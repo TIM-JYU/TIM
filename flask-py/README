@@ -4,7 +4,7 @@ Yksinkertainen web-app, joka on kirjoitettu pythonilla ja sijoitettu dockeriin.
 
 ## Sisältö
 
-Dockerfile - Dockerin conffi. Sanomalla `docker . build` tämä luo uuden docker-imagen. Imagea voi kokeilla
+Dockerfile - Dockerin conffi. Sanomalla `docker build .` tämä luo uuden docker-imagen. Imagea voi kokeilla
 kirjoittamalla `docker run -p 50000:5000 <ed.komennon hash>`. Tämän jälkeen palveluun pääsee käsiksi
 portista 50000. Jos haluat kokeilla muualta, niin viritä ssh-forwardi. Lopuksi kannattaa todeta (toisesta
 tulkista) `docker stop <runin palauttama hash>` ja `docker rm <runin palauttama hash>` sekä `docker rmi 
