@@ -8,4 +8,4 @@ def hello():
 
 if __name__ == "__main__":
      app.wsgi_app = ReverseProxied(app.wsgi_app)	
-     app.run(host='0.0.0.0',port=50000)
+     app.run(host='0.0.0.0',port=5000)
