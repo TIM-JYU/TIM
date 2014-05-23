@@ -1,28 +1,20 @@
 <!doctype html>
 
-<html lang="en">
+<html lang="en" ng-app="timApp">
 <head>
     <meta charset="utf-8">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css?v=1.0">
-
+    <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
+    <script src="{{url_for('static', filename='timController.js')}}"></script>
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     </head>
 
-    <body>
-        <script src="{{ url_for('static', filename='its_a_goat')}}"></script>
-        <div>
-            {% if name %}
-            A text by user {{ name }}:
-            {% else %}
-            It's a goat:
-            <img src="/static/goat"> </img> <span style="font-size: 8px">from http://afunnyanimal.blogspot.fi/2011/08/funny-goat-face.html, 22.5.2014 </span>
-            {%endif%}
-            <div> 
-                <span> {{text}} </span> 
-            </div>
+    <body ng-controller="TimCtrl">
+        <div class="content">
+            {{fileCont}}
+            
         </div>
         <script src="js/scripts.js"></script>
     </body>
