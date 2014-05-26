@@ -18,7 +18,7 @@ def getFile(name, textFile=None):
 
 @app.route('/getMarkdown/<file>')
 def getOhj(file):
-    contents = Markup(markdown.markdown(unicode(open("./static/ohj1/" + file).read(), "utf-8")))
+    contents = Markup(markdown.markdown(open("./static/ohj1/" + file, encoding="utf8").read()))
 #    contents = unicode(open(file+'HTML5', 'r').read(), "utf-8")
     return render_template('start.html', fileCont=contents, stylesheet='stylesheet.css')
 
