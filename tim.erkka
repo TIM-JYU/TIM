@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE erkka [<!ELEMENT erkka (configuration,drawing*)>
+<!ELEMENT drawing ((object|join)*)>
+<!ELEMENT object (id,field+)>
+<!ELEMENT join (id,idref*,field*)>
+<!ELEMENT idref (#PCDATA)>
+<!ELEMENT id (#PCDATA)>
+<!ELEMENT field (#PCDATA)>
+<!ATTLIST object name CDATA #REQUIRED>
+<!ATTLIST idref name CDATA #REQUIRED>
+<!ATTLIST field name CDATA #REQUIRED>
+<!ATTLIST join name CDATA #REQUIRED>
+<!ELEMENT configuration (selectionbox*,objectC+)>
+<!ELEMENT selectionbox (choice+)>
+<!ELEMENT choice (extra_data_field*)>
+<!ELEMENT extra_data_field (#PCDATA)>
+<!ATTLIST selectionbox name ID #REQUIRED>
+<!ATTLIST selectionbox type (combobox|checkbox) #REQUIRED>
+<!ATTLIST choice name CDATA #REQUIRED>
+<!ATTLIST extra_data_field name CDATA #REQUIRED>
+<!ATTLIST extra_data_field default CDATA #REQUIRED>
+<!ELEMENT objectC (fieldC+,rules?)>
+<!ELEMENT fieldC (#PCDATA)>
+<!ELEMENT rules (rule+)>
+<!-- element includes 1- rule-elements --><!ELEMENT rule (#PCDATA)>
+<!ATTLIST objectC color CDATA #IMPLIED>
+<!ATTLIST objectC contains (Attribute) #IMPLIED>
+<!ATTLIST objectC name ID #REQUIRED>
+<!ATTLIST objectC type (Box|Doublebox|Diamond|Circle|Doublecircle|Line|BoxContainer) #REQUIRED>
+<!ATTLIST objectC height CDATA #REQUIRED>
+<!ATTLIST objectC width CDATA #REQUIRED>
+<!ATTLIST fieldC name CDATA #REQUIRED>
+<!ATTLIST fieldC select IDREF #IMPLIED>
+<!ATTLIST rule friend IDREF #REQUIRED>
+<!ATTLIST rule min CDATA #IMPLIED>
+<!ATTLIST rule max CDATA #REQUIRED>
+]>
+<erkka>
+    <configuration>
+        <selectionbox name="datatypes" type="combobox">
+            <choice name="INTEGER"/>
+            <choice name="VARCHAR">
+                <extra_data_field default="100" name="length"/>
+            </choice>
+            <choice name="CHAR">
+                <extra_data_field default="10" name="length"/>
+            </choice>
+            <choice name="NUMERIC">
+                <extra_data_field default="5,2" name="length"/>
+            </choice>
+            <choice name="DATE"/>
+            <choice name="TIME"/>
+            <choice name="TIMESTAMP"/>
+            <choice name="BOOLEAN"/>
+        </selectionbox>
+        <selectionbox name="compulsion" type="combobox">
+            <choice name="NOT NULL"/>
+            <choice name="NULL"/>
+            <choice name="DEFAULT">
+                <extra_data_field default="0" name="value"/>
+            </choice>
+        </selectionbox>
+        <selectionbox name="boolean" type="checkbox">
+            <choice name="true"/>
+        </selectionbox>
+        <selectionbox name="cardinality" type="combobox">
+            <choice name=" "/>
+            <choice name="1"/>
+            <choice name="M"/>
+        </selectionbox>
+        <objectC height="50" name="Entity" type="Box" width="100">
+            <fieldC name="name">Entity</fieldC>
+            <fieldC name="comment"/>
+            <rules>
+                <rule friend="attribute" max="*"/>
+                <rule friend="relationship" max="*"/>
+            </rules>
+        </objectC>
+        <objectC height="50" name="Relationship" type="Diamond" width="100">
+            <fieldC name="name">Relationship</fieldC>
+            <fieldC name="comment"/>
+            <rules>
+                <!--Must join at least 2 entities -->
+                <rule friend="attribute" max="*"/>
+                <rule friend="entity" max="*"/>
+            </rules>
+        </objectC>
+        <objectC height="40" name="Attribute" type="Circle" width="70">
+            <fieldC name="name">Attribute</fieldC>
+            <fieldC name="primarykey" select="boolean"/>
+            <fieldC name="type" select="datatypes"/>
+            <!-- Program creates
+                     combobox in which datatypes
+		     of choice of inner-elements
+		     (look above datatypes-element) -->
+            <fieldC name="compulsion" select="compulsion"/>
+            <fieldC name="comment"/>
+            <rules>
+                <!--Rule tell where attribute can join -->
+                <rule friend="relationship" max="1"/>
+                <rule friend="entity" max="1"/>
+            </rules>
+        </objectC>
+        <objectC height="4" name="Line" type="Line" width="4">
+            <fieldC name="cardinality" select="cardinality"/>
+            <fieldC name="comment"/>
+        </objectC>
+    </configuration>
+    <drawing>
+        <object name="Entity">
+            <id>id5</id>
+            <field name="coordinate_x">143</field>
+            <field name="coordinate_y">124</field>
+            <field name="name">Document</field>
+        </object>
+        <object name="Entity">
+            <id>id7</id>
+            <field name="coordinate_x">629</field>
+            <field name="coordinate_y">128</field>
+            <field name="name">Block</field>
+        </object>
+        <object name="Relationship">
+            <id>id9</id>
+            <field name="coordinate_x">364</field>
+            <field name="coordinate_y">124</field>
+            <field name="name">contains</field>
+        </object>
+        <object name="Entity">
+            <id>id163</id>
+            <field name="coordinate_x">142</field>
+            <field name="coordinate_y">374</field>
+            <field name="name">User</field>
+        </object>
+        <object name="Attribute">
+            <id>id167</id>
+            <field name="coordinate_x">142</field>
+            <field name="coordinate_y">37</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Attribute">
+            <id>id179</id>
+            <field name="coordinate_x">562</field>
+            <field name="coordinate_y">23</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Attribute">
+            <id>id309</id>
+            <field name="coordinate_x">660</field>
+            <field name="coordinate_y">23</field>
+            <field name="name">latest_revision_id</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Entity">
+            <id>id365</id>
+            <field name="coordinate_x">144</field>
+            <field name="coordinate_y">567</field>
+            <field name="name">Note</field>
+        </object>
+        <object name="Attribute">
+            <id>id367</id>
+            <field name="coordinate_x">28</field>
+            <field name="coordinate_y">568</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Attribute">
+            <id>id609</id>
+            <field name="coordinate_x">25</field>
+            <field name="coordinate_y">377</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Relationship">
+            <id>id655</id>
+            <field name="coordinate_x">143</field>
+            <field name="coordinate_y">244</field>
+            <field name="name">owns</field>
+        </object>
+        <object name="Relationship">
+            <id>id1259</id>
+            <field name="coordinate_x">142</field>
+            <field name="coordinate_y">470</field>
+            <field name="name">has</field>
+        </object>
+        <object name="Entity">
+            <id>id1861</id>
+            <field name="coordinate_x">383</field>
+            <field name="coordinate_y">260</field>
+            <field name="name">SuggestedBlock</field>
+        </object>
+        <object name="Relationship">
+            <id>id1863</id>
+            <field name="coordinate_x">561</field>
+            <field name="coordinate_y">237</field>
+            <field name="name">Relationship</field>
+        </object>
+        <object name="Attribute">
+            <id>id2505</id>
+            <field name="coordinate_x">349</field>
+            <field name="coordinate_y">191</field>
+            <field name="name">content</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Relationship">
+            <id>id2797</id>
+            <field name="coordinate_x">235</field>
+            <field name="coordinate_y">307</field>
+            <field name="name">Relationship</field>
+        </object>
+        <object name="Entity">
+            <id>id4349</id>
+            <field name="coordinate_x">679</field>
+            <field name="coordinate_y">394</field>
+            <field name="name">ReadRevision</field>
+        </object>
+        <object name="Entity">
+            <id>id4351</id>
+            <field name="coordinate_x">893</field>
+            <field name="coordinate_y">519</field>
+            <field name="name">Comment</field>
+        </object>
+        <object name="Entity">
+            <id>id4353</id>
+            <field name="coordinate_x">1046</field>
+            <field name="coordinate_y">642</field>
+            <field name="name">Answer</field>
+        </object>
+        <object name="Relationship">
+            <id>id4355</id>
+            <field name="coordinate_x">667</field>
+            <field name="coordinate_y">283</field>
+            <field name="name">Relationship</field>
+        </object>
+        <object name="Relationship">
+            <id>id4357</id>
+            <field name="coordinate_x">395</field>
+            <field name="coordinate_y">397</field>
+            <field name="name">Relationship</field>
+        </object>
+        <object name="Attribute">
+            <id>id4359</id>
+            <field name="coordinate_x">741</field>
+            <field name="coordinate_y">468</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Attribute">
+            <id>id8515</id>
+            <field name="coordinate_x">645</field>
+            <field name="coordinate_y">471</field>
+            <field name="name">revision_id</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <join name="normal">
+            <id>id8517</id>
+            <idref name="idref1">id5</idref>
+            <idref name="idref2">id9</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8519</id>
+            <idref name="idref1">id7</idref>
+            <idref name="idref2">id9</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8521</id>
+            <idref name="idref1">id167</idref>
+            <idref name="idref2">id5</idref>
+        </join>
+        <join name="normal">
+            <id>id8523</id>
+            <idref name="idref1">id179</idref>
+            <idref name="idref2">id7</idref>
+        </join>
+        <join name="normal">
+            <id>id8525</id>
+            <idref name="idref1">id7</idref>
+            <idref name="idref2">id309</idref>
+        </join>
+        <join name="normal">
+            <id>id8527</id>
+            <idref name="idref1">id367</idref>
+            <idref name="idref2">id365</idref>
+        </join>
+        <join name="normal">
+            <id>id8529</id>
+            <idref name="idref1">id609</idref>
+            <idref name="idref2">id163</idref>
+        </join>
+        <join name="normal">
+            <id>id8531</id>
+            <idref name="idref1">id5</idref>
+            <idref name="idref2">id655</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8533</id>
+            <idref name="idref1">id655</idref>
+            <idref name="idref2">id163</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8535</id>
+            <idref name="idref1">id163</idref>
+            <idref name="idref2">id1259</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8537</id>
+            <idref name="idref1">id1259</idref>
+            <idref name="idref2">id365</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8539</id>
+            <idref name="idref1">id7</idref>
+            <idref name="idref2">id1863</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8541</id>
+            <idref name="idref1">id1863</idref>
+            <idref name="idref2">id1861</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8543</id>
+            <idref name="idref1">id1861</idref>
+            <idref name="idref2">id2505</idref>
+        </join>
+        <join name="normal">
+            <id>id8545</id>
+            <idref name="idref1">id1861</idref>
+            <idref name="idref2">id2797</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8547</id>
+            <idref name="idref1">id2797</idref>
+            <idref name="idref2">id163</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8549</id>
+            <idref name="idref1">id7</idref>
+            <idref name="idref2">id4355</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8551</id>
+            <idref name="idref1">id4355</idref>
+            <idref name="idref2">id4349</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8553</id>
+            <idref name="idref1">id4349</idref>
+            <idref name="idref2">id4357</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8555</id>
+            <idref name="idref1">id4357</idref>
+            <idref name="idref2">id163</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8557</id>
+            <idref name="idref1">id4349</idref>
+            <idref name="idref2">id4359</idref>
+        </join>
+        <join name="normal">
+            <id>id8559</id>
+            <idref name="idref1">id4349</idref>
+            <idref name="idref2">id8515</idref>
+        </join>
+        <object name="Relationship">
+            <id>id8561</id>
+            <field name="coordinate_x">877</field>
+            <field name="coordinate_y">241</field>
+            <field name="name">Relationship</field>
+        </object>
+        <object name="Relationship">
+            <id>id8563</id>
+            <field name="coordinate_x">528</field>
+            <field name="coordinate_y">522</field>
+            <field name="name">Relationship</field>
+        </object>
+        <join name="normal">
+            <id>id8565</id>
+            <idref name="idref1">id7</idref>
+            <idref name="idref2">id8561</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id8615</id>
+            <idref name="idref1">id8561</idref>
+            <idref name="idref2">id4351</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8811</id>
+            <idref name="idref1">id4351</idref>
+            <idref name="idref2">id8563</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id8925</id>
+            <idref name="idref1">id8563</idref>
+            <idref name="idref2">id163</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <object name="Relationship">
+            <id>id9497</id>
+            <field name="coordinate_x">1031</field>
+            <field name="coordinate_y">157</field>
+            <field name="name">Relationship</field>
+        </object>
+        <join name="normal">
+            <id>id9499</id>
+            <idref name="idref1">id7</idref>
+            <idref name="idref2">id9497</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <join name="normal">
+            <id>id9695</id>
+            <idref name="idref1">id9497</idref>
+            <idref name="idref2">id4353</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <object name="Relationship">
+            <id>id9903</id>
+            <field name="coordinate_x">529</field>
+            <field name="coordinate_y">644</field>
+            <field name="name">Relationship</field>
+        </object>
+        <join name="normal">
+            <id>id9905</id>
+            <idref name="idref1">id4353</idref>
+            <idref name="idref2">id9903</idref>
+            <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id10441</id>
+            <idref name="idref1">id9903</idref>
+            <idref name="idref2">id163</idref>
+            <field name="cardinality">1</field>
+        </join>
+        <object name="Attribute">
+            <id>id10975</id>
+            <field name="coordinate_x">841</field>
+            <field name="coordinate_y">594</field>
+            <field name="name">text</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <join name="normal">
+            <id>id10977</id>
+            <idref name="idref1">id10975</idref>
+            <idref name="idref2">id4351</idref>
+        </join>
+        <object name="Attribute">
+            <id>id11053</id>
+            <field name="coordinate_x">1160</field>
+            <field name="coordinate_y">681</field>
+            <field name="name">content</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <join name="normal">
+            <id>id11055</id>
+            <idref name="idref1">id4353</idref>
+            <idref name="idref2">id11053</idref>
+        </join>
+        <object name="Attribute">
+            <id>id11139</id>
+            <field name="coordinate_x">946</field>
+            <field name="coordinate_y">594</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <object name="Attribute">
+            <id>id11141</id>
+            <field name="coordinate_x">1159</field>
+            <field name="coordinate_y">616</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <join name="normal">
+            <id>id11143</id>
+            <idref name="idref1">id11139</idref>
+            <idref name="idref2">id4351</idref>
+        </join>
+        <join name="normal">
+            <id>id11235</id>
+            <idref name="idref1">id11141</idref>
+            <idref name="idref2">id4353</idref>
+        </join>
+        <object name="Attribute">
+            <id>id11625</id>
+            <field name="coordinate_x">444</field>
+            <field name="coordinate_y">190</field>
+            <field name="name">id</field>
+            <field name="primarykey">true</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
+        <join name="normal">
+            <id>id11627</id>
+            <idref name="idref1">id1861</idref>
+            <idref name="idref2">id11625</idref>
+        </join>
+    </drawing>
+</erkka>
+<!-- DTD-file for ERKKA -->
+<!-- This is configuration file which defines used cases in program.
+At first definition of choices of combobox.
+Here is defined also syntax of each tag.
+If you use combobox you have to use follow syntax.
+Combobox definition order you select one of choices.
+This case is compulsory. -->
+<!-- Then is defined used objects with data
+which include itself or other objects -->
