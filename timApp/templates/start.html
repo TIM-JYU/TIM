@@ -44,7 +44,7 @@
         <div class="content" ng-repeat-start="par in paragraphs" ng-bind-html="par.text" > 
         </div>
          <button ng-click="setEditable(par.par)"></button>
-        <input ng-repeat-end type="text" ng-show="par.hidden" ng-model="par.text"></input> 
+        <input ng-repeat-end type="textarea" ng-show="par.hidden" ng-model="par.text"></input> 
         
         {% endraw %}
     </body>
