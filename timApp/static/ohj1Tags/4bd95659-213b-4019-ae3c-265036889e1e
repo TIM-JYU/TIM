@@ -1,5 +1,0 @@
-<p>Mantissa puolestaan esitetään niin, että se on aina vähintään 1.
-Mantissaa kuvaavat bitit esittävätkin ainoastaan mantissan
-desimaaliosaa. Jos floatin mantissaa kuvaavat bitit olisivat esimerkiksi
-10100000000000000000000, olisi mantissa tällöin binäärimuodossa 1.101
-eli desimaalimuodossa 1.625.</p>

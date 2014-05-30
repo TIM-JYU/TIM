@@ -1,8 +1,0 @@
-<p>Niin sanottujen muuttumattomien merkkijonojen, eli String-tyypin,
-lisäksi C#:ssa on muuttuvia merkkijonoja. Muuttuvien merkkijonojen idea
-on, että voimme lisätä ja poistaa siitä merkkejä luomisen jälkeen.
-String-tyyppisen merkkijonon muuttaminen ei onnistu sen luomisen
-jälkeen. Käytännössä, jos haluamme muuttaa String-merkkijonoa, tehdään
-uusi olio. Jos merkkijonoon tehdään paljon muutoksia (esimerkiksi jonoon
-lisätään useaan kertaan merkkejä), käy käsittely lopulta hitaaksi - ja
-tämä hitaus alkaa näkyä melko nopeasti.</p>

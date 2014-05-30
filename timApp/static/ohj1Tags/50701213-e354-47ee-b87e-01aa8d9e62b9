@@ -1,3 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-// tulostaa Ville Virtanen
-Console.WriteLine(kurssinOpiskelijat[0,1] + " " + kurssinOpiskelijat[0,0]);</code></p>

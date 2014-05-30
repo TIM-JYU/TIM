@@ -1,8 +1,0 @@
-<p>Järjestämisalgoritmeja käsitellään enemmän muilla kursseilla (esim.
-<a href="https://korppi.jyu.fi/kotka/r.jsp?course=132236">ITKA201 Algoritmit 1</a>
-ja <a href="https://korppi.jyu.fi/kotka/r.jsp?course=132249">TIEP111 Ohjelmointi
-2</a>). Tässä vaiheessa
-meille riittää, että osaamme käyttää C#:sta valmiina löytyvää
-järjestämisaliohjelmaa Sort. Tämä on siitäkin syystä järkevää, että
-kielestä valmiina löytyvä järjestämisalgoritmi on <em>lähes aina nopeampi</em>,
-kuin itse tehty.</p>

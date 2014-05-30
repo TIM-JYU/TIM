@@ -1,7 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-int luku1 = 5;
-int luku2 = 5;
-System.Console.WriteLine(++luku1); // tulostaa 6;
-System.Console.WriteLine(luku2 + 1 ); // tulostaa 6;
-System.Console.WriteLine(luku1); // 6
-System.Console.WriteLine(luku2); // 5</code></p>

@@ -1,7 +1,0 @@
-<p>Kahden lumiukon tapauksessa tämä vielä onnistuu ilman, että koodin määrä
-kasvaa kohtuuttomasti, mutta entä jos meidän pitäisi piirtää 10 tai 100
-lumiukkoa? Kuinka monta riviä ohjelmaan tulisi silloin? Kun lähes
-samanlainen koodinpätkä tulee useampaan kuin yhteen paikkaan, on
-useimmiten syytä muodostaa siitä oma <em>aliohjelma</em>. Koodin monistaminen
-moneen paikkaan lisäisi vain koodirivien määrää, tekisi ohjelman
-ymmärtämisestä vaikeampaa ja vaikeuttaisi testaamista.</p>

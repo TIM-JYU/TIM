@@ -1,4 +1,0 @@
-<p>\
- Huomaa, että rakenteen ja alkeistietotyypin nimet ovat C#:ssa
-synonyymejä. Seuraavat rivit tuottavat saman lopputuloksen (mikäli
-System-nimiavaruus on otettu käyttöön using-lauseella).</p>

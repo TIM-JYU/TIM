@@ -1,8 +1,0 @@
-<p>Kutsuttaessa aliohjelmaa hyppää ohjelman suoritus välittömästi
-parametrien sijoitusten jälkeen kutsuttavan aliohjelman ensimmäiselle
-riville ja alkaa suorittamaan aliohjelmaa kutsussa määritellyillä
-parametreilla. Kun päästään aliohjelman koodin loppuun palataan
-jatkamaan kutsun jälkeisestä seuraavasta lausekkeesta. Esimerkissämme
-kun ensimmäinen lumiukko on piirretty, palataan tavallaan ensimmäisen
-kutsun puolipisteeseen ja sitten pääohjelma jatkuu kutsumalla toista
-lumiukon piirtämistä.</p>

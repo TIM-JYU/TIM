@@ -1,3 +1,0 @@
-<p><code>{.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
-String henkilo = "Ville Virtanen";
-Console.WriteLine(henkilo.ToLower()); //tulostaa "ville virtanen"</code></p>

@@ -1,4 +1,0 @@
-<p>Jypeli-kirjasto kutsuu Paint-aliohjelmaa tasaisin väliajoin (kymmeniä
-kertoja sekunnissa) pelin ollessa käynnissä. Siinä voi siis toteuttaa
-animaatioita muuttamalla koordinaatteja sen mukaan millä ajanhetkellä
-piirretään.</p>

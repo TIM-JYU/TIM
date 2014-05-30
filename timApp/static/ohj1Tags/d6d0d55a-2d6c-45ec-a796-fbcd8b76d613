@@ -1,5 +1,0 @@
-<p>C#:ssa on kahden mallisia rakenteita, joihin tietoja voidaan tallentaa.
-Tapauksesta riippuen tiedot tallennetaan joko <em>alkeistietotyyppeihin</em>
-tai <em>oliotietotyyppeihin</em>. Oliotietotyypit eroavat alkeistietotyypeistä
-siinä, että ne ovat <em>viitteitä</em> tiettyyn olioon, ja siksi niitä
-kutsutaan myös nimellä viitetyypit tai viitemuuttujat.</p>

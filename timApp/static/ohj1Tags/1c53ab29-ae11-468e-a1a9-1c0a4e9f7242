@@ -1,5 +1,0 @@
-<p>Poikkeuksia voidaan kuitenkin käsitellä hallitusti poikkeustenhallinnan
-(exception handling) avulla. Tällöin poikkeukseen varaudutaan ja
-ohjelman suoritusta voidaan jatkaa poikkeuksen sattuessa. Poikkeusten
-hallinta sisältää aina try- ja catch-lohkon. Lisäksi voidaan käyttää
-myös finally-lohkoa.</p>

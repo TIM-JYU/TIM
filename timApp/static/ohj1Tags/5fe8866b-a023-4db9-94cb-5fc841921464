@@ -1,8 +1,0 @@
-<p>Koska lukujärjestelmät sisältävät samoja symboleja, täytyy ne osata
-jotenkin erottaa toisistaan. Tämä tehdään usein alaindekseillä.
-Esimerkiksi binääriluku 11 voitaisiin kirjoittaa muodossa 11~2~.Tällöin
-sen erottaa 10-järjestelmän luvusta 11, joka voitaisiin vastaavasti
-kirjoittaa muodossa 11~10~. Koska alaindeksien kirjoittaminen koneella
-on hieman haastavaa, käytetään usein myös merkintää, jossa binääriluvun
-perään lisätään B-kirjain. Esimerkiksi 11B tarkoittaisi samaa kuin
-11~2~.</p>

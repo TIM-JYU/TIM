@@ -1,4 +1,0 @@
-<p>Eksponentiksi saatiin -4, eli liukuluvun binääriesitykseen siihen
-lisätään BIAS, eli saadaan 10-järjestelmän luku -4 + 127 = 123, joka on
-binäärilukuna 1111011. Muutetaan nyt mantissa binääriluvuksi. Muista,
-että mantissan kokonaisosaa ei merkitty liukuluvun binääriesitykseen.</p>

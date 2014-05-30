@@ -1,5 +1,0 @@
-<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-PiirraSierpinskinKolmio(korkeus, x, y) // x ja y tarkoittavat kärjellään
-                                       // seisovan kolmion alakulman koordinaatteja
-{
-   jos (korkeus &lt; PIENIN_SALLITTU_KORKEUS) poistu</p>

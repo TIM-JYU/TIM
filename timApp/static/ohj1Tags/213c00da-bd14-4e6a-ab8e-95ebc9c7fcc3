@@ -1,6 +1,0 @@
-<p>\
- Nopeasti voisi olettaa, että ikkunassamme näkyisi nyt vain kaksi
-samanlaista ympyrää eri paikoissa. Näin ei kuitenkaan ole, vaan molemmat
-PhysicsObject-oliot viittaavat samaan ympyrään, jonka säde on 50. Tämä
-johtuu siitä, että muuttujat p1 ja p2 ovat olioviitteitä, jotka
-viittaavat (ts. osoittavat) samaan olioon.</p>

@@ -1,4 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-a -= 2;
-a += -2;  // lisättävä luku voisi olla muuttuja. Luku voi olla myös negatiivinen
-a = a - 2;</code></p>

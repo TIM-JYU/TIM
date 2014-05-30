@@ -1,8 +1,0 @@
-<p>Tässä luodaan uusi muuttuja, jolla kontrolloidaan, mitä taulukon
-alkioita ollaan tulostamassa. Lisäksi sen avulla selvitetään, milloin
-taulukon kaikki alkiot on tulostettu ruudulle. Muuttuja alustetaan
-arvoon 0, sillä taulukon ensimmäinen alkio on aina indeksissä 0.
-Muuttujalle annetaan nimeksi i. Useimmiten pelkät kirjaimet ovat huonoja
-muuttujan nimiä, koska ne kuvaavat muuttujaa huonosti. Silmukoissa
-kuitenkin nimi i on vakiinnuttanut asemansa kontrolloimassa silmukoiden
-kierroksia, joten sitä voidaan hyvällä omallatunnolla käyttää.</p>

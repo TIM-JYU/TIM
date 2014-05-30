@@ -1,4 +1,0 @@
-<p>Jos sijoitetaan "olio" toiseen "olioon", niin tosiasiassa sijoitetaan
-viitemuuttujien arvoja, eli sijoituksen <code>s2 = s1</code>{.western} jälkeen
-molemmat merkkijono-olioviitteet "osoittavat" samaan olioon. Nyt tilanne
-muuttuisi seuraavasti:</p>

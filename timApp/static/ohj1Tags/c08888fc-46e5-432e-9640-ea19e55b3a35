@@ -1,4 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-s2 = null;
-...
-if (s2 != null) Console.WriteLine("s2:n pituus on " + s2.Length);</code></p>

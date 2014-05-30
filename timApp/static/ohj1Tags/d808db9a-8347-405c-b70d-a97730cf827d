@@ -1,3 +1,0 @@
-<p>Taulukon arvoja voi tietenkin myös muuttaa. Jos esimerkiksi olisi
-kyseessä karkausvuosi, voisimme muuttaa helmikuun pituudeksi 29.
-Helmikuuhan on taulukon indeksissä 1, sillä indeksointi alkoi nollasta.</p>

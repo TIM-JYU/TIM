@@ -1,3 +1,0 @@
-<p>C#:n primitiivityypit sen sijaan sijoittuvat suoraan arvoina
-pinomuistiin (tai myöhemmin olioiden attribuuttien tapauksessa oliolle
-varattuun muistialueeseen). Siksi vertailu</p>

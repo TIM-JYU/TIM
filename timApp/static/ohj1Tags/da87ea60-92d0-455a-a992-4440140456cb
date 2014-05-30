@@ -1,3 +1,0 @@
-<p>Koska merkkijono on kokoelma yksittäisiä char-merkkejä, saadaan
-merkkijonon kukin merkki char-tyyppisenä laittamalla halutun merkin
-paikkaindeksi merkkijono-olion perään hakasulkeiden sisään, esimerkiksi:</p>

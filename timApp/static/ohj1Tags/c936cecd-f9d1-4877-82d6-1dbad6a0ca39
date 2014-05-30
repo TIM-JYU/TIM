@@ -1,4 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-int[] it1 = new int[1]; it1[0] = 3;
-int[] it2 = new int[1]; it2[0] = 3;
-Console.WriteLine(it1 == it2); // false</code></p>

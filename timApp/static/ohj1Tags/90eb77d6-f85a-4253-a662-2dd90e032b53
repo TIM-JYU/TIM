@@ -1,5 +1,0 @@
-<p>Huomaa, että i-muuttujan arvo alkaa nollasta, joka tulostetaan
-ensimmäisenä Hello World! -tekstin jälkeen. Silmukan runko-osan
-suorittamisen ehtona on, että i-muuttujan arvon on oltava alle 10, joten
-kun i saavuttaa arvon 10 (10:n kierroksen päätteeksi), poistutaan
-silmukasta.</p>

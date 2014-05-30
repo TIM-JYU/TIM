@@ -1,7 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-public static void Rekursio(parametrit) 
-{
-   if (lopetusehto) return;
-   // toimenpiteitä ... 
-   Rekursio(uudet parametrit);  // Itsensä kutsuminen
-}</code></p>

@@ -1,6 +1,0 @@
-<p>Alkioiden lisääminen List\&lt;T&gt;-olioon, ja itse asiassa kaikkiin
-Collections.Generic-nimiavaruuden luokkien olioihin, onnistuu
-Add-metodilla. Add-metodi lisää alkion aina tietorakenteen ”loppuun”,
-eli loogisessa mielessä viimeiseksi. Kun indeksointi alkaa jälleen
-nollasta, niin ensimmäinen lisätty alkio löytyy siis indeksistä 0,
-seuraava 1 jne. Elokuvia voitaisiin nyt lisätä seuraavasti:</p>

@@ -1,6 +1,0 @@
-<p>Tästä nähdään jo, että kyseessä on päättymätön luku, koska meidän täytyy
-jälleen kertoa lukua 0.6 kahdella. Laskeminen voidaan siis lopettaa,
-sillä jakso on jo nähtävillä. Kun jaksoa jatketaan 23 bitin mittaiseksi,
-saadaan mantissaksi binääriluku 10011001100110011001100. Seuraavat kaksi
-bittiä olisivat 11, joten luku pyöristyy vielä muotoon
-10011001100110011001101. Nyt kaikki liukuluvun osat ovat selvillä:</p>

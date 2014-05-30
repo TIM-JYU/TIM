@@ -1,5 +1,0 @@
-<p>Metodeita ja aliohjelmia, jotka ottavat vastaan parametreja palauttavat
-arvon sanotaan joskus myös <em>funktioiksi</em>. Nimitys ei ole hullumpi, jos
-vertaa Keskiarvo-aliohjelmaa vaikkapa matematiikan funktioon f(x, y) =
-(x + y) / 2. Funktiolla ei lisäksi saisi olla sivuvaikutuksia, kuten
-esimerkiksi tulostamista tai globaalien muuttujien muuttamista.</p>

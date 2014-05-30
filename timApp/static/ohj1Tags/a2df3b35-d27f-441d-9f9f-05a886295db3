@@ -1,5 +1,0 @@
-<p>C#:n tietotyypit voidaan jakaa alkeistietotyyppeihin (primitive types)
-ja oliotietotyyppeihin (reference types). Oliotietotyyppeihin kuuluu
-muun muassa käyttämämme PhysicsObject-tyyppi, jota pallot p1 jne.
-olivat, sekä merkkijonojen tallennukseen tarkoitettu String-olio.
-Oliotyyppejä käsitellään myöhemmin luvussa 8.</p>

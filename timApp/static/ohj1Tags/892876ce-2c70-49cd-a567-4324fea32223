@@ -1,6 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-String jono2 = "kissa,,,; koira";
-char[] erottimet = new char[] { ' ', ';', ',' };
-String[] pilkottu = jono2.Split(erottimet,
-  StringSplitOptions.RemoveEmptyEntries);
-// Palat olisivat nyt ["kissa", "koira"]</code></p>

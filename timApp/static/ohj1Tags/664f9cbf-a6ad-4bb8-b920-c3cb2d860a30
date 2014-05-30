@@ -1,2 +1,0 @@
-<p>Toisinpäin tämä ei onnistu: double-tyyppistä arvoa ei voi sijoittaa
-int-tyyppiseen muuttujaan. Alla oleva koodi ei kääntyisi:</p>

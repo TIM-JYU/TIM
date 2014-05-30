@@ -1,5 +1,0 @@
-<p>switch-rakennetta voidaan käyttää silloin, kun meidän täytyy suorittaa
-valintaa yksittäisten kokonaislukujen tai merkkien (char) perusteella.
-Jokaista odotettua muuttujan arvoa kohtaan on switch-rakenteessa oma
-case-osa, johon kirjoitetaan toimenpiteet, jotka tehdään tässä
-tapauksessa. Yleinen muoto switch-rakenteelle on seuraava.</p>

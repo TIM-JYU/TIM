@@ -1,8 +1,0 @@
-<p>Kun käsitellään useita samaan asiaan liittyviä jossain mielessä
-samankaltaisia tai yhteen liittyviä arvoja, on usein syytä ottaa
-käyttöön <em>taulukko</em> (array). Taulukko on tietorakenne, johon voi
-tallentaa useita samantyyppisiä muuttujia. Yksittäistä taulukon
-muuttujaa sanotaan <em>alkioksi</em> (element). Jokaisella alkiolla on
-taulukossa paikka, jota sanotaan <em>indeksiksi</em> (index). Taulukon
-indeksointi alkaa C#:ssa aina nollasta, eli esimerkiksi 12-alkioisen
-taulukon ensimmäisen alkion indeksi olisi 0 ja viimeisen 11.</p>

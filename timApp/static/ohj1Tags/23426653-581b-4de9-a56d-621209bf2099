@@ -1,4 +1,0 @@
-<p>Palataan esimerkkiin 15.3. Koska pallo-oliot ovat taulukossa, voimme
-käydä taulukon alkiot läpi silmukan avulla, ja muuttaa kaikkien pallojen
-värin toiseksi. Main-metodi on jätetty listauksesta pois. Pallojen
-luomiseen käytämme esimerkissä 16.2.4 esiteltyä LuoPallo-aliohjelmaa.</p>

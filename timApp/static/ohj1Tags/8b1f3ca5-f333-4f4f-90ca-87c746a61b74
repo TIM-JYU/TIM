@@ -1,5 +1,0 @@
-<p>Liukulukua käytetään siis reaalilukujen esitykseen tietokoneissa.
-Liukulukuesitykseen kuuluu neljä osaa: etumerkki (s), mantissa (m),
-kantaluku (k) ja eksponentti (c). Kantaluvulla ja eksponentilla
-määritellään luvun suuruusluokka ja mantissa kuvaa luvun merkitseviä
-numeroita. Luku x saadaan laskettua kaavalla:</p>

@@ -1,6 +1,0 @@
-<p><variable declarators=""> ::= <variable declarator=""> | <variable declarators=""> , 
-                               <variable declarator="">
-<variable declarator=""> ::= <variable declarator="" id=""> | <variable declarator="" id="">= <variable initializer="">
-<variable declarator="" id=""> ::= <identifier> | <variable declarator="" id=""> []
-<variable initializer=""> ::= <expression> | <array initializer="">
-```</array></expression></variable></variable></identifier></variable></variable></variable></variable></variable></variable></variable></variable></variable></p>

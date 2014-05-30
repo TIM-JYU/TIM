@@ -1,6 +1,0 @@
-<p>Jos vertaamme tätä tapaa switch-rakenteella toteutettuun tapaan
-huomaamme, että koodin määrä väheni huomattavasti. Tämä tapa on lisäksi
-nopeampi, sillä jos esimerkiksi hakisimme arvosanalle viisi kirjallista
-arvosanaa, switch-rakenteessa tehtäisiin viisi vertailuoperaatiota.
-Taulukkoa käyttämällä vertailuoperaatioita ei tehdä yhtään, vaan
-ainoastaan yksi hakuoperaatio taulukosta.</p>

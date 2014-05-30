@@ -1,7 +1,0 @@
-<p>Kontrollirakenteessa alustetaan ja päivitetään nyt kahta eri muuttujaa.
-Muuttujat erotetaan toisistaan pilkulla. Huomaa, että muuttujan tyyppi
-kirjoitetaan vain yhden kerran! Ehtona on, että suoritusta jatketaan
-niin kauan kuin muuttuja vasen on pienempää kuin muuttuja oikea. Lopuksi
-päivitetään vielä muuttujien arvoja. Eri muuttujien päivitykset
-erotetaan toisistaan jälleen pilkulla. Muuttujaa vasen kasvatetaan joka
-kierroksella yhdellä kun taas muuttujaa oikea sen sijaa vähennetään.</p>

@@ -1,9 +1,0 @@
-<p>Sierpinskin kolmio on puolalaisen matemaatikko <em>Wacław Sierpińskin</em>
-vuonna 1915 esittelemä <em>fraktaali</em>. Se on tasasivuinen kolmio, jonka
-ympärille piirretään kolme uutta tasasivuista kolmiota niin, että kunkin
-uuden kolmion jokin kärki on edellisen (suuremman) kolmion sivun
-keskipisteessä. Kunkin uuden kolmion koko on puolet suuremmasta
-kolmiosta. Uudet kolmiot muodostuvat siis ”ison” kolmion yläosaan,
-vasempaan alakulmaan ja oikeaan alakulmaan. Tilanne selviää paremmin
-kuvasta. Sierpinskin kolmion toinen vaihe on alla. Kolmion viivojen
-piirtämiseen käytämme Canvas-oliota (ks. luku 21).</p>

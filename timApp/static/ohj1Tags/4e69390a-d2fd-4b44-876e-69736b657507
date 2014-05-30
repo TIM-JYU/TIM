@@ -1,6 +1,0 @@
-<p>Ideana try-catch -rakenteessa on, että poikkeusalttiit lauseet
-sijoitetaan try-lohkon sisään. Tämän jälkeen catch-lohkossa kerrotaan
-mitä poikkeustilanteessa tehdään. Ennen catch-lohkoa täytyy kuitenkin
-kertoa mitä poikkeuksia yritetään ottaa kiinni (catch). Tämä ilmoitetaan
-sulkeissa catch-sanan jälkeen, ennen catch-lohkoa aloittavaa
-aaltosulkua. Yleisessä muodossa try-catch rakenne olisi seuraava:</p>

@@ -1,8 +1,0 @@
-<ul>
-<li><a href="http://msdn.microsoft.com/en-us/library/czx8s9ts.aspx">Replace(Char,
-    Char)</a> Korvaa
-    merkkijonon kaikki tietyt merkit toisilla merkeillä. Ensimmäisenä
-    parametrina korvattava merkki ja toisena korvaaja. Huomaa, että
-    parametrit laitetaan char-muuttujille tyypilliseen tapaan
-    yksinkertaisten lainausmerkkien sisään.</li>
-</ul>

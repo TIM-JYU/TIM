@@ -1,4 +1,0 @@
-<p>Alkion poistaminen halutusta paikasta (indeksistä) tehdään
-RemoveAt-metodilla. Parametriksi annetaan sen alkion indeksi, joka
-halutaan poistaa. Alkion "Casablanca" poistaminen onnistuisi
-seuraavasti.</p>

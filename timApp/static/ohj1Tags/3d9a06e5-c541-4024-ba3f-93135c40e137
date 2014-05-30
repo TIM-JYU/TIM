@@ -1,5 +1,0 @@
-<p>Koska return-lause lopettaa metodin toiminnan, voitaisiin yllä olevaa
-aliohjelmaa lyhentää palauttamalla jokaisessa case-osassa suoraan
-kirjallinen arvosana. Tällöin break-lauseet voisi jättää pois, sillä
-return-lauseen ansiosta tapauksesta toiseen valuttaminen ei ole
-mahdollista.</p>

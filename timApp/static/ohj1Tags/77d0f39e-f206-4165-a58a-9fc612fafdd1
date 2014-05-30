@@ -1,3 +1,0 @@
-<p>Peliolio täytyy aina lisätä kentälle, ennen kuin se saadaan näkyviin.
-Tämä tapahtuu Add-metodin avulla, joka ottaa parametrina kentälle
-lisättävän olion nimen (tässä p1).</p>

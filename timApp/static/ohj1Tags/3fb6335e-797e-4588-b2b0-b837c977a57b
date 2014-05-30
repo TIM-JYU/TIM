@@ -1,7 +1,0 @@
-<p>Rivillä kolme määritellään (tai oikeammin <em>esitellään</em>) uusi aliohjelma
-nimeltä Main. Nimensä ansiosta se on tämän luokan pääohjelma. Sanat
-static ja void kuuluvat aina Main-aliohjelman esittelyyn. Paneudumme
-niihin tarkemmin hieman myöhemmin, mutta sanottakoon tässä kohtaa, että
-static tarkoittaa, että aliohjelma on <em>luokkakohtainen</em> (vastakohtana
-<em>oliokohtainen</em>, jolloin static-sanaa ei kirjoiteta). Vastaavasti void
-merkitsee, ettei aliohjelma palauta mitään tietoa.</p>

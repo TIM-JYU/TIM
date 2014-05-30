@@ -1,3 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-TietorakenneLuokanNimi&lt;TallettavienOlioidenTyyppi&gt; rakenteenNimi =
-  new TietorakenneLuokanNimi&lt;TallettavienOlioidenTyyppi&gt;();</code></p>

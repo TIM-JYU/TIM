@@ -1,4 +1,0 @@
-<p>Kun yritetään tallentaa kokonaislukujen jakolaskun tulosta
-liukulukutyyppiseen (float tai double) muuttujaan, voi tulos tallettua
-kokonaislukuna, jos jakaja ja jaettava ovat molemmat ilmoitettu ilman
-desimaaliosaa.</p>

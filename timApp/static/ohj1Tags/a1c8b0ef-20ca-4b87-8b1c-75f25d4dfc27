@@ -1,5 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-char[] erottimet = new char[] { ' ', ';', ',' };
-Console.Write("Kirjoita &gt; ");
-String jono1 = Console.ReadLine();
-String[] pilkottu = jono1.Split(erottimet);</code></p>

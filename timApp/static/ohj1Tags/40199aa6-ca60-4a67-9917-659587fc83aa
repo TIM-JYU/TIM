@@ -1,4 +1,0 @@
-<p>Huomaa, että yllä olevassa esimerkissä ”+”- merkki ei toimi
-aritmeettisena operaattorina, vaan sillä yhdistetään tulostettavia
-merkkijonoja. C#:ssa ”+”-merkkiä käytetään siis myös merkkijonojen
-yhdistelyyn.</p>

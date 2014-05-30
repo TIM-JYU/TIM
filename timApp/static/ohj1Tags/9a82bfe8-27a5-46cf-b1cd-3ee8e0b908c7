@@ -1,6 +1,0 @@
-<p>Ohjelmoinnissa tulee usein tilanteita, joissa samaa tai lähes samaa
-asiaa täytyy toistaa ohjelmassa useampia kertoja. Varsinkin taulukoiden
-käsittelyssä tällainen asia tulee usein eteen. Jos haluaisimme
-esimerkiksi tulostaa kaikki edellisessä luvussa tekemämme
-kuukausienPaivienLkm-taulukon luvut, onnistuisi se tietenkin
-seuraavasti:</p>

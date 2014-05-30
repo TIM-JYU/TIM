@@ -1,6 +1,0 @@
-<p>Esimerkiksi yllä oleva koodinpätkä aiheuttaisi
-IndexOutOfRangeException-nimisen poikkeuksen. Näitä poikkeuksia tulee
-aluksi usein silloin, kun taulukoita käsitellään silmukoiden avulla ja
-silmukan lopetusehto on väärin. Poikkeuksia aiheuttavat myös esimerkiksi
-jonkun luvun jakaminen nollalla, sekä yritys muuttaa tekstiä sisältävä
-merkkijono joksikin numeeriseksi tietotyypiksi.</p>

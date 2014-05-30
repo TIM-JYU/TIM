@@ -1,7 +1,0 @@
-<p>Huomaa, että LuoPallo on tässä funktioaliohjelma, joka ei tee ohjelmassa
-mitään ”näkyvää”. Se vain luo pallon, kuten nimikin kertoo, mutta ei
-lisää sitä ruudulle. Tästä syystä ei tarvita myöskään Game-parametria,
-joka Lumiukko-esimerkissä aikanaan tarvittiin. Sen sijaan lisääminen
-tehdään Begin-aliohjelmassa. Yleisesti ottaen aliohjelmissa ei pidä
-tehdä enempää kuin mitä dokumentaatiossa kerrotaan - jopa aliohjelman
-nimestä pitäisi kaikkein tärkein selvitä.</p>

@@ -1,6 +1,0 @@
-<p>Yllä olevassa esimerkissä lasketaan nyt arvosanarajat vain kertaalleen
-taulukkoon ja samaa taulukkoa käytetään nyt eri arvosanojen laskemiseen.
-Yhden aliohjelman kuuluisikin aina suorittaa vain yksi tehtävä tai
-toimenpide. Näin aliohjelman koko ei kasva mielettömyyksiin. Lisäksi
-mahdollisuus, että pystymme hyödyntämään aliohjelmaa joskus myöhemmin
-toisessa ohjelmassa lisääntyy.</p>

@@ -1,4 +1,0 @@
-<p>sivunPituus2 = korkeus / sqrt(3) // Sivun pituus jaettuna kahdella
-   alakulma = (x, y) // Pistepari
-   vasenYlakulma = (x - sivunPituus2, y + korkeus)
-   oikeaYlakulma = (x + sivunpituus2, y + korkeus)</p>

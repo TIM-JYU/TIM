@@ -1,9 +1,0 @@
-<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-/// <summary>
-/// Kutsutaan PiirraLumiukko-aliohjelmaa
-/// sopivilla parametreilla.
-/// </summary>
-public override void Begin()
-{
-  Camera.ZoomToLevel();
-  Level.Background.Color = Color.Black;</p>

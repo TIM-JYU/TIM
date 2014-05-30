@@ -1,9 +1,0 @@
-<p>Sijoituksen jälkeen kuvassa muistipaikkaan 8040 ei osoita (viittaa)
-enää kukaan ja tuo muistipaikka muuttuu "roskaksi". Kun roskienkeruu
-(garbage-collection, gc) seuraavan kerran käynnistyy, "vapautetaan"
-tällaiset käyttämättömät muistialueet. Tätä automaattista roskienkeruuta
-on pidetty yhtenä syynä esimerkiksi Javan menestykseen. Samalla täytyy
-kuitenkin varoittaa, että muisti on vain yksi resurssi ja automatiikka
-on olemassa vain muistin hoitamiseksi. Muut resurssit kuten esimerkiksi
-tiedostot ja tietokannat pitää edelleen hoitaa samalla huolellisuudella
-kuin muissakin kielissä. [LAP]</p>

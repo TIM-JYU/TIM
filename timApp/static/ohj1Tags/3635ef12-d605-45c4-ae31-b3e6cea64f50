@@ -1,6 +1,0 @@
-<p>Vaikka tämä muoto muistuttaa jo melko paljon metodin kutsua on ero
-kuitenkin selvä. Metodia kutsuttaessa toimenpide tehdään aina <em>tietylle
-oliolle</em>, kuten p1.Destroy() tuhoaa juuri sen pallon, johon p1-olio
-viittaa. Pallojahan voi tietenkin olla myös muita erinimisiä (kuten
-esimerkissämme onkin). Alla olevassa aliohjelmakutsussa kuitenkin
-käytetään vain luokasta Lumiukot löytyvää PiirraLumiukko-aliohjelmaa.</p>

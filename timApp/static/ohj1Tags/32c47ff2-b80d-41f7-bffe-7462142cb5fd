@@ -1,3 +1,0 @@
-<p>\&lt;&gt;   BNF-kaavio koostuu <em>non-terminaaleista</em> (välikesymbolit) ja <em>terminaaleista</em> (päätesymbolit)<em>.</em> Non-terminaalit kirjoitetaan pienempi kuin (\&lt;)- ja suurempi kuin (&gt;)-merkkien väliin. Jokaiselle non-terminaalille on oltava jossain määrittely. Terminaali sen sijaan kirjoitetaan koodin sellaisenaan.
-  ::=    Aloittaa non-terminaalin määrittelyn. Määrittely voi sisältää uusia non-terminaaleja ja terminaaleja.
-  |      ”|”-merkki kuvaa sanaa ”tai”. Tällöin ”|”-merkin vasemmalla puolella olevan osan sijasta voidaan kirjoittaa oikealla puolella oleva osa.</p>

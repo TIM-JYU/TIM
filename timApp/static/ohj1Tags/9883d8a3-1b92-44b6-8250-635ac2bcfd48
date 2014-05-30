@@ -1,7 +1,0 @@
-<p>Varsinaista aliohjelman toiminnallisuutta kirjoittaessa käytämme nyt
-parametreille antamiamme nimiä. Alimman ympyrän keskipisteen
-koordinaatit saamme nyt suoraan parametreista x ja y, mutta muiden
-ympyröiden keskipisteet meidän täytyy laskea alimman ympyrän
-koordinaateista. Tämä tapahtuu täysin samalla tavalla kuin edellisessä
-esimerkissä. Itse asiassa, jos vertaa aliohjelman sisältöä edellisen
-esimerkin koodiin, on se täysin sama.</p>

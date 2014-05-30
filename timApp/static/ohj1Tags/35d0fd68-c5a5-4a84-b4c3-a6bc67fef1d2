@@ -1,5 +1,0 @@
-<p>Suorassa tulkinnassa varataan yksi bitti ilmoittamaan luvun etumerkkiä
-(+/-). Jos meillä on käytössä 4 bittiä, niin tällöin luku +3~10~ = 0011
-ja -3~10~ = 1011. Suoran esityksen mukana tulee ongelmia
-laskutoimituksia suoritettaessa; mm. luvulla nolla on tällöin kaksi
-esitystä, 0000 ja 1000, mikä ei ole toivottava ominaisuus.</p>

@@ -1,6 +1,0 @@
-<p>Oman tai jonkun muun tekemän luokkakirjaston (.dll-tiedoston),
-esimerkiksi kurssilla käytettävän Jypelin, voi lisätä VS:oon
-seuraavasti. Valitse Solution Explorerista References ja klikkaa hiiren
-oikealla napilla Add reference. Mene Browse-välilehdelle ja hae
-haluamasi kirjasto, esimerkiksi Jypeli.dll. Nyt voit kirjoittaa
-kooditiedoston alkuun lauseen</p>

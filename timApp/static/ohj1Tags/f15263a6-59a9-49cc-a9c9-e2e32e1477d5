@@ -1,5 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-for (int i = 5; 1 &lt;= i; i--) 
-{
-   if (arvosanaRajat[i] &lt;= tenttipisteet) return i;
-}</code></p>

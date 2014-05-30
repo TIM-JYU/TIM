@@ -1,6 +1,0 @@
-<p>Tässä täytyy ottaa huomioon, että ulomman taulukon indeksejä käydään
-läpi eri muuttujalla kuin sisempää taulukkoa. Usein on tapana kirjoittaa
-ensimmäisen (ulomman) indeksimuuttujan nimeksi i, ja seuraavan nimeksi
-j. Samannimisiä muuttujia ei voi käyttää, sillä ne ovat nyt samalla
-näkyvyysalueella. Tässä kyseisessä esimerkissä on loogisempaa käyttää
-riveihin ja sarakkeisiin viittaavia indeksien nimiä - siis r ja s.</p>

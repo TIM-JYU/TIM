@@ -1,8 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-int laskuri = 0;
-while (true) 
-{
-   if (laskuri = 10) break;
-   Console.WriteLine("Hello world!");
-   laskuri++;
-}</code></p>

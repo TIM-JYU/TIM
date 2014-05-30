@@ -1,8 +1,0 @@
-<p>Seuraavalla rivillä asetetaan olion paikka Y-arvon avulla. Huomaa että Y
-kirjoitetaan isolla kirjaimella. Tämä on p1-olion ominaisuus,
-attribuutti. X-koordinaattia meidän ei tarvitse tässä erikseen asettaa,
-se on oletusarvoisesti 0 ja se kelpaa meille. Saadaksemme ympyrät
-piirrettyä oikeille paikoilleen, täytyy meidän laskea koordinaattien
-paikat. Oletuksena ikkunan keskipiste on koordinaatiston origo eli piste
-(0, 0). x-koordinaatin arvot kasvavat oikealle ja y:n arvot ylöspäin,
-samoin kuin ”normaalissa” koulusta tutussa koordinaatistossa.</p>

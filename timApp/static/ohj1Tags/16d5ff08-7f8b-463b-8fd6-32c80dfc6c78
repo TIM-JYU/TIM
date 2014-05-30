@@ -1,5 +1,0 @@
-<p>Seuraavaksi testataan, että jos parametreistä ensimmäinen on luku 1 ja
-toinen luku 0, niin näiden yhdistelmä on 10, joten aliohjelman tulee
-palauttaa luku 10. Nollan ja ykkösen yhdistelmä antaisi 01, mutta sitä
-vastaava luku on tietenkin 1, joten se on luku jota palautuksena
-odotamme, ja näin jatketaan.</p>

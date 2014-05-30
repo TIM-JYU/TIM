@@ -1,5 +1,0 @@
-<p>Oleellista on, että rekursiivisessa aliohjelmassa on joku <em>lopetusehto</em>.
-Muutoin aliohjelma kutsuu itseään loputtomasti. Toinen oleellinen seikka
-on, että seuraavan kutsun, tässä Rekursio(uudet parametrit), parametreja
-jotenkin muutetaan, muutoin rekursiolla ei saada mitään järkevää
-aikaiseksi.</p>

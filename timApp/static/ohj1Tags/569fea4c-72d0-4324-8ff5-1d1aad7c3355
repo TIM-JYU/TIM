@@ -1,5 +1,0 @@
-<p>Yhdellä 16-järjestelmä symbolilla voidaan siis esittää 4-bittinen
-binääriluku. Binääriluku voidaankin muuttaa heksajärjestelmän luvuksi
-järjestelemällä bitit oikealta alkaen neljän bitin ryhmiin ja
-käyttämällä kunkin 4-bitin yhdistelmän heksavastinetta. Muutetaan luku
-11101101~2~ heksajärjestelmään.</p>

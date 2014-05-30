@@ -1,3 +1,0 @@
-<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-<local declaration="" statement="" variable=""> ::= <local declaration="" variable="">;
-<local declaration="" variable=""> ::= <type> <variable declarators=""></variable></type></local></local></local></p>

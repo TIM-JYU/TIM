@@ -1,5 +1,0 @@
-<p>Muuttujaa voi käyttää (lukea ja asettaa arvoja) vain siinä lohkossa,
-missä se on määritelty. Muuttujan määrittelyn täytyy aina olla ennen
-(koodissa ylempänä), kun sitä ensimmäisen kerran käytetään. Jos muuttuja
-on käytettävissä sanotaan, että muuttuja <em>näkyy</em>. Aliohjelman sisällä
-määritelty muuttuja ei siis näy muissa aliohjelmissa.</p>

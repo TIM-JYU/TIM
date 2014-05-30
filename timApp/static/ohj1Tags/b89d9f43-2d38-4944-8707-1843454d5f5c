@@ -1,3 +1,0 @@
-<p>Kaikilla alkeistietotyypeillä sekä C#:n oliotyypeillä on
-ToString-metodi, jolla olio voidaan muuttaa merkkijonoksi. Alla
-esimerkki int-luvun muuttamisesta merkkijonoksi.</p>

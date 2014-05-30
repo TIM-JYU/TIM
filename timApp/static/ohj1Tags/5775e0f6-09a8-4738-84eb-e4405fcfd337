@@ -1,4 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-int indeksi = 0;
-Console.WriteLine(kuukausienPaivienLkm[indeksi]); // ensimmäinen alkio
-Console.WriteLine(kuukausienPaivienLkm[indeksi + 3]); // neljäs alkio</code></p>

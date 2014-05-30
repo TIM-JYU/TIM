@@ -1,8 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-36 /// &lt;summary&gt;
-37 /// Aliohjelma piirtää lumiukon
-38 /// annettuun paikkaan.
-39 /// &lt;/summary&gt;
-40 /// &lt;param name="g"&gt;Peliluokka&lt;/param&gt;
-41 /// &lt;param name="x"&gt;Lumiukon alimman pallon x-koordinaatti.&lt;/param&gt;
-42 /// &lt;param name="y"&gt;Lumiukon alimman pallon y-koordinaatti.&lt;/param&gt;</code></p>

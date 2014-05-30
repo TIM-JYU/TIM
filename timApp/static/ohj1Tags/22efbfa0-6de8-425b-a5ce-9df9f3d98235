@@ -1,5 +1,0 @@
-<ul>
-<li><a href="http://msdn.microsoft.com/en-us/library/system.string.tolower.aspx">ToLower()</a>
-    Palauttaa merkkijonon niin, että kaikki kirjaimet on muutettu
-    pieniksi kirjaimiksi.</li>
-</ul>

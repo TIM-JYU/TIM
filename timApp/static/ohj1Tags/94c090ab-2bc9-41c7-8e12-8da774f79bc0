@@ -1,4 +1,0 @@
-<p>Yksinkertainen esimerkki rekursioista voisi olla <em>kertoman</em> laskeminen.
-Muistutuksena viiden kertoma on siis tulo 5*4*3*2*1. Tämä ei
-välttämättä ole paras tapa laskea kertomaa, mutta havainnollistaa
-rekursiota hyvin. Luonnollisesti laitamme mukaan myös ComTest-testit.</p>

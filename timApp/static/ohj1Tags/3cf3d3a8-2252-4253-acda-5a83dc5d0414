@@ -1,3 +1,0 @@
-<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-int laskunTulos = 5 / 4;
-System.Console.WriteLine(laskunTulos); // tulostaa 1</p>

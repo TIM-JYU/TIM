@@ -1,7 +1,0 @@
-<p>public override void Begin()
-{
-    pallo = new PhysicsObject(30.0, 30.0, Shape.Circle);
-    Add(pallo);
-    Mouse.IsCursorVisible = true;
-    Mouse.ListenMovement(0.1, KuunteleLiiketta, null);
-}</p>

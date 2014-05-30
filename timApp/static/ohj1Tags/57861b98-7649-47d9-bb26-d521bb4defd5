@@ -1,5 +1,0 @@
-<p>Ohjelman kääntämisen yhteydessä dokumentaatiotagit voidaan kirjoittaa
-erilliseen <em>XML</em>-tiedostoon, josta ne voidaan edelleen muuntaa helposti
-selattaviksi HTML-sivuiksi. Tageja voi keksiä itsekin lisää, mutta tämän
-kurssin tarpeisiin riittää hyvin suositeltujen tagien luettelo. Tiedot
-suositelluista tageista löytyvät C#:n dokumentaatiosta:</p>

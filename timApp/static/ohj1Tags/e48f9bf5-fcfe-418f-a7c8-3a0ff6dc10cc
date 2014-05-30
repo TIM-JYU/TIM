@@ -1,9 +1,0 @@
-<p>Ensimmäisellä rivillä määritellään <em>luokka</em> (class) jonka nimi on
-HelloWorld. Tässä vaiheessa riittää ajatella luokkaa ”kotina”
-<em>aliohjelmille</em>. Aliohjelmista puhutaan lisää hieman myöhemmin.
-Toisaalta luokkaa voidaan verrata ”piparkakkumuottiin”-se on
-rakennusohje olioiden (eli ”piparkakkujen”) luomista varten. Ohjelman
-ajamisen aikana olioita syntyy luokkaan kirjoitetun koodin avulla.
-Olioita voidaan myös tuhota. Yhdellä luokalla voidaan siis tehdä monta
-samanlaista oliota, aivan kuten yhdellä piparkakkumuotilla voidaan tehdä
-monta samanlaista (samannäköistä) piparia.</p>

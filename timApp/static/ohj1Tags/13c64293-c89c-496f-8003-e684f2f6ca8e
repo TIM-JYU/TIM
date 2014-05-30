@@ -1,7 +1,0 @@
-<p><code>{lang="zxx" xml:lang="zxx"}
-C:\MyTemp&gt;debug kissa.txt
--d
-0D2F:0100  4B 69 73 73 61 20 69 73-74 75 75 0D 0A 70 75 75   Kissa istuu..puu
-0D2F:0110  73 73 61 61 61 6D 65 74-65 72 73 20 34 00 1E 0D   ssaaameters 4...
-...
--q</code></p>

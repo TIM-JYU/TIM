@@ -1,5 +1,0 @@
-<ul>
-<li><a href="http://msdn.microsoft.com/en-us/library/858x0yyx.aspx">Equals(String)</a>
-    Palauttaa tosi jos kaksi merkkijonoa ovat sisällöltään samat
-    merkkikoko huomioon ottaen. Muutoin palauttaa epätosi.</li>
-</ul>

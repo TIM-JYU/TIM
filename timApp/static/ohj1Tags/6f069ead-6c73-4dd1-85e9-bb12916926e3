@@ -1,3 +1,0 @@
-<p>Alkioiden pitäisi nyt tulostua numerojärjestyksessä. Taulukko voitaisiin
-myös järjestää vain osittain antamalla Sort-aliohjelmalle lisäksi
-parametreina aloitusindeksi, sekä järjestettävien alkioiden määrä.</p>

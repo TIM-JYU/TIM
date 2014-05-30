@@ -1,3 +1,0 @@
-<p>laskunTulos = 7 / 3;
-System.Console.WriteLine(laskunTulos); // tulostaa 2
-```</p>

@@ -1,3 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-String henkilo1 = new string(new char[] {'J', 'a', 'n', 'n', 'e'});
-String henkilo2 = "Kalle Korhonen";</code></p>

@@ -1,2 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-csc Lumiukko.cs /reference:Jypeli.dll;"%XNAGSv4%\References\Windows\x86\Microsoft.Xna.Framework.Game.dll" /platform:x86</code></p>

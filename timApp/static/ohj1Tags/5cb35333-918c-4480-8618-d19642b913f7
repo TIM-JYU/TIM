@@ -1,6 +1,0 @@
-<p>Yllä oleva tulostaa ”10” niin kuin pitääkin. Muuttujan luku2 arvo ei
-siis muutu, vaikka asetamme kolmannella rivillä muuttujaan luku1 arvon
-0. Tämä johtuu siitä, että toisella rivillä asetamme muuttujaan luku2
-muuttujan luku1 arvon, emmekä viitettä muuttujaan luku1.
-Oliotietotyyppisten muuttujien kanssa asia on toinen. Vertaa yllä olevaa
-esimerkkiä seuraavaan:</p>

@@ -1,4 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-aliohjelman Game = this;
-aliohjelman x = 200.0;
-aliohjelman y = Level.Bottom + 300;</code></p>

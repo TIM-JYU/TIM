@@ -1,5 +1,0 @@
-<p>C#:n tuottaa siis lähdekoodista suoritettavan (tai ”ajettavan”)
-tiedoston. Tämä tiedosto on käyttöjärjestelmäriippuvainen, ja
-suoritettavissa vain sillä alustalla, johon käännös on tehty. Toisin
-sanoen, Windows-ympäristössä käännetyt ohjelmat eivät ole ajettavissa OS
-X -käyttöjärjestelmässä, ja toisin päin.</p>

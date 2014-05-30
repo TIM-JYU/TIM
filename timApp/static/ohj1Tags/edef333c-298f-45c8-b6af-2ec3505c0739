@@ -1,3 +1,0 @@
-<p>Tämä johtuu siitä, että lauseke ((luku % 2) == 0), on true jos luku on
-parillinen ja muuten false. Saman tien voimme siis palauttaa suoraan
-tuon lausekkeen arvon, ja aliohjelma toimii kuten aiemminkin.</p>

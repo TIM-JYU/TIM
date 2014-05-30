@@ -1,4 +1,0 @@
-<p>private void KuunteleLiiketta(AnalogState hiirenTila)
-{      <br/>
-    pallo.X = Mouse.PositionOnWorld.X;
-    pallo.Y = Mouse.PositionOnWorld.Y;</p>

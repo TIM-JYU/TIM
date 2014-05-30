@@ -1,8 +1,0 @@
-<ul>
-<li><a href="http://msdn.microsoft.com/en-us/library/aka44szs.aspx">Substring(Int32,
-    Int32)</a>
-    Palauttaa osan merkkijonosta parametrinaan saamiensa indeksien
-    välistä. Ensimmäinen parametri on palautettavan merkkijonon
-    ensimmäisen merkin indeksi ja toinen parametri palautettavien
-    merkkien määrä.</li>
-</ul>

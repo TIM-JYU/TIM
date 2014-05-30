@@ -1,3 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-Image olionKuva = LoadImage("kuvanNimi");
-olio.Image = olionKuva;</code></p>

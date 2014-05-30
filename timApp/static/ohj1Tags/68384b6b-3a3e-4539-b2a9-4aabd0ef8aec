@@ -1,7 +1,0 @@
-<p>Muuttujien yhteydessä teimme aliohjelman, joka laski kahden luvun
-keskiarvon. Tällainen aliohjelma ei ole kovin hyödyllinen, sillä jos
-haluaisimme laskea kolmen tai neljän luvun keskiarvon, täytyisi meidän
-tehdä niillä omat aliohjelmat. Sen sijaan jos annamme luvut taulukossa,
-pärjäämme yhdellä aliohjelmalla. Tehdään siis nyt aliohjelma Keskiarvo,
-joka laskee taulukossa olevien kokonaislukujen keskiarvon. Kirjoitetaan
-sille myös ComTest-testit.</p>

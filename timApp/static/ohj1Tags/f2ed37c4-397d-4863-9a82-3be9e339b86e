@@ -1,8 +1,0 @@
-<p>Liukuluvut ovat tarkkoja, jos niillä esitettävä luku on esitettävissä
-mantissan bittien määrän mukaisena kahden potenssien kombinaatioina.
-Esimerkiksi luvut 0.5, 0.25 jne. ovat tarkkoja. Harmittavasti kuitenkin
-edellä todettiin että 10-järjestelmän luku 0.1 ei ole tarkka. Siksi
-esimerkiksi rahalaskuissa on käytettävä joko senttejä tai esimerkiksi
-C#:n Decimal-luokkaa (Javan BigDecimal). Laskuissa kuitenkin nämä
-erikoistyypit ovat hitaampia, tilanteesta riippuen eivät kuitenkaan
-välttämättä merkitsevästi.</p>

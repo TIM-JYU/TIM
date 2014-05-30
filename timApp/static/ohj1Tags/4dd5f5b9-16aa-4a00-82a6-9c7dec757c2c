@@ -1,4 +1,0 @@
-<p>Itse asiassa, koska aliohjelman suoritus päättyy return-lauseeseen,
-voitaisiin else-sana jättää kokonaan pois, sillä else-lauseeseen mennään
-ohjelmassa nyt vain siinä tapauksessa, että if-ehto <em>ei</em> ollut tosi.
-Voisimmekin kirjoittaa aliohjelman hieman lyhyemmin seuraavasti:</p>

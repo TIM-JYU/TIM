@@ -1,2 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-ControllerOne.Listen(Button.DPadLeft, ButtonState.Down, LiikutaPelaajaa, "Liikuta vasemmalle", pelaaja, new Vector(-1000, 0));</code></p>

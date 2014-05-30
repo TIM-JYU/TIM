@@ -1,6 +1,0 @@
-<p>Huomaa, että string (pienellä alkukirjaimella kirjoitettuna) on
-System.String-luokan alias, joten string ja String voidaan samaistaa
-muuttujien tyyppimäärittelyssä, vaikka tarkasti ottaen toinen on alias
-ja toinen luokan nimi. Yksinkertaisuuden vuoksi jatkossa puhutaan
-pääsääntöisesti vain String-tyypistä sillä oletuksella, että
-System-nimiavaruus on otettu käyttöön lauseella using System;</p>

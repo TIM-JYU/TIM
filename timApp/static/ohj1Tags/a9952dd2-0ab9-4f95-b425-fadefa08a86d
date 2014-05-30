@@ -1,6 +1,0 @@
-<p>Kokoelmat ovat olio-ohjelmoinnin taulukoita. Generics-kokoelmaluokat
-(System.Collections.Generics-nimiavaruus) ovat tyyppiturvallisia, toisin
-sanoen kokoelman jäsenten (ja mahdollisen avaimen) tyyppi voidaan
-määritellä. System.Collections.ObjectModel-nimiavaruudessa on geneerisiä
-kantaluokkia omien kokoelmien toteuttamiseen sekä ”wrappereitä” (ns.
-kääreluokkia), joilla voidaan esimerkiksi tehdä read-only-kokoelmia.</p>

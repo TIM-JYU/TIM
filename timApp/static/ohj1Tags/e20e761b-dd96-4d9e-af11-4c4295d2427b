@@ -1,9 +1,0 @@
-<p>StringBuilder yhtalo = new StringBuilder(); // "" (tyhjä)
-yhtalo.Append("f(x): "); // "f(x): "
-yhtalo.Append(a);        // "f(x): 3.5"
-yhtalo.Append(" + ");    // "f(x): 3.5 + "
-yhtalo.Append(b);        // "f(x): 3.5 + 6"
-yhtalo.Append('x');      // "f(x): 3.5 + 6x"
-yhtalo.Append(" = ");    // "f(x): 3.5 + 6x = "
-yhtalo.Append(c);        // "f(x): 3.5 + 6x = 9.5"
-```</p>

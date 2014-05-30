@@ -1,2 +1,0 @@
-<p>Toisin sanoen yllä olevalla rivillä ei luoda uutta PhysicsObject-oliota,
-vaan ainoastaan uusi olioviite, joka viittaa nyt samaan olioon kuin p1.</p>

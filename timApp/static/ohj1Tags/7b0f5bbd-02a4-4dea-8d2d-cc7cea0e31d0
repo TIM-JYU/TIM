@@ -1,7 +1,0 @@
-<ul>
-<li><a href="http://msdn.microsoft.com/en-us/library/fk49wtc1.aspx">Replace(String,
-    String)</a>
-    Korvaa merkkijonon kaikki merkkijonoesiintymät toisella
-    merkkijonolla. Ensimmäisenä parametrina korvattava merkkijono ja
-    toisena korvaaja.</li>
-</ul>

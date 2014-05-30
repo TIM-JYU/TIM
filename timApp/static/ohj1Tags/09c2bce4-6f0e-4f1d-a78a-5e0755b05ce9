@@ -1,6 +1,0 @@
-<p>C#:ssa on tapana aloittaa aliohjelmien ja metodien nimet isolla
-kirjaimella ja nimessä esiintyvä jokainen uusi sana alkamaan isolla
-kirjaimella. Kirjoitustavasta käytetään termiä PascalCasing. Muuttujat
-kirjoitetaan pienellä alkukirjaimella, ja jokainen seuraava sana isolla
-alkukirjaimella: esimerkiksi double autonNopeus. Tästä käytetään nimeä
-camelCasing. Lisää C#:n nimeämiskäytännöistä voit lukea sivulta</p>

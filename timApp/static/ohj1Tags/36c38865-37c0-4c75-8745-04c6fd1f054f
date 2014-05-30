@@ -1,9 +1,0 @@
-<p>Kohta
-<a href="http://msdn.microsoft.com/en-us/library/system.string_methods.aspx">Methods</a>
-(<a href="http://msdn.microsoft.com/en-us/library/system.string_methods.aspx">http://msdn.microsoft.com/en-us/library/system.string_methods.aspx</a>)
-sisältää tiedot kaikista luokan metodeista. Jokaisella metodilla on
-taulukossa oma rivi, ja rivillä lyhyt kuvaus, mitä metodi tekee.
-Klikattuasi jotain metodia saat siitä tarkemmat tiedot. Tällä sivulla
-kerrotaan mm. minkä tyyppisen parametrin metodi ottaa, ja minkä
-tyyppisen arvon metodi palauttaa. Esimerkiksi String-luokassa
-käyttämämme ToUpper-metodi, joka siis palauttaa String-tyyppisen arvon.</p>

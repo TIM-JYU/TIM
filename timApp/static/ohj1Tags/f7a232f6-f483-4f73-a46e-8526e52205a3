@@ -1,9 +1,0 @@
-<p>Huomataan, että ensimmäisen ja toisen lumiukon piirtäminen tapahtuu
-lähes samanlaisilla koodinpätkillä. Itse asiassa ainoa ero on, että
-jälkimmäisen lumiukon pallot saavat ensimmäisestä lumiukosta eroavat
-koordinaatit. Toisaalta voisimme kirjoittaa koodin myös niin, että
-lumiukon alimman pallon keskipiste tallennetaan <em>muuttujiin</em> x ja y.
-Näiden pisteiden avulla voimme sitten laskea muiden pallojen paikat.
-Määritellään heti alussa myös p1, p2 ja p3 PhysicsObject-olioiksi.
-Rivinumerointi on tässä jätetty pois selvyyden vuoksi. Luvun lopussa
-korjattu ohjelma esitellään kokonaisuudessaan rivinumeroinnin kanssa.</p>

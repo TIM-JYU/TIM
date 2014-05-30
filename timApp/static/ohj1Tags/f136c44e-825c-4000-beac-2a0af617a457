@@ -1,2 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-List&lt;int&gt; luvut = new List&lt;int&gt;() { 3, 3, 1, 7, 3, 5, 7 };</code></p>

@@ -1,4 +1,0 @@
-<p>Silmukan runko-osassa ei suinkaan aina tarvitse tulostaa mitään. Otetaan
-esimerkki, missä luodun taulukon alkioihin sijoitetaan aina kahden
-edellisen alkion sisältämien lukujen summa. Ensimmäisiksi alkioden
-arvoksi asetetaan ”manuaalisesti” luku 1.</p>

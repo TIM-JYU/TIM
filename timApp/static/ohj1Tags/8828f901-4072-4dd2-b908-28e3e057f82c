@@ -1,4 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-double keskiarvo;
-keskiarvo = Keskiarvo(3, 4);
-Console.WriteLine("Keskiarvo = " + keskiarvo);</code></p>

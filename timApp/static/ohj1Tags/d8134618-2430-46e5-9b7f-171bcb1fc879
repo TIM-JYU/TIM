@@ -1,6 +1,0 @@
-<p>Aliohjelma SierpinskinKolmio on staattinen, sillä sen suorittamiseksi
-riittää parametrina tulevat tiedot. Se on myös void-tyyppinen, koska
-emme odota sen palauttavan mitään. Aliohjelma saa neljä parametria:
-piirtoalusta, johon kolmio piirretään, kolmion alimman pisteen x- ja
-y-koordinaatit, sekä kolmion korkeuden. Nämä parametrit riittävät
-tasasivuisen kolmion piirtämiseen Canvas-olion avulla.</p>

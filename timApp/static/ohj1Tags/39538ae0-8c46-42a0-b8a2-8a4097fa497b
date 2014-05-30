@@ -1,3 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-HelloWorld.cs(5,17): error CS0117: 'System.Console' does not contain a
-        definition for 'Writeline'</code></p>

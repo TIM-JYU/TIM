@@ -1,3 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-String lause = "Pekka meni kauppaan";
-Console.WriteLine(lause.Contains("eni")); // Tulostaa True</code></p>

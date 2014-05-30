@@ -1,5 +1,0 @@
-<p>Tässä funktiolla oli sivuvaikutus, eli se muutti parametrina vietyä
-taulukkoa. Jos haluttaisiin alkuperäisen taulukon säilyvän, pitäisi
-funktion alussa luoda uusi taulukko tulosta varten, sijoittaa arvot
-käänteisessä järjestyksessä ja lopuksi <em>palauttaa</em> viite uuteen
-taulukkoon.</p>

@@ -1,5 +1,0 @@
-<p>C#:ssa yhteen muuttujaan voi tallentaa vain yhtä tyyppiä. Tämän takia
-meidän täytyy joskus muuttaa esimerkiksi String-tyyppinen muuttuja
-int-tyyppiseksi tai double-tyyppinen muuttuja int-tyyppiseksi ja niin
-edelleen. Kun muuttujan tyyppi vaihdetaan toiseksi, sanotaan sitä
-tyyppimuunnokseksi (cast, taitype cast).</p>

@@ -1,4 +1,0 @@
-<p><code>{.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
-String henkilo = "Ville Virtanen";
-String etunimi = henkilo.Substring(0, 5); 
-Console.WriteLine(etunimi); // Ville</code></p>

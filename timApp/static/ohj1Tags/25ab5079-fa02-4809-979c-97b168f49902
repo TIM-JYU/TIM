@@ -1,4 +1,0 @@
-<p>Muuttujien lisäksi ohjelmointikielissä voidaan määritellä vakioita
-(constant). Vakioiden arvoa ei voi muuttaa määrittelyn jälkeen. C#:ssa
-vakio määritellään muuten kuten muuttuja, mutta muuttujan tyypin eteen
-kirjoitetaan lisämääre const.</p>

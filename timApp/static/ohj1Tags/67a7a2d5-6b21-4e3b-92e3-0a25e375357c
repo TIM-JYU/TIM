@@ -1,4 +1,0 @@
-<p>p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-p2.X = x;
-p2.Y = y + 100 + 50;
-Add(p2);</p>

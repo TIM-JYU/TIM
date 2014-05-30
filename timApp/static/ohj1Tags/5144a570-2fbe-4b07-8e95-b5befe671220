@@ -1,4 +1,0 @@
-<p>Voimme nyt kokeilla ajaa ohjelmaamme. Se toimii (lähtee käyntiin), mutta
-ei tietenkään vielä piirrä lumiukkoja, eikä pitäisikään, sillä luomamme
-aliohjelma on ”tyhjä”. Lisätään aaltosulkujen väliin varsinainen koodi,
-joka pallojen piirtämiseen tarvitaan.</p>

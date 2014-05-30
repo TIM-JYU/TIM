@@ -1,2 +1,0 @@
-<p>laskunTulos = 5 / 6;
-System.Console.WriteLine(laskunTulos); // tulostaa 0</p>

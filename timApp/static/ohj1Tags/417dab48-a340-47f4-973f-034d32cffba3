@@ -1,3 +1,0 @@
-<p>Niinpä äskeisen koodin virhe voidaan korjata kertomalla muuttujan massa
-tyyppi (tyyppi on double) siinä missä tuo muuttuja ensimmäisen kerran
-otetaan käyttöön:</p>

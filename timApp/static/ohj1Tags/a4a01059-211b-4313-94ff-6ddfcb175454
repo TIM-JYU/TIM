@@ -1,9 +1,0 @@
-<p>Tarkemmin sanottuna luomme uuden PhysicsObject-<em>olion</em> eli
-PhysicsObject-luokan <em>ilmentymän</em>, jonka nimeksi annamme p1.
-PhysicsObject-oliot ovat pelialueella liikkuvia olioita, jotka
-noudattavat fysiikan lakeja. Sulkujen sisään laitamme tiedon siitä,
-millaisen objektin haluamme luoda - tässä tapauksessa leveys ja korkeus
-(Jypeli-mitoissa, ei pikseleissä), sekä olion muoto. Teemme siis
-ympyrän, jonka säde on 100 (leveys 2 * 100 ja korkeus 2 * 100). Muita
-Shape-kokoelmasta löytyviä muotoja ovat muiden muassa kolmio, neliö,
-sydän jne. Olioista puhutaan lisää luvussa 8.</p>

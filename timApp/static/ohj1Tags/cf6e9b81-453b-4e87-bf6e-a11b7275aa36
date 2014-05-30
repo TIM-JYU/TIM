@@ -1,4 +1,0 @@
-<p>break-lauseen voi siis turvallisesti jättää pois case-osasta, <em>jos</em>
-case-osassa palautetaan joku arvo return-lauseella (tai kyseinen
-case-osa ei sisällä yhtään lausetta). Muulloin break-lauseen
-poisjättäminen johtaa virheeseen.</p>

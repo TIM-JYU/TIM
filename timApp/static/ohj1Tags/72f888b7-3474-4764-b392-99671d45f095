@@ -1,3 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-ControllerOne.ListenAnalog(AnalogControl.LeftStick, 0.1, 
-                           LiikutaPelaajaa, "Liikuta pelaajaa tattia pyörittämällä.");</code></p>

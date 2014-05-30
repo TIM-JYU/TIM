@@ -1,4 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-Vector p1 = new Vector(x, y);
-Vector p2 = new Vector(x - s2, y + h);
-Vector p3 = new Vector(x + s2, y + h);</code></p>

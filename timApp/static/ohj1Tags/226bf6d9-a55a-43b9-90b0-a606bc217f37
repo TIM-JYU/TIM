@@ -1,5 +1,0 @@
-<p>Yllä olevalla kutsulla aliohjelman peli-nimiseen muuttujaan sijoitetaan
-this, eli kyseessä oleva peli, x-nimiseen muuttujaan sijoitetaan arvo 0
-(liukulukuun voi sijoittaa kokonaislukuarvon) ja aliohjelman muuttujaan
-y arvo Level.Bottom + 200.0. Voisimme sijoittaa tietenkin minkä tahansa
-muunkin liukuluvun.</p>

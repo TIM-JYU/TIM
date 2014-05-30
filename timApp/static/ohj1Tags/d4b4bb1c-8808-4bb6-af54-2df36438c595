@@ -1,6 +1,0 @@
-<p>Rekursiolla tarkoitetaan algoritmia joka tarvitsee itseään
-ratkaistakseen ongelman. Ohjelmoinnissa esimerkiksi aliohjelmaa, joka
-kutsuu itseään, sanotaan rekursiiviseksi. Rekursiolla voidaan ratkaista
-näppärästi ja pienemmällä määrällä koodia monia ongelmia, joiden
-ratkaiseminen olisi muuten (esim. silmukoilla) melko työlästä.
-Rakenteeltaan rekursiivinen algoritmi muistuttaa jotain seuraavaa.</p>

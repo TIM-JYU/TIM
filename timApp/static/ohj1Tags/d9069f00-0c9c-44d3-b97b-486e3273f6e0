@@ -1,4 +1,0 @@
-<p>finally-lohkon käyttäminen ei ole pakollista, mutta kun sitä käytetään,
-kirjoitetaan se catch-lohkojen jälkeen. Mikäli finally-lohko
-kirjoitetaan mukaan, suoritetaan se joka tapauksessa riippumatta siitä
-aiheuttiko try-lohko poikkeuksia.</p>

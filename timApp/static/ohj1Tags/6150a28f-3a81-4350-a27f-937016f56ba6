@@ -1,6 +1,0 @@
-<p>Kirjoita aliohjelmaan dokumentaatiokommentit ja kommentoi aliohjelma.
-Siirry dokumentaatiokommentin alaosaan, laita yksi tyhjä rivi (ilman
-kauttaviivoja) ja kirjoita ”comt” ja painaa Tab+Tab (kaksi kertaa
-sarkan-näppäintä). Tällöin Visual Studio luo valmiiksi paikan, johon
-testit kirjoitetaan. Dokumentaatiokommentteihin pitäisi ilmestyä
-seuraavat rivi.</p>

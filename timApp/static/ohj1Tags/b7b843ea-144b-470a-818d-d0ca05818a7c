@@ -1,7 +1,0 @@
-<p>Jos vastauksen merkitsevin bitti (vasemman puoleisin) on 1, on vastaus
-negatiivinen ja 2-komplementtimuodossa. Tällöin vastauksen
-tulkitsemiseksi sille suoritetaan muunnos edellä esitetyllä tavalla
-(ensin käännetään bitit, sitten lisätään 1). Muunnoksen tuloksena
-saadaan luvun itseisarvo, itse luku on siis tällöin aina negatiivinen.
-Jos merkitsevin bitti on 0, on vastaus positiivinen, eikä mitään
-muunnosta tarvitse suorittaa.</p>

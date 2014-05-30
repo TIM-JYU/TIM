@@ -1,6 +1,0 @@
-<p>Esimerkissä koordinaattien laskemiseen on käytetty C#:n <em>aritmeettisia
-operaatioita</em>. Voisimme tietenkin laskea koordinaattien pisteet myös
-itse, mutta miksi tehdä niin jos tietokone voi laskea pisteet
-puolestamme? C#:n aritmeettiset perusoperaatiot ovat summa (+),
-vähennys (-), kerto (*), jako (/) ja jakojäännös (%). Aritmeettisista
-operaatioista puhutaan lisää muuttujien yhteydessä kohdassa 7.7.1.</p>

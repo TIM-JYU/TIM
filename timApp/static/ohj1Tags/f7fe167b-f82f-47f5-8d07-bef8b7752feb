@@ -1,7 +1,0 @@
-<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
-muuttujien alustukset;
-while (ehto) 
-{
-  lauseet; // silmukan runko-osa
-  silmukan lopussa tehtävät toimenpiteet;
-}</code></p>
