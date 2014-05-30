@@ -1,0 +1,4 @@
+<p><strong>Aliohjelma</strong>\
+ Osaohjelma, joka voi tehdä kaikki toimensa käyttäen hyväkseen vain
+parametrilistassa tuotua tietoa. Paluuarvon tyyppinä on void, jolloin
+aliohjelma ei palauta mitään arvoa.</p>

@@ -1,0 +1,6 @@
+<p>Aliohjelmalle on annettu myös palautusarvoksi void, joka tarkoittaa
+sitä, että aliohjelma ei palauta mitään arvoa. Aliohjelma voisi
+nimittäin myös lopettaessaan palauttaa jonkun arvon, jota tarvitsisimme
+ohjelmassamme. Tällaisista aliohjelmista puhutaan luvussa 9.
+void-määrityksen jälkeen aliohjelmalle on annettu nimeksi
+PiirraLumiukko.</p>

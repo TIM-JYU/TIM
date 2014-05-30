@@ -1,0 +1,3 @@
+<p>Monissa ohjelmointikielissä, kuten myös Javassa, ASCII-merkkien
+desimaaliarvoja voidaan sijoittaa suoraan char-tyyppisiin muuttujiin.
+Esimerkiksi pikku-a:n (a) voisi sijoittaa muuttujaan c seuraavasti:</p>

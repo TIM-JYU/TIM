@@ -1,0 +1,7 @@
+<p>Yllä olevassa ohjelmassa muodostetaan ikuinen silmukka asettamalla
+while-silmukan ehdoksi true. Tällöin ohjelman suoritus jatkuisi
+loputtomiin ilman break-lausetta. Nyt break-lause suoritetaan, kun
+laskuri saa arvon 10. Tämä rakennehan on täysin järjetön, sillä
+if-lauseen ehdon voisi asettaa käänteisenä while-lauseen ehdoksi ja
+ohjelma toimisi täysin samanlailla. Useimmiten break-lauseen käytön
+voikin välttää.</p>

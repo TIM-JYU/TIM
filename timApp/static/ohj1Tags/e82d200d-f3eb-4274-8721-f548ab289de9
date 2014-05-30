@@ -1,0 +1,6 @@
+<p>Tällä silmukalla sen sijaan katsotaan mihin arvosanaan opiskelijan
+tenttipisteet riittävät. Arvosanoja aletaan käydä läpi lopusta alkuun
+päin. Tämän takia muuttujan i arvo asetetaan aluksi arvoon 5 ja joka
+kierroksella sitä pienennetään yhdellä. Kun oikea arvosana on löytynyt,
+palautetaan tenttiarvosana (eli taulukon indeksi) välittömästi, ettei
+käydä taulukon alkioita turhaan läpi.</p>

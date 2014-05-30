@@ -1,0 +1,4 @@
+<p><em>Lause</em> (statement) ja <em>lauseke</em> (expression) ovat eri asia. Lauseke on
+arvojen, aritmeettisten operaatioiden ja aliohjelmien (tai metodien
+yhdistelmä), joka evaluoituu tietyksi arvoksi. Lauseke on siis lauseen
+osa. Seuraava kuva selventää eroa.</p>

@@ -1,0 +1,3 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+Tietotyyppi[] taulukonNimi;
+taulukonNimi = new Tietotyyppi[taulukonKoko];</code></p>

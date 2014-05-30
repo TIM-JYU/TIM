@@ -1,0 +1,7 @@
+<p>Edellä esitetyn kahvinkeitto-ongelman ratkaisu esitettiin jakamalla
+ratkaisu viiteen osavaiheeseen. Ratkaisun algoritmi sisältää viisi
+toteutettavaa lausetta. Kun näitä viittä lausetta tarkastellaan
+lähemmin, osoittautuu, että niistä kukin on edelleen jaettavissa
+osavaiheisiin, eli ratkaisun pääalgoritmi voidaan jakaa edelleen
+alialgoritmeiksi, joissa askel askeleelta esitetään, kuinka kukin
+osatehtävä ratkaistaan.</p>

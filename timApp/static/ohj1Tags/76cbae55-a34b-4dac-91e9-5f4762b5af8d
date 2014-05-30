@@ -1,0 +1,6 @@
+<p>Oletetaan, että suunnittelisimme yritykselle palkanmaksujärjestelmää.
+Siihen tarvittaisiin muun muassa Tyontekija-luokka. Tyontekija-luokalla
+täytyisi olla ainakin seuraavat attribuutit: nimi, tehtava, osasto,
+palkka. Luokalla täytyisi olla myös ainakin seuraavat metodit:
+MaksaPalkka, MuutaTehtava, MuutaOsasto, MuutaPalkka. Jokainen työntekijä
+olisi nyt omanlaisensa Tyontekija-luokan ilmentymä eli olio.</p>

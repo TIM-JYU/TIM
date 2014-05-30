@@ -1,0 +1,7 @@
+<p>\
+ Dokumentaatiossa näkyy kaikki luokan aliohjelmat ja metodit. Huomaa,
+että Doxygen nimittää sekä aliohjelmia että metodeja jäsenfunktioiksi
+(member functions). Kuten sanottu, nimitykset vaihtelevat
+kirjallisuudessa, ja tässä kohtaa käytössä on hieman harvinaisempi
+nimeämistapa. Kysymys on kuitenkin samasta asiasta, josta me tällä
+kurssilla käytämme nimeä aliohjelmat ja metodit.</p>

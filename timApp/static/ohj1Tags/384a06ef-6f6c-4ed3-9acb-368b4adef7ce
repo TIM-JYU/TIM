@@ -1,0 +1,26 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// &lt;summary&gt;
+/// Yhdistää kahden annetun ei-negatiivisen 
+/// luvun numerot toisiinsa.
+/// &lt;/summary&gt;
+/// &lt;param name="a"&gt;Ensimmäinen luku&lt;/param&gt;
+/// &lt;param name="b"&gt;Toinen luku&lt;/param&gt;
+/// &lt;returns&gt;Yhdistetty luku&lt;/returns&gt;
+/// &lt;example&gt;
+/// &lt;pre name="test"&gt;
+/// Laskuja.Yhdista(0, 0) === 0;
+/// Laskuja.Yhdista(1, 0) === 10;
+/// Laskuja.Yhdista(0, 1) === 1;
+/// Laskuja.Yhdista(1, 1) === 11;
+/// Laskuja.Yhdista(13, 2) === 132;
+/// Laskuja.Yhdista(10, 0) === 100;
+/// Laskuja.Yhdista(10, 87) === 1087;
+/// Laskuja.Yhdista(10, 07) === 107;
+/// &lt;/pre&gt;
+/// &lt;/example&gt;
+public static int Yhdista(int a, int b)
+{
+    String ab = a.ToString() + b; // Ei tehokkain toteutus, mutta yksinkertainen.
+    int tulos = int.Parse(ab);    // Testien ansiosta toteutusta voidaan vaihtaa
+    return tulos;                 // ja silti varmistaa että saadaan sama tulos. 
+}</code></p>

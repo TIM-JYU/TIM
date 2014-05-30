@@ -1,0 +1,3 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+if (1 &lt;= luku)
+  if (luku &lt;= 99) Console.WriteLine("Luku on välillä 1-99");</code></p>

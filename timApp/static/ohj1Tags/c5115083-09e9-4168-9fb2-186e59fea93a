@@ -1,0 +1,71 @@
+<pre><code>    arvosanaRajat[1] = lapaisyraja;
+
+    // Asetetaan taulukkoon jokaisen arvosanan raja
+    for (int i = 2; i &lt;= 5; i++)
+        arvosanaRajat[i] = arvosanaRajat[i - 1] + arvosanojenPisteErot;
+    return arvosanaRajat;
+}
+
+/// &lt;summary&gt;
+/// Muuttaa annetun taulukon merkkijonoksi.
+/// Erotinmerkkinä toimii pilkku + välilyönti (", ").
+/// &lt;/summary&gt;
+/// &lt;param name="taulukko"&gt;Jonoksi muutettava taulukko.&lt;/param&gt;
+/// &lt;returns&gt;Taulukko merkkijonona.&lt;/returns&gt;
+/// &lt;example&gt;
+/// &lt;pre name="test"&gt;
+/// double[] taulukko1 = new double[] {15.4, 20, 1.0, 5.9, -2.4};
+/// Arvosanat.TaulukkoJonoksi(taulukko1) === "15.4, 20, 1, 5.9, -2.4";
+/// &lt;/pre&gt;
+/// &lt;/example&gt;
+public static String TaulukkoJonoksi(double[] taulukko)
+{
+    String erotin = "";
+    StringBuilder jono = new StringBuilder();
+    foreach (double luku in taulukko)
+    {
+        jono.Append(erotin);
+        jono.Append(luku.ToString(CultureInfo.InvariantCulture));
+        erotin = ", ";
+    }
+    return jono.ToString();
+}
+
+/// &lt;summary&gt;
+/// Laskee opiskelijan tenttiarvosanan asteikoilla 0-5.
+/// &lt;/summary&gt;
+/// &lt;param name="pisterajat"&gt;Arvosanojen rajat taulukossa. 
+/// Arvosanan 1 raja taulukon indeksissä 1 jne. &lt;/param&gt;
+/// &lt;param name="tenttiPisteet"&gt;Saadut tenttipisteet.&lt;/param&gt;
+/// &lt;returns&gt;Tenttiarvosana välillä [0..5].&lt;/returns&gt;
+/// &lt;example&gt;
+/// &lt;pre name="test"&gt;
+/// double[] rajat = {0, 12, 14, 16, 18, 20};
+/// Arvosanat.LaskeArvosana(rajat, 11) === 0;
+/// Arvosanat.LaskeArvosana(rajat, 12) === 1;
+/// Arvosanat.LaskeArvosana(rajat, 14) === 2;
+/// Arvosanat.LaskeArvosana(rajat, 22) === 5;
+/// Arvosanat.LaskeArvosana(rajat, 28) === 5;
+/// &lt;/pre&gt;
+/// &lt;/example&gt;
+public static int LaskeArvosana(double[] pisterajat, int tenttiPisteet)
+{
+    for (int i = pisterajat.Length - 1; 1 &lt;= i; i--)
+    {
+        if (pisterajat[i] &lt;= tenttiPisteet) return i;
+    }
+    return 0;
+}
+
+/// &lt;summary&gt;
+/// Pääohjelmassa pari esimerkkiä.
+/// &lt;/summary&gt;
+public static void Main()
+{
+    double[] pisterajat = LaskeRajat(24, 12);
+    Console.WriteLine(LaskeArvosana(pisterajat, 12)); // tulostaa 1
+    Console.WriteLine(LaskeArvosana(pisterajat, 20)); // tulostaa 4
+    Console.WriteLine(LaskeArvosana(pisterajat, 11)); // tulostaa 0
+    Console.ReadKey();
+}
+</code></pre>

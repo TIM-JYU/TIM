@@ -1,0 +1,6 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+PhysicsObject LuoPallo()
+{
+    PhysicsObject pallo = new PhysicsObject(50.0, 50.0, Shape.Circle);
+    return pallo;
+}</code></p>

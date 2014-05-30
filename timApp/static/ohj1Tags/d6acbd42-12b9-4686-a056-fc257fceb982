@@ -1,0 +1,5 @@
+<p>Tällä tavalla jokaiselle riville tulee yhtä monta saraketta eli alkiota.
+Jos eri riveille halutaan eri määrä alkioita, voidaan käyttää niin
+sanottuja jagged array -taulukkoja. Lue lisää jagged arrayn
+MSDN-dokumentaatiosta osoitteesta
+<a href="http://msdn.microsoft.com/en-us/library/2s05feca(v=vs.80).aspx">http://msdn.microsoft.com/en-us/library/2s05feca(v=vs.80).aspx</a>.</p>

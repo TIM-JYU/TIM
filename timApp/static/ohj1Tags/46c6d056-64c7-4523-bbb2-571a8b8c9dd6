@@ -1,0 +1,7 @@
+<p>Silloin tällöin ohjelmoinnissa tarvitsisimme rakennetta, jossa silmukan
+sisäosa on jaettu kahteen osaan. Ensimmäinen osa suoritetaan vaikka ehto
+ei enää olisikaan voimassa, mutta jälkimmäinen osa jätetään
+suorittamatta. Tällaista rakennetta ei C#-kielestä löydy valmiina.
+Tämän rakenteen voi kuitenkin tehdä itse, jolloin on perusteltua käyttää
+hallittua ikuista silmukkaa, joka lopetetaan break-lauseella. Rakenne
+voisi olla suunnilleen seuraavanlainen:</p>

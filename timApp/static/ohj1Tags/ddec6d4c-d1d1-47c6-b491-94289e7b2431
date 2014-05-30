@@ -1,0 +1,15 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+int luku = 3;
+switch (luku)
+{
+    case 0:
+    case 1:
+        Console.WriteLine("Luku on 0 tai 1");
+        break;
+    case 2:
+        Console.WriteLine("Luku on 2");
+        break;
+    default:
+        Console.WriteLine("Oletustapaus");
+        break;
+}</code></p>

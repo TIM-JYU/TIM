@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+string[] luetutRivit = File.ReadAllLines(POLKU);</code></p>

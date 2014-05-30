@@ -1,0 +1,22 @@
+<p>/// @author  Antti-Jussi Lakanen
+/// @version 22.8.2012
+///
+/// <summary>
+/// Moniulotteiset taulukot käytännössä.
+/// </summary>
+public class Laivanupotus
+{
+  /// <summary>
+  /// Taulukon alustus ja tulostus.
+  /// </summary>
+  public static void Main()
+  {
+    int[,] ruudut = { { 1, 0, 2 }, { 0, 0, 3 } };
+    Console.WriteLine(ruudut[0, 0] + " " + ruudut[0, 1] + " " + ruudut[0, 2]);
+    Console.WriteLine(ruudut[1, 0] + " " + ruudut[1, 1] + " " + ruudut[1, 2]);
+    // Tulostaa:
+    // 1 0 2
+    // 0 0 3
+  } 
+}
+```</p>

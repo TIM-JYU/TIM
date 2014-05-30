@@ -1,0 +1,4 @@
+<p>Ehkäpä ohjelmasi ei onnistu lisäämään oikeaa tietoa tietokantaan, koska
+tarvittava kenttä puuttuu, tai lisää väärän tiedon jossain olosuhteissa.
+Tällaiset virheet, jossa sovelluksen logiikka on jollain tavalla
+pielessä, ovat semanttisia virheitä tai loogisia virheitä.</p>

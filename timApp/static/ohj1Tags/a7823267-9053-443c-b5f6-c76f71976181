@@ -1,0 +1,3 @@
+<p>Itse asiassa oliomuuttuja on C#:ssa ainoastaan <em>viite</em> varsinaiseen
+olioon. Siksi niitä kutsutaankin usein myös <em>viitemuuttujiksi.</em>
+Viitemuuttujat eroavat oleellisesti alkeistietotyyppisistä muuttujista.</p>

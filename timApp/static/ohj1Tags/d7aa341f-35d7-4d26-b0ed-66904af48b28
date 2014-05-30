@@ -1,0 +1,3 @@
+<p>C#:ssa muuttujan nimi voi sisältää ääkkösiä, mutta niiden käyttö ei
+suositella, koska siirtyminen koodistosta toiseen aiheuttaa usein
+ylimääräisiä ongelmia.</p>

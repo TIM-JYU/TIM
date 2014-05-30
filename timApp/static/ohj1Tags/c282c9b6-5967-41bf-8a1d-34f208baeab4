@@ -1,0 +1,4 @@
+<p>foreach (int alkio in taulukko) 
+{
+   Console.WriteLine(alkio);
+}</p>

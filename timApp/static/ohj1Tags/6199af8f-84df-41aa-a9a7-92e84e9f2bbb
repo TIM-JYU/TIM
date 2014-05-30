@@ -1,0 +1,12 @@
+<p>public class HelloWorld 
+{
+  /// <summary>
+  /// Pääohjelma, joka hoitaa varsinaisen tulostamisen.
+  /// </summary>
+  /// <param name="args"></param>Ei käytössä
+  public static void Main(string[] args) 
+  { // Suoritus alkaa siis tästä, ohjelman "entry point"
+    System.Console.WriteLine("Hello World!"); // Tämä lause tulostaa ruudulle
+  } // Ohjelman suoritus päättyy tähän
+}
+```</p>

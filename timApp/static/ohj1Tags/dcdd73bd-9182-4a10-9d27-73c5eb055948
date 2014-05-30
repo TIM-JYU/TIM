@@ -1,0 +1,6 @@
+<p>Visual Studio pyrkii muotoilemaan koodia "kauniiksi" kirjoittamisen
+yhteydessä. Käyttäjä voi kuitenkin tarkoituksellisesti tai vahingossa
+rikkoa VS:n sisäisiä muotoilusäännöksiä. Tällöin koodi voidaan palauttaa
+vastaamaan säännöksiä painamalla Edit → Advanced → Format Document tai
+näppäinyhdistelmällä Ctrl+E, D (pidä Ctrl pohjassa, klikkaa ensin E ja
+sitten D).</p>

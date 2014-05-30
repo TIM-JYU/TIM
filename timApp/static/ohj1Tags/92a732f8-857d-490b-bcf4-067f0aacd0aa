@@ -1,0 +1,14 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+public class DeMorgansLaws
+{
+    /// &lt;summary&gt;
+    /// Testiohjelma DeMorganin laeille
+    /// &lt;/summary&gt;
+    public static void Main()
+    {
+        bool p = true;
+        bool q = true;
+        Console.WriteLine(!(p || q) == (!p &amp;&amp; !q));
+        Console.WriteLine(!(p &amp;&amp; q) == (!p || !q));
+    }
+}</code></p>

@@ -1,0 +1,5 @@
+<p>Tässä tarvitaan hiiren tilan lisäksi pelioliossa esitellyn pallon
+tietoja, joten enää ei ole kyse stattisesta aliohjelmasta ja siksi
+static-sana jätetään pois. Metodi sen sijaan pystyy käyttämään <em>olion</em>
+omia "ominaisuuksia", attribuutteja, metodeja ja ns. ominaisuus-kenttiä
+(property fields).</p>

@@ -1,0 +1,3 @@
+<p>IEE 754-standardissa luvun etumerkki (s) ilmoitetaan bittimuodossa
+ensimmäisellä bitillä, jolloin s voi saada joko arvon 0, joka tarkoittaa
+positiivista lukua tai arvon 1, joka tarkoittaa siis negatiivista lukua.</p>

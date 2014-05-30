@@ -1,0 +1,4 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+double tulos = Keskiarvo(5, 2); // funktio Keskiarvo laskisi kahden luvun keskiarvon
+Console.WriteLine(tulos); //tulostaa 3.5
+Console.WriteLine(tulos); //tulostaa 3.5</code></p>

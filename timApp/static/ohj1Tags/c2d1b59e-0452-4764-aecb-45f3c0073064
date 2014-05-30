@@ -1,0 +1,6 @@
+<p>IntelliSense auttaa myös kirjoittamaan nopeammin ja erityisesti
+ehkäisemään kirjoitusvirheiden syntymistä. Jos ei ole konekirjoituksen
+Kimi Räikkönen, voi koodia kirjoittaessa helpottaa elämää painamalla
+Ctrl+Space. Tällöin VS yrittää arvata (perustuen kirjoittamaasi tekstiin
+sekä aiemmin kirjoittamaasi koodiin), mitä haluat kirjoittaa. Jos
+mahdollisia vaihtoehtoja on monta, näyttää VS vaihtoehdot listana.</p>

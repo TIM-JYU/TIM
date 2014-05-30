@@ -1,0 +1,4 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+int[] taulukko = {1, 2, 3, 4, 5};
+// Clone-metodi luo identtisen kopion taulukosta
+int[] kopio_taulukosta = (int[])taulukko.Clone();</code></p>

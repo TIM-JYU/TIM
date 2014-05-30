@@ -1,0 +1,7 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+while (true) 
+{ //ikuinen silmukka
+   Silmukan ensimmäinen osa //suoritetaan, vaikka ehto ei pädekkään
+   if (ehto) break;
+   Silmukan toinen osa //ei suoriteta enää, kun ehto ei ole voimassa
+}</code></p>

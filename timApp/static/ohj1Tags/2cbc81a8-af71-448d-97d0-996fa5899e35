@@ -1,0 +1,8 @@
+<p>C#-ohjelmat koostuvat luokista. Luokat taas sisältävät metodeja (ja
+aliohjelmia), jotka suorittavat tehtäviä ja mahdollisesti palauttavat
+arvoja suoritettuaan näitä tehtäviä. Metodi voisi esimerkiksi laskea
+kahden luvun summan ja palauttaa tuloksen tai piirtää ohjelmoijan
+haluaman kokoisen ympyrän. Samaan asiaan liittyviä metodeja kootaan
+luokkaan ja luokkia kootaan edelleen kirjastoiksi. Idea kirjastoissa on,
+ettei kannata tehdä uudelleen sitä minkä joku on jo tehnyt. Toisin
+sanoen, pyörää ei kannata keksiä uudelleen.</p>

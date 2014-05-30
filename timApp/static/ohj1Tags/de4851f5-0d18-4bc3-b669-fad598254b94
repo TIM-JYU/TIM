@@ -1,0 +1,7 @@
+<p>Tässä luvussa tutustumme tarkemmin merkkijonoihin. Merkkijonot voidaan
+jakaa <em>muuttumattomiin</em> ja <em>muokattaviin</em>. C#:n muuttumaton merkkijono
+on tyypiltään String, johon olemmekin jo hieman tutustuneet olioiden
+yhteydessä. Muuttumatonta merkkijonoa ei voi muuttaa luomisen jälkeen.
+Muokattavan merkkijonon, StringBuilder-olion, käsittely on joissakin
+tilanteessa mielekkäämpää. Vaikka String-olioita ei voikaan muuttaa,
+pärjäämme sillä monissa tilanteissa.</p>

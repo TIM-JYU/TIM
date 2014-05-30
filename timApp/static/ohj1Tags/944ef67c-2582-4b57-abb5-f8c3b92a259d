@@ -1,0 +1,4 @@
+<p>p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+  p2.X = x;
+  p2.Y = p1.Y + 100 + 50;
+  peli.Add(p2);</p>

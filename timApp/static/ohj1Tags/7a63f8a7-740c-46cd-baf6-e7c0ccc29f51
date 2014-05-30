@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+Console.WriteLine(luvut.Count); // Tulostaa 7</code></p>

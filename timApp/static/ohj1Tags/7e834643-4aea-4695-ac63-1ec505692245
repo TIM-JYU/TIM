@@ -1,0 +1,10 @@
+<p>/// <summary>
+/// Pääohjelma
+/// </summary>
+public static void Main()
+{
+    long k = Kertoma(5);
+    Console.WriteLine(k);
+    Console.ReadLine();
+}
+```</p>

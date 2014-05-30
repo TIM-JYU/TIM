@@ -1,0 +1,7 @@
+<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+public static String KirjallinenArvosana(int numero) 
+{
+   switch(numero) 
+   {
+      case 0:
+         return "Hylätty";</p>

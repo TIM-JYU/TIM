@@ -1,0 +1,6 @@
+<p>while-silmukkaa tulisi käyttää silloin, kun meillä ei ole tarkkaa tietoa
+silmukan suorituskierrosten lukumäärästä. Koska taulukon koko on
+tarkalleen tiedossa taulukon luomisen jälkeen, olisi läpikäyminen
+käytännössä järkevämpää ja tehdä for-silmukalla, missä vaara ikuisen
+silmukan syntymiseen on pienempi. Myöhemmin löytyy järkevämpää käyttöä
+while-silmukalle.</p>

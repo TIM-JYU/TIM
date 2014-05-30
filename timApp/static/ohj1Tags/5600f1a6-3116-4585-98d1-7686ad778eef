@@ -1,0 +1,10 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+protected override void Paint(Canvas canvas)
+{
+  canvas.BrushColor = RandomGen.NextColor();
+  double ajanhetki = Game.Time.SinceStartOfGame.TotalSeconds;
+  Vector keskipiste = new Vector(0, 0);
+  Vector reunapiste = new Vector(100 * Math.Cos(ajanhetki), 100 * Math.Sin(ajanhetki));
+  canvas.DrawLine(keskipiste, keskipiste + reunapiste);
+  base.Paint(canvas);
+}</code></p>

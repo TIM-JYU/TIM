@@ -1,0 +1,3 @@
+<p>Yllä olevalla rivillä testataan, että jos Yhdista-aliohjelma saa
+parametrikseen arvot 0 ja 0, niin myös sen palauttavan arvon tulisi olla
+0.</p>

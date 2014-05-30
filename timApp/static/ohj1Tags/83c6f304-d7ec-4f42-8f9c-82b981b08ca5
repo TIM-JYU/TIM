@@ -1,0 +1,7 @@
+<p><em>Pseudokoodi</em> = Ohjelmointikieltä muistuttavaa koodia, jonka tarkoitus
+on piilottaa eri ohjelmointikielten syntaksierot ja jättää jäljelle
+algoritmin perusrakenne. Algoritmia suunniteltaessa voi olla helpompaa
+hahmotella ongelmaa ensiksi pseudokielisenä, ennen kuin kirjoittaa
+varsinaisen ohjelman. Pseudokoodille ei ole mitään standardia, vaan
+jokainen voi kirjoittaa sitä omalla tavallaan. Järkevintä kuitenkin
+kirjoittaa niin, että mahdollisimman moni ymmärtäisi sitä.</p>

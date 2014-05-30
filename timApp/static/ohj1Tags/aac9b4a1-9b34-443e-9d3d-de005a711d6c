@@ -1,0 +1,5 @@
+<p>Ensimmäinen bitti on nolla, eli luku on positiivinen. Seuraavat 8 bittiä
+ovat 01111111, joka on 10-järjestelemän lukuna 127 eli eksponentti on
+127-127 = 0. Mantissaa esittäviksi biteiksi jää pelkkiä nollia, eli
+mantissa on 1.0, koska mantissahan oli aina vähintään 1. Nyt liukuluvun
+kaavalla voidaan laskea mikä luku on kyseessä:</p>

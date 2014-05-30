@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+Console.WriteLine(jono3 .Trim()); // "kalle   ja kille".</code></p>

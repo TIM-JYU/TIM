@@ -1,0 +1,5 @@
+<p>Muuttujaan asetetaan arvo sijoitusoperaattorilla (assignment operator)
+"=". Lauseita, joilla asetetaan muuttujille arvoja sanotaan
+sijoituslauseiksi (assignment statement). On tärkeää huomata, että
+sijoitus tapahtuu aina oikealta vasemmalle: sijoitettava on
+yhtäsuuruusmerkin oikealla puolella ja kohde merkin vasemmalla puolella.</p>

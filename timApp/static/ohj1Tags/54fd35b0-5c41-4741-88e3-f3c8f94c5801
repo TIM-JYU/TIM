@@ -1,0 +1,11 @@
+<p>Kirjastoista, olioista ja metodeista puhutaan lisää kohdassa 4.1 ja
+luvussa 8. Tulostettava merkkijono kirjoitetaan sulkeiden sisälle
+lainausmerkkeihin (Shift + 2). Tämä rivi on myös tämän ohjelman ainoa
+<em>lause</em> (statement). Lauseiden voidaan ajatella olevan yksittäisiä
+toimenpiteitä, joista ohjelma koostuu. Jokainen lause päättyy C#:ssa
+puolipisteeseen. Koska lauseen loppuminen ilmoitetaan puolipisteellä, ei
+C#:n syntaksissa (syntax) ”tyhjillä merkeillä” (white space), kuten
+rivinvaihdoilla ja välilyönneillä ole merkitystä ohjelman toiminnan
+kannalta. Ohjelmakoodin luettavuuden kannalta niillä on kuitenkin suuri
+merkitys. Huomaa, että puolipisteen unohtaminen on yksi yleisimmistä
+ohjelmointivirheistä ja tarkemmin sanottuna <em>syntaksivirheistä.</em></p>

@@ -1,0 +1,5 @@
+<p>Taulukoita käsiteltäessä voidaan käyttää myös foreach-silmukkaa. Se on
+eräänlainen paranneltu versio for-silmukasta. Nimensä mukaan se käy läpi
+kaikki taulukon alkiot. Se on syntaksiltaan selkeämpi silloin, kun
+haluamme tehdä jotain jokaiselle taulukon alkiolle. Sen syntaksi on
+yleisessä muodossa seuraava.</p>

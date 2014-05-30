@@ -1,0 +1,7 @@
+<p>Koska binääriluvuista muodostuu usein hyvin pitkiä, ilmoitetaan ne usein
+ihmiselle helpommin luettavassa muodossa joko 8- tai 16-järjestelmän
+lukuina. Tutustutaan nyt jälkimmäiseen, eli heksajärjestelmään.
+Heksajärjestelmässä on käytössä merkit 0...9A...F, eli yhteensä 16
+symbolia. Näin yhdellä symbolilla voidaan esittää jopa luku 15~10~ =
+1111~2~. Heksalukuja A...F vastaavat 10-järjestelmän luvut näet alla
+olevasta taulukosta.</p>

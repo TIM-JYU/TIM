@@ -1,0 +1,22 @@
+<p>/// <summary>
+/// Peli, jossa liikutellaan palloa.
+/// </summary>
+public class Peli : PhysicsGame
+{
+    /// <summary>
+    /// Luodaan pelaaja ja asetetaan näppäintenkuuntelijat
+    /// </summary>
+    public override void Begin()
+    {
+        PhysicsObject pelaaja = new PhysicsObject(50, 50, Shape.Circle);
+        Add(pelaaja);
+        Keyboard.Listen(Key.Left, ButtonState.Down,
+            LiikutaPelaajaa, "Liikuta vasemmalle", 
+            pelaaja, new Vector(-1000, 0));
+        Keyboard.Listen(Key.Right, ButtonState.Down,
+            LiikutaPelaajaa, "Liikuta oikealle", pelaaja, new Vector(1000, 0));
+        Keyboard.Listen(Key.Up, ButtonState.Down, 
+            LiikutaPelaajaa, "Liikuta ylös", pelaaja, new Vector(0, 1000));
+        Keyboard.Listen(Key.Down, ButtonState.Down,
+            LiikutaPelaajaa, "Liikuta alas", pelaaja, new Vector(0, -1000));
+    }</p>

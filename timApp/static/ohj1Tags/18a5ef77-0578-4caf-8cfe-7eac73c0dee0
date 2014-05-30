@@ -1,0 +1,4 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+33     PhysicsObject p1 = new PhysicsObject(2*100.0, 2*100.0, Shape.Circle);
+34     p1.Y = Level.Bottom + 200.0;
+35     Add(p1);</code></p>

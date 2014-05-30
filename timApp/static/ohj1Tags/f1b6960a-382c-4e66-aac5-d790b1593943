@@ -1,0 +1,8 @@
+<p>Huomaa, että kun haet luokkien dokumentaatioita hakukoneilla, saattavat
+tulokset viitata .NET Frameworkin vanhempiin versioihin (esimerkiksi 1.0
+tai 2.0). Kirjoitushetkellä uusin .NET Framework-versio on 4, ja onkin
+syytä varmistua että löytämäsi dokumentaatio koskee juuri oikeaa
+versiota. Voit esimerkiksi käyttää hakutermissä versionumeroa tähän
+tapaan: ”c# string documentation .net 4”. Versionumeron näkee otsikon
+alapuolella. Voit halutessasi vaihtaa johonkin toiseen versioon
+klikkaamalla Other Versions -pudotusvalikkoa.</p>

@@ -1,0 +1,8 @@
+<p>Meidän täytyy vielä välittää kääntäjälle tieto siitä, että
+Jypeli-kirjastoa tarvitaan Lumiukko-koodin kääntämiseen. Lisäksi
+annetaan kääntäjälle tieto siitä, että ohjelma tehdään <em>32-bittisille</em>
+järjestelmille (x86). Tämä tehdään csc-ohjelman
+<code>/reference</code>{.terminaali-western}-parametrin avulla. Lisäksi tarvitaan
+referenssi Jypelin käyttämään XNA-kirjastoon. Kirjoita nyt
+komentoriville(kaikki rivit samalle riville niin, että /-viivan edessä
+on yksi välilyönti)</p>

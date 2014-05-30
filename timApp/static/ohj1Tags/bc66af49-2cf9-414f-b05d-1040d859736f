@@ -1,0 +1,4 @@
+<p>Tosi, jos molemmat lausekkeet tosia. Eroaa edellisestä siinä, että jos
+lausekkeen totuusarvo on jo saatu selville, niin loppua ei enää
+tarkisteta. Toisin sanoen jos ensimmäinen lauseke oli jo epätosi, niin
+toista lauseketta ei enää suoriteta.</p>

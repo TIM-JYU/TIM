@@ -1,0 +1,6 @@
+<p>Loogisissa virheissä semantiikka, eli merkitys, on väärin. Ne on
+vaikeampi huomata, sillä ohjelma kääntyy semanttisista virheistä
+huolimatta. Ohjelma voi jopa näyttää toimivan täysin oikein. Jos
+looginen virhe ei löydy <em>testauksessakaan</em> (testing), voivat seuraukset
+ohjelmistosta riippuen olla tuhoisia. Tässä yksi tunnettu esimerkki
+loogisesta virheestä:</p>

@@ -1,0 +1,6 @@
+<p>ASCII (American Standard Code for Information Interchange) on merkistö,
+joka käyttää seitsemän-bittistä koodausta. Sillä voidaan siis esittää
+ainoastaan 128 merkkiä. Nimestäkin voi päätellä, että skandinaaviset
+merkit eivät ole mukana, mistä seuraa ongelmia tietotekniikassa vielä
+tänäkin päivänä, kun siirrytään ”skandeja” tukevasta koodistosta
+ASCII-koodistoon.</p>

@@ -1,0 +1,3 @@
+<p>Seuraavassa esimerkissä käyttäjää pyydetään syöttämään merkkijono Jos
+käyttäjä antaa tyhjän jonon, kysytään nimeä uudestaan. Tätä toistetaan
+niin kauan, kunnes käyttäjä antaa jotain muuta kuin tyhjän jonon.</p>

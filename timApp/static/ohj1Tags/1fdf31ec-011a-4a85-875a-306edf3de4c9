@@ -1,0 +1,7 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+while (ehto) 
+{
+  lause1;
+  lause2;
+  lauseX;
+}</code></p>

@@ -1,0 +1,5 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+public static double Keskiarvo(int a, int b) 
+{
+    return (a + b) / 2.0;
+}</code></p>

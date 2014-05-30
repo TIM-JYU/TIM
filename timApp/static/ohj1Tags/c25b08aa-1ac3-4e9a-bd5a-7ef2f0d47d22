@@ -1,0 +1,6 @@
+<p>/// <summary>
+/// Sierpinskin kolmio
+/// </summary>
+public class Sierpinski : Game
+{
+    private static double pieninKorkeus = 10.0;</p>

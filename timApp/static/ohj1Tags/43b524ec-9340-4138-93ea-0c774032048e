@@ -1,0 +1,4 @@
+<p>Parametrejä voi antaa enemmänkin sen mukaan mitä pelissä tarvitsee. Omat
+(eli valinnaiset) parametrit laitetaan edellä mainittujen pakollisten
+parametrien jälkeen ja ne viedään automaattisesti Listen-kutsussa
+annetulle käsittelijälle. Tästä esimerkki hetken kuluttua.</p>

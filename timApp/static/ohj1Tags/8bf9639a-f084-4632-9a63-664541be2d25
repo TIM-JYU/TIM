@@ -1,0 +1,7 @@
+<p>Merkkijonon muuttaminen alkeistietotyypiksi onnistuu sen sijaan
+jokaiselle alkeistietotyypille tehdystä luokasta löytyvällä metodilla.
+Alkeistietotyypithän eivät ole olioita, joten niillä ei ole metodeita.
+C#:sta löytyy kuitenkin jokaista alkeistietotyyppiä vastaava <em>rakenne</em>
+(struct), joista löytyy alkeistietotyyppien käsittelyyn hyödyllisiä
+metodeita. Rakenteet sijaitsevat System-nimiavaruudessa, ja tästä syystä
+ohjelman alussa tarvitaan lause</p>

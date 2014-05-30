@@ -1,0 +1,5 @@
+<p>Merkkijono katkaistaan, jos merkki on välilyönti, pilkku tai puolipiste.
+Jos käyttäjä antaa useamman erotinmerkin peräkkäin (vaikkapa kaksi
+välilyöntiä), niin voi olla toivottavaa, ettei kuitenkaan taulukkoon
+luoda tyhjää alkiota. Tämä voidaan hoitaa antamalla Split()-metodille
+lisäparametri StringSplitOptions.RemoveEmptyEntries.</p>

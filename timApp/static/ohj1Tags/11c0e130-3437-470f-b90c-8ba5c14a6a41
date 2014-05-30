@@ -1,0 +1,4 @@
+<p>Tutustutaan seuraavaksi yhteen C#:n dynaamisista tietorakenteista,
+List\&lt;T&gt;-luokkaan, joka on geneerinen tietorakenne. List\&lt;T&gt;
+muistuttaa jonkin verran taulukkoa; taulukoilla ja listoilla on paljon
+yhteistä:</p>

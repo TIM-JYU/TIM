@@ -1,0 +1,3 @@
+<p>Merkkijono on <em>kokoelma peräkkäisiä merkkejä</em>. Tarkalleen ottaen
+merkkijono toteutetaan C#:ssa sisäisesti taulukkona, joka sisältää
+merkkejä (char). Taulukoista on tässä monisteessa oma lukunsa myöhemmin.</p>

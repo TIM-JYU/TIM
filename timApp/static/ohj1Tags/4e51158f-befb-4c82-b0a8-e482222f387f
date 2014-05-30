@@ -1,0 +1,21 @@
+<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+using Jypeli;
+using System;
+/// @author  Antti-Jussi Lakanen
+/// @version 22.8.2012
+///
+/// <summary>
+/// Lumiukko, jonka pallot ovat taulukossa.
+/// </summary>
+public class Lumiukko : PhysicsGame
+{
+    /// <summary>
+    /// Pääohjelmassa laitetaan "peli" käyntiin Jypelille tyypilliseen tapaan  <br/>
+    /// </summary>
+    public static void Main()
+    {
+        using (Lumiukko peli = new Lumiukko())
+        {
+            peli.Run();
+        }
+    }</p>

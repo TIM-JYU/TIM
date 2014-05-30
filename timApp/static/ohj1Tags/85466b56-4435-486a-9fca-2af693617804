@@ -1,0 +1,5 @@
+<p>Jos muuttujalle täytyy tehdä monia toisensa poissulkevia tarkistuksia,
+voidaan käyttää erityistä else if -rakennetta. Siinä on kaksi tai
+useampia ehtolauseita ja seuraavaan ehtoon mennään vain, jos mikään
+aikaisemmista ehdoista ei ollut tosi. Rakenne on yleisessä muodossa
+seuraava.</p>

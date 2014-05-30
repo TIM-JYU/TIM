@@ -1,0 +1,5 @@
+<p>Itse asiassa lisäämällä muuttujaan ”+”-merkillä merkkijono, tekee C#
+automaattisesti tyyppimuunnoksen ja muuttaa muuttujasta ja siihen
+lisätystä merkkijonosta String-tyyppisen. Tämän takia voidaan
+alkeistietotyyppiset muuttujat muuttaa näppärästi String-tyyppisiksi
+lisäämällä muuttujan eteen tyhjä merkkijono.</p>

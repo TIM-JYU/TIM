@@ -1,0 +1,5 @@
+<p>do-while-silmukka eroaa while-silmukasta siinä, että do-while-silmukassa
+ilmoitetaan ensiksi lauseet (mitä tehdään) ja vasta sen jälkeen ehto
+(kauanko tehdään). Tämän takia do-while -silmukka suoritetaankin joka
+kerta <em>vähintään</em> yhden kerran. Yleisessä muodossa do-while -silmukka on
+seuraavanlainen:</p>

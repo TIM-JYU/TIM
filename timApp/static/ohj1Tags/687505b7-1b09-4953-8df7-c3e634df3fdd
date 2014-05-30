@@ -1,0 +1,9 @@
+<p>Metodeille annettavia tietoja sanotaan <em>parametreiksi</em> (parameter).
+ZoomToLevel-metodi ei ota vastaan yhtään parametria, mutta Add-metodi
+sen sijaan ottaa yhden parametrin: PhysicsObject-tyyppisen olion.
+Add-metodille voidaan antaa toinenkin parametri: <em>taso</em>, jolle olio
+lisätään. Tasojen avulla voidaan hallita, mitkä oliot lisätään
+päällimmäiseksi. Tasoparametri voidaan kuitenkin jättää antamatta,
+jolloin ohjelma itse päättää tasojen parhaan järjestyksen. Parametrit
+kirjoitetaan metodin nimen perään sulkeisiin ja ne erotetaan toisistaan
+pilkuilla.</p>

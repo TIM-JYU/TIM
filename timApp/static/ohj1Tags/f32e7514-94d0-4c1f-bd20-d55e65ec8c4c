@@ -1,0 +1,3 @@
+<p>Kääntäjä kertoo, että ika-nimistä muuttuja yritetään käyttää, vaikka
+sille ei ole osoitettu mitään arvoa. Tämä ei ole sallittua, joten
+ohjelman kääntämisyritys päättyy tähän.</p>

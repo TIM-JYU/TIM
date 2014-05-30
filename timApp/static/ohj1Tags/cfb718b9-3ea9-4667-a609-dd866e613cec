@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+for (int vasen = 0, oikea = taulukko.Length-1; vasen &lt; oikea; vasen++, oikea--)</code></p>

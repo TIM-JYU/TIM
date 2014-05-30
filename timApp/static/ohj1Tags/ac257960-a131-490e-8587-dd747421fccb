@@ -1,0 +1,7 @@
+<p>Muuttujien arvot tallennetaan keskusmuistiin tai rekistereihin, mutta
+ohjelmointikielissä voimme antaa kullekin muuttujalle nimen
+(identifier), jotta muuttujan arvon käsittely olisi helpompaa. Muuttujan
+nimi onkin ohjelmointikielten helpotus, sillä näin ohjelmoijan ei
+tarvitse tietää tarvitsemansa tiedon keskusmuisti- tai
+rekisteriosoitetta, vaan riittää muistaa itse nimeämänsä muuttujan nimi.
+[VES]</p>

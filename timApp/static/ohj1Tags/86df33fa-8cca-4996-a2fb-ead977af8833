@@ -1,0 +1,2 @@
+<p><code>{.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
+if (etunimi.Equals("Aku")) Console.WriteLine("Löytyi!");</code></p>

@@ -1,0 +1,10 @@
+<pre><code>  //tässä "+"-merkki toimii aritmeettisena operaattorina
+  Console.WriteLine(luku1 + luku2); //tulostaa 7
+
+  //tässä "+"-merkki toimii merkkijonoja yhdistelevänä operaattorina
+  Console.WriteLine(luku1 + "" + luku2);  //tulostaa 25
+
+  //Tässä ensimmäinen "+"-merkki toimii aritmeettisena operaattorina
+  //ja toinen "+"-merkki merkkijonoja yhdistelevänä operaattorina
+  Console.WriteLine(luku1 + luku2 + "" + luku1); //tulostaa 72
+</code></pre>

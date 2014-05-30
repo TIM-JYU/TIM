@@ -1,0 +1,4 @@
+<p>Esimerkissä 16.4.2 värjäsimme lumiukon pallot keltaisiksi. Koska
+halusimme muuttaa <em>kaikkien</em> taulukossa olevien olioiden värin, on
+luontevampaa käyttää tehtävään foreach-silmukkaa. LuoPallo-aliohjelma on
+sama kuin esimerkissä 16.4.2 ja jätetty listauksesta pois.</p>

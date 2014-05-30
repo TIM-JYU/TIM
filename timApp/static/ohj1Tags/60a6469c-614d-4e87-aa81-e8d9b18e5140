@@ -1,0 +1,13 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// &lt;summary&gt;
+/// Palauttaa parametrina saamansa numeroarvosanan kirjallisena.
+/// &lt;/summary&gt;
+/// &lt;param name="numero"&gt;tenttiarvosana numerona&lt;/param&gt;
+/// &lt;returns&gt;tenttiarvosana kirjallisena&lt;/returns&gt;
+public static String KirjallinenArvosana(int numero)
+{
+    String[] arvosanat = {"Hylätty", "Välttävä", "Tyydyttävä", 
+                            "Hyvä", "Kiitettävä", "Erinomainen"};
+    if (numero &lt; 0 || arvosanat.Length &lt;= numero) return "Virheellinen syöte!";
+    return arvosanat[numero];
+}</code></p>

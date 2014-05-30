@@ -1,0 +1,21 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// @author  Antti-Jussi Lakanen
+/// @version 22.8.2012
+///
+/// &lt;summary&gt;
+/// Ohjelma, joka laskee painoindeksin
+/// pituuden (m) ja painon (kg) perusteella. 
+/// &lt;/summary&gt;
+public class Painoindeksi
+{
+    /// &lt;summary&gt;
+    /// Pääohjelma, jossa painoindeksi tulostetaan ruudulle.
+    /// &lt;/summary&gt;
+    public static void Main() 
+    {
+      double pituus = 1.83;
+      double paino = 75.0;
+      double painoindeksi = paino / (pituus*pituus);
+      System.Console.WriteLine(painoindeksi);
+   }
+}</code></p>

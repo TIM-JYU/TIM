@@ -1,0 +1,4 @@
+<p>Muuttujat-luvun lopussa tehtiin ohjelma, joka laski painoindeksin. Tee
+ohjelmasta uusi versio, jossa painoindeksin laskeminen tehdään
+aliohjelmassa. Aliohjelma saa siis parametreina pituuden ja painon ja
+palauttaa painoindeksin.</p>

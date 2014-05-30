@@ -1,0 +1,10 @@
+<p><type> ::= <primitive type=""> | <reference type="">
+<primitive type=""> ::= <numeric type=""> | boolean
+<numeric type=""> ::= <integral type=""> | <floating-point type="">
+<integral type=""> ::= byte | short | int | long | char
+<floating-point type=""> ::= float | double
+<reference type=""> ::= <class interface="" or="" type=""> | <array type="">
+<class interface="" or="" type=""> ::= <class type=""> | <interface type="">
+<class type=""> ::= <type name="">
+<interface type=""> ::= <type name="">
+<array type=""> ::= <type> []</type></array></type></interface></type></class></interface></class></class></array></class></reference></floating-point></integral></floating-point></integral></numeric></numeric></primitive></reference></primitive></type></p>

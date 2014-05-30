@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+Console.WriteLine(s1.Equals(s2)); // true</code></p>

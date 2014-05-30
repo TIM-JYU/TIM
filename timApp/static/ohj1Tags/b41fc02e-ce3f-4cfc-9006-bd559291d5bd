@@ -1,0 +1,4 @@
+<p>Komento ”csc” tulee sanoista <em>C Sharp Compiler</em> (compiler = kääntäjä).
+Kääntämisen jälkeen hakemistoon ilmestyy HelloWorld.exe-niminen
+tiedosto, joka voidaan ajaa kuten minkä tahansa ohjelman syöttämällä
+ohjelman nimi:</p>

@@ -1,0 +1,3 @@
+<p>Ilman tuota tyhjän merkkijonon lisäämistä tämä ei onnistuisi, sillä
+String-tyyppiseen muuttujaan ei tietenkään voi tallentaa int- tai
+bool-tyyppistä muuttujaa.</p>

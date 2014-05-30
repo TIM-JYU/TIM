@@ -1,0 +1,5 @@
+<p>PiirraSierpinskinKolmio(korkeus / 2, x - sivunPituus2, y)
+   PiirraSierpinskinKolmio(korkeus / 2, x + sivunPituus2, y)
+   PiirraSierpinskinKolmio(korkeus / 2, x, y + korkeus)
+}
+```</p>

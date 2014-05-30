@@ -1,0 +1,4 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+Console.WriteLine(elokuvat[0, 0]);  //tulostaa "Pulp Fiction"
+Console.WriteLine("Tyyppi: " + elokuvat[0, 1]); //tulostaa "Tyyppi:  Toiminta"
+Console.WriteLine("Ohjaaja: " + elokuvat[0, 2]); //tulostaa "Ohjaaja: Tarantino"</code></p>

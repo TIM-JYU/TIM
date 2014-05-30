@@ -1,0 +1,7 @@
+<p>\
+ Eksponentti esitetään niin, että siitä vähennetään ns. BIAS arvo. BIAS
+arvo floatissa on 127 ja doublessa se on 1023. Näin samalla
+binääriluvulla saadaan esitettyä sekä positiiviset että negatiiviset
+eksponentit. Jos floatin eksponenttia kuvaavat bitit olisivat
+esimerkiksi 01111110, eli desimaalimuodossa 126, niin eksponentti olisi
+126 - 127 = -1.</p>

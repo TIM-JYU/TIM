@@ -1,0 +1,8 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+public class HelloWorld
+{
+  public static void Main()
+  {
+       System.Console.Writeline("Hello World!");
+  }
+}</code></p>

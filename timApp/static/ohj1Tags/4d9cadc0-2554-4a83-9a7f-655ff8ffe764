@@ -1,0 +1,6 @@
+<p>Aliohjelman nimen jälkeen ilmoitetaan sulkeiden sisässä aliohjelman
+parametrit. Jokaista parametria ennen on ilmoitettava myös parametrin
+<em>tietotyyppi</em>. Parametrinä annettiin lumiukon alimman pallon x- ja
+y-koordinaatit. Molempien tietotyyppi on double, joten myös
+vastinparametrien tyyppien tulee olla double. Annetaan myös nimet
+kuvaavasti x ja y.</p>

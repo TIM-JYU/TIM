@@ -1,0 +1,4 @@
+<p>Merkkijonoihin voidaan ”+”-merkkiä käyttämällä yhdistellä myös myös
+numeeristen muuttujien arvoja. Tällöin ero siinä, että toimiiko
+”+”-merkki aritmeettisena operaattorina vai merkkijonoja yhdistelevänä
+operaattorina on todella pieni. Tutki alla olevaa esimerkkiä.</p>

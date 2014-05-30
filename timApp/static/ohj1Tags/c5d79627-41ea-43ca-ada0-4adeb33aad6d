@@ -1,0 +1,9 @@
+<p>Nuo kolme osaa - muuttujien alustus, ehto, lopussa tehtävät toimenpiteet
+- ovat osia, jotka jokaisessa silmukkarakenteessa tarvítaan.
+for-silmukassa ne kirjoitetaan selvästi perättäin yhdelle riville,
+jolloin ne on helpompi saada kirjoitettua kerralla oikein. Silmukan
+suoritusta ohjaavat tekijät on myös helpompi lukea yhdeltä riviltä, kuin
+yrittää selvittää sitä eri riveiltä (silmukkahan voi olla hyvinkin monta
+koodiriviä pitkä). continue-lauseen osalta for- ja while-silmukat
+toimivat eri tavalla. while-silmukassa lisäykset voivat jäädä tekemättä
+continue-lauseen kanssa.</p>

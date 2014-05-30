@@ -1,0 +1,2 @@
+<p>Piirtämistä varten peliluokkaan lisätään Paint-aliohjelma, joka
+ylikirjoittaa (<em>override</em>) kantaluokan vastaavan aliohjelman.</p>

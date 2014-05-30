@@ -1,0 +1,4 @@
+<p>Jos haluttaisiin, että tämä kyseinen aliohjelma myös lisää pallon
+ruutuun, tulisi se nimetä jotenkin muuten, esimerkiksi LisaaPallo olisi
+loogisempi vaihtoehto. Silloin palloa ei palautettaisi kysyjälle ja
+paluuarvon tyypiksi tulisi void.</p>

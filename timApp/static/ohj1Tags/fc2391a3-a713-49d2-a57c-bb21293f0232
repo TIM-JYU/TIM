@@ -1,0 +1,12 @@
+<ul>
+<li>
+<p>Dokumentaatiokommentin alkuun laitetaan \&lt;summary&gt;-tagien väliin
+    lyhyt ja selkeä kuvaus aliohjelman toiminnasta.</p>
+</li>
+<li>
+<p>Jokainen parametri selitetään omien \&lt;param&gt;-tagien väliin ja</p>
+</li>
+<li>
+<p>paluuarvo \&lt;returns&gt;-tagien väliin.</p>
+</li>
+</ul>

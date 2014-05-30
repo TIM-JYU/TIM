@@ -1,0 +1,5 @@
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/system.string.toupper.aspx">ToUpper()</a>
+    Palauttaa merkkijonon niin, että kaikki kirjaimet on muutettu
+    isoiksi kirjaimiksi.</li>
+</ul>

@@ -1,0 +1,4 @@
+<p>// liukuluku merkkijonoksi
+double liukuluku = 0.562;
+String doubleMerkkijonona = liukuluku.ToString();
+```</p>

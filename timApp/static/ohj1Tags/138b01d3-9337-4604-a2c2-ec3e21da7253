@@ -1,0 +1,7 @@
+<p>Päätetään, että aliohjelman nimi on PiirraLumiukko. Sovitaan myös, että
+aliohjelman ensimmäinen parametri on tämä peli, johon lumiukko ilmestyy
+(kirjoitetaan this). Toinen parametri on lumiukon alimman pallon
+keskipisteen x-koordinaatti ja kolmas parametri lumiukon alimman pallon
+keskipisteen y-koordinaatti. Tällöin kentälle voitaisiin piirtää
+lumiukko, jonka alimman pallon keskipiste on (0, Level.Bottom + 200.0),
+seuraavalla kutsulla:</p>

@@ -1,0 +1,7 @@
+<p>Yleisimmin käytetty tapa ilmoittaa negatiiviset luvut on 2-komplementti.
+Tällöin positiivisesta luvusta otetaan ensin 1-komplementti, eli
+muutetaan nollat ykkösiksi ja ykköset nolliksi ("käännetään" kaikki
+bitit vastakkaisiksi), minkä jälkeen tulokseen lisätään 1. Tämän
+esitystavan etuna on se, että yhteenlasku toimii totuttuun tapaan myös
+negatiivisilla luvuilla. Vähennyslasku suoritetaan summaamalla luvun
+vastaluku:</p>

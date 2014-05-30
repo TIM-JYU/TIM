@@ -1,0 +1,9 @@
+<p>Toisella rivillä on oikealle auki oleva <em>aaltosulku</em>. Useissa
+ohjelmointikielissä yhteen liittyvät asiat ryhmitellään tai kootaan
+aaltosulkeiden sisälle. Oikealle auki olevaa aaltosulkua sanotaan
+aloittavaksi aaltosuluksi ja tässä tapauksessa se kertoo kääntäjälle,
+että tästä alkaa HelloWorld-luokkaan liittyvät asiat. Jokaista
+aloittavaa aaltosulkua kohti täytyy olla vasemmalle auki oleva lopettava
+aaltosulku. HelloWorld-luokan lopettava aaltosulku on rivillä viisi,
+joka on samalla ohjelman viimeinen rivi. Aaltosulkeiden rajoittamaa
+aluetta kutsutaan <em>lohkoksi</em> (block).</p>

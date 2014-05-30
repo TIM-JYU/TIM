@@ -1,0 +1,6 @@
+<p>// Tulostetaan alkiot, että nähdää onnistuiko järjestäminen.
+foreach (int alkio in taulukko) 
+{
+   Console.WriteLine(alkio);
+}
+```</p>

@@ -1,0 +1,24 @@
+<pre><code>  case 1:
+     arvosana = "Välttävä";
+     break;
+
+  case 2:
+     arvosana = "Tyydyttävä";
+     break;
+
+  case 3:
+     arvosana = "Hyvä";
+     break;
+
+  case 4:
+     arvosana = "Kiitettävä";
+     break;
+
+  case 5:
+     arvosana = "Erinomainen";
+     break;
+
+  default:
+     arvosana = "Virheellinen arvosana";
+      break;
+</code></pre>

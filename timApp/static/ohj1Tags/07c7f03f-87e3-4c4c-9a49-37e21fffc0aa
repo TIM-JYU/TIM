@@ -1,0 +1,4 @@
+<p>Vastaavasti yllä olevalla rivillä asetetaan nyt muuttujiin uudet arvot,
+joita käytetään seuraavan lumiukon pallojen paikkojen laskemiseen.
+Huomaa, että y-koordinaatti saa negatiivisen arvon, jolloin lumiukon
+alimman pallon keskipiste painuu kuvaruudun keskitason alapuolelle.</p>

@@ -1,0 +1,9 @@
+<p>Vaikka molemmat yllä olevista esimerkeistä ovat syntaksiltaan oikein,
+eli ne noudattavat C#:n kielioppisääntöjä, on niiden luettavuus
+huomattavasti heikompi kuin alkuperäisen ohjelmamme. C#:ssa on
+yhteisesti sovittuja koodauskäytänteet (code conventions), jotka
+määrittelevät, miten ohjelmakoodia tulisi kirjoittaa. Kun kaikki
+kirjoittavat samalla tavalla, on muiden koodin lukeminen helpompaa.
+Tämän monisteen esimerkit on pyritty kirjoittamaan näiden käytänteiden
+mukaisesti. Linkkejä koodauskäytänteisiin löytyy kurssin wiki-sivulta
+osoitteesta</p>

@@ -1,0 +1,2 @@
+<p>void TulostaTaulukko(int[])\
+ Tulostaa annetun kokonaislukutaulukon kaikki alkiot.</p>

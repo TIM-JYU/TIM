@@ -1,0 +1,4 @@
+<p>Tässä tapauksessa += -operaattorin käyttö olisi suositeltavinta, sillä
+lisättävä luku voi olla positiivinen tai negatiivinen (tai nolla), joten
++= -operaattori ei tässä rajoita sitä, millaisia lukuja a-muuttujaan
+voidaan lisätä.</p>

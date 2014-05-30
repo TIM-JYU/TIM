@@ -1,0 +1,10 @@
+<p>Huomaa, että jos while-silmukan ehto on aina true, on kyseessä <em>ikuinen
+silmukka</em> (infinite loop). Ikuinen silmukka on nimensä mukaisesti
+silmukka, joka ei pääty koskaan. Ikuinen silmukka johtuu siitä, että
+silmukan ehto ei saa koskaan arvoa false. Useimmiten ikuinen silmukka on
+ohjelmointivirhe, mutta joskus (hallitun) ikuisen silmukan tekeminen on
+perusteltua. Tällöin silmukasta kuitenkin poistutaan (ennemmin tai
+myöhemmin) break-lauseen avulla. Tällöinhän silmukka ei oikeastaan ole
+ikuinen, vaikka tällaisesta silmukasta sitä nimitystä usein
+käytetäänkin. break-lauseesta puhutaan tässä luvussa myöhemmin kohdassa
+16.8.1.</p>

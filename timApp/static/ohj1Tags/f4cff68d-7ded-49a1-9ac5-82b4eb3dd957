@@ -1,0 +1,5 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+if (ehto1) lause1;
+else if (ehto2) lause2;
+else if (ehto3) lause3;
+else lause4;</code></p>

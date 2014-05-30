@@ -1,0 +1,4 @@
+<p>Luetaan seuraavaksi tietoja netistä. Tässä koko HTML-sivun data
+tallennetaan rivi kerrallaan List\&lt;String&gt;-tietorakenteeseen ilman sen
+kummempaa jatkokäsittelyä. Lopuksi listan sisältö tulostetaan ruudulle
+rivi kerrallaan.</p>

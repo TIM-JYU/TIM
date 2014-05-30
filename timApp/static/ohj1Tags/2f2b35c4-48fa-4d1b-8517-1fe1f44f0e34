@@ -1,0 +1,4 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+double luku1;
+int luku2 = 4;
+luku1 = luku2;</code></p>

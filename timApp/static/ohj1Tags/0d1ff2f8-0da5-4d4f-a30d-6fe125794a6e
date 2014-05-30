@@ -1,0 +1,8 @@
+<p>Alhaalla on Error List (mikäli aktivoit sen päälle aikaisemmin), joka
+näyttää koodin kirjoittamisen aikana havaittuja virheitä, sekä
+käännöksessä tapahtuvia virheitä. Error List on yksi ohjelmoijan
+tärkeimmistä työkaluista ja Visual Studion ehdoton vahvuus -
+syntaksivirheet saadaan kiinni ilman, että ohjelmoijan tarvitsee
+erikseen edes kääntää tekemäänsä ohjelmaa. Voit tuplaklikata Error
+Listissä virhettä, ja VS vie kursorin suoraan siihen pisteeseen, jossa
+olettaa virheen olevan.</p>

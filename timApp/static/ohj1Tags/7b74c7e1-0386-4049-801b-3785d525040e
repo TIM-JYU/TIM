@@ -1,0 +1,16 @@
+<p>/// @author  Antti-Jussi Lakanen
+/// @version 22.8.2012
+///
+/// <summary>
+/// Tulostetaan kayttajan antaman www-osoitteen
+/// sisältö (GET-pyynnön palauttama HTML-koodi).
+/// </summary>
+public class TiedotNetista
+{
+    /// <summary>
+    /// Paaohjelmassa haetaan tiedot netistä listaan ja tulostetaan listan sisältö.
+    /// </summary>
+    public static void Main()
+    {
+        List<string> lista = new List<string>();
+        LueNetistaListaan("https://www.jyu.fi", lista);</string></string></p>

@@ -1,0 +1,5 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+for (int i = 1; i &lt; 100; i += 2) 
+{  
+   Console.WriteLine(i);
+}</code></p>

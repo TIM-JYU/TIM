@@ -1,0 +1,5 @@
+<p>Lisäysoperaattoria (++) ja vähennysoperaattoria (--) voidaan käyttää,
+ennen tai jälkeen muuttujan. Käytettäessä ennen muuttujaa, arvoa
+muutetaan ensin ja mahdollinen toiminto esimerkiksi tulostus, tehdään
+vasta sen jälkeen. Jos operaattori sen sijaan on muuttujan perässä,
+toiminto tehdään ensiksi ja arvoa muutetaan vasta sen jälkeen.</p>

@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+p &amp;&amp; (q || r) = (p &amp;&amp; q) || (p &amp;&amp; r)</code></p>

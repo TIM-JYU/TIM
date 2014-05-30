@@ -1,0 +1,6 @@
+<p><strong>Funktio\
+</strong>Aliohjelma, joka palauttaa jonkin tuloksen, esimerkiksi kahden luvun
+keskiarvon. Tämän määritelmän mukaan funktiossa on aina return-lause
+jonka perässä on lauseke, esimerkiksi return (a+b)/2.0; Puhtaassa
+aliohjelmassakin (ks. edellinen kohta) voi olla return-lause, mutta sen
+perässä ei ole lauseketta.</p>

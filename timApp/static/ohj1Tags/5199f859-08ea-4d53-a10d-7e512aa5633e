@@ -1,0 +1,6 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+08 /// &lt;summary&gt;
+09 /// Luokka, jossa harjoitellaan piirtämistä lisäämällä ympyröitä ruudulle
+10 /// &lt;/summary&gt;
+11 public class Lumiukko : PhysicsGame
+12 {</code></p>

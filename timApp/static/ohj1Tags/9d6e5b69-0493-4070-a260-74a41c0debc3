@@ -1,0 +1,15 @@
+<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+public class Silmukat 
+{  <br/>
+/// <summary>
+/// Tulostaa int-tyyppisen taulukon sisällön.
+/// </summary>
+/// <param name="taulukko"></param>Tulostettava taulukko
+  public static void TulostaTaulukko(int[] taulukko) 
+  {
+    int i = 0;
+    while (i &lt; taulukko.Length){
+      Console.Write(taulukko[i] + " ");
+      i++;
+    }
+  }</p>

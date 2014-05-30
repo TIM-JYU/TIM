@@ -1,0 +1,5 @@
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/dy85x1sa.aspx">Contains(String)</a>
+    Palauttaa totuusarvon sen perusteella esiintyykö parametrin
+    sisältämän merkkijono tutkittavana olevassa merkkijonossa.</li>
+</ul>

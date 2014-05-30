@@ -1,0 +1,4 @@
+<p>Huomaa, että Insert-metodi ei korvaa indeksissä 9 olevaa merkkiä, vaan
+lisää merkkijonoon kokonaan uuden merkin, jolloin merkkijonon pituus
+kasvaa siis yhdellä. Korvaamiseen on olemassa oma metodi, Replace. Tai
+yksittäisen kirjaimen voi vaihtaa suoraam myös yhtalo[2] = 'y';</p>

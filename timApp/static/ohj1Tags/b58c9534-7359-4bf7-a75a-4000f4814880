@@ -1,0 +1,5 @@
+<p>Poikkeus (exception) on ohjelman suorituksen aikana ilmenevä ongelma.
+Jos poikkeusta ei käsitellä, ohjelman suoritus yleensä kaatuu ja
+konsoliin tulostetaan jokin virheilmoitus. Tässä vaiheessa kurssia näin
+on varmasti käynyt jo monta kertaa. Poikkeus voi tapahtua jos
+esimerkiksi yritämme viitata taulukon alkioon, jota ei ole olemassa.</p>

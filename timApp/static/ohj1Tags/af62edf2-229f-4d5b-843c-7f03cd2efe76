@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+String pii = String.Format("{0:#.##}", Math.PI); // pii = "3,14"</code></p>

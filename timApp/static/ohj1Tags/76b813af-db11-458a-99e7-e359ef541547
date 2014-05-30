@@ -1,0 +1,7 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+Ensimmäinen bitti  =&gt; 1  (jota ei merkitä)
+0.6 * 2  = 1.2     =&gt; 1
+0.2 * 2  = 0.4     =&gt; 0
+0.4 * 2  = 0.8     =&gt; 0
+0.8 * 2  = 1.6     =&gt; 1
+0.6 * 2  = 1.2     =&gt; 1</code></p>

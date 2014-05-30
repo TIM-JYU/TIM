@@ -1,0 +1,5 @@
+<p>Tehdään laitoksen henkilökunnalle aliohjelma, joka laskee opiskelijan
+tenttiarvosanan. Parametrinaan aliohjelma saa tentin maksimipistemäärän,
+läpipääsyrajan sekä opiskelijan pisteet. Aliohjelma palauttaa arvosanan
+0-5 niin, että arvosanan 1 saa läpipääsyrajalla ja muut arvosanat
+skaalataan mahdollisimman tasaisesti.</p>

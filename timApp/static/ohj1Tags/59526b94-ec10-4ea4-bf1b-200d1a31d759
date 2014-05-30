@@ -1,0 +1,7 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+HelloWorld.cs(4,3): error CS1519: Invalid token '{' in class, struct, or
+        interface member declaration
+HelloWorld.cs(5,26): error CS1519: Invalid token '(' in class, struct, or
+        interface member declaration
+HelloWorld.cs(7,1): error CS1022: Type or namespace definition, or end-of-file
+        expected</code></p>

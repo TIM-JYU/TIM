@@ -1,0 +1,9 @@
+<p>Tiettyyn paikkaan voidaan lisätä merkkejä ja merkkijonoja
+Insert-metodilla, joka saa parametrikseen indeksin, eli kohdan, johon
+merkki (tai merkit) lisätään, sekä lisättävän merkin (tai merkit).
+Indeksointi alkaa jälleen nollasta. Insert-metodilla voi lisätä myös
+kaikkia samoja tietotyyppejä kuin Append-metodillakin. Voisimme
+esimerkiksi lisätä edelliseen esimerkkiin luvun 3.5 perään vielä
+muuttujan x. Sitä ennen tarkastellaan merkkien järjestystä ja
+indeksointia ja kirjoitetaan kunkin tulostuvan merkin yläpuolelle sen
+paikkaindeksi.</p>

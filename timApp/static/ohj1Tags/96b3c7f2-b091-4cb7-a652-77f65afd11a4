@@ -1,0 +1,8 @@
+<p>Aliohjelmakutsun suorituksessa lasketaan siis ensiksi jokaisen kutsussa
+olevan lausekkeen arvo ja sitten lasketut arvot sijoitetaan kutsussa
+olevassa järjestyksessä aliohjelman vastinparametreille. Siksi
+vastinparametrien pitää olla sijoitusyhteensopivia kutsun lausekkeiden
+kanssa. Esimerkin kutsussa lausekkeet ovat yksinkertaisia: muuttujan
+nimi (this), kokonaislukuarvo (0) ja reaalilukuarvo ( Level.Bottom +
+200.0). Ne voisivat kuitenkin olla kuinka monimutkaisia lausekkeita
+tahansa, esimerkiksi näin:</p>

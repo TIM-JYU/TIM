@@ -1,0 +1,8 @@
+<p>Seuraavaksi kirjoitetaan luokan nimi uudelleen, jonka perään
+kirjoitetaan sulkuihin mahdolliset olion luontiin liittyvät parametrit.
+Parametrit riippuvat siitä kuinka luokan <em>konstruktori</em> (constructor,
+muodostaja) on toteutettu. Konstruktori on metodi, joka suoritetaan aina
+kun uusi olio luodaan. Valmiita luokkia käyttääkseen ei tarvitse
+kuitenkaan tietää konstruktorin toteutuksesta, vaan tarvittavat
+parametrit selviävät aina luokan dokumentaatiosta. Yleisessä muodossa
+uusi olio luodaan alla olevalla tavalla.</p>

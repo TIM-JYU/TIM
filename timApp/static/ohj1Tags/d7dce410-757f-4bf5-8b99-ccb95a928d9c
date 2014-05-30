@@ -1,0 +1,4 @@
+<p>Samoin kuin luokan, niin myös pääohjelman sisältö kirjoitetaan
+aaltosulkeiden sisään. C#:ssa ohjelmoijan kirjoittaman koodin
+suorittaminen alkaa aina käynnistettävän luokan pääohjelmasta. Toki
+sisäisesti ehtii tapahtua paljon asioita jo ennen tätä.</p>

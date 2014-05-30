@@ -1,0 +1,6 @@
+<p>Kielen syntaksin kuvaaminen aloitetaan käännösyksikön (complitatonunit)
+määrittelystä. Tämä on Javassa .java-päätteinen tiedosto. Tämä on siis
+ensimmäinen non-terminaali, joka määritellään. Tämä määrittely sisältää
+sitten toisia non-terminaaleja, joille kaikille on olemassa omat
+määrittelyt. Näin jatketaan, kunnes lopulta on jäljellä pelkkiä
+terminaaleja ja kielen syntaksi on yksiselitteisesti määritelty.</p>

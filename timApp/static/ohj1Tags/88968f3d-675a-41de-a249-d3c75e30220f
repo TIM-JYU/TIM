@@ -1,0 +1,7 @@
+<p>Jos taas tutkimme PhysicsObject-luokan dokumentaatiota (löytyy
+osoitteesta
+<a href="http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/">http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/</a>
+→ Luokat → PhysicsObject), löydämme useita eri konstruktoria (ks. kohta
+<em>Julkiset jäsenfunktiot</em>, jotka alkavat sanalla PhysicsObject).
+Konstruktoreista järjestyksessä toinen saa parametrina kaksi lukua ja
+muodon. Tätä konstruktoria käytimme jo lumiukkoesimerkissä.</p>

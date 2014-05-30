@@ -1,0 +1,2 @@
+<p>Tämä ei kuitenkaan mahdollista reaaliluvun muuttamista String-tyypiksi
+tietyllä tarkkuudella. Tähän on apuna String-luokan Format-metodi.</p>

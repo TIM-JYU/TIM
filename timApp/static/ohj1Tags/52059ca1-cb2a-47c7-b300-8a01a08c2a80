@@ -1,0 +1,12 @@
+<p>/// <summary>
+  /// Pääohjelma.
+  /// </summary>
+  public static void Main() 
+  {
+    int[] kuukausienPaivienLkm = 
+      {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    TulostaTaulukko(kuukausienPaivienLkm);
+    Console.ReadKey();
+  }
+}
+```</p>

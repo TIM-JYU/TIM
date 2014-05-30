@@ -1,0 +1,9 @@
+<p>Muuttujat (variable) toimivat ohjelmassa tietovarastoina erilaisille
+asioille. Muuttuja on kuin pieni laatikko, johon voidaan varastoida
+asioita, esimerkiksi lukuja, sanoja, tietoa ohjelman käyttäjästä ja
+paljon muuta. Ilman muuttujia järkevä tiedon käsittely olisi oikeastaan
+mahdotonta. Olemme jo ohimennen käyttäneetkin muuttujia, esimerkiksi
+Lumiukko-esimerkissä teimme PhysicsObject-tyyppisiä muuttujia p1, p2 ja
+p3. Vastaavasti Lumiukko-aliohjelman parametrit (Game peli, double x,
+double y) ovat myös muuttujia: Game-tyyppinen oliomuuttuja peli, sekä
+double-alkeistietotyyppiset muuttujat x ja y.</p>

@@ -1,0 +1,19 @@
+<ul>
+<li>
+<p>for: Jos silmukan kierrosten määrä on ennalta tiedossa</p>
+</li>
+<li>
+<p>foreach: Jos haluamme tehdä jotain jonkun Collection-tietorakenteen
+    tai taulukon kaikille alkioille.</p>
+</li>
+<li>
+<p>while: Jos silmukan kierrosten määrä ei ole tiedossa
+    (erikoistapauksena hallittu ikuinen silmukka, josta poistutaan
+    break-lauseella), emmekä välttämättä halua suorittaa silmukkaa
+    kertaakaan.</p>
+</li>
+<li>
+<p>do-while: Jos silmukan kierrosten määrä ei ole tiedossa, mutta
+    haluamme suorittaa silmukan vähintään yhden kerran.</p>
+</li>
+</ul>

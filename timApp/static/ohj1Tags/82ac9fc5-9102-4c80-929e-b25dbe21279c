@@ -1,0 +1,28 @@
+<p>/// @author  Antti-Jussi Lakanen, Martti Hyvönen
+/// @version 22.12.2011
+///
+/// <summary>
+/// Harjoitellaan taulukoiden käyttöä ja lasketaan tenttiarvosanoja.
+/// </summary>
+public class Arvosanat
+{
+    /// <summary>
+    /// Laskee tenttiarvosanojen pisterajat taulukkoon.
+    /// </summary>
+    /// <param name="maksimipisteet"></param>tentin maksimipisteet
+    /// <param name="lapaisyraja"></param>tentin läpipääsyraja
+    /// <returns>arvosanojen pisterajat taulukossa</returns>
+    /// <example>
+    /// <pre name="test">
+    /// double[] rajat1 = Arvosanat.LaskeRajat(24, 12);
+    /// String rajat1Jono = Arvosanat.TaulukkoJonoksi(rajat1);
+    /// rajat1Jono === "0, 12, 14.4, 16.8, 19.2, 21.6";
+    /// double[] rajat2 = Arvosanat.LaskeRajat(30, 15);
+    /// String rajat2Jono = Arvosanat.TaulukkoJonoksi(rajat2);
+    /// rajat2Jono === "0, 15, 18, 21, 24, 27";
+    /// </pre>
+    /// </example>
+    public static double[] LaskeRajat(int maksimipisteet, int lapaisyraja)
+    {
+        double[] arvosanaRajat = new double[6];
+        double arvosanojenPisteErot = Math.Round((maksimipisteet - lapaisyraja) / 5.0, 1);</p>

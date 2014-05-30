@@ -1,0 +1,5 @@
+<p>Tuntuu kuitenkin tyhmältä toistaa lähes samanlaista koodia useaan
+kertaan. Tällöin on järkevämpää käyttää jotain toistorakennetta.
+Toistorakenteet soveltuvat erinomaisesti taulukoiden käsittelyyn, mutta
+niistä on myös moniin muihin tarkoituksiin. Toistorakenteista käytetään
+usein myös nimitystä <em>silmukat</em> (loop).</p>

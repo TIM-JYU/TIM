@@ -1,0 +1,5 @@
+<p>Aliohjelmakutsulla ja aliohjelman määrittelyllä on siis hyvin vahva
+yhteys keskenään. Aliohjelmakutsussa annetut tiedot ”sijoitetaan”
+kullakin kutsukerralla aliohjelman määrittelyrivillä esitellyille
+vastinparametreille. Toisin sanoen, aliohjelmakutsun yhteydessä tapahtuu
+väljästi sanottuna seuraavaa.</p>

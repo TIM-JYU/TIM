@@ -1,0 +1,12 @@
+<p>Meille tutuin lukujärjestelmä on 10-järjestelmä. Siinä on 10 eri
+symbolia lukujen esittämiseen (0...9). Lukua 10 sanotaan 10-järjestelmän
+<em>kantaluvuksi</em>. Tietotekniikassa käytetään kuitenkin myös muita
+lukujärjestelmiä. Yleisimpiä ovat 2-järjestelmä (binäärijärjestelmä),
+8-järjestelmä (oktaalijärjestelmä) ja 16-järjestelmä (heksajärjestelmä).
+Binäärijärjestelmässä luvut esitetään kahdella symbolilla (0 ja 1) ja
+oktaalijärjestelmässä vastaavasti kahdeksalla symbolilla (0..7). Samalla
+periaatteella heksajärjestelmässä käytetään 16 symbolia, mutta koska
+numerot loppuvat kesken, otetaan avuksi aakkoset. Symbolin 9 jälkeen
+tulee siis symboli A, jonka jälkeen B ja näin jatketaan edelleen F:n
+asti, joka vastaa siis 10-järjestelmän lukua 15. Heksajärjestelmä
+sisältää siis symbolit 0..9 ja (jatkuen) A..F.</p>

@@ -1,0 +1,5 @@
+<p>Klikkaa Oma tietokone -kuvaketta hiiren oikealla painikkeella ja valitse
+<strong>Ominaisuudet</strong> (Properties). Valitse sitten vasemmalta Advanced system
+settings ja Advanced-välilehdeltä Environment variables. Ylemmästä
+laatikosta valitse muuttuja PATH ja paina <strong>Muokkaa</strong>. Siirry rivin
+Variable value loppuun, kirjoita puolipiste (;) ja heti perään polku</p>

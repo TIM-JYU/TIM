@@ -1,0 +1,4 @@
+<p>Aliohjelmia ja metodeja nimitetään eri tavoin eri kielissä. Esimerkiksi
+C++-kielessä sekä aliohjelmia että metodeja sanotaan funktioiksi.
+Metodeita nimitetään C++-kielessä tarkemmin vielä jäsenfunktioiksi,
+kuten Doxygen teki myös C#:n tapauksessa.</p>

@@ -1,0 +1,5 @@
+<p>Jotta Lumiukko-esimerkkiohjelma voitaisiin nyt kääntää C#-kääntäjällä,
+tulee Jypeli-kirjasto olla tallennettuna tietokoneelle. Jypeli käyttää
+XNA-kirjaston lisäksi vapaan lähdekoodin fysiikka- ja
+matematiikkakirjastoja. Fysiikka- ja matematiikkakirjastot on
+sisäänrakennettuina Jypeli-kirjastoon.</p>

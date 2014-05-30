@@ -1,0 +1,7 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+int laskuri = 0;
+while (laskuri != 10) 
+{
+   Console.WriteLine("Hello world!");
+   laskuri++;
+}</code></p>

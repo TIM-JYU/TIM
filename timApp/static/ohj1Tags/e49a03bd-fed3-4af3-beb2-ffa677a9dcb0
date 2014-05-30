@@ -1,0 +1,15 @@
+<ul>
+<li>
+<p>Muuttujien alustukset: Useimmiten alustetaan vain yksi muuttuja,
+    mutta myös useampien muuttujien alustaminen on mahdollista.</p>
+</li>
+<li>
+<p>Ehto: Kuten muissakin silmukoissa, lauseita toistetaan niin kauan
+    kuin ehto on voimassa.</p>
+</li>
+<li>
+<p>Silmukan lopussa tehtävät toimenpiteet: Useimmiten muuttujan tai
+    muuttujien arvoa kasvatetaan yhdellä, mutta myös suuremmalla
+    määrällä kasvattaminen on mahdollista.</p>
+</li>
+</ul>

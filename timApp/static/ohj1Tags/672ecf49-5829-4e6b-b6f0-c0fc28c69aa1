@@ -1,0 +1,3 @@
+<p>Tehtävä: Suunnittele aliohjelma, joka saa parametrina kokonaisluvun.
+Aliohjelman tulee palauttaa true (tosi), jos luku on parillinen ja false
+(epätosi), jos luku on pariton.</p>

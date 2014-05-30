@@ -1,0 +1,21 @@
+<pre><code>    // Muutetaan pallojen väri
+    for (int i = 0; i &lt; pallot.Length; i++)
+    {
+        pallot[i].Color = Color.Yellow;
+    }
+}
+
+/// &lt;summary&gt;Luo yksittäisen pallon ja palauttaa sen.&lt;/summary&gt;
+/// &lt;param name="x"&gt;Pallon kp x-koordinaatti&lt;/param&gt;
+/// &lt;param name="y"&gt;Pallon kp y-koordinaatti&lt;/param&gt;
+/// &lt;param name="vari"&gt;Pallon väri&lt;/param&gt;
+/// &lt;param name="sade"&gt;Pallon säde&lt;/param&gt;
+public static PhysicsObject LuoPallo(double x, double y, Color vari, double sade)
+{
+    PhysicsObject pallo = new PhysicsObject(2 * sade, 2 * sade, Shape.Circle);
+    pallo.Color = vari;
+    pallo.X = x;
+    pallo.Y = y;
+    return pallo;
+}
+</code></pre>

@@ -1,0 +1,6 @@
+<p>Aliohjelma saa parametrina kokonaisluvun ja palauttaa siis true, jos
+kokonaisluku oli parillinen ja false, jos kokonaisluku oli pariton.
+Toisella rivillä otetaan muuttujan luku ja luvun 2 jakolaskun
+jakojäännös. Jos jakojäännös on 0, niin silloin luku on parillinen, eli
+palautetaan true. Jos jakojäännös ei mennyt tasan, niin silloin luvun on
+pakko olla pariton eli palautetaan false.</p>

@@ -1,0 +1,11 @@
+<p>Visual Studion (VS) maksullinen - ja Jyväskylän yliopiston
+opiskelijoille maksuton - Ultimate-versio, on ladattavissa Microsoftin
+yliopistoyhteistyöpalvelusta, kirjoitushetkellä (elokuu 2012) nimeltään
+DreamSpark Premium. Edellä mainittu Express-versio on saatavilla
+ilmaiseksi Microsoftin verkkosivuilta. Express-versio riittää muilta
+osin tämän kurssin tarpeisiin, mutta siitä puuttuvat testausominaisuudet
+(ks. luku 11). Muistathan, että VS on saatavissa vain
+Windows-käyttöjärjestelmille. Linux- ja Mac OS X -ympäristöihin on
+saatavilla ainakin Mono-sovelluskehitin, mutta tällä kurssilla
+käytettävä Jypeli-ohjelmointikirjasto vaatii toimiakseen
+Windows-käyttöjärjestelmän.</p>

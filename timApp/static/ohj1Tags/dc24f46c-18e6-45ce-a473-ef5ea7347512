@@ -1,0 +1,4 @@
+<p>Tässä esimerkissä luomamme fysiikkaolio nimeltä pallo seuraa hiiren
+kursoria. Käsittelijää kutsutaan aina kun hiirtä liikuttaa.
+ListenMovement:in parametreissa herkkyys (tässä 0.1) tarkoittaa sitä,
+miten pieni hiiren liike aiheuttaa tapahtuman.</p>

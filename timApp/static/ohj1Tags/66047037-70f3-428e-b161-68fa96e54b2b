@@ -1,0 +1,14 @@
+<p>``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// <summary>
+/// Palauttaa parametrina saamansa numeroarvosanan kirjallisena.
+/// </summary>
+/// <param name="numero"></param>tenttiarvosana numerona
+/// <returns>tenttiarvosana kirjallisena</returns>
+public static String KirjallinenArvosana(int numero) 
+{
+   String arvosana = "";
+   switch(numero) 
+   {
+      case 0:
+         arvosana = "Hylätty";
+         break;</p>

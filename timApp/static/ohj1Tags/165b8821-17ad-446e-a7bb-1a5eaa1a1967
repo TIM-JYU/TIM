@@ -1,0 +1,12 @@
+<p>Olio (object) on ”tietorakenne”, jolla pyritään ohjelmoinnissa kuvaamaan
+reaalimaailman ilmiöitä. Luokkapohjaisissa kielissä (kuten C#, Java ja
+C++) olion rakenteen ja käyttäytymisen määrittelee luokka, joka kuvaa
+olion attribuutit ja metodit. Attribuutit ovat olion ominaisuuksia ja
+metodit olion toimintoja. Olion sanotaan olevan luokan <em>ilmentymä</em>.
+Yhdestä luokasta voi siis luoda useita olioita, joilla on samat metodit
+ja attribuutit. Attribuutit voivat saada samasta luokasta luoduilla
+olioilla eri arvoja. Attribuuttien arvot muodostavat olion tilan. Huomaa
+kuitenkin, että vaikka oliolla olisi sama tila, sen <em>identiteetti</em> on
+eri. Esimerkiksi, kaksi täsmälleen samannäköistä palloa voi olla samassa
+paikassa (näyttää yhdeltä pallolta), mutta todellisuudessa ne ovat kaksi
+eri palloa.</p>

@@ -1,0 +1,4 @@
+<p>Kun muutetaan 10-järjestelmän luku liukuluvun binääriesitykseksi, täytyy
+ensiksi selvittää liukuluvun eksponentti. Tämä saadaan selville
+skaalaamalla luku välille [1,2[ kertomalla tai jakamalla lukua
+toistuvasti luvulla 2, niin, että luku x on aluksi muodossa:</p>

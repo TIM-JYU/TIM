@@ -1,0 +1,5 @@
+<p>Kaikkia alkeistietotyyppisiä taulukoita voidaan järjestää
+Sort-aliohjelmalla. Lisäksi voidaan järjestää taulukoita, joiden
+alkioiden tietotyyppi <em>toteuttaa</em> (implements) IComparable-rajapinnan.
+Esimerkiksi String-luokka toteuttaa tuon rajapinnan. Rajapinnoista
+puhutaan lisää kohdassa 23.1.</p>

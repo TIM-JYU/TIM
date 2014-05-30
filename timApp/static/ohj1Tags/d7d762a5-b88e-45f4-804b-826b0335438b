@@ -1,0 +1,12 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+variable_declaration ::= { modifier } type variable_declarator 
+                               { "," variable_declarator } ";"
+modifier ::= "public" | "private" | "protected" | "static" | "final" | "native" |
+             "synchronized" | "abstract" | "threadsafe" | "transient"
+type ::= type_specifier { "[" "]" }
+type_specifier  ::= "boolean" | "byte" | "char" | "short" | "int" | "float" | "long" 
+                               | "double" | class_name | interface_name
+variable_declarator ::= identifier { "[" "]" } [ "="variable_initializer ]
+identifier ::= "a..z,$,_" { "a..z,$,_,0..9,unicode character over 00C0" }
+variable_initializer ::= expression | ( "{" [ variable_initializer 
+                               { "," variable_initializer } [ "," ] ] "}" )</code></p>

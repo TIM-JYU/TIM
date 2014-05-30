@@ -1,0 +1,7 @@
+<p>Kun ohjelma on kirjoitettu, sen ajaminen onnistuu ylhäältä Debug-napista
+(vihreä kolmio) tai klikkaamalla F5 (debug). Nappia painamalla VS
+kääntää ohjelman automaattisesti ja suorittaa heti sen jälkeen ns.
+debuggaustilassa. Ohjelma voidaan ajaa myös nopeammin ilman debuggausta
+- mikä ei yleensä ole suositeltavaa - painamalla Ctrl+F5 (start without
+debugging). Jos haluamme lopettaa ohjelman suorituksen jostain syystä
+kesken kaiken, onnistuu se painamalla Shift+F5.</p>

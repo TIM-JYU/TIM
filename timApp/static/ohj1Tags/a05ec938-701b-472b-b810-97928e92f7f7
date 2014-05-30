@@ -1,0 +1,3 @@
+<p>Jos hiiren painalluksia halutaan kuunnella vain tietyn peliolion (tai
+fysiikkaolion) kohdalla, voidaan käyttää apuna
+Mouse.ListenOn-aliohjelmaa:</p>

@@ -1,0 +1,7 @@
+<p>Ulommassa for-silmukassa käydään läpi taulukon jokainen rivi, eli eri
+elokuvat. Kun elokuva on ”valittu”, käydään elokuvan tiedot läpi.
+Sisemmässä for-silmukassa käydään läpi aina kaikki yhden elokuvan
+tiedot. Tietyn elokuvan eri tiedot tai kentät on tässä päätetty erottaa
+"|"-merkillä. Sisemmän for-silmukan jälkeen tulostetaan vielä
+rivinvaihto Console.WriteLine()-metodilla. Näin eri elokuvat saadaan eri
+riveille.</p>

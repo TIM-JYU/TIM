@@ -1,0 +1,3 @@
+<p>float on kooltaan 32 bittiä. Siinä ensimmäinen bitti siis tarkoittaa
+etumerkkiä, seuraavat 8 bittiä eksponenttia ja jäljelle jäävät 23 bittiä
+mantissaa.</p>

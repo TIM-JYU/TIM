@@ -1,0 +1,14 @@
+<p>Taulukot tarjoavat meille vielä hyvin rajalliset puitteet ohjelmointiin.
+Mietitäänpä vaikka tilanne, jossa meidän tarvitsisi laskea käyttäjän
+syöttämiä lukuja yhteen Käyttäjä saisi syöttää niin monta lukua kuin
+haluaa ja lopuksi painaa enter, jolloin meidän täytyisi laskea ja
+tulostaa näytölle käyttäjän syöttämien lukujen summan. Minne talletamme
+käyttäjän syöttämät luvut? Taulukkoon? Minkä kokoisen taulukon luomme?
+10 alkiota? 100? vai jopa 1000? Vaikka tekisimme kuinka ison taulukon,
+aina käyttäjä voi teoriassa syöttää enemmän lukuja ja luvut eivät mahdu
+taulukkoon. Toisaalta jos teemme 1000 kokoisen taulukon ja käyttäjä
+syöttääkin vain muutaman luvun, varaamme kohtuuttomasti koneen muistia.
+Tällaisia tilanteita varten C#:ssä on dynaamisia tietorakenteita, eli
+kokoelmia. Niiden koko kasvaa sitä mukaan kun alkioita lisätään.
+Dynaamisia tietorakenteita ovat muun muassa listat, puut, vektorit,
+pinot ym. Niiden käyttäminen ja rakenne eroaa huomattavasti toisistaan.</p>

@@ -1,0 +1,5 @@
+<p>canvas.BrushColor = Color.Black;
+  x = canvas.Right - 100;
+  y = canvas.Top - 100;
+  canvas.DrawLine(new Vector(x - 50, y + 50), new Vector(x + 50, y - 50));
+  canvas.DrawLine(new Vector(x + 50, y + 50), new Vector(x - 50, y - 50));</p>

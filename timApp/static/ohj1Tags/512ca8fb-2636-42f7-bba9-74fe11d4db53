@@ -1,0 +1,3 @@
+<p><code>{.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
+String henkilo = "Ville";
+Console.WriteLine(henkilo.Length); //tulostaa 5</code></p>

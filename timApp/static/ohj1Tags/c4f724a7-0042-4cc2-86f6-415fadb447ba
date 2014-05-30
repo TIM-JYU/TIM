@@ -1,0 +1,11 @@
+<p>Aliohjelmassa lasketaan aluksi eri arvosanojen välinen piste-ero, jota
+käytetään arvosanojen laskemiseen. Arvosanojen laskeminen aloitetaan
+ylhäältä alaspäin. Ehto voi sisältää myös aritmeettisia operaatioita.
+Lisäksi alustetaan muuttuja arvosana, johon talletetaan opiskelijan
+saama arvosana. Muuttujaan arvosana talletetaan 5, jos tenttipisteet
+ylittävät läpipääsyrajan johon lisätään arvosanojen välinen piste-ero
+kerrottuna neljällä. Jos opiskelijan pisteet eivät riittäneet arvosanaan
+5, mennään seuraavaan else-if -rakenteeseen ja tarkastetaan riittävätkö
+pisteet arvosanaan 4. Näin jatketaan edelleen kunnes kaikki arvosanat on
+käyty läpi. Lopuksi palautetaan muuttujan arvosana arvo. Pääohjelmassa
+aliohjelmaa on testattu muutamalla testitulostuksella.</p>

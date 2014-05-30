@@ -1,0 +1,2 @@
+<p>// järjestetään nyt vain kolme ensimmäistä alkiota
+Array.Sort(taulukko2, 0, 3);</p>

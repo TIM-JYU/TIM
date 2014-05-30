@@ -1,0 +1,4 @@
+<p>Silmukan lauseita toistetaan niin kauan, kuin ehto on voimassa, eli sen
+arvo on true. Ehto tarkastetaan aina ennen kuin siirrytään seuraavalle
+kierrokselle. Jos ehto saa siis heti alussa arvon false, ei lauseita
+suoriteta kertaakaan.</p>

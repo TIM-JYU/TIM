@@ -1,0 +1,5 @@
+<p>Parametrina annetaan se olio, jonka päällä hiiren painalluksia halutaan
+kuunnella. Muut parametrit ovat kuin normaalissa Listen-kutsussa.
+Käsittelijää PoimiPallo kutsutaan tässä esimerkissä silloin, kun hiiren
+kursori on pallo-nimisen olion päällä ja hiiren vasen nappi on
+painettuna pohjaan.</p>

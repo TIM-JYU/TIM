@@ -1,0 +1,4 @@
+<p>Arvonmuunto-operaattoreiden avulla laskutoimitukset voidaan esittää
+tiiviimmässä muodossa: esimerkiksi x++; (4 merkkiä) tarkoittaa samaa
+asiaa kuin x = x+1; (6 merkkiä). Niiden avulla voidaan myös alustaa
+muuttujia.</p>

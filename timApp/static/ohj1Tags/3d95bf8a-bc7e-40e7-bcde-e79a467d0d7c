@@ -1,0 +1,3 @@
+<p>taulukko2[0] = 10;
+Console.WriteLine(taulukko1[0]); //tulostaa 10
+```</p>

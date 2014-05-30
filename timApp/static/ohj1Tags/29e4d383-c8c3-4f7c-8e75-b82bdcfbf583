@@ -1,0 +1,5 @@
+<p>for (int i = 2; i &lt; luvut.Length; i++)
+{<br/>
+  luvut[i] = luvut[i - 1] + luvut[i - 2];
+}
+```</p>

@@ -1,0 +1,2 @@
+<p>Merkkijonon (String) muuttaminen int-tyypiksi onnistuu C#:n
+int.Parse-funktiolla seuraavasti.</p>

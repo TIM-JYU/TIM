@@ -1,0 +1,3 @@
+<p>String merkkijono1 = "" + luku;
+String merkkijono2 = "" + totuusarvo;
+```</p>

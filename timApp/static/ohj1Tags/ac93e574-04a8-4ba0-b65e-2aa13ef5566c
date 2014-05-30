@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+luvut[i] = luvut[i - 1] + luvut[i - 2];</code></p>

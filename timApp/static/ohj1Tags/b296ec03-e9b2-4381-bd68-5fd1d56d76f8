@@ -1,0 +1,6 @@
+<p>Kun kerromme uudelleen samaa desimaaliosaa kahdella, voidaan laskeminen
+lopettaa. Tällöin kyseessä on päättymätön luku. Luvussa rupeaisi siis
+toistumaan jakso 11001100. Nyt luku luetaan samasta suunnasta, josta
+laskeminenkin aloitettiin. Enää meidän tarvitsee päättää millä
+tarkkuudella luku esitetään. Mitä enemmän bittejä käytämme, sitä
+tarkempi luvusta tulee.</p>

@@ -1,0 +1,5 @@
+<p>Hiiren liikettä voidaan kuunnella aliohjelmalla Mouse.ListenMovement.
+Sille annetaan parametrina kuuntelun herkkyyttä kuvaava double,
+käsittelijä sekä ohjeteksti. Näiden lisäksi voidaan antaa myös omia
+parametreja. Käsittelijällä on yksi pakollinen parametri. Esimerkki
+hiiren kuuntelusta:</p>

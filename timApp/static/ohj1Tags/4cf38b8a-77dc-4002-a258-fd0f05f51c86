@@ -1,0 +1,2 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+PhysicsObject palikka = new PhysicsObject(100, 50);</code></p>

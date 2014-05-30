@@ -1,0 +1,29 @@
+<pre><code>    int i = 0;
+    while (i &lt; 100)
+    {
+        int sade = RandomGen.NextInt(5, 20);
+        double x = RandomGen.NextDouble(Level.Left + sade, Level.Right - sade);
+        double y = RandomGen.NextDouble(Level.Bottom + sade, Level.Top - sade);
+        Color vari = RandomGen.NextColor();
+        PhysicsObject pallo = LuoPallo(x, y, vari, sade);
+        Add(pallo);
+        i++;
+    }
+}
+
+/// &lt;summary&gt;
+/// Luo yksittäisen pallon ja palauttaa sen.
+/// &lt;/summary&gt;
+/// &lt;param name="x"&gt;Pallon kp x-koordinaatti&lt;/param&gt;
+/// &lt;param name="y"&gt;Pallon kp y-koordinaatti&lt;/param&gt;
+/// &lt;param name="vari"&gt;Pallon väri&lt;/param&gt;
+/// &lt;param name="sade"&gt;Pallon säde&lt;/param&gt;
+public static PhysicsObject LuoPallo(double x, double y, Color vari, double sade)
+{
+    PhysicsObject pallo = new PhysicsObject(2 * sade, 2 * sade, Shape.Circle);
+    pallo.Color = vari;
+    pallo.X = x;
+    pallo.Y = y;
+    return pallo;
+}
+</code></pre>

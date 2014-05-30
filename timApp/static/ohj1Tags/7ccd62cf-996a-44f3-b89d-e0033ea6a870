@@ -1,0 +1,4 @@
+<p>Aritmeettisten operaatioiden suoritusjärjestys on vastaava kuin
+matematiikan laskujärjestys. Kerto- ja jakolaskut suoritetaan ennen
+yhteen- ja vähennyslaskua. Lisäksi sulkeiden sisällä olevat lausekkeet
+suoritetaan ensin.</p>

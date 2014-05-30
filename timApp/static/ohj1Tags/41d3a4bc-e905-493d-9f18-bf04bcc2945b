@@ -1,0 +1,16 @@
+<p><code>{.esimerkki-western lang="zxx" xml:lang="zxx"}
+ohj1
+ |
+ +--demot 
+ |  +--demo1
+ |  |  +--HelloWorld
+ |  |  +--Lumiukko
+ |  |  '-demo1.sln
+ |  '--demo2
+ |     +--Lumiukko2
+ |     '--LukujenLaskemista
+ '--ohjaukset
+    +--ohjaus1
+    |  +--HelloWorld
+    |  '--Lumiukko
+    '--ohjaus2</code></p>

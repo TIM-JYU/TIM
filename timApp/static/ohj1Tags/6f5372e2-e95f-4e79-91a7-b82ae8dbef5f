@@ -1,0 +1,3 @@
+<p>C#:ssa täytyy aina asettaa joku arvo muuttujaan <em>ennen</em> sen
+käyttämistä. Kääntäjä ei käännä koodia, jossa käytetään muuttujaa jolle
+ei ole asetettu arvoa. Alla oleva ohjelma ei siis kääntyisi.</p>

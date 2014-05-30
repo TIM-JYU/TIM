@@ -1,0 +1,5 @@
+<p>Pääohjelman lisäksi ohjelma voi sisältää muitakin aliohjelmia.
+Aliohjelmaa <em>kutsutaan</em> pääohjelmasta, metodista tai toisesta
+aliohjelmasta suorittamaan tiettyä tehtävää. Aliohjelmat voivat saada
+parametreja ja palauttaa arvon, kuten metoditkin. Pohditaan seuraavaksi
+mihin aliohjelmia tarvitaan.</p>

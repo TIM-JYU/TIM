@@ -1,0 +1,5 @@
+<p>Olioviite määritellään kirjoittamalla ensiksi sen luokan nimi, josta
+olio luodaan. Seuraavaksi kirjoitetaan nimi, jonka haluamme oliolle
+antaa. Nimen jälkeen tulee yhtäsuuruusmerkki, jonka jälkeen oliota
+luotaessa kirjoitetaan sana new ilmoittamaan, että luodaan uusi olio.
+Tämä new-operaattori varaa tilan tietokoneen muistista oliota varten.</p>

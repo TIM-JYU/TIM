@@ -1,0 +1,9 @@
+<p>for (int r = 0; r &lt; 3; r++) // rivit
+{ 
+   for (int s = 0; s &lt; 3; s++) // sarakkeet
+   { 
+      Console.Write(elokuvat[r, s] + " | ");
+   }
+   Console.WriteLine();
+}
+```</p>

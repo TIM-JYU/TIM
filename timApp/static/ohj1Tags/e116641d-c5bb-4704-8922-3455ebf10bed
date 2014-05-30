@@ -1,0 +1,11 @@
+<ul>
+<li>
+<p>Alkeistietotyypit säilyttävät sisältämänsä tiedon yhdessä paikassa
+    tietokoneen muistissa (nimeltään <em>pino</em>).</p>
+</li>
+<li>
+<p>Viitetyypit sisältävät viitteen johonkin toiseen paikkaan muistissa
+    (kutsutaan nimellä <em>keko</em>), missä varsinainen data sijaitsee.
+    Viittaus olioon sijaitsee kuitenkin pinossa.</p>
+</li>
+</ul>

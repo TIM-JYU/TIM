@@ -1,0 +1,7 @@
+<p>Keskimmäinen ympyrä tulee alimman ympyrän yläpuolelle niin, että ympyrät
+sivuavat toisiaan. Keskimmäisen ympyrän keskipiste sijoittuu siis siten,
+että sen x-koordinaatti on 0 ja y-koordinaatti on <em>alimman ympyrän
+paikka</em> +<em>alimman ympyrän säde + keskimmäisen ympyrän säde</em>. Kun
+haluamme, että keskimmäisen ympyrän säde on 50, niin silloin
+keskimmäisen ympyrän keskipiste tulee kohtaan (0, p1.Y + 100 + 50) ja se
+piirretään lauseella:</p>

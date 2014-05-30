@@ -1,0 +1,6 @@
+<p>Yllä oleva muuttuja voisi olla myös vakio. Tämän kyseisen ohjelman
+tapauksessa se voisi olla jopa perusteltua. Kuitenkin, on myöskin
+perusteltua olettaa, että ohjelmamme kehittyessä pienimmän kolmion
+korkeutta olisi mahdollista muuttaa vaikkapa käyttäjän toimesta, ja
+silloin pieninKorkeus ei olisikaan enää vakio, vaan ohjelman ajon aikana
+muuttuva luku.</p>
