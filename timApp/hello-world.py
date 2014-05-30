@@ -18,12 +18,13 @@ def getFile(name, textFile=None):
             texts = []
             pars = p.getDocumentPars(STATIC_PATH + str(textFile))
             for par in pars:
-                with open(STATIC_PATH + name + "/" + par.strip(), 'r') as f:
-                    texts.append({"par" : par, "text" : Markup(markdown.markdown(unicode(f.read(), encoding="utf-8")))})
+                with open(STATIC_PATH + name + "/" + par.strip(), 'r', encoding="utf-8") as f:
+                    texts.append({"par" : par, "text" : Markup(markdown.markdown(f.read()))})
         else: 
             return redirect(url_for('goat'))
         return render_template('start.html',name=name, text=json.dumps(texts))
-    except IOError:
+    except IOError as err:
+        print(err)
         return redirect(url_for('goat'))
 
 

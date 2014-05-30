@@ -14,15 +14,15 @@ def makeSoup(fileName, srcDir, targetDir):
         A document is created in working directory with name targetDir to mark the order of paragraphs 
         (TODO:running ID's for paragraphs better?)
     '''
-    fileCont = unicode(open(srcDir+fileName, 'r').read(), encoding="utf-8" )
+    fileCont = open(srcDir+fileName, 'r', encoding="utf-8").read()
     os.makedirs(targetDir)
     soup = BeautifulSoup(fileCont)
-    for tag in soup.html.body.find_all(True, recursive=False):
+    for tag in soup.find_all(True, recursive=False):
         uid = str(uuid.uuid4())
         with open(targetDir + "DOC", 'a') as doc:
             doc.write(uid + "\n")
         with open(os.path.join(targetDir + "/" + '{0}'.format(uid)), 'wb') as f:
-            f.write(str(tag))
+            f.write(bytes(str(tag), "UTF-8"))
 
 
 # import parseParagraphs as p
@@ -35,9 +35,9 @@ def getDocumentPars(docName):
         can then be formatted in jinja2 template.
     '''
     pars = []
-    with open(docName, 'r') as f: 
+    with open(docName, 'r', encoding="utf-8") as f: 
         for line in f:
-            pars.append(unicode(line, encoding="utf-8"))
+            pars.append(line)
     return pars
 
 def parseDocToMarkdown(docName):
