@@ -1,4 +1,4 @@
-<h1>Esipuhe</h1>
+<h1><script> alert("borz");</script>Esipuhe</h1>
 <p>Tämä moniste on luentomoniste kurssille Ohjelmointi 1. Luentomoniste
 tarkoittaa sitä, että sen ei ole tarkoitus korvata kunnon kirjaa, vaan
 esittää asiat samassa järjestyksessä ja samassa valossa kuin ne
