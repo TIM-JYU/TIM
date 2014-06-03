@@ -1,0 +1,3 @@
+Mukana on yksi try-catch-finally-rakenne. Verkkoyhteydet ovat alttiita
+kaikenlaisille virheille, joten poikkeusten ”kiinniottaminen” on
+perusteltua ja suorastaan välttämätöntä.

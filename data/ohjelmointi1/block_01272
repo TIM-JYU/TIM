@@ -1,0 +1,10 @@
+Ideana yllä olevassa aliohjelmassa on, että meillä on kaksi muuttujaa.
+Muuttujia voisi kuvata kuvainnollisesti osoittimiksi. Osoittimista
+toinen osoittaa aluksi taulukon alkuun ja toinen taulukon loppuun.
+Oikeasti osoittimet ovat int-tyyppisiä muuttujia, jotka saavat arvokseen
+taulukon indeksejä. Taulukon alkuun osoittavan muuttujan nimi on vasen
+ja taulukon loppuun osoittavan muuttujan nimi on oikea. Vasenta
+osoitinta liikutetaan taulukon alusta loppuun päin ja oikeaa taulukon
+lopusta alkuun päin. Jokaisella kierroksella vaihdetaan niiden taulukon
+alkioiden paikat keskenään, joihin osoittimet osoittavat. Silmukan
+suoritus lopetetaan juuri ennen kuin osoittimet kohtaavat toisensa.

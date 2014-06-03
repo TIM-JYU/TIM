@@ -1,0 +1,4 @@
+Hiirellä ohjauksessa on kuitenkin usein oleellista tietää jotain
+kursorin sijainnista. Hiiren kursori ei ole oletuksenä näkyvä
+peliruudulla, mutta sen saa halutessaan helposti näkyviin, kun
+kirjoittaa koodiin seuraavan rivin vaikkapa kentän luomisen yhteydessä:

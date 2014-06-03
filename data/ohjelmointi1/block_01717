@@ -1,0 +1,3 @@
+Merkitsevin bitti on nyt 1 eli luku on kahden komplementti. Kun
+käännetään bitit ja lisätään 1 saadaan luku 0001. Koska merkitsevin
+bitti oli 1 on luku siis negatiivinen, joten saatiin vastaukseksi -1.

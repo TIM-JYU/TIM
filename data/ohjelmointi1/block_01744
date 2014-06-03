@@ -1,0 +1,4 @@
+\
+ double on kooltaan 64 bittiä. Siinäkin ensimmäinen bitti tarkoittaa
+etumerkkiä, seuraavat 11 bittiä eksponenttia ja jäljelle jäävät 52
+bittiä kuvaavat mantissaa.

@@ -1,0 +1,6 @@
+-   [Substring(Int32,
+    Int32)](http://msdn.microsoft.com/en-us/library/aka44szs.aspx)
+    Palauttaa osan merkkijonosta parametrinaan saamiensa indeksien
+    välistä. Ensimmäinen parametri on palautettavan merkkijonon
+    ensimmäisen merkin indeksi ja toinen parametri palautettavien
+    merkkien määrä.

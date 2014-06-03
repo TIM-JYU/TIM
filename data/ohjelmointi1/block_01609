@@ -1,0 +1,10 @@
+Yllä olevassa esimerkissä keskimmäinen tulostus aiheuttaisi
+DivideByZeroException-poikkeuksen ja tällöin siirryttäisiin välittömästi
+catch-lohkoon. Kolmesta try-lohkossa olevasta tulostusrivistä tulostuisi
+siis vain ensimmäinen. Jos haluaisimme, että kaikki lauseet, jotka eivät
+heitä poikkeusta suoritettaisiin, täytyisi meidän tehdä jokaiselle
+lauseelle oma try-catch -rakenteensa. Tällöin saisimme aikaan melkoisen
+try-catch -viidakon. Useimmiten tällaisissa tilanteissa olisikin
+järkevää tehdä suoritettavasta toimenpiteestä aliohjelma, joka
+sisältäisi try-catch -rakenteen. Tällöin koodi siistiytyisi ja lyhenisi
+huomattavasti.

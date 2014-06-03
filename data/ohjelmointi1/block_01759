@@ -1,0 +1,5 @@
+Ensimmäinen bitti on jälleen 0, eli luku on positiivinen. Seuraavat 8
+bittiä ovat 01111110, joka on desimaalilukuna 126. Eksponentti on siis
+126-127 = -1. Mantissaan jää nyt bitit 11000000000000000000000 eli
+mantissa on binääriluku 1.11, joka on 10-järjestelmässä luku 1.75.
+Liukuluvun esittämäksi reaaliluvuksi saadaan siis:

@@ -1,0 +1,8 @@
+Silmukan viimeinen lause kasvattaa muuttujan iarvoa yhdellä. Ilman tätä
+lausetta saisimme aikaan ikuisen silmukan, sillä indeksin arvo olisi
+koko ajan 0ja silmukan ehto olisi aina tosi. Lisäksi metodi tulostaisi
+koko ajan taulukon ensimmäistä alkioita. Indeksimuuttujan hallintaan
+liittyvät virheet ovat tyypillisiä aloittelevan (ja pidemmällekin
+edistyneen) ohjelmoijan virheitä. Ongelmalliseksi virheen tekee se,
+ettei se ole syntaksivirhe, jolloin esimerkiksi Visual Studio ei anna
+tilanteesta virheilmoitusta.

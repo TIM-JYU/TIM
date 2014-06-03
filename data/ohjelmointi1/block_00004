@@ -1,0 +1,14 @@
+Tässä monisteessa käytetään esimerkkikielenä *C\#*-kieltä. Kuitenkin
+nimenomaan esimerkkinä, koska monisteen rakenne ja esimerkit voisivat
+olla aivan samanlaisia mille tahansa muullekin ohjelmointikielelle.
+Tärkeintä on nimenomaan ohjelmoinnin ajattelutavan oppiminen. Kielen
+vaihtaminen toiseen samansukuiseen kieleen on ennemmin verrattavissa
+Savon murteen vaihtamisen Turun murteeseen, kuin suomen kielen
+vaihtamisen ruotsin kieleen. Toisin sanoen, jos yhdellä kielellä on
+oppinut ohjelmoimaan, kykenee jo lukemaan toisella kielellä
+kirjoitettuja ohjelmia pienen harjoittelun jälkeen. Toisella kielellä
+kirjoittaminen on hieman haastavampaa, mutta samat rakenteet sielläkin
+toistuvat. Ohjelmointikielet tulevat ja menevät. Tätäkin vastaavaa
+kurssia on pidetty Jyväskylän yliopistossa seuraavilla kielillä:
+Fortran, Pascal, C, C++, Java ja nyt C\#. Joissakin yliopistoissa
+aloituskielenä on Python.

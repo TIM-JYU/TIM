@@ -1,0 +1,6 @@
+Pyrittäessä kirjoittamaan koneelle kelpaavia ohjeita joudutaan
+suoritettavana oleva toimenpide kirjaamaan sarjana yksinkertaisia
+toimenpiteitä. Toimenpidesarjan tulee olla yksikäsitteinen, eli sen
+tulee joka tilanteessa tarjota yksi ja vain yksi tapa toimia, eikä siinä
+saa esiintyä ristiriitaisuuksia. Yksikäsitteistä kuvausta tehtävän
+ratkaisuun tarvittavista toimenpiteistä kutsutaan algoritmiksi.

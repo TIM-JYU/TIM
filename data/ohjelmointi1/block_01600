@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+int[] taulukko = new int[5];
+taulukko[5] = 5;
+```

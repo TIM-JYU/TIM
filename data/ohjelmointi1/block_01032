@@ -1,0 +1,12 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+switch (valitsin)
+{
+    // Seuraava koodi aiheuttaa virheen
+    case 1:
+        Console.WriteLine("Tapaus 1...");
+        // Tähän kuuluisi break-lause tai muu hyppylause!
+    case 2:
+        Console.WriteLine("... ja/tai tapaus 2");
+        break;
+}
+```

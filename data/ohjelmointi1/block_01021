@@ -1,0 +1,40 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+using System;
+/// <summary>
+/// Laskee opiskelijan tenttiarvosanan. 
+/// </summary>
+public class LaskeTenttiArvosana
+{
+    /// <summary>
+    /// Laskee tenttiarvosanan pistevälien mukaan.
+    /// </summary>
+    /// <param name="maksimipisteet">Tentin maksimipisteet</param>
+    /// <param name="lapipaasyraja">Tentin läpipääsyraja</param>
+    /// <param name="tenttipisteet">Opiskelijan saamat tenttipisteet</param>
+    /// <returns>tenttiarvosana välillä 0-5.</returns>
+    public static int LaskeArvosana(int maksimipisteet, int lapipaasyraja,
+      int tenttipisteet)
+    {
+        //Lasketaan eri arvosanoille tasaiset pistevälit
+        int arvosanojenPisteErot = (maksimipisteet - lapipaasyraja) / 5;
+        int arvosana = 0;
+
+        if      (lapipaasyraja + 4 * arvosanojenPisteErot <= tenttipisteet) arvosana = 5;
+        else if (lapipaasyraja + 3 * arvosanojenPisteErot <= tenttipisteet) arvosana = 4;
+        else if (lapipaasyraja + 2 * arvosanojenPisteErot <= tenttipisteet) arvosana = 3;
+        else if (lapipaasyraja + 1 * arvosanojenPisteErot <= tenttipisteet) arvosana = 2;
+        else if (lapipaasyraja + 0 * arvosanojenPisteErot <= tenttipisteet) arvosana = 1;
+        return arvosana;
+    }
+
+    /// <summary>
+    /// Pääohjelmassa tehdään testitulostuksia
+    /// </summary>
+    public static void Main()
+    {
+        //Tehdään muutama testitulostus
+        Console.WriteLine(LaskeArvosana(100, 50, 75));
+        Console.WriteLine(LaskeArvosana(24, 12, 12));
+    }
+}
+```

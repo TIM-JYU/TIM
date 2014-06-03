@@ -1,0 +1,4 @@
+Rivillä neljä tulostetaan näytölle Hello World!. C\#:ssa tämä tapahtuu
+pyytämällä .NET-ympäristön mukana tulevan luokkakirjaston
+System-luokkakirjaston Console-luokkaa tulostamaan
+WriteLine()-*metodilla* (method).

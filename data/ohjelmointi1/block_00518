@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+System.Console.WriteLine(5 + 3 * 4 - 2);  //tulostaa 15
+System.Console.WriteLine((5 + 3) * (4 - 2));  //tulostaa 16
+```

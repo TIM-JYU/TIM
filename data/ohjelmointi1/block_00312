@@ -1,0 +1,5 @@
+Ensimmäinen rivi tarkoittaa väljästi sanottuna, että ”lohkaise pieni
+pala - johon mahtuu int-kokoinen arvo - säilytystilaa tietokoneen
+muistista, ja käytä siitä jatkossa nimeä n. Toisella rivillä
+julistetaan, että ”talleta arvo 1 muuttujaan, jonka nimi on n, siten
+korvaten sen, mitä kyseisessä säilytystilassa mahdollisesti jo on”.

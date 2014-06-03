@@ -1,0 +1,62 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+01 using Jypeli;
+02 
+03 /// <summary>
+04 /// Piirretään lumiukko.
+05 /// </summary>
+06 public class Lumiukko : PhysicsGame
+07 {
+08   /// <summary>
+09   /// Pääohjelmassa peli käyntiin.
+10   /// </summary>
+11   /// <param name="args">Ei käytössä.</param>
+12   public static void Main(String[] args)
+13   {
+14     using (Lumiukko game = new Lumiukko())
+15     {
+16       game.Run();
+17     }
+18   }
+19   
+20   /// <summary>
+21   /// Aliohjelma, jossa
+22   /// piirretään ympyrät.
+23   /// </summary>
+24   public override void Begin()
+25   {
+26     Camera.ZoomToLevel();
+27     Level.Background.Color = Color.Black;
+28     
+29     PhysicsObject p1, p2, p3;
+30     
+31     // Eka ukko
+32     p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+33     p1.Y = Level.Bottom + 200.0;
+34     Add(p1);
+35     
+36     p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+37     p2.Y = p1.Y + 100 + 50;
+38     Add(p2);
+39     
+40     p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+41     p3.Y = p2.Y + 50 + 30;
+42     Add(p3);
+43     
+44     // Toinen ukko
+45     p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+46     p1.X = 200;
+47     p1.Y = Level.Bottom + 300.0;
+48     Add(p1);
+49     
+50     p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+51     p2.X = 200;
+52     p2.Y = p1.Y + 100 + 50;
+53     Add(p2);
+54     
+55     p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+56     p3.X = 200;
+57     p3.Y = p2.Y + 50 + 30;
+58     Add(p3);
+59   }
+60 }
+```

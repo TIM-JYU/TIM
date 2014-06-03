@@ -1,0 +1,5 @@
+``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
+String sana = "katti kattinen";
+sana = sana.Replace("atti", "issa");
+Console.WriteLine(sana);  //tulostaa "kissa kissanen"
+```

@@ -1,0 +1,4 @@
+Tosi, jos toinen lausekkeista on tosi. Vastaavasti jos lausekkeen arvo
+selviää jo aikaisemmin, niin loppua ei enää tarkisteta. Toisin sanoen,
+jos ensimmäinen lauseke saa arvon tosi, niin koko lauseke saa arvon tosi
+ja jälkimmäistä ei tarvitse enää tarkastaa.

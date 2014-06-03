@@ -1,0 +1,18 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+try 
+{
+   //jotain lauseita mitä koitetaan suorittaa
+} 
+catch (PoikkeusTyyppiA e) 
+{
+   //jotain toimenpiteitä mitä tehdään kun poikkeus ilmenee
+} 
+catch (PoikkeusTyyppiB e) 
+{
+   //jotain toimenpiteitä mitä tehdään kun poikkeus ilmenee
+} 
+catch (PoikkeusTyyppiC e) 
+{
+   //jotain toimenpiteitä mitä tehdään kun poikkeus ilmenee
+}
+```

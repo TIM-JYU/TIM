@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+!(p || q) sama asia kuin !p && !q
+!(p && q) sama asia kuin !p || !q
+```

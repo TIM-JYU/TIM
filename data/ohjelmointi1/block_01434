@@ -1,0 +1,3 @@
+ShowControlHelp näyttää peliruudulla pelissä käytetyt näppäimet ja
+niille asetetut ohjetekstit. Ohjeteksti on Listen-kutsun neljäntenä
+parametrina annettu merkkijono.

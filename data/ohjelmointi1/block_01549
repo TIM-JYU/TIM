@@ -1,0 +1,5 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+SierpinskinKolmio(canvas, x - s2, y, h / 2); // Vasen alakolmio
+SierpinskinKolmio(canvas, x + s2, y, h / 2); // Oikea alakolmio
+SierpinskinKolmio(canvas, x, y + h, h / 2); // Yläkolmio
+```

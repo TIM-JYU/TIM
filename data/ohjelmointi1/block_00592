@@ -1,0 +1,11 @@
+Yleensä C\#-ohjelmoijan ei tarvitse huolehtia muistin vapauttamisesta,
+mutta on tiettyjä tilanteita, joissa voidaan itse joutua poistamaan
+oliot. Yksi esimerkki tällaisesta tilanteesta on tiedostojen käsittely:
+Jos olio on avannut tiedoston, olisi viimeistään ennen olion tuhoamista
+järkevää sulkea tiedosto. Tällöin samassa yhteydessä olion tuhottavaksi
+merkitsemisen kanssa suoritettaisiin myös tiedoston sulkeminen. Tämä
+tehdään esittelemällä *hajotin* (destructor), joka on luokan metodi ja
+jonka tehtävänä on tyhjentää olio kaikesta sen sisältämästä tiedosta
+sekä vapauttaa sen sisältämät rakenteet, kuten kytkökset avoinna oleviin
+resursseihin (esim tiedostoon, tosin yleensä tiedostoa ei ole hyvä pitää
+avoinna niin kauan aikaa kuin jonkin olion elinkaari voi olla).

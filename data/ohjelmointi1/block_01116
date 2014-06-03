@@ -1,0 +1,2 @@
+Moniulotteisen taulukon alkioiden määrä tulee aina ilmoittaa ennen
+taulukon käyttöä. Tämä tapahtuu new-operaattorilla seuraavasti:

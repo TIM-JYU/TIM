@@ -1,0 +1,5 @@
+Remove-metodi toimii siten, että se poistaa listasta ensimmäisen
+esiintymän, joka vastaa annettua parametria. Metodi palauttaa true,
+mikäli listasta poistettiin alkio. Vastaavasti palautetaan false, mikäli
+annettua parametria vastaavaa alkiota ei löytynyt, jolloin listasta ei
+poistettu mitään.

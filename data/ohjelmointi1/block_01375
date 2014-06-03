@@ -1,0 +1,10 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+int[] taulukko = {-4, 5, -2, 4, 5, 12, 9};
+Array.Sort(taulukko);
+
+// Tulostetaan alkiot, että nähdää onnistuiko järjestäminen.
+foreach (int alkio in taulukko) 
+{
+   Console.WriteLine(alkio);
+}
+```

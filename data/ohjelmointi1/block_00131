@@ -1,0 +1,5 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+Piirrä säteeltään 20cm kokoinen ympyrä koordinaatiston pisteeseen (20, 80)
+Piirrä säteeltään 15cm kokoinen ympyrä edellisen ympyrän päälle
+Piirrä säteeltään 10cm kokoinen ympyrä edellisen ympyrän päälle
+```

@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+TietorakenneLuokanNimi<TallettavienOlioidenTyyppi> rakenteenNimi =
+  new TietorakenneLuokanNimi<TallettavienOlioidenTyyppi>();
+```

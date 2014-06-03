@@ -1,0 +1,2 @@
+Jättämällä tyhjät alkiot huomiotta esimerkiksi merkkijono ”kissa,,,;
+koira” palauttaisi vain kaksialkioisen taulukon:

@@ -1,0 +1,5 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+double huoneenPituus = 540.0;
+double huoneenLeveys = huoneenPituus;
+double huoneenAla = huoneenPituus * huoneenLeveys;
+```

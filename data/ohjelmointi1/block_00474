@@ -1,0 +1,2 @@
+\
+ System.Console.WriteLine(luku++); //tulostaa 0

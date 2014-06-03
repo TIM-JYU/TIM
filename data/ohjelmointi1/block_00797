@@ -1,0 +1,5 @@
+``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
+String henkilo = "Ville Virtanen";
+String sukunimi = henkilo.Substring(6);
+Console.WriteLine(sukunimi); // Virtanen
+```

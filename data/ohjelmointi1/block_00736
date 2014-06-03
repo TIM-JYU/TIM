@@ -1,0 +1,7 @@
+Ohjelman suoritukseen rivi riviltä on nyt kaksi eri komentoa: Step Into
+(F11) ja Step Over (F10). Napit toimivat muuten samalla tavalla, mutta
+jos kyseessä on aliohjelmakutsu, niin Step Into -komennolla mennään
+aliohjelman sisälle, kun Step Over -komento suorittaa rivin kuin se
+olisi yksi lause. Kaikki tällä hetkellä näkyvyysalueella olevat
+muuttujat ja niiden arvot nähdään oikealla olevalla
+Variables-välilehdellä.

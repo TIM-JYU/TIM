@@ -1,0 +1,8 @@
+-   Niissä voi olla vain yhden tyyppisiä alkioita
+
+-   Yksittäiseen alkioon päästään käsiksi laittamalla alkion
+    paikkaindeksi hakasulkujen sisään, esimerkiksi luvut[15, 14], tai
+    pallot[4].
+
+-   Molemmilla on metodeja (funktioita, aliohjelmia) sekä ominaisuuksia
+

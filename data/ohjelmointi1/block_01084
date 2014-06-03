@@ -1,0 +1,7 @@
+\
+ Huomaa, että jokaisella taulukon alkiolla on yksikäsitteinen indeksi.
+Indeksi tarvitaan, jotta taulukon alkiot voitaisiin myöhemmin "löytää"
+taulukosta. Jos taulukkoa ei alusteta määrittelyn yhteydessä, alustetaan
+alkiot automaattisesti oletusarvoihin taulukon luomisen yhteydessä.
+Tällöin numeeriset arvot alustetaan nollaksi, bool-tyyppi saa arvon
+false ja oliotyypit (esim. String) null-viitteen. [MÄN][KOS]

@@ -1,0 +1,4 @@
+Jos luku on positiivinen, kirjoitetaan se normaalisti, ja jos luku on
+negatiivinen, niin käännetään kaikki bitit päinvastaisiksi. Esimerkiksi
+luku +3~10~ = 0011 ja -3~10~ = 1100. Tässäkin systeemissä luvulla nolla
+on kaksi esitystä, 0000 ja 1111.

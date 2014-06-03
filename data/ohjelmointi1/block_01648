@@ -1,0 +1,4 @@
+Jypelissä olevasta RandomGen-luokasta löytyy useita staattisia metodeja,
+joilla satunnaislukujen (ja -värien, totuusarvojen, jne.) luominen on
+helpompaa. Lue RandomGen-luokan dokumentaatio osoitteesta
+<http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/> .

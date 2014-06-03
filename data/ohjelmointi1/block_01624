@@ -1,0 +1,3 @@
+System.IO-nimiavaruus sisältää muun muassa tiedostojen käsittelyyn
+tarvittavia aliohjelmia. Seuraavassa esimerkissä luetaan
+tekstitiedostosta tietoa, sekä kirjoitetaan tiedostoon.

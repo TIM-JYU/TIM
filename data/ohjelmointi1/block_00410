@@ -1,0 +1,11 @@
+``` {.huonoesimerkki-western lang="zxx" xml:lang="zxx"}
+// TÄMÄ OHJELMA EI KÄÄNNY
+public class Esimerkki 
+{
+  public static void Main(string[] args) 
+  {
+    int ika;
+    System.Console.WriteLine(ika);
+  }
+}
+```

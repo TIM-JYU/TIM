@@ -1,0 +1,3 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+PhysicsObject p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+```

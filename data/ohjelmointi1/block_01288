@@ -1,0 +1,5 @@
+Ehtolauseita käsiteltäessä tehtiin aliohjelma, joka laski
+tenttiarvosanan. Aliohjelma sai parametreina tentin maksimipisteet,
+läpipääsyrajan ja opiskelijan tenttipisteet ja palautti opiskelijan
+arvosanan. Tehdään nyt vastaava ohjelma käyttämällä taulukoita.
+Kirjoitetaan samalla ComTest-testit.

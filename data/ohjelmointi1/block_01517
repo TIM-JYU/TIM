@@ -1,0 +1,7 @@
+\
+ Tulosta voidaan lähteä ”kasaamaan” lopusta alkuun päin. Nyt Kertoma(1)
+palauttaa siis luvun 1 ja samalla lopettaa rekursiivisten kutsujen
+tekemisen. Kertoma(2) taas palauttaa 2 \* Kertoma(1) eli 2 \* 1 eli
+luvun 2. Nyt taas Kertoma(3) palauttaa 3 \* Kertoma(2) eli 3 \* 2 ja
+niin edelleen. Lopulta Kertoma(5) palauttaa 5 \* Kertoma(4) eli 5 \* 24
+= 120. Näin on saatu laskettua viiden kertoma rekursiivisesti. [LIA]

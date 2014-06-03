@@ -1,0 +1,19 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+private PhysicsObject pallo;
+
+public override void Begin()
+{
+    pallo = new PhysicsObject(30.0, 30.0, Shape.Circle);
+    Add(pallo);
+    Mouse.IsCursorVisible = true;
+    Mouse.ListenMovement(0.1, KuunteleLiiketta, null);
+}
+
+private void KuunteleLiiketta(AnalogState hiirenTila)
+{        
+    pallo.X = Mouse.PositionOnWorld.X;
+    pallo.Y = Mouse.PositionOnWorld.Y;
+
+    Vector hiirenLiike = hiirenTila.MouseMovement;
+}
+```

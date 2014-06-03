@@ -1,0 +1,3 @@
+-   [ToUpper()](http://msdn.microsoft.com/en-us/library/system.string.toupper.aspx)
+    Palauttaa merkkijonon niin, että kaikki kirjaimet on muutettu
+    isoiksi kirjaimiksi.

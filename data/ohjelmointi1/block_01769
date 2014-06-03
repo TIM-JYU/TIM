@@ -1,0 +1,3 @@
+Nyt kerrotaan lukua kahdella kunnes se on välillä [1,2[ ja muistetaan
+vähentää jokaisen kertomisen jälkeen eksponenttia yhdellä, jotta luvun
+arvo ei muutu.

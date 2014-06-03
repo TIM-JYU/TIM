@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+PhysicsObject kappale = new PhysicsObject(50.0, 50.0);
+bool onkoPaalla = Mouse.IsCursorOn(kappale);
+```

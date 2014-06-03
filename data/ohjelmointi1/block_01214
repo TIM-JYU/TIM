@@ -1,0 +1,4 @@
+Tämän jälkeen luodaan normaalisti PhysicsObject-fysiikkaolio, ja
+annetaan LuoPallo-aliohjelmalle parametrina juuri tekemämme muuttujat,
+joka sitten palauttaa haluamamme pallon. Pallo lisätään kentälle
+Add-metodin avulla.

@@ -1,0 +1,4 @@
+Alkuperäisellä BNF:llä syntaksin kuvaaminen on melko työlästä. Tämän
+takia on otettu käyttöön laajennettu BNF (extended BNF). Siinä
+terminaalit kirjoitetaan lainausmerkkien sisään ja non-terminaalit nyt
+ilman ”\<\>”-merkkejä. Lisäksi tulee kaksi uutta ominaisuutta.

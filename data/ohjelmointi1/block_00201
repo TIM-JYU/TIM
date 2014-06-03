@@ -1,0 +1,9 @@
+Toisin kuin C\#, eräät toiset ohjelmointikielet tuottavat
+käyttöjärjestelmäriippumatonta koodia. Esimerkiksi *Java*-kielessä
+kääntäjän tuottama tiedosto on niin sanottua *tavukoodia*, joka on
+käyttöjärjestelmäriippumatonta koodia. Tavukoodin suorittamiseen
+tarvitaan Java-virtuaalikone (Java Virtual Machine). Java-virtuaalikone
+on oikeaa tietokonetta matkiva ohjelma, joka tulkkaa tavukoodia ja
+suorittaa sitä sitten kohdekoneen prosessorilla. Tässä on merkittävä ero
+perinteisiin käännettäviin kieliin (esimerkiksi C ja C++), joissa
+käännös on tehtävä erikseen jokaiselle eri laitealustalle. [VES][KOS]

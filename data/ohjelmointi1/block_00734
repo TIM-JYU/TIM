@@ -1,0 +1,6 @@
+Kun keskeytyskohta on asetettu, klikataan ylhäältä Debug-nappia tai
+painetaan F5. Visual Studiossa ohjelman ”käynnistäminen” ja debuggauksen
+käynnistäminen ovat sama asia. Toki ohjelma voidaan käynnistää ilman
+debug-tilaakin, mutta silloin mahdolliset ohjelman virheet eivät tule
+Visual Studion tietoon, ja esimerkiksi nollalla jakaminen kaataa ajetun
+ohjelman.

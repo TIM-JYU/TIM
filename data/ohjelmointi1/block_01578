@@ -1,0 +1,3 @@
+Koska rakenne on dynaaminen, muuttuu listan alkioiden järjestys
+lennosta. Nyt "Star Wars"-merkkijono löytyisi indeksistä 0. Poistaa voi
+myös suoraan alkion sisällöllä.

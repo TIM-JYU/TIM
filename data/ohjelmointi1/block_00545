@@ -1,0 +1,15 @@
+Luokan ja olion suhdetta voisi kuvata seuraavalla esimerkillä. Olkoon
+luentosalissa useita ihmisiä. Kaikki luentosalissa olijat ovat ihmisiä.
+Heillä on tietyt samat ominaisuudet, jotka ovat kaikilla ihmisillä,
+kuten pää, kaksi silmää ja muitakin ruumiinosia. Kuitenkin jokainen
+salissa olija on erilainen ihmisen ilmentymä, eli jokaisella oliolla on
+oma identiteetti - eiväthän he ole yksi ja sama vaan heitä on useita.
+Eri ihmisillä voi olla erilainen tukka ja eriväriset silmät ja oma
+puhetyyli. Lisäksi ihmiset voivat olla eri pituisia, painoisia jne.
+Luentosalissa olevat identtiset kaksosetkin olisivat eri ilmentymiä
+ihmisestä. Jos Ihminen olisi luokka, niin kaikki luentosalissa olijat
+olisivat Ihminen-luokan ilmentymiä eli Ihminen-olioita. Tukka, silmät,
+pituus ja paino olisivat sitten olion ominaisuuksia eli attribuutteja.
+Ihmisellä voisi olla lisäksi joitain toimintoja eli metodeja kuten Syo,
+MeneToihin, Opiskele jne. Tarkastellaan seuraavaksi hieman todellisempaa
+esimerkkiä olioista.

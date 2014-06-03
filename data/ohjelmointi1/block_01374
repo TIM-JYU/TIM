@@ -1,0 +1,4 @@
+Taulukot voidaan järjestää käyttämällä Array-luokasta löytyvää
+Sort-aliohjelmaa. Parametrina Sort-aliohjelma saa järjestettävän
+taulukon. Aliohjelman tyyppi on static void, eli se *ei* palauta mitään,
+vaan ainoastaan järjestää taulukon.

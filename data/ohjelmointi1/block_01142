@@ -1,0 +1,3 @@
+Myös taulukot ovat olioita. Siispä taulukkomuuttujat ovat
+viitemuuttujia. Tämän takia taulukon kopioiminen *ei* onnistu alla
+olevalla tavalla kuten alkeistietotyypeillä:

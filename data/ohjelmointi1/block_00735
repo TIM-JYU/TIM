@@ -1,0 +1,7 @@
+Ohjelman suoritus on nyt pysähtynyt siihen kohtaan mihin asetimme
+keskeytyskohdan. Avaa Locals-välilehti alhaalta, ellei se ole jo auki.
+Debuggaus-näkymässä Locals-paneelissa näkyy kaikki tällä hetkellä
+näkyvillä olevat muuttujat (paikalliset, eli lokaalit muuttujat) ja
+niiden arvot. Keskellä näkyy ohjelman koodi, ja keltaisella se rivi
+missä kohtaa ohjelmaa ollaan suorittamassa. Vasemalla näkyy myös
+keltainen nuoli joka osoittaa sen hetkisen rivinumeron.

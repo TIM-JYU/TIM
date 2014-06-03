@@ -1,0 +1,33 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+using Jypeli;
+using System;
+
+/// <summary>
+/// Lumiukko, jonka pallot ovat taulukossa.
+/// </summary>
+public class Lumiukko : PhysicsGame
+{
+    /// <summary>
+    /// Piirretään oliot ja zoomataan kamera niin että kenttä näkyy kokonaan.
+    /// </summary>
+    public override void Begin()
+    {
+        Camera.ZoomToLevel();
+        Level.Background.Color = Color.Black;
+
+        PhysicsObject[] pallot = new PhysicsObject[3];
+        pallot[0] = LuoPallo(0, Level.Bottom + 200, Color.White, 100);
+        pallot[1] = LuoPallo(0, pallot[0].Y + 100 + 50, Color.White, 50);
+        pallot[2] = LuoPallo(0, pallot[1].Y + 50 + 30, Color.White, 30);
+        Add(pallot[0]); Add(pallot[1]); Add(pallot[2]);
+
+        foreach (PhysicsObject pallo in pallot)
+        {
+            pallo.Color = Color.Yellow;
+        }
+    }
+
+    /// <summary> ... 
+    public static PhysicsObject LuoPallo(double x, double y, Color vari, double sade) ...
+}
+```

@@ -1,0 +1,70 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Text;
+
+/// @author  Antti-Jussi Lakanen
+/// @version 22.8.2012
+///
+/// <summary>
+/// Tulostetaan kayttajan antaman www-osoitteen
+/// sisältö (GET-pyynnön palauttama HTML-koodi).
+/// </summary>
+public class TiedotNetista
+{
+    /// <summary>
+    /// Paaohjelmassa haetaan tiedot netistä listaan ja tulostetaan listan sisältö.
+    /// </summary>
+    public static void Main()
+    {
+        List<String> lista = new List<string>();
+        LueNetistaListaan("https://www.jyu.fi", lista);
+
+        foreach (String rivi in lista)
+        {
+            Console.WriteLine(rivi);
+        }
+        Console.ReadKey();
+    }
+
+    /// <summary>
+    /// Luetaan annetun url-osoitteen koko html-koodi
+    /// ja laitetaan rivi kerrallaan String-listaan.
+    /// </summary>
+    /// <param name="url">URL-osoite, mika halutaan lukea.</param>
+    /// <param name="lista">Lista, johon riveja kirjoitetaan.</param>
+    public static void LueNetistaListaan(String url, List<String> lista)
+    {
+        HttpWebResponse response = null;
+        StreamReader reader = null;
+        try
+        {
+            // Lahetetaan HTTP-pyynto palvelimelle
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url); 
+            request.Method = "GET"; // Maaritellaan pyynnon tyypiksi GET
+            response = (HttpWebResponse)request.GetResponse();
+            reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8); 
+            while (!reader.EndOfStream)
+            {
+                String rivi = reader.ReadLine();
+                lista.Add(rivi);
+            }
+        }
+        catch (WebException we) // Ellei saada luotua verkkoyhteytta sopivalla protokollalla
+        {
+            Console.WriteLine(we.Message);
+        }
+        finally
+        {
+            if (reader != null)
+                reader.Close();
+            if (response != null)
+            // Tietovirta taytyy sulkea, jottei sovelluksessa 
+            // jouduttaisi tilaan, missa yhteydet "loppuvat kesken".
+                response.Close(); 
+        }
+    }
+}
+```

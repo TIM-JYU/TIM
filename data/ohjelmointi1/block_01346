@@ -1,0 +1,13 @@
+-   for: Jos silmukan kierrosten määrä on ennalta tiedossa
+
+-   foreach: Jos haluamme tehdä jotain jonkun Collection-tietorakenteen
+    tai taulukon kaikille alkioille.
+
+-   while: Jos silmukan kierrosten määrä ei ole tiedossa
+    (erikoistapauksena hallittu ikuinen silmukka, josta poistutaan
+    break-lauseella), emmekä välttämättä halua suorittaa silmukkaa
+    kertaakaan.
+
+-   do-while: Jos silmukan kierrosten määrä ei ole tiedossa, mutta
+    haluamme suorittaa silmukan vähintään yhden kerran.
+

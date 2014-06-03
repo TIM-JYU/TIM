@@ -1,0 +1,5 @@
+Yksikirjaimisia muuttujien nimiäkin voi perustellusti käyttää, jos
+niillä on esimerkiksi jo matematiikasta tai fysiikasta ennestään tuttu
+merkitys. Nimet x ja y ovat hyviä kuvaamaan koordinaatteja. Nimi l (eng.
+length) viittaa pituuteen ja r (eng. radius) säteeseen. Fysikaalisessa
+ohjelmassa s voi hyvin kuvata matkaa.

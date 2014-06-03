@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+ControllerOne.Listen(Button.DPadLeft, ButtonState.Down, LiikutaPelaajaaVasemmalle,
+                    "Liikuta pelaajaa vasemmalle");
+```

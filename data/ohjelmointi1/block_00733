@@ -1,0 +1,10 @@
+VS:ssa debuggaus aloitetaan asettamalla ensin johonkin kohtaan koodia
+keskeytyskohta (breakpoint). Keskeytyskohta on kohta, johon haluamme
+testauksen aikana ohjelman suorituksen väliaikaisesti pysähtyvän.
+Ohjelman pysähdyttyä voidaan sitä sitten alkaa suorittamaan rivi
+riviltä. Keskeytyskohta tulee siis asettaa koodiin ennen oletettua
+virhekohtaa. Jos haluamme debugata koko ohjelman, asetamme vain
+keskeytyskohdan ohjelman alkuun. Aseta keskeytyskohta kursorin kohdalle
+painamalla F9 tai klikkaamalla koodi-ikkunassa rivinumeroiden vasemmalle
+puolelle (harmaalle alueelle). Keskeytyskohta pitäisi näkyä punaisena
+pallona ja rivillä oleva lause värjättynä punaisella.

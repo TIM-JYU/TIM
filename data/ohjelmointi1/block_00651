@@ -1,0 +1,3 @@
+Tarkasti sanottuna Parse-funktio luo parametrina saamansa merkkijonon
+perusteella uuden int-tyyppisen tiedon, joka talletetaan muuttujaan
+luku2.

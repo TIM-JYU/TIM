@@ -1,0 +1,4 @@
+Jokaisella tietystä luokasta luodulla oliolla on käytössä kaikki tämän
+luokan julkiset metodit. Metodikutsussa käsketään oliota tekemään
+jotain. Voisimme esimerkiksi käskeä PhysicsObject-oliota liikkumaan, tai
+Tyontekija-oliota muuttamaan palkkaansa.

@@ -1,0 +1,6 @@
+Tässä Format-metodi saa kaksi parametria. Ensimmäistä parametria
+sanotaan muotoilumerkkijonoksi (format string). Toisena parametrina on
+sitten muotoiltava arvo. Muotoilumahdollisuuksia on hyvin paljon. Alla
+muutamia esimerkkejä erilaisten lukujen muotoilusta. Lisää löydät
+[MSDN-dokumentaatiosta kohdasta Formatting
+types](http://msdn.microsoft.com/en-us/library/26etazsy.aspx).

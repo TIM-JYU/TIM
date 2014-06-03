@@ -1,0 +1,6 @@
+Oliosta tuli musta. Ensimmäinen arvo kertoo punaisen värin määrän,
+toinen arvo vihreän värin määrän ja kolmas sinisen värin määrän.
+"Värimaailman" lyhenne RGB (**R**ed, **G**reen, **B**lue) tulee tästä.
+Lyhenteestä on helppo muistaa missä järjestyksessä värit tulevat. Määrät
+ovat kokonaislukuja välillä 0-255 (byte). Muitakin tapoja värien
+asettamiseen on olemassa, mutta näillä kahdella pärjää jo hyvin.

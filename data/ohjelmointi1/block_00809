@@ -1,0 +1,3 @@
+-   [Length](http://msdn.microsoft.com/en-us/library/system.string.length.aspx)
+    Palauttaa merkkijonon pituuden kokonaislukuna. Huomaa, että tämä EI
+    ole aliohjelma / metodi, vaan merkkijono-olion *ominaisuus*.

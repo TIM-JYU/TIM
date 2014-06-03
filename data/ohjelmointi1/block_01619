@@ -1,0 +1,7 @@
+Poikkeukset ovat nimensä mukaan säännöstä poikkeavia tapahtumia. Niitä
+ei tulisikaan käyttää periaatteella: "En ole varma toimiiko tämä, joten
+laitan try-catch-rakenteen sisään." Poikkeukset ovat sitä varten, että
+hyvinkin suunnitellussa ja mietityssä koodissa voi joskus tapahtua
+jotain odottamatonta, johon varautuminen voi parhaimmillaan pitää
+lentokoneen kurssissa tai hätäkeskuspäivystyksen tietojärjestelmän
+pystyssä.

@@ -1,0 +1,3 @@
+-   [ToLower()](http://msdn.microsoft.com/en-us/library/system.string.tolower.aspx)
+    Palauttaa merkkijonon niin, että kaikki kirjaimet on muutettu
+    pieniksi kirjaimiksi.

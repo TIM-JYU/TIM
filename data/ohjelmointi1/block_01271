@@ -1,0 +1,17 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// <summary>
+/// Aliohjelma kääntää kokonaisluku-taulukon alkiot päinvastaiseen
+/// järjestykseen.
+/// </summary>
+/// <param name="taulukko">Käännettävä taulukko.</param>
+public static void KaannaTaulukko(int[] taulukko) 
+{
+   int temp;
+   for (int vasen = 0, oikea = taulukko.Length-1; vasen < oikea; vasen++, oikea--) 
+   {
+      temp = taulukko[vasen];
+      taulukko[vasen] = taulukko[oikea];
+      taulukko[oikea] = temp;
+   }
+}
+```

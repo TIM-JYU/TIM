@@ -1,0 +1,4 @@
+Yllä oleva esimerkki osoittaa, että näiden *vahvasti tyypitettyjen*
+tietorakenteiden käyttö on myös turvallista - tietorakenteeseen ei voi
+”vahingossa” laittaa väärän tyyppisiä alkioita, joka saattaisi sitten
+myöhemmin aiheuttaa vakavia ongelmia.

@@ -1,0 +1,4 @@
+Jos luvun parsiminen (jäsentäminen, muuttaminen) ei onnistu, aiheuttaa
+se niin sanotun *poikkeuksen*. double-luvun parsiminen onnistuu
+vastaavasti Double-rakenteesta (iso D-kirjain) löytyvällä
+Parse-funktiolla.

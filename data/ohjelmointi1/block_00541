@@ -1,0 +1,6 @@
+C\#:n alkeistietotyypit antavat melko rajoittuneet puitteet
+ohjelmointiin. Niillä pystytään tallentamaan ainoastaan lukuja ja
+yksittäisiä kirjaimia. Vähänkin monimutkaisemmissa ohjelmissa tarvitaan
+kehittyneempiä rakenteita tiedon tallennukseen. C\#:ssa, Javassa ja
+muissa oliokielissä tällaisen rakenteen tarjoavat oliot. C\#:ssa jo
+merkkijonokin (String) toteutetaan oliona.

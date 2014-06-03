@@ -1,0 +1,3 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+if (!(luku <= 0)) Console.WriteLine("Luku on suurempi kuin nolla");
+```

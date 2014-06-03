@@ -1,0 +1,3 @@
+Itse asiassa oliomuuttuja on C\#:ssa ainoastaan *viite* varsinaiseen
+olioon. Siksi niitä kutsutaankin usein myös *viitemuuttujiksi.*
+Viitemuuttujat eroavat oleellisesti alkeistietotyyppisistä muuttujista.

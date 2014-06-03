@@ -1,0 +1,8 @@
+Kun käsitellään useita samaan asiaan liittyviä jossain mielessä
+samankaltaisia tai yhteen liittyviä arvoja, on usein syytä ottaa
+käyttöön *taulukko* (array). Taulukko on tietorakenne, johon voi
+tallentaa useita samantyyppisiä muuttujia. Yksittäistä taulukon
+muuttujaa sanotaan *alkioksi* (element). Jokaisella alkiolla on
+taulukossa paikka, jota sanotaan *indeksiksi* (index). Taulukon
+indeksointi alkaa C\#:ssa aina nollasta, eli esimerkiksi 12-alkioisen
+taulukon ensimmäisen alkion indeksi olisi 0 ja viimeisen 11.

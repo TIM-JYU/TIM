@@ -1,0 +1,7 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+String henkilo1 = "Seppo Sirkuttaja";
+char kolmasKirjain;
+int i = 2;
+kolmasKirjain = henkilo1[i];  // indeksit menevät 0,1,2,3 jne...
+Console.WriteLine(henkilo1 + " -nimen paikassa " + i + " oleva merkki on " + kolmasKirjain);
+```

@@ -1,0 +1,3 @@
+String-luokan olio on C\#:n ehkä yleisin olio, ja on itse asiassa
+kokoelma (taulukko) perättäisiä yksittäisiä char-tyyppisiä merkkejä. Se
+voidaan luoda seuraavasti.

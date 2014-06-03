@@ -1,0 +1,7 @@
+Liukulukuja (double ja float) testataan ComTest:n
+vertailuoperaattorilla, jossa on kolme aaltoviivaa (\~\~\~). Tämä johtuu
+siitä, että kaikkia reaalilukuja ei pystytä esittämään tietokoneella
+tarkasti, joten täytyy sallia pieni virhemarginaali. Tehdään
+Keskiarvo-aliohjelma, joka osaa laskea kahden double-tyyppisen luvun
+keskiarvon ja kirjoitetaan sille samalla dokumentaatiokommentit ja
+ComTest-testit.

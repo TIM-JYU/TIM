@@ -1,0 +1,5 @@
+Luokan sisällä muuttuja voidaan määritellä myös niin, että se näkyy
+kaikkialla, siis kaikille aliohjelmille. Kun muuttuja on näkyvissä
+kaikille ohjelman osille, sanotaan sitä *globaaliksi muuttujaksi*
+(global variable). Globaaleja muuttujia tulee välttää aina kun
+mahdollista.

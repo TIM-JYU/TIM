@@ -1,0 +1,3 @@
+Koska Keskiarvo-aliohjelma palauttaa aina double-tyyppisen liukuluvun,
+voidaan kutsua käyttää kuten mitä tahansa double-tyyppistä arvoa. Se
+voidaan esimerkiksi tulostaa tai tallentaa muuttujaan.
