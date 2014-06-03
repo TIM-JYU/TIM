@@ -1,0 +1,11 @@
+Liitos: Samuelin koodi, jossa jinja templata laittaa jsondataa suoraan script tagin sisään.
+Lyhyt savutesti python json-palikalle syötetään kaikkea roskaa ja katsotaan saadaanko
+jsonin rakenne muuttumaan:
+
+    for i in {1..1000}; do 
+        cat example.json | radamsa | ./pyJSONTest.py; 
+        if [ $? -ne 0 ]; then echo $i "==>" $?; fi; 
+    done;
+
+
+Tarvitsee radamsan (ks.google ja oulu)
