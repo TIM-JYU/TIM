@@ -3,6 +3,7 @@ from flask import Markup
 from bs4 import BeautifulSoup
 import uuid
 import os
+import pypandoc
 
 # 
 ACCEPTED_TAGS = ['p','h1','h2','h3','h4','h5','em','li','img']
@@ -27,7 +28,7 @@ def makeSoup(fileName, srcDir, targetDir):
 
 # import parseParagraphs as p
 def test():
-    makeSoup("lecture.markdown", "./", "./static/ohj1Tags")
+    makeSoup("/static/ohj1/raw_lecture_notes.markdown", "./", "./static/ohj1Tags")
 
 def getDocumentPars(docName):
     ''' Returns a table of paragraphs of 
