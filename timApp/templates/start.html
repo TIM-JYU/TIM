@@ -2,20 +2,53 @@
 
 <html lang="en" ng-app="timApp">
 <head>
+    <title>TIM</title>
     <meta charset="utf-8">
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='angular-1.2.9/angular.js')}}"></script>
     <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
     <script src="{{url_for('static', filename='timController.js')}}"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script> 
+    <script src="//code.angularjs.org/1.2.9/angular-sanitize.js"></script>
+    <script src="{{url_for('static', filename='jquery-textrange.js')}}"></script>
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    </head>
+    <![endif]-->  
+    <script> 
+        var jsonData = JSON.parse({{ text|tojson|safe }});
+        timApp = angular.module('timApp', ['ngSanitize']);
+        timApp.controller("TimCtrl", ['$scope', function(sc){
+                sc.paragraphs = jsonData; 
+                sc.setEditable = function(par){
+                    var elem = sc.findPar(par);
+                    if(elem.hidden == true){
+                        elem.hidden = false;
+                    }
+                    else {
+                        elem.hidden = true;
+                    }
+                
+                };
+                
+            sc.findPar = function(par){
+                for(var i = 0; i < sc.paragraphs.length; i++){
+                    if (sc.paragraphs[i].par == par){
+                        return sc.paragraphs[i];
+                    }
+                }
+            };
+        }]);
 
-    <body ng-controller="TimCtrl">
-        <div class="content">
-            {{fileCont}}
-            
+
+
+    </script>
+</head>
+    {% raw %}
+    <body ng-controller="TimCtrl"> 
+        <div class="content" ng-repeat-start="par in paragraphs" ng-bind-html="par.text" > 
         </div>
-        <script src="js/scripts.js"></script>
+         <button ng-click="setEditable(par.par)"></button>
+        <input ng-repeat-end type="textarea" ng-show="par.hidden" ng-model="par.text"></input>
+    {% endraw %}
     </body>
 </html>
