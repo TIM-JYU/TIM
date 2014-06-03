@@ -11,12 +11,13 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script> 
     <script src="//code.angularjs.org/1.2.9/angular-sanitize.js"></script>
     <script src="{{url_for('static', filename='jquery-textrange.js')}}"></script>
+    <script src="{{url_for('static', filename='markdown.js')}}"></script>
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->  
     <script> 
         var jsonData = JSON.parse({{ text|tojson|safe }});
-        timApp = angular.module('timApp', ['ngSanitize']);
+        timApp = angular.module('timApp', ['ngSanitize', 'btford.markdown']);
         timApp.controller("TimCtrl", ['$scope', function(sc){
                 sc.paragraphs = jsonData; 
                 sc.setEditable = function(par){
@@ -43,12 +44,13 @@
 
     </script>
 </head>
-    {% raw %}
+{% raw %}
     <body ng-controller="TimCtrl"> 
-        <div class="content" ng-repeat-start="par in paragraphs" ng-bind-html="par.text" > 
+        <div class="content" ng-repeat-start="par in paragraphs"> 
+                <btf-markdown ng-model="par.text"> </btf-markdown>
         </div>
          <button ng-click="setEditable(par.par)"></button>
         <input ng-repeat-end type="textarea" ng-show="par.hidden" ng-model="par.text"></input>
-    {% endraw %}
     </body>
+    {% endraw %}
 </html>
