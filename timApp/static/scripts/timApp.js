@@ -14,7 +14,7 @@
             sc.setEditable = function(par){
                 var elem = sc.findPar(par);
                 var elemId = sc.findParId(par);
-                if(sc.editorExists(elem.par)){
+                if(sc.editing == true && sc.editorExists(elem.par)){
                         mdtext = sc.getEditor(elem.par).editor.getSession().getValue();
                         sc.paragraphs[elemId].text = mdtext; 
                         $('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
@@ -46,9 +46,10 @@
             sc.editorExists = function(par){
                     for(var i = 0; i < sc.editors.length; i++){
                             if(sc.editors[i].par == par){
-                                    return i;
+                                    return true;
                             }
                     }
+                    return false;
             }
 
             sc.getEditor = function(par){
