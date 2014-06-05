@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, Markup
+from flask import Flask, redirect, url_for
 from flask import render_template, render_template_string
 from flask import g
 from ReverseProxied import ReverseProxied
-import markdown
-import parseParagraphs as p
-from verifyPath import verifyPath
 import json
 import os
+from os import listdir
+from os.path import isfile,join
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -23,25 +22,17 @@ app.config.update(dict(
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 STATIC_PATH = "./static/"
 
-@app.teardown_appcontext
-def close_db(error):
-    """Closes the database again at the end of the request."""
-    if hasattr(g, 'sqlite_db'):
-        g.sqlite_db.close()
-
-@app.route("/getFile/<name>/<textFile>/")
-def getFile(name, textFile=None):
+@app.route("/getFile/<textFile>/")
+def getFile(textFile):
+    mypath = STATIC_PATH + "/data/"+textFile
     try:
-        #Check for path injections
-        if verifyPath(name, textFile):
-            texts = []
-            pars = p.getDocumentPars(STATIC_PATH + str(textFile))
-            for par in pars:
-                with open(STATIC_PATH + name + "/" + par.strip(), 'r', encoding="utf-8") as f:
-                    texts.append({"par" : par, "text" : Markup(markdown.markdown(f.read()))})
-        else: 
-            return redirect(url_for('goat'))
-        return render_template('start.html',name=name, text=json.dumps(texts))
+        texts = []
+        pars = [ f for f in listdir(mypath) if isfile(join(mypath,f)) ]
+        pars.sort()
+        for par in pars:
+            with open(STATIC_PATH + "/data/" + textFile + "/" + par, 'r', encoding="utf-8") as f:
+                texts.append({"par" : par, "text" : f.read()})
+        return render_template('start.html', text=json.dumps(texts))
     except IOError as err:
         print(err)
         return redirect(url_for('goat'))
