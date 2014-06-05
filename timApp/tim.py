@@ -1,14 +1,55 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, redirect, url_for, Markup
 from flask import render_template, render_template_string
+from flask import g
 from ReverseProxied import ReverseProxied
 import markdown
 import parseParagraphs as p
 from verifyPath import verifyPath
 import json
+import os
+import sqlite3
 
 app = Flask(__name__) 
+app.config.from_object(__name__)
+
+# Load default config and override config from an environment variable
+app.config.update(dict(
+    DATABASE=os.path.join(app.root_path, 'tim.db'),
+    DEBUG=True,
+    SECRET_KEY='development key',
+    USERNAME='admin',
+    PASSWORD='default'
+))
+app.config.from_envvar('TIM_SETTINGS', silent=True)
 STATIC_PATH = "./static/"
+
+def init_db():
+    with app.app_context():
+        db = get_db()
+        with app.open_resource('schema.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
+
+def connect_db():
+    """Connects to the specific database."""
+    rv = sqlite3.connect(app.config['DATABASE'])
+    rv.row_factory = sqlite3.Row
+    return rv
+
+def get_db():
+    """Opens a new database connection if there is none yet for the
+    current application context.
+    """
+    if not hasattr(g, 'sqlite_db'):
+        g.sqlite_db = connect_db()
+    return g.sqlite_db
+
+@app.teardown_appcontext
+def close_db(error):
+    """Closes the database again at the end of the request."""
+    if hasattr(g, 'sqlite_db'):
+        g.sqlite_db.close()
 
 @app.route("/getFile/<name>/<textFile>/")
 def getFile(name, textFile=None):
