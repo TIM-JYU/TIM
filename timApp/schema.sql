@@ -1,0 +1,177 @@
+
+DROP TABLE DocumentAccess
+;
+
+DROP TABLE BlockAccess
+;
+
+DROP TABLE UserGroupMembers
+;
+
+DROP TABLE ReadRevision
+;
+
+DROP TABLE DocumentBlocks
+;
+
+DROP TABLE Document
+;
+
+DROP TABLE User
+;
+
+DROP TABLE UserGroup
+;
+
+DROP TABLE Block
+;
+
+
+CREATE TABLE Block (
+id INTEGER NOT NULL,
+latest_revision_id INTEGER NOT NULL,
+
+CONSTRAINT Block_PK 
+	PRIMARY KEY (id)
+)
+;
+
+
+CREATE TABLE UserGroup (
+id INTEGER NOT NULL,
+
+CONSTRAINT UserGroup_PK 
+	PRIMARY KEY (id)
+)
+;
+
+
+CREATE TABLE User (
+id INTEGER NOT NULL,
+name INTEGER NOT NULL,
+
+CONSTRAINT User_PK 
+	PRIMARY KEY (id)
+)
+;
+
+
+CREATE TABLE Document (
+id INTEGER NOT NULL,
+name INTEGER NOT NULL,
+UserGroup_id INTEGER NOT NULL,
+
+CONSTRAINT Document_PK 
+	PRIMARY KEY (id),
+CONSTRAINT Document_id 
+	FOREIGN KEY (UserGroup_id)
+	REFERENCES UserGroup (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
+)
+;
+
+
+CREATE TABLE DocumentBlocks (
+Document_id INTEGER NOT NULL,
+Block_id INTEGER NOT NULL,
+
+CONSTRAINT DocumentBlocks_PK
+	PRIMARY KEY (Document_idBlock_id),
+CONSTRAINT DocumentBlocks_id 
+	FOREIGN KEY (Document_id)
+	REFERENCES Document (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+CONSTRAINT DocumentBlocks_id 
+	FOREIGN KEY (Block_id)
+	REFERENCES Block (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
+)
+;
+
+
+CREATE TABLE ReadRevision (
+revision_id INTEGER NOT NULL,
+Block_id INTEGER NOT NULL,
+User_id INTEGER NOT NULL,
+
+CONSTRAINT ReadRevision_PK
+	PRIMARY KEY (Block_idUser_id),
+CONSTRAINT ReadRevision_id 
+	FOREIGN KEY (Block_id)
+	REFERENCES Block (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+CONSTRAINT ReadRevision_id 
+	FOREIGN KEY (User_id)
+	REFERENCES User (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
+)
+;
+
+
+CREATE TABLE UserGroupMembers (
+UserGroup_id INTEGER NOT NULL,
+User_id INTEGER NOT NULL,
+
+CONSTRAINT UserGroupMembers_PK
+	PRIMARY KEY (UserGroup_idUser_id),
+CONSTRAINT UserGroupMembers_id 
+	FOREIGN KEY (UserGroup_id)
+	REFERENCES UserGroup (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+CONSTRAINT UserGroupMembers_id 
+	FOREIGN KEY (User_id)
+	REFERENCES User (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
+)
+;
+
+
+CREATE TABLE BlockAccess (
+visible_from INTEGER NOT NULL,
+visible_to INTEGER NOT NULL,
+Block_id INTEGER NOT NULL,
+UserGroup_id INTEGER NOT NULL,
+
+CONSTRAINT BlockAccess_PK
+	PRIMARY KEY (Block_idUserGroup_id),
+CONSTRAINT BlockAccess_id 
+	FOREIGN KEY (Block_id)
+	REFERENCES Block (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+CONSTRAINT BlockAccess_id 
+	FOREIGN KEY (UserGroup_id)
+	REFERENCES UserGroup (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
+)
+;
+
+
+CREATE TABLE DocumentAccess (
+visible_from INTEGER NOT NULL,
+visible_to INTEGER NOT NULL,
+Document_id INTEGER NOT NULL,
+UserGroup_id INTEGER NOT NULL,
+
+CONSTRAINT DocumentAccess_PK
+	PRIMARY KEY (Document_idUserGroup_id),
+CONSTRAINT DocumentAccess_id 
+	FOREIGN KEY (Document_id)
+	REFERENCES Document (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+CONSTRAINT DocumentAccess_id 
+	FOREIGN KEY (UserGroup_id)
+	REFERENCES UserGroup (id)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
+)
+;
