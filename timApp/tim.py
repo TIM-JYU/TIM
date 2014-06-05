@@ -9,7 +9,9 @@ from verifyPath import verifyPath
 import json
 import os
 import sqlite3
+from enum import Enum
 
+BlockType = Enum('BlockType', 'DocumentBlock Comment Note Answer')
 app = Flask(__name__) 
 app.config.from_object(__name__)
 
@@ -24,26 +26,62 @@ app.config.update(dict(
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 STATIC_PATH = "./static/"
 
-def init_db():
+def initDb():
     with app.app_context():
-        db = get_db()
+        db = getDb()
         with app.open_resource('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()
 
-def connect_db():
+def connectDb():
     """Connects to the specific database."""
     rv = sqlite3.connect(app.config['DATABASE'])
     rv.row_factory = sqlite3.Row
     return rv
 
-def get_db():
+def getDb():
     """Opens a new database connection if there is none yet for the
     current application context.
     """
     if not hasattr(g, 'sqlite_db'):
-        g.sqlite_db = connect_db()
+        g.sqlite_db = connectDb()
     return g.sqlite_db
+
+def createUser(name):
+    """Creates a new user with the specified name."""
+    db = getDb()
+    db.execute('insert into User (name) values (?)', [name])
+    db.commit()
+
+def createDocument(name):
+    """Creates a new document with the specified name."""
+    db = getDb()
+    db.execute('insert into Document (name) values (?)', [name])
+    db.commit()
+    #TODO: Create a file for the document in file system.
+    #TODO: Put the document file under version control (using a Git module maybe?).
+    return
+
+def addMarkDownBlock(document_id, content, previous_block_id):
+    """Adds a new markdown block to the specified document."""
+    db = getDb()
+    db.execute('insert into Block (type_id) values (?)', [BlockType.DocumentBlock])
+    block_id = db.last_insert_rowid()
+    print(block_id)
+    db.commit()
+    #TODO: Create a file for the block using its id as the file name.
+    #TODO: Modify the document file appropriately.
+    return
+
+def modifyMarkDownBlock(block_id, new_content):
+    return
+
+def createDocumentFromBlocks(dir, document_name):
+    """
+    Creates a document from existing blocks in the specified directory.
+    The blocks should be ordered alphabetically.
+    """
+    return
 
 @app.teardown_appcontext
 def close_db(error):
