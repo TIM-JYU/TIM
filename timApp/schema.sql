@@ -1,6 +1,7 @@
 CREATE TABLE Block (
 id INTEGER NOT NULL,
 latest_revision_id INTEGER NULL,
+type_id INTEGER NOT NULL,
 
 CONSTRAINT Block_PK 
 	PRIMARY KEY (id)
@@ -19,7 +20,7 @@ CONSTRAINT UserGroup_PK
 
 CREATE TABLE User (
 id INTEGER NOT NULL,
-name INTEGER NOT NULL,
+name VARCHAR(100) NOT NULL,
 
 CONSTRAINT User_PK 
 	PRIMARY KEY (id)
@@ -29,7 +30,7 @@ CONSTRAINT User_PK
 
 CREATE TABLE Document (
 id INTEGER NOT NULL,
-name INTEGER NOT NULL,
+name VARCHAR(100) NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT Document_PK 
@@ -48,7 +49,7 @@ Document_id INTEGER NOT NULL,
 Block_id INTEGER NOT NULL,
 
 CONSTRAINT DocumentBlocks_PK
-	PRIMARY KEY (Document_id, Block_id),
+	PRIMARY KEY (Document_id,Block_id),
 CONSTRAINT DocumentBlocks_id 
 	FOREIGN KEY (Document_id)
 	REFERENCES Document (id)
@@ -69,7 +70,7 @@ Block_id INTEGER NOT NULL,
 User_id INTEGER NOT NULL,
 
 CONSTRAINT ReadRevision_PK
-	PRIMARY KEY (Block_id, User_id),
+	PRIMARY KEY (Block_id,User_id),
 CONSTRAINT ReadRevision_id 
 	FOREIGN KEY (Block_id)
 	REFERENCES Block (id)
@@ -89,7 +90,7 @@ UserGroup_id INTEGER NOT NULL,
 User_id INTEGER NOT NULL,
 
 CONSTRAINT UserGroupMembers_PK
-	PRIMARY KEY (UserGroup_id, User_id),
+	PRIMARY KEY (UserGroup_id,User_id),
 CONSTRAINT UserGroupMembers_id 
 	FOREIGN KEY (UserGroup_id)
 	REFERENCES UserGroup (id)
@@ -105,13 +106,13 @@ CONSTRAINT UserGroupMembers_id
 
 
 CREATE TABLE BlockAccess (
-visible_from INTEGER NOT NULL,
-visible_to INTEGER NULL,
+visible_from TIMESTAMP NOT NULL,
+visible_to TIMESTAMP NULL,
 Block_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT BlockAccess_PK
-	PRIMARY KEY (Block_id, UserGroup_id),
+	PRIMARY KEY (Block_id,UserGroup_id),
 CONSTRAINT BlockAccess_id 
 	FOREIGN KEY (Block_id)
 	REFERENCES Block (id)
@@ -127,13 +128,13 @@ CONSTRAINT BlockAccess_id
 
 
 CREATE TABLE DocumentAccess (
-visible_from INTEGER NOT NULL,
-visible_to INTEGER NULL,
+visible_from TIMESTAMP NOT NULL,
+visible_to TIMESTAMP NULL,
 Document_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT DocumentAccess_PK
-	PRIMARY KEY (Document_id, UserGroup_id),
+	PRIMARY KEY (Document_id,UserGroup_id),
 CONSTRAINT DocumentAccess_id 
 	FOREIGN KEY (Document_id)
 	REFERENCES Document (id)
