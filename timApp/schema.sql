@@ -1,32 +1,3 @@
-
-DROP TABLE DocumentAccess
-;
-
-DROP TABLE BlockAccess
-;
-
-DROP TABLE UserGroupMembers
-;
-
-DROP TABLE ReadRevision
-;
-
-DROP TABLE DocumentBlocks
-;
-
-DROP TABLE Document
-;
-
-DROP TABLE User
-;
-
-DROP TABLE UserGroup
-;
-
-DROP TABLE Block
-;
-
-
 CREATE TABLE Block (
 id INTEGER NOT NULL,
 latest_revision_id INTEGER NULL,
@@ -77,7 +48,7 @@ Document_id INTEGER NOT NULL,
 Block_id INTEGER NOT NULL,
 
 CONSTRAINT DocumentBlocks_PK
-	PRIMARY KEY (Document_idBlock_id),
+	PRIMARY KEY (Document_id, Block_id),
 CONSTRAINT DocumentBlocks_id 
 	FOREIGN KEY (Document_id)
 	REFERENCES Document (id)
@@ -98,7 +69,7 @@ Block_id INTEGER NOT NULL,
 User_id INTEGER NOT NULL,
 
 CONSTRAINT ReadRevision_PK
-	PRIMARY KEY (Block_idUser_id),
+	PRIMARY KEY (Block_id, User_id),
 CONSTRAINT ReadRevision_id 
 	FOREIGN KEY (Block_id)
 	REFERENCES Block (id)
@@ -118,7 +89,7 @@ UserGroup_id INTEGER NOT NULL,
 User_id INTEGER NOT NULL,
 
 CONSTRAINT UserGroupMembers_PK
-	PRIMARY KEY (UserGroup_idUser_id),
+	PRIMARY KEY (UserGroup_id, User_id),
 CONSTRAINT UserGroupMembers_id 
 	FOREIGN KEY (UserGroup_id)
 	REFERENCES UserGroup (id)
@@ -140,7 +111,7 @@ Block_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT BlockAccess_PK
-	PRIMARY KEY (Block_idUserGroup_id),
+	PRIMARY KEY (Block_id, UserGroup_id),
 CONSTRAINT BlockAccess_id 
 	FOREIGN KEY (Block_id)
 	REFERENCES Block (id)
@@ -162,7 +133,7 @@ Document_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT DocumentAccess_PK
-	PRIMARY KEY (Document_idUserGroup_id),
+	PRIMARY KEY (Document_id, UserGroup_id),
 CONSTRAINT DocumentAccess_id 
 	FOREIGN KEY (Document_id)
 	REFERENCES Document (id)
