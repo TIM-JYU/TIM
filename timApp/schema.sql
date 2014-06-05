@@ -29,7 +29,7 @@ DROP TABLE Block
 
 CREATE TABLE Block (
 id INTEGER NOT NULL,
-latest_revision_id INTEGER NOT NULL,
+latest_revision_id INTEGER NULL,
 
 CONSTRAINT Block_PK 
 	PRIMARY KEY (id)
@@ -135,7 +135,7 @@ CONSTRAINT UserGroupMembers_id
 
 CREATE TABLE BlockAccess (
 visible_from INTEGER NOT NULL,
-visible_to INTEGER NOT NULL,
+visible_to INTEGER NULL,
 Block_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
@@ -157,7 +157,7 @@ CONSTRAINT BlockAccess_id
 
 CREATE TABLE DocumentAccess (
 visible_from INTEGER NOT NULL,
-visible_to INTEGER NOT NULL,
+visible_to INTEGER NULL,
 Document_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
