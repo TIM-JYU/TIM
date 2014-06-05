@@ -1,0 +1,23 @@
+-   -   Valitse Solution-valikosta Create new Solution ja paina Create
+        directory for solution (tärkeä)
+
+    -   Laita Solution Name kohtaan demoN (N = demokerran numero),
+        esimerkiksi demo3
+
+    -   Nyt sinulle on luotu uusi solution ja yksi projekti solutionin
+        sisään.
+
+-   Kun haluat *lisätä* demotehtäviä (projekteja) tiettyyn demokertaan
+    (solutioniin) toimi näin
+
+    -   Avaa sen demokerran solution (.sln-tiedosto) johon haluat
+        tehtävän lisätä (ellei se ole jo auki Visual Studiossa).
+
+    -   File → New project *tai* Solution Explorerissa klikkaa hiiren
+        oikealla solutionin päälle, ja klikkaa Add → New project
+
+    -   Anna projektille nimi, jätä Location ennalleen, ja valitse
+        Solution-valikosta Add to Solution. Solution Name -kohta
+        himmenee ja Location-kohtaan pitäisi tulla automaattisesti
+        lisäteksti demoN.
+

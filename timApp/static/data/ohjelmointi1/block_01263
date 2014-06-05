@@ -1,0 +1,11 @@
+Ohjelmassa lasketaan ensiksi kaikkien taulukoiden lukujen summa
+muuttujaan summa. Koska taulukoiden indeksointi alkaa nollasta, on
+ehdottoman kätevää asettaa myös laskurimuuttuja i aluksi arvoon 0.
+Ehtona on, että silmukkaa suoritetaan niin kauan kuin muuttuja i on
+pienempi kuin taulukon pituus. Jos tuntuu, että ehdossa pitäisi olla
+yhtä suuri tai pienempi kuin -merkki (\<=), niin pohdi seuraavaa. Jos
+taulukon koko olisi vaikka 7, niin tällöin viimeinen alkio olisi
+alkiossa luvut[6], koska indeksointi alkaa nollasta. Tästä johtuen jos
+ehdossa olisi "\<="-merkki, viitattaisiin viimeisenä taulukon alkioon
+luvut[7], joka ei enää kuulu taulukon muistialueeseen. Tällöin ohjelma
+kaatuisi ja saisimme "IndexOutOfRangeException"-poikkeuksen.

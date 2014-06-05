@@ -1,0 +1,8 @@
+Myös Main-metodi, eli pääohjelma, on Jypeli-peleissä käytännössä aina
+tällainen vakiomuotoinen, joten jatkossa siihen ei tarvitse juurikaan
+koskea. Ohitamme tässä vaiheessa pääohjelman sisällön mainitsemalla
+vain, että pääohjelmassa Lumiukko-luokasta tehdään uusi olio (eli uusi
+”peli”), joka sitten laitetaan käyntiin peli.Run()-kohdassa.
+Jypeli-kirjaston rakenteesta johtuen kaikki varsinainen peliin liittyvä
+koodi kirjoitetaan omaan aliohjelmaansa, Begin-aliohjelmaan, jota
+käsittelemme seuraavaksi.

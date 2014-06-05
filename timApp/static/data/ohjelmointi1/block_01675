@@ -1,0 +1,3 @@
+Kun jakojäännökset luetaan nyt alhaalta ylöspäin, saamme binääriluvun
+10011. Vastaavasti laskenta voitaisiin hahmotella kuten alla, josta
+jakojäännös selviää paremmin. Idea molemmissa on kuitenkin sama.

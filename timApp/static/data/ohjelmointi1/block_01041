@@ -1,0 +1,3 @@
+Lähes aina switch-rakenteen voi korvata if ja else-if -rakenteilla,
+niinpä sitä on pidettävä vain yhtenä if-lauseena. Myös switch-rakenteen
+voi usein välttää käyttämällä taulukoita.

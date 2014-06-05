@@ -1,0 +1,18 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+// Tehdään toinen lumiukko
+x = 200; y = Level.Bottom + 300.0;
+p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+p1.X = x;
+p1.Y = y;
+Add(p1);
+
+p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+p2.X = x;
+p2.Y = y + 100 + 50;
+Add(p2);
+
+p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+p3.X = x;
+p3.Y = y + 100 + 2*50 + 30;
+Add(p3);
+```

@@ -1,0 +1,6 @@
+Merkkijonon perään lisääminen onnistuu Append-metodilla.
+Append-metodilla voi lisätä merkkijonon perään muun muassa kaikkia C\#:n
+alkeistietotyyppejä sekä String-olioita. Myös kaikkien C\#:n valmiina
+löytyvien olioiden lisääminen onnistuu Append-metodilla, sillä ne
+sisältävät ToString-metodin, jolla oliot voidaan muuttaa merkkijonoksi.
+Alla oleva koodinpätkä esittelee Append-metodia.

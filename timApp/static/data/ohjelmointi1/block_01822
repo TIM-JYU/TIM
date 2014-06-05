@@ -1,0 +1,11 @@
+\
+ Vastaavasti syntaksia voidaan kuvata ”junaradoilla”. Tämä on eräs
+graafinen tapa kuvata syntaksia. Kuvataan seuraavaksi muuttujaan
+määrittelyä ”junaratojen” avulla. Junaradoissa non-terminaalit on
+kuvattu suorakulmiolla ja terminaalit vähän pyöreämmillä suorakulmiolla.
+Vaihtoehdot kuvataan taas niin, että risteyskohdassa voidaan valita vain
+yksi vaihtoehtoisista raiteista. Lisäksi raiteissa on ”silmukoita”,
+joissa voidaan tehdä useampi kierros. Silmukoilla kuvataan siis
+”{}”-merkkien välissä olevia lauseita. Lisäksi on ”ohitusraiteita”,
+joilla voidaan ohittaa joku osa kokonaan. Tällä kuvataan ”[]”-merkkien
+välissä olevia lauseita.

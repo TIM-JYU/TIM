@@ -1,0 +1,3 @@
+Kokonaisluvuilla laskettaessa lukuja ei siis pyöristetä lähimpään
+kokonaislukuun, vaan desimaaliosa menee C\#:n jakolaskuissa ikään kuin
+"hukkaan".

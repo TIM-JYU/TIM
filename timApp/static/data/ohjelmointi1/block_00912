@@ -1,0 +1,5 @@
+Yllä oleva muoto on jo useimpien ohjelmointikielten syntaksin mukainen.
+Siinä ehto on erotettu sulkeiden sisään, ja perässä on ohje, mitä
+tehdään, jos ehto on tosi. Toisella rivillä sen sijaan on ohje mitä
+tehdään, jos ehto on epätosi. C\#:n syntaksin mukaiseksi ohjelma
+saadaan, kun ohjelmointikieleen kuuluvat sanat muutetaan englanniksi.

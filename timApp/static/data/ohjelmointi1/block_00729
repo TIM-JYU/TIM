@@ -1,0 +1,10 @@
+Virheet ohjelmakoodissa ovat valitettava tosiasia. Ne tulevat aina
+olemaan mukanasi, vaikka olisit kuinka hyvä ohjelmoija tahansa. Hyvä
+ohjelmoija kuitenkin tiedostaa tämän asian, ja valmistautuu siihen
+hankkimalla työkalut virheiden jäljittämistä ja korjaamista varten. On
+olemassa pieniä virheitä, jotka eivät vaikuta ohjelman toimintaan
+millään tavalla (kuten kirjoitusvirhe painonapissa), mutta on olemassa
+myös virheitä, jotka ovat erittäin vakavia. Tällaiset virheet kaatavat
+ohjelman. *Syntaksivirheet* voivat olla pieniä, mutta estävät ohjelmaa
+kääntymästä. *Loogiset* *virheet* eivät jää kääntäjän kouriin, mutta
+aiheuttavat ongelmia ohjelman ajon aikana.

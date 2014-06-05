@@ -1,0 +1,5 @@
+Visual Studiossa on *solutioneja* ja *projekteja*. Yhdessä solutionissa
+voi olla monta projektia ja jokaisen projektin täytyy kuulua johonkin
+solutioniin. Uuden ohjelman kirjoittaminen alkaa aina projektin
+perustamisella johonkin solutioniin, jolloin myös solution luodaan
+samalla, ellei sitä ole jo tehty.

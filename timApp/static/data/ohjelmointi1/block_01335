@@ -1,0 +1,6 @@
+Yllä oleva ohjelmanpätkä siirtyy silmukan alkuun kun muuttujan i ja
+luvun 2 jakojäännös on 0. Muussa tapauksessa ohjelma tulostaa muuttujan
+i arvon. Toisin sanoen ohjelma tulostaa vain parittomat luvut. Myös
+continue-rakennetta voi ja kannattaa pyrkiä välttämään, samoin kuin
+turhia if-rakenteita. Yllä olevan ohjelmanpätkän voisi kirjoittaa vaikka
+seuraavasti.

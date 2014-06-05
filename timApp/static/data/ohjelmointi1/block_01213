@@ -1,0 +1,6 @@
+Silmukassa arvotaan ensin kunkin pallon säde RandomGen-luokan
+satunnaislukugeneraattorilla. Ensimmäisenä parametrina
+NextInt-aliohjelmalle annetaan pienin mahdollinen arvottava luku,
+toisena parametrina luku, jota pienempi arvottavan luvun tulee olla.
+Toisin sanoen, luvut tulevat olemaan välillä 5-19. Samoin arvotaan
+double-tyyppiset koordinaatit sekä Color-tyyppinen väri.

@@ -1,0 +1,10 @@
+C\#-ohjelmia (lausutaan *c sharp*) voi kirjoittaa millä tahansa
+tekstieditorilla. Tekstieditoreja on kymmeniä, ellei satoja, joten yhden
+nimeäminen on vaikeaa. Osa on kuitenkin suunniteltu varta vasten
+ohjelmointia ajatellen. Tällaiset tekstieditorit osaavat muotoilla
+ohjelmoijan kirjoittamaa lähdekoodia (tai lyhyesti koodia)
+automaattisesti siten, että lukeminen on helpompaa ja siten ymmärtäminen
+ja muokkaaminen nopeampaa. Ohjelmoijien suosimia ovat mm. *Vim,* *Emacs,
+ConTEXT* *ja* *NotePad++*, mutta monet muutkin ovat varmasti hyviä.
+Monisteen alun esimerkkien kirjoittamiseen soveltuu hyvin mikä tahansa
+tekstieditori.

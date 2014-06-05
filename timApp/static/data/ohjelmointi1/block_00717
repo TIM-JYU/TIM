@@ -1,0 +1,6 @@
+Jokainen C\#-ohjelma kirjoitetaan luokan sisään. Luotaessa uusi
+konsoliohjelma, tekee Visual Studio meille valmiin kooditiedoston, jossa
+on pieni pätkä valmista ohjelmakoodia. Oletusarvoisesti konsoliohjelmaan
+luodaan yksi kooditiedosto nimeltä Program.cs, jossa on valmiina muutama
+using-lause, nimiavauus eli namespace (projektia vastaavalla nimellä),
+luokka sekä pääohjelma eli Main-metodi.

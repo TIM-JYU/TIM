@@ -1,0 +1,5 @@
+Jokaisen aliohjelman tulisi sisältää dokumentaatiokommentti. Aliohjelman
+dokumentaatiokommentin tulee sisältää ainakin seuraavat asiat: Lyhyt
+kuvaus aliohjelman toiminnasta, selitys kaikista parametreista sekä
+selitys mahdollisesta paluuarvosta. Nämä asiat kuvataan tägien avulla
+seuraavasti:

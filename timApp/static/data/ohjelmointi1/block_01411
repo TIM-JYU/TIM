@@ -1,0 +1,6 @@
+Peli voi ottaa vastaan näppäimistön, Xbox 360 -ohjaimen, hiiren ja
+Windows Phone 7 -puhelimen ohjausta. Ohjainten liikettä "kuunnellaan" ja
+jokaiselle ohjaimelle voidaan määrittää erikseen, mitä mistäkin
+tapahtuu. Kullekin ohjaimelle (näppäimistö, hiiri, Xbox-ohjain,
+WP7-kosketusnäyttö, WP7-kiihtyvyysanturi) on tehty oma Listen-aliohjelma
+jolla kuuntelun asettaminen onnistuu.

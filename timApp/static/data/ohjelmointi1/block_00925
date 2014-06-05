@@ -1,0 +1,7 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+public static bool OnkoLukuParillinen(int luku) 
+{
+   if ((luku % 2) == 0) return true;
+   return false;  // Huom! Ei tarvita else
+}
+```

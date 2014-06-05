@@ -1,0 +1,6 @@
+``` {.huonoesimerkki-western lang="zxx" xml:lang="zxx"}
+//TÄMÄ KOODI EI KÄÄNNY!
+int luku1;
+double luku2 = 4.0;
+luku1 = luku2;
+```

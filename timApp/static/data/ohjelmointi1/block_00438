@@ -1,0 +1,5 @@
+C\#:ssa on myös vertailuoperaattoreita (comparison operators), loogisia
+operaattoreita, bittikohtaisia operaattoreita (bitwise operators),
+arvonmuunto-operaattoreita (shortcut operators), sijoitusoperaattori =,
+is-operaattori sekä ehto-operaattori ?. Tässä luvussa käsitellään näistä
+tärkeimmät.

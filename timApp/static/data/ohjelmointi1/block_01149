@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+kopio_taulukosta[0] = 3;
+Console.WriteLine(taulukko[0] + ", " + kopio_taulukosta[0]); // 1, 3
+```

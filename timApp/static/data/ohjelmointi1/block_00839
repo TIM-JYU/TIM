@@ -1,0 +1,7 @@
+String-luokan Format-metodi tarjoaa monipuoliset muotoilumahdollisuudet
+useille tietotyypeille, mutta katsotaan tässä kuinka sillä voi muotoilla
+reaalilukuja. Math-luokasta saa luvun pii 20 desimaalin tarkkuudella
+kirjoittamalla Math.PI. Huomaa, että PI ei ole metodi, joten perään ei
+tule sulkuja. PI on Math-luokan julkinen staattinen vakio (public const
+double). Jos haluaisimme muuttaa piin String-tyypiksi vain kahden
+desimaalin tarkkuudella, onnistuisi se seuraavasti:

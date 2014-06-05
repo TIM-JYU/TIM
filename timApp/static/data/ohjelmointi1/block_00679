@@ -1,0 +1,7 @@
+Jälkimmäisessä versiossa lukujen 5 ja 2 keskiarvo lasketaan tulostuksen
+yhteydessä. Keskiarvo lasketaan siis kahteen kertaan. Vaikka alemmassa
+tavassa säästetään yksi koodirivi, kulutetaan siinä turhaan tietokoneen
+resursseja laskemalla sama lasku kahteen kertaan. Tässä tapauksessa
+tällä ei ole juurikaan merkitystä, sillä Keskarvo-aliohjelman suoritus
+ei juurikaan rasita nykyaikaisia tietokoneita. Kannattaa kuitenkin
+opetella tapa, ettei ohjelmassa tehtäisi *mitään* turhia suorituksia.

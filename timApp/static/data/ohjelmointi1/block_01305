@@ -1,0 +1,3 @@
+Ohjelmassa on testejä varten tehty yksi apufunktio, TaulukkoJonoksi,
+jonka tehtävä on palauttaa taulukon alkiot yhtenä merkkijonona perättäin
+lueteltuna pilkulla erotettuna.

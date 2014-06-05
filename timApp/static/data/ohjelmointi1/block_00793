@@ -1,0 +1,4 @@
+``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
+String s1 = "jAnNe"; String s2 = "JANNE";
+if (Compare(s1, s2, true) == 0) Console.WriteLine("Samat tai melkein samat!"); // samat tai melkein samat
+```

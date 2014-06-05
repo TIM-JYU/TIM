@@ -1,0 +1,12 @@
+C\#:ssa on olemassa *rajapintoja* (interface), joissa määritellään
+tietyt metodit, ja kaikkien luokkien, jotka toteuttavat (implement)
+tämän rajapinnan, täytyy sisältää samat metodit. Rajapintojen hienous on
+siinä, että voimme käyttää samoja metodeja kaikkiin niihin olioihin,
+jotka toteuttavat saman rajapinnan. Meillä voisi olla, vaikka rajapinta
+Muodot. Nyt voisimme tehdä luokat Ympyra, Kolmio ja Suorakulmio, jotka
+kaikki toteuttaisivat Muodot-rajapinnan. Voisimme nyt luoda esimerkiksi
+Muodot-tyyppisen taulukon, johon voisi nyt tallentaa kaikkia
+Muodot-rajapinnan toteutettavien luokkien olioita. Jos
+Muodot-rajapinnassa olisi määritelty metodi Varita(), voisimme värittää
+silmukassa kerralla taulukollisen ympyröitä, kolmioita ja suorakulmioita
+samalla metodilla.

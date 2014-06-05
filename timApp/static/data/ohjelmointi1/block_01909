@@ -1,0 +1,5 @@
+[1](#sdfootnote1anc)Array.Resize-metodi ei muuta alkuperäistä taulukkoa,
+vaan luo uuden taulukon, kopioi alkuperäisen taulukon kaikki alkiot
+uuteen taulukkoon, ja sen jälkeen korvaa alkuperäisen taulukon
+(viitteen) uudella taulukolla (viitteellä). Ks.
+<http://msdn.microsoft.com/en-us/library/bb348051.aspx>.

@@ -1,0 +1,6 @@
+Luokan edessä oleva public-sana on eräs *saantimääre* (eng. *access
+modifier*). Saantimääreen avulla luokka voidaan asettaa rajoituksetta
+tai osittain muiden (luokkien) saataville, tai piilottaa kokonaan. Sana
+public tarkoittaa, että luokka on muiden luokkien näkökulmasta
+*julkinen*, kuten luokat useimmiten ovat. Muita saantimääreitä ovat
+protected, internal ja private.

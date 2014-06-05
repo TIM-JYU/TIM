@@ -1,0 +1,5 @@
+Tietyissä sovelluksissa, joissa mahdollisimman suuri tarkkuus on
+välttämätön (kuten pankki- tai nanotason fysiikkasovellukset), on
+suositeltavaa käyttää korkeimpaa mahdollista tarkkuutta tarjoavaa
+decimal-tyyppiä. Reaalilukujen esityksestä tietokoneessa puhutaan lisää
+kohdassa [26.6](#o246Liukuluku_floatingpoint). [VES][KOS]

@@ -1,0 +1,7 @@
+Esimerkissämme catch-lohkossa tulostetaan nyt virheilmoitus.
+Poikkeusolio on nimetty "e":ksi, joka on hyvin yleinen poikkeusolion
+viitemuuttujalle annettava nimi. Koska C\#:n poikkeukset olivat olioita,
+on niillä myös joukko metodeja ja ominaisuuksia. catch-lohkossa on
+kutsuttu DivideByZeroException-luokan Message-ominaisuutta, joka
+sisältää poikkeukselle määritellyn virheilmoituksen, jonka siis
+tulostamme tässä konsoli-ikkunaan.

@@ -1,0 +1,13 @@
+-   [Remove(Int32,
+    Int32)](http://msdn.microsoft.com/en-us/library/system.text.stringbuilder.remove.aspx).
+    Poistaa merkkijonosta merkkejä siten, että ensimmäinen parametri on
+    aloitusindeksi, ja toinen parametri on poistettavien merkkien määrä.
+
+-   [ToString()](http://msdn.microsoft.com/en-us/library/4b1063zt.aspx)
+    ja [ToString(Int32,
+    Int32)](http://msdn.microsoft.com/en-us/library/fyx7s61s.aspx).
+    Palauttaa StringBuilder-olion sisällön ”tavallisena”
+    String-merkkijonona. ToString-metodille voi antaa myös kaksi
+    int-lukua parametreina, jolloin palautetaan osa merkkijonosta (ks.
+    [Substring](http://msdn.microsoft.com/en-us/library/aka44szs.aspx)).
+

@@ -1,0 +1,5 @@
+List\<T\>-olioon ja muihin dynaamisiin tietorakenteisiin voi tallentaa
+niin alkeistietotyyppejä kuin oliotietotyyppejäkin. Käsittelemämme
+*geneerinen lista* vaatii *aina* tiedon siitä, minkä tyyppisiä alkioita
+tietorakenteeseen laitetaan. Muun tyyppisiä alkioita listaan ei voi
+laittaa.

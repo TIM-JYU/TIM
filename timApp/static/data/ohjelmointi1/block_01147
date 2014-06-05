@@ -1,0 +1,4 @@
+Huomaa, että sijoituksessa vaaditaan ns. tyyppimuunnos: ennen
+taulukko.Clone-lausetta kirjoitetaan (int[]), sulkujen kanssa, joka
+muuttaa Clone-metodin palauttaman ”yleisen” Object-olion
+kokonaislukutaulukoksi.

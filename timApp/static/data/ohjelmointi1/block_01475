@@ -1,0 +1,5 @@
+Tapahtumankäsittelijällä on pakollinen AnalogState-luokan olio
+parametrina. Siitä saa myös irti tietoa hiiren liikkeistä. Tässä
+esimerkissä hiirenTila.MouseMovement antaa hiiren liikevektorin, joka
+kertoo mihin suuntaan ja miten voimakkaasti kursori on liikkunut (hiiren
+ollessa paikoillaan se on nollavektori).

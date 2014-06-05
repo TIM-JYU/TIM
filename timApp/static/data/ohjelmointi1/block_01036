@@ -1,0 +1,2 @@
+Tehdään aliohjelma, joka saa parametrina tenttiarvosanan numerona (0-5)
+ja palauttaa kirjallisen arvosanan String-oliona.

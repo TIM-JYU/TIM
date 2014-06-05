@@ -1,0 +1,12 @@
+Ensimmäisellä rivillä määritellään jälleen julkinen ja staattinen
+aliohjelma. Lumiukko-esimerkissä static-sanan jälkeen luki void, joka
+tarkoitti, että aliohjelma ei palauttanut mitään arvoa. Koska nyt
+haluamme, että aliohjelma palauttaa parametrina saamiensa
+kokonaislukujen keskiarvon, niin meidän täytyy kirjoittaa paluuarvon
+tyyppi void-sanan tilalle static-sanan jälkeen. Koska kahden
+kokonaisluvun keskiarvo voi olla myös desimaaliluku, niin paluuarvon
+tyyppi on double. Sulkujen sisällä ilmoitetaan jälleen parametrit. Nyt
+parametreina on kaksi kokonaislukua a ja b. Toisella rivillä
+määritellään reaalilukumuuttuja keskiarvo. Kolmannella rivillä lasketaan
+parametrien a ja b summa ja jaetaan se kahdella muuttujaan keskiarvo.
+Neljännellä rivillä palautetaan keskiarvo-muuttujan arvo.

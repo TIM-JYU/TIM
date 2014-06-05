@@ -1,0 +1,6 @@
+Dynaamisen tietorakenteen määrittämisen syntaksi poikkeaa hieman
+tavallisen olion määrittelystä. Ehdit jo varmaan ihmetellä, mikä on
+kulmasulkeissa oleva T List-sanan jälkeen. Kyseinen T tarkoittaa listaan
+talletettavien alkioiden tyyppiä. Tyyppi voi olla alkeistietotyyppi tai
+oliotyyppi. Yleisessä muodossa uuden listan määrittely menee
+seuraavasti:

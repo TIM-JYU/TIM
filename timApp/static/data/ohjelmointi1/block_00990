@@ -1,0 +1,6 @@
+Ei-operaattori siis palauttaa vastakkaisen bool-arvon: todesta tulee
+epätosi ja epätodesta tosi. Jos yllä olevassa lauseessa luku-muuttuja
+saisi arvon 5, niin ehto luku \<= 0 saisi arvon false. Kuitenkin
+ei-operaattori saa arvon true, kun lausekkeen arvo on false, joten koko
+ehto onkin true ja perässä oleva tulostuslause tulostuisi. Lause olisi
+siis sama kuin alla oleva:

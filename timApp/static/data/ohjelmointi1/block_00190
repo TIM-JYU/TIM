@@ -1,0 +1,11 @@
+Vinkki! Yllä esitelty kääntämiskomento on varsin pitkä. Asioiden
+helpottamiseksi voit kirjoittaa tiedoston csk.bat, joka sisältää
+seuraavan tekstin (komento on yksi pitkä rivi):\
+\
+@"%WINDIR%\\Microsoft.NET\\Framework\\v4.0.30319\\csc" %\*
+/reference:Jypeli.dll;"%XNAGSv4%References\\Windows\\x86\\Microsoft.Xna.Framework.Game.dll";"%XNAGSv4%References\\Windows\\x86\\Microsoft.Xna.Framework.dll"
+/platform:x86 /define:WINDOWS\
+\
+Tämä asettaa puolestasi reference ja platform -parametrit. Varmista,
+että tekemäsi csk.bat-tiedosto on ”polussa”. Tämän jälkeen kääntäminen
+onnistuu yksinkertaisemmin: csk OhjelmanNimi.cs

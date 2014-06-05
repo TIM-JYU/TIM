@@ -1,0 +1,6 @@
+Dokumentoiminen tapahtuu *tagien* avulla. Jos olet joskus kirjoittanut
+HTML-sivuja, on merkintätapa sinulle tuttu. Dokumentaatiokommentit
+alkavat aloitustagilla, muotoa \<esimerkki\>, jonka perään tulee
+kommentin asiasisältö. Kommentti loppuu lopetustagiin, muotoa
+\</esimerkki\>, siis muuten sama kuin aloitustagi, mutta ensimmäisen
+kulmasulun jälkeen on yksi vinoviiva.

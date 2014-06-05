@@ -1,0 +1,6 @@
+Aliohjelman toisella rivillä aloitetaan while-silmukka. Ehtona on, että
+(silmukkaa suoritetaan niin kauan, kuin) muuttujan i arvo on *pienempi*
+kuin taulukon pituus. Taulukon pituus saadaan aina selville
+kirjoittamalla nimen perään .Length. Huomionarvoinen seikka on, että
+Length-sanan perään ei tule sulkuja, sillä se ei ole metodi vaan
+attribuutti.

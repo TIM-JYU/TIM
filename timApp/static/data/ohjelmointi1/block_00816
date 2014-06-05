@@ -1,0 +1,3 @@
+C\#-kielessä muokattava merkkijonoluokka on StringBuilder, joka
+sijaitsee System.Text-nimiavaruudessa. Voit ottaa tuon nimiavaruuden
+käyttöön kirjoittamalla ohjelman alkuun

@@ -1,0 +1,7 @@
+Ensimmäiseksi aliohjelmassa määritellään ja alustetaan taulukko, jossa
+on kaikki kirjalliset arvosanat. Taulukko määritellään niin, että
+taulukon indeksissä 0 on arvosanaa 0 vastaava kirjallinen arvosana,
+taulukon indeksissä 1 on arvosanaa 1 vastaava kirjallinen arvosana ja
+niin edelleen. Tällä tavalla tietty taulukon indeksi vastaa suoraan
+vastaavaa kirjallista arvosanaa. Kirjallisten arvosanojen hakeminen on
+näin todella nopeaa.

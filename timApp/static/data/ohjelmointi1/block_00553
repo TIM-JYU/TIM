@@ -1,0 +1,6 @@
+Ennen kuin oliolle on varattu tila tietokoneen muistista
+new-operaattorilla, ei sitä voi käyttää. Ennen new-operaattorin käyttöä
+olion arvo on null, joka tarkoittaa, että olio on käyttökelvoton,
+”mitätön”. Tällaisen olion käyttö aiheuttaa virheilmoituksen. Olio
+voidaan myös tarkoituksellisesti merkitä käyttökelvottomaksi asettamalla
+olionNimi = null.

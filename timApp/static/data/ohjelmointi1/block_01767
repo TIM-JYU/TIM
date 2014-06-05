@@ -1,0 +1,4 @@
+Muutetaan esimerkkinä 10-järjestelmän luku -0.1 liukuluvun
+binääriesitykseksi. Etumerkki huomioidaan sitten ensimmäisessä bitissä,
+joten nyt voidaan käsitellä lukua 0.1. Luku voidaan nyt kirjoittaa
+muodossa :

@@ -1,0 +1,24 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+using System;
+
+/// <summary>
+/// Harjoitellaan do-while-silmukan käyttöä.
+/// </summary>
+public class NimenTulostus
+{
+    /// <summary>
+    /// Pyydetään käyttäjältä syöte ja tulostellaan.
+    /// </summary>
+    public static void Main()
+    {
+        String nimi;
+        do
+        {
+            Console.Write("Anna nimi > ");
+            nimi = Console.ReadLine();
+        } while (nimi.Length == 0);
+        Console.WriteLine("Hei, " + nimi + "!");
+        Console.ReadKey();
+    }
+}
+```

@@ -1,0 +1,6 @@
+Binäärijärjestelmässä kantalukuna on 2 ja siten on käytössä kaksi
+symbolia: 0 ja 1. Binäärijärjestelmä on tietotekniikassa oleellisin
+järjestelmä, sillä lopulta laskenta suurimmassa osassa nykyprosessoreita
+tapahtuu binäärilukuina. Tarkemmin sanottuna binääriluvut esitetään
+prosessorissa jännitteinä. Tietty jänniteväli vastaa arvoa 0 ja tietty
+jänniteväli arvoa 1.

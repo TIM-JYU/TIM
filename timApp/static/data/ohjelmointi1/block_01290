@@ -1,0 +1,3 @@
+Aliohjelman idea on, että jokaisen arvosanan raja tallennetaan
+taulukkoon. Kun taulukkoa sitten käydään läpi lopusta alkuun päin,
+voidaan kokeilla mihin arvosanaan opiskelijan pisteet riittävät.

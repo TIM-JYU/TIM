@@ -1,0 +1,5 @@
+Aliohjelma tarvitsee tiedon *mihin* pisteeseen lumiukko piirretään.
+Viedään siis parametrina lumiukon alimman pallon keskipiste. Muiden
+pallojen paikat voidaan laskea tämän pisteen avulla. Lisäksi tarvitaan
+yksi Game-tyyppinen parametri, jotta aliohjelmaamme voisi kutsua myös
+toisesta ohjelmasta. Nämä parametrit riittävät lumiukon piirtämiseen.

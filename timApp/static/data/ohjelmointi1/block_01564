@@ -1,0 +1,4 @@
+Tutustutaan seuraavaksi yhteen C\#:n dynaamisista tietorakenteista,
+List\<T\>-luokkaan, joka on geneerinen tietorakenne. List\<T\>
+muistuttaa jonkin verran taulukkoa; taulukoilla ja listoilla on paljon
+yhteistä:

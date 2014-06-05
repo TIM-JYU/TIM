@@ -1,0 +1,5 @@
+Kaikkia silmukoita voi kirjoittaa myös toisten silmukoiden sisälle.
+Sisäkkäisiä silmukoita tarvitaan ainakin silloin, kun halutaan tehdä
+jotain moniulotteisille taulukoille. Luvussa 15.5 määrittelimme
+kaksiulotteisen taulukon elokuvien tallentamista varten. Tulostetaan nyt
+sen sisältö käyttämällä kahta for-silmukkaa.

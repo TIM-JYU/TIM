@@ -1,0 +1,6 @@
+Ohjelmoinnissa *idiomilla* tarkoitetaan tapaa jolla asia yleensä
+kannattaa tehdä. Näistä a++ on ohjelmoinnissa vakiintunut tapa ja
+(yleensä) suositeltavin, siis idiomi. Kuitenkin, jos lukua a pitäisikin
+kasvattaa (tai vähentää) kahdella tai kolmella, ei tämä tapa enää
+toimisi. Seuraavassa esimerkissä tarkastellaan eri tapoja kahdella
+vähentämiseksi. Siihen on kolme vaihtoehtoista tapaa.

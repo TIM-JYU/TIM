@@ -1,0 +1,7 @@
+Kun tämän jälkeen kirjoitetaan nimi ja piste ”.”, ilmestyy lista niistä
+funktioaliohjelmista ja metodeista, jotka kyseisellä oliolla ovat
+käytössä. Aliohjelman valinnan jälkeen klikkaa kaarisulku auki, jolloin
+pienten nuolten avulla voi selata kyseessä olevan aliohjelman eri
+”versioita”, eli samannimisiä aliohjelmia eri parametrimäärillä
+varustettuna. Lisäksi saadaan lyhyt kuvaus metodin toiminnasta ja jopa
+esimerkkejä käytöstä.

@@ -1,0 +1,3 @@
+-   [Substring(Int32)](http://msdn.microsoft.com/en-us/library/hxthx5h6.aspx)
+    Palauttaa osan merkkijonosta alkaen parametrinaan saamastaan
+    indeksistä.

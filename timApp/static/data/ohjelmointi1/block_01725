@@ -1,0 +1,13 @@
+Kahdessa viimeisessä laskussa päädyttiin väärään tulokseen! Tämä on
+luonnollista, sillä tietenkään rajallisella bittimäärällä ei voida
+esittää rajaansa isompia lukuja. Meidän esimerkkimme 4 bitin
+lukualueella saadaan vain lukualue [-8, 7]. Vertaa alkeistietotyyppien
+lukualueisiin, jotka esiteltiin kohdassa 7.2. 2-komplementin yksi
+lisäetu on se, että siinä mainitunkaltainen *ylivuoto* (overflow), eli
+lukualueen ylitys, on helppo todeta: viimeiseen bittiin (merkkibittiin)
+tuleva ja sieltä lähtevä muistinumero on erisuuri. Edellisissäkin
+esimerkeissä oikeaan tulokseen päätyneissä laskuissa ne olivat samat ja
+väärän tulokseen päätyneissä laskuissa eri suuret. *Alivuoto*
+(underflow) tulee vastaavasti liukuluvuilla silloin kun laskutoimituksen
+tulos tuottaa nollan, vaikka oikeassa maailmassa tulos ei vielä
+olisikaan nolla.

@@ -1,0 +1,6 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+for (int i = 2; i <= 5; i++) 
+{
+   arvosanaRajat[i] = arvosanaRajat[i-1] + arvosanojenPisteErot;
+}
+```

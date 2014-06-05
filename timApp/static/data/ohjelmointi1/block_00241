@@ -1,0 +1,4 @@
+Usein ohjelman toteutuksessa on viisasta edetä juuri tässä
+järjestyksessä: suunnitellaan aliohjelmakutsu ensiksi, kirjoitetaan
+kutsu sille kuuluvalle paikalle, ja vasta sitten toteutetaan varsinainen
+aliohjelman kirjoittaminen.

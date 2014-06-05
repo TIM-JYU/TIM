@@ -1,0 +1,6 @@
+Ehto on aina joku *looginen lauseke*. Looginen lauseke voi saada vain
+kaksi arvoa: tosi (true) tai epätosi (false). Jos looginen lauseke saa
+arvon tosi, perässä oleva lause tai lauseet suoritetaan, muuten ei tehdä
+mitään ja jatketaan ohjelman suoritusta. Looginen lauseke voi sisältää
+muun muassa lukuarvoja, joiden suuruuksia voidaan vertailla
+vertailuoperaattoreilla.

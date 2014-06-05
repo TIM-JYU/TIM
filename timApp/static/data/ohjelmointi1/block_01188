@@ -1,0 +1,28 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+public class Silmukat 
+{    
+/// <summary>
+/// Tulostaa int-tyyppisen taulukon sisällön.
+/// </summary>
+/// <param name="taulukko">Tulostettava taulukko</param>
+  public static void TulostaTaulukko(int[] taulukko) 
+  {
+    int i = 0;
+    while (i < taulukko.Length){
+      Console.Write(taulukko[i] + " ");
+      i++;
+    }
+  }
+  
+  /// <summary>
+  /// Pääohjelma.
+  /// </summary>
+  public static void Main() 
+  {
+    int[] kuukausienPaivienLkm = 
+      {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    TulostaTaulukko(kuukausienPaivienLkm);
+    Console.ReadKey();
+  }
+}
+```

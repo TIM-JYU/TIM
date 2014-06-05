@@ -1,0 +1,3 @@
+Merkkijonojen yhdistäminen luo aina uuden olion ja siksi sitä on
+käytettävä harkiten, silmukoissa jopa kokonaan StringBuilderillä ja
+Append-metodilla korvaten.

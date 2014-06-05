@@ -1,0 +1,29 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// <summary>
+/// Palauttaa parametrina saamansa int-taulukon
+/// alkoiden keskiarvon.
+/// </summary>
+/// <param name="luvut">summattavat luvut</param>
+/// <returns>summa</returns>
+/// <example>
+/// <pre name="test">
+///   int[] luvut1 = {0};
+///   Laskuja.Keskiarvo(luvut1) ~~~ 0;
+///   int[] luvut2 = {3, 3, 3};
+///   Laskuja.Keskiarvo(luvut2) ~~~ 3;
+///   int[] luvut3 = {3, -3, 3};
+///   Laskuja.Keskiarvo(luvut3) ~~~ 1;
+///   int[] luvut4 = {-3, -6};
+///   Laskuja.Keskiarvo(luvut4) ~~~ -4.5;
+/// </pre>
+/// </example>
+public static double Keskiarvo(int[] luvut)
+{
+    double summa = 0;
+    for (int i = 0; i < luvut.Length; i++)
+    {
+        summa += luvut[i];
+    }
+    return summa / luvut.Length;
+}
+```

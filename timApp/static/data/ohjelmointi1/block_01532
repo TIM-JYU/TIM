@@ -1,0 +1,6 @@
+Attribuuttina määritellään muuttuja, jolla kontrolloidaan kuinka kauan
+rekursiota jatketaan. Muuttuja pieninKorkeus näkyy siis kaikkialla
+luokassa Sierpinski. pieninKorkeus on määritelty ”globaaliksi” sillä
+perusteella, ettei muuttujan alustus toistuisi loputtomasti. Tässä
+ohjelmassa voidaan nimittäin suorittaa aliohjelma SierpinskinKolmio
+todella monta kertaa, riippuen muuttujan pieninKorkeus arvosta.

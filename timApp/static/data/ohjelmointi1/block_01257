@@ -1,0 +1,48 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+using System;
+using Jypeli;
+
+/// @author  Antti-Jussi Lakanen
+/// @version 22.12.2011
+///
+/// <summary>
+/// Lumiukko, jonka pallot väritetään.
+/// </summary>
+public class LumiukkoKeltaisetPallot : PhysicsGame
+{
+    /// <summary>
+    /// Piirretään oliot ja zoomataan kamera niin että kenttä näkyy kokonaan.
+    /// </summary>
+    public override void Begin()
+    {
+        Camera.ZoomToLevel();
+        Level.Background.Color = Color.Black;
+        // Lisätään pallot taulukkoon, ja sitten lisätään kentälle
+        PhysicsObject[] pallot = new PhysicsObject[3];
+        pallot[0] = LuoPallo(0, Level.Bottom + 200, Color.White, 100);
+        pallot[1] = LuoPallo(0, pallot[0].Y + 100 + 50, Color.White, 50);
+        pallot[2] = LuoPallo(0, pallot[1].Y + 50 + 30, Color.White, 30);
+        Add(pallot[0]); Add(pallot[1]); Add(pallot[2]);
+
+        // Muutetaan pallojen väri
+        for (int i = 0; i < pallot.Length; i++)
+        {
+            pallot[i].Color = Color.Yellow;
+        }
+    }
+
+    /// <summary>Luo yksittäisen pallon ja palauttaa sen.</summary>
+    /// <param name="x">Pallon kp x-koordinaatti</param>
+    /// <param name="y">Pallon kp y-koordinaatti</param>
+    /// <param name="vari">Pallon väri</param>
+    /// <param name="sade">Pallon säde</param>
+    public static PhysicsObject LuoPallo(double x, double y, Color vari, double sade)
+    {
+        PhysicsObject pallo = new PhysicsObject(2 * sade, 2 * sade, Shape.Circle);
+        pallo.Color = vari;
+        pallo.X = x;
+        pallo.Y = y;
+        return pallo;
+    }
+}
+```

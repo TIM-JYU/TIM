@@ -1,0 +1,14 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+try 
+{
+   //jotain lauseita mitä koitetaan suorittaa
+} 
+catch (PoikkeusLuokanNimi poikkeukselleAnnettavaNimi) 
+{
+   //jotain toimenpiteitä mitä tehdään kun poikkeus ilmenee
+} 
+finally 
+{
+   //joka tapauksessa suoritettavat lauseet
+}
+```

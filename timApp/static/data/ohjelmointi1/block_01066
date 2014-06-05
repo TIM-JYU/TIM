@@ -1,0 +1,5 @@
+Muuttujaan pystytään tallentamaan yksi arvo kerrallaan. Usein
+ohjelmoinnissa kuitenkin tulee tilanteita, joissa meidän tulisi
+tallettaa useita samantyyppisiä yhteenkuuluvia arvoja. Jos haluaisimme
+tallettaa esimerkiksi kaikkien kuukausien päivien lukumäärän, voisimme
+tietenkin tehdä tämän kuten alla:

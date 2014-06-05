@@ -1,0 +1,4 @@
+Nyt alimman pallon x-koordinaatiksi sijoitetaankin *muuttuja* x, ja
+vastaavasti y-koordinaatin arvoksi asetetaan *muuttuja* y, ja muiden
+pallojen sijainnit lasketaan ensimmäisen pallon koordinaattien
+perusteella.

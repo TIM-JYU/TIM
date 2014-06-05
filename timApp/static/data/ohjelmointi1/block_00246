@@ -1,0 +1,25 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// <summary>
+/// Kutsutaan PiirraLumiukko-aliohjelmaa
+/// sopivilla parametreilla.
+/// </summary>
+public override void Begin()
+{
+  Camera.ZoomToLevel();
+  Level.Background.Color = Color.Black;
+
+  PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+  PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
+}
+
+/// <summary>
+/// Aliohjelma piirtää lumiukon
+/// annettuun paikkaan.
+/// </summary>
+/// <param name="peli">Peli, johon lumiukko tehdään.</param>
+/// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
+/// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
+public static void PiirraLumiukko(Game peli, double x, double y)
+{
+}
+```

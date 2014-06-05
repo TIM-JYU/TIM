@@ -1,0 +1,4 @@
+Vertailuoperaattoreiden avulla verrataan muuttujien arvoja keskenään.
+Vertailuoperaattorit palauttavat totuusarvon (true tai false).
+Vertailuoperaattoreita on kuusi. Lisää vertailuoperaattoreista luvussa
+13.

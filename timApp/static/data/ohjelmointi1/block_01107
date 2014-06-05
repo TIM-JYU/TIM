@@ -1,0 +1,5 @@
+Ehtolauseiden yhteydessä teimme switch-rakennetta käyttämällä
+aliohjelman, joka palautti parametrinaan saamaansa numeroarvosanaa
+vastaavan kirjallisen arvosanan. Tehdään nyt sama aliohjelma taulukkoa
+käyttämällä. Kirjalliset arvosanat voidaan nyt tallentaa
+String-tyyppiseen taulukkoon.

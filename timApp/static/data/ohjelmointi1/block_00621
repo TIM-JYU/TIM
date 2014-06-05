@@ -1,0 +1,9 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+// kokonaisluku merkkijonoksi
+int kokonaisluku = 24;
+String intMerkkijonona = kokonaisluku.ToString();
+
+// liukuluku merkkijonoksi
+double liukuluku = 0.562;
+String doubleMerkkijonona = liukuluku.ToString();
+```

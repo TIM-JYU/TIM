@@ -1,0 +1,3 @@
+Mouse.IsCursorOn palauttaa totuusarvon true tai false riippuen siitä,
+onko kursori sille annetun olion (peli-, fysiikka- tai näyttöolion)
+päällä.

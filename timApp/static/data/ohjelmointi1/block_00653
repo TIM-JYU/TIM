@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+String luku3 = "2.45";
+double luku4 = Double.Parse(luku3);
+```

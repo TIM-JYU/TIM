@@ -1,0 +1,6 @@
+Jokaisessa case-kohdassa sekä default-kohdassa on lauseiden jälkeen
+oltava lause, jolla hypätään pois switch-lohkosta. Ylläolevassa
+esimerkissä hyppylauseena toimi break-lause. Toisin kuin joissain
+esimerkiksi C++:ssa, ei C\#:ssa sallita suorituksen siirtymistä
+tapauksesta (case) toiseen, mikäli tapauksessa on yksikin lause.
+Esimerkiksi seuraava koodi aiheuttaisi virheen.

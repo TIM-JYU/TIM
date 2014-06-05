@@ -1,0 +1,42 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+/// <summary>
+/// Palauttaa parametrina saamansa numeroarvosanan kirjallisena.
+/// </summary>
+/// <param name="numero">tenttiarvosana numerona</param>
+/// <returns>tenttiarvosana kirjallisena</returns>
+public static String KirjallinenArvosana(int numero) 
+{
+   String arvosana = "";
+   switch(numero) 
+   {
+      case 0:
+         arvosana = "Hylätty";
+         break;
+
+      case 1:
+         arvosana = "Välttävä";
+         break;
+
+      case 2:
+         arvosana = "Tyydyttävä";
+         break;
+
+      case 3:
+         arvosana = "Hyvä";
+         break;
+
+      case 4:
+         arvosana = "Kiitettävä";
+         break;
+
+      case 5:
+         arvosana = "Erinomainen";
+         break;
+
+      default:
+         arvosana = "Virheellinen arvosana";
+          break;
+   }
+   return arvosana;
+}
+```

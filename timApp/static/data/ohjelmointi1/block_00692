@@ -1,0 +1,4 @@
+Aluksi rivinumerot eivät ole käytössä. Koodin seuraamisen
+helpottamiseksi otetaan ne käyttöön kohdasta Tools → Options → Text
+Editor → C\# → Line Numbers. Jos Error list-ikkuna ei ole jo näkyvissä
+ruudun alareunassa, kannattaa se ottaa käyttöön: View → Error List.

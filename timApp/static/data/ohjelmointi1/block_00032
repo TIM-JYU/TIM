@@ -1,0 +1,6 @@
+Lisätietoa .NET-kehitystyökaluista ja asentamisesta löytyy kurssin
+kotisivuilta:
+<https://trac.cc.jyu.fi/projects/ohj1/wiki/dotnet-tyokalut>. Kun
+sovelluskehitin on asennettu, käynnistetään komentorivi (Command Prompt,
+lyhyemmin cmd) ja siirrytään siihen hakemistoon, johon HelloWorld.cs
+tiedosto on tallennettu. Ohjelma käännetään nyt komennolla:

@@ -1,0 +1,20 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+public class PlusMerkki 
+{  
+   public static void Main() 
+   {
+      int luku1 = 2;
+      int luku2 = 5;
+
+      //tässä "+"-merkki toimii aritmeettisena operaattorina
+      Console.WriteLine(luku1 + luku2); //tulostaa 7
+
+      //tässä "+"-merkki toimii merkkijonoja yhdistelevänä operaattorina
+      Console.WriteLine(luku1 + "" + luku2);  //tulostaa 25
+
+      //Tässä ensimmäinen "+"-merkki toimii aritmeettisena operaattorina
+      //ja toinen "+"-merkki merkkijonoja yhdistelevänä operaattorina
+      Console.WriteLine(luku1 + luku2 + "" + luku1); //tulostaa 72
+   }
+}
+```

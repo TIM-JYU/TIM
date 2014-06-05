@@ -1,0 +1,13 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+if (ehto) 
+{
+  lause1;
+  lause2;
+  lause3;
+} 
+else 
+{
+  lause4;
+  lause5;
+}
+```

@@ -1,0 +1,10 @@
+Visual Studio huomaa osan syntaksivirheistä, joten osa virheistä voidaan
+korjata jo ennen kääntämistä - tarkemmin sanottuna VS kääntää jatkuvasti
+koodia havaitakseen ja ilmoittaakseen mahdolliset virheet. Kun VS löytää
+virheen, ilmestyy Error List -paneeliin virheilmoitus ja tieto siitä
+rivistä, jolla virheellinen koodi sijaitsee. Lisäksi jos virhe
+paikallistuu alleviivaa VS virheellisen koodinpätkän punaisella
+aaltoviivalla. Viemällä hiiri punaisen rastin päälle, VS kertoo
+tarkemmin mikä kyseisessä kohdassa on vikana. Huomaa, että VS ei
+välttämättä paikallista virhettä täysin oikein. Usein virhe voi olla
+myös edellisellä tai seuraavalla rivillä.

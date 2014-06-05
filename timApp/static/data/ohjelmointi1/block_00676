@@ -1,0 +1,4 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+Console.WriteLine(Keskiarvo(5, 2)); //tämäkin tulostaa 3.5
+Console.WriteLine(Keskiarvo(5, 2)); //tämäkin tulostaa 3.5
+```

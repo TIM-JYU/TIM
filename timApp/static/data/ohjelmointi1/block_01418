@@ -1,0 +1,7 @@
+Neljäs parametri on ohjeteksti, joka voidaan näyttää pelaajalle pelin
+alussa. Tässä tarvitsee vain kertoa mitä tapahtuu kun näppäintä
+painetaan. Ohjetekstin tyyppi on String eli merkkijono. Merkkijono on
+jono kirjoitusmerkkejä tietokoneen muistissa. Merkkijonoilla voimme
+esittää mm. sanoja ja lauseita. Jos ohjetta ei halua tai tarvitse
+laittaa, neljännen parametrin arvoksi voi antaa null jolloin se jää
+tyhjäksi.

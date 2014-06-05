@@ -1,0 +1,5 @@
+Tässä vaiheessa voi olla vielä hankalaa ymmärtää kaikkien konstruktorien
+merkitystä, sillä ne sisältävät tietotyyppejä joita emme ole vielä
+käsitelleet. Esimerkiksi tietotyypin perässä olevat hakasulkeet (esim.
+int[]) tarkoittavat että kyseessä on *taulukko*. Taulukoita käsitellään
+lisää luvussa 15.

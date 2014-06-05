@@ -1,0 +1,5 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+String[,] elokuvat =  { {"Pulp Fiction", "Toiminta", "Tarantino"     }, 
+                        {"2001: Avaruusseikkailu", "Scifi", "Kubrick"},
+                        {"Casablanca", "Draama", "Curtiz"            } };
+```

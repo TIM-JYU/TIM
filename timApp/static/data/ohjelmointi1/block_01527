@@ -1,0 +1,20 @@
+``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
+PiirraSierpinskinKolmio(korkeus, x, y) // x ja y tarkoittavat kärjellään
+                                       // seisovan kolmion alakulman koordinaatteja
+{
+   jos (korkeus < PIENIN_SALLITTU_KORKEUS) poistu
+   
+   sivunPituus2 = korkeus / sqrt(3) // Sivun pituus jaettuna kahdella
+   alakulma = (x, y) // Pistepari
+   vasenYlakulma = (x - sivunPituus2, y + korkeus)
+   oikeaYlakulma = (x + sivunpituus2, y + korkeus)
+   
+   PiirraViiva(alakulma, vasenYlakulma) // Viiva alakulmasta vasempaan yläkulmaan
+   PiirraViiva(vasenYlakulma, oikeaYlakulma)  // Vastaavasti ...
+   PiirraViiva(oikeaYlakulma, alakulma)
+
+   PiirraSierpinskinKolmio(korkeus / 2, x - sivunPituus2, y)
+   PiirraSierpinskinKolmio(korkeus / 2, x + sivunPituus2, y)
+   PiirraSierpinskinKolmio(korkeus / 2, x, y + korkeus)
+}
+```

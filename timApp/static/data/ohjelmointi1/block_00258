@@ -1,0 +1,5 @@
+\
+ Huomaa! Parametrien tyyppien ei tarvitse olla keskenään samoja, kunhan
+kukin parametri on yhteensopiva kutsussa olevan vastinparametrin kanssa.
+Esimerkkejä funktioista löydät kurssin wiki-sivulta:
+<https://trac.cc.jyu.fi/projects/ohj1/wiki/aliohjelmienKirjoittaminen>.
