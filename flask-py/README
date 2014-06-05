@@ -1,13 +1,13 @@
-# Mik√§
+# Mik‰
 
 Yksinkertainen web-app, joka on kirjoitettu pythonilla ja sijoitettu dockeriin.
 
-## Sis√§lt√∂
+## Sis‰ltˆ
 
-Dockerfile - Dockerin conffi. Sanomalla `docker build .` t√§m√§ luo uuden docker-imagen. Imagea voi kokeilla
-kirjoittamalla `docker run -p 50000:5000 <ed.komennon hash>`. T√§m√§n j√§lkeen palveluun p√§√§see k√§siksi
-portista 50000. Jos haluat kokeilla muualta, niin virit√§ ssh-forwardi. Lopuksi kannattaa todeta (toisesta
-tulkista) `docker stop <runin palauttama hash>` ja `docker rm <runin palauttama hash>` sek√§ `docker rmi 
+Dockerfile - Dockerin conffi. Sanomalla `docker build .` t‰m‰ luo uuden docker-imagen. Imagea voi kokeilla
+kirjoittamalla `docker run -p 50000:5000 <ed.komennon hash>`. T‰m‰n j‰lkeen palveluun p‰‰see k‰siksi
+portista 50000. Jos haluat kokeilla muualta, niin virit‰ ssh-forwardi. Lopuksi kannattaa todeta (toisesta
+tulkista) `docker stop <runin palauttama hash>` ja `docker rm <runin palauttama hash>` sek‰ `docker rmi 
 <buildin palauttama hash>`.
 
 hello-world.py - Flask microframeworkin koodiesimerkki.

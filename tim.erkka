@@ -110,31 +110,31 @@
         <object name="Entity">
             <id>id5</id>
             <field name="coordinate_x">143</field>
-            <field name="coordinate_y">126</field>
+            <field name="coordinate_y">128</field>
             <field name="name">Document</field>
         </object>
         <object name="Entity">
             <id>id7</id>
             <field name="coordinate_x">629</field>
-            <field name="coordinate_y">130</field>
+            <field name="coordinate_y">132</field>
             <field name="name">Block</field>
         </object>
         <object name="Relationship">
             <id>id9</id>
             <field name="coordinate_x">364</field>
-            <field name="coordinate_y">126</field>
+            <field name="coordinate_y">128</field>
             <field name="name">DocumentBlocks</field>
         </object>
         <object name="Entity">
             <id>id163</id>
             <field name="coordinate_x">142</field>
-            <field name="coordinate_y">376</field>
+            <field name="coordinate_y">378</field>
             <field name="name">UserGroup</field>
         </object>
         <object name="Attribute">
             <id>id167</id>
             <field name="coordinate_x">71</field>
-            <field name="coordinate_y">37</field>
+            <field name="coordinate_y">39</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -143,7 +143,7 @@
         <object name="Attribute">
             <id>id179</id>
             <field name="coordinate_x">562</field>
-            <field name="coordinate_y">25</field>
+            <field name="coordinate_y">27</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -152,7 +152,7 @@
         <object name="Attribute">
             <id>id309</id>
             <field name="coordinate_x">660</field>
-            <field name="coordinate_y">25</field>
+            <field name="coordinate_y">27</field>
             <field name="name">latest_revision_id</field>
             <field name="type">INTEGER</field>
             <field name="compulsion">NULL</field>
@@ -160,7 +160,7 @@
         <object name="Attribute">
             <id>id609</id>
             <field name="coordinate_x">25</field>
-            <field name="coordinate_y">379</field>
+            <field name="coordinate_y">381</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -169,19 +169,19 @@
         <object name="Relationship">
             <id>id655</id>
             <field name="coordinate_x">143</field>
-            <field name="coordinate_y">246</field>
+            <field name="coordinate_y">248</field>
             <field name="name">owns</field>
         </object>
         <object name="Relationship">
             <id>id4355</id>
             <field name="coordinate_x">612</field>
-            <field name="coordinate_y">604</field>
+            <field name="coordinate_y">606</field>
             <field name="name">ReadRevision</field>
         </object>
         <object name="Attribute">
             <id>id8515</id>
             <field name="coordinate_x">630</field>
-            <field name="coordinate_y">689</field>
+            <field name="coordinate_y">691</field>
             <field name="name">revision_id</field>
             <field name="type">INTEGER</field>
             <field name="compulsion">NOT NULL</field>
@@ -189,27 +189,28 @@
         <object name="Attribute">
             <id>id11697</id>
             <field name="coordinate_x">204</field>
-            <field name="coordinate_y">36</field>
+            <field name="coordinate_y">38</field>
             <field name="name">name</field>
-            <field name="type">INTEGER</field>
+            <field name="type">VARCHAR</field>
+            <field name="length">100</field>
             <field name="compulsion">NOT NULL</field>
         </object>
         <object name="Entity">
             <id>id11717</id>
             <field name="coordinate_x">142</field>
-            <field name="coordinate_y">603</field>
+            <field name="coordinate_y">605</field>
             <field name="name">User</field>
         </object>
         <object name="Relationship">
             <id>id11719</id>
             <field name="coordinate_x">106</field>
-            <field name="coordinate_y">489</field>
+            <field name="coordinate_y">491</field>
             <field name="name">UserGroupMembers</field>
         </object>
         <object name="Attribute">
             <id>id11897</id>
             <field name="coordinate_x">79</field>
-            <field name="coordinate_y">680</field>
+            <field name="coordinate_y">682</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -218,186 +219,200 @@
         <object name="Attribute">
             <id>id11901</id>
             <field name="coordinate_x">209</field>
-            <field name="coordinate_y">684</field>
+            <field name="coordinate_y">686</field>
             <field name="name">name</field>
-            <field name="type">INTEGER</field>
+            <field name="type">VARCHAR</field>
+            <field name="length">100</field>
             <field name="compulsion">NOT NULL</field>
         </object>
         <object name="Relationship">
             <id>id12503</id>
             <field name="coordinate_x">459</field>
-            <field name="coordinate_y">377</field>
+            <field name="coordinate_y">379</field>
             <field name="name">BlockAccess</field>
         </object>
         <object name="Attribute">
             <id>id13625</id>
             <field name="coordinate_x">418</field>
-            <field name="coordinate_y">458</field>
+            <field name="coordinate_y">460</field>
             <field name="name">visible_from</field>
-            <field name="type">INTEGER</field>
+            <field name="type">TIMESTAMP</field>
             <field name="compulsion">NOT NULL</field>
         </object>
         <object name="Attribute">
             <id>id16887</id>
             <field name="coordinate_x">530</field>
-            <field name="coordinate_y">461</field>
+            <field name="coordinate_y">463</field>
             <field name="name">visible_to</field>
-            <field name="type">INTEGER</field>
+            <field name="type">TIMESTAMP</field>
             <field name="compulsion">NULL</field>
         </object>
         <object name="Relationship">
             <id>id18047</id>
             <field name="coordinate_x">301</field>
-            <field name="coordinate_y">240</field>
+            <field name="coordinate_y">242</field>
             <field name="name">DocumentAccess</field>
         </object>
         <object name="Attribute">
             <id>id19503</id>
             <field name="coordinate_x">461</field>
-            <field name="coordinate_y">216</field>
+            <field name="coordinate_y">218</field>
             <field name="name">visible_from</field>
-            <field name="type">INTEGER</field>
+            <field name="type">TIMESTAMP</field>
             <field name="compulsion">NOT NULL</field>
         </object>
         <object name="Attribute">
             <id>id19505</id>
             <field name="coordinate_x">460</field>
-            <field name="coordinate_y">281</field>
+            <field name="coordinate_y">283</field>
             <field name="name">visible_to</field>
-            <field name="type">INTEGER</field>
+            <field name="type">TIMESTAMP</field>
             <field name="compulsion">NULL</field>
         </object>
+        <object name="Attribute">
+            <id>id19555</id>
+            <field name="coordinate_x">731</field>
+            <field name="coordinate_y">136</field>
+            <field name="name">type_id</field>
+            <field name="type">INTEGER</field>
+            <field name="compulsion">NOT NULL</field>
+        </object>
         <join name="normal">
-            <id>id19507</id>
+            <id>id19557</id>
             <idref name="idref1">id5</idref>
             <idref name="idref2">id9</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19509</id>
+            <id>id19559</id>
             <idref name="idref1">id7</idref>
             <idref name="idref2">id9</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19511</id>
+            <id>id19561</id>
             <idref name="idref1">id167</idref>
             <idref name="idref2">id5</idref>
         </join>
         <join name="normal">
-            <id>id19513</id>
+            <id>id19563</id>
             <idref name="idref1">id179</idref>
             <idref name="idref2">id7</idref>
         </join>
         <join name="normal">
-            <id>id19515</id>
+            <id>id19565</id>
             <idref name="idref1">id7</idref>
             <idref name="idref2">id309</idref>
         </join>
         <join name="normal">
-            <id>id19517</id>
+            <id>id19567</id>
             <idref name="idref1">id609</idref>
             <idref name="idref2">id163</idref>
         </join>
         <join name="normal">
-            <id>id19519</id>
+            <id>id19569</id>
             <idref name="idref1">id5</idref>
             <idref name="idref2">id655</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19521</id>
+            <id>id19571</id>
             <idref name="idref1">id655</idref>
             <idref name="idref2">id163</idref>
             <field name="cardinality">1</field>
         </join>
         <join name="normal">
-            <id>id19523</id>
+            <id>id19573</id>
             <idref name="idref1">id7</idref>
             <idref name="idref2">id4355</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19525</id>
+            <id>id19575</id>
             <idref name="idref1">id11697</idref>
             <idref name="idref2">id5</idref>
         </join>
         <join name="normal">
-            <id>id19527</id>
+            <id>id19577</id>
             <idref name="idref1">id163</idref>
             <idref name="idref2">id11719</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19529</id>
+            <id>id19579</id>
             <idref name="idref1">id11719</idref>
             <idref name="idref2">id11717</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19531</id>
+            <id>id19581</id>
             <idref name="idref1">id11717</idref>
             <idref name="idref2">id11897</idref>
         </join>
         <join name="normal">
-            <id>id19533</id>
+            <id>id19583</id>
             <idref name="idref1">id11717</idref>
             <idref name="idref2">id11901</idref>
         </join>
         <join name="normal">
-            <id>id19535</id>
+            <id>id19585</id>
             <idref name="idref1">id12503</idref>
             <idref name="idref2">id163</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19537</id>
+            <id>id19587</id>
             <idref name="idref1">id12503</idref>
             <idref name="idref2">id7</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19539</id>
+            <id>id19589</id>
             <idref name="idref1">id12503</idref>
             <idref name="idref2">id13625</idref>
         </join>
         <join name="normal">
-            <id>id19541</id>
+            <id>id19591</id>
             <idref name="idref1">id12503</idref>
             <idref name="idref2">id16887</idref>
         </join>
         <join name="normal">
-            <id>id19543</id>
+            <id>id19593</id>
             <idref name="idref1">id5</idref>
             <idref name="idref2">id18047</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19545</id>
+            <id>id19595</id>
             <idref name="idref1">id18047</idref>
             <idref name="idref2">id163</idref>
             <field name="cardinality">M</field>
         </join>
         <join name="normal">
-            <id>id19547</id>
+            <id>id19597</id>
             <idref name="idref1">id19503</idref>
             <idref name="idref2">id18047</idref>
         </join>
         <join name="normal">
-            <id>id19549</id>
+            <id>id19599</id>
             <idref name="idref1">id18047</idref>
             <idref name="idref2">id19505</idref>
         </join>
         <join name="normal">
-            <id>id19551</id>
+            <id>id19601</id>
             <idref name="idref1">id4355</idref>
             <idref name="idref2">id8515</idref>
         </join>
         <join name="normal">
-            <id>id19553</id>
+            <id>id19603</id>
             <idref name="idref1">id4355</idref>
             <idref name="idref2">id11717</idref>
             <field name="cardinality">M</field>
+        </join>
+        <join name="normal">
+            <id>id19605</id>
+            <idref name="idref1">id19555</idref>
+            <idref name="idref2">id7</idref>
         </join>
     </drawing>
 </erkka>

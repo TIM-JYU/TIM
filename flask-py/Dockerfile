@@ -9,30 +9,30 @@ run pip install Flask
 run pip install beautifulsoup4
 
 
-# Poistetaan pip. Sit√§ ei tarvitse en√§√§ ja saadaan
-# hitusen pienempi image ja v√§hemm√§n ohjelmia potentiaalisen
-# hy√∂kk√§√§j√§n k√§ytt√∂√∂n. (Periaate ok. k√§yt√§nn√∂ss√§ tosi marginaalinen
+# Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
+# hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen
+# hyˆkk‰‰j‰n k‰yttˆˆn. (Periaate ok. k‰yt‰nnˆss‰ tosi marginaalinen
 # toimenpide)
 run apt-get -y --purge remove python-pip
 
-# Lis√§t√§√§n alkuper√§inen hakemisto polkuun /service
+# Lis‰t‰‰n alkuper‰inen hakemisto polkuun /service
 add . /service
 
-# Lis√§t√§√§n k√§ytt√§j√§ `agent` -- Emme halua ajaa containerissakaan
+# Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 run useradd -M agent
 run chown -R agent /service
 
-# Varmuudeksi estet√§√§n root login ja poistetaan rootin salasana,
+# Varmuudeksi estet‰‰n root login ja poistetaan rootin salasana,
 # jos sellainen on.
 run usermod -p '!' root
 run passwd -l root
 
-# Asetetaan container k√§ynnistym√§√§n tunnuksella agent.
+# Asetetaan container k‰ynnistym‰‰n tunnuksella agent.
 user agent
 
 # Avataan portti 5000 ulos containerista.
 expose 5000
 
-# Kun container k√§ynnistyy, suoritetaan:
+# Kun container k‰ynnistyy, suoritetaan:
 cmd cd /service/ && python hello-world.py
