@@ -1,3 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Console.WriteLine(kuukausienPaivienLkm[0]); //tulostuu 31
-```

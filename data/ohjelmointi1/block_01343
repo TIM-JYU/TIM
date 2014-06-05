@@ -1,4 +1,0 @@
-Jos silmukan ehdoksi asetetaan true, täytyy jossain kohtaa ohjelmassa
-olla break-lause, ettei silmukasta tulisi ikuista. Tällainen rakenne on
-näppärä juuri silloin, kun haluamme, että silmukan lopettamista
-tarkastellaan keskellä silmukkaa.

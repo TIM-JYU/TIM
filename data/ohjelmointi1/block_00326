@@ -1,6 +1,0 @@
-Eri tietotyypit vaativat eri määrän kapasiteettia tietokoneen muistista.
-Vaikka nykyajan koneissa on paljon muistia, on hyvin tärkeää valita
-oikean tyyppinen muuttuja kuhunkin tilanteeseen. Suurissa ohjelmissa
-ongelma korostuu hyvin nopeasti käytettäessä muuttujia, jotka kuluttavat
-tilanteeseen nähden kohtuuttoman paljon muistikapasiteettia. C\#:n
-alkeistietotyypit on lueteltu alla.

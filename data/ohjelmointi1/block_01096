@@ -1,3 +1,0 @@
-Jos viittaamme taulukon alkioon, jota ei ole olemassa, saamme
-IndexOutOfRangeException-poikkeuksen. Tällöin kääntäjä tulostaa
-seuraavan kaltaisen virheilmoituksen ja ohjelman suoritus päättyy.

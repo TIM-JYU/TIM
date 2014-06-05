@@ -1,3 +1,0 @@
-Kun vasen (Key.Left) näppäin on alhaalla (ButtonState.Down), niin
-liikutetaan pelaajaa suorittamalla metodi LiikutaPelaajaaVasemmalle.
-Viimeisenä parametrina on pelissä näkyvä näppäinohjeteksti.

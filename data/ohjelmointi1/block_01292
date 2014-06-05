@@ -1,7 +1,0 @@
-Aliohjelman alussa alustetaan tenttiarvosanojen pisterajoille taulukko.
-Taulukko alustetaan kuuden kokoiseksi, jotta voisimme tallentaa jokaisen
-arvosanan pisterajan vastaavan taulukon indeksin kohdalle. Arvosanan 1
-pisteraja on taulukon indeksissä 1 ja arvosanan 2 indeksissä 2 ja niin
-edelleen. Näin taulukon ensimmäinen indeksi jää käyttämättä, mutta
-taulukkoon viittaaminen on selkeämpää. Koska pisterajat voivat olla
-desimaalilukuja, on taulukon oltava tyypiltään double[].

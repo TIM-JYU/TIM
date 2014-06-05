@@ -1,3 +1,0 @@
-ComTestistä johtuen luokan, jossa aliohjelmia halutaan testata, on
-oltava julkisuusmääreellä public, muutoin testaaminen ei onnistu. Samoin
-jokaisen testattavan aliohjelman on oltava public-aliohjelma.

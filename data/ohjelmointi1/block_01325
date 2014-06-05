@@ -1,4 +1,0 @@
-Silmukoiden normaalia toimintaa voidaan muuttaa break- ja
-continue-lauseilla. Niiden käyttäminen *ei* ole tavallisesti
-suositeltavaa, vaan silmukat pitäisi ensisijaisesti suunnitella niin,
-ettei niitä tarvittaisi.

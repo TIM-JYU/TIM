@@ -1,8 +1,0 @@
-Jo melko yksinkertaisten ohjelmien testaaminen ruudulle tulostelemalla
-veisi paljon aikaa. Tulostukset pitäisi tehdä uudestaan jokaisen
-muutoksen jälkeen, sillä emme voisi mitenkään tietää, että ennen
-muutosta tekemämme testit toimisivat vielä muutoksen jälkeen.
-Yksikkötestauksen idea on, että jokaiselle aliohjelmalle ja metodille
-kirjoitetaan oma testinsä erilliseen tiedostoon, jotka voidaan sitten
-kaikki ajaa kerralla. Näin voimme suorittaa kerran kirjoitetut testit
-jokaisen pienenkin muutoksen jälkeen todella helposti.

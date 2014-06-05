@@ -1,6 +1,0 @@
-Projekti sisältää yhden kansion sijaan kaksi kansiota (Lumiukko ja
-LumiukkoContent), joista jälkimmäinen on varattu sisällön, kuten äänien
-ja kuvien, tuomiselle peliin. Lumiukko-kansiosta löytyy edelleen kaksi
-kooditiedostoa, Ohjelma.cs ja Peli.cs, joista ensimmäinen on varattu
-Main-metodille, ja jälkimmäinen sisältää varsinaisen pelin lähdekoodin.
-Ohjelma.cs-tiedostoa ei käytännössä juurikaan tarvitse muokata.

@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import uuid
 import os
 import pypandoc
+from os import listdir
+from os.path import isfile, join
 
 # 
 ACCEPTED_TAGS = ['p','h1','h2','h3','h4','h5','em','li','img']
@@ -25,7 +27,6 @@ def makeSoup(fileName, srcDir, targetDir):
         with open(os.path.join(targetDir + "/" + '{0}'.format(uid)), 'wb') as f:
             f.write(bytes(str(tag), "UTF-8"))
 
-
 # import parseParagraphs as p
 def test():
     makeSoup("/static/ohj1/raw_lecture_notes.markdown", "./", "./static/ohj1Tags")
@@ -41,5 +42,7 @@ def getDocumentPars(docName):
             pars.append(line)
     return pars
 
-def parseDocToMarkdown(docName):
-    return ""
+def fileList(mypath):
+    files = [ f for f in listdir(mypath) if isfile(join(mypath,f)) ]
+    return files
+            

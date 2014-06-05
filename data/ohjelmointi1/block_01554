@@ -1,6 +1,0 @@
-Olennaista tässä on huomata, että niin kauan, kuin korkeus h on
-*enemmän* kuin annettu kolmion minimikorkeus, emme pääse ensimmäistä
-SierpinskinKolmio-aliohjelmakutsua ”pidemmälle”. Kullakin kutsukerralla
-näet korkeus h puolittuu, joten vasta h:n ollessa riittävän pieni
-lopetusehto toteutuu. Rekursion idean mukaisesti vasta sitten etenemme
-seuraaviin SierpinskinKolmio-kutsuihin (kaksi jälkimmäistä).

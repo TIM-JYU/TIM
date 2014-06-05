@@ -1,7 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-protected override void Paint(Canvas canvas)
-{
-  // Tässä välissä piirretään kuviot
-  base.Paint(canvas);
-}
-```

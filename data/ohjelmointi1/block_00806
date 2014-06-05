@@ -1,5 +1,0 @@
--   [Replace(String,
-    String)](http://msdn.microsoft.com/en-us/library/fk49wtc1.aspx)
-    Korvaa merkkijonon kaikki merkkijonoesiintymät toisella
-    merkkijonolla. Ensimmäisenä parametrina korvattava merkkijono ja
-    toisena korvaaja.

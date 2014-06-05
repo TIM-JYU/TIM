@@ -1,6 +1,0 @@
-Tämänhetkisellä tietämyksellä yllä olevan kaltainen aliohjelma olisi
-lähes mahdoton toteuttaa. Pystyisimme kyllä selvittämään onko luku
-parillinen, mutta meillä ei ole keinoa muuttaa paluuarvoa sen mukaan,
-onko luku parillinen vai ei. Kun ohjelmassa haluamme tehdä eri asioita
-riippuen esimerkiksi käyttäjän syötteestä tai aliohjelmien
-parametreista, tarvitsemme ehtolauseita.

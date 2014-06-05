@@ -1,8 +1,0 @@
-Rivit 8-10 ovat dokumentaatiokommentteja. Rivillä 11 luodaan
-Lumiukko-luokka, joka hieman poikkeaa HelloWorld-esimerkin tavasta luoda
-uusi luokka. Tässä kohtaa käytämme ensimmäisen kerran Jypeli-kirjastoa,
-ja koodissa kerrommekin, että Lumiukko-luokka, jota juuri olemme
-tekemässä, ”perustuu” Jypeli-kirjastossa olevaan PhysicsGame-luokkaan.
-Täsmällisemmin sanottuna Lumiukko-luokka peritään PhysicsGame-luokasta.
-Tuon PhysicsGame-luokan avulla objektien piirtäminen, myöhemmin
-liikuttelu ruudulla ja fysiikan lakien hyödyntäminen on vaivatonta.

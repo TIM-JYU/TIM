@@ -1,9 +1,0 @@
-Myös testit täytyy testata. Voihan olla, että kirjoittamissamme
-testeissä on myös virheitä. Tämä onkin syytä testata kirjoittamalla
-testeihin virhe tarkoituksella. Tällöin Test Results -välilehdellä
-pitäisi tietenkin näkyä punainen ympyrä. Jos näin ei ole, on joku
-testeistä väärin, tai aliohjelmassa on virhe. Hyvien testien
-kirjoittaminen on myös oma taitonsa. Kaikkia mahdollisia tilanteitahan
-ei millään voi testata, joten joudumme valitsemaan, mille parametreille
-testit tehdään. Täytyisi ainakin testata todennäköiset virhepaikat.
-Näitä ovat yleensä ainakin kaikenlaiset "ääritilanteet".

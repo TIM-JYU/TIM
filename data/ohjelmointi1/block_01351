@@ -1,6 +1,0 @@
-Merkkijonoja voidaan pilkkoa String-olion Split-metodilla. Metodi
-palauttaa palaset merkkijono-tyyppisessä taulukossa String[]. Nyt
-Split()-metodille annetaan parametrina taulukko niistä merkeistä (Char),
-joiden halutaan toimivan erotinmerkkeinä. Pyydetään käyttäjältä syöte,
-ja oletetaan, että haluamme, että välilyönti, puolipiste ja pilkku
-toimivat erotinmerkkeinä.

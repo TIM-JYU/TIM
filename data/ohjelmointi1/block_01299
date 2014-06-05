@@ -1,6 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-for (int i = 5; 1 <= i; i--) 
-{
-   if (arvosanaRajat[i] <= tenttipisteet) return i;
-}
-```

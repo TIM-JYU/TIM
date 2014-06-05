@@ -1,5 +1,0 @@
-Kontrollilausekkeessa alustetaan aluksi muuttujan i arvoksi 0.
-Seuraavaksi ehtona on, että silmukan suoritusta jatketaan niin kauan
-kuin muuttujan i arvo on pienempää kuin luku 10. Lopuksi
-kontrollilausekkeessa todetaan, että muuttujan i arvoa kasvatetaan joka
-kierroksella yhdellä.

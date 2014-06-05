@@ -1,3 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Tietotyyppi[] taulukonNimi = new Tietotyyppi[taulukonKoko]; //kaikki alkiot null-viitteitä
-```

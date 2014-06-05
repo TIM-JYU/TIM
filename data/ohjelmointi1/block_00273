@@ -1,3 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-PiirraLumiukko(this, 22.7+sin(2.4), 80.1-Math.PI);
-```

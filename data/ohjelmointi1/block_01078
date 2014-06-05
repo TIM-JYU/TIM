@@ -1,5 +1,0 @@
-Taulukkoon voi myös sijoittaa arvot määrittelyn yhteydessä. Tällöin
-sanotaan, että taulukko *alustetaan* (initialize). Tällöin varsinaista
-luontilausetta ei tarvita, sillä taulukon koko määräytyy sijoitettujen
-arvojen lukumäärän perusteella. Sijoitettavat arvot kirjoitetaan
-aaltosulkeiden sisään.

@@ -1,7 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-int[] taulukko1 = {1, 2, 3, 4, 5};
-int[] taulukko2 = taulukko1;
-
-taulukko2[0] = 10;
-Console.WriteLine(taulukko1[0]); //tulostaa 10
-```

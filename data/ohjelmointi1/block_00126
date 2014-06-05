@@ -1,4 +1,0 @@
-Eräs tärkeä algoritmien kirjoittamisen vaihe on yleistäminen. Tällöin
-valmiiksi tehdystä algoritmista pyritään paikantamaan kaikki alunperin
-annetusta tehtävästä riippuvat tekijät, ja pohditaan voitaisiinko ne
-kenties kokonaan poistaa tai korvata joillakin yleisemmillä tekijöillä.

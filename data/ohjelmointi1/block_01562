@@ -1,4 +1,0 @@
-Valmiita tietorakenteita on C\#:ssa melko paljon, joten ennen oman
-tietorakenteen tekemistä kannattaa tutustua niihin. Tässä luvussa
-tutustumme lähinnä geneeriseen listaan (List\<T\>). Oman tietorakenteen
-tekeminen onkin jo sitten Ohjelmointi 2-kurssin asiaa.

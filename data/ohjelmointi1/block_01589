@@ -1,3 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-luvut.Add(5.3); // Kääntäjä ilmoittaa virheestä!
-```

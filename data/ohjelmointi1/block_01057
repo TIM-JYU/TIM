@@ -1,8 +1,0 @@
-Ohjelman kaikki muuttujat ovat lokaaleja muuttujia, eli ne on esitelty
-lokaalisti Main-metodin sisällä eivätkä "näy" näin ollen Main-metodin
-ulkopuolelle. Tällaisille muuttujille varataan tilaa yleensä
-kutsupinosta. Kutsupino on dynaaminen tietorakenne, johon tallennetaan
-tietoa aktiivisista aliohjelmista. Siitä käytetään usein myös pelkästään
-nimeä pino. Pinosta puhutaan lisää kurssilla ITKA203 Käyttöjärjestelmät.
-Tässä vaiheessa pino voisi hieman yksinkertaistettuna olla lokaalien
-muuttujien kohdalta suurin piirtein seuraavan näköinen:

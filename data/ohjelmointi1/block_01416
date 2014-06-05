@@ -1,8 +1,0 @@
--   ButtonState.Released: Näppäin on juuri vapautettu
-
--   ButtonState.Pressed: Näppäin on juuri painettu alas
-
--   ButtonState.Up: Näppäin on ylhäällä (vapautettuna)
-
--   ButtonState.Down: Näppäin on alaspainettuna
-

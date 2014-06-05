@@ -1,7 +1,0 @@
-\
-\
-\
- Huomaa, että monet String-luokan konstruktoreista on merkitty
-unsafe-merkinnällä, jolloin niitä ei tulisi käyttää omassa koodissa.
-Tällaiset konstruktorit on tarkoitettu ainoastaan järjestelmien
-keskinäiseen viestintään.

@@ -1,6 +1,0 @@
-Lähdekoodi sijaitsee Program.cs-tiedostossa. Kuten huomaat, projektiin
-kuuluu kuitenkin monia muitakin tiedostoja ja kansioita. bin- ja
-obj-kansiot sisältävät ohjelman käännökseen liittyviä
-väliaikaistiedostoja. Properties-kansio taas sisältää julkaisuun
-liittyvää tietoa esimerkiksi tekijänoikeuksista ja merkistöstä. Huomaa,
-että varsinainen projektitiedosto on .csproj-päätteinen.

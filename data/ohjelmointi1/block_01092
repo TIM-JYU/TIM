@@ -1,3 +1,0 @@
-Taulukkoon viittaava indeksi voi olla myös int-tyyppinen lauseke,
-jolloin kuukausienPaivienLkm-taulukkoon viittaaminen onnistuu yhtä hyvin
-seuraavasti:

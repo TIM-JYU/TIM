@@ -1,4 +1,0 @@
-Taulukon alkioihin pääsee käsiksi taulukon nimellä ja indeksillä.
-Ensiksi kirjoitetaan taulukon nimi, jonka jälkeen hakasulkeiden sisään
-halutun alkion indeksi. Yleisessä muodossa taulukon alkioihin viitataan
-seuraavasti.

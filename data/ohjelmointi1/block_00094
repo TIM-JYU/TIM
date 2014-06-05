@@ -1,6 +1,0 @@
-Lähdekoodia on usein vaikea ymmärtää pelkkää ohjelmointikieltä
-lukemalla. Tämän takia koodin sekaan voi ja pitää lisätä selosteita eli
-*kommentteja*. Kommentit ovat sekä koodin kirjoittajaa itseään varten
-että tulevia ohjelman lukijoita ja ylläpitäjiä varten. Monet asiat
-voivat kirjoitettaessa tuntua ilmeisiltä, mutta jo viikon päästä saakin
-pähkäillä, että miksihän tuonkin tuohon kirjoitin.

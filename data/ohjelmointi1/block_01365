@@ -1,4 +1,0 @@
-int[] MerkkijonoLuvuiksi(String, char[])\
- Aliohjelma muuttaa annetun merkkijonon kokonaislukutaulukoksi siten,
-etta luvut erotellaan annetun merkkitaulukon (erotinmerkkien)
-perusteella. Syötteen tulee sisältää vain lukuja ja erotinmerkkejä.

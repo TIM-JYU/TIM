@@ -1,5 +1,0 @@
-\
- Koska määrittelimme koordinaattien parametrien tyypiksi double,
-voisimme yhtä hyvin antaa parametreiksi mitä tahansa muitakin
-desimaalilukuja. Täytyy muistaa, että C\#:ssa desimaalilukuvakioissa
-käytetään pistettä erottamaan kokonaisosa desimaaliosasta.

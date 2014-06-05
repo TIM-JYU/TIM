@@ -1,7 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-int luku = 23;
-bool totuusarvo = false;
-
-String merkkijono1 = "" + luku;
-String merkkijono2 = "" + totuusarvo;
-```

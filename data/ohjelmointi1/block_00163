@@ -1,5 +1,0 @@
-Näistä kahdesta rivistä ensimmäisellä kutsutaan Camera-luokan
-ZoomToLevel-aliohjelmaa, joka pitää huolen siitä, että ”kamera” on
-kohdistettuna ja zoomattuna oikeaan kohtaan. Aliohjelma ei ota vastaan
-parametreja, joten sulkujen sisältö jää tyhjäksi. Toisella rivillä
-muutetaan taustan väri.

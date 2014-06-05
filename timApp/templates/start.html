@@ -1,56 +1,45 @@
 <!doctype html>
-
 <html lang="en" ng-app="timApp">
 <head>
     <title>TIM</title>
     <meta charset="utf-8">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="{{url_for('static', filename='angular-1.2.9/angular.js')}}"></script>
+    <script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
     <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-    <script src="{{url_for('static', filename='timController.js')}}"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script> 
+    <script src="{{url_for('static', filename='scripts/timController.js')}}"></script>
+    <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script> 
     <script src="//code.angularjs.org/1.2.9/angular-sanitize.js"></script>
-    <script src="{{url_for('static', filename='jquery-textrange.js')}}"></script>
-    <script src="{{url_for('static', filename='markdown.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script> 
+    <style type="text/css" media="screen">
+        .editor { 
+            position: absolute;
+            height:30em;
+            width:30em;
+            top: -20;
+            right: 40em;
+            
+        }
+    </style>
+    <script> 
+    // Imported data from jinja2 template
+     var jsonData = JSON.parse({{ text|tojson|safe }});
+    </script> 
+    <script type="text/javascript" src="{{url_for('static', filename='scripts/timApp.js')}}"></script>
+
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->  
-    <script> 
-        var jsonData = JSON.parse({{ text|tojson|safe }});
-        timApp = angular.module('timApp', ['ngSanitize', 'btford.markdown']);
-        timApp.controller("TimCtrl", ['$scope', function(sc){
-                sc.paragraphs = jsonData; 
-                sc.setEditable = function(par){
-                    var elem = sc.findPar(par);
-                    if(elem.hidden == true){
-                        elem.hidden = false;
-                    }
-                    else {
-                        elem.hidden = true;
-                    }
-                
-                };
-                
-            sc.findPar = function(par){
-                for(var i = 0; i < sc.paragraphs.length; i++){
-                    if (sc.paragraphs[i].par == par){
-                        return sc.paragraphs[i];
-                    }
-                }
-            };
-        }]);
-
-
-
-    </script>
+    <script>
+        </script>
 </head>
-{% raw %}
-    <body ng-controller="TimCtrl"> 
-        <div class="content" ng-repeat-start="par in paragraphs"> 
-                <btf-markdown ng-model="par.text"> </btf-markdown>
-        </div>
-         <button ng-click="setEditable(par.par)"></button>
-        <input ng-repeat-end type="textarea" ng-show="par.hidden" ng-model="par.text"></input>
-    </body>
-    {% endraw %}
+    <body ng-controller="TimCtrl">
+    <div ng-repeat="par in paragraphs">   
+            <div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once ng-bind-html="par.html"> </div>
+            <button ng-click="setEditable(par.par)"> Edit </button>         
+            <div  id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display" ng-model="activeEdit.text"></div>
+             
+    </div>
+        </body>
 </html>

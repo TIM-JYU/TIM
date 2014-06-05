@@ -1,4 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-decimal tilinSaldo = 3498.98m;
-float lampotila = -4.8f;
-```

@@ -1,3 +1,0 @@
-C\#-tageja ovat esimerkiksi \<summary\>, jolla ilmoitetaan pieni
-yhteenveto kommenttia seuraavasta koodilohkosta (esimerkiksi pääohjelma
-tai metodi). Yhteenveto päättyy \</summary\> -lopetustagiin.
