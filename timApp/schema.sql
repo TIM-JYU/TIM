@@ -44,7 +44,7 @@ CONSTRAINT Document_id
 ;
 
 
-CREATE TABLE DocumentBlocks (
+CREATE TABLE DocumentBlock (
 Document_id INTEGER NOT NULL,
 Block_id INTEGER NOT NULL,
 
@@ -85,7 +85,7 @@ CONSTRAINT ReadRevision_id
 ;
 
 
-CREATE TABLE UserGroupMembers (
+CREATE TABLE UserGroupMember (
 UserGroup_id INTEGER NOT NULL,
 User_id INTEGER NOT NULL,
 

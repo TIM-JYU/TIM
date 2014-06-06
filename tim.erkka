@@ -110,31 +110,31 @@
         <object name="Entity">
             <id>id5</id>
             <field name="coordinate_x">143</field>
-            <field name="coordinate_y">128</field>
+            <field name="coordinate_y">129</field>
             <field name="name">Document</field>
         </object>
         <object name="Entity">
             <id>id7</id>
             <field name="coordinate_x">629</field>
-            <field name="coordinate_y">132</field>
+            <field name="coordinate_y">133</field>
             <field name="name">Block</field>
         </object>
         <object name="Relationship">
             <id>id9</id>
             <field name="coordinate_x">364</field>
-            <field name="coordinate_y">128</field>
-            <field name="name">DocumentBlocks</field>
+            <field name="coordinate_y">129</field>
+            <field name="name">DocumentBlock</field>
         </object>
         <object name="Entity">
             <id>id163</id>
             <field name="coordinate_x">142</field>
-            <field name="coordinate_y">378</field>
+            <field name="coordinate_y">379</field>
             <field name="name">UserGroup</field>
         </object>
         <object name="Attribute">
             <id>id167</id>
             <field name="coordinate_x">71</field>
-            <field name="coordinate_y">39</field>
+            <field name="coordinate_y">40</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -143,7 +143,7 @@
         <object name="Attribute">
             <id>id179</id>
             <field name="coordinate_x">562</field>
-            <field name="coordinate_y">27</field>
+            <field name="coordinate_y">28</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -152,7 +152,7 @@
         <object name="Attribute">
             <id>id309</id>
             <field name="coordinate_x">660</field>
-            <field name="coordinate_y">27</field>
+            <field name="coordinate_y">28</field>
             <field name="name">latest_revision_id</field>
             <field name="type">INTEGER</field>
             <field name="compulsion">NULL</field>
@@ -160,7 +160,7 @@
         <object name="Attribute">
             <id>id609</id>
             <field name="coordinate_x">25</field>
-            <field name="coordinate_y">381</field>
+            <field name="coordinate_y">382</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -169,19 +169,19 @@
         <object name="Relationship">
             <id>id655</id>
             <field name="coordinate_x">143</field>
-            <field name="coordinate_y">248</field>
+            <field name="coordinate_y">249</field>
             <field name="name">owns</field>
         </object>
         <object name="Relationship">
             <id>id4355</id>
             <field name="coordinate_x">612</field>
-            <field name="coordinate_y">606</field>
+            <field name="coordinate_y">607</field>
             <field name="name">ReadRevision</field>
         </object>
         <object name="Attribute">
             <id>id8515</id>
             <field name="coordinate_x">630</field>
-            <field name="coordinate_y">691</field>
+            <field name="coordinate_y">692</field>
             <field name="name">revision_id</field>
             <field name="type">INTEGER</field>
             <field name="compulsion">NOT NULL</field>
@@ -189,7 +189,7 @@
         <object name="Attribute">
             <id>id11697</id>
             <field name="coordinate_x">204</field>
-            <field name="coordinate_y">38</field>
+            <field name="coordinate_y">39</field>
             <field name="name">name</field>
             <field name="type">VARCHAR</field>
             <field name="length">100</field>
@@ -198,19 +198,19 @@
         <object name="Entity">
             <id>id11717</id>
             <field name="coordinate_x">142</field>
-            <field name="coordinate_y">605</field>
+            <field name="coordinate_y">606</field>
             <field name="name">User</field>
         </object>
         <object name="Relationship">
             <id>id11719</id>
             <field name="coordinate_x">106</field>
-            <field name="coordinate_y">491</field>
-            <field name="name">UserGroupMembers</field>
+            <field name="coordinate_y">492</field>
+            <field name="name">UserGroupMember</field>
         </object>
         <object name="Attribute">
             <id>id11897</id>
             <field name="coordinate_x">79</field>
-            <field name="coordinate_y">682</field>
+            <field name="coordinate_y">683</field>
             <field name="name">id</field>
             <field name="primarykey">true</field>
             <field name="type">INTEGER</field>
@@ -219,7 +219,7 @@
         <object name="Attribute">
             <id>id11901</id>
             <field name="coordinate_x">209</field>
-            <field name="coordinate_y">686</field>
+            <field name="coordinate_y">687</field>
             <field name="name">name</field>
             <field name="type">VARCHAR</field>
             <field name="length">100</field>
@@ -228,13 +228,13 @@
         <object name="Relationship">
             <id>id12503</id>
             <field name="coordinate_x">459</field>
-            <field name="coordinate_y">379</field>
+            <field name="coordinate_y">380</field>
             <field name="name">BlockAccess</field>
         </object>
         <object name="Attribute">
             <id>id13625</id>
             <field name="coordinate_x">418</field>
-            <field name="coordinate_y">460</field>
+            <field name="coordinate_y">461</field>
             <field name="name">visible_from</field>
             <field name="type">TIMESTAMP</field>
             <field name="compulsion">NOT NULL</field>
@@ -242,7 +242,7 @@
         <object name="Attribute">
             <id>id16887</id>
             <field name="coordinate_x">530</field>
-            <field name="coordinate_y">463</field>
+            <field name="coordinate_y">464</field>
             <field name="name">visible_to</field>
             <field name="type">TIMESTAMP</field>
             <field name="compulsion">NULL</field>
@@ -250,13 +250,13 @@
         <object name="Relationship">
             <id>id18047</id>
             <field name="coordinate_x">301</field>
-            <field name="coordinate_y">242</field>
+            <field name="coordinate_y">243</field>
             <field name="name">DocumentAccess</field>
         </object>
         <object name="Attribute">
             <id>id19503</id>
             <field name="coordinate_x">461</field>
-            <field name="coordinate_y">218</field>
+            <field name="coordinate_y">219</field>
             <field name="name">visible_from</field>
             <field name="type">TIMESTAMP</field>
             <field name="compulsion">NOT NULL</field>
@@ -264,7 +264,7 @@
         <object name="Attribute">
             <id>id19505</id>
             <field name="coordinate_x">460</field>
-            <field name="coordinate_y">283</field>
+            <field name="coordinate_y">284</field>
             <field name="name">visible_to</field>
             <field name="type">TIMESTAMP</field>
             <field name="compulsion">NULL</field>
@@ -272,7 +272,7 @@
         <object name="Attribute">
             <id>id19555</id>
             <field name="coordinate_x">731</field>
-            <field name="coordinate_y">136</field>
+            <field name="coordinate_y">137</field>
             <field name="name">type_id</field>
             <field name="type">INTEGER</field>
             <field name="compulsion">NOT NULL</field>
