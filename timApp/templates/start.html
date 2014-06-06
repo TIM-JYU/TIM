@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" ng-app="timApp">
 <head>
     <title>TIM</title>
@@ -13,19 +13,20 @@
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script> 
     <style type="text/css" media="screen">
-        .editor { 
-            position: absolute;
-            height:30em;
-            width:30em;
-            top: -20;
-            right: 40em;
-            
-        }
+
+    .editor { 
+        position: absolute;
+        height: 100%;
+        width:40em;
+        top: 0em; 
+        bottom; 0em;
+        left: 45em;        
+    }
     </style>
     <script> 
     // Imported data from jinja2 template
      var jsonData = JSON.parse({{ text|tojson|safe }});
-    </script> 
+    </script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/timApp.js')}}"></script>
 
     <!--[if lt IE 9]>
@@ -35,11 +36,11 @@
         </script>
 </head>
     <body ng-controller="TimCtrl">
-    <div ng-repeat="par in paragraphs">   
+    <div class="paragraph"  ng-repeat="par in paragraphs">   
             <div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once ng-bind-html="par.html"> </div>
-            <button ng-click="setEditable(par.par)"> Edit </button>         
-            <div  id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display" ng-model="activeEdit.text"></div>
-             
+            <button class="editButton" ng-click="setEditable(par.par)"> Edit </button>         
+            <div id="{{'{{ par.par }}'}}" class="editor"  ng-show="par.display" ng-model="activeEdit.text">
+            </div> 
     </div>
-        </body>
+    </body>
 </html>

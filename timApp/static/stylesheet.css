@@ -1,4 +1,18 @@
+
 .content{
-    width: 40em;
-    white-space: pre;
+        width: 30em;
+        text-align: justify;
 }
+
+.paragraph{
+        position: relative;
+        width: 60em;
+}
+
+.editButton{
+    position:relative; 
+    left:37em;
+    top:0em;
+}
+
+
