@@ -42,7 +42,7 @@ class TimDb(object):
         document_path = os.path.join(self.documents_path, str(document_id))
         
         try:
-            #Create empty file.
+            #Create an empty file.
             open(document_path, 'a').close()
         except OSError:
             print('Couldn\'t open file for writing:' + document_path)
@@ -83,7 +83,6 @@ class TimDb(object):
         #TODO: Add the block under version control (Git module?).
         
         #Modify the document file appropriately.
-        #found_line = False
         next_block_id_str = str(next_block_id)
         
         document_path = self.getDocumentPath(document_id)
@@ -93,7 +92,6 @@ class TimDb(object):
                 docfile.write(str(block_id) + "\n")
             return block_id
         
-        #document_file = 
         found = False
         for line in fileinput.input(document_path, inplace=1):
             if line == next_block_id_str + "\n":
