@@ -14,19 +14,17 @@
             sc.setEditable = function(par){
                 var elem = sc.findPar(par);
                 var elemId = sc.findParId(par);
-                if(sc.editing == true && sc.editorExists(elem.par)){
+                if(sc.paragraphs[elemId].display == true && sc.editorExists(elem.par)){
                         mdtext = sc.getEditor(elem.par).editor.getSession().getValue();
                         sc.paragraphs[elemId].text = mdtext; 
                         $('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
                         sc.paragraphs[elemId].display = false;
                         sc.activeEdit.editId = "";
                         sc.activeEdit.text = "";
-                        sc.editing = false;
                 }
 
                                 
                 else {
-
                     sc.paragraphs[elemId].display = true;
                     var editor = ace.edit(elem.par);
                     editor.getSession().setValue(sc.paragraphs[elemId].text);
@@ -36,10 +34,8 @@
                     editor.getSession().on('change', function(e) {
                         $('.'+elem.par).html(sc.convertHtml.makeHtml(editor.getSession().getValue()));
                     }); 
-                    sc.editing = true;
                     sc.activeEdit.text = sc.paragraphs[elemId].text;
                     sc.activeEdit.editId = elem.par;
-       //             sc.setEditPosition(elem.par);
                 }               
             };
             
@@ -113,3 +109,15 @@
                     }
                 }
             });
+
+// Here we define converter for markdown --> html. You can define custom hooks here.
+function makeSanitizingConverter(){
+    converter = new Markdown.getSanitizingConverter();
+    converter.hooks.chain("postConversion", function(text){      
+    });
+    return converter;
+}
+
+
+
+
