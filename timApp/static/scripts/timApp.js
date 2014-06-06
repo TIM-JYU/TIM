@@ -1,7 +1,7 @@
 
        
         timApp = angular.module('timApp', ['ngSanitize']);
-        timApp.controller("TimCtrl", ['$scope', function(sc){
+        timApp.controller("TimCtrl", ['$scope', '$http', function(sc, http){
             sc.paragraphs = jsonData;
             sc.convertHtml = new Markdown.getSanitizingConverter();
             sc.editors = [];
@@ -21,14 +21,20 @@
                         sc.paragraphs[elemId].display = false;
                         sc.activeEdit.editId = "";
                         sc.activeEdit.text = "";
+                        http({method: 'POST',
+                               url: '/postParagraph/',
+                               data: JSON.stringify({"documentName":documentName,"par" : elem.par, "text": elem.text})})
+                                
                 }
 
                                 
                 else {
                     sc.paragraphs[elemId].display = true;
+                    
                     var editor = ace.edit(elem.par);
                     editor.getSession().setValue(sc.paragraphs[elemId].text);
                     editor.setTheme("ace/theme/monokai");
+                    editor.renderer.setPadding(10, 10, 10,10);
                     editor.getSession().setMode("ace/mode/markdown");  
                     sc.editors.push({"par": elem.par, "editor" : editor});
                     editor.getSession().on('change', function(e) {

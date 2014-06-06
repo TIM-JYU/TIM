@@ -7,6 +7,8 @@
 .paragraph{
         position: relative;
         width: 60em;
+        margin-left:1em;
+        margin-top: 2em;
 }
 
 .editButton{
@@ -15,4 +17,10 @@
     top:0em;
 }
 
-
+.material{
+     background-color: white;
+     display:inline-block;
+     border: 2px solid;
+     border-radius: 25px;
+     box-shadow: 10px 10px 5px #888888;
+}

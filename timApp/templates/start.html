@@ -3,29 +3,35 @@
 <head>
     <title>TIM</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
     <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
+    <link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
+    <link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
     <script src="{{url_for('static', filename='scripts/timController.js')}}"></script>
     <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script> 
-    <script src="//code.angularjs.org/1.2.9/angular-sanitize.js"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script> 
     <style type="text/css" media="screen">
-
     .editor { 
         position: absolute;
         height: 100%;
-        width:40em;
+        width:30em;
         top: 0em; 
         bottom; 0em;
-        left: 45em;        
+        left: 45em;
+        border: 2px solid;
+        padding: 15px 5px 5px 5px;
+        border-radius: 15px;        
     }
     </style>
     <script> 
     // Imported data from jinja2 template
      var jsonData = JSON.parse({{ text|tojson|safe }});
+     var documentName = {{name|tojson|safe}}.toString();
     </script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/timApp.js')}}"></script>
 
@@ -35,12 +41,15 @@
     <script>
         </script>
 </head>
-    <body ng-controller="TimCtrl">
-    <div class="paragraph"  ng-repeat="par in paragraphs">   
-            <div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once ng-bind-html="par.html"> </div>
-            <button class="editButton" ng-click="setEditable(par.par)"> Edit </button>         
-            <div id="{{'{{ par.par }}'}}" class="editor"  ng-show="par.display" ng-model="activeEdit.text">
-            </div> 
-    </div>
+    <body style="background-color: #CCFFFF" ng-controller="TimCtrl">
+        <div class="material">
+            <div class="paragraph"  ng-repeat="par in paragraphs">   
+                <div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once ng-bind-html="par.html"> </div>
+                <button class="editButton" ng-click="setEditable(par.par)"> Edit </button>         
+                <div id="{{'{{ par.par }}'}}" class="editor"  ng-show="par.display" ng-model="activeEdit.text">
+                </div> 
+            </div>
+        </div>
+    
     </body>
 </html>
