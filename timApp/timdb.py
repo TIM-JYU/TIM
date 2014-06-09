@@ -15,6 +15,8 @@ class TimDb(object):
         self.db.row_factory = sqlite3.Row
         self.files_root_path = files_root_path
         
+        #TODO: Make sure that db_path and files_root_path are valid!
+        
         self.documents_path = os.path.join(files_root_path, 'documents')
         self.blocks_path = os.path.join(files_root_path, 'blocks')
         for path in [self.documents_path, self.blocks_path]:
@@ -22,6 +24,7 @@ class TimDb(object):
                 os.makedirs(path)
         
     def init(self):
+        """Initializes the database. The database is emptied if it exists."""
         with open('schema.sql', 'r') as f:
             self.db.cursor().executescript(f.read())
         self.db.commit()
@@ -107,6 +110,7 @@ class TimDb(object):
         return block_id
     
     def modifyMarkDownBlock(self, block_id, new_content):
+        """Modifies the specified block."""
         block_path = self.getBlockPath(block_id)
         
         try:
@@ -133,6 +137,7 @@ class TimDb(object):
             return [int(line) for line in f.readlines()]
     
     def getDocumentBlocks(self, document_id):
+        """Gets all the blocks of the specified document."""
         block_ids = self.getDocumentBlockIds(document_id)
         
         blocks = []
@@ -164,7 +169,9 @@ class TimDb(object):
                 document_file.write("%s\n" % block)
     
     def getBlockPath(self, block_id):
+        """Gets the path of the specified block."""
         return os.path.join(self.blocks_path, str(block_id))
     
     def getDocumentPath(self, document_id):
+        """Gets the path of the specified document."""
         return os.path.join(self.documents_path, str(document_id))
