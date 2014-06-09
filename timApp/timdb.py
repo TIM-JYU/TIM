@@ -119,6 +119,19 @@ class TimDb(object):
         
         #TODO: Commit changes in version control and update fields in database.
     
+    def getDocument(self, document_id):
+        """Gets the metadata information of the specified document."""
+        c = self.db.cursor()
+        c.execute('select * from Document where id = ?', document_id)
+        return c.fetchone()
+    
+    def getDocumentBlockIds(self, document_id):
+        """Gets the block ids of the specified document."""
+        document_path = self.getDocumentPath(document_id)
+        
+        with open(document_path) as f:
+            return [int(line) for line in f.readlines()]
+    
     def createDocumentFromBlocks(self, block_directory, document_name):
         """
         Creates a document from existing blocks in the specified directory.
