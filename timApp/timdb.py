@@ -21,8 +21,8 @@ class TimDb(object):
             if not os.path.exists(path):
                 os.makedirs(path)
         
-    def init(self, schema_file):
-        with open(schema_file, 'r') as f:
+    def init(self):
+        with open('schema.sql', 'r') as f:
             self.db.cursor().executescript(f.read())
         self.db.commit()
     
@@ -33,7 +33,7 @@ class TimDb(object):
     
     def createDocument(self, name):
         """Creates a new document with the specified name."""
-        #Usergroup id is 0 for now.
+        # Usergroup id is 0 for now.
         c = self.db.cursor()
         c.execute('insert into Document (name, UserGroup_id) values (?,?)', [name, 0])
         document_id = c.lastrowid
@@ -42,14 +42,14 @@ class TimDb(object):
         document_path = os.path.join(self.documents_path, str(document_id))
         
         try:
-            #Create an empty file.
+            # Create an empty file.
             open(document_path, 'a').close()
         except OSError:
             print('Couldn\'t open file for writing:' + document_path)
             self.db.rollback()
             raise
         
-        #TODO: Put the document file under version control (using a Git module maybe?).
+        # TODO: Put the document file under version control (using a Git module maybe?).
         return document_id
     
     def addBlockToDb(self, document_id):
@@ -64,25 +64,25 @@ class TimDb(object):
     
     def addMarkDownBlock(self, document_id, content, next_block_id):
         """Adds a new markdown block to the specified document."""
-        start = timeit.default_timer()
+        # start = timeit.default_timer()
         block_id = self.addBlockToDb(document_id)
         self.db.commit()
-        #TODO: Use path.join always instead of string concatenation.
-        #Save all blocks in the same directory for now.
-        #block_path = os.path.join(self.blocks_path, document_id + '/' + block_id)
+        # TODO: Use path.join always instead of string concatenation.
+        # Save all blocks in the same directory for now.
+        # block_path = os.path.join(self.blocks_path, document_id + '/' + block_id)
         block_path = os.path.join(self.blocks_path, str(block_id))
         
         try:
-            #The file shouldn't already exist, so we use the 'x' flag.
+            # The file shouldn't already exist, so we use the 'x' flag.
             with open(block_path, 'xt', encoding="utf-8") as blockfile:
                 blockfile.write(content)
         except OSError:
             print('Couldn\'t create the file or file already exists:' + block_path)
             self.db.rollback()
             raise
-        #TODO: Add the block under version control (Git module?).
+        # TODO: Add the block under version control (Git module?).
         
-        #Modify the document file appropriately.
+        # Modify the document file appropriately.
         next_block_id_str = str(next_block_id)
         
         document_path = self.getDocumentPath(document_id)
@@ -101,8 +101,8 @@ class TimDb(object):
         
         assert found
         
-        stop = timeit.default_timer()
-        print(stop - start)
+        # stop = timeit.default_timer()
+        # print(stop - start)
         
         return block_id
     
@@ -110,19 +110,19 @@ class TimDb(object):
         block_path = self.getBlockPath(block_id)
         
         try:
-            with open(block_path, 'wt') as blockfile:
+            with open(block_path, 'wt', encoding="utf-8") as blockfile:
                 blockfile.write(new_content)
                 blockfile.truncate()
         except:
             print('Couldn\'t modify block file:' + block_path)
             raise
         
-        #TODO: Commit changes in version control and update fields in database.
+        # TODO: Commit changes in version control and update fields in database.
     
     def getDocument(self, document_id):
         """Gets the metadata information of the specified document."""
         c = self.db.cursor()
-        c.execute('select * from Document where id = ?', document_id)
+        c.execute('select * from Document where id = ?', [document_id])
         return c.fetchone()
     
     def getDocumentBlockIds(self, document_id):
@@ -131,6 +131,15 @@ class TimDb(object):
         
         with open(document_path) as f:
             return [int(line) for line in f.readlines()]
+    
+    def getDocumentBlocks(self, document_id):
+        block_ids = self.getDocumentBlockIds(document_id)
+        
+        blocks = []
+        for block_id in block_ids:
+            with open(self.getBlockPath(block_id), encoding="utf-8") as f:
+                blocks.append({"par": str(block_id), "text": f.read()}) #TODO: par doesn't have to be str... but atm frontend expects it to be str
+        return blocks
     
     def createDocumentFromBlocks(self, block_directory, document_name):
         """
@@ -141,7 +150,7 @@ class TimDb(object):
         assert os.path.isdir(block_directory)
         blockfiles = [ f for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f)) ]
         
-        #TODO: Is the blockfiles list automatically sorted or not?
+        # TODO: Is the blockfiles list automatically sorted or not?
         
         blocks = []
         for file in blockfiles:
