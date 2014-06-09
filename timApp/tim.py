@@ -9,6 +9,7 @@ import os
 import verifyPath
 from os import listdir
 from os.path import isfile,join
+from timdb import TimDb
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -25,6 +26,10 @@ app.config.from_envvar('TIM_SETTINGS', silent=True)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
+def getTimDb():
+    if not hasattr(g, 'timdb'):
+        g.timdb = TimDb(db_path='test.db', files_root_path='test_files')
+    return g.timdb
 
 @app.route("/getFile/<textFile>/")
 def getFile(textFile):
@@ -52,7 +57,15 @@ def postParagraph():
         return "Success"
     return "Path may be corrupt"
 
-
+@app.route("/getDocument/<doc_id>")
+def getDocument(doc_id):
+    timdb = getTimDb()
+    try:
+        texts = timdb.getDocumentBlocks(int(doc_id))
+        doc = timdb.getDocument(int(doc_id))
+        return render_template('start.html', name=doc['name'], text=json.dumps(texts))
+    except ValueError:
+        return redirect(url_for('goat'))
 
 #@app.route('/getMarkdown/<file>')
 #def getOhj(file):
