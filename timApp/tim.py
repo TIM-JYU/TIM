@@ -20,7 +20,8 @@ app.config.update(dict(
     DEBUG=True,
     SECRET_KEY='development key',
     USERNAME='admin',
-    PASSWORD='default'
+    PASSWORD='default',
+    FILES_PATH='tim_files'
 ))
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 STATIC_PATH = "./static/"
@@ -28,7 +29,7 @@ DATA_PATH = "./static/data/"
 
 def getTimDb():
     if not hasattr(g, 'timdb'):
-        g.timdb = TimDb(db_path='test.db', files_root_path='test_files')
+        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
     return g.timdb
 
 @app.route("/getFile/<textFile>/")
@@ -50,15 +51,24 @@ def getFile(textFile):
 def postParagraph():
     paragraphText = request.get_json()['text']
     paragraphName = request.get_json()['par']
-    fileName = request.get_json()['documentName']
-    if(verifyPath.verifyDataPath(fileName+"/"+paragraphName)):
-        with open(DATA_PATH + fileName + '/' + paragraphName , 'w') as f:
-            f.write(paragraphText)
-        return "Success"
-    print ("Failed to write file")
-    return "Path may be corrupt"
+    
+    timdb = getTimDb()
+    try:
+        timdb.modifyMarkDownBlock(int(paragraphName), paragraphText)
+    except IOError as err:
+        print(err)
+        return "Failed to modify block."
+    return "Success"
+    
+#     fileName = request.get_json()['documentName']
+#     if(verifyPath.verifyDataPath(fileName+"/"+paragraphName)):
+#         with open(DATA_PATH + fileName + '/' + paragraphName , 'w') as f:
+#             f.write(paragraphText)
+#         return "Success"
+#     print ("Failed to write file")
+#     return "Path may be corrupt"
 
-@app.route("/getDocument/<doc_id>")
+@app.route("/documents/<doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()
     try:
