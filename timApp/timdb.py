@@ -3,13 +3,22 @@ import os
 import sqlite3
 import sys
 #import timeit
-from contracts import contract
+from contracts import contract, new_contract
 from enum import Enum
 from shutil import copyfile
 
 BLOCKTYPE = Enum('BLOCKTYPE', 'DocumentBlock Comment Note Answer')
-TABLE_NAMES = ['User', 'UserGroup', 'UserGroupMember', 'BlockAccess',
-               'DocumentAccess', 'Document', 'Block', 'ReadRevision', 'DocumentBlock']
+TABLE_NAMES = ['User',
+               'UserGroup',
+               'UserGroupMember',
+               'BlockAccess',
+               'DocumentAccess',
+               'Document',
+               'Block',
+               'ReadRevision',
+               'DocumentBlock']
+
+new_contract('row', sqlite3.Row)
 
 class TimDb(object):
     """Handles saving and retrieving information from TIM database."""
@@ -41,7 +50,7 @@ class TimDb(object):
             self.db.execute('delete from ' + table) #TABLE_NAMES is constant so no SQL injection possible
 
     @contract
-    def createUser(self, name : 'str'):
+    def createUser(self, name : 'str') -> 'int':
         """Creates a new user with the specified name.
         
         :param name: The name of the user to be created.
@@ -53,7 +62,8 @@ class TimDb(object):
         user_id = cursor.lastrowid
         return user_id
 
-    def getUser(self, user_id):
+    @contract
+    def getUser(self, user_id : 'int') -> 'row':
         """Gets the user with the specified id."""
         
         cursor = self.db.cursor()
@@ -61,7 +71,7 @@ class TimDb(object):
         return cursor.fetchone()
         
     @contract
-    def createDocument(self, name : 'str'):
+    def createDocument(self, name : 'str') -> 'int':
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created.
@@ -104,7 +114,7 @@ class TimDb(object):
         return block_id
     
     @contract
-    def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None'):
+    def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
@@ -175,7 +185,7 @@ class TimDb(object):
         # TODO: Commit changes in version control and update fields in database.
     
     @contract
-    def getDocument(self, document_id : 'int'):
+    def getDocument(self, document_id : 'int') -> 'row':
         """Gets the metadata information of the specified document.
         
         :param document_id: The id of the document to be retrieved.
@@ -186,7 +196,7 @@ class TimDb(object):
         return cursor.fetchone()
     
     @contract
-    def getDocumentBlockIds(self, document_id : 'int'):
+    def getDocumentBlockIds(self, document_id : 'int') -> 'list(int)':
         """Gets the block ids of the specified document.
         
         :param document_id: The id of the document.
@@ -198,7 +208,7 @@ class TimDb(object):
             return [int(line) for line in f.readlines()]
     
     @contract
-    def getDocumentBlocks(self, document_id : 'int'):
+    def getDocumentBlocks(self, document_id : 'int') -> 'list(dict)':
         """Gets all the blocks of the specified document.
         
         :param document_id: The id of the document.
@@ -239,7 +249,7 @@ class TimDb(object):
                 document_file.write("%s\n" % block)
     
     @contract
-    def getBlockPath(self, block_id : 'int'):
+    def getBlockPath(self, block_id : 'int') -> 'str':
         """Gets the path of the specified block.
         
         :param block_id: The id of the block.
@@ -248,7 +258,7 @@ class TimDb(object):
         return os.path.join(self.blocks_path, str(block_id))
     
     @contract
-    def getDocumentPath(self, document_id : 'int'):
+    def getDocumentPath(self, document_id : 'int') -> 'str':
         """Gets the path of the specified document.
         
         :param document_id: The id of the document.
