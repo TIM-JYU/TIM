@@ -18,7 +18,9 @@ class TestTimDb(unittest.TestCase):
         TEST_USER_NAME = 'test_name'
         user_id = self.db.createUser(TEST_USER_NAME)
         self.assertIsNotNone(user_id, "user_id was None")
-        self.assertEqual(TEST_USER_NAME, self.db.getUser(user_id)['name'], 'User name was not saved properly')
+        user = self.db.getUser(user_id)
+        self.assertEqual(TEST_USER_NAME, user['name'], 'User name was not saved properly')
+        self.assertEqual(user_id, user['id'], 'User id was not saved properly')
     
     def test_document(self):
         TEST_DOCUMENT_NAME = 'test_document'
@@ -29,6 +31,7 @@ class TestTimDb(unittest.TestCase):
     def test_blocks(self):
         TEST_CONTENT = 'test content!'
         TEST_CONTENT2 = 'second block'
+        TEST_CONTENT3 = 'something new'
         document_id = self.db.createDocument('test_document')
         
         self.db.addMarkDownBlock(document_id, TEST_CONTENT, None)
@@ -44,10 +47,13 @@ class TestTimDb(unittest.TestCase):
         self.assertEqual(TEST_CONTENT2, blocks[0]['text'], 'Block content was wrong')
         self.assertEqual(TEST_CONTENT, blocks[1]['text'], 'Block content was wrong')
         
+        self.db.modifyMarkDownBlock(block_ids[0], TEST_CONTENT3)
+        blocks = self.db.getDocumentBlocks(document_id)
+        self.assertEqual(TEST_CONTENT3, blocks[0]['text'], 'Block content was wrong')
+        
     def tearDown(self):
         shutil.rmtree(TEST_FILES_PATH)
         self.db.close()
-        return
     
 if __name__ == '__main__':
     unittest.main()
