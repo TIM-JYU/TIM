@@ -3,16 +3,19 @@ import os
 import sqlite3
 import sys
 #import timeit
+from contracts import contract
 from enum import Enum
 from shutil import copyfile
 
 BLOCKTYPE = Enum('BLOCKTYPE', 'DocumentBlock Comment Note Answer')
-
+TABLE_NAMES = ['User', 'UserGroup', 'UserGroupMember', 'BlockAccess',
+               'DocumentAccess', 'Document', 'Block', 'ReadRevision', 'DocumentBlock']
 
 class TimDb(object):
     """Handles saving and retrieving information from TIM database."""
 
-    def __init__(self, db_path, files_root_path):
+    @contract
+    def __init__(self, db_path : 'str', files_root_path : 'str'):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.files_root_path = files_root_path
@@ -25,14 +28,20 @@ class TimDb(object):
             if not os.path.exists(path):
                 os.makedirs(path)
 
-    def init(self):
+    def create(self):
         """Initializes the database from the schema.sql file.
-        The database is emptied if it exists."""
+        NOTE: The database is emptied if it exists."""
         with open('schema.sql', 'r') as schema_file:
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
 
-    def createUser(self, name):
+    def clear(self):
+        """Clears the contents of all database tables."""
+        for table in TABLE_NAMES:
+            self.db.execute('delete from ' + table) #TABLE_NAMES is constant so no SQL injection possible
+
+    @contract
+    def createUser(self, name : 'str'):
         """Creates a new user with the specified name.
         
         :param name: The name of the user to be created.
@@ -44,7 +53,15 @@ class TimDb(object):
         user_id = cursor.lastrowid
         return user_id
 
-    def createDocument(self, name):
+    def getUser(self, user_id):
+        """Gets the user with the specified id."""
+        
+        cursor = self.db.cursor()
+        cursor.execute('select * from User where id = ?', [user_id])
+        return cursor.fetchone()
+        
+    @contract
+    def createDocument(self, name : 'str'):
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created.
@@ -69,7 +86,8 @@ class TimDb(object):
         # TODO: Put the document file under version control (using a Git module maybe?).
         return document_id
     
-    def addBlockToDb(self, document_id):
+    @contract
+    def addBlockToDb(self, document_id : 'int'):
         """Adds a new block to the database with the specified document_id.
         Does NOT commit the transaction!
         
@@ -85,7 +103,8 @@ class TimDb(object):
         
         return block_id
     
-    def addMarkDownBlock(self, document_id, content, next_block_id):
+    @contract
+    def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None'):
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
@@ -132,7 +151,12 @@ class TimDb(object):
         
         return block_id
     
-    def modifyMarkDownBlock(self, block_id, new_content):
+    def close(self):
+        """Closes the database connection."""
+        self.db.close()
+    
+    @contract
+    def modifyMarkDownBlock(self, block_id : 'int', new_content : 'str'):
         """Modifies the specified block.
         
         :param block_id: The id of the block to be modified.
@@ -150,7 +174,8 @@ class TimDb(object):
         
         # TODO: Commit changes in version control and update fields in database.
     
-    def getDocument(self, document_id):
+    @contract
+    def getDocument(self, document_id : 'int'):
         """Gets the metadata information of the specified document.
         
         :param document_id: The id of the document to be retrieved.
@@ -160,7 +185,8 @@ class TimDb(object):
         cursor.execute('select * from Document where id = ?', [document_id])
         return cursor.fetchone()
     
-    def getDocumentBlockIds(self, document_id):
+    @contract
+    def getDocumentBlockIds(self, document_id : 'int'):
         """Gets the block ids of the specified document.
         
         :param document_id: The id of the document.
@@ -171,7 +197,8 @@ class TimDb(object):
         with open(document_path) as f:
             return [int(line) for line in f.readlines()]
     
-    def getDocumentBlocks(self, document_id):
+    @contract
+    def getDocumentBlocks(self, document_id : 'int'):
         """Gets all the blocks of the specified document.
         
         :param document_id: The id of the document.
@@ -185,7 +212,8 @@ class TimDb(object):
                 blocks.append({"par": str(block_id), "text": f.read()}) #TODO: par doesn't have to be str... but atm frontend expects it to be str
         return blocks
     
-    def createDocumentFromBlocks(self, block_directory, document_name):
+    @contract
+    def createDocumentFromBlocks(self, block_directory : 'str', document_name : 'str'):
         """
         Creates a document from existing blocks in the specified directory.
         The blocks should be ordered alphabetically.
@@ -210,7 +238,8 @@ class TimDb(object):
             for block in blocks:
                 document_file.write("%s\n" % block)
     
-    def getBlockPath(self, block_id):
+    @contract
+    def getBlockPath(self, block_id : 'int'):
         """Gets the path of the specified block.
         
         :param block_id: The id of the block.
@@ -218,7 +247,8 @@ class TimDb(object):
         """
         return os.path.join(self.blocks_path, str(block_id))
     
-    def getDocumentPath(self, document_id):
+    @contract
+    def getDocumentPath(self, document_id : 'int'):
         """Gets the path of the specified document.
         
         :param document_id: The id of the document.
