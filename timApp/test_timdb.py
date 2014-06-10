@@ -5,6 +5,7 @@ import unittest
 
 from timdb import TimDb
 
+#TODO: Any good framework for property-based testing for Python?
 
 TEST_DB_NAME = 'test.db'
 TEST_FILES_PATH = 'test_files'
