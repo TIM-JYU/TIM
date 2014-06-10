@@ -1,12 +1,14 @@
+from enum import Enum
 import fileinput
 import os
+from shutil import copyfile
 import sqlite3
 import sys
-#import timeit
-from contracts import contract, new_contract
-from enum import Enum
-from shutil import copyfile
 
+from contracts import contract, new_contract
+
+
+#import timeit
 BLOCKTYPE = Enum('BLOCKTYPE', 'DocumentBlock Comment Note Answer')
 TABLE_NAMES = ['User',
                'UserGroup',
@@ -37,65 +39,6 @@ class TimDb(object):
             if not os.path.exists(path):
                 os.makedirs(path)
 
-    def create(self):
-        """Initializes the database from the schema.sql file.
-        NOTE: The database is emptied if it exists."""
-        with open('schema.sql', 'r') as schema_file:
-            self.db.cursor().executescript(schema_file.read())
-        self.db.commit()
-
-    def clear(self):
-        """Clears the contents of all database tables."""
-        for table in TABLE_NAMES:
-            self.db.execute('delete from ' + table) #TABLE_NAMES is constant so no SQL injection possible
-
-    @contract
-    def createUser(self, name : 'str') -> 'int':
-        """Creates a new user with the specified name.
-        
-        :param name: The name of the user to be created.
-        :returns: The id of the newly created user.
-        """
-        cursor = self.db.cursor()
-        cursor.execute('insert into User (name) values (?)', [name])
-        self.db.commit()
-        user_id = cursor.lastrowid
-        return user_id
-
-    @contract
-    def getUser(self, user_id : 'int') -> 'row':
-        """Gets the user with the specified id."""
-        
-        cursor = self.db.cursor()
-        cursor.execute('select * from User where id = ?', [user_id])
-        return cursor.fetchone()
-        
-    @contract
-    def createDocument(self, name : 'str') -> 'int':
-        """Creates a new document with the specified name.
-        
-        :param name: The name of the document to be created.
-        :returns: The id of the newly created document.
-        """
-        # Usergroup id is 0 for now.
-        cursor = self.db.cursor()
-        cursor.execute('insert into Document (name, UserGroup_id) values (?,?)', [name, 0])
-        document_id = cursor.lastrowid
-        self.db.commit()
-        
-        document_path = os.path.join(self.documents_path, str(document_id))
-        
-        try:
-            # Create an empty file.
-            open(document_path, 'a').close()
-        except OSError:
-            print('Couldn\'t open file for writing:' + document_path)
-            self.db.rollback()
-            raise
-        
-        # TODO: Put the document file under version control (using a Git module maybe?).
-        return document_id
-    
     @contract
     def addBlockToDb(self, document_id : 'int'):
         """Adds a new block to the database with the specified document_id.
@@ -161,28 +104,97 @@ class TimDb(object):
         
         return block_id
     
+    def clear(self):
+        """Clears the contents of all database tables."""
+        for table in TABLE_NAMES:
+            self.db.execute('delete from ' + table) #TABLE_NAMES is constant so no SQL injection possible
+
     def close(self):
         """Closes the database connection."""
         self.db.close()
     
-    @contract
-    def modifyMarkDownBlock(self, block_id : 'int', new_content : 'str'):
-        """Modifies the specified block.
+    def create(self):
+        """Initializes the database from the schema.sql file.
+        NOTE: The database is emptied if it exists."""
+        with open('schema.sql', 'r') as schema_file:
+            self.db.cursor().executescript(schema_file.read())
+        self.db.commit()
         
-        :param block_id: The id of the block to be modified.
-        :param new_content: The new content of the block.
+
+            
+    @contract
+    def createDocument(self, name : 'str') -> 'int':
+        """Creates a new document with the specified name.
+        
+        :param name: The name of the document to be created.
+        :returns: The id of the newly created document.
         """
-        block_path = self.getBlockPath(block_id)
+        # Usergroup id is 0 for now.
+        cursor = self.db.cursor()
+        cursor.execute('insert into Document (name, UserGroup_id) values (?,?)', [name, 0])
+        document_id = cursor.lastrowid
+        self.db.commit()
+        
+        document_path = os.path.join(self.documents_path, str(document_id))
         
         try:
-            with open(block_path, 'wt', encoding="utf-8") as blockfile:
-                blockfile.write(new_content)
-                blockfile.truncate()
-        except:
-            print('Couldn\'t modify block file:' + block_path)
+            # Create an empty file.
+            open(document_path, 'a').close()
+        except OSError:
+            print('Couldn\'t open file for writing:' + document_path)
+            self.db.rollback()
             raise
         
-        # TODO: Commit changes in version control and update fields in database.
+        # TODO: Put the document file under version control (using a Git module maybe?).
+        return document_id
+
+    @contract
+    def createDocumentFromBlocks(self, block_directory : 'str', document_name : 'str'):
+        """
+        Creates a document from existing blocks in the specified directory.
+        The blocks should be ordered alphabetically.
+        
+        :param block_directory: The path to the directory containing the blocks.
+        :param document_name: The name of the document to be created.
+        """
+        document_id = self.createDocument(document_name)
+        assert os.path.isdir(block_directory)
+        blockfiles = [ f for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f)) ]
+        
+        # TODO: Is the blockfiles list automatically sorted or not?
+        
+        blocks = []
+        for file in blockfiles:
+            block_id = self.addBlockToDb(document_id)
+            copyfile(os.path.join(block_directory, file), self.getBlockPath(block_id))
+            blocks.append(block_id)
+        self.db.commit()
+        
+        with open(self.getDocumentPath(document_id), 'wt') as document_file:
+            for block in blocks:
+                document_file.write("%s\n" % block)
+
+    @contract
+    def createUser(self, name : 'str') -> 'int':
+        """Creates a new user with the specified name.
+        
+        :param name: The name of the user to be created.
+        :returns: The id of the newly created user.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('insert into User (name) values (?)', [name])
+        self.db.commit()
+        user_id = cursor.lastrowid
+        return user_id
+
+    @contract
+    def getBlockPath(self, block_id : 'int') -> 'str':
+        """Gets the path of the specified block.
+        
+        :param block_id: The id of the block.
+        :returns: The path of the block.
+        """
+        return os.path.join(self.blocks_path, str(block_id))
     
     @contract
     def getDocument(self, document_id : 'int') -> 'row':
@@ -223,41 +235,6 @@ class TimDb(object):
         return blocks
     
     @contract
-    def createDocumentFromBlocks(self, block_directory : 'str', document_name : 'str'):
-        """
-        Creates a document from existing blocks in the specified directory.
-        The blocks should be ordered alphabetically.
-        
-        :param block_directory: The path to the directory containing the blocks.
-        :param document_name: The name of the document to be created.
-        """
-        document_id = self.createDocument(document_name)
-        assert os.path.isdir(block_directory)
-        blockfiles = [ f for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f)) ]
-        
-        # TODO: Is the blockfiles list automatically sorted or not?
-        
-        blocks = []
-        for file in blockfiles:
-            block_id = self.addBlockToDb(document_id)
-            copyfile(os.path.join(block_directory, file), self.getBlockPath(block_id))
-            blocks.append(block_id)
-        self.db.commit()
-        
-        with open(self.getDocumentPath(document_id), 'wt') as document_file:
-            for block in blocks:
-                document_file.write("%s\n" % block)
-    
-    @contract
-    def getBlockPath(self, block_id : 'int') -> 'str':
-        """Gets the path of the specified block.
-        
-        :param block_id: The id of the block.
-        :returns: The path of the block.
-        """
-        return os.path.join(self.blocks_path, str(block_id))
-    
-    @contract
     def getDocumentPath(self, document_id : 'int') -> 'str':
         """Gets the path of the specified document.
         
@@ -265,3 +242,31 @@ class TimDb(object):
         :returns: The path of the document.
         """
         return os.path.join(self.documents_path, str(document_id))
+
+    @contract
+    def getUser(self, user_id : 'int') -> 'row':
+        """Gets the user with the specified id."""
+        
+        cursor = self.db.cursor()
+        cursor.execute('select * from User where id = ?', [user_id])
+        return cursor.fetchone()
+    
+    @contract
+    def modifyMarkDownBlock(self, block_id : 'int', new_content : 'str'):
+        """Modifies the specified block.
+        
+        :param block_id: The id of the block to be modified.
+        :param new_content: The new content of the block.
+        """
+        block_path = self.getBlockPath(block_id)
+        
+        try:
+            with open(block_path, 'wt', encoding="utf-8") as blockfile:
+                blockfile.write(new_content)
+                blockfile.truncate()
+        except:
+            print('Couldn\'t modify block file:' + block_path)
+            raise
+        
+        # TODO: Commit changes in version control and update fields in database.
+        

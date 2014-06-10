@@ -2,7 +2,9 @@
 
 import shutil
 import unittest
+
 from timdb import TimDb
+
 
 TEST_DB_NAME = 'test.db'
 TEST_FILES_PATH = 'test_files'
