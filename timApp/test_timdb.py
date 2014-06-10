@@ -26,10 +26,20 @@ class TestTimDb(unittest.TestCase):
     
     def test_document(self):
         TEST_DOCUMENT_NAME = 'test_document'
+        TEST_DOCUMENT_NAME2 = 'some_other_document'
         document_id = self.db.createDocument(TEST_DOCUMENT_NAME)
         self.assertIsNotNone(document_id, "document_id was None")
         self.assertEqual(TEST_DOCUMENT_NAME, self.db.getDocument(document_id)['name'], 'Document name was not saved properly')
-    
+        
+        document_id2 = self.db.createDocument(TEST_DOCUMENT_NAME2)
+        self.assertIsNotNone(document_id2, "document_id2 was None")
+        self.assertEqual(TEST_DOCUMENT_NAME2, self.db.getDocument(document_id2)['name'], 'Document name was not saved properly')
+        
+        docs = self.db.getDocuments()
+        self.assertEqual(2, len(docs), 'Length of docs was wrong')
+        self.assertEqual(TEST_DOCUMENT_NAME, docs[0]['name'], 'Document name was not retrieved properly')
+        self.assertEqual(TEST_DOCUMENT_NAME2, docs[1]['name'], 'Document name was not retrieved properly')
+        
     def test_blocks(self):
         TEST_CONTENT = 'test content!'
         TEST_CONTENT2 = 'second block'
