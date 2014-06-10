@@ -208,7 +208,7 @@ class TimDb(object):
             return [int(line) for line in f.readlines()]
     
     @contract
-    def getDocumentBlocks(self, document_id : 'int') -> 'list(dict)':
+    def getDocumentBlocks(self, document_id : 'int') -> 'list(dict[2](str: str))':
         """Gets all the blocks of the specified document.
         
         :param document_id: The id of the document.
