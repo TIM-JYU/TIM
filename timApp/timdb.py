@@ -208,6 +208,13 @@ class TimDb(object):
         return cursor.fetchone()
     
     @contract
+    def getDocuments(self) -> 'seq(row)':
+        """Gets all the documents in the database."""
+        cursor = self.db.cursor()
+        cursor.execute('select * from Document')
+        return cursor.fetchall()    
+        
+    @contract
     def getDocumentBlockIds(self, document_id : 'int') -> 'list(int)':
         """Gets the block ids of the specified document.
         
