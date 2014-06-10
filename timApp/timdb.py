@@ -2,14 +2,16 @@ import fileinput
 import os
 import sqlite3
 import sys
-import timeit
+#import timeit
 from enum import Enum
 from shutil import copyfile
 
-BlockType = Enum('BlockType', 'DocumentBlock Comment Note Answer')
+BLOCKTYPE = Enum('BLOCKTYPE', 'DocumentBlock Comment Note Answer')
 
 
 class TimDb(object):
+    """Handles saving and retrieving information from TIM database."""
+
     def __init__(self, db_path, files_root_path):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
@@ -22,24 +24,36 @@ class TimDb(object):
         for path in [self.documents_path, self.blocks_path]:
             if not os.path.exists(path):
                 os.makedirs(path)
-        
+
     def init(self):
-        """Initializes the database. The database is emptied if it exists."""
-        with open('schema.sql', 'r') as f:
-            self.db.cursor().executescript(f.read())
+        """Initializes the database from the schema.sql file.
+        The database is emptied if it exists."""
+        with open('schema.sql', 'r') as schema_file:
+            self.db.cursor().executescript(schema_file.read())
         self.db.commit()
-    
+
     def createUser(self, name):
-        """Creates a new user with the specified name."""
-        self.db.execute('insert into User (name) values (?)', [name])
+        """Creates a new user with the specified name.
+        
+        :param name: The name of the user to be created.
+        :returns: The id of the newly created user.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('insert into User (name) values (?)', [name])
         self.db.commit()
-    
+        user_id = cursor.lastrowid
+        return user_id
+
     def createDocument(self, name):
-        """Creates a new document with the specified name."""
+        """Creates a new document with the specified name.
+        
+        :param name: The name of the document to be created.
+        :returns: The id of the newly created document.
+        """
         # Usergroup id is 0 for now.
-        c = self.db.cursor()
-        c.execute('insert into Document (name, UserGroup_id) values (?,?)', [name, 0])
-        document_id = c.lastrowid
+        cursor = self.db.cursor()
+        cursor.execute('insert into Document (name, UserGroup_id) values (?,?)', [name, 0])
+        document_id = cursor.lastrowid
         self.db.commit()
         
         document_path = os.path.join(self.documents_path, str(document_id))
@@ -56,18 +70,30 @@ class TimDb(object):
         return document_id
     
     def addBlockToDb(self, document_id):
-        """Adds a new block to the database with the specified document_id. Does NOT commit the transaction!"""
-        c = self.db.cursor()
-        c.execute('insert into Block (type_id) values (?)', [BlockType.DocumentBlock.value])
-        block_id = c.lastrowid
+        """Adds a new block to the database with the specified document_id.
+        Does NOT commit the transaction!
+        
+        :param document_id: The id of the document with which this block is
+           associated.
+        :returns: The id of the newly added block.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('insert into Block (type_id) values (?)', [BLOCKTYPE.DocumentBlock.value])
+        block_id = cursor.lastrowid
         assert block_id is not None
-        c.execute('insert into DocumentBlock (Document_id, Block_id) values (?,?)', [document_id, block_id])
+        cursor.execute('insert into DocumentBlock (Document_id, Block_id) values (?,?)', [document_id, block_id])
         
         return block_id
     
     def addMarkDownBlock(self, document_id, content, next_block_id):
-        """Adds a new markdown block to the specified document."""
-        # start = timeit.default_timer()
+        """Adds a new markdown block to the specified document.
+        
+        :param document_id: The id of the document.
+        :param content: The content of the block.
+        :param next_block_id: The id of the succeeding block.
+           The value should be None if the block should be the last block of the document.
+        :returns: The id of the newly added block.
+        """
         block_id = self.addBlockToDb(document_id)
         self.db.commit()
         # TODO: Use path.join always instead of string concatenation.
@@ -104,13 +130,14 @@ class TimDb(object):
         
         assert found
         
-        # stop = timeit.default_timer()
-        # print(stop - start)
-        
         return block_id
     
     def modifyMarkDownBlock(self, block_id, new_content):
-        """Modifies the specified block."""
+        """Modifies the specified block.
+        
+        :param block_id: The id of the block to be modified.
+        :param new_content: The new content of the block.
+        """
         block_path = self.getBlockPath(block_id)
         
         try:
@@ -124,20 +151,32 @@ class TimDb(object):
         # TODO: Commit changes in version control and update fields in database.
     
     def getDocument(self, document_id):
-        """Gets the metadata information of the specified document."""
-        c = self.db.cursor()
-        c.execute('select * from Document where id = ?', [document_id])
-        return c.fetchone()
+        """Gets the metadata information of the specified document.
+        
+        :param document_id: The id of the document to be retrieved.
+        :returns: A row representing the document.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('select * from Document where id = ?', [document_id])
+        return cursor.fetchone()
     
     def getDocumentBlockIds(self, document_id):
-        """Gets the block ids of the specified document."""
+        """Gets the block ids of the specified document.
+        
+        :param document_id: The id of the document.
+        :returns: A list of the block ids of the document.
+        """
         document_path = self.getDocumentPath(document_id)
         
         with open(document_path) as f:
             return [int(line) for line in f.readlines()]
     
     def getDocumentBlocks(self, document_id):
-        """Gets all the blocks of the specified document."""
+        """Gets all the blocks of the specified document.
+        
+        :param document_id: The id of the document.
+        :returns: The blocks of the document.
+        """
         block_ids = self.getDocumentBlockIds(document_id)
         
         blocks = []
@@ -150,6 +189,9 @@ class TimDb(object):
         """
         Creates a document from existing blocks in the specified directory.
         The blocks should be ordered alphabetically.
+        
+        :param block_directory: The path to the directory containing the blocks.
+        :param document_name: The name of the document to be created.
         """
         document_id = self.createDocument(document_name)
         assert os.path.isdir(block_directory)
@@ -169,9 +211,17 @@ class TimDb(object):
                 document_file.write("%s\n" % block)
     
     def getBlockPath(self, block_id):
-        """Gets the path of the specified block."""
+        """Gets the path of the specified block.
+        
+        :param block_id: The id of the block.
+        :returns: The path of the block.
+        """
         return os.path.join(self.blocks_path, str(block_id))
     
     def getDocumentPath(self, document_id):
-        """Gets the path of the specified document."""
+        """Gets the path of the specified document.
+        
+        :param document_id: The id of the document.
+        :returns: The path of the document.
+        """
         return os.path.join(self.documents_path, str(document_id))
