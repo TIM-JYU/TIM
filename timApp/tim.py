@@ -30,7 +30,8 @@ DATA_PATH = "./static/data/"
 
 @app.route("/getDocuments/")
 def getDocuments():
-    return jsonify({"text" : "ohjelmointi1"})
+    timdb = getTimDb()
+    return json.dumps(timdb.getDocuments())
 
 
 def getTimDb():

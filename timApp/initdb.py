@@ -7,3 +7,4 @@ if __name__ == "__main__":
     os.chdir(dname)
     timdb = TimDb(db_path='tim.db', files_root_path='tim_files')
     timdb.create()
+    timdb.createDocumentFromBlocks('./static/data/ohjelmointi1', document_name)

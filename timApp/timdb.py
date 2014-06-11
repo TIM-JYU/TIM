@@ -207,12 +207,21 @@ class TimDb(object):
         cursor.execute('select * from Document where id = ?', [document_id])
         return cursor.fetchone()
     
-    @contract
-    def getDocuments(self) -> 'seq(row)':
+   
+    def getDocuments(self) -> 'list(dict)':
         """Gets all the documents in the database."""
         cursor = self.db.cursor()
         cursor.execute('select * from Document')
-        return cursor.fetchall()
+        #return cursor.fetchall()
+        rows = [x for x in cursor.fetchall()]
+        cols = [x[0] for x in cursor.description]
+        results = []
+        for row in rows:
+            result = {}
+            for prop, val in zip(cols, row):
+                result[prop] = val
+                results.append(result)
+        return results
     
     @contract
     def getDocumentsByIds(self, document_ids : 'list(int)') -> 'seq(row)':
