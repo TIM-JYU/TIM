@@ -2,12 +2,12 @@
 
 import shutil
 import unittest
+from hypothesis.statefultesting import *
+from hypothesis.testdecorators import *
 
 from timdb import TimDb
 
-#TODO: Any good framework for property-based testing for Python?
-
-TEST_DB_NAME = 'test.db'
+TEST_DB_NAME = ':memory:'
 TEST_FILES_PATH = 'test_files'
 
 
@@ -15,19 +15,23 @@ class TestTimDb(unittest.TestCase):
 
     def setUp(self):
         self.db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
-        self.db.clear()
-
-    def test_user(self):
-        TEST_USER_NAME = 'test_name'
+        self.db.create()
+        #self.db.clear()
+    
+    @given(str)
+    def test_user(self, TEST_USER_NAME):
+        #TEST_USER_NAME = 'test_name'
+        #print(TEST_USER_NAME)
         user_id = self.db.createUser(TEST_USER_NAME)
         self.assertIsNotNone(user_id, "user_id was None")
         user = self.db.getUser(user_id)
         self.assertEqual(TEST_USER_NAME, user['name'], 'User name was not saved properly')
         self.assertEqual(user_id, user['id'], 'User id was not saved properly')
     
-    def test_document(self):
-        TEST_DOCUMENT_NAME = 'test_document'
-        TEST_DOCUMENT_NAME2 = 'some_other_document'
+    @given(str,str)
+    def test_document(self, TEST_DOCUMENT_NAME, TEST_DOCUMENT_NAME2):
+        #TEST_DOCUMENT_NAME = 'test_document'
+        #TEST_DOCUMENT_NAME2 = 'some_other_document'
         document_id = self.db.createDocument(TEST_DOCUMENT_NAME)
         self.assertIsNotNone(document_id, "document_id was None")
         self.assertEqual(TEST_DOCUMENT_NAME, self.db.getDocument(document_id)['name'], 'Document name was not saved properly')
@@ -36,15 +40,16 @@ class TestTimDb(unittest.TestCase):
         self.assertIsNotNone(document_id2, "document_id2 was None")
         self.assertEqual(TEST_DOCUMENT_NAME2, self.db.getDocument(document_id2)['name'], 'Document name was not saved properly')
         
-        docs = self.db.getDocuments()
+        docs = self.db.getDocumentsByIds([document_id, document_id2])
         self.assertEqual(2, len(docs), 'Length of docs was wrong')
         self.assertEqual(TEST_DOCUMENT_NAME, docs[0]['name'], 'Document name was not retrieved properly')
         self.assertEqual(TEST_DOCUMENT_NAME2, docs[1]['name'], 'Document name was not retrieved properly')
         
-    def test_blocks(self):
-        TEST_CONTENT = 'test content!'
-        TEST_CONTENT2 = 'second block'
-        TEST_CONTENT3 = 'something new'
+    @given(str,str,str)
+    def test_blocks(self, TEST_CONTENT, TEST_CONTENT2, TEST_CONTENT3):
+        #TEST_CONTENT = 'test content!'
+        #TEST_CONTENT2 = 'second block'
+        #TEST_CONTENT3 = 'something new'
         document_id = self.db.createDocument('test_document')
         
         self.db.addMarkDownBlock(document_id, TEST_CONTENT, None)
@@ -65,8 +70,22 @@ class TestTimDb(unittest.TestCase):
         self.assertEqual(TEST_CONTENT3, blocks[0]['text'], 'Block content was wrong')
         
     def tearDown(self):
-        shutil.rmtree(TEST_FILES_PATH)
         self.db.close()
-    
+        return
+
+# class TimDbTester(StatefulTest):
+#     def __init__(self):
+#         self.target = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
+#         self.target.clear()
+#     
+#     @step
+#     @requires(str)
+#     def addUser(self, name):
+#         print(name)
+#         user_id = self.target.createUser(name)
+#         assert user_id is not None
+        
 if __name__ == '__main__':
+    shutil.rmtree(TEST_FILES_PATH)
     unittest.main()
+    #TimDbTester.breaking_example()
