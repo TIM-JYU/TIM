@@ -227,7 +227,8 @@ class TimDb(object):
     def getDocumentsByIds(self, document_ids : 'list(int)') -> 'seq(row)':
         """Gets all the documents in the database."""
         cursor = self.db.cursor()
-        cursor.execute('select * from Document where id in (?)', document_ids)
+        cursor.execute('select * from Document where id in (%s)' %
+                           ','.join('?'*len(document_ids)), document_ids)
         return cursor.fetchall()
     
     @contract
