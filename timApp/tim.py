@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for
+from flask import jsonify, Flask, redirect, url_for
 from flask import render_template, render_template_string
 from flask import g
 from flask import request
@@ -27,13 +27,20 @@ app.config.from_envvar('TIM_SETTINGS', silent=True)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
+
+@app.route("/getDocuments/")
+def getDocuments():
+    return jsonify({"text" : "ohjelmointi1"})
+
+
 def getTimDb():
     if not hasattr(g, 'timdb'):
         g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
     return g.timdb
 
-@app.route("/getFile/<textFile>/")
-def getFile(textFile):
+
+@app.route("/getJSON/<textFile>/")
+def getJSON(textFile):
     mypath = DATA_PATH +textFile
     try:
         texts = []
@@ -42,10 +49,10 @@ def getFile(textFile):
         for par in pars:
             with open(DATA_PATH + textFile + "/" + par, 'r', encoding="utf-8") as f:
                 texts.append({"par" : par, "text" : f.read()})
-        return render_template('start.html', name=textFile, text=json.dumps(texts))
+        return jsonify({"name" : textFile, "text" : texts})
     except IOError as err:
         print(err)
-        return redirect(url_for('goat'))
+        return render_template("No data found")
 
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
@@ -84,13 +91,19 @@ def getDocument(doc_id):
 #    contents = unicode(open(file+'HTML5', 'r').read(), "utf-8")
 #    return render_template('start.html', fileCont=contents, stylesheet='stylesheet.css')
 
-@app.route('/')
-@app.route('/<path:path>')
-def goat(path=None):
-    return render_template('goat.html')
+
+
+@app.route("/")
+def getFile():
+    return render_template('start.html')
+
+#@app.route('/')
+#@app.route('/<path:path>')
+#def goat(path=None):
+#    return render_template('goat.html')
 
 if __name__ == "__main__":
-#    app.debug = True
-#   app.run()
-     app.wsgi_app = ReverseProxied(app.wsgi_app)	
-     app.run(host='0.0.0.0',port=5000)
+    app.debug = True
+    app.run()
+ #   app.wsgi_app = ReverseProxied(app.wsgi_app)	
+#   app.run(host='0.0.0.0',port=5000)

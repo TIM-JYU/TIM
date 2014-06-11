@@ -162,7 +162,7 @@ class TimDb(object):
         blockfiles = [ f for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f)) ]
         
         # TODO: Is the blockfiles list automatically sorted or not?
-        
+        blockfiles.sort() 
         blocks = []
         for file in blockfiles:
             block_id = self.addBlockToDb(document_id)
