@@ -1,23 +1,24 @@
-var TimCtrl = angular.module('controllers', [])
-.controller("ParCtrl", ['$scope', '$http', function(sc, http){
+var TimCtrl = angular.module('controllers', []);
+
+TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             sc.paragraphs = "";
-            sc.documentList = [documents];
-            sc.documentName = sc.documentList[0];
+            sc.documentEdit = false;
+            sc.documentList = documents;
             sc.convertHtml = new Markdown.getSanitizingConverter();
             sc.editors = [];
-            sc.displayLoading = false;
-
+            sc.displayIndex = true;
             // Get document
             sc.getDocument = function(documentName){
-                sc.displayLoading = true;
-                http({method: 'GET', url: '/getJSON/' + sc.documentName}).
+                sc.displayIndex = false;
+                http({method: 'GET', url: '/getJSON/' + documentName}).
+                //http({method: 'GET', url: '/document/' + "3/"}).
                     success(function(data, status, headers, config) {
-                        sc.displayLoading = false;
+                        sc.displayIndex = false;
                         sc.paragraphs = data.text;
                         sc.updateParagraphs();
                     }).
                     error(function(data, status, headers, config) {
-                        sc.displayLoading = false;
+                        sc.displayIndex = false;
                         alert("Document is not currently available");
                     });
             };
@@ -44,23 +45,17 @@ var TimCtrl = angular.module('controllers', [])
                         sc.activeEdit.text = "";
                         http({method: 'POST',
                                url: '/postParagraph/',
-                               data: JSON.stringify({"documentName":sc.documentName,"par" : elem.par, "text": elem.text})})
-                                
+                               data: JSON.stringify({"documentName":sc.documentName,
+                                                     "par" : elem.par, 
+                                                     "text": elem.text})})
+                               
+                         
                 }
 
                                 
                 else {
                     sc.paragraphs[elemId].display = true;
-                    
-                    var editor = ace.edit(elem.par);
-                    editor.getSession().setValue(sc.paragraphs[elemId].text);
-                    editor.setTheme("ace/theme/monokai");
-                    editor.renderer.setPadding(10, 10, 10,10);
-                    editor.getSession().setMode("ace/mode/markdown");  
-                    sc.editors.push({"par": elem.par, "editor" : editor});
-                    editor.getSession().on('change', function(e) {
-                        $('.'+elem.par).html(sc.convertHtml.makeHtml(editor.getSession().getValue()));
-                    }); 
+                    sc.createEditor(elem, elemId);
                     sc.activeEdit.text = sc.paragraphs[elemId].text;
                     sc.activeEdit.editId = elem.par;
                 }               
@@ -97,5 +92,26 @@ var TimCtrl = angular.module('controllers', [])
                 }
             };
             
-        }]); 
-        
+            sc.createEditor = function(elem, elemId){
+                    var editor = ace.edit(elem.par);
+                    editor.getSession().setValue(sc.paragraphs[elemId].text);
+                    editor.setTheme("ace/theme/eclipse");
+                    editor.renderer.setPadding(10, 10, 10,10);
+                    editor.getSession().setMode("ace/mode/markdown"); 
+                    editor.getSession().setUseWrapMode(true);
+                    editor.getSession().setWrapLimitRange(0, 79);
+                    sc.editors.push({"par": elem.par, "editor" : editor});
+                    editor.getSession().on('change', function(e) {
+                            $('.'+elem.par).html(sc.convertHtml.makeHtml(editor.getSession().getValue()));
+                    });
+            };
+        }]);
+
+
+
+
+
+
+
+
+

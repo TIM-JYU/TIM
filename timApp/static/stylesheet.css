@@ -2,6 +2,7 @@
 .content{
         width: 30em;
         text-align: justify;
+        word-break: break-all;
 }
 
 .paragraph{
@@ -13,13 +14,20 @@
 
 .editButton{
     position:relative; 
+    font-size: x-small;
     left:37em;
+    width: 5em;
+    height: 3em;
     top:0em;
+    border: 2px none;
+    border-radius: 25px;
+    background-color: #66FF99;
 }
 
 .material{
      background-color: white;
      display:inline-block;
+     width: 100%;
      border: 2px solid;
      border-radius: 25px;
      box-shadow: 10px 10px 5px #888888;

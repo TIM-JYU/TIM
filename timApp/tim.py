@@ -46,18 +46,14 @@ def getTimDb():
 
 @app.route("/getJSON/<textFile>/")
 def getJSON(textFile):
-    mypath = DATA_PATH +textFile
+    timdb = getTimDb()
     try:
-        texts = []
-        pars = [ f for f in listdir(mypath) if isfile(join(mypath,f)) ]
-        pars.sort()
-        for par in pars:
-            with open(DATA_PATH + textFile + "/" + par, 'r', encoding="utf-8") as f:
-                texts.append({"par" : par, "text" : f.read()})
-        return jsonify({"name" : textFile, "text" : texts})
+        texts = timdb.getDocumentBlocks(int(textFile))
+        doc = timdb.getDocument(int(textFile))
+        return jsonify({"name" : doc['name'], "text" : texts})
     except IOError as err:
         print(err)
-        return render_template("No data found")
+        return "No data found"
 
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():

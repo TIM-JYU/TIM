@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="timApp">
+<html lang="en">
 <head>
     <title>TIM</title>
     <meta charset="utf-8">
@@ -20,13 +20,13 @@
     .editor { 
         position: absolute;
         height: 100%;
-        width:30em;
+        width:45em;       
         top: 0em; 
-        bottom; 0em;
         left: 45em;
         border: 2px solid;
         padding: 15px 5px 5px 5px;
-        border-radius: 15px;        
+        border-radius: 15px;      
+        text-align: justify;  
     }
     </style>
     
@@ -38,13 +38,13 @@
     <script>
         </script>
 </head>
-<body style="background-color: #CCFFFF" ng-controller="ParCtrl">   
+<body style="background-color: #CCFFFF"  ng-app="timApp" ng-controller="ParCtrl">   
         <div class="material">
         <div style="padding: 5px 5px 5px 5px;" ng-if="paragraphs.length <= 0" > 
-                <span ng-show="!(displayLoading)"> Welcome! Start by choosing a document to view: </span>
-                <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayLoading"> </img>
-                <ul ng-show="!(displayLoading)" ng-repeat="doc in documentList"> 
-                    <li style="color: blue;text-decoration:underline" ng-click="getDocument(doc)" ng-bind="doc"> </li>         
+                <span ng-show="displayIndex">&nbsp;&nbsp; Welcome! Start by choosing a document to view: </span>
+                <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex"> </img>
+                <ul ng-show="displayIndex" ng-repeat="doc in documentList"> 
+                    <li style="color: blue;text-decoration:underline; cursor:pointer" ng-click="getDocument(doc.id)" ng-bind="doc.name"> </li>         
                 </ul>                
         </div>
             <div class="paragraph"  ng-repeat="par in paragraphs">   
