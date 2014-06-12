@@ -2,8 +2,18 @@ var TimCtrl = angular.module('controllers', []);
 
 TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             sc.paragraphs = "";
+            sc.getDocIds = function(){
+                http({method: 'GET', url: '/getDocuments/'}).
+                    success(function(data, status, headers, config) {
+                            sc.documentList = data;
+                    }).
+                    error(function(data, status, headers, config) {
+                            sc.documentList = [];
+                    });
+            };
             sc.documentEdit = false;
-            sc.documentList = documents;
+            sc.documentList = [];
+            sc.getDocIds();
             sc.convertHtml = new Markdown.getSanitizingConverter();
             sc.editors = [];
             sc.displayIndex = true;
