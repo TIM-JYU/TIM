@@ -75,7 +75,7 @@ class TimDb(object):
         
         try:
             # The file shouldn't already exist, so we use the 'x' flag.
-            with open(block_path, 'xt', encoding="utf-8") as blockfile:
+            with open(block_path, 'xt', encoding="utf-8", newline='\n') as blockfile:
                 blockfile.write(content)
         except OSError:
             print('Couldn\'t create the file or file already exists:' + block_path)
@@ -254,7 +254,7 @@ class TimDb(object):
         
         blocks = []
         for block_id in block_ids:
-            with open(self.getBlockPath(block_id), encoding="utf-8") as f:
+            with open(self.getBlockPath(block_id), encoding="utf-8", newline='') as f:
                 blocks.append({"par": str(block_id), "text": f.read()}) #TODO: par doesn't have to be str... but atm frontend expects it to be str
         return blocks
     
@@ -285,7 +285,7 @@ class TimDb(object):
         block_path = self.getBlockPath(block_id)
         
         try:
-            with open(block_path, 'wt', encoding="utf-8") as blockfile:
+            with open(block_path, 'wt', encoding="utf-8", newline='\n') as blockfile:
                 blockfile.write(new_content)
                 blockfile.truncate()
         except:
