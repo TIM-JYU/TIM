@@ -23,7 +23,11 @@ app.config.update(dict(
     PASSWORD='default',
     FILES_PATH='tim_files'
 ))
-app.config.from_envvar('TIM_SETTINGS', silent=True)
+#app.config.from_envvar('TIM_SETTINGS', silent=True)
+
+if os.path.abspath('.') == '/service':
+    app.config['DEBUG'] = False
+
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
@@ -104,7 +108,7 @@ def getFile():
 #    return render_template('goat.html')
 
 if __name__ == "__main__":
-    app.debug = True
-    app.run()
- #   app.wsgi_app = ReverseProxied(app.wsgi_app)	
-#   app.run(host='0.0.0.0',port=5000)
+#    app.debug = True
+#    app.run()
+    app.wsgi_app = ReverseProxied(app.wsgi_app)	
+    app.run(host='0.0.0.0',port=5000)
