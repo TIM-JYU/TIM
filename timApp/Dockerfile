@@ -10,6 +10,7 @@ run pip3 install Flask
 run pip3 install markdown
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
+run pip3 install hypothesis
 
 # Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
 # hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen
