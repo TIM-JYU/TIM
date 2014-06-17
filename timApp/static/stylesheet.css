@@ -2,7 +2,7 @@
 .content{
         width: 30em;
         text-align: justify;
-        
+        word-wrap: break-word;        
 }
 
 .paragraph{
@@ -13,16 +13,31 @@
 }
 
 .editButton{ 
-    position: relative;
-    top: -3em;
-    left:5em;
+    position: absolute;
+    top: 0em;
+    left:49em;
     font-size: x-small;
     width: 5em;
     height: 3em;
     top:0em;
     border: 2px none;
     border-radius: 25px;
-    background-color: #66FF99;
+    outline: none;
+
+}
+
+.saveButton{
+    position: absolute;
+    top: 0em;
+    left:49em;
+    font-size: x-small;
+    width: 5em;
+    height: 3em;
+    top:0em;
+    border: 2px none;
+    border-radius: 25px;
+    outline: none;
+    background-color: #30FF30;
 }
 
 .material{

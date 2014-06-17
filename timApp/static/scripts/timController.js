@@ -47,19 +47,22 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             sc.activeEdit = {"editId": "", "text" : "", "editor": ""};
             sc.setEditable = function(par){
                 var elem = sc.findPar(par);
-                var elemId = sc.findParId(par);
-                sc.editing = true;
-                
+                var elemId = sc.findParId(par); 
                 if(elem.par == sc.activeEdit['editId']){
                     sc.saveEdits(elem, elemId);
-                }
+                    sc.activeEdit = {"editId": "", "text" : "", "editor": ""};
+               }
                 else {
-                    if(sc.activeEdit.editor != ""){
+                    if(sc.activeEdit.editId != ""){
                         sc.setEditable(sc.activeEdit.editId);
                     }
 
                     if(!sc.editorExists(elem.par)){
                             sc.createEditor(elem,elemId);
+                            sc.activeEdit['editor'] = sc.getEditor(par);
+                    }
+                    else{
+                            sc.activeEdit['editor'] = sc.getEditor(par);
                     }
                     sc.paragraphs[elemId].display = true;
                     
@@ -101,12 +104,7 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             };
             
             sc.createEditor = function(elem, elemId){
-                    if(!sc.editorExists(elem.par)){
-                            editor = ace.edit(elem.par);
-                    }
-                    else {
-                            editor = new ace.edit(elem.par);
-                    }
+                    editor = new ace.edit(elem.par);
                     editor.getSession().setValue(sc.paragraphs[elemId].text);
                     editor.setTheme("ace/theme/eclipse");
                     editor.renderer.setPadding(10, 10, 10,10);
@@ -115,13 +113,11 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
                     editor.getSession().setWrapLimitRange(0, 79);
                     $('.'+elem.par).get()[0].focus();
                     editor.getSession().on('change', function(e) {
-                            $('.'+elem.par).html(sc.convertHtml.makeHtml(editor.getSession().getValue()));
+                            $('.'+elem.par).html(sc.convertHtml.makeHtml(sc.activeEdit['editor'].editor.getSession().getValue()));
                     });
-                    editor.on('blur', function(e){
-                            
+                   /** editor.on('blur', function(e){
                             sc.setEditable(elem.par);
-                    });
-
+                    });**/
                     sc.activeEdit["editor"] = editor;
                     if(!sc.editorExists(elem)) {
                             sc.editors.push({"par" : elem.par, "editor": editor});
@@ -136,7 +132,7 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             }
 
             sc.saveEdits = function(elem, elemId){
-                    mdtext = sc.activeEdit['editor'].getSession().getValue();
+                    mdtext = sc.activeEdit['editor'].editor.getSession().getValue();
                     sc.paragraphs[elemId].text = mdtext; 
                     $('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
                     sc.paragraphs[elemId].display = false;

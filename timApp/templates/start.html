@@ -50,8 +50,8 @@
         </div>
             <div class="paragraph"  ng-repeat="par in paragraphs">   
                 <div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once ng-bind-html="par.html"> </div>
+                <button class="editButton" ng-click="setEditable(par.par)"> Edit </button>         
                 <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display" ng-model="activeEdit.text">
-                    <button class="editButton" ng-show="!par.display" ng-click="setEditable(par.par)"> Edit </button>         
                 </div> 
             </div>
         </div>
