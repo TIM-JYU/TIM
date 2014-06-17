@@ -220,7 +220,7 @@ class TimDb(object):
             result = {}
             for prop, val in zip(cols, row):
                 result[prop] = val
-                results.append(result)
+            results.append(result)
         return results
     
     @contract
