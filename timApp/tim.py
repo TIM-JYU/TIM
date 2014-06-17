@@ -23,7 +23,11 @@ app.config.update(dict(
     PASSWORD='default',
     FILES_PATH='tim_files'
 ))
-app.config.from_envvar('TIM_SETTINGS', silent=True)
+#app.config.from_envvar('TIM_SETTINGS', silent=True)
+
+if os.path.abspath('.') == '/service':
+    app.config['DEBUG'] = False
+
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
@@ -42,18 +46,14 @@ def getTimDb():
 
 @app.route("/getJSON/<textFile>/")
 def getJSON(textFile):
-    mypath = DATA_PATH +textFile
+    timdb = getTimDb()
     try:
-        texts = []
-        pars = [ f for f in listdir(mypath) if isfile(join(mypath,f)) ]
-        pars.sort()
-        for par in pars:
-            with open(DATA_PATH + textFile + "/" + par, 'r', encoding="utf-8") as f:
-                texts.append({"par" : par, "text" : f.read()})
-        return jsonify({"name" : textFile, "text" : texts})
+        texts = timdb.getDocumentBlocks(int(textFile))
+        doc = timdb.getDocument(int(textFile))
+        return jsonify({"name" : doc['name'], "text" : texts})
     except IOError as err:
         print(err)
-        return render_template("No data found")
+        return "No data found"
 
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
@@ -104,7 +104,7 @@ def getFile():
 #    return render_template('goat.html')
 
 if __name__ == "__main__":
-    app.debug = True
-    app.run()
- #   app.wsgi_app = ReverseProxied(app.wsgi_app)	
-#   app.run(host='0.0.0.0',port=5000)
+#    app.debug = True
+#    app.run()
+    app.wsgi_app = ReverseProxied(app.wsgi_app)	
+    app.run(host='0.0.0.0',port=5000)

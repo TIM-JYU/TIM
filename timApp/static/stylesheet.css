@@ -2,6 +2,7 @@
 .content{
         width: 30em;
         text-align: justify;
+        word-wrap: break-word;        
 }
 
 .paragraph{
@@ -11,15 +12,38 @@
         margin-top: 2em;
 }
 
-.editButton{
-    position:relative; 
-    left:37em;
+.editButton{ 
+    position: absolute;
+    top: 0em;
+    left:49em;
+    font-size: x-small;
+    width: 5em;
+    height: 3em;
     top:0em;
+    border: 2px none;
+    border-radius: 25px;
+    outline: none;
+
+}
+
+.saveButton{
+    position: absolute;
+    top: 0em;
+    left:49em;
+    font-size: x-small;
+    width: 5em;
+    height: 3em;
+    top:0em;
+    border: 2px none;
+    border-radius: 25px;
+    outline: none;
+    background-color: #30FF30;
 }
 
 .material{
      background-color: white;
      display:inline-block;
+     width: 100%;
      border: 2px solid;
      border-radius: 25px;
      box-shadow: 10px 10px 5px #888888;
