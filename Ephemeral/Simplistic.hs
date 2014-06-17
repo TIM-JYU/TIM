@@ -16,7 +16,7 @@ import Data.Monoid
 
 type DocID = BS.ByteString
 type Block = T.Text
-newtype Doc = Doc [Block]
+newtype Doc = Doc {fromDoc::[Block]}
 
 convert :: BS.ByteString -> Doc
 convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 $ bs) of
@@ -33,7 +33,6 @@ initialize = newAtomicLRU (Just 200) >>= return . State
 loadDocument :: MonadIO m => DocID -> BS.ByteString -> State -> m ()
 loadDocument docID bs (State st) = liftIO $ do
     let doc@(Doc d) = convert bs
-    liftIO $ print (length d)
     insert docID doc st
 
 fetchBlock :: MonadIO m => DocID -> Int -> State -> m (Maybe Block)
@@ -44,6 +43,14 @@ fetchBlock docID index (State st) = liftIO $ do
          | index >= 0 && index < length d 
           -> return (Just (d !! index))
         _ -> return Nothing
+
+replace :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> m ()
+replace docID index bs (State st) = liftIO $ do
+    doc <- LRU.lookup docID st
+    case doc of 
+        Nothing       -> LRU.insert docID (convert bs) st
+        Just (Doc d)  -> LRU.insert docID (Doc $ take index d++fromDoc (convert bs)++drop (index+1) d) st
+
 
 main = do
     state <- initialize
@@ -56,6 +63,12 @@ main = do
             case block of 
                 Nothing -> writeBS "{\"Error\":\"No block found\"}" 
                 Just  r -> writeText r
+         ),
+         (":docID/:idx", method PUT $ do
+            docID <- requireParam "docID"
+            idx   <- requireParam "idx"
+            bd    <- readRequestBody (1024*2000)
+            replace docID idx (LBS.toStrict bd) state
          ),
          ("load/:docID/", method POST $ do
             docID <- requireParam "docID"
