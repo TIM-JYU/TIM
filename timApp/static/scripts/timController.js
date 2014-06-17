@@ -15,7 +15,6 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             sc.documentList = [];
             sc.getDocIds();
             sc.convertHtml = new Markdown.getSanitizingConverter();
-            sc.editors = [];
             sc.displayIndex = true;
             // Get document
             sc.getDocument = function(documentName){
@@ -36,38 +35,37 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             sc.updateParagraphs = function(){
                 for(var i = 0; i < sc.paragraphs.length; i++){
                     sc.paragraphs[i].html = sc.convertHtml.makeHtml(sc.paragraphs[i].text);
-                    sc.paragraphs[i].display = "false";
+                    sc.paragraphs[i].display = false;
                 }
             }
-            
 
+
+
+
+            sc.editors = []; 
             sc.editing = false;
-            sc.activeEdit = {"editId": "", "text" : ""};
+            sc.activeEdit = {"editId": "", "text" : "", "editor": ""};
             sc.setEditable = function(par){
                 var elem = sc.findPar(par);
                 var elemId = sc.findParId(par);
-                if(sc.paragraphs[elemId].display == true && sc.editorExists(elem.par)){
-                        mdtext = sc.getEditor(elem.par).editor.getSession().getValue();
-                        sc.paragraphs[elemId].text = mdtext; 
-                        $('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
-                        sc.paragraphs[elemId].display = false;
-                        sc.activeEdit.editId = "";
-                        sc.activeEdit.text = "";
-                        http({method: 'POST',
-                               url: '/postParagraph/',
-                               data: JSON.stringify({"documentName":sc.documentName,
-                                                     "par" : elem.par, 
-                                                     "text": elem.text})})
-                               
-                         
+                sc.editing = true;
+                
+                if(elem.par == sc.activeEdit['editId']){
+                    sc.saveEdits(elem, elemId);
                 }
-
-                                
                 else {
+                    if(sc.activeEdit.editor != ""){
+                        sc.setEditable(sc.activeEdit.editId);
+                    }
+
+                    if(!sc.editorExists(elem.par)){
+                            sc.createEditor(elem,elemId);
+                    }
                     sc.paragraphs[elemId].display = true;
-                    sc.createEditor(elem, elemId);
+                    
                     sc.activeEdit.text = sc.paragraphs[elemId].text;
                     sc.activeEdit.editId = elem.par;
+                    
                 }               
             };
             
@@ -103,18 +101,53 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             };
             
             sc.createEditor = function(elem, elemId){
-                    var editor = ace.edit(elem.par);
+                    if(!sc.editorExists(elem.par)){
+                            editor = ace.edit(elem.par);
+                    }
+                    else {
+                            editor = new ace.edit(elem.par);
+                    }
                     editor.getSession().setValue(sc.paragraphs[elemId].text);
                     editor.setTheme("ace/theme/eclipse");
                     editor.renderer.setPadding(10, 10, 10,10);
                     editor.getSession().setMode("ace/mode/markdown"); 
                     editor.getSession().setUseWrapMode(true);
                     editor.getSession().setWrapLimitRange(0, 79);
-                    sc.editors.push({"par": elem.par, "editor" : editor});
+                    $('.'+elem.par).get()[0].focus();
                     editor.getSession().on('change', function(e) {
                             $('.'+elem.par).html(sc.convertHtml.makeHtml(editor.getSession().getValue()));
                     });
+                    editor.on('blur', function(e){
+                            
+                            sc.setEditable(elem.par);
+                    });
+
+                    sc.activeEdit["editor"] = editor;
+                    if(!sc.editorExists(elem)) {
+                            sc.editors.push({"par" : elem.par, "editor": editor});
+                    }
             };
+            sc.splitPar = function(elemIndex, elem){
+            //    sc.paragraphs[].text.splice(sc.find);
+            }
+            
+            sc.mergePar = function(elemIndex, elem){
+                    // Merge two paragraphs
+            }
+
+            sc.saveEdits = function(elem, elemId){
+                    mdtext = sc.activeEdit['editor'].getSession().getValue();
+                    sc.paragraphs[elemId].text = mdtext; 
+                    $('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
+                    sc.paragraphs[elemId].display = false;
+                    http({method: 'POST',
+                          url: '/postParagraph/',
+                          data: JSON.stringify({"documentName":sc.documentName,
+                                                "par" : elem.par, 
+                                                "text": elem.text})})
+                                        
+            }
+
         }]);
 
 

@@ -12,10 +12,11 @@
         margin-top: 2em;
 }
 
-.editButton{
-    position:relative; 
+.editButton{ 
+    position: relative;
+    top: -3em;
+    left:5em;
     font-size: x-small;
-    left:37em;
     width: 5em;
     height: 3em;
     top:0em;
