@@ -7,11 +7,13 @@ import os
 from shutil import copyfile
 import sqlite3
 import pypandoc
+import json
+import time
 from contracts import contract, new_contract
 
 
 # import timeit
-BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer')
+BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
 TABLE_NAMES = ['BlockEditAccess',
                'BlockViewAccess',
                'UserGroupMember',
@@ -31,6 +33,7 @@ class TimDb(object):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.files_root_path = files_root_path
+        self.json_cache_path = os.path.join(files_root_path, 'json_cache')
         
         # TODO: Make sure that db_path and files_root_path are valid!
         
@@ -39,7 +42,7 @@ class TimDb(object):
             if not os.path.exists(path):
                 os.makedirs(path)
     
-    @contract
+    #@contract
     def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
         """Adds a new markdown block to the specified document.
         
@@ -51,18 +54,42 @@ class TimDb(object):
         """
 
         document_path = self.getBlockPath(document_id)
-        doc_json = None
-        with open(document_path, encoding="utf-8") as docfile:
-            doc_json = pypandoc.convert(docfile, 'json', 'markdown', encoding='utf-8')
+        cache_path = self.getCachePath(document_id)
         
-        return doc_json
+        doc_json = None
+        start_time = time.time()
+        if not os.path.exists(cache_path):
+            converted = pypandoc.convert(document_path, 'json', 'markdown', encoding='utf-8') # This is a very slow operation!
+            #test_convert = pypandoc.convert(str(converted), 'markdown', 'json')
+            #print('Conversion took: ' + str(time.time() - start_time))
+            doc_json = json.loads(converted) # This operation is very fast compared to pypandoc conversion.
+        else:
+            doc_json = json.loads(cache_path)
+        
+        # The following is WAY too slow.
+#         paragraphs = []
+#         i = 0
+#         for para in doc_json[1]:
+#             print(str(i))
+#             paragraphs.append(pypandoc.convert(json.dumps([{'docTitle': [], 'docAuthors': [], 'docDate': []}, [para]]), 'markdown', 'json'))
+#             i += 1
+            
+        #doc_json = pypandoc.convert(document_path, 'markdown', 'markdown', encoding='utf-8')
+        
+        
+        # doc_json[1] is an array of paragraphs.
+        #print('Conversion + JSON took: ' + str(time.time() - start_time))
+        #doc_json = pypandoc.convert(document_path, 'json', 'markdown', encoding='utf-8')
+        
         
         # TODO:
-        # 1. Load the current version of the document.
-        # 2. Parse it with pypandoc to JSON.
-        # 3. Add the new block to JSON in the correct position (using next_block_id).
-        # 4. Write the document to the block file and commit it to version control.
-        # 5. Return true to indicate success.
+        # 1. Load the current version of the document (as JSON from cache, if exists).
+        # 2. If the document was not found from cache, parse it with pypandoc to JSON.
+        # 3. Save the JSON in cache.
+        # 4. Deserialize the JSON to a Python object.
+        # 5. Add the new block to JSON in the correct position (using next_block_id).
+        # 6. Write the document to the block file and commit it to version control. Update cache also.
+        # 7. Return true to indicate success.
         
     
     def clear(self):
@@ -77,7 +104,7 @@ class TimDb(object):
     def create(self):
         """Initializes the database from the schema.sql file.
         NOTE: The database is emptied if it exists."""
-        with open('schema.sql', 'r') as schema_file:
+        with open('schema2.sql', 'r') as schema_file:
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
 
@@ -109,7 +136,11 @@ class TimDb(object):
 
     @contract
     def importDocument(self, document_file : 'str', document_name : 'str'):
-        return
+        """Imports the specified document in the database."""
+        
+        # Assuming the document file is markdown-formatted, importing a document is very straightforward.
+        doc_id = self.createDocument(document_name)
+        copyfile(document_file, self.getDocumentPath(doc_id))
 
     @contract
     def createUser(self, name : 'str') -> 'int':
@@ -132,6 +163,9 @@ class TimDb(object):
         :returns: The path of the block.
         """
         return os.path.join(self.blocks_path, str(block_id))
+    
+    def getCachePath(self, block_id : 'int'):
+        return os.path.join(self.json_cache_path, str(block_id))
     
     @contract
     def getDocument(self, document_id : 'int') -> 'row':
@@ -205,7 +239,11 @@ class TimDb(object):
         :param document_id: The id of the document.
         :returns: The path of the document.
         """
-        return os.path.join(self.documents_path, str(document_id))
+        return os.path.join(self.blocks_path, str(document_id))
+
+    @contract
+    def getImagePath(self, image_id : 'int', image_filename : 'str'):
+        return os.path.join(self.files_root_path, 'img', str(image_id), image_filename)
 
     @contract
     def getUser(self, user_id : 'int') -> 'row':
@@ -215,6 +253,11 @@ class TimDb(object):
         cursor.execute('select * from User where id = ?', [user_id])
         return cursor.fetchone()
     
+    def splitDocumentToBlocks(self, document_path : 'str'):
+        """Splits the given document into blocks."""
+        # TODO (this function may not be needed if this is implemented with Pandoc).
+        
+        
     @contract
     def modifyMarkDownBlock(self, document_id : 'int', block_id : 'int', new_content : 'str'):
         """Modifies the specified block.
@@ -233,4 +276,35 @@ class TimDb(object):
         # 5. Return true to indicate success.
         
         # TODO: Commit changes in version control and update fields in database.
+    
+    def saveImage(self, image_data : 'bytes', image_filename : 'str'):
+        """Saves an image to the database."""
+        
+        # TODO: Check that the file extension is allowed.
+        # TODO: User group id should be a parameter.
+        cursor = self.db.cursor()
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [image_filename, 0, BLOCKTYPE.Image.value])
+        img_id = cursor.lastrowid
+        
+        with open(self.getImagePath(img_id, image_filename), 'xb') as f:
+            f.write(image_data)
+        
+        self.db.commit()
+        return
+
+    def deleteImage(self, image_id : 'int'):
+        """Deletes an image from the database."""
+        
+        #TODO: Check that the user has right to delete image.
+        cursor = self.db.cursor()
+        cursor.execute('select description from Block where type_id = ? and id = ?', [BLOCKTYPE.Image.value, image_id])
+        image_filename = cursor.fetchone()[0]
+        cursor.execute('delete from Block where type_id = ? and id = ?', [BLOCKTYPE.Image.value, image_id])
+        if cursor.rowcount == 0:
+            raise
+            #TODO: Raise error if no image was deleted.
+        
+        os.remove(self.getImagePath(image_id, image_filename))
+        
+        self.db.commit()
         
