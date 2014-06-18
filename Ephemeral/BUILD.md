@@ -20,6 +20,7 @@ joudut asentamaan loput. Tähän menee kuitenkin vain hetki:
 
 Kääntäminen onnistuu nyt komennolla
 
+    cabal configure
     cabal build
 
 minkä jälkeen sinulla on binääri `Ephemeral` 
@@ -50,6 +51,7 @@ Nykyisellään `Ephemeral` määrittelee reitit:
 
 * POST /load/:docID        => Lataa cacheen kokonaisen dokumentin
 * GET  /:docID/:blockIndex => Hakee yksittäisen blokin
+* GET /diff/:docID/:docID  => Hakee diffin (JSON)
 * PUT  /:docID/:blockIndex => Korvaa yksittäisen blokin
 
 
