@@ -54,6 +54,7 @@ instance Ord a => Ord (Labeled x a) where
 labelList :: (Enum t1, Num t1) => t -> [a] -> [Labeled (t, t1) a]
 labelList lbl lst = [Labeled (lbl,i) x | (i,x) <- zip [0..] lst]
 
+-- TODO: PerformDiff is really, really slow!
 performDiff :: MonadIO m => DocID -> DocID -> State -> m (Maybe [(DocID,Int)])
 performDiff parentID childID (State st) = liftIO $ do
    parent <- LRU.lookup parentID st 
