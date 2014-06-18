@@ -2,46 +2,89 @@
 module Main where
 import qualified Text.Pandoc as PDC
 import Data.Cache.LRU.IO as LRU
+import qualified Data.Foldable as F
 import qualified Data.Text as T
+import Data.List
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
-import Control.Applicative
-import Data.Aeson
 import Control.Monad.Trans
 import Snap.Core
+import Data.Aeson
+import Data.Algorithm.Diff as D
 import Snap.Util.Readable
 import Snap.Http.Server
-import Data.Monoid
+import qualified Data.Sequence as Seq
+import Data.Sequence (Seq)
+import EphemeralPrelude
 
-type DocID = BS.ByteString
+newtype DocID = DocID T.Text deriving(Eq,Ord,Show)
+instance Readable DocID where
+    fromBS = return . DocID . T.decodeUtf8
+instance ToJSON DocID where
+    toJSON (DocID t) = toJSON t 
+
 type Block = T.Text
-newtype Doc = Doc {fromDoc::[Block]}
+newtype Doc = Doc {fromDoc::Seq Block}
 
 convert :: BS.ByteString -> Doc
 convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 $ bs) of
-              PDC.Pandoc _ bs -> Doc $ map (T.pack . PDC.writeMarkdown PDC.def . PDC.Pandoc mempty . box) bs
+              PDC.Pandoc _ blocks -> Doc . Seq.fromList . 
+                    map (T.pack . PDC.writeMarkdown PDC.def . PDC.Pandoc mempty . box) 
+                    $ blocks
 
+box :: t -> [t]
 box x = [x]
 
-newtype State = State (AtomicLRU BS.ByteString Doc)
+newtype State = State (AtomicLRU DocID Doc)
 
 initialize :: IO State 
 initialize = newAtomicLRU (Just 200) >>= return . State
 
+-- Diff Handling
+
+data Labeled label a = Labeled {getLabel::label,unLabel::a} deriving (Show)
+
+instance Eq a => Eq (Labeled x a) where
+    Labeled _ a == Labeled _ b = a == b
+
+instance Ord a => Ord (Labeled x a) where
+    compare = compare `on` unLabel
+
+labelList :: (Enum t1, Num t1) => t -> [a] -> [Labeled (t, t1) a]
+labelList lbl lst = [Labeled (lbl,i) x | (i,x) <- zip [0..] lst]
+
+performDiff :: MonadIO m => DocID -> DocID -> State -> m (Maybe [(DocID,Int)])
+performDiff parentID childID (State st) = liftIO $ do
+   parent <- LRU.lookup parentID st 
+   child <- LRU.lookup childID st 
+   case (parent,child) of
+     (Just (Doc a),Just (Doc b)) 
+       -> return $ Just (execDiff (labelList parentID (F.toList a)) 
+                                  (labelList childID (F.toList b)))
+     _ ->  return Nothing
+
+execDiff :: [Labeled (DocID,Int) Block] -> [Labeled (DocID,Int) Block] -> [(DocID,Int)]
+execDiff a b = reverse $ foldl' op [] (getDiff a b)
+   where 
+    op acc (D.First  _) = acc
+    op acc (Second bl) = getLabel bl:acc
+    op acc (Both bl _) = getLabel bl:acc
+
 -- Ops
 loadDocument :: MonadIO m => DocID -> BS.ByteString -> State -> m ()
-loadDocument docID bs (State st) = liftIO $ do
-    let doc@(Doc d) = convert bs
-    insert docID doc st
+loadDocument docID bs (State st) = liftIO $ 
+    LRU.insert docID (convert bs) st
+
+
 
 fetchBlock :: MonadIO m => DocID -> Int -> State -> m (Maybe Block)
 fetchBlock docID index (State st) = liftIO $ do
     doc <- LRU.lookup docID st
     case doc of
         Just (Doc d) 
-         | index >= 0 && index < length d 
-          -> return (Just (d !! index))
+         | index >= 0 && index < Seq.length d 
+          -> return (Just $ Seq.index d index)
         _ -> return Nothing
 
 replace :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> m ()
@@ -49,9 +92,15 @@ replace docID index bs (State st) = liftIO $ do
     doc <- LRU.lookup docID st
     case doc of 
         Nothing       -> LRU.insert docID (convert bs) st
-        Just (Doc d)  -> LRU.insert docID (Doc $ take index d++fromDoc (convert bs)++drop (index+1) d) st
+        Just (Doc d)  -> LRU.insert docID (Doc $ insertRange d index (fromDoc (convert bs))) st
 
+insertRange :: Seq a -> Int -> Seq a -> Seq a
+insertRange orig index source = 
+    let 
+     (s,e) = Seq.splitAt index orig
+    in s <> source <> e
 
+main :: IO ()
 main = do
     state <- initialize
     quickHttpServe $ route 
@@ -73,12 +122,19 @@ main = do
          ("load/:docID/", method POST $ do
             docID <- requireParam "docID"
             bd    <- readRequestBody (1024*2000)
-            liftIO $ LBS.writeFile "whatIGot" bd
             loadDocument docID (LBS.toStrict bd) state
             writeBS "{\"Ok\":\"Document loaded\"}" 
-            )
+         ),
+         ("diff/:parentID/:childID/", method GET $ do
+            parentID <- requireParam "parentID"
+            childID  <- requireParam "childID"
+            diffed <- performDiff parentID childID state
+            writeLBS (encode diffed) 
+         )
+ 
         ]
 
+requireParam :: (MonadSnap m, Readable b) => BS.ByteString -> m b
 requireParam p = getParam p >>= \x -> case x of
-                    Just p -> fromBS p
+                    Just val -> fromBS val
                     Nothing -> error $ "Parameter "++show p++" needed" -- TODO
