@@ -113,10 +113,10 @@ class TimDb(object):
         """Closes the database connection."""
         self.db.close()
     
-    def create(self):
+    def create(self, schema_file='schema.sql'):
         """Initializes the database from the schema.sql file.
         NOTE: The database is emptied if it exists."""
-        with open('schema.sql', 'r') as schema_file:
+        with open(schema_file, 'r') as schema_file:
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
         
