@@ -12,7 +12,7 @@
         margin-top: 2em;
 }
 
-.editButton{ 
+.editButton:hover { 
     position: absolute;
     top: 0em;
     left:72em;
@@ -23,8 +23,27 @@
     border: 2px none;
     border-radius: 25px;
     outline: none;
+    visibility : visible;
+    background: #C0C0C0  ;
+    color: black;
 
 }
+.editButton { 
+    position: absolute;
+    top: 0em;
+    left:72em;
+    font-size: x-small;
+    width: 5em;
+    height: 3em;
+    top:0em;
+    border: 2px none;
+    border-radius: 25px;
+    outline: none;
+    background: #f8f8f8;
+    color: white;
+
+}
+
 
 .saveButton{
     position: absolute;
