@@ -1,7 +1,8 @@
 var TimCtrl = angular.module('controllers', []);
 
-TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
+TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             sc.paragraphs = "";
+            sc.pluginPat = /\{plugin}\[(.*)]/;
             sc.getDocIds = function(){
                 http({method: 'GET', url: '/getDocuments/'}).
                     success(function(data, status, headers, config) {
@@ -15,6 +16,22 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             sc.documentList = [];
             sc.getDocIds();
             sc.convertHtml = new Markdown.getSanitizingConverter();
+           
+            sc.convertHtml.hooks.chain("preBlockGamut", function (text, runBlockGamut) {
+                var pat = /\{plugin}\[(.*)]/;
+                var match = pat.exec(text);
+                if(match != null){
+                    alert(match[0] + "   " + match[1]);   
+                    teksti = text.replace(match[0], sc.pluginPromise(match[1]).then(function(data){return JSON.stringify(data)}));
+                    return teksti;
+                }
+                else {
+                    return text;
+                }
+                
+            });
+
+
             sc.displayIndex = true;
             // Get document
             sc.getDocument = function(documentName){
@@ -39,9 +56,19 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
                 }
             }
 
-
-
-
+            sc.pluginPromise = function(plugin){
+                var deferred = q.defer();
+                http({method: 'GET', url: '/pluginCall/' + plugin}).
+                    success(function(data, status, headers, config) {
+                            alert(data);
+                            deferred.resolve(data.toString('utf-8'))
+                    }).
+                    error(function(data, status, headers, config) {
+                            deferred.reject( "[unspecified plugin]")
+                    });
+                return deferred.promise;
+            }
+          
             sc.editors = []; 
             sc.editing = false;
             sc.activeEdit = {"editId": "", "text" : "", "editor": ""};
@@ -113,7 +140,9 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
                     editor.getSession().setWrapLimitRange(0, 79);
                     $('.'+elem.par).get()[0].focus();
                     editor.getSession().on('change', function(e) {
-                            $('.'+elem.par).html(sc.convertHtml.makeHtml(sc.activeEdit['editor'].editor.getSession().getValue()));
+                            text = sc.activeEdit['editor'].editor.getSession().getValue();
+
+                            $('.'+elem.par).html(sc.convertHtml.makeHtml(text));
                     });
                    /** editor.on('blur', function(e){
                             sc.setEditable(elem.par);
@@ -123,14 +152,6 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
                             sc.editors.push({"par" : elem.par, "editor": editor});
                     }
             };
-            sc.splitPar = function(elemIndex, elem){
-            //    sc.paragraphs[].text.splice(sc.find);
-            }
-            
-            sc.mergePar = function(elemIndex, elem){
-                    // Merge two paragraphs
-            }
-
             sc.saveEdits = function(elem, elemId){
                     mdtext = sc.activeEdit['editor'].editor.getSession().getValue();
                     sc.paragraphs[elemId].text = mdtext; 

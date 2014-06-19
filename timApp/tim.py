@@ -10,6 +10,7 @@ import verifyPath
 from os import listdir
 from os.path import isfile,join
 from timdb import TimDb
+from containerLink import callPlugin
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -86,25 +87,25 @@ def getDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
-#@app.route('/getMarkdown/<file>')
-#def getOhj(file):
-#    contents = Markup(markdown.markdown(unicode(open("./static/ohj1/" + file).read(),encoding="utf-8")))
-#    contents = unicode(open(file+'HTML5', 'r').read(), "utf-8")
-#    return render_template('start.html', fileCont=contents, stylesheet='stylesheet.css')
 
+@app.route("/pluginCall/<plugin>")
+def callHello(plugin):
+    print (callPlugin(plugin).decode('utf-8'))
+    return callPlugin(plugin).decode('utf-8')
+
+@app.route("/hello", methods=['POST'])
+def hello():
+    html = request.get_json()['html']
+    
 
 
 @app.route("/")
 def getFile():
     return render_template('start.html')
 
-#@app.route('/')
-#@app.route('/<path:path>')
-#def goat(path=None):
-#    return render_template('goat.html')
 
 if __name__ == "__main__":
-#    app.debug = True
-#    app.run()
-    app.wsgi_app = ReverseProxied(app.wsgi_app)	
-    app.run(host='0.0.0.0',port=5000)
+    app.debug = True
+    app.run()
+#    app.wsgi_app = ReverseProxied(app.wsgi_app)	
+#    app.run(host='0.0.0.0',port=5000)
