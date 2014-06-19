@@ -52,6 +52,7 @@
   PRE {
     border-style: solid;
     border-width: 1px;
+	padding : 4px;
     margin-left: 2.00cm;
     margin-right: 0.00cm;
     line-height: 1em;
@@ -238,3 +239,15 @@ color:#aaaaff;	text-decoration:none;
 }*/
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
+
+.editor {
+position: absolute;
+height: 100%;
+width: 45em;
+top: 0em;
+left: 65em;
+border: 2px solid;
+padding: 15px 5px 5px 5px;
+border-radius: 15px;
+text-align: justify;
+}
