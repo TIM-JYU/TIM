@@ -6,14 +6,14 @@ from enum import Enum
 import os
 from shutil import copyfile
 import sqlite3
-import pypandoc
-import json
 import time
+import urllib.request
 from contracts import contract, new_contract
 
 
 # import timeit
 BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
+EPHEMERAL_URL = 'localhost:8001'
 TABLE_NAMES = ['BlockEditAccess',
                'BlockViewAccess',
                'UserGroupMember',
@@ -54,42 +54,21 @@ class TimDb(object):
         """
 
         document_path = self.getBlockPath(document_id)
-        cache_path = self.getCachePath(document_id)
         
-        doc_json = None
-        start_time = time.time()
-        if not os.path.exists(cache_path):
-            converted = pypandoc.convert(document_path, 'json', 'markdown', encoding='utf-8') # This is a very slow operation!
-            #test_convert = pypandoc.convert(str(converted), 'markdown', 'json')
-            #print('Conversion took: ' + str(time.time() - start_time))
-            doc_json = json.loads(converted) # This operation is very fast compared to pypandoc conversion.
-        else:
-            doc_json = json.loads(cache_path)
+        #TODO:
+        #1. Make sure that the document exists.
         
-        # The following is WAY too slow.
-#         paragraphs = []
-#         i = 0
-#         for para in doc_json[1]:
-#             print(str(i))
-#             paragraphs.append(pypandoc.convert(json.dumps([{'docTitle': [], 'docAuthors': [], 'docDate': []}, [para]]), 'markdown', 'json'))
-#             i += 1
-            
-        #doc_json = pypandoc.convert(document_path, 'markdown', 'markdown', encoding='utf-8')
+        assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
+        #2. Call Ephemeral to add a block to the document. (not yet supported)
         
-        # doc_json[1] is an array of paragraphs.
-        #print('Conversion + JSON took: ' + str(time.time() - start_time))
-        #doc_json = pypandoc.convert(document_path, 'json', 'markdown', encoding='utf-8')
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/add/' + str(document_id) + '/' + str(next_block_id), data=content, method='PUT')
         
+        response = urllib.request.urlopen(req)
         
-        # TODO:
-        # 1. Load the current version of the document (as JSON from cache, if exists).
-        # 2. If the document was not found from cache, parse it with pypandoc to JSON.
-        # 3. Save the JSON in cache.
-        # 4. Deserialize the JSON to a Python object.
-        # 5. Add the new block to JSON in the correct position (using next_block_id).
-        # 6. Write the document to the block file and commit it to version control. Update cache also.
-        # 7. Return true to indicate success.
+        print(response.read())
+        #3. Check return value (success/fail).
+        #4. Does Ephemeral save it to FS?
         
     
     def clear(self):
@@ -132,6 +111,7 @@ class TimDb(object):
             raise
         
         # TODO: Put the document file block under version control (using a Git module maybe?).
+        # TODO: Should the empty doc be put in Ephemeral?
         return document_id
 
     @contract
@@ -141,6 +121,13 @@ class TimDb(object):
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
         doc_id = self.createDocument(document_name)
         copyfile(document_file, self.getDocumentPath(doc_id))
+        
+        #TODO: Load the document to Ephemeral
+        with open(document_file, 'r') as f:
+            req = urllib.request.Request(url=EPHEMERAL_URL + '/load/' + str(doc_id), data=f.read(), method='PUT')
+            response = urllib.request.urlopen(req)
+            print(response.read())
+        
 
     @contract
     def createUser(self, name : 'str') -> 'int':
@@ -224,13 +211,7 @@ class TimDb(object):
         :param document_id: The id of the document.
         :returns: The blocks of the document.
         """
-        block_ids = self.getDocumentBlockIds(document_id)
-        
-        blocks = []
-        for block_id in block_ids:
-            with open(self.getBlockPath(block_id), encoding="utf-8", newline='') as f:
-                blocks.append({"par": str(block_id), "text": f.read()})  # TODO: par doesn't have to be str... but atm frontend expects it to be str
-        return blocks
+        #TODO: Get blocks from Ephemeral.
     
     @contract
     def getDocumentPath(self, document_id : 'int') -> 'str':
@@ -268,14 +249,19 @@ class TimDb(object):
         """
         document_path = self.getBlockPath(block_id)
         
-        # TODO:
-        # 1. Load the current version of the document.
-        # 2. Parse it into a list of pieces.
-        # 3. Add the new block to the list of pieces in the correct position (using block_id).
-        # 4. Write the document to the block file and commit it.
-        # 5. Return true to indicate success.
+        #TODO: This method needs the version id (hash) of the client's document to see if there's been another edit before this.
         
-        # TODO: Commit changes in version control and update fields in database.
+        assert os.path.exists(document_path), 'document does not exist: %r' % document_id
+        
+        #2. Call Ephemeral to modify the block.
+        
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(block_id), data=new_content, method='PUT')
+        response = urllib.request.urlopen(req)
+        responseStr = response.read()
+        print(responseStr)
+        
+        #3. Check return value (success/fail).
+        #4. Does Ephemeral save it to FS?
     
     def saveImage(self, image_data : 'bytes', image_filename : 'str'):
         """Saves an image to the database."""
