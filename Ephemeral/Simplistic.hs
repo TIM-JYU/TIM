@@ -139,7 +139,7 @@ main = do
             docID <- requireParam "docID"
             doc <- fetchDoc docID state
             case doc of
-                Just  (Doc d) -> traverse (\x -> writeText x >> writeText "\n") d >> return ()
+                Just  (Doc d) -> traverse (\x -> writeText x >> writeText "\n\n") d >> return ()
                 Nothing -> writeBS "{\"Error\":\"No block found\"}" 
          ),
          (":docID/:idx", method GET $ do
