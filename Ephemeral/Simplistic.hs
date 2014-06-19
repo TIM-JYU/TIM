@@ -11,7 +11,9 @@ import qualified Data.ByteString.Lazy as LBS
 import Control.Monad.Trans
 import Snap.Core
 import Data.Aeson
+import GHC.Generics
 import Data.Algorithm.Diff as D
+import Data.Algorithm.Diff3 as D3
 import Snap.Util.Readable
 import Snap.Http.Server
 import qualified Data.Sequence as Seq
@@ -64,6 +66,26 @@ performDiff parentID childID (State st) = liftIO $ do
        -> return $ Just (execDiff (labelList parentID (F.toList a)) 
                                   (labelList childID (F.toList b)))
      _ ->  return Nothing
+
+-- TODO: PerformDiff3 is really, really slow!
+performDiff3 :: MonadIO m => DocID -> DocID -> DocID -> State -> m (Maybe [D3.Hunk (DocID,Integer)])
+performDiff3 parentID childID1 childID2 (State st) = liftIO $ do
+   parent <- LRU.lookup parentID st 
+   child1 <- LRU.lookup childID1 st 
+   child2 <- LRU.lookup childID2 st 
+   case (parent,child1,child2) of
+     (Just (Doc a),Just (Doc b),Just (Doc c)) 
+       -> return . Just . fmap (fmap getLabel) $ 
+                diff3  (labelList parentID (F.toList a)) 
+                       (labelList childID1 (F.toList b))
+                       (labelList childID2 (F.toList c))
+     _ ->  return Nothing
+
+instance ToJSON a => ToJSON (Hunk a) where
+    toJSON (LeftChange a)   = object ["Left"   .= a]
+    toJSON (RightChange a)  = object ["Right"  .= a]
+    toJSON (Unchanged a)    = object ["Parent" .= a]
+    toJSON (Conflict a b c) = object ["Left" .= a, "Right" .= b, "Parent" .= c]
 
 execDiff :: [Labeled (DocID,Int) Block] -> [Labeled (DocID,Int) Block] -> [(DocID,Int)]
 execDiff a b = reverse $ foldl' op [] (getDiff a b)
@@ -130,6 +152,13 @@ main = do
             parentID <- requireParam "parentID"
             childID  <- requireParam "childID"
             diffed <- performDiff parentID childID state
+            writeLBS (encode diffed) 
+         ),
+         ("diff3/:parentID/:childID1/:childID2", method GET $ do
+            parentID <- requireParam "parentID"
+            childID1  <- requireParam "childID1"
+            childID2  <- requireParam "childID2"
+            diffed <- performDiff3 parentID childID1 childID2 state
             writeLBS (encode diffed) 
          )
  
