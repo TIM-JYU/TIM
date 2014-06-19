@@ -12,6 +12,7 @@ import Control.Monad.Trans
 import Snap.Core
 import Data.Aeson
 import GHC.Generics
+import Data.Traversable
 import Data.Algorithm.Diff as D
 import Data.Algorithm.Diff3 as D3
 import Snap.Util.Readable
@@ -99,6 +100,12 @@ loadDocument :: MonadIO m => DocID -> BS.ByteString -> State -> m ()
 loadDocument docID bs (State st) = liftIO $ 
     LRU.insert docID (convert bs) st
 
+fetchDoc :: MonadIO m => DocID -> State -> m (Maybe Doc)
+fetchDoc docID (State st) = liftIO $ do
+    doc <- LRU.lookup docID st
+    case doc of
+        Just d -> return (Just d)
+        _ -> return Nothing
 
 
 fetchBlock :: MonadIO m => DocID -> Int -> State -> m (Maybe Block)
@@ -128,6 +135,13 @@ main = do
     state <- initialize
     quickHttpServe $ route 
         [
+         (":docID", method GET $ do
+            docID <- requireParam "docID"
+            doc <- fetchDoc docID state
+            case doc of
+                Just  (Doc d) -> traverse (\x -> writeText x >> writeText "\n") d >> return ()
+                Nothing -> writeBS "{\"Error\":\"No block found\"}" 
+         ),
          (":docID/:idx", method GET $ do
             docID <- requireParam "docID"
             idx   <- requireParam "idx"
