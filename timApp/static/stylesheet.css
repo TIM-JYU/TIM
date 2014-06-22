@@ -21,7 +21,7 @@
     height: 3em;
     top:0em;
     border: 2px none;
-    border-radius: 25px;
+    border-radius: 15px;
     outline: none;
     visibility : visible;
     background: #C0C0C0  ;
@@ -37,9 +37,9 @@
     height: 3em;
     top:0em;
     border: 2px none;
-    border-radius: 25px;
+    border-radius: 15px;
     outline: none;
-    background: #f8f8f8;
+    background: #fcfcfc;
     color: white;
 
 }
@@ -71,6 +71,7 @@
   PRE {
     border-style: solid;
     border-width: 1px;
+    border-radius: 5px;
 	padding : 4px;
     margin-left: 2.00cm;
     margin-right: 0.00cm;
