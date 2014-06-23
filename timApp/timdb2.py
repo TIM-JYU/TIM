@@ -114,20 +114,32 @@ class TimDb(object):
         return document_id
 
     @contract
-    def importDocument(self, document_file : 'str', document_name : 'str'):
+    def importDocument(self, document_file : 'str', document_name : 'str') -> 'int':
         """Imports the specified document in the database."""
         
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
         doc_id = self.createDocument(document_name)
         copyfile(document_file, self.getDocumentPath(doc_id))
         
-        print('doc_id is: ' + str(doc_id))
-        
         with open(document_file, 'rb') as f:
             req = urllib.request.Request(url=EPHEMERAL_URL + '/load/' + str(doc_id), data=f.read(), method='POST')
             response = urllib.request.urlopen(req)
             print(response.read())
         
+        return doc_id
+    
+    @contract
+    def grantViewAccess(self, group_id : 'int', block_id : 'int'):
+        """Grants view access to a group for a block.
+        
+        :param group_id: The group id to which to grant view access.
+        :param block_id: The id of the block for which to grant view access.
+        """
+
+        #TODO: Check that the group_id and block_id exist.
+        cursor = self.db.cursor()
+        cursor.execute('insert into BlockViewAccess (Block_id,UserGroup_id,visible_from) values (?,?,date(\'now\'))', [block_id, group_id])
+        self.db.commit()
 
     @contract
     def createUser(self, name : 'str') -> 'int':
@@ -141,6 +153,24 @@ class TimDb(object):
         self.db.commit()
         user_id = cursor.lastrowid
         return user_id
+
+    def createUserGroup(self, name : 'str') -> 'int':
+        """Creates a new user group.
+        
+        :returns: The id of the created user group.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('insert into UserGroup (name) values (?)', [name])
+        group_id = cursor.lastrowid
+        assert group_id is not None, 'group_id was None'
+        self.db.commit()
+        return group_id
+    
+    @contract
+    def addUserToGroup(self, group_id : 'int', user_id : 'int'):
+        cursor = self.db.cursor()
+        cursor.execute('insert into UserGroupMember (UserGroup_id, User_id) values (?, ?)', [group_id, user_id])
+        self.db.commit()
 
     @contract
     def getBlockPath(self, block_id : 'int') -> 'str':
@@ -167,10 +197,12 @@ class TimDb(object):
     
    
     def getDocuments(self) -> 'list(dict)':
-        """Gets all the documents in the database."""
+        """Gets all the documents in the database.
+        
+        :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
+        """
         cursor = self.db.cursor()
-        cursor.execute('select * from Block where type_id = ?', [BLOCKTYPE.Document.value])
-        # return cursor.fetchall()
+        cursor.execute('select id,description as name from Block where type_id = ?', [BLOCKTYPE.Document.value])
         rows = [x for x in cursor.fetchall()]
         cols = [x[0] for x in cursor.description]
         results = []
@@ -185,7 +217,7 @@ class TimDb(object):
     def getDocumentsByIds(self, document_ids : 'list(int)') -> 'seq(row)':
         """Gets all the documents in the database."""
         cursor = self.db.cursor()
-        cursor.execute('select * from Block where id in (%s)' % 
+        cursor.execute('select id,description as name from Block where id in (%s)' % 
                            ','.join('?' * len(document_ids)), document_ids)
         return cursor.fetchall()
     
@@ -198,8 +230,9 @@ class TimDb(object):
         """
         document_path = self.getDocumentPath(document_id)
         
-        with open(document_path) as f:
-            return [int(line) for line in f.readlines()]
+        assert os.path.exists(document_path), 'document does not exist: %d' % document_id
+        
+        #TODO: Get ids from Ephemeral.
     
     @contract
     def getDocumentBlocks(self, document_id : 'int') -> 'list(dict[2](str: str))':
@@ -211,6 +244,22 @@ class TimDb(object):
         #TODO: Get blocks from Ephemeral.
         #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
         
+        # So let's make a quick hack to fetch the block.
+        responseStr = None
+        blocks = []
+        notEnd = True
+        blockIndex = 0
+        while notEnd:
+            req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(blockIndex), method='GET')
+            response = urllib.request.urlopen(req)
+            responseStr = str(response.read(), encoding='utf-8')
+            notEnd = responseStr != '{"Error":"No block found"}'
+            if notEnd:
+                blocks.append({"par": str(blockIndex), "text" : responseStr})
+            blockIndex += 1
+            print('Fetched block: ' + str(blockIndex))
+            print(responseStr)
+        return blocks
     
     @contract
     def getDocumentPath(self, document_id : 'int') -> 'str':
@@ -234,7 +283,10 @@ class TimDb(object):
 
     @contract
     def getUser(self, user_id : 'int') -> 'row':
-        """Gets the user with the specified id."""
+        """Gets the user with the specified id.
+        
+        :returns: An sqlite3 row object representing the user. Columns: id, name.
+        """
         
         cursor = self.db.cursor()
         cursor.execute('select * from User where id = ?', [user_id])
@@ -254,6 +306,7 @@ class TimDb(object):
         
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
+        #TODO: Use string formatting here.
         req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
         response = urllib.request.urlopen(req)
         responseStr = str(response.read())
@@ -261,10 +314,68 @@ class TimDb(object):
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
+    def userHasViewAccess(self, user_id : 'int', block_id : 'int') -> 'bool':
+        """Returns whether the user has access to the specified block.
+        
+        :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute("""select id from User where
+                          id = ?
+                          and (User.id in 
+                              (select User_id from UserGroupMember where UserGroup_id in
+                                  (select UserGroup_id from BlockViewAccess where Block_id = ?))
+                              
+                          or  (User.id in 
+                              (select User_id from UserGroupMember where UserGroup_id in
+                              (select UserGroup_id from Block where Block.id = ?))
+                              ))""", [user_id, block_id, block_id])
+        result = cursor.fetchall()
+        assert len(result) <= 1, 'rowcount should be 1 at most'
+        return len(result) == 1
+    
+    def userHasEditAccess(self, user_id : 'int', block_id : 'int') -> 'bool':
+        """Returns whether the user has access to the specified block.
+        
+        :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
+        """
+        
+        #TODO: This method is pretty much copy-paste from userHasViewAccess. Should make some common method.
+        cursor = self.db.cursor()
+        cursor.execute("""select id from User where
+                          id = ?
+                          and (User.id in 
+                              (select User_id from UserGroupMember where UserGroup_id in
+                                  (select UserGroup_id from BlockEditAccess where Block_id = ?))
+                              
+                          or  (User.id in 
+                              (select User_id from UserGroupMember where UserGroup_id in
+                              (select UserGroup_id from Block where Block.id = ?))
+                              ))""", [user_id, block_id, block_id])
+        assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
+        return cursor.rowcount == 1
+    
+    def userIsOwner(self, user_id : 'int', block_id : 'int') -> 'bool':
+        """Returns whether the user belongs to the owners of the specified block.
+        
+        :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""select id from User where
+                          id = ?
+                          and (id in
+                              (select User_id from UserGroup where id in
+                              (select UserGroup_id from Block where Block_id = ?))
+                              )""", [user_id, block_id])
+        assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
+        return cursor.rowcount == 1
+    
     def saveImage(self, image_data : 'bytes', image_filename : 'str'):
         """Saves an image to the database."""
         
         # TODO: Check that the file extension is allowed.
+        # TODO: Should file name be unique among images?
         # TODO: User group id should be a parameter.
         cursor = self.db.cursor()
         cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [image_filename, 0, BLOCKTYPE.Image.value])
@@ -274,6 +385,7 @@ class TimDb(object):
             f.write(image_data)
         
         self.db.commit()
+        #TODO: Return image filename (and id if file names don't have to be unique).
         return
 
     def deleteImage(self, image_id : 'int'):
