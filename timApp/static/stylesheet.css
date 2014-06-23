@@ -7,7 +7,7 @@
 
 .paragraph{
         position: relative;
-        max-width: 60em;
+        max-width: 40em;
         margin-left:1em;
         margin-top: 1em;
 }
@@ -39,7 +39,7 @@
     border: 2px none;
     border-radius: 15px;
     outline: none;
-    background: #fcfcfc;
+    background: #C8FCFC;
     color: white;
 
 }
@@ -62,7 +62,7 @@
 .material{
      background-color: white;
      display:inline-block;
-     width: 100%;
+     width: 90%;
      border: 2px solid;
      border-radius: 25px;
      box-shadow: 10px 10px 5px #888888;
