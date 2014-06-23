@@ -1,7 +1,7 @@
 import urllib.request
 
 PLUGINS = [
-        {"host" : "http://localhost:50002/1/1", "name" : "typeGame"}
+        {"host" : "http://localhost:50003/1/1", "name" : "typeGame"}
         ]
 
 # Main plugin call, plugin must match one of the specified plugins in 

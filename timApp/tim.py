@@ -90,7 +90,6 @@ def getDocument(doc_id):
 
 @app.route("/pluginCall/<plugin>")
 def callHello(plugin):
-    print (callPlugin(plugin).decode('utf-8'))
     return callPlugin(plugin).decode('utf-8')
 
 @app.route("/hello", methods=['POST'])
