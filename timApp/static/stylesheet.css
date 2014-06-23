@@ -1,30 +1,49 @@
 
 .content{
-        width: 30em;
+        max-width: 40em;
         text-align: justify;
         word-wrap: break-word;        
 }
 
 .paragraph{
         position: relative;
-        width: 60em;
+        max-width: 60em;
         margin-left:1em;
-        margin-top: 2em;
+        margin-top: 1em;
 }
 
-.editButton{ 
+.editButton:hover { 
     position: absolute;
     top: 0em;
-    left:49em;
+    left:72em;
     font-size: x-small;
     width: 5em;
     height: 3em;
     top:0em;
     border: 2px none;
-    border-radius: 25px;
+    border-radius: 15px;
     outline: none;
+    visibility : visible;
+    background: #C0C0C0  ;
+    color: black;
 
 }
+.editButton { 
+    position: absolute;
+    top: 0em;
+    left:72em;
+    font-size: x-small;
+    width: 5em;
+    height: 3em;
+    top:0em;
+    border: 2px none;
+    border-radius: 15px;
+    outline: none;
+    background: #fcfcfc;
+    color: white;
+
+}
+
 
 .saveButton{
     position: absolute;
@@ -47,4 +66,211 @@
      border: 2px solid;
      border-radius: 25px;
      box-shadow: 10px 10px 5px #888888;
+}
+
+  PRE {
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+	padding : 4px;
+    margin-left: 2.00cm;
+    margin-right: 0.00cm;
+    line-height: 1em;
+    font-size:1em;
+    box-shadow: 10px 10px 5px #888888;
+  }
+  code {
+    margin-right: 0.00cm;
+    line-height: 1em;
+    font-size:1em;
+     
+  }
+
+  PRE.esimerkki-western {
+    font-size:1em;
+  }
+
+  PRE.huonoesimerkki-western {
+    font-size:1em;
+  }
+
+  table {
+    margin-left:auto; margin-right:auto;
+border-collapse:collapse;
+ empty-cells: show;
+    /*
+ border-spacing: 0px;
+ border-color:#000000;
+ border-width:0px;
+ border-style:solid;*/
+ }
+
+ /*td {
+ border-color:#000000;
+ border-width:1px;
+ border-style:solid;
+ }*/
+
+  P {
+    margin-top: 0.5cm;margin-bottom: 0.5cm;
+    margin-left: 2em;
+  }
+
+  P.sananselitys-western {
+    padding: 0.4cm;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  p.kannentiedot-western {
+    margin-top:0.1cm;
+    margin-bottom:0.1cm;
+  }
+
+  p.kannentiedotoikea-western {
+    margin-top:0.1cm;
+    margin-bottom:0.1cm;
+  }
+
+  h1 {
+    text-align:center;
+margin-top:  3cm;
+/*margin-top: 0cm;*/
+    margin-bottom: 1cm;
+    color: navy;
+    border-top: navy 2pt solid; border-bottom: navy 2pt solid;
+    padding-top: 10pt; padding-bottom: 10pt;
+    line-height: 1.3em;
+  }
+
+  h2 {
+    text-align:left;
+    margin-top: 1.5cm;
+/*margin-top: 0cm;*/
+    line-height: 1.2em;
+  }
+
+  h3 {
+    text-align:left;
+    margin-top:1cm;
+/*margin-top: 0cm;*/
+    margin-bottom: 0.5cm;
+  }
+
+  h4 {
+    /*margin-top:1cm;*/
+    text-align:left;
+    margin-top: 0cm;
+    margin-bottom: 0.5cm;
+  }
+
+  blockquote {margin-left:1.5cm;margin-right:1.5cm;}
+  /*Georgia, - huonot numerot pystysuunnassa*/
+  body {
+    max-width:50em;margin-left:0.7cm;margin-right:0.7cm;
+    font-family: Verdana, Arial, sans-serif;
+    font-size:1em;
+    line-height: 1.2em;
+  }
+
+  a {
+    text-decoration:none;
+  }
+
+
+:link { color: navy; text-decoration:none;}
+:visited { color: blue; text-decoration:none; }
+a:active { color: navy; text-decoration:none;}
+
+a:hover {cursor:pointer; color: navy; text-decoration:underline; }
+
+
+  
+  sub {
+  font-size: 0.8em; /* gecko-pohjaisilla selaimilla sub n‰kyy liian ylh‰‰ll‰, ellei fonttia pienenn‰ */
+  }
+  
+  br {
+    margin:0;
+    padding:0;
+    line-height: 0.4;  /* pienempi v‰li monisteen kansia varten */
+  }
+
+  
+/* lukujen #-linkit */
+a.placeholder {
+font-size:0.7em;color:#ccccff;	text-decoration:none;
+}
+a.placeholder:visited {
+font-size:0.7em;color:#ccccff;	text-decoration:none;
+}
+a.placeholder:hover {
+font-size:0.7em;color:#aaaaff;	text-decoration:none;
+}
+
+
+
+
+
+p.links_h1 {
+ float:right;margin-bottom:0;padding-bottom:0;margin-top: 0;padding-top:1.55em;font-size:1em;
+}
+p.links_h2  {
+ float:right;margin-bottom:0;padding-bottom:0;margin-top: 0;padding-top:0;font-size:0.9em;
+}
+
+p.links {
+ float:right;margin-bottom:0;padding-bottom:0;margin-top: 0;padding-top:0;font-size:0.8em;
+}
+
+div.header {
+margin:0;
+/*padding: 1em 0 0.4em 0;*/
+padding:0;
+}
+
+div.header:hover .anchor {
+ visibility: visible;
+}
+
+/* uusi ankkurityyli, korvaa placeholderit.
+influenced by trac anchors */
+a.anchor:hover {
+ border: none;
+ font-weight:bold;
+color:#7777ff;	text-decoration:none;
+ vertical-align: text-bottom;
+}
+
+
+.anchor:link, .anchor:visited {
+ border: none;
+color:#aaaaff;	text-decoration:none;
+ vertical-align: text-bottom;
+}
+* > .anchor:link, * > .anchor:visited {
+ visibility: hidden;
+}
+
+
+
+
+/* pre-blokit, joissa sub/sup - spanit ymp‰rill‰, v‰hennet‰‰n paddingia */
+/*pre.esimerkki-western-sub {
+    font-size:1em;
+    border: 1px solid #000000; padding: 0cm 0.1cm; so-language: zxx
+}*/
+
+/*body {font-family: Verdana, Arial, sans-serif}*/
+
+.editor {
+position: absolute;
+height: 100%;
+width: 45em;
+top: 0em;
+left: 65em;
+border: 2px solid;
+padding: 15px 5px 5px 5px;
+border-radius: 15px;
+text-align: justify;
 }
