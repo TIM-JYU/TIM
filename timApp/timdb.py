@@ -27,7 +27,6 @@ class TimDb(object):
 
     @contract
     def __init__(self, db_path : 'str', files_root_path : 'str'):
-        self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.files_root_path = files_root_path
         
@@ -38,6 +37,7 @@ class TimDb(object):
         for path in [self.documents_path, self.blocks_path]:
             if not os.path.exists(path):
                 os.makedirs(path)
+        self.db = sqlite3.connect(db_path)
 
     @contract
     def addBlockToDb(self, document_id : 'int'):
