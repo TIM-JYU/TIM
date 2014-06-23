@@ -3,6 +3,7 @@ from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 # Asennetaan python, pip ja flask
+run apt-get update
 run apt-get install -y ghc
 run apt-get install -y cabal-install
 run apt-get install -y zlib1g-dev

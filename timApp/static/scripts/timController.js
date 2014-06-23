@@ -1,7 +1,8 @@
 var TimCtrl = angular.module('controllers', []);
 
-TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
+TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             sc.paragraphs = "";
+            sc.pluginPat = /\{plugin}\[(.*)]/;
             sc.getDocIds = function(){
                 http({method: 'GET', url: '/getDocuments/'}).
                     success(function(data, status, headers, config) {
@@ -15,6 +16,19 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             sc.documentList = [];
             sc.getDocIds();
             sc.convertHtml = new Markdown.getSanitizingConverter();
+            sc.convertHtml.hooks.chain("preBlockGamut", function (text, runBlockGamut) {
+                var match = sc.pluginPat.exec(text);
+                if(match != null){
+                    teksti = sc.fetchAndReplace(text, match[0], match[1]);
+                    return teksti;
+                }
+                else {
+                    return text;
+                }
+                
+            });
+
+
             sc.displayIndex = true;
             // Get document
             sc.getDocument = function(documentName){
@@ -34,14 +48,32 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
 
             sc.updateParagraphs = function(){
                 for(var i = 0; i < sc.paragraphs.length; i++){
-                    sc.paragraphs[i].html = sc.convertHtml.makeHtml(sc.paragraphs[i].text);
+                    var text = sc.paragraphs[i].text;
+                   // var match = sc.pluginPat.exec(sc.paragraphs[i].text);
+                   // if(match != null){
+                   //     text = sc.fetchAndReplace(text, match[0], match[1]);
+                   // }
+                    sc.paragraphs[i].html = sc.convertHtml.makeHtml(text);
                     sc.paragraphs[i].display = false;
                 }
             }
+            sc.fetchAndReplace = function(text, wholeMatch, match){ 
+                    pluginText = sc.callPlugin(match);
+                    receivedText = sc.tempVariable;
+                    return text.replace(wholeMatch, receivedText);
+            }
 
-
-
-
+            sc.tempVariable = ""; // TODO: only serves to act as temporary storage for data fetched, fix           
+            sc.callPlugin = function(plugin){
+                http.get('/pluginCall/' + plugin).
+                    success(function(data, status, headers, config) {
+                             sc.tempVariable = data;
+                    }).
+                    error(function(data, status, headers, config) {
+                             return "[unspecified plugin]"
+                    });
+            }
+          
             sc.editors = []; 
             sc.editing = false;
             sc.activeEdit = {"editId": "", "text" : "", "editor": ""};
@@ -68,7 +100,7 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
                     
                     sc.activeEdit.text = sc.paragraphs[elemId].text;
                     sc.activeEdit.editId = elem.par;
-                    
+                    sc.activeEdit['editor'].editor.focus();
                 }               
             };
             
@@ -113,24 +145,18 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
                     editor.getSession().setWrapLimitRange(0, 79);
                     $('.'+elem.par).get()[0].focus();
                     editor.getSession().on('change', function(e) {
-                            $('.'+elem.par).html(sc.convertHtml.makeHtml(sc.activeEdit['editor'].editor.getSession().getValue()));
+                            text = sc.activeEdit['editor'].editor.getSession().getValue();
+
+                            $('.'+elem.par).html(sc.convertHtml.makeHtml(text));
                     });
-                   /** editor.on('blur', function(e){
+                    editor.on('blur', function(e){
                             sc.setEditable(elem.par);
-                    });**/
+                    });
                     sc.activeEdit["editor"] = editor;
                     if(!sc.editorExists(elem)) {
                             sc.editors.push({"par" : elem.par, "editor": editor});
                     }
             };
-            sc.splitPar = function(elemIndex, elem){
-            //    sc.paragraphs[].text.splice(sc.find);
-            }
-            
-            sc.mergePar = function(elemIndex, elem){
-                    // Merge two paragraphs
-            }
-
             sc.saveEdits = function(elem, elemId){
                     mdtext = sc.activeEdit['editor'].editor.getSession().getValue();
                     sc.paragraphs[elemId].text = mdtext; 
@@ -145,12 +171,4 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', function(sc, http){
             }
 
         }]);
-
-
-
-
-
-
-
-
 
