@@ -149,9 +149,9 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
                             $('.'+elem.par).html(sc.convertHtml.makeHtml(text));
                     });
-                    editor.on('blur', function(e){
+/**                    editor.on('blur', function(e){
                             sc.setEditable(elem.par);
-                    });
+                    });**/
                     sc.activeEdit["editor"] = editor;
                     if(!sc.editorExists(elem)) {
                             sc.editors.push({"par" : elem.par, "editor": editor});
