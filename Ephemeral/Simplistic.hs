@@ -117,6 +117,13 @@ fetchBlock docID index (State st) = liftIO $ do
           -> return (Just $ Seq.index d index)
         _ -> return Nothing
 
+--fetchBlocks :: MonadIO m => DocID -> State -> m ([Block])
+--fetchBlocks docID (State st) = liftIO $ do
+--    doc <- LRU.lookup docID st
+--    case doc of
+--        Just (Doc d) -> return (map (Seq.index d) [0..Seq.length d]) --(Just $ Seq.index d index)
+--        _ -> return []
+
 replace :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> m ()
 replace docID index bs (State st) = liftIO $ do
     doc <- LRU.lookup docID st

@@ -8,3 +8,4 @@ if __name__ == "__main__":
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
     timdb.create()
     timdb.createDocumentFromBlocks('./static/data/ohjelmointi1', 'Ohjelmointi 1')
+    timdb.createDocumentFromBlocks('./static/data/ohjelmointi1', 'Ohjelmointi1-TESTAILUA')
