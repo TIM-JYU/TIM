@@ -13,7 +13,7 @@ from contracts import contract, new_contract
 
 # import timeit
 BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
-EPHEMERAL_URL = 'localhost:8001'
+EPHEMERAL_URL = 'http://localhost:8001'
 TABLE_NAMES = ['BlockEditAccess',
                'BlockViewAccess',
                'UserGroupMember',
@@ -33,7 +33,6 @@ class TimDb(object):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.files_root_path = files_root_path
-        self.json_cache_path = os.path.join(files_root_path, 'json_cache')
         
         # TODO: Make sure that db_path and files_root_path are valid!
         
@@ -55,12 +54,12 @@ class TimDb(object):
 
         document_path = self.getBlockPath(document_id)
         
-        #TODO:
-        #1. Make sure that the document exists.
+        #TODO: Is this method needed? We could just call modify so that the content has 2 paragraphs.
+        
         
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
-        #2. Call Ephemeral to add a block to the document. (not yet supported)
+        #Ephemeral does not yet support adding blocks.
         
         req = urllib.request.Request(url=EPHEMERAL_URL + '/add/' + str(document_id) + '/' + str(next_block_id), data=content, method='PUT')
         
@@ -122,9 +121,10 @@ class TimDb(object):
         doc_id = self.createDocument(document_name)
         copyfile(document_file, self.getDocumentPath(doc_id))
         
-        #TODO: Load the document to Ephemeral
-        with open(document_file, 'r') as f:
-            req = urllib.request.Request(url=EPHEMERAL_URL + '/load/' + str(doc_id), data=f.read(), method='PUT')
+        print('doc_id is: ' + str(doc_id))
+        
+        with open(document_file, 'rb') as f:
+            req = urllib.request.Request(url=EPHEMERAL_URL + '/load/' + str(doc_id), data=f.read(), method='POST')
             response = urllib.request.urlopen(req)
             print(response.read())
         
@@ -150,9 +150,6 @@ class TimDb(object):
         :returns: The path of the block.
         """
         return os.path.join(self.blocks_path, str(block_id))
-    
-    def getCachePath(self, block_id : 'int'):
-        return os.path.join(self.json_cache_path, str(block_id))
     
     @contract
     def getDocument(self, document_id : 'int') -> 'row':
@@ -212,6 +209,8 @@ class TimDb(object):
         :returns: The blocks of the document.
         """
         #TODO: Get blocks from Ephemeral.
+        #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
+        
     
     @contract
     def getDocumentPath(self, document_id : 'int') -> 'str':
@@ -224,6 +223,13 @@ class TimDb(object):
 
     @contract
     def getImagePath(self, image_id : 'int', image_filename : 'str'):
+        """Gets the path of an image.
+        
+        :param image_id: The id of the image.
+        :param image_filename: The filename of the image.
+        :returns: The path of the image file.
+        """
+        
         return os.path.join(self.files_root_path, 'img', str(image_id), image_filename)
 
     @contract
@@ -233,11 +239,6 @@ class TimDb(object):
         cursor = self.db.cursor()
         cursor.execute('select * from User where id = ?', [user_id])
         return cursor.fetchone()
-    
-    def splitDocumentToBlocks(self, document_path : 'str'):
-        """Splits the given document into blocks."""
-        # TODO (this function may not be needed if this is implemented with Pandoc).
-        
         
     @contract
     def modifyMarkDownBlock(self, document_id : 'int', block_id : 'int', new_content : 'str'):
@@ -253,15 +254,12 @@ class TimDb(object):
         
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
-        #2. Call Ephemeral to modify the block.
-        
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(block_id), data=new_content, method='PUT')
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
         response = urllib.request.urlopen(req)
-        responseStr = response.read()
+        responseStr = str(response.read())
         print(responseStr)
         
-        #3. Check return value (success/fail).
-        #4. Does Ephemeral save it to FS?
+        #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
     def saveImage(self, image_data : 'bytes', image_filename : 'str'):
         """Saves an image to the database."""
