@@ -1,6 +1,5 @@
 # Avaa docker
 
-
 Suorita seuraava komento `Ephemeral` hakemistossa: 
 
     docker run -i -t -v $PWD:/Ephemeral ephemeral
@@ -49,10 +48,11 @@ Voit kokeilla `Ephemeralia` vaikka näin:
 
 Nykyisellään `Ephemeral` määrittelee reitit:
 
-* POST /load/:docID        => Lataa cacheen kokonaisen dokumentin
-* GET  /:docID/:blockIndex => Hakee yksittäisen blokin
-* GET /diff/:docID/:docID  => Hakee diffin (JSON)
-* PUT  /:docID/:blockIndex => Korvaa yksittäisen blokin
+* POST /load/:docID                => Lataa cacheen kokonaisen dokumentin
+* GET  /:docID/:blockIndex         => Hakee yksittäisen blokin
+* GET  /diff/:docID/:docID         => Hakee diffin (JSON)
+* GET  /diff3/:docID/:docID/:docID => Hakee diff3:n (JSON?)
+* PUT  /:docID/:blockIndex         => Korvaa yksittäisen blokin
 
 
 # Tulevaisuudessa..
@@ -60,5 +60,3 @@ Nykyisellään `Ephemeral` määrittelee reitit:
 Nyt meni suurin osa ajasta siihen, että kokosin toimivan buildi
 ympäristön. Näinollen järjelliset virheilmoitukset, diffit ja merget
 jäävät tulevaisuuteen.
-
-
