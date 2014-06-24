@@ -41,7 +41,7 @@ class TimDb(object):
             if not os.path.exists(path):
                 os.makedirs(path)
     
-    #@contract
+    @contract
     def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
         """Adds a new markdown block to the specified document.
         
@@ -68,8 +68,52 @@ class TimDb(object):
         print(response.read())
         #3. Check return value (success/fail).
         #4. Does Ephemeral save it to FS?
-        
+        return 0
     
+    def addNote(self, user_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
+        """Adds a note to the document.
+        
+        :param user_id: The user who created the note.
+        :param content: The content of the note.
+        :param block_id: The block to which the comment is added.
+        :param block_specifier: A specifier that tells a more accurate position of the note.
+               Currently the index of the paragraph within document.
+        
+        """
+        cursor = self.db.cursor()
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, 0, BLOCKTYPE.Note.value])
+        note_id = cursor.lastrowid
+        assert note_id is not None, 'note_id was None'
+        cursor.execute('insert into BlockRelation (parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?)',
+                       [block_specifier, block_id, 0])
+        
+        with open(self.getBlockPath(note_id), encoding='utf-8') as f:
+            f.write(content)
+        
+        self.db.commit()
+        
+        return
+    
+    def getNotes(self, user_id : 'int', block_id : 'int'):
+        """Gets all the notes for a block.
+        
+        :param user_id: The id of the user whose notes will be fetched.
+        :param block_id: The id of the block whose notes will be fetched.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""select id, UserGroup_id from Block where id = ? and type_id = ? and UserGroup_id in
+                         (select UserGroup_id from UserGroupMember where User_id = ?)""", [block_id, BLOCKTYPE.Note.value, user_id])
+        rows = [x for x in cursor.fetchall()]
+        
+        notes = []
+        for row in rows:
+            note_id = row[0]
+            note={'id' : note_id}
+            with open(self.getBlockPath(id)) as f:
+                note['content'] = f.read() #TODO: Check if this is correct syntax.
+            notes.append(note)
+        return notes
+        
     def clear(self):
         """Clears the contents of all database tables."""
         for table in TABLE_NAMES:
