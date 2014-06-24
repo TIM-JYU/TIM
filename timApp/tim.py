@@ -9,15 +9,16 @@ import os
 import verifyPath
 from os import listdir
 from os.path import isfile,join
-from timdb import TimDb
 from containerLink import callPlugin
+from timdb import TimDb
+
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
 
 # Load default config and override config from an environment variable
 app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'tim.db'),
+    DATABASE=os.path.join(app.root_path, 'tim_files/tim.db'),
     DEBUG=True,
     SECRET_KEY='development key',
     USERNAME='admin',
@@ -96,7 +97,15 @@ def callHello(plugin):
 def hello():
     html = request.get_json()['html']
     
-
+@app.route("/view/<doc_id>")
+def viewDocument(doc_id):
+    timdb = getTimDb()
+    try:
+        #texts = timdb.getDocumentBlocks(int(doc_id))
+        doc = timdb.getDocument(int(doc_id))
+        return render_template('view.html', docID=doc['id'], docName=doc['name'])
+    except ValueError:
+        return redirect(url_for('goat'))
 
 @app.route("/")
 def getFile():
