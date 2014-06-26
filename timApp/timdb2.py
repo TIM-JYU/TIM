@@ -9,6 +9,7 @@ import sqlite3
 import time
 import urllib.request
 from contracts import contract, new_contract
+from timApp.timdb import BLOCKTYPE
 
 
 # import timeit
@@ -61,7 +62,7 @@ class TimDb(object):
         
         #Ephemeral does not yet support adding blocks.
         
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/add/' + str(document_id) + '/' + str(next_block_id), data=content, method='PUT')
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/add/{}/{}'.format(document_id, next_block_id), data=content, method='PUT')
         
         response = urllib.request.urlopen(req)
         
@@ -91,6 +92,8 @@ class TimDb(object):
             f.write(content)
         
         self.db.commit()
+        
+        #TODO: Do notes need to be versioned?
         
         return
     
@@ -158,6 +161,22 @@ class TimDb(object):
         return document_id
 
     @contract
+    def deleteParagraph(self, par_id : 'int', document_id : 'int'):
+        """Deletes a paragraph from a document.
+        
+        :param document_id: The id of the document from which to delete the paragraph.
+        :param par_id: The index of the paragraph in the document that should be deleted.
+        """
+        
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/delete/{}/{}'.format(document_id, par_id), method='POST')
+        response = urllib.request.urlopen(req)
+        print(response.read())
+        
+        #TODO: Check for errors.
+        #TODO: Commit changes in VCS.
+        
+        
+    @contract
     def importDocument(self, document_file : 'str', document_name : 'str') -> 'int':
         """Imports the specified document in the database."""
         
@@ -166,7 +185,7 @@ class TimDb(object):
         copyfile(document_file, self.getDocumentPath(doc_id))
         
         with open(document_file, 'rb') as f:
-            req = urllib.request.Request(url=EPHEMERAL_URL + '/load/' + str(doc_id), data=f.read(), method='POST')
+            req = urllib.request.Request(url=EPHEMERAL_URL + '/load/{}'.format(doc_id), data=f.read(), method='POST')
             response = urllib.request.urlopen(req)
             print(response.read())
         
@@ -233,9 +252,7 @@ class TimDb(object):
         :returns: A row representing the document.
         """
         cursor = self.db.cursor()
-        cursor.execute('select * from Block where id = ?', [document_id])
-        
-        #TODO: Assert that type_id == Document
+        cursor.execute('select * from Block where id = ? and type_id = ?', [document_id, BLOCKTYPE.Document.value])
         
         return cursor.fetchone()
     
@@ -294,7 +311,7 @@ class TimDb(object):
         notEnd = True
         blockIndex = 0
         while notEnd:
-            req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(blockIndex), method='GET')
+            req = urllib.request.Request(url=EPHEMERAL_URL + '/{}/{}'.format(document_id, blockIndex), method='GET')
             response = urllib.request.urlopen(req)
             responseStr = str(response.read(), encoding='utf-8')
             notEnd = responseStr != '{"Error":"No block found"}'
@@ -351,7 +368,7 @@ class TimDb(object):
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
         #TODO: Use string formatting here.
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/{}/{}'.format(document_id, block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
         response = urllib.request.urlopen(req)
         responseStr = str(response.read())
         print(responseStr)
