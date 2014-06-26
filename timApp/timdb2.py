@@ -6,10 +6,14 @@ from enum import Enum
 import os
 from shutil import copyfile
 import sqlite3
-import time
+#import time
 import urllib.request
 from contracts import contract, new_contract
-from timApp.timdb import BLOCKTYPE
+#from vcstools import GitClient # vcstools doesn't seem to support creating repos...
+import gitpylib.repo
+import gitpylib.sync
+import gitpylib.file
+import gitpylib.common
 
 
 # import timeit
@@ -31,16 +35,27 @@ class TimDb(object):
 
     @contract
     def __init__(self, db_path : 'str', files_root_path : 'str'):
-        self.db = sqlite3.connect(db_path)
-        self.db.row_factory = sqlite3.Row
         self.files_root_path = files_root_path
         
         # TODO: Make sure that db_path and files_root_path are valid!
         
-        self.blocks_path = os.path.join(files_root_path, 'blocks')
+        self.blocks_path = os.path.join(os.path.abspath(files_root_path), 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
                 os.makedirs(path)
+        self.db = sqlite3.connect(db_path)
+        self.db.row_factory = sqlite3.Row
+        
+        
+        #Initialize repo to root path:
+        
+        cwd = os.getcwd()
+        os.chdir(files_root_path)
+        gitpylib.repo.init()
+        
+        #Restore old working directory (TODO: is this needed?)
+        os.chdir(cwd)
+        
     
     @contract
     def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
@@ -62,7 +77,7 @@ class TimDb(object):
         
         #Ephemeral does not yet support adding blocks.
         
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/add/{}/{}'.format(document_id, next_block_id), data=content, method='PUT')
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/add/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'), method='PUT')
         
         response = urllib.request.urlopen(req)
         
@@ -113,7 +128,7 @@ class TimDb(object):
             note_id = row[0]
             note={'id' : note_id}
             with open(self.getBlockPath(id)) as f:
-                note['content'] = f.read() #TODO: Check if this is correct syntax.
+                note['content'] = f.read()
             notes.append(note)
         return notes
         
@@ -156,7 +171,19 @@ class TimDb(object):
             self.db.rollback()
             raise
         
-        # TODO: Put the document file block under version control (using a Git module maybe?).
+        cwd = os.getcwd()
+        os.chdir(self.files_root_path)
+        gitpylib.file.stage(document_path)
+        # TODO: Set author for the commit (need to call safe_git_call).
+        gitpylib.sync.commit([document_path], 'Created document: %s' % name, skip_checks=False, include_staged_files=False)
+        output, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
+        # To get all versions (hashes) of a file:
+        # git log --format=%H filename
+        # To get also timestamps:
+        # git log --format=%H%ad filename
+        
+        os.chdir(cwd)
+        print(output)
         # TODO: Should the empty doc be put in Ephemeral?
         return document_id
 
@@ -168,12 +195,12 @@ class TimDb(object):
         :param par_id: The index of the paragraph in the document that should be deleted.
         """
         
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/delete/{}/{}'.format(document_id, par_id), method='POST')
+        req = urllib.request.Request(url=EPHEMERAL_URL + '/delete/{}/{}'.format(document_id, par_id), method='PUT')
         response = urllib.request.urlopen(req)
         print(response.read())
         
         #TODO: Check for errors.
-        #TODO: Commit changes in VCS.
+        #TODO: Get the new document from Ephemeral and commit the change in VCS.
         
         
     @contract
