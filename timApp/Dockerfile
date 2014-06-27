@@ -19,7 +19,7 @@ run pip3 install hypothesis
 run apt-get -y --purge remove python3-pip
 
 # Lis‰t‰‰n alkuper‰inen hakemisto polkuun /service
-add . /service
+run mkdir /service
 
 # Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
@@ -40,4 +40,4 @@ expose 5000
 # Kun container k‰ynnistyy, suoritetaan:
 cmd cd /service/ && python3 initdb.py && python3 tim.py
 
-volume /tim_files/:/service/tim_files/
+#volume /tim_files/:/service/tim_files/
