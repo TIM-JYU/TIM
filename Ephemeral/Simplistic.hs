@@ -4,6 +4,7 @@ import qualified Text.Pandoc as PDC
 import Data.Cache.LRU.IO as LRU
 import qualified Data.Foldable as F
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as LT
 import Data.List
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString as BS
@@ -20,21 +21,28 @@ import Snap.Http.Server
 import qualified Data.Sequence as Seq
 import Data.Sequence (Seq)
 import EphemeralPrelude
+import Text.Blaze.Html.Renderer.Text
 
 newtype DocID = DocID T.Text deriving(Eq,Ord,Show)
+
 instance Readable DocID where
     fromBS = return . DocID . T.decodeUtf8
+
 instance ToJSON DocID where
     toJSON (DocID t) = toJSON t 
 
-type Block = T.Text
+data Block = Block {markdown::T.Text, html::LT.Text} deriving Eq
 newtype Doc = Doc {fromDoc::Seq Block}
 
 convert :: BS.ByteString -> Doc
 convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 $ bs) of
-              PDC.Pandoc _ blocks -> Doc . Seq.fromList . 
-                    map (T.pack . PDC.writeMarkdown PDC.def . PDC.Pandoc mempty . box) 
-                    $ blocks
+              PDC.Pandoc _ blocks -> Doc . Seq.fromList .  map convertBlock $ blocks
+            where 
+                convertBlock t = let  pdc = PDC.Pandoc mempty . box $ t
+                                 in Block
+                                     (T.pack     . PDC.writeMarkdown PDC.def $ pdc)
+                                     (renderHtml . PDC.writeHtml PDC.def     $ pdc)
+                            
 
 box :: t -> [t]
 box x = [x]
@@ -148,8 +156,15 @@ main = do
             docID <- requireParam "docID"
             doc <- fetchDoc docID state
             case doc of
-                Just  (Doc d) -> traverse (\x -> writeText x >> writeText "\n\n") d >> return ()
-                Nothing -> writeBS "{\"Error\":\"No block found\"}" 
+                Just  (Doc d) -> traverse (\x -> writeText (markdown x) >> writeText "\n\n") d >> return ()
+                Nothing -> writeBS "{\"Error\":\"No doc found\"}" 
+         ),
+         ("/html/:docID", method GET $ do
+            docID <- requireParam "docID"
+            doc <- fetchDoc docID state
+            case doc of
+                Just  (Doc d) -> traverse (\x -> writeLazyText (html x) >> writeText "\n\n") d >> return ()
+                Nothing -> writeBS "{\"Error\":\"No doc found\"}" 
          ),
          (":docID/:idx", method GET $ do
             docID <- requireParam "docID"
@@ -157,7 +172,7 @@ main = do
             block <- fetchBlock docID idx state
             case block of 
                 Nothing -> writeBS "{\"Error\":\"No block found\"}" 
-                Just  r -> writeText r
+                Just  r -> writeText (markdown r)
          ),
          (":docID/:idx", method PUT $ do
             docID <- requireParam "docID"
