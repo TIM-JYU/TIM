@@ -8,6 +8,7 @@ class EphemeralClient(object):
     
     @contract
     def __init__(self, server_path: 'str'):
+        """Initializes EphemeralClient with the specified server path."""
         self.server_path = server_path
 
     @contract
@@ -26,7 +27,8 @@ class EphemeralClient(object):
         
         return True
 
-    def deleteBlock(self, document_id, block_id):
+    @contract
+    def deleteBlock(self, document_id : 'int', block_id : 'int') -> 'bool':
         """Deletes a block from a document.
         
         :param document_id: The id of the document.
@@ -43,24 +45,48 @@ class EphemeralClient(object):
 
     @contract
     def diff(self, first_document_id : 'int', second_document_id : 'int') -> 'str':
+        """Performs a diff between two documents.
+        
+        :param first_document_id: The id of the first document.
+        :param second_document_id: The id of the second document.
+        :returns: (TODO)
+        """
         req = urllib.request.Request(url=self.server_path + '/diff/{}/{}'.format(first_document_id, second_document_id), method='GET')
         response = urllib.request.urlopen(req)
         return str(response.read(), encoding='utf-8')
     
     @contract
     def diff3(self, first_document_id : 'int', second_document_id : 'int', third_document_id : 'int') -> 'str':
+        """Performs a diff between three documents.
+        
+        :param first_document_id: The id of the first document.
+        :param second_document_id: The id of the second document.
+        :param third_document_id: The id of the third document.
+        :returns: (TODO)
+        """
         req = urllib.request.Request(url=self.server_path + '/diff/{}/{}'.format(first_document, second_document), method='GET')
         response = urllib.request.urlopen(req)
         return str(response.read(), encoding='utf-8')
     
     @contract
     def getBlock(self, document_id : 'int', block_id : 'int') -> 'str':
+        """Gets an individual block from a document.
+        
+        :param document_id: The id of the document.
+        :param block_id: The id of the block.
+        :returns: The content of the block.
+        """
         req = urllib.request.Request(url=self.server_path + '/{}/{}'.format(document_id, block_id), method='GET')
         response = urllib.request.urlopen(req)
         return str(response.read(), encoding='utf-8')
     
     @contract
-    def getDocumentAsBlocks(self, document_id: 'int') -> 'str':
+    def getDocumentAsBlocks(self, document_id: 'int') -> 'list(str:str)':
+        """Gets the document as a list of blocks.
+        
+        :param document_id: The id of the document.
+        :returns: The document as a list of blocks.
+        """
         # TODO: Ephemeral doesn't support this yet.
         req = urllib.request.Request(url=self.server_path + '/{}'.format(document_id), method='GET')
         return ''
@@ -94,6 +120,12 @@ class EphemeralClient(object):
     
     @contract
     def modifyBlock(self, document_id : 'int', block_id : 'int', new_content: 'str') -> 'bool':
+        """Modifies the specified block in the given document.
+        
+        :param document_id: The id of the document.
+        :param block_id: The id of the block to be modified.
+        :param new_content: The new content of the block.
+        """
         req = urllib.request.Request(url=self.server_path + '/{}/{}'.format(document_id, block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
         response = urllib.request.urlopen(req)
         responseStr = str(response.read(), encoding='utf-8')
