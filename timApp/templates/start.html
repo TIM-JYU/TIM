@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <title>TIM</title>
@@ -19,23 +19,33 @@
     <style type="text/css" media="screen">
     .editor { 
         position: absolute;
-        height: 100%;
-        width:45em;       
         top: 0em; 
-        left: 60em;
+        height: 100%;
+        text-align: left;    
+    }
+    </style>
+    <style type="text/css" media="screen and (max-device-width: 1200px)">
+    .editor { 
+        position: relative;
+        top: 0em; 
+		left: 0em;
+        height: 5em;
+        text-align: left;    
+    }
+    </style>
+	<!--
+        width:45em;       
         border: 2px solid;
         padding: 15px 5px 5px 5px;
         border-radius: 15px;      
-        text-align: justify;  
-    }
-    </style>
+		-->
     
     <script type="text/javascript" src="{{url_for('static', filename='scripts/timApp.js')}}"></script>
 
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->  
-    <script>
+    <script> 
         
     </script>
 </head>
