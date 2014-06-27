@@ -31,6 +31,9 @@ instance Readable DocID where
 instance ToJSON DocID where
     toJSON (DocID t) = toJSON t 
 
+instance ToJSON a => ToJSON (Seq a) where
+    toJSON = toJSON . F.toList
+
 data Block = Block {markdown::T.Text, html::LT.Text} deriving Eq
 newtype Doc = Doc {fromDoc::Seq Block}
 
@@ -157,6 +160,13 @@ main = do
             doc <- fetchDoc docID state
             case doc of
                 Just  (Doc d) -> traverse (\x -> writeText (markdown x) >> writeText "\n\n") d >> return ()
+                Nothing -> writeBS "{\"Error\":\"No doc found\"}" 
+         ),
+         ("/json-html/:docID", method GET $ do
+            docID <- requireParam "docID"
+            doc <- fetchDoc docID state
+            case doc of
+                Just  (Doc d) -> writeLBS . encode . fmap html $ d
                 Nothing -> writeBS "{\"Error\":\"No doc found\"}" 
          ),
          ("/html/:docID", method GET $ do
