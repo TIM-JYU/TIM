@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, Flask, redirect, url_for
-from flask import render_template, render_template_string
+from flask import render_template
 from flask import g
 from flask import request
 from ReverseProxied import ReverseProxied
 import json
 import os
-import verifyPath
-from os import listdir
-from os.path import isfile,join
 from containerLink import callPlugin
 from timdb import TimDb
 
