@@ -2,12 +2,16 @@
 An Ephemeral client that can communicate with Ephemeral server.
 '''
 import urllib.request
-from contracts import contract
+import requests
+import json
+from contracts import contract, new_contract
+
+new_contract('bytes', bytes)
 
 class EphemeralClient(object):
     
     @contract
-    def __init__(self, server_path: 'str'):
+    def __init__(self, server_path : 'str'):
         """Initializes EphemeralClient with the specified server path."""
         self.server_path = server_path
 
@@ -19,7 +23,7 @@ class EphemeralClient(object):
         :param next_block_id: The id of the following block.
         :param content: The content of the block.
         """
-        req = urllib.request.Request(url=self.server_path + '/add/{}/{}'.format(document_id, next_block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
+        req = urllib.request.Request(url=self.server_path + '/add/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'), method='PUT')
         response = urllib.request.urlopen(req)
         responseStr = str(response.read(), encoding='utf-8')
         
@@ -35,7 +39,7 @@ class EphemeralClient(object):
         :param block_id: The id of the block to be deleted.
         :returns: True if deletion was successful, false otherwise.
         """
-        req = urllib.request.Request(url=self.server_path + '/delete/{}/{}'.format(document_id, next_block_id), method='PUT')
+        req = urllib.request.Request(url=self.server_path + '/delete/{}/{}'.format(document_id, block_id), method='PUT')
         response = urllib.request.urlopen(req)
         responseStr = str(response.read(), encoding='utf-8')
         
@@ -57,14 +61,14 @@ class EphemeralClient(object):
     
     @contract
     def diff3(self, first_document_id : 'int', second_document_id : 'int', third_document_id : 'int') -> 'str':
-        """Performs a diff between three documents.
+        """Performs a diff among three documents.
         
         :param first_document_id: The id of the first document.
         :param second_document_id: The id of the second document.
         :param third_document_id: The id of the third document.
         :returns: (TODO)
         """
-        req = urllib.request.Request(url=self.server_path + '/diff/{}/{}'.format(first_document, second_document), method='GET')
+        req = urllib.request.Request(url=self.server_path + '/diff/{}/{}'.format(first_document_id, second_document_id), method='GET')
         response = urllib.request.urlopen(req)
         return str(response.read(), encoding='utf-8')
     
@@ -81,15 +85,16 @@ class EphemeralClient(object):
         return str(response.read(), encoding='utf-8')
     
     @contract
-    def getDocumentAsBlocks(self, document_id: 'int') -> 'list(str:str)':
-        """Gets the document as a list of blocks.
+    def getDocumentAsHtmlBlocks(self, document_id: 'int') -> 'list(str)':
+        """Gets the document as a list of HTML blocks.
         
         :param document_id: The id of the document.
-        :returns: The document as a list of blocks.
+        :returns: The document as a list of HTML blocks.
         """
-        # TODO: Ephemeral doesn't support this yet.
-        req = urllib.request.Request(url=self.server_path + '/{}'.format(document_id), method='GET')
-        return ''
+        req = urllib.request.Request(url=self.server_path + '/json-html/{}'.format(document_id), method='GET')
+        response = urllib.request.urlopen(req)
+        responseStr = str(response.read(), encoding='utf-8')
+        return json.loads(responseStr)
     
     @contract
     def getDocumentFullText(self, document_id : 'int') -> 'str':
@@ -126,10 +131,13 @@ class EphemeralClient(object):
         :param block_id: The id of the block to be modified.
         :param new_content: The new content of the block.
         """
-        req = urllib.request.Request(url=self.server_path + '/{}/{}'.format(document_id, block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
-        response = urllib.request.urlopen(req)
-        responseStr = str(response.read(), encoding='utf-8')
+        #req = urllib.request.Request(url=self.server_path + '/{}/{}'.format(document_id, block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
+        #response = urllib.request.urlopen(req)
+        #responseStr = str(response.read(), encoding='utf-8')
         
+        # requests library is much simpler to use:
+        r = requests.put(url=self.server_path + '/{}/{}'.format(document_id, block_id), data=bytes(new_content, encoding='utf-8'))
+        str = r.text
         # TODO: Handle errors.
         
         return True

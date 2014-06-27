@@ -175,21 +175,22 @@ class TimDb(object):
             self.db.rollback()
             raise
         
-        cwd = os.getcwd()
-        os.chdir(self.files_root_path)
-        gitpylib.file.stage(document_path)
-        # TODO: Set author for the commit (need to call safe_git_call).
-        gitpylib.sync.commit([document_path], 'Created document: %s' % name, skip_checks=False, include_staged_files=False)
-        output, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
-        # To get all versions (hashes) of a file:
-        # git log --format=%H filename
-        # To get also timestamps:
-        # git log --format=%H%ad filename
+        # Don't commit to Git at this point.
+        #sha_hash = self.gitCommit(document_path, 'Created document: %s' % name, 'docker')
+        #print(sha_hash)
         
-        os.chdir(cwd)
-        print(output)
         # TODO: Should the empty doc be put in Ephemeral?
         return document_id
+
+    def gitCommit(self, file_path : 'str', commit_message: 'str', author : 'str'):
+        cwd = os.getcwd()
+        os.chdir(self.files_root_path)
+        gitpylib.file.stage(file_path)
+        # TODO: Set author for the commit (need to call safe_git_call).
+        gitpylib.sync.commit([file_path], commit_message, skip_checks=False, include_staged_files=False)
+        latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
+        os.chdir(cwd)
+        return latest_hash.rstrip()
 
     @contract
     def deleteParagraph(self, par_id : 'int', document_id : 'int'):
@@ -218,6 +219,8 @@ class TimDb(object):
             ec = EphemeralClient(EPHEMERAL_URL)
             ec.loadDocument(doc_id, f.read())
         
+        sha_hash = self.gitCommit(self.getDocumentPath(doc_id), 'Imported document: %s' % document_name, 'docker')
+        print(sha_hash)
         return doc_id
     
     @contract
@@ -341,7 +344,7 @@ class TimDb(object):
         blockIndex = 0
         ec = EphemeralClient(EPHEMERAL_URL)
         while notEnd:
-            responseStr = ec.getBlock(document_id, block_id)
+            responseStr = ec.getBlock(document_id, blockIndex)
             notEnd = responseStr != '{"Error":"No block found"}'
             if notEnd:
                 blocks.append({"par": str(blockIndex), "text" : responseStr})
@@ -359,6 +362,16 @@ class TimDb(object):
         """
         return os.path.join(self.blocks_path, str(document_id))
 
+    @contract
+    def getDocumentVersions(self, document_id : 'int') -> 'list(dict(str:str))':
+        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad')
+        lines = output.splitlines()
+        versions = []
+        for line in lines:
+            pieces = line.split('|')
+            versions.append({'hash' : pieces[0], 'timestamp' : pieces[1]})
+        return versions
+        
     @contract
     def getImagePath(self, image_id : 'int', image_filename : 'str'):
         """Gets the path of an image.
@@ -397,6 +410,13 @@ class TimDb(object):
         
         ec = EphemeralClient(EPHEMERAL_URL)
         ec.modifyBlock(document_id, block_id, new_content)
+        doc_content = ec.getDocumentFullText(document_id)
+        
+        with open(self.getDocumentPath(document_id), 'w', encoding='utf-8') as f:
+            f.write(doc_content)
+            
+        sha_hash = self.gitCommit(document_path, 'Modified document with id: %d' % document_id, 'docker')
+        print(sha_hash)
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
