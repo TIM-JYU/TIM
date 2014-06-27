@@ -50,6 +50,8 @@ Nykyisellään `Ephemeral` määrittelee reitit:
 
 * POST /load/:docID                => Lataa cacheen kokonaisen dokumentin
 * GET  /:docID/:blockIndex         => Hakee yksittäisen blokin
+* GET  /html/:docID                => Hakee koko dokumentin HTML:nä
+* GET  /json-html/:docID           => Hakee koko dokumentin blokkeina HTML:nä
 * GET  /diff/:docID/:docID         => Hakee diffin (JSON)
 * GET  /diff3/:docID/:docID/:docID => Hakee diff3:n (JSON?)
 * PUT  /:docID/:blockIndex         => Korvaa yksittäisen blokin
