@@ -2,19 +2,20 @@
 Another version of TimDb that stores documents as whole.
 '''
 
+# TODO: This file is getting rather large. It should probably be divided somehow.
+
 from enum import Enum
 import os
 from shutil import copyfile
 import sqlite3
 #import time
-import urllib.request
 from contracts import contract, new_contract
 #from vcstools import GitClient # vcstools doesn't seem to support creating repos...
 import gitpylib.repo
 import gitpylib.sync
 import gitpylib.file
 import gitpylib.common
-
+from ephemeralclient import EphemeralClient
 
 # import timeit
 BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
@@ -35,6 +36,11 @@ class TimDb(object):
 
     @contract
     def __init__(self, db_path : 'str', files_root_path : 'str'):
+        """Initialized TimDB with the specified database and root path.
+        
+        :param db_path: The path of the database file.
+        :param files_root_path: The root path where all the files will be stored.
+        """
         self.files_root_path = files_root_path
         
         # TODO: Make sure that db_path and files_root_path are valid!
@@ -77,11 +83,9 @@ class TimDb(object):
         
         #Ephemeral does not yet support adding blocks.
         
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/add/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'), method='PUT')
+        ec = EphemeralClient(EPHEMERAL_URL)
+        success = ec.addBlock(document_id, next_block_id, content)
         
-        response = urllib.request.urlopen(req)
-        
-        print(response.read())
         #3. Check return value (success/fail).
         #4. Does Ephemeral save it to FS?
         return 0
@@ -195,9 +199,8 @@ class TimDb(object):
         :param par_id: The index of the paragraph in the document that should be deleted.
         """
         
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/delete/{}/{}'.format(document_id, par_id), method='PUT')
-        response = urllib.request.urlopen(req)
-        print(response.read())
+        ec = EphemeralClient(EPHEMERAL_URL)
+        success = ec.deleteBlock(document_id, par_id)
         
         #TODO: Check for errors.
         #TODO: Get the new document from Ephemeral and commit the change in VCS.
@@ -212,9 +215,8 @@ class TimDb(object):
         copyfile(document_file, self.getDocumentPath(doc_id))
         
         with open(document_file, 'rb') as f:
-            req = urllib.request.Request(url=EPHEMERAL_URL + '/load/{}'.format(doc_id), data=f.read(), method='POST')
-            response = urllib.request.urlopen(req)
-            print(response.read())
+            ec = EphemeralClient(EPHEMERAL_URL)
+            ec.loadDocument(doc_id, f.read())
         
         return doc_id
     
@@ -320,7 +322,7 @@ class TimDb(object):
         
         assert os.path.exists(document_path), 'document does not exist: %d' % document_id
         
-        #TODO: Get ids from Ephemeral.
+        #TODO: Get ids of the document from Ephemeral. If the ids are indexes, maybe only count is needed?
     
     @contract
     def getDocumentBlocks(self, document_id : 'int') -> 'list(dict[2](str: str))':
@@ -332,15 +334,14 @@ class TimDb(object):
         #TODO: Get blocks from Ephemeral.
         #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
         
-        # So let's make a quick hack to fetch the block.
+        # So let's make a quick hack to fetch the blocks. This is VERY slow; it fetches about one block per second when running locally on Windows machine.
         responseStr = None
         blocks = []
         notEnd = True
         blockIndex = 0
+        ec = EphemeralClient(EPHEMERAL_URL)
         while notEnd:
-            req = urllib.request.Request(url=EPHEMERAL_URL + '/{}/{}'.format(document_id, blockIndex), method='GET')
-            response = urllib.request.urlopen(req)
-            responseStr = str(response.read(), encoding='utf-8')
+            responseStr = ec.getBlock(document_id, block_id)
             notEnd = responseStr != '{"Error":"No block found"}'
             if notEnd:
                 blocks.append({"par": str(blockIndex), "text" : responseStr})
@@ -394,11 +395,8 @@ class TimDb(object):
         
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
-        #TODO: Use string formatting here.
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/{}/{}'.format(document_id, block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
-        response = urllib.request.urlopen(req)
-        responseStr = str(response.read())
-        print(responseStr)
+        ec = EphemeralClient(EPHEMERAL_URL)
+        ec.modifyBlock(document_id, block_id, new_content)
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
