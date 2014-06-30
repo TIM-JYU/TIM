@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>{{docName}} - TIM</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script
+	src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
+<script
+	src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
+<link rel="stylesheet"
+	href="{{url_for('static', filename='stylesheet.css')}}">
+<link
+	href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
+<link
+	href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
+<script src="{{url_for('static', filename='scripts/timController.js')}}"></script>
+<script
+	src="{{url_for('static', filename='scripts/viewController.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
+<script type="text/javascript"
+	src="{{url_for('static', filename='scripts/getDocuments.js')}}"></script>
+<style type="text/css" media="screen">
+.editor {
+	position: absolute;
+	height: 100%;
+	width: 45em;
+	top: 0em;
+	border: 2px solid;
+	padding: 15px 5px 5px 5px;
+	border-radius: 15px;
+	text-align: left;
+}
+</style>
+
+<script type="text/javascript"
+	src="{{url_for('static', filename='scripts/timApp.js')}}"></script>
+
+<!--[if lt IE 9]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+<script>
+        
+    </script>
+</head>
+<body style="background-color: #CCFFFF" ng-app="timApp"
+	ng-controller="ViewCtrl" ng-init="getDocumentAndNotes({{docID|e}})">
+	<div class="material" data-docid="{{docID|e}}">
+		<h1>{{docName}}</h1>
+		<img src="{{url_for('static', filename='images/loading.gif')}}"
+			ng-show="displayIndex">
+
+		<div class="paragraph" ng-repeat="par in paragraphs">
+			<div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once
+				ng-bind-html="par.html"></div>
+			<button class="editButton" ng-click="">Add note</button>
+			<div ng-if="par.notes.length > 0" class="notes" bind-once>
+				<div class="note" ng-repeat="note in par.notes"
+					ng-bind-html="note.html"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

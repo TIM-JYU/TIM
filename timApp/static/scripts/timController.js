@@ -100,7 +100,11 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                     
                     sc.activeEdit.text = sc.paragraphs[elemId].text;
                     sc.activeEdit.editId = elem.par;
-                    sc.activeEdit['editor'].editor.focus();
+					var iOS = /(iPad|iPhone|iPod)/g.test( navigator.platform );
+					// if ( !iOS ) alert("Not IOS"); else alert("ios");
+					// alert(navigator.platform);
+					// iPad does not open the keyboard if not manually focused to editable area
+                    if ( !iOS ) sc.activeEdit['editor'].editor.focus();
                 }               
             };
             
@@ -156,6 +160,7 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                     if(!sc.editorExists(elem)) {
                             sc.editors.push({"par" : elem.par, "editor": editor});
                     }
+                    // sc.setEditable(elem.par);
             };
             sc.saveEdits = function(elem, elemId){
                     mdtext = sc.activeEdit['editor'].editor.getSession().getValue();

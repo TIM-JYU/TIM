@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, Flask, redirect, url_for
-from flask import render_template, render_template_string
+from flask import render_template
 from flask import g
 from flask import request
 from flask import send_from_directory
 from ReverseProxied import ReverseProxied
 import json
 import os
-import verifyPath
-from os import listdir
-from os.path import isfile,join
-from timdb import TimDb
 from containerLink import callPlugin
 from werkzeug.utils import secure_filename
+from timdb import TimDb
+
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
 
 # Load default config and override config from an environment variable
 app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'tim.db'),
+    DATABASE=os.path.join(app.root_path, 'tim_files/tim.db'),
     DEBUG=True,
     SECRET_KEY='development key',
     USERNAME='admin',
@@ -120,7 +118,15 @@ def callHello(plugin, params):
 def hello():
     html = request.get_json()['html']
     
-
+@app.route("/view/<doc_id>")
+def viewDocument(doc_id):
+    timdb = getTimDb()
+    try:
+        #texts = timdb.getDocumentBlocks(int(doc_id))
+        doc = timdb.getDocument(int(doc_id))
+        return render_template('view.html', docID=doc['id'], docName=doc['name'])
+    except ValueError:
+        return redirect(url_for('goat'))
 
 @app.route("/")
 def getFile():
@@ -128,7 +134,7 @@ def getFile():
 
 
 if __name__ == "__main__":
-    app.debug = True
-    app.run()
-#    app.wsgi_app = ReverseProxied(app.wsgi_app)	
-#    app.run(host='0.0.0.0',port=5000)
+#    app.debug = True
+#    app.run()
+    app.wsgi_app = ReverseProxied(app.wsgi_app)	
+    app.run(host='0.0.0.0',port=5000)

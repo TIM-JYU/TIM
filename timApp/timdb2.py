@@ -2,14 +2,20 @@
 Another version of TimDb that stores documents as whole.
 '''
 
+# TODO: This file is getting rather large. It should probably be divided somehow.
+
 from enum import Enum
 import os
 from shutil import copyfile
 import sqlite3
-import time
-import urllib.request
+#import time
 from contracts import contract, new_contract
-
+#from vcstools import GitClient # vcstools doesn't seem to support creating repos...
+import gitpylib.repo
+import gitpylib.sync
+import gitpylib.file
+import gitpylib.common
+from ephemeralclient import EphemeralClient
 
 # import timeit
 BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
@@ -30,18 +36,34 @@ class TimDb(object):
 
     @contract
     def __init__(self, db_path : 'str', files_root_path : 'str'):
-        self.db = sqlite3.connect(db_path)
-        self.db.row_factory = sqlite3.Row
+        """Initialized TimDB with the specified database and root path.
+        
+        :param db_path: The path of the database file.
+        :param files_root_path: The root path where all the files will be stored.
+        """
         self.files_root_path = files_root_path
         
         # TODO: Make sure that db_path and files_root_path are valid!
         
-        self.blocks_path = os.path.join(files_root_path, 'blocks')
+        self.blocks_path = os.path.join(os.path.abspath(files_root_path), 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
                 os.makedirs(path)
+        self.db = sqlite3.connect(db_path)
+        self.db.row_factory = sqlite3.Row
+        
+        
+        #Initialize repo to root path:
+        
+        cwd = os.getcwd()
+        os.chdir(files_root_path)
+        gitpylib.repo.init()
+        
+        #Restore old working directory (TODO: is this needed?)
+        os.chdir(cwd)
+        
     
-    #@contract
+    @contract
     def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
         """Adds a new markdown block to the specified document.
         
@@ -61,15 +83,61 @@ class TimDb(object):
         
         #Ephemeral does not yet support adding blocks.
         
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/add/' + str(document_id) + '/' + str(next_block_id), data=content, method='PUT')
+        ec = EphemeralClient(EPHEMERAL_URL)
+        success = ec.addBlock(document_id, next_block_id, content)
         
-        response = urllib.request.urlopen(req)
-        
-        print(response.read())
         #3. Check return value (success/fail).
         #4. Does Ephemeral save it to FS?
-        
+        return 0
     
+    @contract
+    def addNote(self, user_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
+        """Adds a note to the document.
+        
+        :param user_id: The user who created the note.
+        :param content: The content of the note.
+        :param block_id: The block to which the comment is added.
+        :param block_specifier: A specifier that tells a more accurate position of the note.
+               Currently the index of the paragraph within document.
+        
+        """
+        cursor = self.db.cursor()
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, 0, BLOCKTYPE.Note.value])
+        note_id = cursor.lastrowid
+        assert note_id is not None, 'note_id was None'
+        cursor.execute('insert into BlockRelation (parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?)',
+                       [block_specifier, block_id, 0])
+        
+        with open(self.getBlockPath(note_id), encoding='utf-8') as f:
+            f.write(content)
+        
+        self.db.commit()
+        
+        #TODO: Do notes need to be versioned?
+        
+        return
+    
+    @contract
+    def getNotes(self, user_id : 'int', block_id : 'int'):
+        """Gets all the notes for a block.
+        
+        :param user_id: The id of the user whose notes will be fetched.
+        :param block_id: The id of the block whose notes will be fetched.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""select id, UserGroup_id from Block where id = ? and type_id = ? and UserGroup_id in
+                         (select UserGroup_id from UserGroupMember where User_id = ?)""", [block_id, BLOCKTYPE.Note.value, user_id])
+        rows = [x for x in cursor.fetchall()]
+        
+        notes = []
+        for row in rows:
+            note_id = row[0]
+            note={'id' : note_id}
+            with open(self.getBlockPath(id)) as f:
+                note['content'] = f.read()
+            notes.append(note)
+        return notes
+        
     def clear(self):
         """Clears the contents of all database tables."""
         for table in TABLE_NAMES:
@@ -109,10 +177,39 @@ class TimDb(object):
             self.db.rollback()
             raise
         
-        # TODO: Put the document file block under version control (using a Git module maybe?).
+        # Don't commit to Git at this point.
+        #sha_hash = self.gitCommit(document_path, 'Created document: %s' % name, 'docker')
+        #print(sha_hash)
+        
         # TODO: Should the empty doc be put in Ephemeral?
         return document_id
+    
+    @contract
+    def gitCommit(self, file_path : 'str', commit_message: 'str', author : 'str'):
+        cwd = os.getcwd()
+        os.chdir(self.files_root_path)
+        gitpylib.file.stage(file_path)
+        # TODO: Set author for the commit (need to call safe_git_call).
+        gitpylib.sync.commit([file_path], commit_message, skip_checks=False, include_staged_files=False)
+        latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
+        os.chdir(cwd)
+        return latest_hash.rstrip()
 
+    @contract
+    def deleteParagraph(self, par_id : 'int', document_id : 'int'):
+        """Deletes a paragraph from a document.
+        
+        :param document_id: The id of the document from which to delete the paragraph.
+        :param par_id: The index of the paragraph in the document that should be deleted.
+        """
+        
+        ec = EphemeralClient(EPHEMERAL_URL)
+        success = ec.deleteBlock(document_id, par_id)
+        
+        #TODO: Check for errors.
+        #TODO: Get the new document from Ephemeral and commit the change in VCS.
+        
+        
     @contract
     def importDocument(self, document_file : 'str', document_name : 'str') -> 'int':
         """Imports the specified document in the database."""
@@ -122,10 +219,11 @@ class TimDb(object):
         copyfile(document_file, self.getDocumentPath(doc_id))
         
         with open(document_file, 'rb') as f:
-            req = urllib.request.Request(url=EPHEMERAL_URL + '/load/' + str(doc_id), data=f.read(), method='POST')
-            response = urllib.request.urlopen(req)
-            print(response.read())
+            ec = EphemeralClient(EPHEMERAL_URL)
+            ec.loadDocument(doc_id, f.read())
         
+        sha_hash = self.gitCommit(self.getDocumentPath(doc_id), 'Imported document: %s' % document_name, 'docker')
+        print(sha_hash)
         return doc_id
     
     @contract
@@ -154,6 +252,7 @@ class TimDb(object):
         user_id = cursor.lastrowid
         return user_id
 
+    @contract
     def createUserGroup(self, name : 'str') -> 'int':
         """Creates a new user group.
         
@@ -189,13 +288,11 @@ class TimDb(object):
         :returns: A row representing the document.
         """
         cursor = self.db.cursor()
-        cursor.execute('select * from Block where id = ?', [document_id])
-        
-        #TODO: Assert that type_id == Document
+        cursor.execute('select id, description as name from Block where id = ? and type_id = ?', [document_id, BLOCKTYPE.Document.value])
         
         return cursor.fetchone()
     
-   
+    @contract
     def getDocuments(self) -> 'list(dict)':
         """Gets all the documents in the database.
         
@@ -232,7 +329,7 @@ class TimDb(object):
         
         assert os.path.exists(document_path), 'document does not exist: %d' % document_id
         
-        #TODO: Get ids from Ephemeral.
+        #TODO: Get ids of the document from Ephemeral. If the ids are indexes, maybe only count is needed?
     
     @contract
     def getDocumentBlocks(self, document_id : 'int') -> 'list(dict[2](str: str))':
@@ -244,15 +341,14 @@ class TimDb(object):
         #TODO: Get blocks from Ephemeral.
         #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
         
-        # So let's make a quick hack to fetch the block.
+        # So let's make a quick hack to fetch the blocks. This is VERY slow; it fetches about one block per second when running locally on Windows machine.
         responseStr = None
         blocks = []
         notEnd = True
         blockIndex = 0
+        ec = EphemeralClient(EPHEMERAL_URL)
         while notEnd:
-            req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(blockIndex), method='GET')
-            response = urllib.request.urlopen(req)
-            responseStr = str(response.read(), encoding='utf-8')
+            responseStr = ec.getBlock(document_id, blockIndex)
             notEnd = responseStr != '{"Error":"No block found"}'
             if notEnd:
                 blocks.append({"par": str(blockIndex), "text" : responseStr})
@@ -260,6 +356,12 @@ class TimDb(object):
             print('Fetched block: ' + str(blockIndex))
             print(responseStr)
         return blocks
+    
+    def getDocumentAsHtmlBlocks(self, document_id : 'int') -> 'list(str)':
+        """Gets the specified document in HTML form."""
+        
+        ec = EphemeralClient(EPHEMERAL_URL)
+        return ec.getDocumentAsHtmlBlocks(document_id)
     
     @contract
     def getDocumentPath(self, document_id : 'int') -> 'str':
@@ -270,6 +372,25 @@ class TimDb(object):
         """
         return os.path.join(self.blocks_path, str(document_id))
 
+    @contract
+    def getDocumentVersions(self, document_id : 'int') -> 'list(dict(str:str))':
+        """Gets the versions of a document.
+        
+        :param document_id: The id of the document whose versions will be fetched.
+        :returns: A list of the versions of the document.
+        """
+        #TODO: Check that a document with this id exists.
+        cwd = os.getcwd()
+        os.chdir(self.files_root_path)
+        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad ' + os.path.relpath(self.getDocumentPath(document_id)).replace('\\', '/'))
+        os.chdir(cwd)
+        lines = output.splitlines()
+        versions = []
+        for line in lines:
+            pieces = line.split('|')
+            versions.append({'hash' : pieces[0], 'timestamp' : pieces[1]})
+        return versions
+        
     @contract
     def getImagePath(self, image_id : 'int', image_filename : 'str'):
         """Gets the path of an image.
@@ -306,14 +427,19 @@ class TimDb(object):
         
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
-        #TODO: Use string formatting here.
-        req = urllib.request.Request(url=EPHEMERAL_URL + '/' + str(document_id) + '/' + str(block_id), data=bytes(new_content, encoding='utf-8'), method='PUT')
-        response = urllib.request.urlopen(req)
-        responseStr = str(response.read())
-        print(responseStr)
+        ec = EphemeralClient(EPHEMERAL_URL)
+        ec.modifyBlock(document_id, block_id, new_content)
+        doc_content = ec.getDocumentFullText(document_id)
+        
+        with open(self.getDocumentPath(document_id), 'w', encoding='utf-8') as f:
+            f.write(doc_content)
+            
+        sha_hash = self.gitCommit(document_path, 'Modified document with id: %d' % document_id, 'docker')
+        print(sha_hash)
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
+    @contract
     def userHasViewAccess(self, user_id : 'int', block_id : 'int') -> 'bool':
         """Returns whether the user has access to the specified block.
         
@@ -335,6 +461,7 @@ class TimDb(object):
         assert len(result) <= 1, 'rowcount should be 1 at most'
         return len(result) == 1
     
+    @contract
     def userHasEditAccess(self, user_id : 'int', block_id : 'int') -> 'bool':
         """Returns whether the user has access to the specified block.
         
@@ -356,6 +483,7 @@ class TimDb(object):
         assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
         return cursor.rowcount == 1
     
+    @contract
     def userIsOwner(self, user_id : 'int', block_id : 'int') -> 'bool':
         """Returns whether the user belongs to the owners of the specified block.
         
@@ -371,6 +499,7 @@ class TimDb(object):
         assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
         return cursor.rowcount == 1
     
+    @contract
     def saveImage(self, image_data : 'bytes', image_filename : 'str'):
         """Saves an image to the database."""
         
@@ -388,6 +517,7 @@ class TimDb(object):
         #TODO: Return image filename (and id if file names don't have to be unique).
         return
 
+    @contract
     def deleteImage(self, image_id : 'int'):
         """Deletes an image from the database."""
         
