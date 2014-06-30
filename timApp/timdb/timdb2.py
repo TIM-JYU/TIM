@@ -91,24 +91,24 @@ class TimDb(object):
         return 0
     
     @contract
-    def addNote(self, user_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
+    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
         """Adds a note to the document.
         
         :param user_id: The user who created the note.
         :param content: The content of the note.
         :param block_id: The block to which the comment is added.
         :param block_specifier: A specifier that tells a more accurate position of the note.
-               Currently the index of the paragraph within document.
-        
+               Should be the index of the paragraph within the document.
         """
+        #TODO: Needs revision id.
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, 0, BLOCKTYPE.Note.value])
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, usergroup_id, BLOCKTYPE.Note.value])
         note_id = cursor.lastrowid
         assert note_id is not None, 'note_id was None'
-        cursor.execute('insert into BlockRelation (parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?)',
-                       [block_specifier, block_id, 0])
+        cursor.execute('insert into BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?,?)',
+                       [note_id, block_specifier, block_id, 0])
         
-        with open(self.getBlockPath(note_id), encoding='utf-8') as f:
+        with open(self.getBlockPath(note_id), 'w', encoding='utf-8') as f:
             f.write(content)
         
         self.db.commit()
@@ -118,22 +118,23 @@ class TimDb(object):
         return
     
     @contract
-    def getNotes(self, user_id : 'int', block_id : 'int'):
-        """Gets all the notes for a block.
+    def getNotes(self, user_id : 'int', document_id : 'int'):
+        """Gets all the notes for a document for a user.
         
         :param user_id: The id of the user whose notes will be fetched.
         :param block_id: The id of the block whose notes will be fetched.
         """
         cursor = self.db.cursor()
-        cursor.execute("""select id, UserGroup_id from Block where id = ? and type_id = ? and UserGroup_id in
-                         (select UserGroup_id from UserGroupMember where User_id = ?)""", [block_id, BLOCKTYPE.Note.value, user_id])
+        cursor.execute("""select id, UserGroup_id from Block where id in
+                             (select Block_id from BlockRelation where parent_block_id = ?) and type_id = ? and UserGroup_id in
+                                 (select UserGroup_id from UserGroupMember where User_id = ?)""", [document_id, BLOCKTYPE.Note.value, user_id])
         rows = [x for x in cursor.fetchall()]
         
         notes = []
         for row in rows:
             note_id = row[0]
-            note={'id' : note_id}
-            with open(self.getBlockPath(id)) as f:
+            note = {'id' : note_id}
+            with open(self.getBlockPath(note_id)) as f:
                 note['content'] = f.read()
             notes.append(note)
         return notes
