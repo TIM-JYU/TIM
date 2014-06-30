@@ -14,7 +14,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
 			//TODO: Get notes for each paragraph as follows:
 			//1. Get all notes from server related to this document (and current user).
 			
-			notes = $scope.getNotes(docID);
+			$scope.getNotes(docID);
 			
 			//2. Group notes by paragraph so that each paragraph has "notes" attribute.
 			//3. AngularJS will render them using the template automagically.
@@ -28,7 +28,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
 			var result;
             http.get('/notes/' + docID).
             success(function(data, status, headers, config) {
-                     result = data;
+                     console.log(data);
             }).
             error(function(data, status, headers, config) {
                      return "[Could not fetch notes]";
