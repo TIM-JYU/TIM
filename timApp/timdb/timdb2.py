@@ -52,16 +52,15 @@ class TimDb(object):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         
-        
+    def initRepo(self):
         #Initialize repo to root path:
         
         cwd = os.getcwd()
-        os.chdir(files_root_path)
+        os.chdir(self.files_root_path)
         gitpylib.repo.init()
         
         #Restore old working directory (TODO: is this needed?)
         os.chdir(cwd)
-        
     
     @contract
     def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
@@ -210,6 +209,26 @@ class TimDb(object):
         #TODO: Check for errors.
         #TODO: Get the new document from Ephemeral and commit the change in VCS.
         
+        
+    @contract
+    def createDocumentFromBlocks(self, block_directory : 'str', document_name : 'str'):
+        """
+        Creates a document from existing blocks in the specified directory.
+        The blocks should be ordered alphabetically.
+        
+        :param block_directory: The path to the directory containing the blocks.
+        :param document_name: The name of the document to be created.
+        """
+        assert os.path.isdir(block_directory)
+        blockfiles = [ f for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f)) ]
+        
+        blockfiles.sort()
+        tmpfile = open("tmp.temp", "w", encoding='utf-8')
+        for file in blockfiles:
+            with open(os.path.join(block_directory, file), 'r', encoding='utf-8') as f:
+                tmpfile.write(f.read())
+                tmpfile.write('\n\n')
+        self.importDocument('tmp.temp', document_name)        
         
     @contract
     def importDocument(self, document_file : 'str', document_name : 'str') -> 'int':
