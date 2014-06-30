@@ -225,6 +225,7 @@ class TimDb(object):
         blockfiles.sort()
         tmpfile = open("tmp.temp", "w", encoding='utf-8')
         for file in blockfiles:
+            print(file)
             with open(os.path.join(block_directory, file), 'r', encoding='utf-8') as f:
                 tmpfile.write(f.read())
                 tmpfile.write('\n\n')
