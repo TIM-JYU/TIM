@@ -2,7 +2,7 @@ var TimCtrl = angular.module('controllers', []);
 
 TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             sc.paragraphs = "";
-            sc.pluginPat = /\{plugin}\[(.*)]/;
+            sc.pluginPat = /\{plugin}\[(.*)][(.*)]/;
             sc.getDocIds = function(){
                 http({method: 'GET', url: '/getDocuments/'}).
                     success(function(data, status, headers, config) {
@@ -14,12 +14,13 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             };
             sc.documentEdit = false;
             sc.documentList = [];
+            sc.uploadFile;
             sc.getDocIds();
             sc.convertHtml = new Markdown.getSanitizingConverter();
             sc.convertHtml.hooks.chain("preBlockGamut", function (text, runBlockGamut) {
                 var match = sc.pluginPat.exec(text);
                 if(match != null){
-                    teksti = sc.fetchAndReplace(text, match[0], match[1]);
+                    teksti = sc.fetchAndReplace(text, match[0], match[1], match[2]);
                     return teksti;
                 }
                 else {
@@ -34,7 +35,6 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             sc.getDocument = function(documentName){
                 sc.displayIndex = false;
                 http({method: 'GET', url: '/getJSON/' + documentName}).
-                //http({method: 'GET', url: '/document/' + "3/"}).
                     success(function(data, status, headers, config) {
                         sc.displayIndex = false;
                         sc.paragraphs = data.text;
@@ -57,15 +57,15 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                     sc.paragraphs[i].display = false;
                 }
             }
-            sc.fetchAndReplace = function(text, wholeMatch, match){ 
-                    pluginText = sc.callPlugin(match);
+            sc.fetchAndReplace = function(text, wholeMatch, match, params){ 
+                    pluginText = sc.callPlugin(match, params);
                     receivedText = sc.tempVariable;
                     return text.replace(wholeMatch, receivedText);
             }
 
             sc.tempVariable = ""; // TODO: only serves to act as temporary storage for data fetched, fix           
-            sc.callPlugin = function(plugin){
-                http.get('/pluginCall/' + plugin).
+            sc.callPlugin = function(plugin, params){
+                http.get('/pluginCall/' + plugin + '/' + params).
                     success(function(data, status, headers, config) {
                              sc.tempVariable = data;
                     }).
@@ -175,5 +175,13 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                                         
             }
 
+
+            sc.uploadFile = function(){
+                var file = $scope.myFile;
+                var uploadUrl = '/upload/';
+                fileUpload.uploadFileToUrl(file, uploadUrl);
+            };
+
         }]);
+
 

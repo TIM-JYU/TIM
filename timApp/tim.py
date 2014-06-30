@@ -3,13 +3,14 @@ from flask import jsonify, Flask, redirect, url_for
 from flask import render_template
 from flask import g
 from flask import request
+from flask import send_from_directory
 from ReverseProxied import ReverseProxied
 import json
 import os
 from containerLink import callPlugin
+from werkzeug.utils import secure_filename
 from timdb import TimDb
 
-# Kommentti
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -21,16 +22,38 @@ app.config.update(dict(
     SECRET_KEY='development key',
     USERNAME='admin',
     PASSWORD='default',
-    FILES_PATH='tim_files'
-))
+    FILES_PATH='tim_files',
+    UPLOAD_FOLDER = "./media/images/",
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1025 
+   ))
+
+def allowed_file(filename):
+        return '.' in filename and \
+                filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
 #app.config.from_envvar('TIM_SETTINGS', silent=True)
 
 if os.path.abspath('.') == '/service':
     app.config['DEBUG'] = False
 
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
+@app.route('/upload/', methods=['POST'])
+def upload_file():
+    print("File received, checking contents...")
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            print("File contents safe, saving.")
+            return redirect(url_for('uploaded_file', filename=filename))
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
 
 @app.route("/getDocuments/")
 def getDocuments():
@@ -82,14 +105,14 @@ def getDocument(doc_id):
     try:
         texts = timdb.getDocumentBlocks(int(doc_id))
         doc = timdb.getDocument(int(doc_id))
-        return render_template('start.html', name=doc['name'], text=json.dumps(texts))
+        return render_template('editing.html', name=doc['name'], text=json.dumps(texts))
     except ValueError:
         return redirect(url_for('goat'))
 
 
-@app.route("/pluginCall/<plugin>")
-def callHello(plugin):
-    return callPlugin(plugin).decode('utf-8')
+@app.route("/pluginCall/<plugin>/<params>")
+def callHello(plugin, params):
+    return callPlugin(plugin, params).decode('utf-8')
 
 @app.route("/hello", methods=['POST'])
 def hello():
@@ -117,7 +140,7 @@ def getNotes(doc_id):
 
 @app.route("/")
 def getFile():
-    return render_template('start.html')
+    return render_template('index.html')
 
 
 if __name__ == "__main__":
