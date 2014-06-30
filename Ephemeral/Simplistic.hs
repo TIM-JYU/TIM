@@ -190,7 +190,7 @@ main = do
             block <- fetchBlock docID idx state
             case block of 
                 Nothing -> writeBS "{\"Error\":\"No block found\"}" 
-                Just  r -> writeHtml r
+                Just  r -> writeLazyText (html r)
          ),
          (":docID/:idx", method PUT $ do
             docID <- requireParam "docID"
