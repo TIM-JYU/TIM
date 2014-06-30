@@ -1,6 +1,6 @@
 var controls = angular.module('controllers');
 
-controls.controller('ViewCtrl', function($scope, $controller) {
+controls.controller('ViewCtrl', function($scope, $controller, $http) {
 
 	// inherit properties from ParCtrl
 		$controller('ParCtrl', {
@@ -13,9 +13,26 @@ controls.controller('ViewCtrl', function($scope, $controller) {
 			
 			//TODO: Get notes for each paragraph as follows:
 			//1. Get all notes from server related to this document (and current user).
-			//2. Group notes by paragraph so that each paragraph has "notes" attribute (and MAYBE hasNotes, but this can be deduced from the number of notes).
+			
+			notes = $scope.getNotes(docID);
+			
+			//2. Group notes by paragraph so that each paragraph has "notes" attribute.
 			//3. AngularJS will render them using the template automagically.
-			  
+			
+			
+			
 			 
 		};
+		
+		$scope.getNotes = function(docID) {
+			var result;
+            http.get('/notes/' + docID).
+            success(function(data, status, headers, config) {
+                     result = data;
+            }).
+            error(function(data, status, headers, config) {
+                     return "[Could not fetch notes]";
+            });
+            return result;
+		}
 	});

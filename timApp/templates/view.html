@@ -64,7 +64,8 @@
 				ng-bind-html="par.html"></div>
 			<button class="editButton" ng-click="">Add note</button>
 			<div ng-if="par.notes.length > 0" class="notes" bind-once>
-				<div class="note" ng-repeat="note in par.notes" ng-bind-html="note.html"></div>
+				<div class="note" ng-repeat="note in par.notes"
+					ng-bind-html="note.html"></div>
 			</div>
 		</div>
 	</div>
