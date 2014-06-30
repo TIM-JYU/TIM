@@ -38,7 +38,7 @@ def allowed_file(filename):
 if os.path.abspath('.') == '/service':
     app.config['DEBUG'] = False
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
