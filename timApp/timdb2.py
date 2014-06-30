@@ -90,6 +90,7 @@ class TimDb(object):
         #4. Does Ephemeral save it to FS?
         return 0
     
+    @contract
     def addNote(self, user_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
         """Adds a note to the document.
         
@@ -116,6 +117,7 @@ class TimDb(object):
         
         return
     
+    @contract
     def getNotes(self, user_id : 'int', block_id : 'int'):
         """Gets all the notes for a block.
         
@@ -181,7 +183,8 @@ class TimDb(object):
         
         # TODO: Should the empty doc be put in Ephemeral?
         return document_id
-
+    
+    @contract
     def gitCommit(self, file_path : 'str', commit_message: 'str', author : 'str'):
         cwd = os.getcwd()
         os.chdir(self.files_root_path)
@@ -249,6 +252,7 @@ class TimDb(object):
         user_id = cursor.lastrowid
         return user_id
 
+    @contract
     def createUserGroup(self, name : 'str') -> 'int':
         """Creates a new user group.
         
@@ -284,11 +288,11 @@ class TimDb(object):
         :returns: A row representing the document.
         """
         cursor = self.db.cursor()
-        cursor.execute('select * from Block where id = ? and type_id = ?', [document_id, BLOCKTYPE.Document.value])
+        cursor.execute('select id, description as name from Block where id = ? and type_id = ?', [document_id, BLOCKTYPE.Document.value])
         
         return cursor.fetchone()
     
-   
+    @contract
     def getDocuments(self) -> 'list(dict)':
         """Gets all the documents in the database.
         
@@ -364,7 +368,10 @@ class TimDb(object):
 
     @contract
     def getDocumentVersions(self, document_id : 'int') -> 'list(dict(str:str))':
-        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad')
+        cwd = os.getcwd()
+        os.chdir(self.files_root_path)
+        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad ' + self.getDocumentPath(document_id))
+        os.chdir(cwd)
         lines = output.splitlines()
         versions = []
         for line in lines:
@@ -420,6 +427,7 @@ class TimDb(object):
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
+    @contract
     def userHasViewAccess(self, user_id : 'int', block_id : 'int') -> 'bool':
         """Returns whether the user has access to the specified block.
         
@@ -441,6 +449,7 @@ class TimDb(object):
         assert len(result) <= 1, 'rowcount should be 1 at most'
         return len(result) == 1
     
+    @contract
     def userHasEditAccess(self, user_id : 'int', block_id : 'int') -> 'bool':
         """Returns whether the user has access to the specified block.
         
@@ -462,6 +471,7 @@ class TimDb(object):
         assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
         return cursor.rowcount == 1
     
+    @contract
     def userIsOwner(self, user_id : 'int', block_id : 'int') -> 'bool':
         """Returns whether the user belongs to the owners of the specified block.
         
@@ -477,6 +487,7 @@ class TimDb(object):
         assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
         return cursor.rowcount == 1
     
+    @contract
     def saveImage(self, image_data : 'bytes', image_filename : 'str'):
         """Saves an image to the database."""
         
@@ -494,6 +505,7 @@ class TimDb(object):
         #TODO: Return image filename (and id if file names don't have to be unique).
         return
 
+    @contract
     def deleteImage(self, image_id : 'int'):
         """Deletes an image from the database."""
         
