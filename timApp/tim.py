@@ -128,7 +128,7 @@ def viewDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
-@app.route("notes/<doc_id>")
+@app.route("/notes/<doc_id>")
 def getNotes(doc_id):
     timdb = getTimDb()
     try:
