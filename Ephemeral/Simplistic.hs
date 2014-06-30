@@ -159,6 +159,14 @@ main = do
                 Nothing -> writeBS "{\"Error\":\"No block found\"}" 
                 Just  r -> writeText r
          ),
+         (":docID/:idx/html", method GET $ do
+            docID <- requireParam "docID"
+            idx   <- requireParam "idx"
+            block <- fetchBlock docID idx state
+            case block of 
+                Nothing -> writeBS "{\"Error\":\"No block found\"}" 
+                Just  r -> writeHtml r
+         ),
          (":docID/:idx", method PUT $ do
             docID <- requireParam "docID"
             idx   <- requireParam "idx"
