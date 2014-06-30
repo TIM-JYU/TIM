@@ -357,6 +357,12 @@ class TimDb(object):
             print(responseStr)
         return blocks
     
+    def getDocumentAsHtmlBlocks(self, document_id : 'int') -> 'list(str)':
+        """Gets the specified document in HTML form."""
+        
+        ec = EphemeralClient(EPHEMERAL_URL)
+        return ec.getDocumentAsHtmlBlocks(document_id)
+    
     @contract
     def getDocumentPath(self, document_id : 'int') -> 'str':
         """Gets the path of the specified document.
@@ -368,9 +374,15 @@ class TimDb(object):
 
     @contract
     def getDocumentVersions(self, document_id : 'int') -> 'list(dict(str:str))':
+        """Gets the versions of a document.
+        
+        :param document_id: The id of the document whose versions will be fetched.
+        :returns: A list of the versions of the document.
+        """
+        #TODO: Check that a document with this id exists.
         cwd = os.getcwd()
         os.chdir(self.files_root_path)
-        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad ' + self.getDocumentPath(document_id))
+        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad ' + os.path.relpath(self.getDocumentPath(document_id)).replace('\\', '/'))
         os.chdir(cwd)
         lines = output.splitlines()
         versions = []
