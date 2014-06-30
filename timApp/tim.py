@@ -9,6 +9,7 @@ import os
 from containerLink import callPlugin
 from timdb import TimDb
 
+# Kommentti
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -110,7 +111,7 @@ def getFile():
 
 
 if __name__ == "__main__":
-    app.debug = True
-    app.run()
-#    app.wsgi_app = ReverseProxied(app.wsgi_app)	
-#    app.run(host='0.0.0.0',port=5000)
+#    app.debug = True
+#    app.run()
+    app.wsgi_app = ReverseProxied(app.wsgi_app)	
+    app.run(host='0.0.0.0',port=5000)
