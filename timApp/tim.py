@@ -105,6 +105,16 @@ def viewDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
+@app.route("notes/<doc_id>")
+def getNotes(doc_id):
+    timdb = getTimDb()
+    try:
+        notes = []
+        #notes = timdb.getNotes(doc_id) #TODO: Needs timdb2 
+        return json.dumps(notes)
+    except ValueError:
+        return redirect(url_for('goat'))
+
 @app.route("/")
 def getFile():
     return render_template('start.html')
