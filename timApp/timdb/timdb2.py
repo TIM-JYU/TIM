@@ -15,8 +15,11 @@ import gitpylib.repo
 import gitpylib.sync
 import gitpylib.file
 import gitpylib.common
-from ephemeralclient import EphemeralClient
+from ephemeralclient import EphemeralClient, EphemeralException
 import collections
+
+class TimDbException(Exception):
+    pass
 
 BLOCKTYPES=collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE'))
 blocktypes=BLOCKTYPES(0,1,2,3,4)
@@ -389,7 +392,13 @@ class TimDb(object):
         """Gets the specified document in HTML form."""
         
         ec = EphemeralClient(EPHEMERAL_URL)
-        return ec.getDocumentAsHtmlBlocks(document_id)
+        
+        try:
+            blocks = ec.getDocumentAsHtmlBlocks(document_id)
+        except EphemeralException as e:
+            raise TimDbException(str(e))
+        
+        return blocks
     
     @contract
     def getDocumentPath(self, document_id : 'int') -> 'str':
