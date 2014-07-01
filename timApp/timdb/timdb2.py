@@ -383,8 +383,6 @@ class TimDb(object):
             if notEnd:
                 blocks.append({"par": str(blockIndex), "text" : responseStr})
             blockIndex += 1
-            print('Fetched block: ' + str(blockIndex))
-            print(responseStr)
         return blocks
     
     def getDocumentAsHtmlBlocks(self, document_id : 'int') -> 'list(str)':
