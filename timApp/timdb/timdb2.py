@@ -4,7 +4,7 @@ Another version of TimDb that stores documents as whole.
 
 # TODO: This file is getting rather large. It should probably be divided somehow.
 
-from enum import Enum
+#from enum import Enum
 import os
 from shutil import copyfile
 import sqlite3
@@ -16,9 +16,18 @@ import gitpylib.sync
 import gitpylib.file
 import gitpylib.common
 from ephemeralclient import EphemeralClient
+import collections
 
+BLOCKTYPES=collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE'))
+blocktypes=BLOCKTYPES(0,1,2,3,4)
 # import timeit
-BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
+#BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
+#DOCUMENT = 1
+#COMMENT = 2
+#NOTE = 3
+#ANSWER = 4
+#IMAGE = 5
+
 EPHEMERAL_URL = 'http://localhost:8001'
 TABLE_NAMES = ['BlockEditAccess',
                'BlockViewAccess',
@@ -101,7 +110,7 @@ class TimDb(object):
         """
         #TODO: Needs revision id.
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, usergroup_id, BLOCKTYPE.Note.value])
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, usergroup_id, blocktypes.NOTE])
         note_id = cursor.lastrowid
         assert note_id is not None, 'note_id was None'
         cursor.execute('insert into BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?,?)',
@@ -126,7 +135,7 @@ class TimDb(object):
         cursor = self.db.cursor()
         cursor.execute("""select id, UserGroup_id from Block where id in
                              (select Block_id from BlockRelation where parent_block_id = ?) and type_id = ? and UserGroup_id in
-                                 (select UserGroup_id from UserGroupMember where User_id = ?)""", [document_id, BLOCKTYPE.Note.value, user_id])
+                                 (select UserGroup_id from UserGroupMember where User_id = ?)""", [document_id, blocktypes.NOTE, user_id])
         rows = [x for x in cursor.fetchall()]
         
         notes = []
@@ -163,7 +172,7 @@ class TimDb(object):
         """
         # Usergroup id is 0 for now.
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [name, 0, BLOCKTYPE.Document.value])
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [name, 0, blocktypes.DOCUMENT])
         document_id = cursor.lastrowid
         self.db.commit()
         
@@ -309,7 +318,7 @@ class TimDb(object):
         :returns: A row representing the document.
         """
         cursor = self.db.cursor()
-        cursor.execute('select id, description as name from Block where id = ? and type_id = ?', [document_id, BLOCKTYPE.Document.value])
+        cursor.execute('select id, description as name from Block where id = ? and type_id = ?', [document_id, blocktypes.DOCUMENT])
         
         return cursor.fetchone()
     
@@ -320,7 +329,7 @@ class TimDb(object):
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
         cursor = self.db.cursor()
-        cursor.execute('select id,description as name from Block where type_id = ?', [BLOCKTYPE.Document.value])
+        cursor.execute('select id,description as name from Block where type_id = ?', [blocktypes.DOCUMENT])
         rows = [x for x in cursor.fetchall()]
         cols = [x[0] for x in cursor.description]
         results = []
@@ -528,7 +537,7 @@ class TimDb(object):
         # TODO: Should file name be unique among images?
         # TODO: User group id should be a parameter.
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [image_filename, 0, BLOCKTYPE.Image.value])
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [image_filename, 0, blocktypes.IMAGE])
         img_id = cursor.lastrowid
         
         with open(self.getImagePath(img_id, image_filename), 'xb') as f:
@@ -544,9 +553,9 @@ class TimDb(object):
         
         #TODO: Check that the user has right to delete image.
         cursor = self.db.cursor()
-        cursor.execute('select description from Block where type_id = ? and id = ?', [BLOCKTYPE.Image.value, image_id])
+        cursor.execute('select description from Block where type_id = ? and id = ?', [blocktypes.IMAGE, image_id])
         image_filename = cursor.fetchone()[0]
-        cursor.execute('delete from Block where type_id = ? and id = ?', [BLOCKTYPE.Image.value, image_id])
+        cursor.execute('delete from Block where type_id = ? and id = ?', [blocktypes.IMAGE, image_id])
         if cursor.rowcount == 0:
             raise
             #TODO: Raise error if no image was deleted.
