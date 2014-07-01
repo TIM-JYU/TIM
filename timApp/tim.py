@@ -9,7 +9,7 @@ import json
 import os
 from containerLink import callPlugin
 from werkzeug.utils import secure_filename
-from timdb.timdb2 import TimDb
+from timdb.timdb2 import TimDb, TimDbException
 from flask import Response
 
 app = Flask(__name__) 
@@ -83,8 +83,12 @@ def getJSON_HTML(doc_id):
     timdb = getTimDb()
     try:
         blocks = timdb.getDocumentAsHtmlBlocks(int(doc_id))
-        return json.dumps(blocks)
+        doc = timdb.getDocument(int(doc_id))
+        return jsonify({"name" : doc['name'], "text" : blocks})
     except ValueError as err:
+        print(err)
+        return "[]"
+    except TimDbException as err:
         print(err)
         return "[]"
 
@@ -163,7 +167,7 @@ def getNotes(doc_id):
     timdb = getTimDb()
     try:
         #notes = []
-        notes = timdb.getNotes(0, doc_id) #TODO: Needs timdb2 
+        notes = timdb.getNotes(0, int(doc_id)) #TODO: Needs timdb2 
         return json.dumps(notes)
     except ValueError:
         return redirect(url_for('goat'))
