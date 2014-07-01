@@ -109,16 +109,26 @@ def postParagraph():
 #     print ("Failed to write file")
 #     return "Path may be corrupt"
 
+#@app.route("/documents/<doc_id>")
+#def getDocument(doc_id):
+#    timdb = getTimDb()
+#    try:
+#        texts = timdb.getDocumentBlocks(int(doc_id))
+#        doc = timdb.getDocument(int(doc_id))
+#        return render_template('editing.html', name=doc['name'], text=json.dumps(texts))
+#    except ValueError:
+#        return redirect(url_for('goat'))
+
+
 @app.route("/documents/<doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()
     try:
-        texts = timdb.getDocumentBlocks(int(doc_id))
+        texts = timdb.getDocumentAsHtmlBlocks(int(doc_id))
         doc = timdb.getDocument(int(doc_id))
         return render_template('editing.html', name=doc['name'], text=json.dumps(texts))
     except ValueError:
         return redirect(url_for('goat'))
-
 
 @app.route("/pluginCall/<plugin>/<params>")
 def callHello(plugin, params):
