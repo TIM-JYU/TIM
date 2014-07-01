@@ -60,6 +60,8 @@ def getDocuments():
     timdb = getTimDb()
     return Response(json.dumps(timdb.getDocuments()), mimetype='application/json')
 
+def getCurrentUserId():
+    return 1
 
 def getTimDb():
     if not hasattr(g, 'timdb'):
@@ -67,23 +69,23 @@ def getTimDb():
     return g.timdb
 
 
-@app.route("/getJSON/<textFile>/")
-def getJSON(textFile):
+@app.route("/getJSON/<int:doc_id>/")
+def getJSON(doc_id):
     timdb = getTimDb()
     try:
-        texts = timdb.getDocumentBlocks(int(textFile))
-        doc = timdb.getDocument(int(textFile))
+        texts = timdb.getDocumentBlocks(doc_id)
+        doc = timdb.getDocument(doc_id)
         return jsonify({"name" : doc['name'], "text" : texts})
     except IOError as err:
         print(err)
         return "No data found"
 
-@app.route("/getJSON-HTML/<doc_id>")
+@app.route("/getJSON-HTML/<int:doc_id>")
 def getJSON_HTML(doc_id):
     timdb = getTimDb()
     try:
-        blocks = timdb.getDocumentAsHtmlBlocks(int(doc_id))
-        doc = timdb.getDocument(int(doc_id))
+        blocks = timdb.getDocumentAsHtmlBlocks(doc_id)
+        doc = timdb.getDocument(doc_id)
         return jsonify({"name" : doc['name'], "text" : blocks})
     except ValueError as err:
         print(err)
@@ -113,12 +115,12 @@ def postParagraph():
 #     print ("Failed to write file")
 #     return "Path may be corrupt"
 
-@app.route("/documents/<doc_id>")
+@app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()
     try:
-        texts = timdb.getDocumentBlocks(int(doc_id))
-        doc = timdb.getDocument(int(doc_id))
+        texts = timdb.getDocumentBlocks(doc_id)
+        doc = timdb.getDocument(doc_id)
         return render_template('editing.html', name=doc['name'], text=json.dumps(texts))
     except ValueError:
         return redirect(url_for('goat'))
@@ -132,32 +134,32 @@ def callHello(plugin, params):
 def hello():
     html = request.get_json()['html']
     
-@app.route("/view/<doc_id>")
+@app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
     timdb = getTimDb()
     try:
-        #texts = timdb.getDocumentBlocks(int(doc_id))
-        doc = timdb.getDocument(int(doc_id))
+        #texts = timdb.getDocumentBlocks(doc_id)
+        doc = timdb.getDocument(doc_id)
         return render_template('view.html', docID=doc['id'], docName=doc['name'])
     except ValueError:
         return redirect(url_for('goat'))
 
-@app.route("/postNote")
-def postNote():
+@app.route("/postNote/<int:group_id>")
+def postNote(group_id):
     noteText = request.get_json('text')
     docId = request.get_json('doc_id')
     paragraph_id = request.get_json('par_id')
     timdb = getTimDb()
-    timdb.addNote(0, noteText, int(docId), int(paragraph_id))
+    timdb.addNote(group_id, noteText, int(docId), int(paragraph_id))
     #TODO: Handle error.
     return "Success"
 
-@app.route("/notes/<doc_id>")
+@app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
     timdb = getTimDb()
     try:
         #notes = []
-        notes = timdb.getNotes(0, int(doc_id)) #TODO: Needs timdb2 
+        notes = timdb.getNotes(getCurrentUserId(), doc_id) #TODO: Needs timdb2 
         return json.dumps(notes)
     except ValueError:
         return redirect(url_for('goat'))
