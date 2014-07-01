@@ -37,8 +37,8 @@
     
     <script>
         // Data from jinja2 template
-        var jsonDoc = {{ text|tojson|safe }};
-        var docName = {{ name|tojson|safe}};
+        var jsonDoc = JSON.parse({{ text|tojson|safe }});
+        var docName = JSON.parse({{ name|tojson|safe}});
     </script>
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>

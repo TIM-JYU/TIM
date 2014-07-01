@@ -85,7 +85,10 @@ class EphemeralClient(object):
         """
         req = urllib.request.Request(url=self.server_path + '/{}/{}'.format(document_id, block_id), method='GET')
         response = urllib.request.urlopen(req)
-        return str(response.read(), encoding='utf-8')
+        responseStr = str(response.read(), encoding='utf-8')
+        if responseStr == '{"Error":"No block found"}':
+            raise EphemeralException('No block found with document id %d and index %d' % (document_id, block_id))
+        return responseStr
     
     @contract
     def getDocumentAsHtmlBlocks(self, document_id: 'int') -> 'list(str)':
