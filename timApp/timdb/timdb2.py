@@ -237,7 +237,6 @@ class TimDb(object):
         blockfiles.sort()
         tmpfile = open("tmp.temp", "w", encoding='utf-8')
         for file in blockfiles:
-            print(file)
             with open(os.path.join(block_directory, file), 'r', encoding='utf-8') as f:
                 tmpfile.write(f.read())
                 tmpfile.write('\n\n')
@@ -256,7 +255,6 @@ class TimDb(object):
             ec.loadDocument(doc_id, f.read())
         
         sha_hash = self.gitCommit(self.getDocumentPath(doc_id), 'Imported document: %s' % document_name, 'docker')
-        print(sha_hash)
         return doc_id
     
     @contract
@@ -472,7 +470,6 @@ class TimDb(object):
             f.write(doc_content)
             
         sha_hash = self.gitCommit(document_path, 'Modified document with id: %d' % document_id, 'docker')
-        print(sha_hash)
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
