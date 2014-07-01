@@ -97,7 +97,6 @@ class EphemeralClient(object):
         req = urllib.request.Request(url=self.server_path + '/json-html/{}'.format(document_id), method='GET')
         response = urllib.request.urlopen(req)
         responseStr = str(response.read(), encoding='utf-8')
-        print(responseStr)
         if responseStr == '{"Error":"No doc found"}':
             raise EphemeralException('No document found with id %d' % document_id)
         return json.loads(responseStr)
