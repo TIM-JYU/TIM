@@ -363,6 +363,21 @@ class TimDb(object):
         #TODO: Get ids of the document from Ephemeral. If the ids are indexes, maybe only count is needed?
     
     @contract
+    def getBlock(self, document_id : 'int', block_id : 'int') -> 'str':
+        """Gets a block of a document.
+        
+        :param document_id: The id of the document.
+        :param block_id: The id (index) of the block in the document.
+        """
+        
+        ec = EphemeralClient(EPHEMERAL_URL)
+        try:
+            block = ec.getBlock(document_id, block_id)
+        except EphemeralException as e:
+            raise TimDbException(str(e))
+        return block
+        
+    @contract
     def getDocumentBlocks(self, document_id : 'int') -> 'list(dict[2](str: str))':
         """Gets all the blocks of the specified document.
         
