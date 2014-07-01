@@ -9,7 +9,7 @@ import json
 import os
 from containerLink import callPlugin
 from werkzeug.utils import secure_filename
-from timdb import TimDb
+from timdb.timdb import TimDb
 
 
 app = Flask(__name__) 

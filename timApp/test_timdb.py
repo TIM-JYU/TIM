@@ -5,7 +5,7 @@ import unittest
 from hypothesis.statefultesting import *
 from hypothesis.testdecorators import *
 
-from timdb import TimDb
+from timdb.timdb import TimDb
 
 TEST_DB_NAME = ':memory:'
 TEST_FILES_PATH = 'test_files'
