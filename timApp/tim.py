@@ -9,8 +9,8 @@ import json
 import os
 from containerLink import callPlugin
 from werkzeug.utils import secure_filename
-from timdb.timdb import TimDb
-
+from timdb.timdb2 import TimDb
+from flask import Response
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -58,7 +58,7 @@ def uploaded_file(filename):
 @app.route("/getDocuments/")
 def getDocuments():
     timdb = getTimDb()
-    return json.dumps(timdb.getDocuments())
+    return Response(json.dumps(timdb.getDocuments()), mimetype='application/json')
 
 
 def getTimDb():
@@ -77,6 +77,16 @@ def getJSON(textFile):
     except IOError as err:
         print(err)
         return "No data found"
+
+@app.route("/getJSON-HTML/<doc_id>")
+def getJSON_HTML(doc_id):
+    timdb = getTimDb()
+    try:
+        blocks = timdb.getDocumentAsHtmlBlocks(int(doc_id))
+        return json.dumps(blocks)
+    except ValueError as err:
+        print(err)
+        return "[]"
 
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
@@ -128,12 +138,22 @@ def viewDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
+@app.route("/postNote")
+def postNote():
+    noteText = request.get_json('text')
+    docId = request.get_json('doc_id')
+    paragraph_id = request.get_json('par_id')
+    timdb = getTimDb()
+    timdb.addNote(0, noteText, int(docId), int(paragraph_id))
+    #TODO: Handle error.
+    return "Success"
+
 @app.route("/notes/<doc_id>")
 def getNotes(doc_id):
     timdb = getTimDb()
     try:
-        notes = []
-        #notes = timdb.getNotes(doc_id) #TODO: Needs timdb2 
+        #notes = []
+        notes = timdb.getNotes(0, doc_id) #TODO: Needs timdb2 
         return json.dumps(notes)
     except ValueError:
         return redirect(url_for('goat'))
