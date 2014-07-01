@@ -104,14 +104,6 @@ def postParagraph():
         print(err)
         return "Failed to modify block."
     return "Success"
-    
-#     fileName = request.get_json()['documentName']
-#     if(verifyPath.verifyDataPath(fileName+"/"+paragraphName)):
-#         with open(DATA_PATH + fileName + '/' + paragraphName , 'w') as f:
-#             f.write(paragraphText)
-#         return "Success"
-#     print ("Failed to write file")
-#     return "Path may be corrupt"
 
 #@app.route("/documents/<doc_id>")
 #def getDocument(doc_id):
@@ -130,9 +122,14 @@ def getDocument(doc_id):
     try:
         texts = timdb.getDocumentAsHtmlBlocks(int(doc_id))
         doc = timdb.getDocument(int(doc_id))
-        return render_template('editing.html', name=doc['name'], text=json.dumps(texts))
+        return render_template('editing.html', docId=doc['id'], name=doc['name'], text=json.dumps(texts))
     except ValueError:
         return redirect(url_for('goat'))
+
+@app.route("/getBlock/<blockId>")
+def getBlockMd(blockId):
+    timdb = getTimDb();
+    return ""
 
 @app.route("/pluginCall/<plugin>/<params>")
 def callHello(plugin, params):
