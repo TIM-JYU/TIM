@@ -128,9 +128,22 @@ def getDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
-@app.route("/getBlock/<blockId>")
-def getBlockMd(blockId):
+@app.route("/getBlock/<docId>/<blockId>")
+def getBlockMd(docId, blockId):
     timdb = getTimDb();
+    block = timdb.getBlock(docId, blockId)
+    return block
+
+@app.route("/getBlockHtml/<docId>/<blockId>")
+def getBlockHtml(docId, blockId):
+    timdb = getTimDb();
+    block = timdb.getBlockHtml(docId, blockId)
+    return block
+
+@app.route("/postBlock/", methods=["POST"])
+def postBlock():
+    timdb = getTimDb()
+    request.get_json()['text']
     return ""
 
 @app.route("/pluginCall/<plugin>/<params>")
