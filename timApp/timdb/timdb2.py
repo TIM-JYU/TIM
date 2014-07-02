@@ -387,7 +387,7 @@ class TimDb(object):
         #TODO: Get blocks from Ephemeral.
         #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
         
-        # So let's make a quick hack to fetch the blocks. This is VERY slow; it fetches about one block per second when running locally on Windows machine.
+        # So let's make a quick hack to fetch the blocks. This is VERY slow (on Windows at least); it fetches about one block per second when running locally on Windows machine.
         responseStr = None
         blocks = []
         notEnd = True
@@ -415,6 +415,7 @@ class TimDb(object):
         assert len(result) <= 1, 'len(result) was more than 1'
         return len(result) == 1
         
+    @contract
     def getDocumentAsHtmlBlocks(self, document_id : 'int') -> 'list(str)':
         """Gets the specified document in HTML form."""
         
@@ -422,11 +423,13 @@ class TimDb(object):
         
         try:
             blocks = ec.getDocumentAsHtmlBlocks(document_id)
-        except NotInCacheException as e:
+        except NotInCacheException:
             if self.documentExists(document_id):
                 with open(self.getBlockPath(document_id), 'rb') as f:
                     ec.loadDocument(document_id, f.read())
                 blocks = ec.getDocumentAsHtmlBlocks(document_id)
+            else:
+                raise TimDbException('The requested document was not found.')
         return blocks
     
     @contract
