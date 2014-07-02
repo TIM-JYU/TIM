@@ -136,15 +136,19 @@ class TimDb(object):
         :param block_id: The id of the block whose notes will be fetched.
         """
         cursor = self.db.cursor()
-        cursor.execute("""select id, UserGroup_id from Block where id in
-                             (select Block_id from BlockRelation where parent_block_id = ?) and type_id = ? and UserGroup_id in
+        cursor.execute("""select id, parent_block_specifier from Block,BlockRelation where
+                             Block.id = BlockRelation.Block_id
+                          and id in
+                             (select Block_id from BlockRelation where parent_block_id = ?)
+                          and type_id = ?
+                          and UserGroup_id in
                                  (select UserGroup_id from UserGroupMember where User_id = ?)""", [document_id, blocktypes.NOTE, user_id])
         rows = [x for x in cursor.fetchall()]
         
         notes = []
         for row in rows:
             note_id = row[0]
-            note = {'id' : note_id}
+            note = {'id' : note_id, 'specifier' : row[1]}
             with open(self.getBlockPath(note_id)) as f:
                 note['content'] = f.read()
             notes.append(note)
@@ -376,7 +380,21 @@ class TimDb(object):
         except EphemeralException as e:
             raise TimDbException(str(e))
         return block
+    
+    def getBlockAsHtml(self, document_id : 'int', block_id : 'int') -> 'str':
+        """Gets a block of a document.
         
+        :param document_id: The id of the document.
+        :param block_id: The id (index) of the block in the document.
+        """
+        
+        ec = EphemeralClient(EPHEMERAL_URL)
+        try:
+            block = ec.getBlockAsHtml(document_id, block_id)
+        except EphemeralException as e:
+            raise TimDbException(str(e))
+        return block
+    
     @contract
     def getDocumentBlocks(self, document_id : 'int') -> 'list(dict[2](str: str))':
         """Gets all the blocks of the specified document.
