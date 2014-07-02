@@ -15,7 +15,7 @@ import gitpylib.repo
 import gitpylib.sync
 import gitpylib.file
 import gitpylib.common
-from ephemeralclient import EphemeralClient, EphemeralException
+from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException
 import collections
 
 class TimDbException(Exception):
@@ -105,7 +105,7 @@ class TimDb(object):
     def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
         """Adds a note to the document.
         
-        :param user_id: The user who created the note.
+        :param usergroup_id: The usergroup who owns the note.
         :param content: The content of the note.
         :param block_id: The block to which the comment is added.
         :param block_specifier: A specifier that tells a more accurate position of the note.
@@ -136,15 +136,19 @@ class TimDb(object):
         :param block_id: The id of the block whose notes will be fetched.
         """
         cursor = self.db.cursor()
-        cursor.execute("""select id, UserGroup_id from Block where id in
-                             (select Block_id from BlockRelation where parent_block_id = ?) and type_id = ? and UserGroup_id in
+        cursor.execute("""select id, parent_block_specifier from Block,BlockRelation where
+                             Block.id = BlockRelation.Block_id
+                          and id in
+                             (select Block_id from BlockRelation where parent_block_id = ?)
+                          and type_id = ?
+                          and UserGroup_id in
                                  (select UserGroup_id from UserGroupMember where User_id = ?)""", [document_id, blocktypes.NOTE, user_id])
         rows = [x for x in cursor.fetchall()]
         
         notes = []
         for row in rows:
             note_id = row[0]
-            note = {'id' : note_id}
+            note = {'id' : note_id, 'specifier' : row[1]}
             with open(self.getBlockPath(note_id)) as f:
                 note['content'] = f.read()
             notes.append(note)
@@ -376,7 +380,21 @@ class TimDb(object):
         except EphemeralException as e:
             raise TimDbException(str(e))
         return block
+    
+    def getBlockAsHtml(self, document_id : 'int', block_id : 'int') -> 'str':
+        """Gets a block of a document.
         
+        :param document_id: The id of the document.
+        :param block_id: The id (index) of the block in the document.
+        """
+        
+        ec = EphemeralClient(EPHEMERAL_URL)
+        try:
+            block = ec.getBlockAsHtml(document_id, block_id)
+        except EphemeralException as e:
+            raise TimDbException(str(e))
+        return block
+    
     @contract
     def getDocumentBlocks(self, document_id : 'int') -> 'list(dict[2](str: str))':
         """Gets all the blocks of the specified document.
@@ -387,7 +405,7 @@ class TimDb(object):
         #TODO: Get blocks from Ephemeral.
         #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
         
-        # So let's make a quick hack to fetch the blocks. This is VERY slow; it fetches about one block per second when running locally on Windows machine.
+        # So let's make a quick hack to fetch the blocks. This is VERY slow (on Windows at least); it fetches about one block per second when running locally on Windows machine.
         responseStr = None
         blocks = []
         notEnd = True
@@ -401,6 +419,21 @@ class TimDb(object):
             blockIndex += 1
         return blocks
     
+    @contract
+    def documentExists(self, document_id : 'int') -> 'bool':
+        """Checks whether a document with the specified id exists.
+        
+        :param document_id: The id of the document.
+        :returns: True if the documents exists, false otherwise.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('select count(id) from Block where id = ? and type_id = ?', [document_id, blocktypes.DOCUMENT])
+        result = cursor.fetchall()
+        assert len(result) <= 1, 'len(result) was more than 1'
+        return len(result) == 1
+        
+    @contract
     def getDocumentAsHtmlBlocks(self, document_id : 'int') -> 'list(str)':
         """Gets the specified document in HTML form."""
         
@@ -408,9 +441,13 @@ class TimDb(object):
         
         try:
             blocks = ec.getDocumentAsHtmlBlocks(document_id)
-        except EphemeralException as e:
-            raise TimDbException(str(e))
-        
+        except NotInCacheException:
+            if self.documentExists(document_id):
+                with open(self.getBlockPath(document_id), 'rb') as f:
+                    ec.loadDocument(document_id, f.read())
+                blocks = ec.getDocumentAsHtmlBlocks(document_id)
+            else:
+                raise TimDbException('The requested document was not found.')
         return blocks
     
     @contract

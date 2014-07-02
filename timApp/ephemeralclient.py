@@ -11,6 +11,9 @@ new_contract('bytes', bytes)
 class EphemeralException(Exception):
     pass
 
+class NotInCacheException(Exception):
+    pass
+
 class EphemeralClient(object):
     
     @contract
@@ -91,6 +94,21 @@ class EphemeralClient(object):
         return responseStr
     
     @contract
+    def getBlockAsHtml(self, document_id : 'int', block_id : 'int') -> 'str':
+        """Gets an individual block from a document.
+        
+        :param document_id: The id of the document.
+        :param block_id: The id of the block.
+        :returns: The content of the block.
+        """
+        req = urllib.request.Request(url=self.server_path + '/{}/{}/html'.format(document_id, block_id), method='GET')
+        response = urllib.request.urlopen(req)
+        responseStr = str(response.read(), encoding='utf-8')
+        if responseStr == '{"Error":"No block found"}':
+            raise EphemeralException('No block found with document id %d and index %d' % (document_id, block_id))
+        return responseStr
+    
+    @contract
     def getDocumentAsHtmlBlocks(self, document_id: 'int') -> 'list(str)':
         """Gets the document as a list of HTML blocks.
         
@@ -101,7 +119,7 @@ class EphemeralClient(object):
         response = urllib.request.urlopen(req)
         responseStr = str(response.read(), encoding='utf-8')
         if responseStr == '{"Error":"No doc found"}':
-            raise EphemeralException('No document found with id %d' % document_id)
+            raise NotInCacheException('No document found with id %d' % document_id)
         return json.loads(responseStr)
     
     @contract
