@@ -15,7 +15,7 @@ import gitpylib.repo
 import gitpylib.sync
 import gitpylib.file
 import gitpylib.common
-from ephemeralclient import EphemeralClient, EphemeralException
+from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException
 import collections
 
 class TimDbException(Exception):
@@ -105,7 +105,7 @@ class TimDb(object):
     def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
         """Adds a note to the document.
         
-        :param user_id: The user who created the note.
+        :param usergroup_id: The usergroup who owns the note.
         :param content: The content of the note.
         :param block_id: The block to which the comment is added.
         :param block_specifier: A specifier that tells a more accurate position of the note.
@@ -401,6 +401,20 @@ class TimDb(object):
             blockIndex += 1
         return blocks
     
+    @contract
+    def documentExists(self, document_id : 'int') -> 'bool':
+        """Checks whether a document with the specified id exists.
+        
+        :param document_id: The id of the document.
+        :returns: True if the documents exists, false otherwise.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('select count(id) from Block where id = ? and type_id = ?', [document_id, blocktypes.DOCUMENT])
+        result = cursor.fetchall()
+        assert len(result) <= 1, 'len(result) was more than 1'
+        return len(result) == 1
+        
     def getDocumentAsHtmlBlocks(self, document_id : 'int') -> 'list(str)':
         """Gets the specified document in HTML form."""
         
@@ -408,9 +422,11 @@ class TimDb(object):
         
         try:
             blocks = ec.getDocumentAsHtmlBlocks(document_id)
-        except EphemeralException as e:
-            raise TimDbException(str(e))
-        
+        except NotInCacheException as e:
+            if self.documentExists(document_id):
+                with open(self.getBlockPath(document_id), 'rb') as f:
+                    ec.loadDocument(document_id, f.read())
+                blocks = ec.getDocumentAsHtmlBlocks(document_id)
         return blocks
     
     @contract
