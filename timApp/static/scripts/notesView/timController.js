@@ -32,9 +32,9 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
             sc.displayIndex = true;
             // Get document
-            sc.getDocument = function(documentName){
+            sc.getDocument = function(documentId){
                 sc.displayIndex = false;
-                http({method: 'GET', url: '/getJSON/' + documentName}).
+                http({method: 'GET', url: '/getJSON-HTML/' + documentId}).
                     success(function(data, status, headers, config) {
                         sc.displayIndex = false;
                         sc.paragraphs = data.text;
@@ -48,12 +48,15 @@ TimCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
             sc.updateParagraphs = function(){
                 for(var i = 0; i < sc.paragraphs.length; i++){
-                    var text = sc.paragraphs[i].text;
+                	//paragraphs are already html
+                    var text = sc.paragraphs[i];
                    // var match = sc.pluginPat.exec(sc.paragraphs[i].text);
                    // if(match != null){
                    //     text = sc.fetchAndReplace(text, match[0], match[1]);
                    // }
-                    sc.paragraphs[i].html = sc.convertHtml.makeHtml(text);
+                    //console.log(text);
+                    //console.log(sc.paragraphs[i])
+                    //sc.paragraphs[i].html = text;//sc.convertHtml.makeHtml(text);
                     sc.paragraphs[i].display = false;
                 }
             }
