@@ -60,12 +60,16 @@
 			ng-show="displayIndex">
 
 		<div class="paragraph" ng-repeat="par in pars track by $index">
-			<div style="" id="" class="content {{ '{{ $index }}' }}" bind-once
+			<div style="" class="content {{ '{{ $index }}' }}" bind-once
 				ng-bind-html="par.html"></div>
-			<button class="editButton" ng-click="">Add note</button>
-			<div ng-if="par.notes.length > 0" class="notes" bind-once>
+
+			<div ng-if="par.notes.length > 0" class="notes">
 				<div class="note" ng-repeat="note in par.notes"
 					ng-bind-html="note.content"></div>
+				<div ng-if="showNoteEditor">
+					<textarea class="noteeditor"></textarea>
+				</div>
+				<button ng-if="" class="noteButton" ng-click="showNoteEditor = true">Add note</button>
 			</div>
 		</div>
 	</div>
