@@ -148,7 +148,7 @@ insertRange :: Seq a -> Int -> Seq a -> Seq a
 insertRange orig index source = 
     let 
      (s,e) = Seq.splitAt index orig
-    in s <> source <> e
+    in s <> source <> (Seq.drop 1 e)
 
 main :: IO ()
 main = do

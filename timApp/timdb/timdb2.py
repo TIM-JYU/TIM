@@ -509,7 +509,7 @@ class TimDb(object):
         :param new_content: The new content of the paragraph.
         """
         document_path = self.getDocumentPath(document_id)
-        
+        print(document_path) 
         #TODO: This method needs the version id (hash) of the client's document to see if there's been another edit before this.
         
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id

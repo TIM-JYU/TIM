@@ -9,8 +9,12 @@ ja sorsat hakemistossa /Ephemeral
 
 # Korjaa build-ympäristö
 
+(Samuel: zip-archive ei vaikuttanut olevan asennettuna, joten 
+         tarvi asentaa käsityönä komennolla "cabal install zip-archive")
+
 Ihan kaikki ei kuitenkaan asentunut tähän docker kuvaan, joten
 joudut asentamaan loput. Tähän menee kuitenkin vain hetki:
+
 
     cd /Ephemeral
     cabal install --only-dependencies
