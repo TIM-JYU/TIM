@@ -1,10 +1,7 @@
 '''
 An Ephemeral client that can communicate with Ephemeral server.
 '''
-import urllib.request
-from urllib.request import URLError
 import requests
-import json
 from contracts import contract, new_contract
 
 new_contract('bytes', bytes)
@@ -30,12 +27,13 @@ class EphemeralClient(object):
         :param next_block_id: The id of the following block.
         :param content: The content of the block.
         """
-        # NOTE: Ephemeral doesn't support adding blocks yet.
-        req = urllib.request.Request(url=self.server_path + '/add/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'), method='PUT')
-        response = urllib.request.urlopen(req)
-        responseStr = str(response.read(), encoding='utf-8')
         
-        # TODO: Handle errors.
+        # NOTE: Ephemeral doesn't support adding blocks yet.
+        try:
+            r = requests.put(url=self.server_path + '/add/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'))
+        except ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfBlockNotFound(r.text)
         
         return True
 
@@ -47,11 +45,12 @@ class EphemeralClient(object):
         :param block_id: The id of the block to be deleted.
         :returns: True if deletion was successful, false otherwise.
         """
-        # NOTE: Ephemeral doesn't support deletion yet.
-        req = urllib.request.Request(url=self.server_path + '/delete/{}/{}'.format(document_id, block_id), method='PUT')
-        response = urllib.request.urlopen(req)
-        responseStr = str(response.read(), encoding='utf-8')
-        self.__raiseExceptionIfBlockNotFound(responseStr)
+        
+        try:
+            r = requests.put(url=self.server_path + '/delete/{}/{}'.format(document_id, block_id))
+        except ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfBlockNotFound(r.text)
         
         return True
 
@@ -63,9 +62,13 @@ class EphemeralClient(object):
         :param second_document_id: The id of the second document.
         :returns: (TODO)
         """
-        req = urllib.request.Request(url=self.server_path + '/diff/{}/{}'.format(first_document_id, second_document_id), method='GET')
-        response = urllib.request.urlopen(req)
-        return str(response.read(), encoding='utf-8')
+        
+        try:
+            r = requests.get(url=self.server_path + '/diff/{}/{}'.format(first_document_id, second_document_id))
+        except ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfDocumentNotFound(r.text)
+        return r.text
     
     @contract
     def diff3(self, first_document_id : 'int', second_document_id : 'int', third_document_id : 'int') -> 'str':
@@ -74,11 +77,15 @@ class EphemeralClient(object):
         :param first_document_id: The id of the first document.
         :param second_document_id: The id of the second document.
         :param third_document_id: The id of the third document.
-        :returns: (TODO)
+        :returns: The diff3 output (TODO: what format?).
         """
-        req = urllib.request.Request(url=self.server_path + '/diff3/{}/{}/{}'.format(first_document_id, second_document_id, third_document_id), method='GET')
-        response = urllib.request.urlopen(req)
-        return str(response.read(), encoding='utf-8')
+        
+        try:
+            r = requests.get(url=self.server_path + '/diff3/{}/{}/{}'.format(first_document_id, second_document_id, third_document_id))
+        except ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfDocumentNotFound(r.text)
+        return r.text
     
     @contract
     def getBlock(self, document_id : 'int', block_id : 'int') -> 'str':
@@ -88,11 +95,13 @@ class EphemeralClient(object):
         :param block_id: The id of the block.
         :returns: The content of the block.
         """
-        req = urllib.request.Request(url=self.server_path + '/{}/{}'.format(document_id, block_id), method='GET')
-        response = urllib.request.urlopen(req)
-        responseStr = str(response.read(), encoding='utf-8')
-        self.__raiseExceptionIfBlockNotFound(responseStr)
-        return responseStr
+        
+        try:
+            r = requests.get(url=self.server_path + '/{}/{}'.format(document_id, block_id))
+        except ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfBlockNotFound(r.text)
+        return r.text
     
     @contract
     def __raiseExceptionIfBlockNotFound(self, response : 'str'):
@@ -120,11 +129,13 @@ class EphemeralClient(object):
         :param block_id: The id of the block.
         :returns: The content of the block.
         """
-        req = urllib.request.Request(url=self.server_path + '/{}/{}/html'.format(document_id, block_id), method='GET')
-        response = urllib.request.urlopen(req)
-        responseStr = str(response.read(), encoding='utf-8')
-        self.__raiseExceptionIfBlockNotFound(responseStr)
-        return responseStr
+        
+        try:
+            r = requests.get(url=self.server_path + '/{}/{}/html'.format(document_id, block_id))
+        except ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfBlockNotFound(r.text)
+        return r.text
     
     @contract
     def getDocumentAsHtmlBlocks(self, document_id: 'int') -> 'list(str)':
@@ -166,7 +177,7 @@ class EphemeralClient(object):
         """
         
         try:
-            r = requests.post(url=self.server_path + '/load/{}'.format(document_id), data=content, headers={'Content-Type': 'application/octet-stream'})
+            r = requests.post(url=self.server_path + '/load/{}'.format(document_id), data=content)
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         return True
