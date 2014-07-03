@@ -10,9 +10,32 @@
 	margin-top: 1em;
 }
 
+.notes {
+	position: absolute;
+	left: 45em;
+	width: 17em;
+}
+
 .note {
 	border: 1px solid black;
 	border-radius: 2px;
+}
+
+.noteButton {
+    font-size: x-small;
+    width: 5em;
+    height: 3em;
+    top: 0em;
+    border: 2px none;
+    border-radius: 15px;
+    outline: none;
+    background: #C8FCFD;
+    color: white;
+}
+
+.noteButton:hover {
+    background: #C0C0C0;
+    color: black;
 }
 
 .editButton:hover {
