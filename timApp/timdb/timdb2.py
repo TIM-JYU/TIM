@@ -508,7 +508,7 @@ class TimDb(object):
         :param block_id: The id (relative to document) of the paragraph to be modified.
         :param new_content: The new content of the paragraph.
         """
-        document_path = self.getBlockPath(block_id)
+        document_path = self.getDocumentPath(document_id)
         
         #TODO: This method needs the version id (hash) of the client's document to see if there's been another edit before this.
         

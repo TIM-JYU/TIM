@@ -96,12 +96,13 @@ def getJSON_HTML(doc_id):
 
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
+    documentName = request.get_json()['docName']
     paragraphText = request.get_json()['text']
     paragraphName = request.get_json()['par']
     
     timdb = getTimDb()
     try:
-        timdb.modifyMarkDownBlock(int(paragraphName), paragraphText)
+        timdb.modifyMarkDownBlock(documentName,int(paragraphName), paragraphText)
     except IOError as err:
         print(err)
         return "Failed to modify block."
@@ -128,16 +129,16 @@ def getDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
-@app.route("/getBlock/<docId>/<blockId>")
+@app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
     timdb = getTimDb();
     block = timdb.getBlock(docId, blockId)
     return block
 
-@app.route("/getBlockHtml/<docId>/<blockId>")
+@app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
     timdb = getTimDb();
-    block = timdb.getBlockHtml(docId, blockId)
+    block = timdb.getBlockAsHtml(docId, blockId)
     return block
 
 @app.route("/postBlock/", methods=["POST"])
