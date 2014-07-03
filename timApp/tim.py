@@ -180,7 +180,7 @@ def getNotes(doc_id):
     timdb = getTimDb()
     try:
         #notes = []
-        notes = timdb.getNotes(getCurrentUserId(), doc_id) #TODO: Needs timdb2 
+        notes = timdb.getNotes(getCurrentUserId(), doc_id)
         return json.dumps(notes)
     except ValueError:
         return redirect(url_for('goat'))

@@ -53,11 +53,11 @@ class TimDb(object):
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
-        self.files_root_path = files_root_path
+        self.files_root_path = os.path.abspath(files_root_path)
         
         # TODO: Make sure that db_path and files_root_path are valid!
         
-        self.blocks_path = os.path.join(os.path.abspath(files_root_path), 'blocks')
+        self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
                 os.makedirs(path)
@@ -71,8 +71,14 @@ class TimDb(object):
         os.chdir(self.files_root_path)
         gitpylib.repo.init()
         
-        #Restore old working directory (TODO: is this needed?)
         os.chdir(cwd)
+        
+        # Create .gitattributes that disables EOL conversion on Windows:
+        gitattrib = os.path.join(self.files_root_path, '.gitattributes')
+        with open(gitattrib, 'w') as f:
+            f.write('* text eol=lf')
+        
+        self.gitCommit(gitattrib, 'Created .gitattributes', 'docker')
     
     @contract
     def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
@@ -206,9 +212,13 @@ class TimDb(object):
         os.chdir(self.files_root_path)
         gitpylib.file.stage(file_path)
         # TODO: Set author for the commit (need to call safe_git_call).
-        gitpylib.sync.commit([file_path], commit_message, skip_checks=False, include_staged_files=False)
+        try:
+            gitpylib.sync.commit([file_path], commit_message, skip_checks=False, include_staged_files=False)
+        except Exception as e:
+            raise TimDbException('Commit failed. ' + str(e))
+        finally:
+            os.chdir(cwd)
         latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
-        os.chdir(cwd)
         return latest_hash.rstrip()
 
     @contract
@@ -382,7 +392,7 @@ class TimDb(object):
         return block
     
     def getBlockAsHtml(self, document_id : 'int', block_id : 'int') -> 'str':
-        """Gets a block of a document.
+        """Gets a block of a document in HTML.
         
         :param document_id: The id of the document.
         :param block_id: The id (index) of the block in the document.
@@ -442,9 +452,12 @@ class TimDb(object):
         try:
             blocks = ec.getDocumentAsHtmlBlocks(document_id)
         except NotInCacheException:
+            #print('not in cache, checking if it exists')
             if self.documentExists(document_id):
+                #print('it exists, loading to Ephemeral')
                 with open(self.getBlockPath(document_id), 'rb') as f:
                     ec.loadDocument(document_id, f.read())
+                #print('calling again Ephemeral')
                 blocks = ec.getDocumentAsHtmlBlocks(document_id)
             else:
                 raise TimDbException('The requested document was not found.')
