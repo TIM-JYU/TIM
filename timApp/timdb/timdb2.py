@@ -382,7 +382,7 @@ class TimDb(object):
         return block
     
     def getBlockAsHtml(self, document_id : 'int', block_id : 'int') -> 'str':
-        """Gets a block of a document.
+        """Gets a block of a document in HTML.
         
         :param document_id: The id of the document.
         :param block_id: The id (index) of the block in the document.
