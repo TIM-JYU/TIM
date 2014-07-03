@@ -33,6 +33,7 @@ class EphemeralClient(object):
             r = requests.put(url=self.server_path + '/add/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r.text)
         
         return True
@@ -50,6 +51,7 @@ class EphemeralClient(object):
             r = requests.put(url=self.server_path + '/delete/{}/{}'.format(document_id, block_id))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r.text)
         
         return True
@@ -67,6 +69,7 @@ class EphemeralClient(object):
             r = requests.get(url=self.server_path + '/diff/{}/{}'.format(first_document_id, second_document_id))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfDocumentNotFound(r.text)
         return r.text
     
@@ -84,6 +87,7 @@ class EphemeralClient(object):
             r = requests.get(url=self.server_path + '/diff3/{}/{}/{}'.format(first_document_id, second_document_id, third_document_id))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfDocumentNotFound(r.text)
         return r.text
     
@@ -100,6 +104,7 @@ class EphemeralClient(object):
             r = requests.get(url=self.server_path + '/{}/{}'.format(document_id, block_id))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r.text)
         return r.text
     
@@ -134,6 +139,7 @@ class EphemeralClient(object):
             r = requests.get(url=self.server_path + '/{}/{}/html'.format(document_id, block_id))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r.text)
         return r.text
     
@@ -149,6 +155,7 @@ class EphemeralClient(object):
             r = requests.get(url=self.server_path + '/json-html/{}'.format(document_id))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfDocumentNotFound(r.text)
         return r.json()
     
@@ -164,6 +171,7 @@ class EphemeralClient(object):
             r = requests.get(url=self.server_path + '/{}'.format(document_id))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r.text)
         return r.text
     
@@ -195,6 +203,7 @@ class EphemeralClient(object):
             r = requests.put(url=self.server_path + '/{}/{}'.format(document_id, block_id), data=bytes(new_content, encoding='utf-8'))
         except ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r.text)
         
         return True
