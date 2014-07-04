@@ -4,25 +4,24 @@ Another version of TimDb that stores documents as whole.
 
 # TODO: This file is getting rather large. It should probably be divided somehow.
 
-#from enum import Enum
 import os
 from shutil import copyfile
 import sqlite3
 #import time
 from contracts import contract, new_contract
-#from vcstools import GitClient # vcstools doesn't seem to support creating repos...
 import gitpylib.repo
 import gitpylib.sync
 import gitpylib.file
 import gitpylib.common
 from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException
 import collections
+from pprint import pprint
 
 class TimDbException(Exception):
     pass
 
-BLOCKTYPES=collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE'))
-blocktypes=BLOCKTYPES(0,1,2,3,4)
+BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE'))
+blocktypes = BLOCKTYPES(0,1,2,3,4)
 # import timeit
 #BLOCKTYPE = Enum('BLOCKTYPE', 'Document Comment Note Answer Image')
 #DOCUMENT = 1
@@ -48,7 +47,7 @@ class TimDb(object):
 
     @contract
     def __init__(self, db_path : 'str', files_root_path : 'str'):
-        """Initialized TimDB with the specified database and root path.
+        """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
@@ -76,7 +75,7 @@ class TimDb(object):
         # Create .gitattributes that disables EOL conversion on Windows:
         gitattrib = os.path.join(self.files_root_path, '.gitattributes')
         with open(gitattrib, 'w') as f:
-            f.write('* text eol=lf')
+            f.write('* -text')
         
         self.gitCommit(gitattrib, 'Created .gitattributes', 'docker')
     
@@ -135,6 +134,23 @@ class TimDb(object):
         return
     
     @contract
+    def modifyNote(self, note_id : 'int', new_content : 'str'):
+        """Modifies an existing note.
+        
+        :param note_id: The id of the note to be modified.
+        :param new_content: The new content of the note.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('select exists(select id from Block where id = ? and type_id = ? limit 1)', [note_id, blocktypes.NOTE])
+        result = cursor.fetchone()
+        if result[0] == 0:
+            raise TimDbException('The requested note was not found.')
+        
+        with open(self.getBlockPath(note_id), 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        
+    @contract
     def getNotes(self, user_id : 'int', document_id : 'int'):
         """Gets all the notes for a document for a user.
         
@@ -155,7 +171,7 @@ class TimDb(object):
         for row in rows:
             note_id = row[0]
             note = {'id' : note_id, 'specifier' : row[1]}
-            with open(self.getBlockPath(note_id)) as f:
+            with open(self.getBlockPath(note_id), encoding='utf-8') as f:
                 note['content'] = f.read()
             notes.append(note)
         return notes
