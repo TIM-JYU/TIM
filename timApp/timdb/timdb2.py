@@ -215,11 +215,13 @@ class TimDb(object):
         try:
             gitpylib.sync.commit([file_path], commit_message, skip_checks=False, include_staged_files=False)
         except Exception as e:
+            if 'nothing added to commit' in str(e):
+                return
             raise TimDbException('Commit failed. ' + str(e))
         finally:
             os.chdir(cwd)
-        latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
-        return latest_hash.rstrip()
+        #latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
+        #return latest_hash.rstrip()
 
     @contract
     def deleteParagraph(self, par_id : 'int', document_id : 'int'):
@@ -268,7 +270,7 @@ class TimDb(object):
             ec = EphemeralClient(EPHEMERAL_URL)
             ec.loadDocument(doc_id, f.read())
         
-        sha_hash = self.gitCommit(self.getDocumentPath(doc_id), 'Imported document: %s' % document_name, 'docker')
+        self.gitCommit(self.getDocumentPath(doc_id), 'Imported document: %s' % document_name, 'docker')
         return doc_id
     
     @contract
@@ -522,7 +524,7 @@ class TimDb(object):
         :param new_content: The new content of the paragraph.
         """
         document_path = self.getDocumentPath(document_id)
-        print(document_path) 
+        #print(document_path) 
         #TODO: This method needs the version id (hash) of the client's document to see if there's been another edit before this.
         
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
@@ -533,8 +535,8 @@ class TimDb(object):
         
         with open(self.getDocumentPath(document_id), 'w', encoding='utf-8') as f:
             f.write(doc_content)
-            
-        sha_hash = self.gitCommit(document_path, 'Modified document with id: %d' % document_id, 'docker')
+        
+        self.gitCommit(document_path, 'Modified document with id: %d' % document_id, 'docker')
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
     
