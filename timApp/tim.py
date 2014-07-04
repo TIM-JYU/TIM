@@ -165,11 +165,13 @@ def viewDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
-@app.route("/postNote/<int:group_id>")
-def postNote(group_id):
-    noteText = request.get_json('text')
-    docId = request.get_json('doc_id')
-    paragraph_id = request.get_json('par_id')
+@app.route("/postNote", methods=['POST'])
+def postNote():
+    jsondata = request.get_json()
+    noteText = jsondata['text']
+    group_id = jsondata['group_id']
+    docId = jsondata['doc_id']
+    paragraph_id = jsondata['par_id']
     timdb = getTimDb()
     timdb.addNote(group_id, noteText, int(docId), int(paragraph_id))
     #TODO: Handle error.

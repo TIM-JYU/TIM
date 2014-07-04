@@ -5,30 +5,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script
-	src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
+    src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
 <script
-	src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
+    src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
 <link rel="stylesheet"
-	href="{{url_for('static', filename='stylesheet.css')}}">
+    href="{{url_for('static', filename='stylesheet.css')}}">
 <link
-	href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
+    href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
 <link
-	href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
+    href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
 <script
-	src="{{url_for('static', filename='scripts/notesView/timController.js')}}"></script>
+    src="{{url_for('static', filename='scripts/notesView/timController.js')}}"></script>
 <script
-	src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
+    src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
 <script type="text/javascript"
-	src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
+    src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
 <script type="text/javascript"
-	src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
+    src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
 <script type="text/javascript"
-	src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+    src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
 <script type="text/javascript"
-	src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
+    src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
 <script type="text/javascript"
-	src="{{url_for('static', filename='scripts/getDocuments.js')}}"></script>
+    src="{{url_for('static', filename='scripts/getDocuments.js')}}"></script>
 <style type="text/css" media="screen">
 .editor {
 	position: absolute;
@@ -43,7 +43,7 @@
 </style>
 
 <script type="text/javascript"
-	src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
+    src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
 
 <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -53,25 +53,34 @@
     </script>
 </head>
 <body style="background-color: #CCFFFF" ng-app="timApp"
-	ng-controller="ViewCtrl" ng-init="getDocumentAndNotes({{docID|e}})">
-	<div class="material" data-docid="{{docID|e}}">
-		<h1>{{docName}}</h1>
-		<img src="{{url_for('static', filename='images/loading.gif')}}"
-			ng-show="displayIndex">
+    ng-controller="ViewCtrl" ng-init="getDocumentAndNotes({{docID|e}})">
+    <div class="material">
+        <h1>{{docName}}</h1>
+        <img src="{{url_for('static', filename='images/loading.gif')}}"
+            ng-show="displayIndex">
 
-		<div class="paragraph" ng-repeat="par in pars track by $index">
-			<div style="" class="content {{ '{{ $index }}' }}" bind-once
-				ng-bind-html="par.html"></div>
+        <div class="paragraph" ng-repeat="par in pars track by $index">
+            <div style="" class="content {{ '{{ $index }}' }}" bind-once
+                ng-bind-html="par.html"></div>
 
-			<div ng-if="par.notes.length > 0" class="notes">
-				<div class="note" ng-repeat="note in par.notes"
-					ng-bind-html="note.content"></div>
-				<div ng-if="showNoteEditor">
-					<textarea class="noteeditor"></textarea>
-				</div>
-				<button ng-if="" class="noteButton" ng-click="showNoteEditor = true">Add note</button>
-			</div>
-		</div>
-	</div>
+            <div class="notes">
+                <div ng-show="par.notes.length > 0" class="note"
+                    ng-repeat="note in par.notes">
+                    {{ '{{ note.content }}' }}
+                    <button ng-click="" class="noteButton">Edit</button>
+                    <button ng-click="deleteNote($index, {{docID|e}})"
+                        class="noteButton">Delete</button>
+                </div>
+                <div ng-show="showEditor">
+                    <textarea class="noteeditor" ng-model="note.text"></textarea>
+                </div>
+                <button class="noteButton"
+                    ng-click="showEditor ? addNote($index, {{docID|e}}) : (showEditor = true)">{{
+                    '{{showEditor ? "Save" : "Add note"}}' }}</button>
+                <button ng-show="showEditor" class="noteButton"
+                    ng-click="showEditor = false">Cancel</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
