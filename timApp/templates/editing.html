@@ -51,6 +51,7 @@
 </form> 
 <div class="material"> 
        <div class="paragraph"  ng-repeat="par in paragraphs">   
+           <span> {{ '{{ par.par }}'}} </span>
            <div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once ng-bind-html="par.html"> </div>
            <button class="editButton" ng-click="setEditable(par.par)"> Edit </button>         
            <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display" ng-model="activeEdit.text">
