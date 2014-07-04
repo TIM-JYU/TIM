@@ -17,8 +17,8 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
 
             $scope.getNotes(docID);
             $scope.note = {};
-            //$scope.showEditor = false;
-            
+            // $scope.showEditor = false;
+
             // console.log('got notes');
             // 2. Group notes by paragraph so that each paragraph has "notes"
             // attribute.
@@ -54,7 +54,8 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
         $scope.addNote = function(parIndex, docID) {
             // alert('saving notes, parIndex = ' + parIndex + '\nText is: '
             // + $scope.note.text); dsd
-            // $scope.showEditor = false; //this doesn't work; probably needs its own controller
+            // $scope.showEditor = false; //this doesn't work; probably needs
+            // its own controller
             $http.post('/postNote', {
                 "par_id" : parIndex,
                 "doc_id" : docID,
@@ -71,4 +72,16 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             });
         };
 
+        $scope.deleteNote = function(noteID) {
+            $http.post('/deleteNote', {
+                "note_id" : noteID
+
+            }).success(function(data, status, headers, config) {
+                // TODO: Maybe fetch notes only for this paragraph and not the
+                    // whole document.
+                    $scope.getNotes(docID);
+                }).error(function(data, status, headers, config) {
+                alert('Could not delete the note.')
+            });
+        }
     });
