@@ -133,6 +133,23 @@ class TimDb(object):
         
         return
     
+    def deleteNote(self, note_id : 'int'):
+        """Deletes a note.
+        
+        :param note_id: The id of the note to be deleted.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('delete from Block where id = ? and type_id = ?', [note_id, blocktypes.NOTE])
+        if cursor.rowcount == 0:
+            raise TimDbException('The block to be deleted was not found.')
+        
+        assert os.path.exists(self.getBlockPath(note_id)), "Block did not exist on file system."
+        
+        os.remove(self.getBlockPath(note_id))
+        
+        self.db.commit()
+        
     @contract
     def modifyNote(self, note_id : 'int', new_content : 'str'):
         """Modifies an existing note.
