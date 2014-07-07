@@ -133,6 +133,7 @@ class TimDb(object):
         
         return
     
+    @contract
     def deleteNote(self, note_id : 'int'):
         """Deletes a note.
         
@@ -142,7 +143,9 @@ class TimDb(object):
         cursor = self.db.cursor()
         cursor.execute('delete from Block where id = ? and type_id = ?', [note_id, blocktypes.NOTE])
         if cursor.rowcount == 0:
-            raise TimDbException('The block to be deleted was not found.')
+            raise TimDbException('The block %d was not found.' % note_id)
+        
+        cursor.execute('delete from BlockRelation where Block_id = ?', [note_id])
         
         assert os.path.exists(self.getBlockPath(note_id)), "Block did not exist on file system."
         

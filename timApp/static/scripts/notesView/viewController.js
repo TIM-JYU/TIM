@@ -68,11 +68,11 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
                     // whole document.
                     $scope.getNotes(docID);
                 }).error(function(data, status, headers, config) {
-                alert('Could not save the note.')
+                alert('Could not save the note.');
             });
         };
 
-        $scope.deleteNote = function(noteID) {
+        $scope.deleteNote = function(noteID, docID) {
             $http.post('/deleteNote', {
                 "note_id" : noteID
 
@@ -81,7 +81,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
                     // whole document.
                     $scope.getNotes(docID);
                 }).error(function(data, status, headers, config) {
-                alert('Could not delete the note.')
+                alert('Could not delete the note.');
             });
         }
     });

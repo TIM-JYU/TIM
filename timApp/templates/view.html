@@ -68,7 +68,7 @@
                     ng-repeat="note in par.notes">
                     {{ '{{ note.content }}' }}
                     <button ng-click="" class="noteButton">Edit</button>
-                    <button ng-click="deleteNote($index, {{docID|e}})"
+                    <button ng-click="deleteNote(note.id, {{docID|e}})"
                         class="noteButton">Delete</button>
                 </div>
                 <div ng-show="showEditor">

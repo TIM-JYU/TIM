@@ -180,11 +180,10 @@ def postNote():
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
     jsondata = request.get_json()
-    noteId = jsondata['note_id']
+    noteId = int(jsondata['note_id'])
     timdb = getTimDb()
-    
-    # TODO: Implement this.
-    # timdb.deleteNote(noteId)
+    timdb.deleteNote(noteId)
+    return "Success"
 
 @app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
