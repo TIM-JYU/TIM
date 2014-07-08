@@ -177,6 +177,15 @@ def postNote():
     #TODO: Handle error.
     return "Success"
 
+@app.route("/editNote", methods=['POST'])
+def editNote():
+    jsondata = request.get_json()
+    noteText = jsondata['text']
+    noteId = jsondata['note_id']
+    timdb = getTimDb()
+    timdb.modifyNote(noteId, noteText)
+    return "Success"
+
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
     jsondata = request.get_json()

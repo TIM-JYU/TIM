@@ -18,6 +18,7 @@
     src="{{url_for('static', filename='scripts/notesView/timController.js')}}"></script>
 <script
     src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
+    <script src="{{url_for('static', filename='scripts/notesView/noteController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
 <script type="text/javascript"
     src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
@@ -59,26 +60,27 @@
         <img src="{{url_for('static', filename='images/loading.gif')}}"
             ng-show="displayIndex">
 
-        <div class="paragraph" ng-repeat="par in pars track by $index">
+        <div class="paragraph" ng-repeat="par in pars track by $index" ng-init="parIndex = $index">
             <div style="" class="content {{ '{{ $index }}' }}" bind-once
                 ng-bind-html="par.html"></div>
 
-            <div class="notes">
+            <div class="notes" ng-controller="NoteCtrl">
                 <div ng-show="par.notes.length > 0" class="note"
                     ng-repeat="note in par.notes">
                     {{ '{{ note.content }}' }}
-                    <button ng-click="" class="noteButton">Edit</button>
+                    <button ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
                     <button ng-click="deleteNote(note.id, {{docID|e}})"
                         class="noteButton">Delete</button>
                 </div>
-                <div ng-show="showEditor">
-                    <textarea class="noteeditor" ng-model="note.text"></textarea>
+                <div ng-show="m.showEditor">
+                    <textarea class="noteeditor" ng-model="m.noteText"></textarea>
                 </div>
-                <button class="noteButton"
-                    ng-click="showEditor ? addNote($index, {{docID|e}}) : (showEditor = true)">{{
-                    '{{showEditor ? "Save" : "Add note"}}' }}</button>
-                <button ng-show="showEditor" class="noteButton"
-                    ng-click="showEditor = false">Cancel</button>
+                <button ng-show="m.showEditor" class="noteButton"
+                    ng-click="saveButtonToggled()">Save</button>
+                    <button ng-show="!m.showEditor" class="noteButton"
+                    ng-click="addNoteButtonToggled()">Add note</button>
+                <button ng-show="m.showEditor" class="noteButton"
+                    ng-click="m.showEditor = false">Cancel</button>
             </div>
         </div>
     </div>
