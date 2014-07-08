@@ -74,7 +74,7 @@ class TimDb(object):
         
         # Create .gitattributes that disables EOL conversion on Windows:
         gitattrib = os.path.join(self.files_root_path, '.gitattributes')
-        with open(gitattrib, 'w') as f:
+        with open(gitattrib, 'w', newline='\n') as f:
             f.write('* -text')
         
         self.gitCommit(gitattrib, 'Created .gitattributes', 'docker')
@@ -124,7 +124,7 @@ class TimDb(object):
         cursor.execute('insert into BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?,?)',
                        [note_id, block_specifier, block_id, 0])
         
-        with open(self.getBlockPath(note_id), 'w', encoding='utf-8') as f:
+        with open(self.getBlockPath(note_id), 'w', encoding='utf-8', newline='\n') as f:
             f.write(content)
         
         self.db.commit()
@@ -167,7 +167,7 @@ class TimDb(object):
         if result[0] == 0:
             raise TimDbException('The requested note was not found.')
         
-        with open(self.getBlockPath(note_id), 'w', encoding='utf-8') as f:
+        with open(self.getBlockPath(note_id), 'w', encoding='utf-8', newline='\n') as f:
             f.write(new_content)
         
     @contract
@@ -191,7 +191,7 @@ class TimDb(object):
         for row in rows:
             note_id = row[0]
             note = {'id' : note_id, 'specifier' : row[1]}
-            with open(self.getBlockPath(note_id), encoding='utf-8') as f:
+            with open(self.getBlockPath(note_id), 'r', encoding='utf-8') as f:
                 note['content'] = f.read()
             notes.append(note)
         return notes
@@ -569,7 +569,7 @@ class TimDb(object):
         ec.modifyBlock(document_id, block_id, new_content)
         doc_content = ec.getDocumentFullText(document_id)
         
-        with open(self.getDocumentPath(document_id), 'w', encoding='utf-8') as f:
+        with open(self.getDocumentPath(document_id), 'w', encoding='utf-8', newline='\n') as f:
             f.write(doc_content)
         
         self.gitCommit(document_path, 'Modified document with id: %d' % document_id, 'docker')
