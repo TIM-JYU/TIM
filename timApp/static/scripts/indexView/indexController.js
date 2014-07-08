@@ -1,6 +1,6 @@
 var TimCtrl = angular.module('controllers', []);
 
-TimCtrl.controller("ParCtrl", [ '$scope', '$http', '$q', function(sc, http, q) {
+TimCtrl.controller("IndexCtrl", [ '$scope', '$http', '$q', function(sc, http, q) {
     sc.getDocIds = function() {
         http( {
             method : 'GET',
