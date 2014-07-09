@@ -19,27 +19,6 @@
 <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
 <script type="text/javascript"
     src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/getDocuments.js')}}"></script>
-<style type="text/css" media="screen">
-.editor {
-	position: absolute;
-	height: 100%;
-	width: 45em;
-	top: 0em;
-	left: 60em;
-	border: 2px solid;
-	padding: 15px 5px 5px 5px;
-	border-radius: 15px;
-	text-align: justify;
-}
-</style>
 
 <script type="text/javascript"
     src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
@@ -55,13 +34,22 @@
         <div style="padding: 5px 5px 5px 5px;">
             <span ng-show="displayIndex">&nbsp;&nbsp; Welcome!
                 Start by choosing a document to view: </span> <img
-                src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
+                src="{{url_for('static', filename='images/loading.gif')}}"
+                ng-show="!displayIndex">
             <ul ng-repeat="doc in documentList">
-                <li><a href="{{ '{{ "/documents/" + doc.id }}' }}" ng-bind="doc.name">
-                </a></li>
+                <li><a href="/documents/{{ '{{ doc.id }}' }}"
+                    ng-bind="doc.name"> </a></li>
             </ul>
+            <a ng-show="!showControls" ng-click="showControls = true">Create
+                a new document</a>
+            <div ng-show="showControls">
+                <label>Document name: <input ng-model="docName"
+                    type="text">
+                </label>
+                <input ng-click="createDocument(docName)" type="button" value="Create">
+                <input ng-click="showControls = false" type="button" value="Cancel">
+            </div>
         </div>
-
     </div>
 </body>
 </html>
