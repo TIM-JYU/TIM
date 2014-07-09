@@ -108,16 +108,13 @@ def postParagraph():
         return "Failed to modify block."
     return "Success"
 
-#@app.route("/documents/<doc_id>")
-#def getDocument(doc_id):
-#    timdb = getTimDb()
-#    try:
-#        texts = timdb.getDocumentBlocks(int(doc_id))
-#        doc = timdb.getDocument(int(doc_id))
-#        return render_template('editing.html', name=doc['name'], text=json.dumps(texts))
-#    except ValueError:
-#        return redirect(url_for('goat'))
-
+@app.route("/createDocument", methods=["POST"])
+def createDocument():
+    jsondata = request.get_json()
+    docName = jsondata['doc_name']
+    timdb = getTimDb()
+    docId = timdb.createDocument(docName)
+    return jsonify({'id' : docId})
 
 @app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
