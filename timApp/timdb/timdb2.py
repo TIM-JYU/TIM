@@ -206,7 +206,7 @@ class TimDb(object):
         self.db.close()
     
     def create(self):
-        """Initializes the database from the schema.sql file.
+        """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
         with open('schema2.sql', 'r') as schema_file:
             self.db.cursor().executescript(schema_file.read())
@@ -228,18 +228,20 @@ class TimDb(object):
         document_path = os.path.join(self.blocks_path, str(document_id))
         
         try:
-            # Create an empty file.
-            open(document_path, 'a').close()
+            with open(document_path, 'w', encoding='utf-8', newline='\n') as f:
+                f.write('Edit me!')
         except OSError:
             print('Couldn\'t open file for writing:' + document_path)
             self.db.rollback()
             raise
         
-        # Don't commit to Git at this point.
+        # TODO: Commit to Git (maybe)
         #sha_hash = self.gitCommit(document_path, 'Created document: %s' % name, 'docker')
         #print(sha_hash)
         
-        # TODO: Should the empty doc be put in Ephemeral?
+        ec = EphemeralClient(EPHEMERAL_URL)
+        ec.loadDocument(document_id, b'Edit me!')
+        
         return document_id
     
     @contract
