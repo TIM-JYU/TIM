@@ -37,17 +37,18 @@
                 src="{{url_for('static', filename='images/loading.gif')}}"
                 ng-show="!displayIndex">
             <ul ng-repeat="doc in documentList">
-                <li><a href="/documents/{{ '{{ doc.id }}' }}"
-                    ng-bind="doc.name"> </a></li>
+                <li><a href="/documents/{{ '{{ doc.id }}' }}">{{
+                        '{{ doc.name }}' }}</a> (last modified: {{ '{{ doc.versions[0].timestamp }}' }})</li>
             </ul>
-            <a ng-show="!showControls" ng-click="showControls = true">Create
-                a new document</a>
+            <a ng-show="!showControls && displayIndex"
+                ng-click="showControls = true">Create a new document</a>
             <div ng-show="showControls">
                 <label>Document name: <input ng-model="docName"
                     type="text">
-                </label>
-                <input ng-click="createDocument(docName)" type="button" value="Create">
-                <input ng-click="showControls = false" type="button" value="Cancel">
+                </label> <input ng-click="createDocument(docName)" type="button"
+                    value="Create"> <input
+                    ng-click="showControls = false" type="button"
+                    value="Cancel">
             </div>
         </div>
     </div>

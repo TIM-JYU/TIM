@@ -392,6 +392,7 @@ class TimDb(object):
             result = {}
             for prop, val in zip(cols, row):
                 result[prop] = val
+            result['versions'] = self.getDocumentVersions(result['id'])
             results.append(result)
         return results
     
@@ -522,7 +523,7 @@ class TimDb(object):
         #TODO: Check that a document with this id exists.
         cwd = os.getcwd()
         os.chdir(self.files_root_path)
-        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad ' + os.path.relpath(self.getDocumentPath(document_id)).replace('\\', '/'))
+        output, err = gitpylib.common.safe_git_call('log --format=%H|%ad --date=relative ' + os.path.relpath(self.getDocumentPath(document_id)).replace('\\', '/'))
         os.chdir(cwd)
         lines = output.splitlines()
         versions = []
