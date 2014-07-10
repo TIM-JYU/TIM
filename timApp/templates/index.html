@@ -45,7 +45,7 @@
             <div ng-show="showControls">
                 <label>Document name: <input ng-model="docName"
                     type="text">
-                </label> <input ng-click="createDocument(docName)" type="button"
+                </label> <input ng-disabled="!docName" ng-click="createDocument(docName)" type="button"
                     value="Create"> <input
                     ng-click="showControls = false" type="button"
                     value="Cancel">
