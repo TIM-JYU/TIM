@@ -69,6 +69,61 @@
 	background: #C8FCFD;
 	color: white;
 }
+.editButton:before{
+    content:"Edit";
+    }
+
+.parSaveButton {
+	position: absolute;
+	top: 0em;
+	left: 72em;
+	font-size: x-small;
+	width: 5em;
+	height: 3em;
+	top: 0em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+	background: #19D119;
+	color: white;
+}
+.parSaveButton:before{
+        content:"Save";
+}
+
+.cancelButton:hover {
+	position: absolute;
+	top: 0em;
+	left: 72em;
+	font-size: x-small;
+	width: 5em;
+	height: 3em;
+	top: 3em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+	visibility: visible; 
+    background: #FF0000;
+	color: black;
+}
+.cancelButton:before{
+        content:"Cancel";
+}
+
+.cancelButton {
+	position: absolute;
+	top: 0em;
+	left: 72em;
+	font-size: x-small;
+	width: 5em;
+	height: 3em;
+	top: 3em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+    background: #FF0000;	
+	color: white;
+}
 
 .saveButton {
 	position: absolute;
@@ -91,6 +146,22 @@
 	border: 2px solid;
 	border-radius: 25px;
 	box-shadow: 10px 10px 5px #888888;
+}
+
+.addParButton{
+    z-index: 2;
+    position: absolute;
+    height:1em;
+    opacity:0;
+    height:2em;
+    width: 43em;
+    }
+.addParButton:hover{
+    display:block;
+    background-color:#4DFF4D;
+    border: 1px dotted #338533;
+    border-radius:25px;
+    opacity: 0.3;
 }
 
 PRE {

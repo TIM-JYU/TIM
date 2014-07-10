@@ -2,7 +2,7 @@ import urllib.request
 import urllib
 
 PLUGINS = [
-        {"host" : "http://localhost:50003/1/1", "name" : "typeGame"}
+        {"host" : "http://localhost:50003/", "name" : "typeGame"}
         ]
 
 # Main plugin call, plugin must match one of the specified plugins in 
@@ -10,8 +10,7 @@ PLUGINS = [
 def callPlugin(plugin, params=""):
     plug = getPlugin(plugin)
     if(params != ""):
-        data = urllib.urlencode(params)
-        request = urllib.request.urlopen(plug['host'], data=data)
+        request = urllib.request.urlopen(plug['host'] + params)
     else:
         request = urllib.request.urlopen(plug['host'])
     return request.read()

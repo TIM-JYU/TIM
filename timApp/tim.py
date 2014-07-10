@@ -145,7 +145,7 @@ def postBlock():
     return ""
 
 @app.route("/pluginCall/<plugin>/<params>")
-def callHello(plugin, params):
+def callHello(plugin, params=""):
     return callPlugin(plugin, params).decode('utf-8')
 
 @app.route("/hello", methods=['POST'])
