@@ -144,6 +144,15 @@ replace docID index bs (State st) = liftIO $ do
         Nothing       -> LRU.insert docID (convert bs) st
         Just (Doc d)  -> LRU.insert docID (Doc $ insertRange d index (fromDoc (convert bs))) st
 
+addParagraph :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> m ()
+addParagraph docID idx bs (State st) = liftIO $ do
+    doc <- LRU.lookup docID st
+    case doc of 
+        Just (Doc d) -> LRU.insert docID (Doc $ s <> fromDoc (convert bs) <> e) st
+            where (s,e) = Seq.splitAt idx d
+        Nothing -> LRU.insert docID (convert bs) st 
+
+
 insertRange :: Seq a -> Int -> Seq a -> Seq a
 insertRange orig index source = 
     let 
@@ -197,6 +206,13 @@ main = do
             idx   <- requireParam "idx"
             bd    <- readRequestBody (1024*2000)
             replace docID idx (LBS.toStrict bd) state
+         ),
+         ("/new/:docID/:idx", method POST $ do
+            docID <- requireParam "docID"
+            idx   <- requireParam "idx"
+            bd    <- readRequestBody (1024*2000)
+            addParagraph docID idx (LBS.toStrict bd) state
+            
          ),
          ("load/:docID/", method POST $ do
             docID <- requireParam "docID"
