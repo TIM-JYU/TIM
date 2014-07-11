@@ -53,12 +53,15 @@ Voit kokeilla `Ephemeralia` vaikka näin:
 Nykyisellään `Ephemeral` määrittelee reitit:
 
 * POST /load/:docID                => Lataa cacheen kokonaisen dokumentin
-* GET  /:docID/:blockIndex         => Hakee yksittäisen blokin
+* POST /new/:docID/:idx            => Lisää blokin dokumenttiin
+* PUT  /:docID/:idx                => Korvaa yksittäisen blokin
+* GET  /:docID/:idx                => Hakee yksittäisen blokin Markdown-muodossa
+* GET  /:docID/:idx/html           => Hakee yksittäisen blokin HTML:nä
+* GET  /:docID                     => Hakee koko dokumentin Markdown-muodossa
 * GET  /html/:docID                => Hakee koko dokumentin HTML:nä
 * GET  /json-html/:docID           => Hakee koko dokumentin blokkeina HTML:nä
 * GET  /diff/:docID/:docID         => Hakee diffin (JSON)
 * GET  /diff3/:docID/:docID/:docID => Hakee diff3:n (JSON?)
-* PUT  /:docID/:blockIndex         => Korvaa yksittäisen blokin
 
 
 # Tulevaisuudessa..
