@@ -1,3 +1,4 @@
+
 {-#LANGUAGE OverloadedStrings, ScopedTypeVariables#-}
 module Main where
 import qualified Text.Pandoc as PDC
@@ -144,7 +145,7 @@ fetchDoc docID (State st) =  hoistMaybe (jsErr $ "No such document: "<> (T.pack 
 fetchBlock :: MonadIO m => DocID -> Int -> State -> EitherT Value m Block
 fetchBlock docID index state@(State st) = do
     Doc d <- fetchDoc docID state
-    abortIf (index >= 0 && index < Seq.length d)
+    abortIf (index < 0 && index >= Seq.length d)
             (jsErr "Index out of bounds")
     return (Seq.index d index)
 
@@ -191,9 +192,10 @@ insertRange orig index source =
 textAffinity :: Block -> Block -> Double
 textAffinity d1 d2 
  | d1 == d2  = 1
- | otherwise = Set.size (Set.intersection (bagOfWords d1) (bagOfWords d2))
+ | otherwise = 0.95 * 
+               (Set.size (Set.intersection (bagOfWords d1) (bagOfWords d2))
                `fdiv`
-               Set.size (Set.union        (bagOfWords d1) (bagOfWords d2))
+               Set.size (Set.union        (bagOfWords d1) (bagOfWords d2)))
  where fdiv a b = fromIntegral a / fromIntegral b
 
 main :: IO ()
@@ -295,3 +297,4 @@ requireParamE :: (MonadSnap m, Readable b) => BS.ByteString -> EitherT Value m b
 requireParamE p = lift (getParam p) >>= \x -> case x of
                     Just val -> lift $ fromBS val
                     Nothing  -> left . jsErr $ "Parameter " <> T.decodeUtf8 p <> " needed"
+
