@@ -210,7 +210,9 @@ main = do
             idx   <- requireParamE "idx"
             fetchBlock docID idx state >>= lift.op
         runFailing :: EitherT Value Snap a -> Snap ()
-        runFailing op = eitherT (writeLBS.encode) -- In case of failure, send the encoded error
+        runFailing op = eitherT (\res -> do
+                                    modifyResponse (setResponseStatus 404 "Bad request")
+                                    writeLBS.encode $ res) -- In case of failure, send the encoded error
                                 (\_ -> return ()) -- In case of success, assume that data has been already sent
                                 op
 
@@ -238,6 +240,7 @@ main = do
             bd    <- lift (readRequestBody (1024*2000))
             replace docID idx (LBS.toStrict bd) state
          ),
+         -- Add a new paragraph. Required [X]
          ("/new/:docID/:idx", method POST . runFailing $ do
             docID <- requireParamE "docID"
             idx   <- requireParamE "idx"
@@ -245,11 +248,11 @@ main = do
             lift (addParagraph docID idx (LBS.toStrict bd) state)
             
          ),
+         -- Delete a paragraph. Required [X]
          ("/delete/:docID/:idx", method PUT . runFailing $ do
             docID <- requireParamE "docID"
             idx   <- requireParamE "idx"
             lift (removePar docID idx state)
-            
          ),
          -- Load an entire markdown document into cache. Required [X]
          ("load/:docID/", method POST . runFailing $ do
@@ -259,6 +262,8 @@ main = do
                 loadDocument docID (LBS.toStrict bd) state
                 writeBS "{\"Ok\":\"Document loaded\"}" 
          ),
+         -- Get an affinity map for paragraph `:doc1idx` in document `doc1ID` against
+         -- document `doc2ID`.
          ("match/:doc1ID/:doc1idx/:doc2ID", method GET . runFailing $ do
             d1ID  <- requireParamE "doc1ID"
             d2ID  <- requireParamE "doc2ID"
@@ -266,6 +271,7 @@ main = do
             aff   <- performMatch (d1ID,d1idx) d2ID state 
             lift (writeLBS . encode $ aff)
          ),
+         -- Get a complete affinity map between documents `doc1D` and `doc2ID`.
          ("mapDocuments/:doc1ID/:doc2ID", method GET . runFailing $ do
             d1ID  <- requireParamE "doc1ID"
             d2ID  <- requireParamE "doc2ID"
