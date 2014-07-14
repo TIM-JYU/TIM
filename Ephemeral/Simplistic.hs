@@ -12,6 +12,7 @@ import qualified Data.ByteString.Lazy as LBS
 import Control.Monad.Trans
 import Control.Monad.Trans.Either
 import Snap.Core
+import Data.Ord
 import Data.Aeson
 import GHC.Generics
 import Data.Traversable
@@ -79,6 +80,16 @@ performMatch (d1ID,i1) d2ID state = do
    Doc d2 <- fetchDoc d2ID state
    block  <- fetchBlock d1ID i1 state
    return $ zip (map (textAffinity block) (F.toList d2)) [0..]
+
+performAffinityMap :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(Int,Int)] 
+performAffinityMap d1ID d2ID state = do
+   Doc d1 <- fetchDoc d1ID state
+   Doc d2 <- fetchDoc d2ID state
+   return [(doMatching d1 b,i)
+          | (b,i) <- zip (F.toList d2) [0..]]
+ where 
+  doMatching :: Seq Block -> Block -> Int
+  doMatching s b = snd . maximumBy (comparing fst) $ zip (map (textAffinity b) (F.toList s)) [0..]
 
 -- TODO: PerformDiff is really, really slow!
 performDiff :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(DocID,Int)]
@@ -251,6 +262,12 @@ main = do
             d2ID  <- requireParamE "doc2ID"
             d1idx <- requireParamE "doc1idx"
             aff   <- performMatch (d1ID,d1idx) d2ID state 
+            lift (writeLBS . encode $ aff)
+         ),
+         ("mapDocuments/:doc1ID/:doc2ID", method GET . runFailing $ do
+            d1ID  <- requireParamE "doc1ID"
+            d2ID  <- requireParamE "doc2ID"
+            aff   <- performAffinityMap d1ID d2ID state 
             lift (writeLBS . encode $ aff)
          ),
          ("diff/:parentID/:childID/", method GET . runFailing $ do
