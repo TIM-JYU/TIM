@@ -191,9 +191,10 @@ insertRange orig index source =
 textAffinity :: Block -> Block -> Double
 textAffinity d1 d2 
  | d1 == d2  = 1
- | otherwise = Set.size (Set.intersection (bagOfWords d1) (bagOfWords d2))
+ | otherwise = 0.95 * 
+               (Set.size (Set.intersection (bagOfWords d1) (bagOfWords d2))
                `fdiv`
-               Set.size (Set.union        (bagOfWords d1) (bagOfWords d2))
+               Set.size (Set.union        (bagOfWords d1) (bagOfWords d2)))
  where fdiv a b = fromIntegral a / fromIntegral b
 
 main :: IO ()
