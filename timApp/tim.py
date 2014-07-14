@@ -180,10 +180,12 @@ def viewDocument(doc_id):
 def postNote():
     jsondata = request.get_json()
     noteText = jsondata['text']
-    group_id = jsondata['group_id']
+    #group_id = jsondata['group_id']
+    
     docId = jsondata['doc_id']
     paragraph_id = jsondata['par_id']
     timdb = getTimDb()
+    group_id = timdb.users.getUserGroups(getCurrentUserId())[0]['id']
     timdb.notes.addNote(group_id, noteText, int(docId), int(paragraph_id))
     #TODO: Handle error.
     return "Success"
