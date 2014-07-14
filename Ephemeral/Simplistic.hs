@@ -12,6 +12,7 @@ import qualified Data.ByteString.Lazy as LBS
 import Control.Monad.Trans
 import Control.Monad.Trans.Either
 import Snap.Core
+import Data.Ord
 import Data.Aeson
 import GHC.Generics
 import Data.Traversable
@@ -79,6 +80,17 @@ performMatch (d1ID,i1) d2ID state = do
    Doc d2 <- fetchDoc d2ID state
    block  <- fetchBlock d1ID i1 state
    return $ zip (map (textAffinity block) (F.toList d2)) [0..]
+
+performAffinityMap :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(Int,Int,Double)] 
+performAffinityMap d1ID d2ID state = do
+   Doc d1 <- fetchDoc d1ID state
+   Doc d2 <- fetchDoc d2ID state
+   return [(idx1,idx2,aff)
+          | (b,idx1) <- zip (F.toList d2) [0..]
+          , let (aff,idx2) = doMatching d1 b]
+ where 
+  doMatching :: Seq Block -> Block -> (Double,Int)
+  doMatching s b = maximumBy (comparing fst) $ zip (map (textAffinity b) (F.toList s)) [0..]
 
 -- TODO: PerformDiff is really, really slow!
 performDiff :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(DocID,Int)]
@@ -190,15 +202,17 @@ textAffinity d1 d2
 main :: IO ()
 main = do
     state <- initialize
-    let withDoc op = do
-            docID <- requireParam "docID"
-            runFailing (fetchDoc docID state>>=lift.op)
-        withBlock op =  do
-            docID <- requireParam "docID"
-            idx   <- requireParam "idx"
-            runFailing (fetchBlock docID idx state >>= lift.op)
+    let withDoc op = runFailing $ do
+            docID <- requireParamE "docID"
+            fetchDoc docID state>>=lift.op
+        withBlock op = runFailing $  do
+            docID <- requireParamE "docID"
+            idx   <- requireParamE "idx"
+            fetchBlock docID idx state >>= lift.op
         runFailing :: EitherT Value Snap a -> Snap ()
-        runFailing op = eitherT (writeLBS.encode) -- In case of failure, send the encoded error
+        runFailing op = eitherT (\res -> do
+                                    modifyResponse (setResponseStatus 404 "Bad request")
+                                    writeLBS.encode $ res) -- In case of failure, send the encoded error
                                 (\_ -> return ()) -- In case of success, assume that data has been already sent
                                 op
 
@@ -226,31 +240,42 @@ main = do
             bd    <- lift (readRequestBody (1024*2000))
             replace docID idx (LBS.toStrict bd) state
          ),
-         ("/new/:docID/:idx", method POST $ do
-            docID <- requireParam "docID"
-            idx   <- requireParam "idx"
-            bd    <- readRequestBody (1024*2000)
-            addParagraph docID idx (LBS.toStrict bd) state
+         -- Add a new paragraph. Required [X]
+         ("/new/:docID/:idx", method POST . runFailing $ do
+            docID <- requireParamE "docID"
+            idx   <- requireParamE "idx"
+            bd    <- lift (readRequestBody (1024*2000))
+            lift (addParagraph docID idx (LBS.toStrict bd) state)
             
          ),
-         ("/delete/:docID/:idx", method PUT $ do
-            docID <- requireParam "docID"
-            idx   <- requireParam "idx"
-            removePar docID idx state
-            
+         -- Delete a paragraph. Required [X]
+         ("/delete/:docID/:idx", method PUT . runFailing $ do
+            docID <- requireParamE "docID"
+            idx   <- requireParamE "idx"
+            lift (removePar docID idx state)
          ),
          -- Load an entire markdown document into cache. Required [X]
-         ("load/:docID/", method POST $ do
-            docID <- requireParam "docID"
-            bd    <- readRequestBody (1024*2000)
-            loadDocument docID (LBS.toStrict bd) state
-            writeBS "{\"Ok\":\"Document loaded\"}" 
+         ("load/:docID/", method POST . runFailing $ do
+            docID <- requireParamE "docID"
+            lift $ do
+                bd    <- readRequestBody (1024*2000)
+                loadDocument docID (LBS.toStrict bd) state
+                writeBS "{\"Ok\":\"Document loaded\"}" 
          ),
+         -- Get an affinity map for paragraph `:doc1idx` in document `doc1ID` against
+         -- document `doc2ID`.
          ("match/:doc1ID/:doc1idx/:doc2ID", method GET . runFailing $ do
             d1ID  <- requireParamE "doc1ID"
             d2ID  <- requireParamE "doc2ID"
             d1idx <- requireParamE "doc1idx"
             aff   <- performMatch (d1ID,d1idx) d2ID state 
+            lift (writeLBS . encode $ aff)
+         ),
+         -- Get a complete affinity map between documents `doc1D` and `doc2ID`.
+         ("mapDocuments/:doc1ID/:doc2ID", method GET . runFailing $ do
+            d1ID  <- requireParamE "doc1ID"
+            d2ID  <- requireParamE "doc2ID"
+            aff   <- performAffinityMap d1ID d2ID state 
             lift (writeLBS . encode $ aff)
          ),
          ("diff/:parentID/:childID/", method GET . runFailing $ do
@@ -259,12 +284,12 @@ main = do
             diffed <- performDiff parentID childID state
             lift (writeLBS (encode diffed))
          ),
-         ("diff3/:parentID/:childID1/:childID2", method GET $ do
-            parentID <- requireParam "parentID"
-            childID1  <- requireParam "childID1"
-            childID2  <- requireParam "childID2"
+         ("diff3/:parentID/:childID1/:childID2", method GET . runFailing $ do
+            parentID <- requireParamE "parentID"
+            childID1 <- requireParamE "childID1"
+            childID2 <- requireParamE "childID2"
             diffed <- performDiff3 parentID childID1 childID2 state
-            writeLBS (encode diffed) 
+            lift (writeLBS (encode diffed))
          )
  
         ]
@@ -273,8 +298,3 @@ requireParamE :: (MonadSnap m, Readable b) => BS.ByteString -> EitherT Value m b
 requireParamE p = lift (getParam p) >>= \x -> case x of
                     Just val -> lift $ fromBS val
                     Nothing  -> left . jsErr $ "Parameter " <> T.decodeUtf8 p <> " needed"
-
-requireParam :: (MonadSnap m, Readable b) => BS.ByteString -> m b
-requireParam p = getParam p >>= \x -> case x of
-                    Just val -> fromBS val
-                    Nothing -> error $ "Parameter "++show p++" needed" -- TODO
