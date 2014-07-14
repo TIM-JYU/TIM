@@ -176,20 +176,17 @@ addParagraph docID idx bs (State st) = liftIO $ do
         Nothing -> LRU.insert docID (convert bs) st 
 
 
-removePar :: MonadIO m => DocID -> Int -> State -> m ()
-removePar docID idx (State st) = liftIO $ do
-    doc <- LRU.lookup docID st
-    case doc of 
-        Just (Doc d) -> LRU.insert docID (Doc $ s <> Seq.drop 1 e) st
-            where (s,e) = Seq.splitAt idx d
-        Nothing -> return () 
+removePar :: MonadIO m => DocID -> Int -> State -> EitherT Value m ()
+removePar docID idx state@(State st) = do
+    Doc d <- fetchDoc docID state
+    let (s,e) = Seq.splitAt idx d
+    liftIO (LRU.insert docID (Doc $ s <> Seq.drop 1 e) st)
 
 -- Currently acts as part of replace, removes original block.
 insertRange :: Seq a -> Int -> Seq a -> Seq a
 insertRange orig index source = 
-    let 
-     (s,e) = Seq.splitAt index orig
-    in s <> source <> (Seq.drop 1 e)
+    let (s,e) = Seq.splitAt index orig
+    in  s <> source <> (Seq.drop 1 e)
 
 textAffinity :: Block -> Block -> Double
 textAffinity d1 d2 
@@ -252,7 +249,7 @@ main = do
          ("/delete/:docID/:idx", method PUT . runFailing $ do
             docID <- requireParamE "docID"
             idx   <- requireParamE "idx"
-            lift (removePar docID idx state)
+            removePar docID idx state
          ),
          -- Load an entire markdown document into cache. Required [X]
          ("load/:docID/", method POST . runFailing $ do

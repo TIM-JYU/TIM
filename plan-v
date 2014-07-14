@@ -1,0 +1,85 @@
+# Lukoton & Tunnisteeton
+
+Suunnitteluperiaatteet:
+
+* Mahdollisimman vähän ongelmia yhtäaikaisuudesta
+* Helppo toteuttaa (vastaa gitin mallia melko pitkälle)
+* Helposti muistinnettavissa (memoization)
+
+## Määritelmiä
+
+* **Dokumentti**: Järjestetty joukko kappaleita
+
+* **Kappale**: Mikä tahansa elementti, joka vastaa html:n block elementtiä. Esimerkiksi
+tekstikappale, taulukko, interaktiivinen komponentti, tai otsikko.
+
+* **Käännös**: Identtisesti sama kappale, mutta eri kielellä.
+
+* **Diff2**: [Standardi unix diff2](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.4.6927).
+
+* **Diff3**: [Standardi unix diff3](http://www.cis.upenn.edu/~bcpierce/papers/diff3-short.pdf)
+
+* **match(doc1,doc2)**: Yksinkertainen affiniteettifunktio kahdelle tekstikappaleelle. Esimerkiksi
+seuraava määritelmä tuntuu toimivan kohtuu hyvin.
+
+`match(d1,d2) == 1` jos `d1 == d2`
+`match(d1,d2) == #intersection(set(d1),set(d2)) / #union(set(d1),set(d2))`
+
+Missä `set(d)` on kappaleen markdown lähdetekstin sanojen joukko, `#` merkitsee
+joukon mahtavuutta, `union` on joukkojen yhdiste ja `intersection` niiden leikkaus.
+
+Tätä mittaria käytetään tunnistamaan muistiinpanojen sijainti.
+
+## Dokumentin datamalli
+
+Dokumentista talletetaan:
+    * Kappaleet ja niiden järjestys,
+    * nimi tai muu vastaava uniikki tunniste,
+    * versio (tiiviste + lista edeltäjistä).
+
+Toisinsanoen, mitä tahansa dokumentia ja versiota voidaan indeksoida
+nopeasti. Versiot muodostavat **osittaisjärjestyksen**, eli ne eivät
+ole juoksevia numeroita. Järkevin tapa tallettaa versio on todennäköisesti
+tallettaa koko dokumentista laskettu tiiviste ja viitteet dokumentin
+aikaisempiin versioihin.
+
+Dokumentit ovat muuttumattomia, eli jokainen muutos tuottaa uuden dokumentin.
+(Talletusrakenne voi tarvittaessa optimoida tätä)
+
+## Kappaleen datamalli
+
+Kappaleesta talletetaan:
+
+* Markdown lähdeteksti
+* Metatiedot, kuten:
+    - Käännökset, eli erikieliset versiot
+    - Muut mahdolliset laajenteet, joita voi olla *kaikilla* kappaleilla.
+* Muistinnetut tiedot, kuten:
+    - Esiladottu html
+    - Hash nopeaa vertausta varten
+    - Kappaleen sanojen joukko nopeaa matchausta varten
+    - Kappaleeseen matchatut muistiinpanot
+    - jne.
+
+Lähdeteksti ja metatiedot muodostavat luontaisen tulotyypin. Erityisesti tämä
+johtaa siihen, että *diff2/3* ja *match* voidaan laskea lähdetekstille ja
+jokaiselle metatiedolle erikseen, jolloin saadaan useita diffejä.
+
+Muistinnetut tiedot voidaan aina laskea uudestaan ja niiden säilyttäminen
+on vain tehokkuuskysymys.
+
+# Käyttätapaukset
+
+## 2. Rinnakkainen moniste
+
+Kaikki
+
+(Talletusrakenteella voidaan optimoida tätä tarvittaessa)
+
+# Mahdollisia ongelmakohtia
+
+Käännetyn tekstin kappaleet ja alkuperäisen tekstin kappaleet eivät
+todennäköisesti vastaa toisiaan 1:1. Todennäköisesti sama asia 
+jakaantuu useisiin kappaleisiin kun se kirjoitetaan luontevasti
+toiselle kielelle. Tämä malli rajoittaa vastaavuuden 1:1:een, mikä
+saattaa vaikeuttaa kääntämistä.
