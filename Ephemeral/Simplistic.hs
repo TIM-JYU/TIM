@@ -202,13 +202,13 @@ textAffinity d1 d2
 main :: IO ()
 main = do
     state <- initialize
-    let withDoc op = do
-            docID <- requireParam "docID"
-            runFailing (fetchDoc docID state>>=lift.op)
-        withBlock op =  do
-            docID <- requireParam "docID"
-            idx   <- requireParam "idx"
-            runFailing (fetchBlock docID idx state >>= lift.op)
+    let withDoc op = runFailing $ do
+            docID <- requireParamE "docID"
+            fetchDoc docID state>>=lift.op
+        withBlock op = runFailing $  do
+            docID <- requireParamE "docID"
+            idx   <- requireParamE "idx"
+            fetchBlock docID idx state >>= lift.op
         runFailing :: EitherT Value Snap a -> Snap ()
         runFailing op = eitherT (writeLBS.encode) -- In case of failure, send the encoded error
                                 (\_ -> return ()) -- In case of success, assume that data has been already sent
@@ -238,25 +238,26 @@ main = do
             bd    <- lift (readRequestBody (1024*2000))
             replace docID idx (LBS.toStrict bd) state
          ),
-         ("/new/:docID/:idx", method POST $ do
-            docID <- requireParam "docID"
-            idx   <- requireParam "idx"
-            bd    <- readRequestBody (1024*2000)
-            addParagraph docID idx (LBS.toStrict bd) state
+         ("/new/:docID/:idx", method POST . runFailing $ do
+            docID <- requireParamE "docID"
+            idx   <- requireParamE "idx"
+            bd    <- lift (readRequestBody (1024*2000))
+            lift (addParagraph docID idx (LBS.toStrict bd) state)
             
          ),
-         ("/delete/:docID/:idx", method PUT $ do
-            docID <- requireParam "docID"
-            idx   <- requireParam "idx"
-            removePar docID idx state
+         ("/delete/:docID/:idx", method PUT . runFailing $ do
+            docID <- requireParamE "docID"
+            idx   <- requireParamE "idx"
+            lift (removePar docID idx state)
             
          ),
          -- Load an entire markdown document into cache. Required [X]
-         ("load/:docID/", method POST $ do
-            docID <- requireParam "docID"
-            bd    <- readRequestBody (1024*2000)
-            loadDocument docID (LBS.toStrict bd) state
-            writeBS "{\"Ok\":\"Document loaded\"}" 
+         ("load/:docID/", method POST . runFailing $ do
+            docID <- requireParamE "docID"
+            lift $ do
+                bd    <- readRequestBody (1024*2000)
+                loadDocument docID (LBS.toStrict bd) state
+                writeBS "{\"Ok\":\"Document loaded\"}" 
          ),
          ("match/:doc1ID/:doc1idx/:doc2ID", method GET . runFailing $ do
             d1ID  <- requireParamE "doc1ID"
@@ -277,12 +278,12 @@ main = do
             diffed <- performDiff parentID childID state
             lift (writeLBS (encode diffed))
          ),
-         ("diff3/:parentID/:childID1/:childID2", method GET $ do
-            parentID <- requireParam "parentID"
-            childID1  <- requireParam "childID1"
-            childID2  <- requireParam "childID2"
+         ("diff3/:parentID/:childID1/:childID2", method GET . runFailing $ do
+            parentID <- requireParamE "parentID"
+            childID1 <- requireParamE "childID1"
+            childID2 <- requireParamE "childID2"
             diffed <- performDiff3 parentID childID1 childID2 state
-            writeLBS (encode diffed) 
+            lift (writeLBS (encode diffed))
          )
  
         ]
@@ -291,8 +292,3 @@ requireParamE :: (MonadSnap m, Readable b) => BS.ByteString -> EitherT Value m b
 requireParamE p = lift (getParam p) >>= \x -> case x of
                     Just val -> lift $ fromBS val
                     Nothing  -> left . jsErr $ "Parameter " <> T.decodeUtf8 p <> " needed"
-
-requireParam :: (MonadSnap m, Readable b) => BS.ByteString -> m b
-requireParam p = getParam p >>= \x -> case x of
-                    Just val -> fromBS val
-                    Nothing -> error $ "Parameter "++show p++" needed" -- TODO
