@@ -49,15 +49,14 @@
             <button ng-click="uploadFile()">Upload image</button>
 </form> 
 <div class="material"> 
-<!--        <div ng-if="paragraphs.length > 1" class="addParButton b0" ng-click="addParagraphs(0)"><strong> Add paragraph </strong> </div> -->
+        <div ng-if="paragraphs.length > 1" class="addParButton b0" ng-click="addParagraph(0)"><strong> + </strong> </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">   
            <span> {{ '{{ par.par }}'}} </span>
-           <div style="" id="" class="content {{ '{{ par.par }}' }}" bind-once ng-bind-html="par.html"> </div>
+           <div style="" id="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html"> </div>
            <button ng-class="par.display ? 'parSaveButton' : 'editButton' " ng-click="setEditable(par.par)"></button>
            <button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          
-           <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display" ng-model="activeEdit.text">
-           </div> 
-           <!--    <div class="addParButton b{{'{{par.par + 1}}'}}" ng-click="addParagraphs(par.par)"><strong> Add paragraph </strong> </div>-->  
+           <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display" ng-model="activeEdit.text"></div> 
+           <div class="addParButton b{{'{{par.par + 1}}'}}" ng-click="addParagraph(par.par + 1)"><strong> + </strong> </div>  
        </div>
    </div>
 </body>

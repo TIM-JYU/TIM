@@ -164,6 +164,15 @@ addParagraph docID idx bs (State st) = liftIO $ do
         Nothing -> LRU.insert docID (convert bs) st 
 
 
+removePar :: MonadIO m => DocID -> Int -> State -> m ()
+removePar docID idx (State st) = liftIO $ do
+    doc <- LRU.lookup docID st
+    case doc of 
+        Just (Doc d) -> LRU.insert docID (Doc $ s <> Seq.drop 1 e) st
+            where (s,e) = Seq.splitAt idx d
+        Nothing -> return () 
+
+-- Currently acts as part of replace, removes original block.
 insertRange :: Seq a -> Int -> Seq a -> Seq a
 insertRange orig index source = 
     let 
@@ -222,6 +231,12 @@ main = do
             idx   <- requireParam "idx"
             bd    <- readRequestBody (1024*2000)
             addParagraph docID idx (LBS.toStrict bd) state
+            
+         ),
+         ("/delete/:docID/:idx", method PUT $ do
+            docID <- requireParam "docID"
+            idx   <- requireParam "idx"
+            removePar docID idx state
             
          ),
          -- Load an entire markdown document into cache. Required [X]

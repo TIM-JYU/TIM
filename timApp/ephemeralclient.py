@@ -30,7 +30,7 @@ class EphemeralClient(object):
         
         # NOTE: Ephemeral doesn't support adding blocks yet.
         try:
-            r = requests.put(url=self.server_path + '/new/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'))
+            r = requests.post(url=self.server_path + '/new/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'))
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
