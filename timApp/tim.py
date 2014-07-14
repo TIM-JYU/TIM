@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, Flask, redirect, url_for
+from flask import jsonify, Flask, redirect, url_for, session, abort
 from flask import render_template
 from flask import g
 from flask import request
@@ -41,6 +41,10 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
+@app.errorhandler(403)
+def page_not_found(e):
+    return render_template('403.html'), 403
+
 @app.route('/upload/', methods=['POST'])
 def upload_file():
     print("File received, checking contents...")
@@ -59,10 +63,13 @@ def uploaded_file(filename):
 @app.route("/getDocuments/")
 def getDocuments():
     timdb = getTimDb()
-    return Response(json.dumps(timdb.documents.getDocuments()), mimetype='application/json')
+    docs = timdb.documents.getDocuments()
+    allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    return Response(json.dumps(allowedDocs), mimetype='application/json')
 
 def getCurrentUserId():
-    return 1
+    uid = session.get('user_id')
+    return uid if uid is not None else 0
 
 def getTimDb():
     if not hasattr(g, 'timdb'):
@@ -156,6 +163,8 @@ def hello():
 @app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
     timdb = getTimDb()
+    if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
+        abort(403)
     try:
         #texts = timdb.getDocumentBlocks(doc_id)
         doc = timdb.documents.getDocument(doc_id)
@@ -203,14 +212,31 @@ def getNotes(doc_id):
         return redirect(url_for('goat'))
 
 @app.route("/")
-def getFile():
-    return render_template('index.html')
+def indexPage():
+    return render_template('index.html', userName=session.get('user_name'), userId=getCurrentUserId())
 
 @app.route("/login", methods=['POST'])
 def login():
     jsondata = request.get_json()
     userName = jsondata['user_name']
+    timdb = getTimDb()
+    userId = timdb.users.getUserByName(userName)
     
+    #For now we just create a user if it doesn't exist.
+    if userId is None:
+        uid = timdb.users.createUser(userName)
+        gid = timdb.users.createUserGroup('group of user %s' % userName)
+        timdb.users.addUserToGroup(gid, uid)
+        userId = uid
+    session['user_id'] = userId
+    session['user_name'] = userName
+    return 'Success'
+
+@app.route("/logout", methods=['POST'])
+def logout():
+    session['user_id'] = None
+    session['user_name'] = 'Anonymous'
+    return redirect(url_for('indexPage'))
     
 if __name__ == "__main__":
 #    app.debug = True

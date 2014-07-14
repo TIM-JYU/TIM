@@ -143,15 +143,9 @@ class Documents(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('select id,description as name from Block where type_id = ?', [blocktypes.DOCUMENT])
-        rows = [x for x in cursor.fetchall()]
-        cols = [x[0] for x in cursor.description]
-        results = []
-        for row in rows:
-            result = {}
-            for prop, val in zip(cols, row):
-                result[prop] = val
+        results = self.resultAsDictionary(cursor)
+        for result in results:
             result['versions'] = self.getDocumentVersions(result['id'])
-            results.append(result)
         return results
     
     @contract

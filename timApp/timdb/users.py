@@ -16,7 +16,17 @@ class Users(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path)
+    
+    @contract
+    def createAnonymousUser(self) -> 'None':
+        """Creates an anonymous user and a usergroup for it."""
         
+        cursor = self.db.cursor()
+        cursor.execute('insert into User (id, name) values (?, ?)', [0, 'Anonymous'])
+        cursor.execute('insert into UserGroup (id, name) values (?, ?)', [0, 'Anonymous group'])
+        cursor.execute('insert into UserGroupMember (User_id, UserGroup_id) values (?, ?)', [0, 0])
+        self.db.commit()
+    
     @contract
     def createUser(self, name : 'str') -> 'int':
         """Creates a new user with the specified name.
@@ -62,8 +72,33 @@ class Users(TimDbBase):
         """
         
         cursor = self.db.cursor()
-        cursor.execute('select * from User where id = ?', [user_id])
+        cursor.execute('select id, name from User where id = ?', [user_id])
         return cursor.fetchone()
+    
+    @contract
+    def getUserByName(self, name : 'str') -> 'int|None':
+        """Gets the id of the specified username.
+        
+        :param name: The name of the user.
+        :returns: The id of the user or None if the user does not exist.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('select id from User where name = ?', [name])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
+    
+    @contract
+    def getUserGroups(self, user_id : 'int') -> 'list(dict)':
+        """Gets the user groups of a user.
+        
+        :param user_id: The id of the user.
+        :returns: The user groups that the user belongs to.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute("""select id, name from UserGroup where id in (select UserGroup_id from UserGroupMember where User_id = ?)""", [user_id])
+        return self.resultAsDictionary(cursor)
     
     def __grantAccess(self, group_id : 'int', block_id : 'int', access_type : 'str'):
         """Grants access to a group for a block.
