@@ -81,15 +81,16 @@ performMatch (d1ID,i1) d2ID state = do
    block  <- fetchBlock d1ID i1 state
    return $ zip (map (textAffinity block) (F.toList d2)) [0..]
 
-performAffinityMap :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(Int,Int)] 
+performAffinityMap :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(Int,Int,Double)] 
 performAffinityMap d1ID d2ID state = do
    Doc d1 <- fetchDoc d1ID state
    Doc d2 <- fetchDoc d2ID state
-   return [(doMatching d1 b,i)
-          | (b,i) <- zip (F.toList d2) [0..]]
+   return [(idx1,idx2,aff)
+          | (b,idx1) <- zip (F.toList d2) [0..]
+          , let (aff,idx2) = doMatching d1 b]
  where 
-  doMatching :: Seq Block -> Block -> Int
-  doMatching s b = snd . maximumBy (comparing fst) $ zip (map (textAffinity b) (F.toList s)) [0..]
+  doMatching :: Seq Block -> Block -> (Double,Int)
+  doMatching s b = maximumBy (comparing fst) $ zip (map (textAffinity b) (F.toList s)) [0..]
 
 -- TODO: PerformDiff is really, really slow!
 performDiff :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(DocID,Int)]
