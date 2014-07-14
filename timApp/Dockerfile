@@ -2,7 +2,7 @@
 from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
-# Asennetaan python, pip ja flask
+# Asennetaan Python, pip ja muut tarvittavat packaget
 
 run apt-get install -y python3
 run apt-get install -y python3-pip
@@ -11,6 +11,8 @@ run pip3 install markdown
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
 run pip3 install hypothesis
+run pip3 install gitpylib
+run pip3 install requests
 
 # Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
 # hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen
