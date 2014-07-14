@@ -281,17 +281,22 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
 
             sc.saveEdits = function(elem, elemId){
-                    text = sc.activeEdit['editor'].getSession().getValue();
-                    //sc.paragraphs[elemId].text = mdtext; 
-                    //$('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
-                    sc.paragraphs[elemId].display = false;
-                    http({method: 'POST',
-                          url: '/postParagraph/',
-                          data: JSON.stringify({
-                                                "docName" : sc.docId,
-                                                "par" : elem.par, 
-                                                "text": text
-                          })});
+                    if(sc.activeEdit.editor.getSession().getValue().length <= 0){
+                        sc.delParagraph(elemId);
+                    }
+                    else{
+                        text = sc.activeEdit['editor'].getSession().getValue();
+                        //sc.paragraphs[elemId].text = mdtext; 
+                        //$('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
+                        sc.paragraphs[elemId].display = false;
+                        http({method: 'POST',
+                                url: '/postParagraph/',
+                                data: JSON.stringify({
+                                        "docName" : sc.docId,
+                                        "par" : elem.par, 
+                                        "text": text
+                             })});
+                    }
             }
 
             sc.newParagraph = function(elem){
@@ -314,9 +319,9 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                         sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
                     }
                     for(var z = 0; z < sc.editors.length; z++){
-                            if(sc.editors[z].par >= indx){
-                                    sc.editors[z].par = sc.editors[z].par - 1;
-                            }
+                        if(sc.editors[z].par >= indx){
+                               sc.editors[z].par = sc.editors[z].par - 1;
+                        }
                     }
             };
             
