@@ -124,7 +124,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                             sc.saveEdits(elem, elemId);
                     }
                     sc.activeEdit = {"editId": "", "editor": ""};
-                    sc.promiseOfHtml(par);
+
                }
                 else {
                     if(sc.activeEdit.editId !== ""){
@@ -281,6 +281,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
 
             sc.saveEdits = function(elem, elemId){
+                    alert(sc.activeEdit.editor.getSession().getValue().length <= 0);
                     if(sc.activeEdit.editor.getSession().getValue().length <= 0){
                         sc.delParagraph(elemId);
                     }
@@ -296,6 +297,8 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                                         "par" : elem.par, 
                                         "text": text
                              })});
+
+                        sc.promiseOfHtml(elemId);
                     }
             }
 
@@ -311,18 +314,42 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                           })});
             };
 
-
+            sc.callDelete = function(blockId){
+                var deferred = q.defer();
+                removePar = function(blockId){ 
+                    http.get('/deleteParagraph/' + sc.docId + "/" + blockId).
+                        success(function(data, status, headers, config) {
+                            deferred.resolve(data);
+                        }).
+                        error(function(data, status, headers, config) {
+                            deferred.reject("Failed to fetch html")
+                        });
+                }
+                removePar(blockId);
+                return deferred.promise;
+            }
             sc.delParagraph = function(indx){
-                    sc.paragraphs.splice(indx, 1);
-                    var i = (function(i){return i})(indx);
-                    for(var j = i; j < sc.paragraphs.length;j++){
-                        sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
-                    }
-                    for(var z = 0; z < sc.editors.length; z++){
-                        if(sc.editors[z].par >= indx){
-                               sc.editors[z].par = sc.editors[z].par - 1;
+                    var promise = sc.callDelete(indx);
+                    promise.then(function(data){
+                        sc.paragraphs.splice(indx, 1);
+                        var i = (function(i){return i})(indx);
+                        for(var j = i; j < sc.paragraphs.length;j++){
+                            sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
                         }
-                    }
+                        for(var z = 0; z < sc.editors.length; z++){
+                            if(sc.editors[z].par >= indx){
+                                   sc.editors[z].par = sc.editors[z].par - 1;
+                            }
+                        }
+                        sc.$apply();
+                    }, function(reason) {
+                            alert('Failed: ' + reason);
+                    }, function(data) {
+                            alert('Request progressing');
+
+                    });
+
+
             };
             
             sc.addParagraph = function(indx){

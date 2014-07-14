@@ -144,7 +144,7 @@ fetchDoc docID (State st) =  hoistMaybe (jsErr $ "No such document: "<> (T.pack 
 fetchBlock :: MonadIO m => DocID -> Int -> State -> EitherT Value m Block
 fetchBlock docID index state@(State st) = do
     Doc d <- fetchDoc docID state
-    abortIf (index >= 0 && index < Seq.length d)
+    abortIf (index < 0 && index >= Seq.length d)
             (jsErr "Index out of bounds")
     return (Seq.index d index)
 

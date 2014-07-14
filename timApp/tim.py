@@ -149,6 +149,13 @@ def addBlock():
     timdb.documents.addMarkdownBlock(int(docId), blockText, int(paragraph_id))
     return "Successfully posted paragraph"
 
+
+@app.route("/deleteParagraph/<int:docId>/<int:blockId>")
+def removeBlock(docId,blockId):
+    timdb = getTimDb()
+    timdb.documents.deleteParagraph(docId, blockId)
+    return "Successfully removed paragraph"
+
 @app.route("/pluginCall/<plugin>/<params>")
 def callHello(plugin, params=""):
     return callPlugin(plugin, params).decode('utf-8')
