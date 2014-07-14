@@ -59,6 +59,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             // Auxiliary variables
             sc.uploadFile;
             sc.documentEdit = false;
+            sc.sendingNew = false;
             sc.tempVariable = ""; // TODO: only serves to act as temporary storage for data fetched, fix           
             
             // markdown-html converter, currently unused but for future preview purposes might be useful.
@@ -116,7 +117,12 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                 var elem = sc.findPar(par);
                 var elemId = sc.findParId(par); 
                 if(elem.par === sc.activeEdit['editId']){
-                    sc.saveEdits(elem, elemId);
+                    if(sc.sendingNew){
+                            sc.newParagraph(elem,elemId)
+                            sc.sendingNew = false;
+                    }else {
+                            sc.saveEdits(elem, elemId);
+                    }
                     sc.activeEdit = {"editId": "", "editor": ""};
                     sc.promiseOfHtml(par);
                }
@@ -145,9 +151,13 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             };
             
             sc.cancelEdit = function(par){
-                    sc.activeEdit['editor'].setValue(sc.oldParagraph, -1);
+                    if(sc.sendingNew){
+                        sc.delParagraph(par);
+                    }
+                    sc.activeEdit['editor'].getSession().setValue(sc.oldParagraph, -1);
                     sc.paragraphs[par].display = false;
                     sc.activeEdit = {"editId": "", "editor": ""};
+                    sc.sendingNew = false;
                     
             }            
 
@@ -188,13 +198,18 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                 getBlockMd = function(blockId){
                     http.get('/getBlock/' +sc.docId + "/" + blockId).
                     success(function(data, status, headers, config) {
-                        deferred.resolve(data);
+                                deferred.resolve(data);
+                        
                     }).
                     error(function(data, status, headers, config) {
                         deferred.reject("Failed to fetch markdown")
                     });
                 }
-                getBlockMd(blockId);
+                if(sc.sendingNew){
+                   deferred.resolve("<empty>");
+                }else{
+                    getBlockMd(blockId);
+                }
                 return deferred.promise;
             }
 
@@ -232,8 +247,9 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             
             sc.createEditor = function(elem, elemId){
                     var promise = sc.getBlockMd(elem.par);
-                    promise.then(function(data) {
+                    promise.then(function(data) {                           
                             sc.activeEdit['text'] = data;
+                           
                             editor = new ace.edit(elem.par.toString());                    
                             editor.getSession().setValue(sc.activeEdit.text);
                             editor.setTheme("ace/theme/eclipse");
@@ -263,62 +279,67 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
             };
 
-            sc.newParagraphEdit = function(elem){
-                    sc.activeEdit['text'] = "";
-                    editor = new ace.edit(elem.par.toString());                    
-                    editor.getSession().setValue(sc.activeEdit.text);
-                    editor.setTheme("ace/theme/eclipse");
-                    editor.renderer.setPadding(10, 10, 10,10);
-                    editor.getSession().setMode("ace/mode/markdown"); 
-                    editor.getSession().setUseWrapMode(true);
-                    editor.getSession().setWrapLimitRange(0, 79);
-                    editor.setOptions({maxLines:40, minLines:3});
-                    $('.'+elem.par).get()[0].focus();
-                    editor.getSession().on('change', function(e) {
-                            //text = sc.activeEdit['editor'].editor.getSession().getValue();
-                    });
-                    /**                            editor.on('blur', function(e){
-                      sc.setEditable(elem.par);
-                      });**/
-                    sc.activeEdit["editor"] = editor;
-                    if(!sc.editorExists(elem.par)) {
-                            sc.editors.push({"par" : elem.par, "editor": editor});
-                    }
-            };
 
             sc.saveEdits = function(elem, elemId){
+                    if(sc.activeEdit.editor.getSession().getValue().length <= 0){
+                        sc.delParagraph(elemId);
+                    }
+                    else{
+                        text = sc.activeEdit['editor'].getSession().getValue();
+                        //sc.paragraphs[elemId].text = mdtext; 
+                        //$('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
+                        sc.paragraphs[elemId].display = false;
+                        http({method: 'POST',
+                                url: '/postParagraph/',
+                                data: JSON.stringify({
+                                        "docName" : sc.docId,
+                                        "par" : elem.par, 
+                                        "text": text
+                             })});
+                    }
+            }
+
+            sc.newParagraph = function(elem){
                     text = sc.activeEdit['editor'].getSession().getValue();
-                    //sc.paragraphs[elemId].text = mdtext; 
-                    //$('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
-                    sc.paragraphs[elemId].display = false;
+                    sc.paragraphs[elem.par].display = false;
                     http({method: 'POST',
-                          url: '/postParagraph/',
+                          url: '/newParagraph/',
                           data: JSON.stringify({
                                                 "docName" : sc.docId,
                                                 "par" : elem.par, 
                                                 "text": text
                           })});
-            }
-
-            sc.newParagraph = function(parId, parHtml){
-                    var promise = q.defer();
-                    newParagraph = function(parId, parHtml){
-                        http({method: 'POST',
-                              url: '/newParagraph/',
-                              data: JSON.stringify({
-                                                    "docName" : sc.docId,
-                                                    "par" : elem.par, 
-                                                    "text": text
-                              })});
-                    }
             };
 
-            sc.addParagraphs = function(i){
-                    sc.paragraphs.splice(i, 0, {"par": i, "html" : "", "display" : false});
-                    sc.newParagraphEdit(sc.paragraphs[i]);
-                    sc.paragraphs[i].display = true;
-                    sc.activeEdit.editId = i;
-					var iOS = /(iPad|iPhone|iPod)/g.test( navigator.platform );
+
+            sc.delParagraph = function(indx){
+                    sc.paragraphs.splice(indx, 1);
+                    var i = (function(i){return i})(indx);
+                    for(var j = i; j < sc.paragraphs.length;j++){
+                        sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
+                    }
+                    for(var z = 0; z < sc.editors.length; z++){
+                        if(sc.editors[z].par >= indx){
+                               sc.editors[z].par = sc.editors[z].par - 1;
+                        }
+                    }
+            };
+            
+            sc.addParagraph = function(indx){
+                    sc.paragraphs.splice(indx, 0, {"par": indx, "html" : "", "display" : false});   
+                    var i = (function(i){return i})(indx);
+                    for(var j = i+1; j < sc.paragraphs.length;j++){
+                        sc.paragraphs[j].par = sc.paragraphs[j].par + 1;
+                    }
+                    for(var z = 0; z < sc.editors.length; z++){
+                            if(sc.editors[z].par >= indx){
+                                    sc.editors[z].par = sc.editors[z].par + 1;
+                            }
+                    }
+                    sc.$apply();
+
+                    sc.sendingNew = true;
+                    sc.setEditable(indx);
             };
 
             sc.uploadFile = function(){

@@ -21,7 +21,7 @@ class Documents(TimDbBase):
         TimDbBase.__init__(self, db_path, files_root_path)
     
     @contract
-    def addMarkDownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
+    def addMarkdownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
@@ -31,15 +31,8 @@ class Documents(TimDbBase):
         :returns: The id of the newly added block.
         """
 
-        document_path = self.getBlockPath(document_id)
-        
-        #TODO: Is this method needed? We could just call modify so that the content has 2 paragraphs.
-        
-        
-        assert os.path.exists(document_path), 'document does not exist: %r' % document_id
-        
-        #Ephemeral does not yet support adding blocks.
-        
+        document_path = self.getBlockPath(document_id)        
+        assert os.path.exists(document_path), 'document does not exist: %r' % document_id       
         ec = EphemeralClient(EPHEMERAL_URL)
         success = ec.addBlock(document_id, next_block_id, content)
         

@@ -146,11 +146,15 @@ def getBlockHtml(docId, blockId):
     block = timdb.documents.getBlockAsHtml(docId, blockId)
     return block
 
-@app.route("/postBlock/", methods=["POST"])
-def postBlock():
+@app.route("/newParagraph/", methods=["POST"])
+def addBlock():
     timdb = getTimDb()
-    request.get_json()['text']
-    return ""
+    jsondata = request.get_json()
+    blockText = jsondata['text']
+    docId = jsondata['docName']
+    paragraph_id = jsondata['par']
+    timdb.documents.addMarkdownBlock(int(docId), blockText, int(paragraph_id))
+    return "Successfully posted paragraph"
 
 @app.route("/pluginCall/<plugin>/<params>")
 def callHello(plugin, params=""):
