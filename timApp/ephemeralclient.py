@@ -5,6 +5,7 @@ import requests
 from contracts import contract, new_contract
 
 new_contract('bytes', bytes)
+new_contract('Response', requests.Response)
 
 class EphemeralException(Exception):
     pass
@@ -34,7 +35,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r.text)
+        self.__raiseExceptionIfBlockNotFound(r)
         
         return True
 
@@ -52,7 +53,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r.text)
+        self.__raiseExceptionIfBlockNotFound(r)
         
         return True
 
@@ -70,7 +71,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfDocumentNotFound(r.text)
+        self.__raiseExceptionIfDocumentNotFound(r)
         return r.text
     
     @contract
@@ -88,7 +89,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfDocumentNotFound(r.text)
+        self.__raiseExceptionIfDocumentNotFound(r)
         return r.text
     
     @contract
@@ -105,25 +106,26 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r.text)
+        self.__raiseExceptionIfBlockNotFound(r)
         return r.text
     
     @contract
-    def __raiseExceptionIfBlockNotFound(self, response : 'str'):
+    def __raiseExceptionIfBlockNotFound(self, r : 'Response'):
         """Raises EphemeralException if the response contains 'no block found'.
         
         :param response: The response string.
         """
-        if response == '{"Error":"No block found"}':
+        
+        if r.status_code == 404:
             raise NotInCacheException('The requested block was not found.')
 
     @contract
-    def __raiseExceptionIfDocumentNotFound(self, response : 'str'):
+    def __raiseExceptionIfDocumentNotFound(self, r : 'Response'):
         """Raises EphemeralException if the response contains 'no block found'.
         
         :param response: The response string.
         """
-        if response == '{"Error":"No doc found"}':
+        if r.status_code == 404:
             raise NotInCacheException('The requested document was not found.')
 
     @contract
@@ -140,7 +142,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r.text)
+        self.__raiseExceptionIfBlockNotFound(r)
         return r.text
     
     @contract
@@ -156,7 +158,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfDocumentNotFound(r.text)
+        self.__raiseExceptionIfDocumentNotFound(r)
         return r.json()
     
     @contract
@@ -172,7 +174,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r.text)
+        self.__raiseExceptionIfBlockNotFound(r)
         return r.text
     
     @contract
@@ -204,6 +206,6 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r.text)
+        self.__raiseExceptionIfBlockNotFound(r)
         
         return True
