@@ -107,17 +107,17 @@ def getJSON_HTML(doc_id):
 
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
-    documentName = request.get_json()['docName']
+    docId = request.get_json()['docName']
     paragraphText = request.get_json()['text']
-    paragraphName = request.get_json()['par']
+    parIndex = request.get_json()['par']
     
     timdb = getTimDb()
     try:
-        timdb.documents.modifyMarkDownBlock(documentName,int(paragraphName), paragraphText)
+        blocks = timdb.documents.modifyMarkDownBlock(docId, int(parIndex), paragraphText)
     except IOError as err:
         print(err)
         return "Failed to modify block."
-    return "Success"
+    return json.dumps(blocks)
 
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
@@ -158,9 +158,8 @@ def addBlock():
     blockText = jsondata['text']
     docId = jsondata['docName']
     paragraph_id = jsondata['par']
-    timdb.documents.addMarkdownBlock(int(docId), blockText, int(paragraph_id))
-    return "Successfully posted paragraph"
-
+    blocks = timdb.documents.addMarkdownBlock(int(docId), blockText, int(paragraph_id))
+    return json.dumps(blocks)
 
 @app.route("/deleteParagraph/<int:docId>/<int:blockId>")
 def removeBlock(docId,blockId):

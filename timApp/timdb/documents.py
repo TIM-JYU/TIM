@@ -21,7 +21,7 @@ class Documents(TimDbBase):
         TimDbBase.__init__(self, db_path, files_root_path)
     
     @contract
-    def addMarkdownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'int':
+    def addMarkdownBlock(self, document_id : 'int', content : 'str', next_block_id : 'int|None') -> 'list(str)':
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
@@ -34,11 +34,12 @@ class Documents(TimDbBase):
         document_path = self.getBlockPath(document_id)        
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id       
         ec = EphemeralClient(EPHEMERAL_URL)
-        success = ec.addBlock(document_id, next_block_id, content)
+        blocks = ec.addBlock(document_id, next_block_id, content)
         
         #TODO: Update indexes for notes.
+        #TODO: Commit the change to git.
         
-        return 0
+        return blocks
 
     @contract
     def createDocument(self, name : 'str', owner_group_id : 'int') -> 'int':
@@ -64,9 +65,7 @@ class Documents(TimDbBase):
             self.db.rollback()
             raise
         
-        #TODO: Commit to Git
-        #sha_hash = self.gitCommit(document_path, 'Created document: %s' % name, 'docker')
-        #print(sha_hash)
+        self.gitCommit(document_path, 'Created document: %s' % name, 'docker')
         
         ec = EphemeralClient(EPHEMERAL_URL)
         ec.loadDocument(document_id, b'Edit me!')
@@ -279,7 +278,7 @@ class Documents(TimDbBase):
         return doc_id
     
     @contract
-    def modifyMarkDownBlock(self, document_id : 'int', block_id : 'int', new_content : 'str'):
+    def modifyMarkDownBlock(self, document_id : 'int', block_id : 'int', new_content : 'str') -> 'list(str)':
         """Modifies the specified block.
         
         :param document_id: The id of the document.
@@ -293,7 +292,9 @@ class Documents(TimDbBase):
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         
         ec = EphemeralClient(EPHEMERAL_URL)
-        ec.modifyBlock(document_id, block_id, new_content)
+        blocks = ec.modifyBlock(document_id, block_id, new_content)
+        
+        #TODO: Is there a better way to commit changes to Git? Is it necessary to commit the full document?
         doc_content = ec.getDocumentFullText(document_id)
         
         with open(self.getDocumentPath(document_id), 'w', encoding='utf-8', newline='\n') as f:
@@ -303,3 +304,4 @@ class Documents(TimDbBase):
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
         #TODO: Update indexes for notes.
+        return blocks

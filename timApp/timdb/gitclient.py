@@ -42,14 +42,14 @@ def gitCommit(files_root_path : 'str', file_path : 'str', commit_message: 'str',
     # TODO: Set author for the commit (need to call safe_git_call).
     try:
         gitpylib.sync.commit([file_path], commit_message, skip_checks=False, include_staged_files=False)
+        latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
     except Exception as e:
         if 'nothing added to commit' in str(e):
             return
         raise TimDbException('Commit failed. ' + str(e))
     finally:
         os.chdir(cwd)
-    #latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
-    #return latest_hash.rstrip()
+    return latest_hash.rstrip()
 
 @contract
 def gitCommand(files_root_path : 'str', command : 'str'):

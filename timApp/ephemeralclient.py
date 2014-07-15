@@ -21,7 +21,7 @@ class EphemeralClient(object):
         self.server_path = server_path
 
     @contract
-    def addBlock(self, document_id : 'int', next_block_id : 'int', content : 'str') -> 'bool':
+    def addBlock(self, document_id : 'int', next_block_id : 'int', content : 'str') -> 'list(str)':
         """Adds a block to a document.
         
         :param document_id: The id of the document.
@@ -29,17 +29,14 @@ class EphemeralClient(object):
         :param content: The content of the block.
         """
         
-        # NOTE: Ephemeral doesn't support adding blocks yet.
         try:
             r = requests.post(url=self.server_path + '/new/{}/{}'.format(document_id, next_block_id), data=bytes(content, encoding='utf-8'))
-            print(r)
-            print(r.text)
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r)
         
-        return True
+        return r.json()
 
     @contract
     def deleteBlock(self, document_id : 'int', block_id : 'int') -> 'bool':
@@ -210,7 +207,7 @@ class EphemeralClient(object):
         return True
     
     @contract
-    def modifyBlock(self, document_id : 'int', block_id : 'int', new_content: 'str') -> 'bool':
+    def modifyBlock(self, document_id : 'int', block_id : 'int', new_content: 'str') -> 'list(str)':
         """Modifies the specified block in the given document.
         
         :param document_id: The id of the document.
@@ -225,4 +222,4 @@ class EphemeralClient(object):
         r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r)
         
-        return True
+        return r.json()
