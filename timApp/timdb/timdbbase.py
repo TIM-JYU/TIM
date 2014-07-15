@@ -60,4 +60,15 @@ class TimDbBase(object):
             return True
         return False
 
-    
+    def resultAsDictionary(self, cursor):
+        """Converts the result in database cursor object to JSON."""
+        
+        rows = [x for x in cursor.fetchall()]
+        cols = [x[0] for x in cursor.description]
+        results = []
+        for row in rows:
+            result = {}
+            for prop, val in zip(cols, row):
+                result[prop] = val
+            results.append(result)
+        return results

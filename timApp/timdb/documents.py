@@ -36,20 +36,21 @@ class Documents(TimDbBase):
         ec = EphemeralClient(EPHEMERAL_URL)
         success = ec.addBlock(document_id, next_block_id, content)
         
-        #3. Check return value (success/fail).
-        #4. Does Ephemeral save it to FS?
+        #TODO: Update indexes for notes.
+        
         return 0
 
     @contract
-    def createDocument(self, name : 'str') -> 'int':
+    def createDocument(self, name : 'str', owner_group_id : 'int') -> 'int':
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created.
+        :param owner_group_id: The id of the owner group.
         :returns: The id of the newly created document.
         """
         # Usergroup id is 0 for now.
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [name, 0, blocktypes.DOCUMENT])
+        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [name, owner_group_id, blocktypes.DOCUMENT])
         document_id = cursor.lastrowid
         self.db.commit()
         
@@ -105,6 +106,7 @@ class Documents(TimDbBase):
         
         #TODO: Check for errors.
         #TODO: Get the new document from Ephemeral and commit the change in VCS.
+        #TODO: Update indexes for notes.
     
     @contract
     def documentExists(self, document_id : 'int') -> 'bool':
@@ -136,15 +138,9 @@ class Documents(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('select id,description as name from Block where type_id = ?', [blocktypes.DOCUMENT])
-        rows = [x for x in cursor.fetchall()]
-        cols = [x[0] for x in cursor.description]
-        results = []
-        for row in rows:
-            result = {}
-            for prop, val in zip(cols, row):
-                result[prop] = val
+        results = self.resultAsDictionary(cursor)
+        for result in results:
             result['versions'] = self.getDocumentVersions(result['id'])
-            results.append(result)
         return results
     
     @contract
@@ -268,11 +264,11 @@ class Documents(TimDbBase):
         return versions
         
     @contract
-    def importDocument(self, document_file : 'str', document_name : 'str') -> 'int':
+    def importDocument(self, document_file : 'str', document_name : 'str', owner_group_id : 'int') -> 'int':
         """Imports the specified document in the database."""
         
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
-        doc_id = self.createDocument(document_name)
+        doc_id = self.createDocument(document_name, owner_group_id)
         copyfile(document_file, self.getDocumentPath(doc_id))
         
         with open(document_file, 'rb') as f:
@@ -306,4 +302,4 @@ class Documents(TimDbBase):
         gitCommit(self.files_root_path, document_path, 'Modified document with id: %d' % document_id, 'docker')
         
         #TODO: Check return value (success/fail). Currently Ephemeral doesn't return anything.
-    
+        #TODO: Update indexes for notes.

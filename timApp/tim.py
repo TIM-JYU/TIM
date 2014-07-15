@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, Flask, redirect, url_for
+from flask import jsonify, Flask, redirect, url_for, session, abort, flash
 from flask import render_template
 from flask import g
 from flask import request
@@ -41,6 +41,10 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
+@app.errorhandler(403)
+def forbidden(error):
+    return render_template('403.html', message=error.description), 403
+
 @app.route('/upload/', methods=['POST'])
 def upload_file():
     print("File received, checking contents...")
@@ -59,10 +63,16 @@ def uploaded_file(filename):
 @app.route("/getDocuments/")
 def getDocuments():
     timdb = getTimDb()
-    return Response(json.dumps(timdb.documents.getDocuments()), mimetype='application/json')
+    docs = timdb.documents.getDocuments()
+    allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    for doc in allowedDocs:
+        doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
+        doc['owner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+    return Response(json.dumps(allowedDocs), mimetype='application/json')
 
 def getCurrentUserId():
-    return 1
+    uid = session.get('user_id')
+    return uid if uid is not None else 0
 
 def getTimDb():
     if not hasattr(g, 'timdb'):
@@ -114,12 +124,14 @@ def createDocument():
     jsondata = request.get_json()
     docName = jsondata['doc_name']
     timdb = getTimDb()
-    docId = timdb.documents.createDocument(docName)
+    docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonify({'id' : docId})
 
 @app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()
+    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
+        abort(403, "You don't have permission to edit this document.")
     try:
         texts = timdb.documents.getDocumentAsHtmlBlocks(doc_id)
         doc = timdb.documents.getDocument(doc_id)
@@ -167,6 +179,8 @@ def hello():
 @app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
     timdb = getTimDb()
+    if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
+        abort(403, "You don't have permission to view this document.")
     try:
         #texts = timdb.getDocumentBlocks(doc_id)
         doc = timdb.documents.getDocument(doc_id)
@@ -174,14 +188,20 @@ def viewDocument(doc_id):
     except ValueError:
         return redirect(url_for('goat'))
 
+def getCurrentUserGroup():
+    timdb = getTimDb()
+    return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
+
 @app.route("/postNote", methods=['POST'])
 def postNote():
     jsondata = request.get_json()
     noteText = jsondata['text']
-    group_id = jsondata['group_id']
+    #group_id = jsondata['group_id']
+    
     docId = jsondata['doc_id']
     paragraph_id = jsondata['par_id']
     timdb = getTimDb()
+    group_id = timdb.users.getUserGroups(getCurrentUserId())[0]['id']
     timdb.notes.addNote(group_id, noteText, int(docId), int(paragraph_id))
     #TODO: Handle error.
     return "Success"
@@ -214,14 +234,31 @@ def getNotes(doc_id):
         return redirect(url_for('goat'))
 
 @app.route("/")
-def getFile():
-    return render_template('index.html')
+def indexPage():
+    return render_template('index.html', userName=session.get('user_name'), userId=getCurrentUserId())
 
 @app.route("/login", methods=['POST'])
 def login():
-    jsondata = request.get_json()
-    userName = jsondata['user_name']
+    userName = request.form['user_name']
+    timdb = getTimDb()
+    userId = timdb.users.getUserByName(userName)
     
+    #For now we just create a user if it doesn't exist.
+    if userId is None:
+        uid = timdb.users.createUser(userName)
+        gid = timdb.users.createUserGroup('group of user %s' % userName)
+        timdb.users.addUserToGroup(gid, uid)
+        userId = uid
+    session['user_id'] = userId
+    session['user_name'] = userName
+    flash('You were successfully logged in.')
+    return redirect(url_for('indexPage'))
+
+@app.route("/logout", methods=['POST'])
+def logout():
+    session['user_id'] = None
+    session['user_name'] = 'Anonymous'
+    return redirect(url_for('indexPage'))
     
 if __name__ == "__main__":
 #    app.debug = True

@@ -26,55 +26,86 @@
 <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-
-</head>
 <style type="text/css">
 table {
-    margin: 1em;
+	margin: 1em;
 }
 
 thead {
-    font-weight: bold;
+	font-weight: bold;
 }
 
 table td {
 	padding: 0.2em;
 }
+
+.flashes li {
+	list-style-type: none;
+	border: 1px solid black;
+	border-radius: 3px;
+	padding: 0.5em;
+}
 </style>
+</head>
+
 <body style="background-color: #CCFFFF" ng-app="indexApp"
     ng-controller="IndexCtrl">
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul class="flashes">
+        {% for message in messages %}
+        <li>{{ message }}</li> {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+    <p>Currently logged in as: {{userName}} (user id = {{userId}})</p>
     <div class="material">
         <div style="padding: 5px 5px 5px 5px;">
             <span ng-show="displayIndex">&nbsp;&nbsp; Welcome!
                 Start by choosing a document to view: </span> <img
                 src="{{url_for('static', filename='images/loading.gif')}}"
                 ng-show="!displayIndex">
-            <table ng-show="displayIndex">
-                <thead>
-                    <tr>
-                        <td>Document name</td>
-                        <td></td>
-                        <td></td>
-                        <td>Last modified</td>
+            <div ng-show="displayIndex">
+                <table ng-show="documentList.length > 0">
+                    <thead>
+                        <tr>
+                            <td>Document name</td>
+                            <td></td>
+                            <td></td>
+                            <td>Last modified</td>
+                            <td>Owner?</td>
+                        </tr>
+                    </thead>
+                    <tr ng-repeat="doc in documentList">
+                        <td>{{ '{{ doc.name }}' }}</td>
+                        <td><a ng-show="doc.canEdit"
+                            href="/documents/{{ '{{ doc.id }}' }}">Edit</a></td>
+                        <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
+                        <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
+                        <td>{{ '{{ doc.owner ? "Yes" : "No" }}' }}</td>
                     </tr>
-                </thead>
-                <tr ng-repeat="doc in documentList">
-                    <td>{{ '{{ doc.name }}' }}</td>
-                    <td><a href="/documents/{{ '{{ doc.id }}' }}">Edit</a></td>
-                    <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
-                    <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
-                </tr>
-            </table>
-            <a ng-show="!showControls && displayIndex"
-                ng-click="showControls = true">Create a new document</a>
-            <div ng-show="showControls">
-                <label>Document name: <input ng-model="docName"
-                    type="text">
-                </label> <input ng-disabled="!docName"
-                    ng-click="createDocument(docName)" type="button"
-                    value="Create"> <input
-                    ng-click="showControls = false" type="button"
-                    value="Cancel">
+                </table>
+                <p ng-show="documentList.length == 0">There are no documents to show.</p>
+                <a ng-show="!showControls"
+                    ng-click="showControls = true">Create a new
+                    document</a>
+                <div ng-show="showControls">
+                    <label>Document name: <input
+                        ng-model="docName" type="text">
+                    </label> <input ng-disabled="!docName"
+                        ng-click="createDocument(docName)" type="button"
+                        value="Create"> <input
+                        ng-click="showControls = false" type="button"
+                        value="Cancel">
+                </div>
+                <div>
+                    <form method="POST" action="/login">
+                        <label>Log in as: <input type="text"
+                            name="user_name"></label> <input
+                            type="submit" value="Login">
+                    </form>
+                    <form method="POST" action="/logout">
+                        <input type="submit" value="Logout">
+                    </form>
+                </div>
             </div>
         </div>
     </div>

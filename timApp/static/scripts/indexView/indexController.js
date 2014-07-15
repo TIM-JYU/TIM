@@ -1,6 +1,9 @@
 var TimCtrl = angular.module('controllers', []);
 
-TimCtrl.controller("IndexCtrl", [ '$scope', '$http', '$q',
+TimCtrl.controller("IndexCtrl", [
+        '$scope',
+        '$http',
+        '$q',
         function(sc, http, q) {
             sc.createDocument = function(name) {
                 http.post('/createDocument', {
@@ -10,7 +13,7 @@ TimCtrl.controller("IndexCtrl", [ '$scope', '$http', '$q',
                 }).error(function(data, status, headers, config) {
                     alert("Could not create the document.");
                 });
-            }
+            };
 
             sc.getDocIds = function() {
                 http( {
@@ -24,6 +27,7 @@ TimCtrl.controller("IndexCtrl", [ '$scope', '$http', '$q',
                     // TODO: Show some error message.
                     });
             };
+
             sc.documentList = [];
             sc.getDocIds();
             sc.displayIndex = false;

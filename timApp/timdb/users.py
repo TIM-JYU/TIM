@@ -16,6 +16,19 @@ class Users(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path)
+    
+    @contract
+    def createAnonymousUser(self) -> 'int':
+        """Creates an anonymous user and a usergroup for it.
+        The user id and its associated usergroup id is 0.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('insert into User (id, name) values (?, ?)', [0, 'Anonymous'])
+        cursor.execute('insert into UserGroup (id, name) values (?, ?)', [0, 'Anonymous group'])
+        cursor.execute('insert into UserGroupMember (User_id, UserGroup_id) values (?, ?)', [0, 0])
+        self.db.commit()
+        return 0
         
     @contract
     def createUser(self, name : 'str') -> 'int':
@@ -62,8 +75,33 @@ class Users(TimDbBase):
         """
         
         cursor = self.db.cursor()
-        cursor.execute('select * from User where id = ?', [user_id])
+        cursor.execute('select id, name from User where id = ?', [user_id])
         return cursor.fetchone()
+    
+    @contract
+    def getUserByName(self, name : 'str') -> 'int|None':
+        """Gets the id of the specified username.
+        
+        :param name: The name of the user.
+        :returns: The id of the user or None if the user does not exist.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('select id from User where name = ?', [name])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
+    
+    @contract
+    def getUserGroups(self, user_id : 'int') -> 'list(dict)':
+        """Gets the user groups of a user.
+        
+        :param user_id: The id of the user.
+        :returns: The user groups that the user belongs to.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute("""select id, name from UserGroup where id in (select UserGroup_id from UserGroupMember where User_id = ?)""", [user_id])
+        return self.resultAsDictionary(cursor)
     
     def __grantAccess(self, group_id : 'int', block_id : 'int', access_type : 'str'):
         """Grants access to a group for a block.
@@ -76,8 +114,12 @@ class Users(TimDbBase):
         #TODO: Check that the group_id and block_id exist.
         assert access_type in ['view', 'edit'], 'invalid value for access_type'
         cursor = self.db.cursor()
-        cursor.execute('insert into %s (Block_id,UserGroup_id,visible_from) values (?,?,date(\'now\'))'
-                       % 'BlockViewAccess' if access_type == 'view' else 'BlockEditAccess', [block_id, group_id])
+        if access_type == 'view':
+            cursor.execute('insert into BlockViewAccess (Block_id,UserGroup_id,visible_from) values (?,?,date(\'now\'))'
+                       , [block_id, group_id])
+        else:
+            cursor.execute('insert into BlockEditAccess (Block_id,UserGroup_id,editable_from) values (?,?,date(\'now\'))'
+                       , [block_id, group_id])
         self.db.commit()
         
     @contract
@@ -141,8 +183,9 @@ class Users(TimDbBase):
                               (select User_id from UserGroupMember where UserGroup_id in
                               (select UserGroup_id from Block where Block.id = ?))
                               ))""", [user_id, block_id, block_id])
-        assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
-        return cursor.rowcount == 1
+        result = cursor.fetchall()
+        assert len(result) <= 1, 'rowcount should be 1 at most'
+        return len(result) == 1
     
     @contract
     def userIsOwner(self, user_id : 'int', block_id : 'int') -> 'bool':
@@ -154,8 +197,9 @@ class Users(TimDbBase):
         cursor.execute("""select id from User where
                           id = ?
                           and (id in
-                              (select User_id from UserGroup where id in
-                              (select UserGroup_id from Block where Block_id = ?))
+                              (select User_id from UserGroupMember where UserGroup_id in
+                              (select UserGroup_id from Block where id = ?))
                               )""", [user_id, block_id])
-        assert cursor.rowcount <= 1, 'rowcount should be 1 at most'
-        return cursor.rowcount == 1
+        result = cursor.fetchall()
+        assert len(result) <= 1, 'rowcount should be 1 at most'
+        return len(result) == 1
