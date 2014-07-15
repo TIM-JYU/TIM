@@ -184,7 +184,8 @@ def viewDocument(doc_id):
     try:
         #texts = timdb.getDocumentBlocks(doc_id)
         doc = timdb.documents.getDocument(doc_id)
-        return render_template('view.html', docID=doc['id'], docName=doc['name'])
+        versions = timdb.documents.getDocumentVersions(doc_id)
+        return render_template('view.html', docID=doc['id'], docName=doc['name'], version=versions[0])
     except ValueError:
         return redirect(url_for('goat'))
 
