@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, Flask, redirect, url_for, session, abort
+from flask import jsonify, Flask, redirect, url_for, session, abort, flash
 from flask import render_template
 from flask import g
 from flask import request
@@ -42,8 +42,8 @@ STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
 @app.errorhandler(403)
-def page_not_found(e):
-    return render_template('403.html'), 403
+def forbidden(error):
+    return render_template('403.html', message=error.description), 403
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
@@ -65,6 +65,9 @@ def getDocuments():
     timdb = getTimDb()
     docs = timdb.documents.getDocuments()
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    for doc in allowedDocs:
+        doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
+        doc['owner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
     return Response(json.dumps(allowedDocs), mimetype='application/json')
 
 def getCurrentUserId():
@@ -121,12 +124,14 @@ def createDocument():
     jsondata = request.get_json()
     docName = jsondata['doc_name']
     timdb = getTimDb()
-    docId = timdb.documents.createDocument(docName)
+    docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonify({'id' : docId})
 
 @app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()
+    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
+        abort(403, "You don't have permission to edit this document.")
     try:
         texts = timdb.documents.getDocumentAsHtmlBlocks(doc_id)
         doc = timdb.documents.getDocument(doc_id)
@@ -175,13 +180,17 @@ def hello():
 def viewDocument(doc_id):
     timdb = getTimDb()
     if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
-        abort(403)
+        abort(403, "You don't have permission to view this document.")
     try:
         #texts = timdb.getDocumentBlocks(doc_id)
         doc = timdb.documents.getDocument(doc_id)
         return render_template('view.html', docID=doc['id'], docName=doc['name'])
     except ValueError:
         return redirect(url_for('goat'))
+
+def getCurrentUserGroup():
+    timdb = getTimDb()
+    return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
@@ -230,8 +239,7 @@ def indexPage():
 
 @app.route("/login", methods=['POST'])
 def login():
-    jsondata = request.get_json()
-    userName = jsondata['user_name']
+    userName = request.form['user_name']
     timdb = getTimDb()
     userId = timdb.users.getUserByName(userName)
     
@@ -243,7 +251,8 @@ def login():
         userId = uid
     session['user_id'] = userId
     session['user_name'] = userName
-    return 'Success'
+    flash('You were successfully logged in.')
+    return redirect(url_for('indexPage'))
 
 @app.route("/logout", methods=['POST'])
 def logout():
