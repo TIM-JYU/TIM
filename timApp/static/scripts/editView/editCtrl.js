@@ -208,8 +208,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                             if(match !== null){
                                 data = sc.fetchAndReplace(data, match[0], match[1], match[2]);
                             }
-                            $("." + elemId).get()[0].innerHTML = data; 
-                            sc.alert(data); 
+                            $("." + elemId).get()[0].innerHTML = data;  
                             sc.paragraphs[elemId].html = data;
                     
                     }, function(reason) {
