@@ -93,6 +93,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                     if(sc.sendingNew){
                             sc.newParagraph(elem,elemId)
                             sc.sendingNew = false;
+                            sc.saveEdits(elem,elemId);
                     }else {
                             sc.saveEdits(elem, elemId);
                     }

@@ -231,6 +231,8 @@ main = do
          
          -- Send a single block as markdown. Required [?]
          (":docID/:idx", method GET . withBlock $ \block -> writeText (markdown block)),
+         -- Send a single block as HTML. Required [X]
+         (":docID/:idx/html", method GET . withBlock $ \block -> writeLazyText (html block)),
 
          -- Replace a block. Required [X]
          (":docID/:idx", method PUT . runFailing $ do
@@ -238,6 +240,8 @@ main = do
             idx   <- requireParamE "idx"
             bd    <- lift (readRequestBody (1024*2000))
             replace docID idx (LBS.toStrict bd) state
+            let (Doc d) = convert (LBS.toStrict bd)
+            lift (writeLBS . encode . fmap html $ d)
          ),
          -- Add a new paragraph. Required [X]
          ("/new/:docID/:idx", method POST . runFailing $ do
