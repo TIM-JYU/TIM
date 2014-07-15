@@ -65,7 +65,7 @@ class Documents(TimDbBase):
             self.db.rollback()
             raise
         
-        self.gitCommit(document_path, 'Created document: %s' % name, 'docker')
+        gitCommit(self.files_root_path, document_path, 'Created document: %s' % name, 'docker')
         
         ec = EphemeralClient(EPHEMERAL_URL)
         ec.loadDocument(document_id, b'Edit me!')
