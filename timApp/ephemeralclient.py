@@ -213,6 +213,7 @@ class EphemeralClient(object):
         :param document_id: The id of the document.
         :param block_id: The id of the block to be modified.
         :param new_content: The new content of the block.
+        :returns: A list of the created blocks.
         """
 
         try:
