@@ -135,7 +135,8 @@ def getDocument(doc_id):
     try:
         texts = timdb.documents.getDocumentAsHtmlBlocks(doc_id)
         doc = timdb.documents.getDocument(doc_id)
-        return render_template('editing.html', docId=doc['id'], name=doc['name'], text=json.dumps(texts))
+        versions = timdb.documents.getDocumentVersions(doc_id)
+        return render_template('editing.html', docId=doc['id'], name=doc['name'], text=json.dumps(texts), version=versions[0])
     except ValueError:
         return redirect(url_for('goat'))
 
