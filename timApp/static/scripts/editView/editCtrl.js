@@ -34,23 +34,26 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
             sc.pluginPat = /\{(.*)}\[(.*)]/;
             // Initialize paragraphs, jsonDoc is a global variable made by jinja2-template, it resides in viewTemplate (editing.html) 
             sc.paragraphs = [];
-            for(var i = 0; i <= jsonDoc.length; i++){
-                    (function(i){
-                        var text = jsonDoc[i];
-                        sc.paragraphs.push({"par": i, "html": text});
-                        var match = sc.pluginPat.exec(text);
-                        if(match !== null){
-                                var promise = sc.callPlugin(match[1], match[2]);
-                                promise.then(
-                                    function(data){ 
-                                        text = text.replace(match[0], data);
-                                        $("." + i.toString()).get()[0].innerHTML = text;
-                                    },
-                                    function(){},
-                                    function(){});
-                        }
-                    })(i);
-            }
+            sc.updateParagraphs = function(){
+                    for(var i = 0; i <= jsonDoc.length; i++){
+                            (function(i){
+                                    var text = jsonDoc[i];
+                                    sc.paragraphs.push({"par": i, "html": text});
+                                    var match = sc.pluginPat.exec(text);
+                                    if(match !== null){
+                                            var promise = sc.callPlugin(match[1], match[2]);
+                                            promise.then(
+                                                    function(data){ 
+                                                            text = text.replace(match[0], data);
+                                                            $("." + i.toString()).get()[0].innerHTML = text;
+                                                    },
+                                                    function(){},
+                                                    function(){});
+                                    }
+                            })(i);
+                    }
+            };
+            sc.updateParagraphs();
 
             // Meta-data for document, docId and docName are global variables from jinja2-template
             sc.docId = docId;
@@ -76,36 +79,6 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                 
             });
 
-/**            // Get document§
-            sc.getDocument = function(documentName){
-                sc.displayIndex = false;
-                http({method: 'GET', url: '/getJSON/' + documentName}).
-                    success(function(data, status, headers, config) {
-                        sc.displayIndex = false;
-                        sc.paragraphs = data.text;
-                        sc.updateParagraphs();
-                    }).
-                    error(function(data, status, headers, config) {
-                        sc.displayIndex = false;
-                        alert("Document is not currently available");
-                    });
-            };
-
-            sc.updateParagraphs = function(){
-                for(var i = 0; i < sc.paragraphs.length; i++){
-                    var text = sc.paragraphs[i].text;
-                    var match = sc.pluginPat.exec(sc.paragraphs[i].text);
-                    if(match != null){
-                        text = sc.fetchAndReplace(text, match[0], match[1]);
-                    }
-                    //sc.paragraphs[i].html = sc.convertHtml.makeHtml(text);
-                    sc.paragraphs[i].display = false;
-                }
-            }
-**/
-
-////////////////////// PLUGIN FUNCTIONS ///////////////////////////////
-            
 
             
 ////////////////////////// EDITING ////////////////////////////////////////////
@@ -235,7 +208,9 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                             if(match !== null){
                                 data = sc.fetchAndReplace(data, match[0], match[1], match[2]);
                             }
-                            $("." + elemId).get()[0].innerHTML = data;   
+                            $("." + elemId).get()[0].innerHTML = data; 
+                            sc.alert(data); 
+                            sc.paragraphs[elemId].html = data;
                     
                     }, function(reason) {
                             alert('Failed: ' + reason);
@@ -281,7 +256,6 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
 
             sc.saveEdits = function(elem, elemId){
-                    alert(sc.activeEdit.editor.getSession().getValue().length <= 0);
                     if(sc.activeEdit.editor.getSession().getValue().length <= 0){
                         sc.delParagraph(elemId);
                     }
@@ -299,6 +273,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                              })});
 
                         sc.promiseOfHtml(elemId);
+                        sc.$apply();
                     }
             }
 
@@ -312,6 +287,9 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                                                 "par" : elem.par, 
                                                 "text": text
                           })});
+                        
+                    $("." + elem.par).get()[0].innerHTML = sc.paragraphs[elem.par].html;   
+                    
             };
 
             sc.callDelete = function(blockId){

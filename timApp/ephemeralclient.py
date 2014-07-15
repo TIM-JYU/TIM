@@ -48,7 +48,7 @@ class EphemeralClient(object):
         """
         
         try:
-            r = requests.put(url=self.server_path + '/delete/{}/{}'.format(document_id, block_id, ""))
+            r = requests.put(url=self.server_path + '/delete/{}/{}'.format(document_id, block_id), data="Filler")
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'

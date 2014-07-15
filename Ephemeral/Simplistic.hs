@@ -245,6 +245,8 @@ main = do
             idx   <- requireParamE "idx"
             bd    <- lift (readRequestBody (1024*2000))
             lift (addParagraph docID idx (LBS.toStrict bd) state)
+            let (Doc d) = convert (LBS.toStrict bd)
+            lift (writeLBS . encode . fmap html $ d)
             
          ),
          -- Delete a paragraph. Required [X]

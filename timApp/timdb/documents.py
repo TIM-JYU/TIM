@@ -93,7 +93,7 @@ class Documents(TimDbBase):
         self.importDocument('tmp.temp', document_name)  
         
     @contract
-    def deleteParagraph(self, par_id : 'int', document_id : 'int'):
+    def deleteParagraph(self, document_id : 'int', par_id : 'int'):
         """Deletes a paragraph from a document.
         
         :param document_id: The id of the document from which to delete the paragraph.
