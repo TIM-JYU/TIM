@@ -110,6 +110,21 @@ class EphemeralClient(object):
         return r.text
     
     @contract
+    def getBlockMapping(self, first_document_id : 'int', second_document_id : 'int'):
+        """Gets a mapping of blocks between two documents.
+        
+        :param first_document_id: The id of the first document.
+        :param second_document_id: The id of the second document.
+        :returns: The mapping of blocks between the two documents.
+        """
+        
+        try:
+            r = requests.get(url=self.server_path + '/mapDocuments/{}/{}'.format(first_document_id, second_document_id))
+        except requests.exceptions.ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        return r.json()
+        
+    @contract
     def __raiseExceptionIfBlockNotFound(self, r : 'Response'):
         """Raises EphemeralException if the response contains 'no block found'.
         
