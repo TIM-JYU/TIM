@@ -41,12 +41,10 @@
 
 .editButton:hover {
 	position: absolute;
-	top: 0em;
 	left: 72em;
 	font-size: x-small;
 	width: 5em;
 	height: 3em;
-	top: 0em;
 	border: 2px none;
 	border-radius: 15px;
 	outline: none;
@@ -54,31 +52,51 @@
 	background: #C0C0C0;
 	color: black;
 }
+.edit{
+    top: 0em;
+}
+.edit:before{
+    content:"Edit";
+    }
+.delete:before{
+    content:"Delete"
+}
 
 .editButton {
 	position: absolute;
-	top: 0em;
 	left: 72em;
 	font-size: x-small;
 	width: 5em;
 	height: 3em;
-	top: 0em;
 	border: 2px none;
 	border-radius: 15px;
 	outline: none;
 	background: #C8FCFD;
 	color: white;
 }
-.editButton:before{
-    content:"Edit";
-    }
 
+.deleteButton{
+    position: absolute;
+    left:72em;
+	font-size: x-small;
+	width: 5em;
+    z-index: 10;
+	height: 3em;
+	top: 6em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+	background: #FF0000;
+	color: white;
+}
+ 
 .parSaveButton {
 	position: absolute;
 	top: 0em;
 	left: 72em;
 	font-size: x-small;
 	width: 5em;
+    z-index:10;
 	height: 3em;
 	top: 0em;
 	border: 2px none;
@@ -98,12 +116,13 @@
 	font-size: x-small;
 	width: 5em;
 	height: 3em;
+    z-index: 10;
 	top: 3em;
 	border: 2px none;
 	border-radius: 15px;
 	outline: none;
 	visibility: visible; 
-    background: #FF0000;
+    background: #999966; 
 	color: black;
 }
 .cancelButton:before{
@@ -112,6 +131,7 @@
 
 .cancelButton {
 	position: absolute;
+    z-index: 10;
 	top: 0em;
 	left: 72em;
 	font-size: x-small;
@@ -121,7 +141,7 @@
 	border: 2px none;
 	border-radius: 15px;
 	outline: none;
-    background: #FF0000;	
+    background: #999966;	
 	color: white;
 }
 
@@ -165,7 +185,8 @@
 }
 
 PRE {
-	border-style: solid;
+
+        border-style: solid;
 	border-width: 1px;
 	border-radius: 5px;
 	padding: 4px;
