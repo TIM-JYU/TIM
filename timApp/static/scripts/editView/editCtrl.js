@@ -1,6 +1,6 @@
 var EditCtrl = angular.module('controller', []);
 
-EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
+EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(sc, http, q, fileUpload){
 
             sc.callPlugin = function(plugin, params){
                 var promise = q.defer();
@@ -184,7 +184,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                 }
                 return deferred.promise;
             }
-
+/**
             sc.getBlockHtml = function(blockId){
                 var deferred = q.defer();
                 getBlockHtml = function(blockId){ 
@@ -217,7 +217,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
 
                     });
             }
-            
+**/            
             sc.createEditor = function(elem, elemId){
                     var promise = sc.getBlockMd(elem.par);
                     promise.then(function(data) {                                                    
@@ -286,7 +286,6 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                                                             newParId = newParId + 1;
                                                     }
                                             sc.sendingNew = false; 
-
                                             },
                                             function(reason){
                                                     alert(reason);
@@ -349,9 +348,9 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                     sc.sendingNew = true;
                     sc.$apply();
             };
-
+            sc.myFile;
             sc.uploadFile = function(){
-                var file = $scope.myFile;
+                var file = sc.myFile;
                 var uploadUrl = '/upload/';
                 fileUpload.uploadFileToUrl(file, uploadUrl);
             };

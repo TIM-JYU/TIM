@@ -37,7 +37,7 @@ def allowed_file(filename):
 if os.path.abspath('.') == '/service':
     app.config['DEBUG'] = False
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'txt'])
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
@@ -47,14 +47,20 @@ def forbidden(error):
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
-    print("File received, checking contents...")
+    timdb = getTimDb()
     if request.method == 'POST':
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            print("File contents safe, saving.")
-            return redirect(url_for('uploaded_file', filename=filename))
+        doc = request.files['file']
+        if allowed_file(doc.filename):
+            filename = secure_filename(doc.filename)
+            if(".txt" in filename):
+                   doc.save("./uploadedDocs/" + filename)
+                   print("saved file")
+                   timdb.documents.importDocument("./uploadedDocs/" + filename, filename, 0)
+                   return "Succesfully uploaded document"
+            else:
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                print("File contents safe, saving.")
+                return redirect(url_for('uploaded_file', filename=filename))
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):

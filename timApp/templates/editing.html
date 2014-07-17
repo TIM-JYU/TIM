@@ -45,8 +45,8 @@
 </head>
 <body style="background-color: #CCFFFF"  ng-app="timApp" ng-controller="ParCtrl">   
 <form enctype="multipart/form-data">
-            <input type="file" file-model="upFile"/>
-            <button ng-click="uploadFile()">Upload image</button>
+            <input type="file" file-model="myFile"/>
+            <button ng-click="uploadFile()">Upload file</button>
 </form> 
 <div class="material"> 
         <div ng-if="paragraphs.length > 1" class="addParButton b0" ng-click="addParagraph(0);setEditable(0)"><strong> + </strong> </div>
