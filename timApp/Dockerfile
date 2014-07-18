@@ -40,6 +40,6 @@ user agent
 expose 5000
 
 # Kun container käynnistyy, suoritetaan:
-cmd cd /service/ && python3 initdb.py && python3 tim.py
+cmd cd /service/ && python3 initdb2.py && python3 tim.py
 
 #volume /tim_files/:/service/tim_files/
