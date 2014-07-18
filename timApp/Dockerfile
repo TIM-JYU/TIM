@@ -21,6 +21,10 @@ run pip3 install requests
 # toimenpide)
 run apt-get -y --purge remove python3-pip
 
+# Asetetaan nimi ja email gitti‰ varten.
+run git config --global user.email "agent@docker.com"
+run git config --global user.name "agent"
+
 # Lis‰t‰‰n alkuper‰inen hakemisto polkuun /service
 run mkdir /service
 
