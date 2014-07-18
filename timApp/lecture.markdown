@@ -1,7 +1,7 @@
-Esipuhe
+Esipuhe v2.0
 =======
 
-Tämä moniste on luentomoniste kurssille Ohjelmointi 1. Luentomoniste
+**Tämä** moniste on luentomoniste kurssille Ohjelmointi 1. Luentomoniste
 tarkoittaa sitä, että sen ei ole tarkoitus korvata kunnon kirjaa, vaan
 esittää asiat samassa järjestyksessä ja samassa valossa kuin ne
 esitetään luennolla. Jotta moniste ei paisuisi kohtuuttomasti, ei
@@ -48,9 +48,7 @@ tietokoneluokassa sekä harjoitustyön tekemisen. Näistä lisätietoa,
 samoin kuin kurssilla käytettävien työkalujen hankkimisesta ja
 asentamisesta löytyy kurssin kotisivuilta:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-https://trac.cc.jyu.fi/projects/ohj1
-```
+ >https://trac.cc.jyu.fi/projects/ohj1
 
 Tämä moniste perustuu Martti Hyvösen ja Vesa Lappalaisen syksyllä 2009
 kirjoittamaan *Ohjelmointi 1* -monisteeseen, joka osaltaan sai muotonsa
@@ -98,19 +96,17 @@ ilmaisuilla.
 Eräänä esimerkkinä ohjelmoinnista voidaan pitää sokerikakun
 valmistukseen kirjoitettua ohjetta:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Sokerikakku
-
-6       munaa
-1,5 dl  sokeria
-1,5 dl  jauhoja
-1,5 tl  leivinjauhetta
-
-1.  Vatkaa sokeri ja munat vaahdoksi.
-2.  Sekoita jauhot ja leivinjauhe.
-3.  Sekoita muna-sokerivaahto ja jauhoseos.
-4.  Paista 45 min 175°C lämpötilassa.
-```
+    Sokerikakku
+    
+    6       munaa
+    1,5 dl  sokeria
+    1,5 dl  jauhoja
+    1,5 tl  leivinjauhetta
+    
+    1.  Vatkaa sokeri ja munat vaahdoksi.
+    2.  Sekoita jauhot ja leivinjauhe.
+    3.  Sekoita muna-sokerivaahto ja jauhoseos.
+    4.  Paista 45 min 175°C lämpötilassa.
 
 Valmistusohje on ilmiselvästi kirjoitettu ihmistä varten, vieläpä
 sellaista ihmistä, joka tietää leipomisesta melko paljon. Jos sama ohje
@@ -159,21 +155,17 @@ tekstieditorit yrittävät oletuksena tallentaa kaikki tiedostot
 tarkenteella .txt ja tällöin tiedoston nimi voi helposti tulla muotoon
 HelloWorld.cs.txt.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public class HelloWorld 
-{
-   public static void Main() 
-   {
-      System.Console.WriteLine("Hello World!");
-   }
-}
-```
+    public class HelloWorld 
+    {
+       public static void Main() 
+       {
+          System.Console.WriteLine("Hello World!");
+       }
+    }
 
 Tämän ohjelman pitäisi tulostaa näytölle teksti
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Hello World!
-```
+    Hello World!
 
 Voidaksemme kokeilla ohjelmaa käytännössä, täytyy se ensiksi kääntää
 tietokoneen ymmärtämään muotoon.
@@ -184,7 +176,7 @@ ohjelmaksi.
 Esimerkkejä muilla ohjelmointikielillä kirjoitetusta HelloWorld
 -ohjelmasta löydät vaikkapa:
 
-[http://www2.latech.edu/\~acm/HelloWorld.html](http://www2.latech.edu/~acm/HelloWorld.html).
+><http://www2.latech.edu/~acm/HelloWorld.html>.
 
 2.2 Ohjelman kääntäminen ja ajaminen
 ------------------------------------
@@ -201,48 +193,43 @@ mahdollista vain Windows-ympäristössä.
 
 Lisätietoa .NET-kehitystyökaluista ja asentamisesta löytyy kurssin
 kotisivuilta:
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/dotnet-tyokalut](https://trac.cc.jyu.fi/projects/ohj1/wiki/dotnet-tyokalut).
-Kun sovelluskehitin on asennettu, käynnistetään komentorivi (Command
-Prompt, lyhyemmin cmd) ja siirrytään siihen hakemistoon, johon
-HelloWorld.cs tiedosto on tallennettu. Ohjelma käännetään nyt
-komennolla:
+<https://trac.cc.jyu.fi/projects/ohj1/wiki/dotnet-tyokalut>. Kun
+sovelluskehitin on asennettu, käynnistetään komentorivi (Command Prompt,
+lyhyemmin cmd) ja siirrytään siihen hakemistoon, johon HelloWorld.cs
+tiedosto on tallennettu. Ohjelma käännetään nyt komennolla:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-csc HelloWorld.cs
-```
+    csc HelloWorld.cs
+
 
 Komento ”csc” tulee sanoista *C Sharp Compiler* (compiler = kääntäjä).
 Kääntämisen jälkeen hakemistoon ilmestyy HelloWorld.exe-niminen
 tiedosto, joka voidaan ajaa kuten minkä tahansa ohjelman syöttämällä
 ohjelman nimi:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-HelloWorld
-```
+    HelloWorld
+
 
 Ohjelman tulisi nyt tulostaa näyttöön teksti Hello World!, kuten alla
 olevassa kuvassa.
 
-![\
- Kuva 1: Ohjelman kääntäminen ja ajaminen Windowsin
-komentorivillä.](../src/luentomonistecsUusin_htm_m16b63f32.png)
+ ![](http://kurssit.it.jyu.fi/ITKP102/monistecs/src/luentomonistecsUusin_htm_m16b63f32.png)
+    
+Kuva 1: Ohjelman kääntäminen ja ajaminen Windowsin
+komentorivillä.
 
-\
  Huomaa, että käännettäessä kirjoitetaan koko tiedoston nimi
 .cs-tarkentimen kanssa.
 
 Jos saat virheilmoituksen
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-'csc' is not recognized as an internal or external command, operable program or batch file.
-```
+    'csc' is not recognized as an internal or external command, operable program or batch file.
+
 
 niin kääntäjäohjelmaa csc.exe ei silloin löydy niin sanotusta
 *hakupolusta*. Ohjelman lisääminen hakupolkuun onnistuu komennolla:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-set PATH=%WINDIR%\Microsoft.NET\Framework\v4.0.30319;%path% 
-```
+    set PATH=%WINDIR%\Microsoft.NET\Framework\v4.0.30319;%path% 
+
 
 Jotta kääntäjää ei tarvitsisi joka kerta lisätä hakupolkuun, voi sen
 lisätä siihen pysyvästi. Esimerkiksi Windows 7:ssä tämä tapahtuu
@@ -254,9 +241,8 @@ settings ja Advanced-välilehdeltä Environment variables. Ylemmästä
 laatikosta valitse muuttuja PATH ja paina **Muokkaa**. Siirry rivin
 Variable value loppuun, kirjoita puolipiste (;) ja heti perään polku
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-%WINDIR%\Microsoft.NET\Framework\v4.0.30319
-```
+    %WINDIR%\Microsoft.NET\Framework\v4.0.30319
+
 
 XP:ssä vastaavasti Oma tietokone → Ominaisuudet → Lisäasetukset →
 Ympäristömuuttujat.
@@ -268,10 +254,9 @@ Ensimmäinen kirjoittamamme ohjelma HelloWorld.cs on oikeastaan
 yksinkertaisin mahdollinen C\#-ohjelma. Alla yksinkertaisimman ohjelman
 kaksi ensimmäistä riviä.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public class HelloWorld
-{
-```
+    public class HelloWorld
+    {
+
 
 Ensimmäisellä rivillä määritellään *luokka* (class) jonka nimi on
 HelloWorld. Tässä vaiheessa riittää ajatella luokkaa ”kotina”
@@ -321,10 +306,9 @@ aaltosulku. HelloWorld-luokan lopettava aaltosulku on rivillä viisi,
 joka on samalla ohjelman viimeinen rivi. Aaltosulkeiden rajoittamaa
 aluetta kutsutaan *lohkoksi* (block).
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public static void Main()
-{
-```
+    public static void Main()
+    {
+
 
 Rivillä kolme määritellään (tai oikeammin *esitellään*) uusi aliohjelma
 nimeltä Main. Nimensä ansiosta se on tämän luokan pääohjelma. Sanat
@@ -339,9 +323,8 @@ aaltosulkeiden sisään. C\#:ssa ohjelmoijan kirjoittaman koodin
 suorittaminen alkaa aina käynnistettävän luokan pääohjelmasta. Toki
 sisäisesti ehtii tapahtua paljon asioita jo ennen tätä.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-System.Console.WriteLine("Hello World!");
-```
+    System.Console.WriteLine("Hello World!");
+
 
 Rivillä neljä tulostetaan näytölle Hello World!. C\#:ssa tämä tapahtuu
 pyytämällä .NET-ympäristön mukana tulevan luokkakirjaston
@@ -386,29 +369,26 @@ looginen virhe ei löydy *testauksessakaan* (testing), voivat seuraukset
 ohjelmistosta riippuen olla tuhoisia. Tässä yksi tunnettu esimerkki
 loogisesta virheestä:
 
-[http://money.cnn.com/magazines/fortune/fortune\_archive/2000/02/07/272831/index.htm](http://money.cnn.com/magazines/fortune/fortune_archive/2000/02/07/272831/index.htm).
+><http://money.cnn.com/magazines/fortune/fortune_archive/2000/02/07/272831/index.htm>.
 
 ### 2.3.2 Kääntäjän virheilmoitusten tulkinta
 
 Alla on esimerkki syntaksivirheestä HelloWorld-ohjelmassa.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public class HelloWorld
-{
-  public static void Main()
-  {
-       System.Console.Writeline("Hello World!");
-  }
-}
-```
+    public class HelloWorld
+    {
+      public static void Main()
+      {
+           System.Console.Writeline("Hello World!");
+      }
+    }
 
 Ohjelmassa on pieni kirjoitusvirhe, joka on (ilman apuvälineitä) melko
 hankala huomata. Tutkitaan csc-kääntäjän antamaa virheilmoitusta.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-HelloWorld.cs(5,17): error CS0117: 'System.Console' does not contain a
-        definition for 'Writeline'
-```
+    HelloWorld.cs(5,17): error CS0117: 'System.Console' does not 
+    contain a definition for 'Writeline'
+
 
 Kääntäjä kertoo, että tiedostossa HelloWorld.cs rivillä 5 ja sarakkeessa
 17 on seuraava virhe: System.Console-luokka ei tunne Writeline-komentoa.
@@ -419,26 +399,22 @@ Valitettavasti virheilmoituksen sisältö ei aina kuvaa ongelmaa kovinkaan
 hyvin. Alla olevassa esimerkissä on erehdytty laittamaan puolipisteen
 väärään paikkaan.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public class HelloWorld
-{
-  public static void Main();
-  {
-       System.Console.Writeline("Hello World!");
-  }
-}
-```
+    public class HelloWorld
+    {
+      public static void Main();
+      {
+           System.Console.Writeline("Hello World!");
+      }
+    }
+
 
 Virheilmoitus, tai oikeastaan virheilmoitukset, näyttävät seuraavalta.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-HelloWorld.cs(4,3): error CS1519: Invalid token '{' in class, struct, or
-        interface member declaration
-HelloWorld.cs(5,26): error CS1519: Invalid token '(' in class, struct, or
-        interface member declaration
-HelloWorld.cs(7,1): error CS1022: Type or namespace definition, or end-of-file
-        expected
-```
+    HelloWorld.cs(4,3): error CS1519: Invalid token '{' in class, 
+    struct, or interface member declaration
+    HelloWorld.cs(5,26): error CS1519: Invalid token '(' in class,       struct, or interface member declaration
+    HelloWorld.cs(7,1): error CS1022: Type or namespace definition, 
+    or end-of-file expected
 
 Ensimmäinen virheilmoitus osoittaa riville 4, vaikka todellisuudessa
 ongelma on rivillä 3. Toisin sanoen, näistä virheilmoituksista ei ole
@@ -451,29 +427,24 @@ Esimerkkinämme ollut HelloWorld-ohjelma voitaisiin, ilman että sen
 toiminta muuttuisi, vaihtoehtoisesti kirjoittaa myös seuraavassa
 muodossa.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public class HelloWorld
-                          {
-  
-
-     public static void Main() 
-  {
-System.Console.WriteLine("Hello World!");
+    public class HelloWorld
+                              {
+      
+    
+         public static void Main() 
+      {
+    System.Console.WriteLine("Hello World!");
+        }
+    
+    
     }
 
 
-}
-```
-
-\
- \
-
 Edelleen, koodi voitaisiin kirjoittaa myös seuraavasti.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public class HelloWorld { public static void Main() {
-    System.Console.WriteLine("Hello World!"); } }
-```
+    public class HelloWorld { public static void Main() {
+        System.Console.WriteLine("Hello World!"); } }
+
 
 Vaikka molemmat yllä olevista esimerkeistä ovat syntaksiltaan oikein,
 eli ne noudattavat C\#:n kielioppisääntöjä, on niiden luettavuus
@@ -485,21 +456,23 @@ Tämän monisteen esimerkit on pyritty kirjoittamaan näiden käytänteiden
 mukaisesti. Linkkejä koodauskäytänteisiin löytyy kurssin wiki-sivulta
 osoitteesta
 
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/CsKoodausKaytanteet](https://trac.cc.jyu.fi/projects/ohj1/wiki/CsKoodausKaytanteet)[.](https://trac.cc.jyu.fi/projects/ohj1/wiki/CsKoodausKaytanteet)
+><https://trac.cc.jyu.fi/projects/ohj1/wiki/CsKoodausKaytanteet>[.](https://trac.cc.jyu.fi/projects/ohj1/wiki/CsKoodausKaytanteet)
 
 Merkkijonoja käsiteltäessä välilyönneillä, tabulaattoreilla ja
 rivinvaihdoilla on kuitenkin merkitystä. Vertaa alla olevia tulostuksia.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-System.Console.WriteLine("Hello World!");
-```
+    System.Console.WriteLine("Hello World!");
 
-Yllä oleva rivi tulostaa: Hello World!, kun taas alla oleva rivi
-tulostaa: H e l l o W o r l d !
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-System.Console.WriteLine("H e l l o    W o r l d !");
-```
+Yllä oleva rivi tulostaa: 
+>Hello World!
+
+kun taas alla oleva rivi
+tulostaa: 
+>H e l l o W o r l d !
+
+    System.Console.WriteLine("H e l l o    W o r l d !");
+
 
 2.4 Kommentointi
 ----------------
@@ -517,19 +490,17 @@ pähkäillä, että miksihän tuonkin tuohon kirjoitin.
 Kääntäjä jättää kommentit huomioimatta, joten ne eivät vaikuta ohjelman
 toimintaan. C\#:ssa on kolmenlaisia kommentteja.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-// Yhden rivin kommentti
-```
+    // Yhden rivin kommentti
+
 
 Yhden rivin kommentti alkaa kahdella vinoviivalla (//). Sen vaikutus
 kestää koko rivin loppuun.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-/* Tämä   kommentti
-   on usean
-   rivin
-   pituinen */
-```
+    /* Tämä   kommentti
+       on usean
+       rivin
+       pituinen */
+    
 
 Vinoviivalla ja asteriskilla alkava (/\*) kommentti kestää niin kauan
 kunnes vastaan tulee asteriski ja vinoviiva ( \*/). Huomaa, ettei
@@ -554,11 +525,10 @@ aina kolme vinoviivaa (Shift + 7). Jokainen seuraava
 dokumentaatiokommenttirivi aloitetaan siis myöskin kolmella
 vinoviivalla.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-/// Tämä 
-/// on 
-/// dokumentaatiokommentti 
-```
+    /// Tämä 
+    /// on 
+    /// dokumentaatiokommentti 
+    
 
 Dokumentoiminen tapahtuu *tagien* avulla. Jos olet joskus kirjoittanut
 HTML-sivuja, on merkintätapa sinulle tuttu. Dokumentaatiokommentit
@@ -577,31 +547,31 @@ selattaviksi HTML-sivuiksi. Tageja voi keksiä itsekin lisää, mutta tämän
 kurssin tarpeisiin riittää hyvin suositeltujen tagien luettelo. Tiedot
 suositelluista tageista löytyvät C\#:n dokumentaatiosta:
 
-[http://msdn.microsoft.com/en-us/library/5ast78ax.aspx](http://msdn.microsoft.com/en-us/library/5ast78ax.aspx)[.](http://msdn.microsoft.com/en-us/library/5ast78ax.aspx)
+><http://msdn.microsoft.com/en-us/library/5ast78ax.aspx>[.](http://msdn.microsoft.com/en-us/library/5ast78ax.aspx)
 
 Voisimme kirjoittaa nyt C\#-kommentit HelloWorld-ohjelman alkuun
 seuraavasti:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-/// @author  Antti-Jussi Lakanen
-/// @version 28.8.2012
-///
-/// <summary>
-/// Esimerkkiohjelma, joka tulostaa tekstin "Hello World!"
-/// </summary>
-
-public class HelloWorld 
-{
-  /// <summary>
-  /// Pääohjelma, joka hoitaa varsinaisen tulostamisen.
-  /// </summary>
-  /// <param name="args">Ei käytössä</param>
-  public static void Main(string[] args) 
-  { // Suoritus alkaa siis tästä, ohjelman "entry point"
-    System.Console.WriteLine("Hello World!"); // Tämä lause tulostaa ruudulle
-  } // Ohjelman suoritus päättyy tähän
-}
-```
+    /// @author  Antti-Jussi Lakanen
+    /// @version 28.8.2012
+    ///
+    /// <summary>
+    /// Esimerkkiohjelma, joka tulostaa tekstin "Hello World!"
+    /// </summary>
+    
+    public class HelloWorld 
+    {
+      /// <summary>
+      /// Pääohjelma, joka hoitaa varsinaisen tulostamisen.
+      /// </summary>
+      /// <param name="args">Ei käytössä</param>
+      public static void Main(string[] args) 
+      { // Suoritus alkaa siis tästä, ohjelman "entry point"
+        // seuraava lause tulostaa ruudulle
+        System.Console.WriteLine("Hello World!"); 
+      } // Ohjelman suoritus päättyy tähän
+    }
+    
 
 Ohjelman alussa kerrotaan kohteen tekijän nimi. Tämän jälkeen tulee
 ensimmäinen dokumentaatiokommentti (huomaa kolme vinoviivaa), joka on
@@ -635,15 +605,14 @@ Ohjelman kirjoittaminen voidaan aloittaa hahmottelemalla tarvittavat
 algoritmit eli kirjaamalla lista niistä toimenpiteistä, joita tehtävän
 suoritukseen tarvitaan:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Kahvin keittäminen:
+    Kahvin keittäminen:
+    
+    1.  Täytä pannu vedellä.
+    2.  Keitä vesi.
+    3.  Lisää kahvijauhot.
+    4.  Anna tasaantua.
+    5.  Tarjoile kahvi.
 
-1.  Täytä pannu vedellä.
-2.  Keitä vesi.
-3.  Lisää kahvijauhot.
-4.  Anna tasaantua.
-5.  Tarjoile kahvi.
-```
 
 Algoritmi on yleisesti ottaen mahdollisimman pitkälle tarkennettu
 toimenpidesarja, jossa askel askeleelta esitetään yksikäsitteisessä
@@ -659,26 +628,25 @@ osatehtävien suorittamiseen. Vain sillä, että kukin osasuoritus tehdään,
 on merkitystä. Esimerkiksi pannukahvinkeitossa jokainen osatehtävä
 voidaan jakaa edelleen osasiin:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Kahvinkeitto:
+    Kahvinkeitto:
+    
+    1.  Täytä pannu vedellä:
+      1.1.  Pistä pannu hanan alle.
+      1.2.  Avaa hana.
+      1.3.  Anna veden valua, kunnes vettä on riittävästi.
+    2.  Keitä vesi:
+      2.1.  Aseta pannu hellalle.
+      2.2.  Kytke virta keittolevyyn.
+      2.3.  Anna lämmetä, kunnes vesi kiehuu.
+    3.  Lisää kahvinporot:
+      3.1.  Mittaa kahvinporot.
+      3.2.  Sekoita kahvinporot kiehuvaan veteen.
+    4.  Anna tasaantua:
+      4.1.  Odota, kunnes suurin osa valmiista kahvista on vajonnut
+            pannun pohjalle.
+    5.  Tarjoile kahvi:
+      5.1.  Tämä sitten onkin jo oma tarinansa...
 
-1.  Täytä pannu vedellä:
-  1.1.  Pistä pannu hanan alle.
-  1.2.  Avaa hana.
-  1.3.  Anna veden valua, kunnes vettä on riittävästi.
-2.  Keitä vesi:
-  2.1.  Aseta pannu hellalle.
-  2.2.  Kytke virta keittolevyyn.
-  2.3.  Anna lämmetä, kunnes vesi kiehuu.
-3.  Lisää kahvinporot:
-  3.1.  Mittaa kahvinporot.
-  3.2.  Sekoita kahvinporot kiehuvaan veteen.
-4.  Anna tasaantua:
-  4.1.  Odota, kunnes suurin osa valmiista kahvista on vajonnut
-        pannun pohjalle.
-5.  Tarjoile kahvi:
-  5.1.  Tämä sitten onkin jo oma tarinansa...
-```
 
 Edellä esitetyn kahvinkeitto-ongelman ratkaisu esitettiin jakamalla
 ratkaisu viiteen osavaiheeseen. Ratkaisun algoritmi sisältää viisi
@@ -719,11 +687,10 @@ kirjoitetuissa ohjeissa, niin myös tietokoneelle esitetyt ohjeet luetaan
 ylhäältä alaspäin, ellei muuta ilmoiteta. Esimerkiksi ohjeen lumiukon
 piirtämisestä voisi esittää yksinkertaistettuna alla olevalla tavalla.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Piirrä säteeltään 20cm kokoinen ympyrä koordinaatiston pisteeseen (20, 80)
-Piirrä säteeltään 15cm kokoinen ympyrä edellisen ympyrän päälle
-Piirrä säteeltään 10cm kokoinen ympyrä edellisen ympyrän päälle
-```
+    Piirrä säteeltään 20cm kokoinen ympyrä koordinaatiston pisteeseen     (20, 80)
+    Piirrä säteeltään 15cm kokoinen ympyrä edellisen ympyrän päälle
+    Piirrä säteeltään 10cm kokoinen ympyrä edellisen ympyrän päälle
+
 
 Yllä oleva koodi ei ole vielä mitään ohjelmointikieltä, mutta se
 sisältää jo ajatuksen siitä kuinka lumiukko voitaisiin tietokoneella
@@ -733,17 +700,17 @@ piirtää. Piirrämme lumiukon C\#-ohjelmointikielellä seuraavassa luvussa.
 =======================================
 
 Seuraavissa esimerkeissä käytetään Jyväskylän yliopistossa
-kehitettyä*Jypeli-ohjelmointikirjastoa.* Kirjaston voit ladata koneelle
+kehitettyä *Jypeli-ohjelmointikirjastoa.* Kirjaston voit ladata koneelle
 osoitteesta
 
-[https://trac.cc.jyu.fi/projects/npo/wiki/LataaJypeli](https://trac.cc.jyu.fi/projects/npo/wiki/LataaJypeli),
+><https://trac.cc.jyu.fi/projects/npo/wiki/LataaJypeli>,
 
 josta löytyy myös ohjeet kirjaston asennukseen ja käyttöön. Huomaa, että
 tietokoneellasi tulee olla asennettuna .NET Framework 4 sekä XNA Game
 Studio 4, jotta graafinen ohjelma voidaan kääntää. .NET-frameworkin
 asennusohjeet löytyvät osoitteesta
 
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/dotnet-tyokalut](https://trac.cc.jyu.fi/projects/ohj1/wiki/dotnet-tyokalut).
+><https://trac.cc.jyu.fi/projects/ohj1/wiki/dotnet-tyokalut>.
 
 Vaikka tässä kohtaa emme vielä Visual Studio 2010 -kehitysympäristöä
 tarvitsekaan, on sen asentaminen tässä kohtaa myös viisasta, sillä
@@ -767,7 +734,7 @@ luokkakirjasto. Luokkakirjaston dokumentaatioon (documentation)
 kannattaa tutustua, sillä sieltä löytyy monia todella hyödyllisiä
 metodeja. Dokumentaatio löytyy Microsoftin sivuilta osoitteesta
 
-[http://msdn.microsoft.com/en-us/library/ms229335.aspx](http://msdn.microsoft.com/en-us/library/ms229335.aspx).
+><http://msdn.microsoft.com/en-us/library/ms229335.aspx>.
 
 *Dokumentaatio =* Sisältää tiedot kaikista kirjaston luokista ja niiden
 metodeista (ja aliohjelmista). Löytyy useimmiten ainakin WWW-muodossa.
@@ -788,62 +755,59 @@ Piirretään lumiukko käyttämällä Jypeli-kirjastoa. Mallikoodin vasemmassa
 reunassa juoksee myös rivinumerointi, joka ei kuulu koodiin, mutta
 helpottaa lukemista.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-01 // Otetaan käyttöön Jyväskylän yliopiston Jypeli-kirjasto
-02 using Jypeli;
-03 
-04 /// @author  Vesa Lappalainen, Antti-Jussi Lakanen 
-05 /// @version 22.12.2011
-06 ///
-07 ///
-08 /// <summary>
-09 /// Luokka, jossa harjoitellaan piirtämistä lisäämällä ympyröitä ruudulle
-10 /// </summary>
-11 public class Lumiukko : PhysicsGame
-12 {
-13   /// <summary>
-14   /// Pääohjelmassa laitetaan "peli" käyntiin Jypelille tyypilliseen tapaan    
-15   /// </summary>
-16   /// <param name="args">Ei käytössä</param>
-17   public static void Main(string[] args)
-18   {
-19     using (Lumiukko peli = new Lumiukko())
-20     {
-21       peli.Run();
-22     }
-23   }
-24   
-25   /// <summary>
-26   /// Piirretään oliot ja zoomataan kamera niin että kenttä näkyy kokonaan.
-27   /// </summary>
-28   public override void Begin()
-29   {
-30     Camera.ZoomToLevel();
-31     Level.Background.Color = Color.Black;
-32     
-33     PhysicsObject p1 = new PhysicsObject(2*100.0, 2*100.0, Shape.Circle);
-34     p1.Y = Level.Bottom + 200.0;
-35     Add(p1);
-36     
-37     PhysicsObject p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-38     p2.Y = p1.Y + 100 + 50;
-39     Add(p2);
-40     
-41     PhysicsObject p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
-42     p3.Y = p2.Y + 50 + 30;
-43     Add(p3);
-44   }
-45 }
-```
+    01 // Otetaan käyttöön Jyväskylän yliopiston Jypeli-kirjasto
+    02 using Jypeli;
+    03 
+    04 /// @author  Vesa Lappalainen, Antti-Jussi Lakanen 
+    05 /// @version 22.12.2011
+    06 ///
+    07 ///
+    08 /// <summary>
+    09 /// Luokka, jossa harjoitellaan piirtämistä lisäämällä ympyröitä ruudulle
+    10 /// </summary>
+    11 public class Lumiukko : PhysicsGame
+    12 {
+    13   /// <summary>
+    14   /// Pääohjelmassa laitetaan "peli" käyntiin Jypelille tyypilliseen tapaan    
+    15   /// </summary>
+    16   /// <param name="args">Ei käytössä</param>
+    17   public static void Main(string[] args)
+    18   {
+    19     using (Lumiukko peli = new Lumiukko())
+    20     {
+    21       peli.Run();
+    22     }
+    23   }
+    24   
+    25   /// <summary>
+    26   /// Piirretään oliot ja zoomataan kamera niin että kenttä näkyy kokonaan.
+    27   /// </summary>
+    28   public override void Begin()
+    29   {
+    30     Camera.ZoomToLevel();
+    31     Level.Background.Color = Color.Black;
+    32     
+    33     PhysicsObject p1 = new PhysicsObject(2*100.0, 2*100.0, Shape.Circle);
+    34     p1.Y = Level.Bottom + 200.0;
+    35     Add(p1);
+    36     
+    37     PhysicsObject p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+    38     p2.Y = p1.Y + 100 + 50;
+    39     Add(p2);
+    40     
+    41     PhysicsObject p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+    42     p3.Y = p2.Y + 50 + 30;
+    43     Add(p3);
+    44   }
+    45 }
+    ```
 
 Ajettaessa ohjelman tulisi piirtää yksinkertainen lumiukko keskelle
 ruutua, kuten alla olevassa kuvassa. 4.3.1 Ohjelman suoritus
 
-![\
+ ![](http://kurssit.it.jyu.fi/ITKP102/monistecs/src/luentomonistecsUusin_htm_m793342fb.png)
  Kuva 2: Lumiukko Jypeli-kirjaston avulla
-piirrettynä](../src/luentomonistecsUusin_htm_m793342fb.png)
-
-\
+piirrettynä
 
 ### 4.3.1 Ohjelman suoritus
 
@@ -859,21 +823,19 @@ pääohjelman suoritukseen. Aliohjelmista puhutaan enemmän luvussa 6.
 
 Tarkastellaan ohjelman oleellisempia kohtia.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-02 using Jypeli;
-```
+    02 using Jypeli;
+
 
 Aluksi meidän täytyy kertoa kääntäjälle, että haluamme ottaa käyttöön
 koko Jypeli-kirjaston. Nyt Jypeli-kirjaston kaikki luokat (ja niiden
 metodit) ovat käytettävissämme.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-08 /// <summary>
-09 /// Luokka, jossa harjoitellaan piirtämistä lisäämällä ympyröitä ruudulle
-10 /// </summary>
-11 public class Lumiukko : PhysicsGame
-12 {
-```
+    08 /// <summary>
+    09 /// Luokka, jossa harjoitellaan piirtämistä lisäämällä ympyröitä ruudulle
+    10 /// </summary>
+    11 public class Lumiukko : PhysicsGame
+    12 {
+    
 
 Rivit 8-10 ovat dokumentaatiokommentteja. Rivillä 11 luodaan
 Lumiukko-luokka, joka hieman poikkeaa HelloWorld-esimerkin tavasta luoda
@@ -884,19 +846,18 @@ Täsmällisemmin sanottuna Lumiukko-luokka peritään PhysicsGame-luokasta.
 Tuon PhysicsGame-luokan avulla objektien piirtäminen, myöhemmin
 liikuttelu ruudulla ja fysiikan lakien hyödyntäminen on vaivatonta.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-13   /// <summary>
-14   /// Pääohjelmassa laitetaan "peli" käyntiin Jypelille tyypilliseen tapaan.    
-15   /// </summary>
-16   /// <param name="args">Ei käytössä</param>
-17   public static void Main(String[] args)
-18   {
-19     using (Lumiukko peli = new Lumiukko())
-20     {
-21       peli.Run();
-22     }
-23   }
-```
+    13   /// <summary>
+    14   /// Pääohjelmassa laitetaan "peli" käyntiin Jypelille tyypilliseen tapaan.    
+    15   /// </summary>
+    16   /// <param name="args">Ei käytössä</param>
+    17   public static void Main(String[] args)
+    18   {
+    19     using (Lumiukko peli = new Lumiukko())
+    20     {
+    21       peli.Run();
+    22     }
+    23   }
+
 
 Myös Main-metodi, eli pääohjelma, on Jypeli-peleissä käytännössä aina
 tällainen vakiomuotoinen, joten jatkossa siihen ei tarvitse juurikaan
@@ -910,10 +871,9 @@ käsittelemme seuraavaksi.
 Tarkasti ottaen Begin alkaa riviltä 29. Ensimmäinen lause on kirjoitettu
 riville 30.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-30     Camera.ZoomToLevel();
-31     Level.Background.Color = Color.Black;
-```
+    30     Camera.ZoomToLevel();
+    31     Level.Background.Color = Color.Black;
+
 
 Näistä kahdesta rivistä ensimmäisellä kutsutaan Camera-luokan
 ZoomToLevel-aliohjelmaa, joka pitää huolen siitä, että ”kamera” on
@@ -921,11 +881,10 @@ kohdistettuna ja zoomattuna oikeaan kohtaan. Aliohjelma ei ota vastaan
 parametreja, joten sulkujen sisältö jää tyhjäksi. Toisella rivillä
 muutetaan taustan väri.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-33     PhysicsObject p1 = new PhysicsObject(2*100.0, 2*100.0, Shape.Circle);
-34     p1.Y = Level.Bottom + 200.0;
-35     Add(p1);
-```
+    33     PhysicsObject p1 = new PhysicsObject(2*100.0, 2*100.0, Shape.Circle);
+    34     p1.Y = Level.Bottom + 200.0;
+    35     Add(p1);
+    
 
 Näiden kolmen rivin aikana luomme uuden fysiikkaolio-ympyrän, annamme
 sille säteen, y-koordinaatin, sekä lisäämme sen ”pelikentälle”, eli
@@ -966,9 +925,8 @@ jolloin ohjelma itse päättää tasojen parhaan järjestyksen. Parametrit
 kirjoitetaan metodin nimen perään sulkeisiin ja ne erotetaan toisistaan
 pilkuilla.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-MetodinNimi(parametri1, parametri2,..., parametriX);
-```
+    MetodinNimi(parametri1, parametri2,..., parametriX);
+
 
 Seuraavien rivien aikana luomme vielä kaksi ympyrää vastaavalla tavalla,
 mutta vaihtaen sädettä ja ympyrän koordinaatteja.
@@ -988,11 +946,10 @@ haluamme, että keskimmäisen ympyrän säde on 50, niin silloin
 keskimmäisen ympyrän keskipiste tulee kohtaan (0, p1.Y + 100 + 50) ja se
 piirretään lauseella:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-PhysicsObject p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-p2.Y = p1.Y + 100 + 50;
-Add(p2);
-```
+    PhysicsObject p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+    p2.Y = p1.Y + 100 + 50;
+    Add(p2);
+
 
 Huomaa, että fysiikkaolion Y-ominaisuuden asettamisen (*set*) lisäksi
 voimme myös lukea tai pyytää (*get*) kyseisen ominaisuuden arvon. Yllä
@@ -1001,24 +958,22 @@ puolelle p1.Y.
 
 Seuraava kuva havainnollistaa ensimmäisen ja toisen pallon asettelua.
 
-![\
- Kuva 3: Lumiukon kaksi ensimmäistä palloa asemoituina
-paikoilleen.](../src/luentomonistecsUusin_htm_m58b94a29.png)
+ ![](http://kurssit.it.jyu.fi/ITKP102/monistecs/src/luentomonistecsUusin_htm_m58b94a29.png)
+Kuva 3: Lumiukon kaksi ensimmäistä palloa asemoituina
+paikoilleen.
 
-\
- \
- \
-
-Ylin ympyrä sivuaa sitten taas keskimmäistä ympyrää. Harjoitustehtäväksi
-jätetään laskea ylimmän ympyrän koordinaatit, kun ympyrän säde on 30.
+ Ylin ympyrä sivuaa sitten taas keskimmäistä ympyrää.
+Harjoitustehtäväksi jätetään laskea ylimmän ympyrän koordinaatit, kun
+ympyrän säde on 30.
 
 Kaikki tiedot luokista, luokkien metodeista sekä siitä mitä parametreja
 metodeille tulee antaa löydät käyttämäsi kirjaston dokumentaatiosta.
 Jypelin luokkadokumentaatio löytyy osoitteesta:
-[http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/](http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/).
 
-4.4 Harjoitus
--------------
+><http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/>.
+
+##4.4 Harjoitus {#harjoitus-1}
+
 
 Etsi Jypeli-kirjaston dokumentaatiosta RandomGen-luokka. Mitä tietoa
 löydät NextInt(int min, int max)-metodista? Mitä muita metodeja luokassa
@@ -1034,23 +989,23 @@ matematiikkakirjastoja. Fysiikka- ja matematiikkakirjastot on
 sisäänrakennettuina Jypeli-kirjastoon.
 
 Ennen kääntämistä kopioi seuraavat tiedostot kurssin kotisivuilta
-([https://trac.cc.jyu.fi/projects/ohj1/wiki/csharpCommandLine](https://trac.cc.jyu.fi/projects/ohj1/wiki/csharpCommandLine))
-samaan kansioon Lumiukko.cs-tiedoston kanssa.
+(<https://trac.cc.jyu.fi/projects/ohj1/wiki/csharpCommandLine>) samaan
+kansioon Lumiukko.cs-tiedoston kanssa.
 
 -   Jypeli.dll
+
 
 Meidän täytyy vielä välittää kääntäjälle tieto siitä, että
 Jypeli-kirjastoa tarvitaan Lumiukko-koodin kääntämiseen. Lisäksi
 annetaan kääntäjälle tieto siitä, että ohjelma tehdään *32-bittisille*
 järjestelmille (x86). Tämä tehdään csc-ohjelman
-`/reference`{.terminaali-western}-parametrin avulla. Lisäksi tarvitaan
+`/reference`-parametrin avulla. Lisäksi tarvitaan
 referenssi Jypelin käyttämään XNA-kirjastoon. Kirjoita nyt
 komentoriville(kaikki rivit samalle riville niin, että /-viivan edessä
 on yksi välilyönti)
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-csc Lumiukko.cs /reference:Jypeli.dll;"%XNAGSv4%\References\Windows\x86\Microsoft.Xna.Framework.Game.dll" /platform:x86
-```
+    csc Lumiukko.cs /reference:Jypeli.dll;"%XNAGSv4%\References\Windows\x86\Microsoft.Xna.Framework.Game.dll" /platform:x86
+
 
 Jos käyttöjärjestelmäsi ei tunnista csc-komentoa, niin kertaa luvussa 2
 olevat ohjeet komennon asettamisesta
@@ -1059,14 +1014,16 @@ olevat ohjeet komennon asettamisesta
 Vinkki! Yllä esitelty kääntämiskomento on varsin pitkä. Asioiden
 helpottamiseksi voit kirjoittaa tiedoston csk.bat, joka sisältää
 seuraavan tekstin (komento on yksi pitkä rivi):\
- \
-@"%WINDIR%\\Microsoft.NET\\Framework\\v4.0.30319\\csc" %\*
-/reference:Jypeli.dll;"%XNAGSv4%References\\Windows\\x86\\Microsoft.Xna.Framework.Game.dll";"%XNAGSv4%References\\Windows\\x86\\Microsoft.Xna.Framework.dll"
-/platform:x86 /define:WINDOWS\
- \
+
+    @"%WINDIR%\\Microsoft.NET\\Framework\\v4.0.30319\\csc" %\*
+    /reference:Jypeli.dll;"%XNAGSv4%References\\Windows\\x86\\Microsoft.Xna.Framework.Game.dll";"%XNAGSv4%References\\Windows\\x86\\Microsoft.Xna.Framework.dll"
+    /platform:x86 /define:WINDOWS\
+
 Tämä asettaa puolestasi reference ja platform -parametrit. Varmista,
 että tekemäsi csk.bat-tiedosto on ”polussa”. Tämän jälkeen kääntäminen
-onnistuu yksinkertaisemmin: csk OhjelmanNimi.cs
+onnistuu yksinkertaisemmin: 
+    
+    csk OhjelmanNimi.cs
 
 5. Lähdekoodista prosessorille
 ==============================
@@ -1093,15 +1050,13 @@ syntaksiltaan oikein. [VES][KOS]
 Kääntäminen tehtiin Windowsissa komentorivillä (Command Prompt)
 käyttämällä komentoa
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-csc Tiedostonnimi.cs
-```
+    csc Tiedostonnimi.cs
+
 
 tai hyödyntämällä edellisessä luvussa esiteltyä komentojonoa
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-csk Tiedostonnimi.cs
-```
+    csk Tiedostonnimi.cs
+
 
 5.2 Suorittaminen
 -----------------
@@ -1122,11 +1077,7 @@ suorittaa sitä sitten kohdekoneen prosessorilla. Tässä on merkittävä ero
 perinteisiin käännettäviin kieliin (esimerkiksi C ja C++), joissa
 käännös on tehtävä erikseen jokaiselle eri laitealustalle. [VES][KOS]
 
-\
- \
-
-6. Aliohjelmat
-==============
+#6. Aliohjelmat
 
 > “Copy and paste is a design error.” - David Parnas
 
@@ -1140,68 +1091,67 @@ Jos tehtävänämme olisi piirtää useampi lumiukko, niin tämänhetkisellä
 tietämyksellämme tekisimme todennäköisesti jonkin alla olevan kaltaisen
 ratkaisun.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-01 using Jypeli;
-02 
-03 /// <summary>
-04 /// Piirretään lumiukko.
-05 /// </summary>
-06 public class Lumiukko : PhysicsGame
-07 {
-08   /// <summary>
-09   /// Pääohjelmassa peli käyntiin.
-10   /// </summary>
-11   /// <param name="args">Ei käytössä.</param>
-12   public static void Main(String[] args)
-13   {
-14     using (Lumiukko game = new Lumiukko())
-15     {
-16       game.Run();
-17     }
-18   }
-19   
-20   /// <summary>
-21   /// Aliohjelma, jossa
-22   /// piirretään ympyrät.
-23   /// </summary>
-24   public override void Begin()
-25   {
-26     Camera.ZoomToLevel();
-27     Level.Background.Color = Color.Black;
-28     
-29     PhysicsObject p1, p2, p3;
-30     
-31     // Eka ukko
-32     p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
-33     p1.Y = Level.Bottom + 200.0;
-34     Add(p1);
-35     
-36     p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-37     p2.Y = p1.Y + 100 + 50;
-38     Add(p2);
-39     
-40     p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
-41     p3.Y = p2.Y + 50 + 30;
-42     Add(p3);
-43     
-44     // Toinen ukko
-45     p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
-46     p1.X = 200;
-47     p1.Y = Level.Bottom + 300.0;
-48     Add(p1);
-49     
-50     p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-51     p2.X = 200;
-52     p2.Y = p1.Y + 100 + 50;
-53     Add(p2);
-54     
-55     p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
-56     p3.X = 200;
-57     p3.Y = p2.Y + 50 + 30;
-58     Add(p3);
-59   }
-60 }
-```
+    01 using Jypeli;
+    02 
+    03 /// <summary>
+    04 /// Piirretään lumiukko.
+    05 /// </summary>
+    06 public class Lumiukko : PhysicsGame
+    07 {
+    08   /// <summary>
+    09   /// Pääohjelmassa peli käyntiin.
+    10   /// </summary>
+    11   /// <param name="args">Ei käytössä.</param>
+    12   public static void Main(String[] args)
+    13   {
+    14     using (Lumiukko game = new Lumiukko())
+    15     {
+    16       game.Run();
+    17     }
+    18   }
+    19   
+    20   /// <summary>
+    21   /// Aliohjelma, jossa
+    22   /// piirretään ympyrät.
+    23   /// </summary>
+    24   public override void Begin()
+    25   {
+    26     Camera.ZoomToLevel();
+    27     Level.Background.Color = Color.Black;
+    28     
+    29     PhysicsObject p1, p2, p3;
+    30     
+    31     // Eka ukko
+    32     p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+    33     p1.Y = Level.Bottom + 200.0;
+    34     Add(p1);
+    35     
+    36     p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+    37     p2.Y = p1.Y + 100 + 50;
+    38     Add(p2);
+    39     
+    40     p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+    41     p3.Y = p2.Y + 50 + 30;
+    42     Add(p3);
+    43     
+    44     // Toinen ukko
+    45     p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+    46     p1.X = 200;
+    47     p1.Y = Level.Bottom + 300.0;
+    48     Add(p1);
+    49     
+    50     p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+    51     p2.X = 200;
+    52     p2.Y = p1.Y + 100 + 50;
+    53     Add(p2);
+    54     
+    55     p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+    56     p3.X = 200;
+    57     p3.Y = p2.Y + 50 + 30;
+    58     Add(p3);
+    59   }
+    60 }
+
 
 Huomataan, että ensimmäisen ja toisen lumiukon piirtäminen tapahtuu
 lähes samanlaisilla koodinpätkillä. Itse asiassa ainoa ero on, että
@@ -1213,55 +1163,52 @@ Määritellään heti alussa myös p1, p2 ja p3 PhysicsObject-olioiksi.
 Rivinumerointi on tässä jätetty pois selvyyden vuoksi. Luvun lopussa
 korjattu ohjelma esitellään kokonaisuudessaan rivinumeroinnin kanssa.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-double x, y;
-PhysicsObject p1, p2, p3;
-
-// Tehdään ensimmäinen lumiukko
-x = 0; y = Level.Bottom + 200.0;
-p1 = new PhysicsObject(2*100.0, 2*100.0, Shape.Circle);
-p1.X = x;
-p1.Y = y;
-Add(p1);
-
-p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-p2.X = x;
-p2.Y = y + 100 + 50; // y + 1. pallon säde + 2. pallon säde
-Add(p2);
-
-p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
-p3.X = x;
-p3.Y = y + 100 + 2 * 50 + 30; // y + 1. pallon säde + 2. halk. + 3. säde
-Add(p3);
-```
+    double x, y;
+    PhysicsObject p1, p2, p3;
+    
+    // Tehdään ensimmäinen lumiukko
+    x = 0; y = Level.Bottom + 200.0;
+    p1 = new PhysicsObject(2*100.0, 2*100.0, Shape.Circle);
+    p1.X = x;
+    p1.Y = y;
+    Add(p1);
+    
+    p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+    p2.X = x;
+    p2.Y = y + 100 + 50; // y + 1. pallon säde + 2. pallon säde
+    Add(p2);
+    
+    p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+    p3.X = x;
+    p3.Y = y + 100 + 2 * 50 + 30; // y + 1. pallon säde + 2. halk. + 3. säde
+    Add(p3);
+    
 
 Vastaavasti toiselle lumiukolle: asetetaan vain x:n ja y:n arvot
 oikeiksi.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-// Tehdään toinen lumiukko
-x = 200; y = Level.Bottom + 300.0;
-p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
-p1.X = x;
-p1.Y = y;
-Add(p1);
+    // Tehdään toinen lumiukko
+    x = 200; y = Level.Bottom + 300.0;
+    p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+    p1.X = x;
+    p1.Y = y;
+    Add(p1);
+    
+    p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+    p2.X = x;
+    p2.Y = y + 100 + 50;
+    Add(p2);
+    
+    p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+    p3.X = x;
+    p3.Y = y + 100 + 2*50 + 30;
+    Add(p3);
 
-p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-p2.X = x;
-p2.Y = y + 100 + 50;
-Add(p2);
-
-p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
-p3.X = x;
-p3.Y = y + 100 + 2*50 + 30;
-Add(p3);
-```
 
 Tarkastellaan nyt muutoksia hieman tarkemmin.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-double x, y;
-```
+    double x, y;
+
 
 Yllä olevalla rivillä esitellään kaksi liukuluku*tyyppistä* *muuttujaa*.
 Liukuluku on eräs tapa esittää *reaalilukuja* tietokoneissa. C\#:ssa
@@ -1271,20 +1218,19 @@ on double. Muuttujista ja niiden tyypeistä puhutaan lisää luvussa 7.
 *Liukuluku* (floating point) = Tietokoneissa käytettävä esitysmuoto
 reaaliluvuille. Tarkempaa tietoa liukuluvuista löytyy luvusta 26.
 
-\
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-x = 0; y = Level.Bottom + 200.0;
-```
+
+
+    x = 0; y = Level.Bottom + 200.0;
+
 
 Yllä olevalla rivillä on kaksi lausetta. Ensimmäisellä asetetaan
 muuttujaan x arvo 0 ja toisella muuttujaan y arvo 50 (jos Level.Bottom
 sattuu olemaan vaikka -150). Nyt voimme käyttää lumiukon pallojen
 laskentaan näitä muuttujia.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-x = 300; y = Level.Bottom + 300.0;
-```
+    x = 300; y = Level.Bottom + 300.0;
+
 
 Vastaavasti yllä olevalla rivillä asetetaan nyt muuttujiin uudet arvot,
 joita käytetään seuraavan lumiukon pallojen paikkojen laskemiseen.
@@ -1296,12 +1242,10 @@ vastaavasti y-koordinaatin arvoksi asetetaan *muuttuja* y, ja muiden
 pallojen sijainnit lasketaan ensimmäisen pallon koordinaattien
 perusteella.
 
-![\
- Kuva 4: Kaksi
-lumiukkoa.](../src/luentomonistecsUusin_htm_m12339dd1.png)
+![](/static/ohj1/images/luentomonistecsUusin_htm_m12339dd1.png)
+ 
 
-\
- Näiden muutosten jälkeen molempien lumiukkojen varsinainen piirtäminen
+Näiden muutosten jälkeen molempien lumiukkojen varsinainen piirtäminen
 tapahtuu nyt **täysin samalla koodilla**.
 
 Uusien lumiukkojen piirtäminen olisi nyt jonkin verran helpompaa, sillä
@@ -1318,9 +1262,6 @@ samanlainen koodinpätkä tulee useampaan kuin yhteen paikkaan, on
 useimmiten syytä muodostaa siitä oma *aliohjelma*. Koodin monistaminen
 moneen paikkaan lisäisi vain koodirivien määrää, tekisi ohjelman
 ymmärtämisestä vaikeampaa ja vaikeuttaisi testaamista.
-
-\
- \
 
 Lisäksi jos monistetussa koodissa olisi vikaa, jouduttaisiin korjaukset
 tekemään myös useampaan paikkaan. Hyvän ohjelman yksi mitta (kriteeri)
@@ -1353,9 +1294,8 @@ metodi liittyy aina tiettyyn olioon. Esimerkiksi pallo-olio p1
 voitaisiin poistaa pelikentällä kutsumalla metodia Destroy(), eli
 kirjoittaisimme:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-p1.Destroy();
-```
+    p1.Destroy();
+
 
 Toisin sanoen metodeja kutsuttaessa täytyy ensin kirjoittaa sen olion
 nimi, jonka metodia kutsutaan, ja sen jälkeen pisteellä erotettuna
@@ -1371,17 +1311,15 @@ keskipisteen y-koordinaatti. Tällöin kentälle voitaisiin piirtää
 lumiukko, jonka alimman pallon keskipiste on (0, Level.Bottom + 200.0),
 seuraavalla kutsulla:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-PiirraLumiukko(this, 0, Level.Bottom + 200.0);
-```
+    PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+
 
 Kutsussa voisi myös ensiksi mainita sen luokan nimen mistä aliohjelma
 löytyy. Tällä kutsulla aliohjelmaa voisi kutsua myös muista luokista,
 koska määrittelimme Lumiukot-luokan julkiseksi (public).
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Lumiukot.PiirraLumiukko(this, 0, Level.Bottom + 200.0);
-```
+    Lumiukot.PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+
 
 Vaikka tämä muoto muistuttaa jo melko paljon metodin kutsua on ero
 kuitenkin selvä. Metodia kutsuttaessa toimenpide tehdään aina *tietylle
@@ -1393,20 +1331,19 @@ käytetään vain luokasta Lumiukot löytyvää PiirraLumiukko-aliohjelmaa.
 Jos olisimme toteuttaneet jo varsinaisen aliohjelman, piirtäisi Begin
 meille nyt kaksi lumiukkoa.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-/// <summary>
-/// Kutsutaan PiirraLumiukko-aliohjelmaa
-/// sopivilla parametreilla.
-/// </summary>
-public override void Begin()
-{
-  Camera.ZoomToLevel();
-  Level.Background.Color = Color.Black;
-
-  PiirraLumiukko(this, 0, Level.Bottom + 200.0);
-  PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
-}
-```
+    /// <summary>
+    /// Kutsutaan PiirraLumiukko-aliohjelmaa
+    /// sopivilla parametreilla.
+    /// </summary>
+    public override void Begin()
+    {
+      Camera.ZoomToLevel();
+      Level.Background.Color = Color.Black;
+    
+      PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+      PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
+    }
+    
 
 Koska PiirraLumiukko-aliohjelmaa ei luonnollisesti vielä ole olemassa,
 ei ohjelmamme vielä toimi. Seuraavaksi meidän täytyy toteuttaa itse
@@ -1418,7 +1355,8 @@ kutsu sille kuuluvalle paikalle, ja vasta sitten toteutetaan varsinainen
 aliohjelman kirjoittaminen.
 
 Lisätietoja aliohjelmien kutsumisesta löydät kurssin wiki-sivulta:
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/aliohjelmienKutsuminen](https://trac.cc.jyu.fi/projects/ohj1/wiki/aliohjelmienKutsuminen).
+
+><https://trac.cc.jyu.fi/projects/ohj1/wiki/aliohjelmienKutsuminen>.
 
 6.2 Aliohjelman kirjoittaminen
 ------------------------------
@@ -1431,52 +1369,49 @@ teimme edellisessä alaluvussa.
 Lisätään ohjelmaamme aliohjelman runko. Dokumentoidaan aliohjelma myös
 saman tien.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-/// <summary>
-/// Kutsutaan PiirraLumiukko-aliohjelmaa
-/// sopivilla parametreilla.
-/// </summary>
-public override void Begin()
-{
-  Camera.ZoomToLevel();
-  Level.Background.Color = Color.Black;
-
-  PiirraLumiukko(this, 0, Level.Bottom + 200.0);
-  PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
-}
-
-/// <summary>
-/// Aliohjelma piirtää lumiukon
-/// annettuun paikkaan.
-/// </summary>
-/// <param name="peli">Peli, johon lumiukko tehdään.</param>
-/// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
-/// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
-public static void PiirraLumiukko(Game peli, double x, double y)
-{
-}
-```
+    /// <summary>
+    /// Kutsutaan PiirraLumiukko-aliohjelmaa
+    /// sopivilla parametreilla.
+    /// </summary>
+    public override void Begin()
+    {
+      Camera.ZoomToLevel();
+      Level.Background.Color = Color.Black;
+    
+      PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+      PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
+    }
+    
+    /// <summary>
+    /// Aliohjelma piirtää lumiukon
+    /// annettuun paikkaan.
+    /// </summary>
+    /// <param name="peli">Peli, johon lumiukko tehdään.</param>
+    /// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
+    /// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
+    public static void PiirraLumiukko(Game peli, double x, double y)
+    {
+    }
+    
 
 Alla oleva kuva selvittää aliohjelmakutsun ja aliohjelman määrittelyn
 sekä vastinparametrien yhteyttä.
 
-![\
- Kuva 5: Aliohjelmakutsu ja aliohjelman
-vastinparametrit.](../src/luentomonistecsUusin_htm_m48da2e91.png)
+![](/static/ohj1/images/luentomonistecsUusin_htm_m48da2e91.png)
+Kuva 5: Aliohjelmakutsu ja aliohjelman
+vastinparametrit.
 
-\
  Aliohjelman toteutuksen ensimmäistä riviä
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-public static void PiirraLumiukko(Game peli, double x, double y)
-```
+    public static void PiirraLumiukko(Game peli, double x, double y)
+
 
 sanotaan aliohjelman *otsikoksi* (header) tai *esittelyriviksi*. Otsikon
 alussa määritellään aliohjelman *näkyvyys* julkiseksi (public). Kun
 näkyvyys on julkinen, niin aliohjelmaa voidaan kutsua eli käyttää myös
 muissa luokissa. Aliohjelma määritellään myös staattiseksi (static),
 sillä jos emme määrittelisi aliohjelmaa staattiseksi, olisi se
-oikeastaan metodi, eli olion toiminto (ks. luku 8.5). Statttinen
+oikeastaan metodi, eli olion toiminto (ks. luku 8.5). Staattinen
 aliohjelma pystyy tekemään kaikki toimensa parametreinä tuodun tiedon
 perusteella.
 
@@ -1489,8 +1424,6 @@ PiirraLumiukko.
 
 Huomaa! C\#:ssa aliohjelmat kirjoitetaan tyypillisesti isolla
 alkukirjaimella.
-
-\
 
 Huomaa! Aliohjelmien (ja metodien) nimien tulisi olla verbejä tai
 tekemistä ilmaisevia lauseita, esimerkiksi LuoPallo, Siirry,
@@ -1508,14 +1441,10 @@ Tietotyypeistä voit lukea lisää kohdasta 7.2 ja luvusta 8.
 Huomaa! Aliohjelman parametrien nimien ei tarvitse olla samoja kuin
 kutsussa. Niiden nimet kannattaa kuitenkin olla mahdollisimman kuvaavia.
 
-\
-
 Huomaa! Parametrien tyyppien ei tarvitse olla keskenään samoja, kunhan
 kukin parametri on yhteensopiva kutsussa olevan vastinparametrin kanssa.
 Esimerkkejä funktioista löydät kurssin wiki-sivulta:
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/aliohjelmienKirjoittaminen](https://trac.cc.jyu.fi/projects/ohj1/wiki/aliohjelmienKirjoittaminen).
-
-\
+><https://trac.cc.jyu.fi/projects/ohj1/wiki/aliohjelmienKirjoittaminen>.
 
 Aliohjelmakutsulla ja aliohjelman määrittelyllä on siis hyvin vahva
 yhteys keskenään. Aliohjelmakutsussa annetut tiedot ”sijoitetaan”
@@ -1523,11 +1452,10 @@ kullakin kutsukerralla aliohjelman määrittelyrivillä esitellyille
 vastinparametreille. Toisin sanoen, aliohjelmakutsun yhteydessä tapahtuu
 väljästi sanottuna seuraavaa.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-aliohjelman Game = this;
-aliohjelman x = 200.0;
-aliohjelman y = Level.Bottom + 300;
-```
+    aliohjelman Game = this;
+    aliohjelman x = 200.0;
+    aliohjelman y = Level.Bottom + 300;
+    
 
 Voimme nyt kokeilla ajaa ohjelmaamme. Se toimii (lähtee käyntiin), mutta
 ei tietenkään vielä piirrä lumiukkoja, eikä pitäisikään, sillä luomamme
@@ -1537,52 +1465,50 @@ joka pallojen piirtämiseen tarvitaan.
 Pieni muutos aikaisempaan versioon kuitenkin tarvitaan. Rivit, joilla
 pallot lisätään kentälle, muutetaan muotoon
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-peli.Add(...);
-```
+    peli.Add(...);
+
 
 missä pisteiden paikalle tulee pallo-olion muuttujan nimi.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-/// <summary>
-/// Kutsutaan PiirraLumiukko-aliohjelmaa
-/// sopivilla parametreilla.
-/// </summary>
-public override void Begin()
-{
-  Camera.ZoomToLevel();
-  Level.Background.Color = Color.Black;
-
-  PiirraLumiukko(this, 0, Level.Bottom + 200.0);
-  PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
-}
-
-/// <summary>
-/// Aliohjelma piirtää lumiukon
-/// annettuun paikkaan.
-/// </summary>
-/// <param name="g">Peli, johon lumiukko tehdään.</param>
-/// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
-/// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
-public static void PiirraLumiukko(Game peli, double x, double y)
-{
-  PhysicsObject p1, p2, p3;
-  p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
-  p1.X = x;
-  p1.Y = y;
-  peli.Add(p1);
-  
-  p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-  p2.X = x;
-  p2.Y = p1.Y + 100 + 50;
-  peli.Add(p2);
-  
-  p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
-  p3.X = x;
-  p3.Y = p2.Y + 50 + 30;
-  peli.Add(p3);
-}
-```
+    /// <summary>
+    /// Kutsutaan PiirraLumiukko-aliohjelmaa
+    /// sopivilla parametreilla.
+    /// </summary>
+    public override void Begin()
+    {
+      Camera.ZoomToLevel();
+      Level.Background.Color = Color.Black;
+    
+      PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+      PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
+    }
+    
+    /// <summary>
+    /// Aliohjelma piirtää lumiukon
+    /// annettuun paikkaan.
+    /// </summary>
+    /// <param name="g">Peli, johon lumiukko tehdään.</param>
+    /// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
+    /// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
+    public static void PiirraLumiukko(Game peli, double x, double y)
+    {
+      PhysicsObject p1, p2, p3;
+      p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+      p1.X = x;
+      p1.Y = y;
+      peli.Add(p1);
+      
+      p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+      p2.X = x;
+      p2.Y = p1.Y + 100 + 50;
+      peli.Add(p2);
+      
+      p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+      p3.X = x;
+      p3.Y = p2.Y + 50 + 30;
+      peli.Add(p3);
+    }
+    
 
 Varsinaista aliohjelman toiminnallisuutta kirjoittaessa käytämme nyt
 parametreille antamiamme nimiä. Alimman ympyrän keskipisteen
@@ -1599,13 +1525,12 @@ kirjoitetaan pienellä alkukirjaimella, ja jokainen seuraava sana isolla
 alkukirjaimella: esimerkiksi double autonNopeus. Tästä käytetään nimeä
 camelCasing. Lisää C\#:n nimeämiskäytännöistä voit lukea sivulta
 
-[http://msdn.microsoft.com/en-us/library/ms229043.aspx](http://msdn.microsoft.com/en-us/library/ms229043.aspx).
+><http://msdn.microsoft.com/en-us/library/ms229043.aspx>.
 
 Tarkastellaan seuraavaksi mitä aliohjelmakutsussa tapahtuu.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-PiirraLumiukko(this, 0, Level.Bottom + 200.0);
-```
+    PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+
 
 Yllä olevalla kutsulla aliohjelman peli-nimiseen muuttujaan sijoitetaan
 this, eli kyseessä oleva peli, x-nimiseen muuttujaan sijoitetaan arvo 0
@@ -1622,97 +1547,88 @@ nimi (this), kokonaislukuarvo (0) ja reaalilukuarvo ( Level.Bottom +
 200.0). Ne voisivat kuitenkin olla kuinka monimutkaisia lausekkeita
 tahansa, esimerkiksi näin:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-PiirraLumiukko(this, 22.7+sin(2.4), 80.1-Math.PI);
-```
+    PiirraLumiukko(this, 22.7+sin(2.4), 80.1-Math.PI);
 
-\
- \
 
 *Lause* (statement) ja *lauseke* (expression) ovat eri asia. Lauseke on
 arvojen, aritmeettisten operaatioiden ja aliohjelmien (tai metodien
 yhdistelmä), joka evaluoituu tietyksi arvoksi. Lauseke on siis lauseen
 osa. Seuraava kuva selventää eroa.
 
-![\
- Kuva 6: Lauseen ja lausekkeen
-ero](../src/luentomonistecsUusin_htm_m5dfaebb8.png)
+![](/static/ohj1/images//luentomonistecsUusin_htm_m5dfaebb8.png)
 
-\
- Koska määrittelimme koordinaattien parametrien tyypiksi double,
+Kuva 6: Lauseen ja lausekkeen ero
+
+Koska määrittelimme koordinaattien parametrien tyypiksi double,
 voisimme yhtä hyvin antaa parametreiksi mitä tahansa muitakin
 desimaalilukuja. Täytyy muistaa, että C\#:ssa desimaalilukuvakioissa
 käytetään pistettä erottamaan kokonaisosa desimaaliosasta.
 
 Kokonaisuudessaan ohjelma näyttää nyt seuraavalta:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-01 using Jypeli;
-02 
-03 
-04 /// @author  Antti-Jussi Lakanen, Vesa Lappalainen
-05 /// @version 22.8.2012
-06 ///
-07 /// <summary>
-08 /// Piirretään lumiukkoja ja harjoitellaan aliohjelman käyttöä.
-09 /// </summary>
-10 public class Lumiukot : PhysicsGame
-11 {
-12  /// <summary>
-13  /// Pääohjelmassa laitetaan "peli" käyntiin.
-14  /// </summary>
-15  /// <param name="args">Ei käytössä</param>
-16  public static void Main(string[] args)
-17  {
-18    using (Lumiukot peli = new Lumiukot())
-19    {
-20     peli.Run();
-21    }
-22  }
-23  
-24  /// <summary>
-25  /// Kutsutaan PiirraLumiukko-aliohjelmaa
-26  /// sopivilla parametreilla.
-27  /// </summary>
-28  public override void Begin()
-29  {
-30   Camera.ZoomToLevel();
-31   Level.Background.Color = Color.Black;
-32   
-33   PiirraLumiukko(this, 0, Level.Bottom + 200.0);
-34   PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
-35  }
-36
-37  /// <summary>
-38  /// Aliohjelma piirtää lumiukon
-39  /// annettuun paikkaan.
-40  /// </summary>
-41  /// <param name="peli">Peliluokka</param> 
-42  /// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
-43  /// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
-44  public static void PiirraLumiukko(Game peli, double x, double y)
-45  {
-46    PhysicsObject p1, p2, p3;
-47    p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
-48    p1.X = x;
-49    p1.Y = y;
-50    peli.Add(p1);
-51    
-52    p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
-53    p2.X = x;
-54    p2.Y = p1.Y + 100 + 50;
-55    peli.Add(p2);
-56    
-57    p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
-58    p3.X = x;
-59    p3.Y = p2.Y + 50 + 30;
-60    peli.Add(p3);
-61  }
-62 }
-```
-
-\
- \
+    01 using Jypeli;
+    02 
+    03 
+    04 /// @author  Antti-Jussi Lakanen, Vesa Lappalainen
+    05 /// @version 22.8.2012
+    06 ///
+    07 /// <summary>
+    08 /// Piirretään lumiukkoja ja harjoitellaan aliohjelman käyttöä.
+    09 /// </summary>
+    10 public class Lumiukot : PhysicsGame
+    11 {
+    12  /// <summary>
+    13  /// Pääohjelmassa laitetaan "peli" käyntiin.
+    14  /// </summary>
+    15  /// <param name="args">Ei käytössä</param>
+    16  public static void Main(string[] args)
+    17  {
+    18    using (Lumiukot peli = new Lumiukot())
+    19    {
+    20     peli.Run();
+    21    }
+    22  }
+    23  
+    24  /// <summary>
+    25  /// Kutsutaan PiirraLumiukko-aliohjelmaa
+    26  /// sopivilla parametreilla.
+    27  /// </summary>
+    28  public override void Begin()
+    29  {
+    30   Camera.ZoomToLevel();
+    31   Level.Background.Color = Color.Black;
+    32   
+    33   PiirraLumiukko(this, 0, Level.Bottom + 200.0);
+    34   PiirraLumiukko(this, 200.0, Level.Bottom + 300.0);
+    35  }
+    36
+    37  /// <summary>
+    38  /// Aliohjelma piirtää lumiukon
+    39  /// annettuun paikkaan.
+    40  /// </summary>
+    41  /// <param name="peli">Peliluokka</param> 
+    42  /// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
+    43  /// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
+    44  public static void PiirraLumiukko(Game peli, double x, double y)
+    45  {
+    46    PhysicsObject p1, p2, p3;
+    47    p1 = new PhysicsObject(2 * 100.0, 2 * 100.0, Shape.Circle);
+    48    p1.X = x;
+    49    p1.Y = y;
+    50    peli.Add(p1);
+    51    
+    52    p2 = new PhysicsObject(2 * 50.0, 2 * 50.0, Shape.Circle);
+    53    p2.X = x;
+    54    p2.Y = p1.Y + 100 + 50;
+    55    peli.Add(p2);
+    56    
+    57    p3 = new PhysicsObject(2 * 30.0, 2 * 30.0, Shape.Circle);
+    58    p3.X = x;
+    59    p3.Y = p2.Y + 50 + 30;
+    60    peli.Add(p3);
+    61  }
+    62 }
+    
 
 Kutsuttaessa aliohjelmaa hyppää ohjelman suoritus välittömästi
 parametrien sijoitusten jälkeen kutsuttavan aliohjelman ensimmäiselle
@@ -1739,38 +1655,37 @@ kuvaus aliohjelman toiminnasta, selitys kaikista parametreista sekä
 selitys mahdollisesta paluuarvosta. Nämä asiat kuvataan tägien avulla
 seuraavasti:
 
--   Dokumentaatiokommentin alkuun laitetaan \<summary\>-tagien väliin
+-   Dokumentaatiokommentin alkuun laitetaan summary-tagien väliin
     lyhyt ja selkeä kuvaus aliohjelman toiminnasta.
+-   Jokainen parametri selitetään omien param-tagien väliin ja
+-   paluuarvo returns-tagien väliin.
 
--   Jokainen parametri selitetään omien \<param\>-tagien väliin ja
 
--   paluuarvo \<returns\>-tagien väliin.
 
 PiirraLumiukko-aliohjelman dokumentaatiokommentit on edellisessä
 esimerkissämme riveillä 36-41.
 
-\
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-36 /// <summary>
-37 /// Aliohjelma piirtää lumiukon
-38 /// annettuun paikkaan.
-39 /// </summary>
-40 /// <param name="g">Peliluokka</param>
-41 /// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
-42 /// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
-```
 
-*Doxygen*-työkalun (ks.
-[http://en.wikipedia.org/wiki/Doxygen](http://en.wikipedia.org/wiki/Doxygen))
-tuottama HTML-sivu tästä luokasta näyttäisi nyt seuraavalta:
 
-![\
- Kuva 7: Osa Lumiukot-luokan
-dokumentaatiosta](../src/luentomonistecsUusin_htm_5219b95e.png)
+    36 /// <summary>
+    37 /// Aliohjelma piirtää lumiukon
+    38 /// annettuun paikkaan.
+    39 /// </summary>
+    40 /// <param name="g">Peliluokka</param>
+    41 /// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
+    42 /// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
+    
 
-\
- Dokumentaatiossa näkyy kaikki luokan aliohjelmat ja metodit. Huomaa,
+*Doxygen*-työkalun (ks. <http://en.wikipedia.org/wiki/Doxygen>) tuottama
+HTML-sivu tästä luokasta näyttäisi nyt seuraavalta:
+
+![](/static/ohj1/images/luentomonistecsUusin_htm_5219b95e.png)
+
+Kuva 7: Osa Lumiukot-luokan
+dokumentaatiosta
+
+Dokumentaatiossa näkyy kaikki luokan aliohjelmat ja metodit. Huomaa,
 että Doxygen nimittää sekä aliohjelmia että metodeja jäsenfunktioiksi
 (member functions). Kuten sanottu, nimitykset vaihtelevat
 kirjallisuudessa, ja tässä kohtaa käytössä on hieman harvinaisempi
@@ -1816,20 +1731,18 @@ kuten Doxygen teki myös C\#:n tapauksessa.
 
 Kerrataan vielä lyhyesti aliohjelman, funktion ja metodin erot.
 
-**Aliohjelma**\
+**Aliohjelma**
  Osaohjelma, joka voi tehdä kaikki toimensa käyttäen hyväkseen vain
 parametrilistassa tuotua tietoa. Paluuarvon tyyppinä on void, jolloin
 aliohjelma ei palauta mitään arvoa.
 
-**Funktio\
-**Aliohjelma, joka palauttaa jonkin tuloksen, esimerkiksi kahden luvun
+**Funktio** Aliohjelma, joka palauttaa jonkin tuloksen, esimerkiksi kahden luvun
 keskiarvon. Tämän määritelmän mukaan funktiossa on aina return-lause
 jonka perässä on lauseke, esimerkiksi return (a+b)/2.0; Puhtaassa
 aliohjelmassakin (ks. edellinen kohta) voi olla return-lause, mutta sen
 perässä ei ole lauseketta.
 
-**Metodi\
-**Aliohjelma, joka tarvitsee tehtävän suorittamiseksi kohteena olevan
+**Metodi** Aliohjelma, joka tarvitsee tehtävän suorittamiseksi kohteena olevan
 olion omia tietoja. Näitä käytetään tällä kurssilla, mutta ei tehdä
 alkupään esimerkeissä itse. Lopullisessa pelissä voi tulla tehtäväksi
 myös metodeja, jotka tarvitsevat peliluokan-olion tietoja toimintansa
@@ -1876,10 +1789,9 @@ tavalla ”häthätää”.
 Ohjelmoijan on kuitenkin tehtävä vastaava asia hieman tarkemmin.
 C\#-kielessä tämä tapahtuisi kirjoittamalla seuraavasti:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-int n;
-n = 1;
-```
+    int n;
+    n = 1;
+    
 
 Ensimmäinen rivi tarkoittaa väljästi sanottuna, että ”lohkaise pieni
 pala - johon mahtuu int-kokoinen arvo - säilytystilaa tietokoneen
@@ -1902,9 +1814,8 @@ kirjaimella, jonka jälkeen jokainen uusi sana alkaa aina isolla
 kirjaimella. Kuten aiemmin mainittiin, tämä nimeämistapa on nimeltään
 camelCasing.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-muuttujanTietotyyppi muuttujanNimi;
-```
+    muuttujanTietotyyppi muuttujanNimi;
+
 
 Tuo mainitsemamme int on siis tietotyyppi, ja int-tyyppiseen muuttujaan
 voi tallentaa kokonaislukuja. Muuttujaan n voimme laittaa lukuja 1, 2,
@@ -1913,9 +1824,7 @@ voi tallentaa kokonaislukuja. Muuttujaan n voimme laittaa lukuja 1, 2,
 
 Henkilön iän voisimme tallentaa seuraavaan muuttujaan:
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-int henkilonIka;
-```
+    int henkilonIka;
 
 Huomaa, että tässä emme aseta muuttujalle mitään arvoa, vain
 määrittelemme muuttujan int-tyyppiseksi ja annamme sille nimen.
@@ -1924,16 +1833,14 @@ Samantyyppisiä muuttujia voidaan määritellä kerralla useampia
 erottamalla muuttujien nimet pilkulla. Tietotyyppiä double käytetään,
 kun halutaan tallentaa desimaalilukuja.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-double paino, pituus;
-```
+    double paino, pituus;
+
 
 Määrittely onnistuu toki myös erikseen.
 
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-double paino;
-double pituus;
-```
+    double paino;
+    double pituus;
+
 
 7.2 Alkeistietotyypit
 ---------------------
@@ -2070,14 +1977,6 @@ decimal
 erittäin tarkka liukuluku
 
 Noin 28 luvun tarkkuus
-
-\
-
-\
-
-\
-
-\
 
 Tässä monisteessa suositellaan, että desimaalilukujen talletukseen
 käytettäväksi aina double-tietotyyppiä (jossain tapauksissa jopa
@@ -2292,14 +2191,9 @@ Taulukko 2: C\#:n varatut sanat.
   delegate   implicit   private     throw        
   ---------- ---------- ----------- ------------ -----------
 
-\
- \
 
-\
- \
 
-7.5 Muuttujien näkyvyys
------------------------
+##7.5 Muuttujien näkyvyys
 
 Muuttujaa voi käyttää (lukea ja asettaa arvoja) vain siinä lohkossa,
 missä se on määritelty. Muuttujan määrittelyn täytyy aina olla ennen
@@ -2315,7 +2209,7 @@ mahdollista.
 
 Lisätietoa muuttujien näkyvyydestä löydät wikistä osoitteessa
 
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/MuuttujienNakyvyys](https://trac.cc.jyu.fi/projects/ohj1/wiki/MuuttujienNakyvyys).
+<https://trac.cc.jyu.fi/projects/ohj1/wiki/MuuttujienNakyvyys>.
 
 7.6 Vakiot
 ----------
@@ -2367,13 +2261,13 @@ Toiminto
 
 Esimerkki
 
-+
+-   
 
 yhteenlasku
 
 System.Console.WriteLine(1+2); // tulostaa 3
 
--
+-   
 
 vähennyslasku
 
@@ -2418,9 +2312,8 @@ asiaa kuin x = x+1; (6 merkkiä). Niiden avulla voidaan myös alustaa
 muuttujia.
 
 \
- \
-
-Taulukko 4: Arvonmuunto-operaattorit.
+\
+ Taulukko 4: Arvonmuunto-operaattorit.
 
 Ope-raattori
 
@@ -2435,8 +2328,7 @@ Lisäysoperaattori. Lisää muuttujan arvoa yhdellä.
 int luku = 0;
 
 \
-
-System.Console.WriteLine(luku++); //tulostaa 0
+ System.Console.WriteLine(luku++); //tulostaa 0
 
 System.Console.WriteLine(luku++); //tulostaa 1
 
@@ -2513,12 +2405,9 @@ luku %= 5; //luku-muuttujan arvo on 4
 luku %=2; //luku-muuttujan arvo on 0
 
 \
-
 \
-
 \
-
-Lisäysoperaattoria (++) ja vähennysoperaattoria (--) voidaan käyttää,
+ Lisäysoperaattoria (++) ja vähennysoperaattoria (--) voidaan käyttää,
 ennen tai jälkeen muuttujan. Käytettäessä ennen muuttujaa, arvoa
 muutetaan ensin ja mahdollinen toiminto esimerkiksi tulostus, tehdään
 vasta sen jälkeen. Jos operaattori sen sijaan on muuttujan perässä,
@@ -2530,7 +2419,8 @@ kuin esimerkiksi aritmeettiset operaatiot. Seuraava esimerkki
 havainnollistaa asiaa.
 
 \
- \
+\
+
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
 int luku1 = 5;
@@ -2662,10 +2552,8 @@ public class Painoindeksi
 ```
 
 \
- \
-
-8. Oliotietotyypit
-==================
+\
+ 8. Oliotietotyypit ==================
 
 C\#:n alkeistietotyypit antavat melko rajoittuneet puitteet
 ohjelmointiin. Niillä pystytään tallentamaan ainoastaan lukuja ja
@@ -2790,6 +2678,8 @@ kutsutaan myös nimellä viitetyypit tai viitemuuttujat.
     (kutsutaan nimellä *keko*), missä varsinainen data sijaitsee.
     Viittaus olioon sijaitsee kuitenkin pinossa.
 
+
+
 Yleensä meidän ei tarvitse olla kovin huolissamme siitä käytämmekö
 alkeistietotyyppiä (kuten int, double tai char) vai oliotyyppiä (kuten
 String). Yleisesti ottaen tärkein ero on siinä, että alkeistietotyyppien
@@ -2850,9 +2740,8 @@ vaan ainoastaan uusi olioviite, joka viittaa nyt samaan olioon kuin p1.
 olioon.](../src/luentomonistecsUusin_htm_75ff594f.png)
 
 \
- \
-
-*Oliomuuttuja =* Viite todelliseen olioon. Samaan olioon voi olla
+\
+ *Oliomuuttuja =* Viite todelliseen olioon. Samaan olioon voi olla
 useitakin viitteitä.
 
 Viitteitä käsitellään tarkemmin luvussa 14.
@@ -2965,11 +2854,10 @@ ja metodeista. Luokkien dokumentaatioissa on yleensä linkkejä
 esimerkkeihin, kuten myös String-luokan tapauksessa. Tutustutaan nyt
 tarkemmin String-luokan dokumentaatioon. String-luokan dokumentaatio
 löytyy sivulta
-[http://msdn.microsoft.com/en-us/library/system.string.aspx](http://msdn.microsoft.com/en-us/library/system.string.aspx),
-ja lista *jäsenistä* eli käytössä olevista konstruktoreista,
-attribuuteista (fields), ominaisuuksista (property) ja metodeista
-sivulta
-[http://msdn.microsoft.com/en-us/library/system.string\_members.aspx](http://msdn.microsoft.com/en-us/library/system.string_members.aspx).
+<http://msdn.microsoft.com/en-us/library/system.string.aspx>, ja lista
+*jäsenistä* eli käytössä olevista konstruktoreista, attribuuteista
+(fields), ominaisuuksista (property) ja metodeista sivulta
+<http://msdn.microsoft.com/en-us/library/system.string_members.aspx>.
 
 Olemme kiinnostuneita tässä vaiheessa kohdista String Constructor ja
 String Methods (sivun vasemmassa osassa hierarkiapuussa). Klikkaa
@@ -2997,19 +2885,18 @@ konstruktorin esittelyriviä. Esimerkiksi linkki
 ```
 
 vie [sivulle](http://msdn.microsoft.com/en-us/library/ttyxaek9.aspx)
-([http://msdn.microsoft.com/en-us/library/ttyxaek9.aspx](http://msdn.microsoft.com/en-us/library/ttyxaek9.aspx))
-jossa konstruktorista public String(char[]) kerrotaan lisätietoja ja
-annetaan käyttöesimerkkejä.
+(<http://msdn.microsoft.com/en-us/library/ttyxaek9.aspx>) jossa
+konstruktorista public String(char[]) kerrotaan lisätietoja ja annetaan
+käyttöesimerkkejä.
 
 ![\
  Kuva 10: Tiedot luokan konstruktoreista löytyvät MSDN-dokumentaatioissa
 Constructor-kohdasta.](../src/luentomonistecsUusin_htm_1b70689e.png)
 
 \
- \
- \
-
-Huomaa, että monet String-luokan konstruktoreista on merkitty
+\
+\
+ Huomaa, että monet String-luokan konstruktoreista on merkitty
 unsafe-merkinnällä, jolloin niitä ei tulisi käyttää omassa koodissa.
 Tällaiset konstruktorit on tarkoitettu ainoastaan järjestelmien
 keskinäiseen viestintään.
@@ -3047,8 +2934,8 @@ pitkä lista.
 
 Jos taas tutkimme PhysicsObject-luokan dokumentaatiota (löytyy
 osoitteesta
-[http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/](http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/)
-→ Luokat → PhysicsObject), löydämme useita eri konstruktoria (ks. kohta
+<http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/> →
+Luokat → PhysicsObject), löydämme useita eri konstruktoria (ks. kohta
 *Julkiset jäsenfunktiot*, jotka alkavat sanalla PhysicsObject).
 Konstruktoreista järjestyksessä toinen saa parametrina kaksi lukua ja
 muodon. Tätä konstruktoria käytimme jo lumiukkoesimerkissä.
@@ -3063,7 +2950,7 @@ alta.](../src/luentomonistecsUusin_htm_74f89f25.png)
 määritellä muodon vasta myöhemmin fysiikkaolionShape-ominaisuuden
 avulla.
 
-### 8.7.2 Harjoitus
+### 8.7.2 Harjoitus {#harjoitus-2}
 
 Tutki muita konstruktoreja. Mitä niistä selviää dokumentaation
 perusteella? Mikä on oletusmuoto?
@@ -3072,7 +2959,7 @@ perusteella? Mikä on oletusmuoto?
 
 Kohta
 [Methods](http://msdn.microsoft.com/en-us/library/system.string_methods.aspx)
-([http://msdn.microsoft.com/en-us/library/system.string\_methods.aspx](http://msdn.microsoft.com/en-us/library/system.string_methods.aspx))
+(<http://msdn.microsoft.com/en-us/library/system.string_methods.aspx>)
 sisältää tiedot kaikista luokan metodeista. Jokaisella metodilla on
 taulukossa oma rivi, ja rivillä lyhyt kuvaus, mitä metodi tekee.
 Klikattuasi jotain metodia saat siitä tarkemmat tiedot. Tällä sivulla
@@ -3171,9 +3058,7 @@ double
 [Double](http://msdn.microsoft.com/en-us/library/system.double.aspx)
 
 \
-
 \
-
 \
  Huomaa, että rakenteen ja alkeistietotyypin nimet ovat C\#:ssa
 synonyymejä. Seuraavat rivit tuottavat saman lopputuloksen (mikäli
@@ -3210,10 +3095,8 @@ double luku4 = Double.Parse(luku3);
 ```
 
 \
- \
-
-9. Aliohjelman paluuarvo
-========================
+\
+ 9. Aliohjelman paluuarvo ========================
 
 Aliohjelmat-luvussa tekemämme Lumiukko-aliohjelma ei palauttanut mitään
 arvoa. Usein on kuitenkin hyödyllistä, että lopettaessaan aliohjelma
@@ -3307,7 +3190,7 @@ arvoja ja palautettaisiin. C\#:ssa on olemassa kolmaskin keino on
 olemassa, jota ei käsitellä tällä kurssilla: ref- ja out-parametrit,
 katso
 
-[http://msdn.microsoft.com/en-us/library/t3c3bfhx(v=vs.80).aspx](http://msdn.microsoft.com/en-us/library/t3c3bfhx(v=vs.80).aspx).
+<http://msdn.microsoft.com/en-us/library/t3c3bfhx(v=vs.80).aspx>.
 
 Metodeita ja aliohjelmia, jotka ottavat vastaan parametreja palauttavat
 arvon sanotaan joskus myös *funktioiksi*. Nimitys ei ole hullumpi, jos
@@ -3344,7 +3227,7 @@ tällä ei ole juurikaan merkitystä, sillä Keskarvo-aliohjelman suoritus
 ei juurikaan rasita nykyaikaisia tietokoneita. Kannattaa kuitenkin
 opetella tapa, ettei ohjelmassa tehtäisi *mitään* turhia suorituksia.
 
-9.1 Harjoitus
+9.1 Harjoitus {#harjoitus-3}
 -------------
 
 Muuttujat-luvun lopussa tehtiin ohjelma, joka laski painoindeksin. Tee
@@ -3367,9 +3250,10 @@ C\#:lle tehtyjä ilmaisia sovelluskehittimiä ovat muun muassa
 
 -   SnippetCompiler.
 
-\
 
-Tässä monisteessa tutustumme tarkemmin *Visual Studio 2010 Express*
+
+\
+ Tässä monisteessa tutustumme tarkemmin *Visual Studio 2010 Express*
 -tuoteperheeseen kuuluvaan *Visual C\# 2010 Express* -kehittimeen. Muita
 perheeseen kuuluvia ilmaisia C\#-kehittimiä ovat mm. *Visual Studio 2010
 Express for Windows Phone* sekä *Visual Web Developer 2010 Express*
@@ -3439,6 +3323,8 @@ hahmottaa esimerkiksi seuraavasti:
         nimissä, tulemme yleensä toimeen myös ilman niitä, mutta
         ongelmia ääkköset ja erikoismerkit aiheuttavat usein.
 
+
+
 Huomaa! Tarkista luennoitsijalta demotehtävien tallennuspaikka
 yliopiston mikroverkossa.
 
@@ -3464,6 +3350,8 @@ yliopiston mikroverkossa.
         Solution-valikosta Add to Solution. Solution Name -kohta
         himmenee ja Location-kohtaan pitäisi tulla automaattisesti
         lisäteksti demoN.
+
+
 
 Näin tehtynä kaikki yhden demokerran tehtävät löytyvät "saman katon
 alta" eli yhden solutionin kaikki projektit menevät samaan kansioon.
@@ -3494,6 +3382,7 @@ syntynyt. Esimerkkinä vaikkapa HelloWorld-kansio.
 
 \
 
+
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
 HelloWorld
  |
@@ -3518,18 +3407,17 @@ liittyvää tietoa esimerkiksi tekijänoikeuksista ja merkistöstä. Huomaa,
 että varsinainen projektitiedosto on .csproj-päätteinen.
 
 \
-
-Solution toimii tavallaan liimana näiden eri projektitiedostojen välille
-yhdistäen ne Visual Studiossa. Tämän johdosta monen eri projektin
-käsittely yhtä aikaa on kätevää.
+ Solution toimii tavallaan liimana näiden eri projektitiedostojen
+välille yhdistäen ne Visual Studiossa. Tämän johdosta monen eri
+projektin käsittely yhtä aikaa on kätevää.
 
 \
-
-Viimeisenä tutkitaan Jypeli-projektimallista luotua projektia, sillä sen
-kansiorakenne eroaa hieman konsoliohjelmaan syntyvästä
+ Viimeisenä tutkitaan Jypeli-projektimallista luotua projektia, sillä
+sen kansiorakenne eroaa hieman konsoliohjelmaan syntyvästä
 kansiorakenteesta, esimerkkinä Lumiukko-projekti.
 
 \
+
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
 Lumiukko
@@ -3591,7 +3479,7 @@ Keskellä näkyy koodin kirjoitusikkuna. Eri kooditiedostot aukeavat
 välilehtiin, joita voi selata näppäinyhdistelmällä Ctrl+Tab (ja
 Shift+Ctrl+Tab).
 
-### 10.2.4 Ohjelman kirjoittaminen
+### 10.2.4 Ohjelman kirjoittaminen {#ohjelman-kirjoittaminen-1}
 
 Jokainen C\#-ohjelma kirjoitetaan luokan sisään. Luotaessa uusi
 konsoliohjelma, tekee Visual Studio meille valmiin kooditiedoston, jossa
@@ -3609,7 +3497,7 @@ ohjelmaan. Vastaa tähän kyllä.
 Nyt meillä on edessä uusi luokan raakile Main-metodeineen ja editori,
 jolla ohjelma voidaan kirjoittaa.
 
-### 10.2.5 Ohjelman kääntäminen ja ajaminen
+### 10.2.5 Ohjelman kääntäminen ja ajaminen {#ohjelman-kääntäminen-ja-ajaminen-1}
 
 Kun ohjelma on kirjoitettu, sen ajaminen onnistuu ylhäältä Debug-napista
 (vihreä kolmio) tai klikkaamalla F5 (debug). Nappia painamalla VS
@@ -3642,7 +3530,7 @@ tietokoneohjelmissa ongelmia aiheuttivat releiden väliin lämmittelemään
 päässeet luteet. Ohjelmien korjaaminen oli siis kirjaimellisesti
 hyönteisten (bugs) poistoa. Katso lisätietoja Wikipediasta:
 
-[http://en.wikipedia.org/wiki/Software\_bug\#Etymology](http://en.wikipedia.org/wiki/Software_bug#Etymology).
+><http://en.wikipedia.org/wiki/Software_bug#Etymology>.
 
 Virheet ohjelmakoodissa ovat valitettava tosiasia. Ne tulevat aina
 olemaan mukanasi, vaikka olisit kuinka hyvä ohjelmoija tahansa. Hyvä
@@ -3774,12 +3662,9 @@ Tools → Options → Text editor → C\# → Formatting.
 Kurssin Wikistä löytyy lisää vinkkejä ja neuvoja Visual Studion
 käyttöön:
 
-[https://trac.cc.jyu.fi/projects/ohj1](https://trac.cc.jyu.fi/projects/ohj1).
+<https://trac.cc.jyu.fi/projects/ohj1>.
 
-\
-
-11. ComTest
-===========
+#11. ComTest
 
 > “Program testing can be a very effective way to show the presence of
 > bugs, but is hopelessly inadequate for showing their absence.” -
@@ -3809,12 +3694,12 @@ Samalla kirjoitetut testit toimivat dokumentaatiossa esimerkkinä
 aliohjelman tai metodin toiminnasta. ComTest:n asennusohjeet löytyy
 sivulta:
 
-[https://trac.cc.jyu.fi/projects/comtest/wiki/ComTestCsharp](https://trac.cc.jyu.fi/projects/comtest/wiki/ComTestCsharp).
+><https://trac.cc.jyu.fi/projects/comtest/wiki/ComTestCsharp>.
 
 Koska ComTest on vielä kehitysvaiheessa, löytyy sivuilta myös
 ajankohtaisimmat tiedot ComTestin käytöstä.
 
-11.1 Käyttö
+11.1 Käyttö {#käyttö-1}
 -----------
 
 ComTestistä johtuen luokan, jossa aliohjelmia halutaan testata, on
@@ -3958,8 +3843,7 @@ public static double Keskiarvo(double a, double b)
 ```
 
 \
-
-Liukulukuja testattaessa täytyy parametrit antaa desimaaliosan kanssa.
+ Liukulukuja testattaessa täytyy parametrit antaa desimaaliosan kanssa.
 Esimerkiksi jos yllä olevassa esimerkissä ensimmäinen testi olisi muotoa
 Keskiarvo(0, 0) \~\~\~ 0.0, niin tällöin ajettaisiin aliohjelma
 Keskiarvo(int x, int y), *jos* sellainen olisi olemassa.
@@ -4011,6 +3895,7 @@ muutama. Kaikki metodit näet C\#:n
     Palauttaa tosi jos kaksi merkkijonoa ovat sisällöltään samat
     merkkikoko huomioon ottaen. Muutoin palauttaa epätosi.
 
+
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 if (etunimi.Equals("Aku")) Console.WriteLine("Löytyi!");
 ```
@@ -4025,6 +3910,7 @@ if (etunimi.Equals("Aku")) Console.WriteLine("Löytyi!");
     kolmanneksi parametriksi false, tai jos halutaan unohtaa
     kirjainkoko, laitetaan kolmanneksi true.
 
+
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String s1 = "jAnNe"; String s2 = "JANNE";
 if (Compare(s1, s2, true) == 0) Console.WriteLine("Samat tai melkein samat!"); // samat tai melkein samat
@@ -4033,6 +3919,7 @@ if (Compare(s1, s2, true) == 0) Console.WriteLine("Samat tai melkein samat!"); /
 -   [Contains(String)](http://msdn.microsoft.com/en-us/library/dy85x1sa.aspx)
     Palauttaa totuusarvon sen perusteella esiintyykö parametrin
     sisältämän merkkijono tutkittavana olevassa merkkijonossa.
+
 
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String henkilo = "Ville Virtanen";
@@ -4043,6 +3930,7 @@ if (henkilo.Contains(haettava)) Console.WriteLine(haettava + " löytyi!");
 -   [Substring(Int32)](http://msdn.microsoft.com/en-us/library/hxthx5h6.aspx)
     Palauttaa osan merkkijonosta alkaen parametrinaan saamastaan
     indeksistä.
+
 
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String henkilo = "Ville Virtanen";
@@ -4057,6 +3945,7 @@ Console.WriteLine(sukunimi); // Virtanen
     ensimmäisen merkin indeksi ja toinen parametri palautettavien
     merkkien määrä.
 
+
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String henkilo = "Ville Virtanen";
 String etunimi = henkilo.Substring(0, 5); 
@@ -4067,6 +3956,7 @@ Console.WriteLine(etunimi); // Ville
     Palauttaa merkkijonon niin, että kaikki kirjaimet on muutettu
     pieniksi kirjaimiksi.
 
+
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String henkilo = "Ville Virtanen";
 Console.WriteLine(henkilo.ToLower()); //tulostaa "ville virtanen"
@@ -4075,6 +3965,7 @@ Console.WriteLine(henkilo.ToLower()); //tulostaa "ville virtanen"
 -   [ToUpper()](http://msdn.microsoft.com/en-us/library/system.string.toupper.aspx)
     Palauttaa merkkijonon niin, että kaikki kirjaimet on muutettu
     isoiksi kirjaimiksi.
+
 
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String henkilo = "Ville Virtanen";
@@ -4088,6 +3979,7 @@ Console.WriteLine(henkilo.ToUpper()); //tulostaa "VILLE VIRTANEN"
     parametrit laitetaan char-muuttujille tyypilliseen tapaan
     yksinkertaisten lainausmerkkien sisään.
 
+
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String sana = "katti";
 sana = sana.Replace('t', 's');
@@ -4100,6 +3992,7 @@ Console.WriteLine(sana);  //tulostaa "kassi"
     merkkijonolla. Ensimmäisenä parametrina korvattava merkkijono ja
     toisena korvaaja.
 
+
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String sana = "katti kattinen";
 sana = sana.Replace("atti", "issa");
@@ -4111,6 +4004,7 @@ Lisäksi
 -   [Length](http://msdn.microsoft.com/en-us/library/system.string.length.aspx)
     Palauttaa merkkijonon pituuden kokonaislukuna. Huomaa, että tämä EI
     ole aliohjelma / metodi, vaan merkkijono-olion *ominaisuus*.
+
 
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
 String henkilo = "Ville";
@@ -4130,9 +4024,8 @@ Console.WriteLine(henkilo1 + " -nimen paikassa " + i + " oleva merkki on " + kol
 ```
 
 \
-
-Merkkijonojen indeksointi alkaa nollasta! Merkkijonon ensimmäinen merkki
-on siis indeksissä 0.
+ Merkkijonojen indeksointi alkaa nollasta! Merkkijonon ensimmäinen
+merkki on siis indeksissä 0.
 
 12.3 Muokattavat merkkijonot: StringBuilder
 -------------------------------------------
@@ -4218,9 +4111,11 @@ yksittäisen kirjaimen voi vaihtaa suoraam myös yhtalo[2] = 'y';
     int-lukua parametreina, jolloin palautetaan osa merkkijonosta (ks.
     [Substring](http://msdn.microsoft.com/en-us/library/aka44szs.aspx)).
 
+
+
 Muut metodit löytyvät StringBuilder-luokan MSDN-dokumentaatiosta:
 
-[http://msdn.microsoft.com/en-us/library/k5314fdf.aspx](http://msdn.microsoft.com/en-us/library/k5314fdf.aspx).
+<http://msdn.microsoft.com/en-us/library/k5314fdf.aspx>.
 
 12.4 Huomautus: aritmeettinen + vs. merkkijonoja yhdistelevä +
 --------------------------------------------------------------
@@ -4304,7 +4199,7 @@ types](http://msdn.microsoft.com/en-us/library/26etazsy.aspx).
 ![\
  Kuva 12: Muotoilujonoilla voidaan muotoilla lukuja monipuolisesti.
 Tämän esimerkin lähdekoodi löytyy osoitteesta
-[https://trac.cc.jyu.fi/projects/ohj1/browser/luentomonistecs/esimerkit/StringFormat.cs](https://trac.cc.jyu.fi/projects/ohj1/browser/luentomonistecs/esimerkit/StringFormat.cs)](../src/luentomonistecsUusin_htm_356ed562.png)
+<https://trac.cc.jyu.fi/projects/ohj1/browser/luentomonistecs/esimerkit/StringFormat.cs>](../src/luentomonistecsUusin_htm_356ed562.png)
 
 \
  Esimerkkisarakkeista kolmas, {0,11:\#\#0.0} (otsikkoriviltä puuttuu tuo
@@ -4423,14 +4318,13 @@ Vuokaaviolla if-rakennetta voisi kuvata seuraavasti:
 vuokaaviona](../src/luentomonistecsUusin_htm_194ffc3.png)
 
 \
- \
-
-*Vuokaavio =* Kaavio, jolla mallinnetaan *algoritmia* tai prosessia.
+\
+ *Vuokaavio =* Kaavio, jolla mallinnetaan *algoritmia* tai prosessia.
 
 Ennen kuin if-rakenteesta voidaan antaa esimerkkiä, tarvitsemme hieman
 tietoa vertailuoperaattoreista.
 
-13.3 Vertailuoperaattorit
+13.3 Vertailuoperaattorit {#vertailuoperaattorit-1}
 -------------------------
 
 Vertailuoperaattoreilla voidaan vertailla aritmeettisia arvoja.
@@ -4482,12 +4376,10 @@ Palauttaa tosi, jos vasemmalla puolella oleva luku on pienempi tai yhtä
 suuri.
 
 \
-
 \
-
 \
-
-### 13.3.1 Huomautus: sijoitusoperaattori (=) ja vertailuoperaattori (==)
+ \#\#\# 13.3.1 Huomautus: sijoitusoperaattori (=) ja vertailuoperaattori
+(==)
 
 Muistathan, ettei sijoitusoperaattoria (=) voi käyttää vertailuun. Tämä
 on yksi yleisimmistä ohjelmointivirheistä. Vertailuun aina kaksi **=**
@@ -4557,9 +4449,8 @@ else lause2;
 ```
 
 \
- \
-
-Kuten pelkässä if-rakenteessa myös if-else -rakenteessa lauseiden
+\
+ Kuten pelkässä if-rakenteessa myös if-else -rakenteessa lauseiden
 tilalla voi olla myös lohko.
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
@@ -4583,9 +4474,8 @@ if-else -rakennetta voisi sen sijaan kuvata seuraavalla vuokaaviolla:
 vuokaaviona.](../src/luentomonistecsUusin_htm_m19490db5.gif)
 
 \
- \
-
-### 13.5.1 Esimerkki: Pariton vai parillinen
+\
+ \#\#\# 13.5.1 Esimerkki: Pariton vai parillinen
 
 Tehdään aliohjelma joka palauttaa true jos luku on parillinen ja false
 jos luku on pariton.
@@ -4698,24 +4588,17 @@ eksklusiivinen tai (XOR)
 Tosi, *jos* toinen, *mutta* eivät molemmat, on tosi.
 
 \
-
 \
-
 \
-
 \
- \
-
 \
- \
-
 \
- \
-
 \
- \
-
-### 13.6.1 Operaattoreiden totuustaulut
+\
+\
+\
+\
+ \#\#\# 13.6.1 Operaattoreiden totuustaulut
 
 Taulukko 8: Seuraavassa 0=epätosi, 1=tosi. Totuustaulu eri
 operaattoreille.
@@ -4919,8 +4802,7 @@ vuokaaviona.](../src/luentomonistecsUusin_htm_m28552086.gif)
 jälkeen kaksi else if-lausetta.
 
 \
-
-### 13.7.1 Esimerkki: Tenttiarvosanan laskeminen
+ \#\#\# 13.7.1 Esimerkki: Tenttiarvosanan laskeminen
 
 Tehdään laitoksen henkilökunnalle aliohjelma, joka laskee opiskelijan
 tenttiarvosanan. Parametrinaan aliohjelma saa tentin maksimipistemäärän,
@@ -4984,12 +4866,12 @@ aliohjelmaa on testattu muutamalla testitulostuksella.
 Tässäkin esimerkissä monet if-lauseet voitaisiin välttää *silmukalla*
 ja/tai *taulukoinnilla*. Tästä puhutaan luvussa 15.
 
-### 13.7.2 Harjoitus
+### 13.7.2 Harjoitus {#harjoitus-4}
 
 Miten ohjelmaa pitäisi muuttaa, jos pisteiden tarkastus aloitettaisiin
 arvosanasta 0?
 
-### 13.7.3 Harjoitus
+### 13.7.3 Harjoitus {#harjoitus-5}
 
 Lyhenisikö koodi ja tarvittaisiinko else-lauseita, jos lause arvosana =
 5; korvattaisiin lauseella return 5; ?
@@ -5256,9 +5138,8 @@ muuttujien kohdalta suurin piirtein seuraavan näköinen:
  Kuva 16: Olioviitteet](../src/luentomonistecsUusin_htm_m7a47ee4d.gif)
 
 \
- \
-
-Jos sijoitetaan "olio" toiseen "olioon", niin tosiasiassa sijoitetaan
+\
+ Jos sijoitetaan "olio" toiseen "olioon", niin tosiasiassa sijoitetaan
 viitemuuttujien arvoja, eli sijoituksen `s2 = s1`{.western} jälkeen
 molemmat merkkijono-olioviitteet "osoittavat" samaan olioon. Nyt tilanne
 muuttuisi seuraavasti:
@@ -5268,9 +5149,8 @@ muuttuisi seuraavasti:
 olioon](../src/luentomonistecsUusin_htm_2e6e1c93.gif)
 
 \
- \
- \
-
+\
+\
  Sijoituksen jälkeen kuvassa muistipaikkaan 8040 ei osoita (viittaa)
 enää kukaan ja tuo muistipaikka muuttuu "roskaksi". Kun roskienkeruu
 (garbage-collection, gc) seuraavan kerran käynnistyy, "vapautetaan"
@@ -5296,10 +5176,8 @@ if (s2 != null) Console.WriteLine("s2:n pituus on " + s2.Length);
 Ilman testiä esimerkissä tulisi NullPointerException-poikkeus.
 
 \
- \
-
-15. Taulukot
-============
+\
+ 15. Taulukot ============
 
 Muuttujaan pystytään tallentamaan yksi arvo kerrallaan. Usein
 ohjelmoinnissa kuitenkin tulee tilanteita, joissa meidän tulisi
@@ -5336,7 +5214,7 @@ indeksointi alkaa C\#:ssa aina nollasta, eli esimerkiksi 12-alkioisen
 taulukon ensimmäisen alkion indeksi olisi 0 ja viimeisen 11.
 
 Taulukon koko täytyy määrittää etukäteen, eikä sitä voi myöhemmin
-muuttaa[^1^](#sdfootnote1sym).
+muuttaa[\^1\^](\#sdfootnote1sym).
 
 15.1 Taulukon luominen
 ----------------------
@@ -5516,7 +5394,7 @@ Esimerkiksi keskimmäisen pallon värin muuttaminen onnistuisi seuraavasti
 pallot[1].Color = Color.Yellow;
 ```
 
-15.4 Esimerkki: arvosana kirjalliseksi
+15.4 Esimerkki: arvosana kirjalliseksi {#esimerkki-arvosana-kirjalliseksi-1}
 --------------------------------------
 
 Ehtolauseiden yhteydessä teimme switch-rakennetta käyttämällä
@@ -5668,14 +5546,13 @@ Console.WriteLine("Ohjaaja: " + elokuvat[0, 2]); //tulostaa "Ohjaaja: Tarantino"
 ```
 
 \
-
-Tällä tavalla jokaiselle riville tulee yhtä monta saraketta eli alkiota.
-Jos eri riveille halutaan eri määrä alkioita, voidaan käyttää niin
-sanottuja jagged array -taulukkoja. Lue lisää jagged arrayn
+ Tällä tavalla jokaiselle riville tulee yhtä monta saraketta eli
+alkiota. Jos eri riveille halutaan eri määrä alkioita, voidaan käyttää
+niin sanottuja jagged array -taulukkoja. Lue lisää jagged arrayn
 MSDN-dokumentaatiosta osoitteesta
-[http://msdn.microsoft.com/en-us/library/2s05feca(v=vs.80).aspx](http://msdn.microsoft.com/en-us/library/2s05feca(v=vs.80).aspx).
+<http://msdn.microsoft.com/en-us/library/2s05feca(v=vs.80).aspx>.
 
-### 15.5.1 Harjoitus
+### 15.5.1 Harjoitus {#harjoitus-6}
 
 Miten tulostat taulukosta Casablanca? Entä Kubrick?
 
@@ -5773,17 +5650,15 @@ Lisätietoja 1- ja 2-ulotteisista taulukoista löydät kurssin
 wiki-sivuston monisteen täydennyksistä. Lue myös nuo materiaalit läpi
 (kuuluvat tenttialueeseen).
 
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/taulukot](https://trac.cc.jyu.fi/projects/ohj1/wiki/taulukot)
-(1-ulotteiset taulukot)
+<https://trac.cc.jyu.fi/projects/ohj1/wiki/taulukot> (1-ulotteiset
+taulukot)
 
-[https://trac.cc.jyu.fi/projects/ohj1/wiki/taulukot2D](https://trac.cc.jyu.fi/projects/ohj1/wiki/taulukot2D)
-(2-ulotteiset taulukot)
+<https://trac.cc.jyu.fi/projects/ohj1/wiki/taulukot2D> (2-ulotteiset
+taulukot)
 
 \
- \
-
-16. Toistorakenteet (silmukat)
-==============================
+\
+ 16. Toistorakenteet (silmukat) ==============================
 
 Ohjelmoinnissa tulee usein tilanteita, joissa samaa tai lähes samaa
 asiaa täytyy toistaa ohjelmassa useampia kertoja. Varsinkin taulukoiden
@@ -5856,6 +5731,8 @@ C\#:ssa on neljän tyyppisiä toistorakenteita:
 
 -   foreach
 
+
+
 On tilanteita, joissa voimme vapaasti valita näistä minkä tahansa, mutta
 useimmiten toistorakenteen valinnan kanssa täytyy olla tarkkana.
 Jokaisella näistä on tietyt ominaispiirteensä, eivätkä kaikki
@@ -5910,9 +5787,8 @@ Ikuinen silmukka on mahdollista tehdä myös muilla toistorakenteilla.
 vuokaaviona](../src/luentomonistecsUusin_htm_m38354e6c.gif)
 
 \
- \
-
-### 16.2.3 Esimerkki: Taulukon tulostaminen
+\
+ \#\#\# 16.2.3 Esimerkki: Taulukon tulostaminen
 
 Tehdään aliohjelma joka tulostaa int-tyyppisen yksiulotteisen taulukon
 sisällön.
@@ -6153,9 +6029,8 @@ Vuokaaviona do-while -silmukan voisi esittää seuraavasti:
 vuokaaviona.](../src/luentomonistecsUusin_htm_m6406473.gif)
 
 \
- \
-
-### 16.3.1 Esimerkki: nimen kysyminen käyttäjältä
+\
+ \#\#\# 16.3.1 Esimerkki: nimen kysyminen käyttäjältä
 
 Seuraavassa esimerkissä käyttäjää pyydetään syöttämään merkkijono Jos
 käyttäjä antaa tyhjän jonon, kysytään nimeä uudestaan. Tätä toistetaan
@@ -6223,6 +6098,8 @@ operaatiota, jotka on erotettu toisistaan puolipisteellä.
     muuttujien arvoa kasvatetaan yhdellä, mutta myös suuremmalla
     määrällä kasvattaminen on mahdollista.
 
+
+
 Alla for-silmukan syntaksi graafisessa ”junarataformaatissa” (ks. luku
 28.2) - tosin tarkoitusta varten hieman yksinkertaistettuna.
 
@@ -6254,12 +6131,10 @@ Vuokaaviona ylläolevan for-silmukan voisi kuvata alla olevalla tavalla.
 for-silmukalle](../src/luentomonistecsUusin_htm_821ea7c.png)
 
 \
- \
- \
-
 \
-
-Huomaa, että i-muuttujan arvo alkaa nollasta, joka tulostetaan
+\
+\
+ Huomaa, että i-muuttujan arvo alkaa nollasta, joka tulostetaan
 ensimmäisenä Hello World! -tekstin jälkeen. Silmukan runko-osan
 suorittamisen ehtona on, että i-muuttujan arvon on oltava alle 10, joten
 kun i saavuttaa arvon 10 (10:n kierroksen päätteeksi), poistutaan
@@ -6296,9 +6171,8 @@ luvut  1   1   2   3   5   8   13  21  34  55
 ```
 
 \
- \
-
-Myös for-silmukalla voidaan tehdä "ikuinen" silmukka:
+\
+ Myös for-silmukalla voidaan tehdä "ikuinen" silmukka:
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
 for(;;)
@@ -6398,7 +6272,7 @@ public class LumiukkoKeltaisetPallot : PhysicsGame
 }
 ```
 
-### 16.4.3 Harjoitus
+### 16.4.3 Harjoitus {#harjoitus-7}
 
 Tee aliohjelma, joka muuttaa PhysicsObject-taulukossa olevien olioiden
 värin halutuksi.
@@ -6462,7 +6336,7 @@ return summa / luvut.Length;
 Aliohjelman lopussa palautetaan lukujen summa jaettuna lukujen määrällä,
 eli taulukon pituudella.
 
-### 16.4.5 Harjoitus
+### 16.4.5 Harjoitus {#harjoitus-8}
 
 Pohdi, mikä tärkeä tapaus jää huomiotta taulukon keskiarvon
 laskemisessa.
@@ -6554,7 +6428,7 @@ funktion alussa luoda uusi taulukko tulosta varten, sijoittaa arvot
 käänteisessä järjestyksessä ja lopuksi *palauttaa* viite uuteen
 taulukkoon.
 
-### 16.4.7 Harjoitus
+### 16.4.7 Harjoitus {#harjoitus-9}
 
 Tee funktiosta KaannaTaulukko sivuvaikutukseton versio.
 
@@ -7116,16 +6990,17 @@ Silmukan valinta:
 -   do-while: Jos silmukan kierrosten määrä ei ole tiedossa, mutta
     haluamme suorittaa silmukan vähintään yhden kerran.
 
+
+
 Seuraava kuva kertaa vielä kaikki C\#:n valmiit silmukat:
 
 ![\
  Kuva 27: C\#:n silmukat](../src/luentomonistecsUusin_htm_m6ff43568.gif)
 
 \
- \
- \
-
-17. Merkkijonojen pilkkominen ja muokkaaminen
+\
+\
+ 17. Merkkijonojen pilkkominen ja muokkaaminen
 =============================================
 
 17.1 String.Split()
@@ -7552,6 +7427,8 @@ kuunnella ja sillä on neljä mahdollista arvoa:
 
 -   ButtonState.Down: Näppäin on alaspainettuna
 
+
+
 Kolmas parametri kertoo mitä tehdään, kun näppäin sitten on painettuna.
 Tähän tulee tapahtuman käsittelijä, eli sen aliohjelman nimi, jonka
 suoritukseen haluamme siirtyä näppäimen tapahtuman sattuessa.
@@ -7733,10 +7610,9 @@ liikkua.
  Kuva 28: Yksikköympyrä.](../src/luentomonistecsUusin_htm_54d2cbea.png)
 
 \
- \
- \
-
-Tatin asennon tietyllä hetkellä saa selville myös ilman jatkuvaa tatin
+\
+\
+ Tatin asennon tietyllä hetkellä saa selville myös ilman jatkuvaa tatin
 kuuntelua kirjoittamalla:
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
@@ -7747,7 +7623,7 @@ Tämä palauttaa samoin vektorin tatin sen hetkisestä asennosta (X ja Y
 väliltä -1, 1).
 
 Myös Xbox-ohjaimen liipaisimia voidaan kuunnella. Lue lisää ohjewikistä:
-[https://trac.cc.jyu.fi/projects/npo/wiki/OhjaintenLisays](https://trac.cc.jyu.fi/projects/npo/wiki/OhjaintenLisays).
+<https://trac.cc.jyu.fi/projects/npo/wiki/OhjaintenLisays>.
 
 20.4 Hiiri
 ----------
@@ -7897,6 +7773,7 @@ Nykyisellään niitä on yksi:
     koordinaatit joko vektoreina tai luettelemalla molempien pisteiden
     x- ja y-koordinaatit.
 
+
 Väri voidaan asettaa BrushColor-ominaisuuden kautta.
 
 Piirtoalueen reunojen koordinaatteja voi lukea samaan tapaan kuin
@@ -7946,10 +7823,8 @@ Alla kuva lopputuloksesta.
 piirrettynä.](../src/luentomonistecsUusin_htm_m692570a4.png)
 
 \
- \
-
-21.2 Esimerkki: Pyörivä jana
-----------------------------
+\
+ 21.2 Esimerkki: Pyörivä jana ----------------------------
 
 Seuraavassa esimerkissä tehdään satunnaisesti väriään vaihtava jana,
 joka pyörii alkupisteensä ympäri.
@@ -7967,13 +7842,10 @@ protected override void Paint(Canvas canvas)
 ```
 
 \
- \
-
 \
- \
-
-22. Rekursio
-============
+\
+\
+ 22. Rekursio ============
 
 > “To iterate is human, to recurse divine.” -L. Peter Deutsch
 
@@ -8107,7 +7979,7 @@ kolmio.](../src/luentomonistecsUusin_htm_m5638d5c8.png)
  Sierpinskin kolmion piirtäminen onnistuu loistavasti rekursiolla, mutta
 ilman rekursiota kolmion piirtäminen olisi melko työlästä. Sierpinskin
 kolmiosta voi lukea lisää esim. Wikipediasta:
-[http://en.wikipedia.org/wiki/Sierpinski\_triangle](http://en.wikipedia.org/wiki/Sierpinski_triangle).
+<http://en.wikipedia.org/wiki/Sierpinski_triangle>.
 
 Kirjoitetaan algoritmi pseudokoodiksi:
 
@@ -8120,6 +7992,7 @@ jokainen voi kirjoittaa sitä omalla tavallaan. Järkevintä kuitenkin
 kirjoittaa niin, että mahdollisimman moni ymmärtäisi sitä.
 
 \
+
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
 PiirraSierpinskinKolmio(korkeus, x, y) // x ja y tarkoittavat kärjellään
@@ -8318,9 +8191,7 @@ lopetusehto toteutuu. Rekursion idean mukaisesti vasta sitten etenemme
 seuraaviin SierpinskinKolmio-kutsuihin (kaksi jälkimmäistä).
 
 \
-
-22.2 Harjoitus
---------------
+ 22.2 Harjoitus --------------
 
 Montako kertaa tässä esimerkissä lopulta suoritetaan aliohjelma
 SierpinskinKolmio?
@@ -8386,6 +8257,8 @@ yhteistä:
     pallot[4].
 
 -   Molemmilla on metodeja (funktioita, aliohjelmia) sekä ominaisuuksia
+
+
 
 List\<T\>-olioon ja muihin dynaamisiin tietorakenteisiin voi tallentaa
 niin alkeistietotyyppejä kuin oliotietotyyppejäkin. Käsittelemämme
@@ -8475,7 +8348,7 @@ Console.WriteLine(elokuvat[0]); // tulostaa "Toy Story"
 
 Näillä metodeilla pärjää jo melko hyvin. Muista metodeista voi lukea
 List\<T\>-luokan dokumentaatiosta:
-[http://msdn.microsoft.com/en-us/library/6sh2ey19.aspx](http://msdn.microsoft.com/en-us/library/6sh2ey19.aspx).
+<http://msdn.microsoft.com/en-us/library/6sh2ey19.aspx>.
 
 Tehdään toinen esimerkki int-tyyppisillä luvuilla. Annetaan listalle
 sisältö heti listaa alustettaessa.
@@ -8517,13 +8390,10 @@ Listan alkiot näyttävät tämän jälkeen seuraavalta.
 ```
 
 \
- \
-
 \
- \
-
-24. Poikkeukset
-===============
+\
+\
+ 24. Poikkeukset ===============
 
 > “If you don’t handle [exceptions], we shut your application down. 
 > That dramatically increases the reliability of the system.”\
@@ -8772,9 +8642,8 @@ public class TiedostostaLuku
 ```
 
 \
- \
-
-Tutkitaan tärkeimpiä kohtia hieman tarkemmin
+\
+ Tutkitaan tärkeimpiä kohtia hieman tarkemmin
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
 if (!File.Exists(POLKU))
@@ -8928,8 +8797,7 @@ Liukuluku arvotaan NextDouble-metodilla.
 Jypelissä olevasta RandomGen-luokasta löytyy useita staattisia metodeja,
 joilla satunnaislukujen (ja -värien, totuusarvojen, jne.) luominen on
 helpompaa. Lue RandomGen-luokan dokumentaatio osoitteesta
-[http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/](http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/)
-.
+<http://kurssit.it.jyu.fi/npo/material/latest/documentation/html/> .
 
 26. Lukujen esitys tietokoneessa
 ================================
@@ -9159,7 +9027,7 @@ Negatiivinen luku voidaan esittää joko suorana, 1-komplementtina tai
 
 ### 26.4.1 Suora tulkinta
 
- Suorassa tulkinnassa varataan yksi bitti ilmoittamaan luvun etumerkkiä
+Suorassa tulkinnassa varataan yksi bitti ilmoittamaan luvun etumerkkiä
 (+/-). Jos meillä on käytössä 4 bittiä, niin tällöin luku +3~10~ = 0011
 ja -3~10~ = 1011. Suoran esityksen mukana tulee ongelmia
 laskutoimituksia suoritettaessa; mm. luvulla nolla on tällöin kaksi
@@ -9172,7 +9040,7 @@ negatiivinen, niin käännetään kaikki bitit päinvastaisiksi. Esimerkiksi
 luku +3~10~ = 0011 ja -3~10~ = 1100. Tässäkin systeemissä luvulla nolla
 on kaksi esitystä, 0000 ja 1111.
 
-### 26.4.3 2-komplementti
+### 26.4.3 2-komplementti {#komplementti-1}
 
 Yleisimmin käytetty tapa ilmoittaa negatiiviset luvut on 2-komplementti.
 Tällöin positiivisesta luvusta otetaan ensin 1-komplementti, eli
@@ -9320,6 +9188,8 @@ olevasta taulukosta.
   F~16~   15~10~
   ------- --------
 
+
+
 Yhdellä 16-järjestelmä symbolilla voidaan siis esittää 4-bittinen
 binääriluku. Binääriluku voidaankin muuttaa heksajärjestelmän luvuksi
 järjestelemällä bitit oikealta alkaen neljän bitin ryhmiin ja
@@ -9362,6 +9232,8 @@ Taulukko 9: Lukujen vastaavuus eri lukujärjestelmissä.
   14         1110      16        E          -2
   15         1111      17        F          -1
   ---------- --------- --------- ---------- ----------------
+
+
 
 26.6 Liukuluku (floating-point)
 -------------------------------
@@ -9542,6 +9414,8 @@ bittiä olisivat 11, joten luku pyöristyy vielä muotoon
 
 -   Mantissa: 10011001100110011001101
 
+
+
 Eli yhdistämällä saadaan:
 
 ``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
@@ -9582,7 +9456,7 @@ erikoistyypit ovat hitaampia, tilanteesta riippuen eivät kuitenkaan
 välttämättä merkitsevästi.
 
 Toisaalta liukuluvulla voi esittää tarkasti kokonaislukuja aina arvoon
-2^mantissan\\ bittien\\ lukumäärä^ saakka. Eli doublella (52 bittiä
+2\^mantissan\\ bittien\\ lukumäärä\^ saakka. Eli doublella (52 bittiä
 mantissalle) voi tarkasti käsitellä suurempia kokonaislukuja kuin
 int-tyypillä (32 bittiä luvun esittämiseen). long-tyypin 64-bitillä
 päästään vielä doublea suurempiin tarkkoihin kokonaislukuihin. Valmiit
@@ -9610,12 +9484,12 @@ matemaattisissa ongelmissa, eikä oikeasta häirinnyt tavallista
 toimistokäyttäjää millään tavalla. Tästä ja muista listan bugeista voi
 lukea lisää alla olevasta linkistä.
 
-[http://www.wired.com/software/coolapps/news/2005/11/69355](http://www.wired.com/software/coolapps/news/2005/11/69355)
+<http://www.wired.com/software/coolapps/news/2005/11/69355>
 
 27. ASCII-koodi
 ===============
 
- ASCII (American Standard Code for Information Interchange) on merkistö,
+ASCII (American Standard Code for Information Interchange) on merkistö,
 joka käyttää seitsemän-bittistä koodausta. Sillä voidaan siis esittää
 ainoastaan 128 merkkiä. Nimestäkin voi päätellä, että skandinaaviset
 merkit eivät ole mukana, mistä seuraa ongelmia tietotekniikassa vielä
@@ -9629,74 +9503,80 @@ heksalukuna.
 
 Taulukko 10: ASCII-merkistö.
 
-  ----- ----- ---------------------------- ---- ---- ------- ---- ---- ---- ----- ---- -----
-  Des   Hex   Merkki                       \    \    \       \    \    \    \     \    \
-                                                                                       
+  ---- ---- ---------------------- --- --- ------ --- --- --- ---- --- ---
+  Des  Hex  Merkki                 \   \   \      \   \   \   \    \   \
+                                                                       
 
-  0     0     NUL (null)                   32   20   Space   64   40   @    96    60   \`
+  0    0    NUL (null)             32  20  Space  64  40  @   96   60  \`
 
-  1     1     SOH (otsikon alku)           33   21   !       65   41   A    97    61   a
+  1    1    SOH (otsikon alku)     33  21  !      65  41  A   97   61  a
 
-  2     2     STX (tekstin alku)           34   22   "       66   42   B    98    62   b
+  2    2    STX (tekstin alku)     34  22  "      66  42  B   98   62  b
 
-  3     3     ETX (tekstin loppu)          35   23   \#      67   43   C    99    63   c
+  3    3    ETX (tekstin loppu)    35  23  \#     67  43  C   99   63  c
 
-  4     4     EOT (end of transmission)    36   24   \$      68   44   D    100   64   d
+  4    4    EOT (end of            36  24  \$     68  44  D   100  64  d
+            transmission)                                              
 
-  5     5     ENQ (enquiry)                37   25   %       69   45   E    101   65   e
+  5    5    ENQ (enquiry)          37  25  %      69  45  E   101  65  e
 
-  6     6     ACK (acknowledge)            38   26   &       70   46   F    102   66   f
+  6    6    ACK (acknowledge)      38  26  &      70  46  F   102  66  f
 
-  7     7     BEL (bell)                   39   27   '       71   47   G    103   67   g
+  7    7    BEL (bell)             39  27  '      71  47  G   103  67  g
 
-  8     8     BS (backspace)               40   28   (       72   48   H    104   68   h
+  8    8    BS (backspace)         40  28  (      72  48  H   104  68  h
 
-  9     9     TAB (tabulaattori)           41   29   )       73   49   I    105   69   i
+  9    9    TAB (tabulaattori)     41  29  )      73  49  I   105  69  i
 
-  10    A     LF (uusi rivi)               42   2A   \*      74   4A   J    106   6A   j
+  10   A    LF (uusi rivi)         42  2A  \*     74  4A  J   106  6A  j
 
-  11    B     VT (vertical tab)            43   2B   +       75   4B   K    107   6B   k
+  11   B    VT (vertical tab)      43  2B  +      75  4B  K   107  6B  k
 
-  12    C     FF (uusi sivu)               44   2C   ,       76   4C   L    108   6C   l
+  12   C    FF (uusi sivu)         44  2C  ,      76  4C  L   108  6C  l
 
-  13    D     CR (carriage return)         45   2D   -       77   4D   M    109   6D   m
+  13   D    CR (carriage return)   45  2D  -      77  4D  M   109  6D  m
 
-  14    E     SO (shift out)               46   2E   ,       78   4E   N    110   6E   n
+  14   E    SO (shift out)         46  2E  ,      78  4E  N   110  6E  n
 
-  15    F     SI (shift in)                47   2F   /       79   4F   O    111   6F   o
+  15   F    SI (shift in)          47  2F  /      79  4F  O   111  6F  o
 
-  16    10    DLE (data link escape)       48   30   0       80   50   P    112   70   p
+  16   10   DLE (data link escape) 48  30  0      80  50  P   112  70  p
 
-  17    11    DC1 (device control 1)       49   31   1       81   51   Q    113   71   q
+  17   11   DC1 (device control 1) 49  31  1      81  51  Q   113  71  q
 
-  18    12    DC2 (device control 2)       50   32   2       82   52   R    114   72   r
+  18   12   DC2 (device control 2) 50  32  2      82  52  R   114  72  r
 
-  19    13    DC3 (device control 3)       51   33   3       83   53   S    115   73   s
+  19   13   DC3 (device control 3) 51  33  3      83  53  S   115  73  s
 
-  20    14    DC4 (device control 4)       52   34   4       84   54   T    116   74   t
+  20   14   DC4 (device control 4) 52  34  4      84  54  T   116  74  t
 
-  21    15    NAK (negative acknowledge)   53   35   5       85   55   U    117   75   u
+  21   15   NAK (negative          53  35  5      85  55  U   117  75  u
+            acknowledge)                                               
 
-  22    16    SYN (synchronous table)      54   36   6       86   56   V    118   76   v
+  22   16   SYN (synchronous       54  36  6      86  56  V   118  76  v
+            table)                                                     
 
-  23    17    ETB (end of trans. block)    55   37   7       87   57   W    119   77   w
+  23   17   ETB (end of trans.     55  37  7      87  57  W   119  77  w
+            block)                                                     
 
-  24    18    CAN (cancel)                 56   38   8       88   58   X    120   78   x
+  24   18   CAN (cancel)           56  38  8      88  58  X   120  78  x
 
-  25    19    EM (end of medium)           57   39   9       89   59   Y    121   79   y
+  25   19   EM (end of medium)     57  39  9      89  59  Y   121  79  y
 
-  26    1A    SUB (substitute)             58   3A   :       90   5A   Z    122   7A   z
+  26   1A   SUB (substitute)       58  3A  :      90  5A  Z   122  7A  z
 
-  27    1B    ESC (escape)                 59   3B   ;       91   5B   [    123   7B   {
+  27   1B   ESC (escape)           59  3B  ;      91  5B  [   123  7B  {
 
-  28    1C    FS (file separator)          60   3C   \<      92   5C   \\   124   7C   |
+  28   1C   FS (file separator)    60  3C  \<     92  5C  \\  124  7C  |
 
-  29    1D    GS (group separator)         61   3D   =       93   5D   ]    125   7D   }
+  29   1D   GS (group separator)   61  3D  =      93  5D  ]   125  7D  }
 
-  30    1E    RS (record separator)        62   3E   \>      94   5E   \^   126   7E   \~
+  30   1E   RS (record separator)  62  3E  \>     94  5E  \^  126  7E  \~
 
-  31    1F    US (unit separator)          63   3F   ?       95   5F   \_   127   7F   DEL
-  ----- ----- ---------------------------- ---- ---- ------- ---- ---- ---- ----- ---- -----
+  31   1F   US (unit separator)    63  3F  ?      95  5F  \_  127  7F  DEL
+  ---- ---- ---------------------- --- --- ------ --- --- --- ---- --- ---
+
+
 
 Monissa ohjelmointikielissä, kuten myös Javassa, ASCII-merkkien
 desimaaliarvoja voidaan sijoittaa suoraan char-tyyppisiin muuttujiin.
@@ -9737,10 +9617,8 @@ C:\MyTemp>debug kissa.txt
 ```
 
 \
- \
-
-28. Syntaksin kuvaaminen
-========================
+\
+ 28. Syntaksin kuvaaminen ========================
 
 28.1 BNF
 --------
@@ -9754,6 +9632,8 @@ käyty läpi alla olevassa taulukossa:
   ::=    Aloittaa non-terminaalin määrittelyn. Määrittely voi sisältää uusia non-terminaaleja ja terminaaleja.
   |      ”|”-merkki kuvaa sanaa ”tai”. Tällöin ”|”-merkin vasemmalla puolella olevan osan sijasta voidaan kirjoittaa oikealla puolella oleva osa.
   ------ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
 Määrittely on yleisessä muodossa seuraava:
 
@@ -9800,7 +9680,7 @@ Lopetetaan muuttujan määrittelyn kuvaaminen tähän. Kokonaisuudessaan
 siitä tulisi todella pitkä. Koko Javan syntaksin BNF:nä löytää
 seuraavasta linkistä.
 
-[http://www.daimi.au.dk/dRegAut/JavaBNF.html](http://www.daimi.au.dk/dRegAut/JavaBNF.html).
+<http://www.daimi.au.dk/dRegAut/JavaBNF.html>.
 
 28.2 Laajennettu BNF (EBNF)
 ---------------------------
@@ -9814,6 +9694,8 @@ ilman ”\<\>”-merkkejä. Lisäksi tulee kaksi uutta ominaisuutta.
   {}   Aaltosulkeiden sisään kirjoitetut osat voidaan jättää joko kokonaan pois tai toistaa yhden tai useamman kerran.
   []   Hakasulkeiden sisään kirjoitetut osat voidaan suorittaa joko kerran tai ei ollenkaan.
   ---- -----------------------------------------------------------------------------------------------------------------
+
+
 
 Nyt muuttujan määrittelyn syntaksi saadaan kuvattua hieman helpommin:
 
@@ -9835,7 +9717,7 @@ Lausekkeen (expression) avaamisesta aukeaisi jälleen uusia ja uusia
 non-terminaaleja, joten muuttujan määrittelyn kuvaaminen kannattaa
 lopettaa tähän. Voit katsoa loput seuraavasta linkistä:
 
-[http://cui.unige.ch/db-research/Enseignement/analyseinfo/JAVA/BNFindex.html](http://cui.unige.ch/db-research/Enseignement/analyseinfo/JAVA/BNFindex.html)
+<http://cui.unige.ch/db-research/Enseignement/analyseinfo/JAVA/BNFindex.html>
 
 ![\
  Kuva 37: Muuttujan määrittelyn syntaksia "junaradoilla"
@@ -9863,24 +9745,24 @@ Lisätietoa:
     kieliopit](https://korppi.jyu.fi/kotka/r.jsp?course=69997) .
 
 -   Paavo Niemisen 2007 pitämän Ohjelmointi 1-kurssin luentokalvot:
-    [http://users.jyu.fi/\~nieminen/ohj1/materiaalia/luento02.pdf](http://users.jyu.fi/~nieminen/ohj1/materiaalia/luento02.pdf).
+    <http://users.jyu.fi/~nieminen/ohj1/materiaalia/luento02.pdf>.
     Junaratoja löytyy myös muista Paavon kalvoista.
 
 -   Javan syntaksi EBNF:nä kuvattuna. Sisältää myös graafiset junaradat.
-    [http://cui.unige.ch/db-research/Enseignement/analyseinfo/JAVA/BNFindex.html](http://cui.unige.ch/db-research/Enseignement/analyseinfo/JAVA/BNFindex.html)
+    <http://cui.unige.ch/db-research/Enseignement/analyseinfo/JAVA/BNFindex.html>
 
--   Wikipedia:
-    [http://en.wikipedia.org/wiki/Backus%E2%80%93Naur\_Form](http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form)
+-   Wikipedia: <http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form>
 
 -   Googlella löytyy lisää
 
+
+
 \
- \
+\
+ C\#:n syntaksia on kuvattu MSDN-dokumentaatiossa muun muassa
+seuraavilla sivuilla.
 
-C\#:n syntaksia on kuvattu MSDN-dokumentaatiossa muun muassa seuraavilla
-sivuilla.
-
-[http://msdn.microsoft.com/en-us/library/Aa664812](http://msdn.microsoft.com/en-us/library/Aa664812).
+<http://msdn.microsoft.com/en-us/library/Aa664812>.
 
 29. Jälkisanat
 ==============
@@ -9897,51 +9779,75 @@ Liite: Sanasto
 Internetistä löytyy ohjelmoinnista paremmin tietoa englanniksi. Tässä
 tiedonhakua auttava sanasto ohjelmoinnin perustermeistä.
 
-  ------------------------- ----------------------------------- --------------------- -------------------- ------------------------------ ------------------------------------
-  aliohjelma                subprogram, subroutine, procedure   konstruktori          constructor          rajapinta                      interface
+  ---------- -------------- --------- -------- ------------ --------------
+  aliohjelma subprogram,    konstrukt construc rajapinta    interface
+             subroutine,    ori       tor                   
+             procedure                                      
 
-  alirajapinta              subinterface                        koodauskäytänteet     code conventions     roskienkeruu                   garbage collection
+  alirajapin subinterface   koodauskä code     roskienkeruu garbage
+  ta                        ytänteet  conventi              collection
+                                      ons                   
 
-  alivuoto                  underflow                           kääntäjä              compiler             roskienkerääjä                 garbage collector
+  alivuoto   underflow      kääntäjä  compiler roskienkerää garbage
+                                               jä           collector
 
-  alkeistietotyyppi         primitive types                     kääriä                wrap                 sijoituslause                  assignment statement
+  alkeistiet primitive      kääriä    wrap     sijoituslaus assignment
+  otyyppi    types                             e            statement
 
-  alkio                     element                             lause                 statement            sijoitusoperaattori            assignment operator
+  alkio      element        lause     statemen sijoitusoper assignment
+                                      t        aattori      operator
 
-  alustaa                   intialize                           lippu                 flag                 silmukka                       loop
+  alustaa    intialize      lippu     flag     silmukka     loop
 
-  aritmeettinen operaatio   arithmetic operation                lohko                 block                sovelluskehitin                Integrated Development Environment
+  aritmeetti arithmetic     lohko     block    sovelluskehi Integrated
+  nen        operation                         tin          Development
+  operaatio                                                 Environment
 
-  aritmeettinen lauseke     arithmetic expression               luokka                class                staattinen                     static
+  aritmeetti arithmetic     luokka    class    staattinen   static
+  nen        expression                                     
+  lauseke                                                   
 
-  bugi                      bug                                 metodi                method               standardi syöttövirta          standard input stream
+  bugi       bug            metodi    method   standardi    standard input
+                                               syöttövirta  stream
 
-  destruktori               destructor                          muuttuja              variable             standardi tulostusvirta        standard output stream
+  destruktor destructor     muuttuja  variable standardi    standard
+  i                                            tulostusvirt output stream
+                                               a            
 
-  dokumentaatio             documentation                       määritellä            declare              standardi virhetulostusvirta   standard error output stream
+  dokumentaa documentation  määritell declare  standardi    standard error
+  tio                       ä                  virhetulostu output stream
+                                               svirta       
 
-  funktio                   function                            olio                  object               syntaksi                       syntax
+  funktio    function       olio      object   syntaksi     syntax
 
-  globaali vakio            global constant                     ottaa kiinni          catch                taulukko                       array
+  globaali   global         ottaa     catch    taulukko     array
+  vakio      constant       kiinni                          
 
-  globaali muuttuja         global variable                     paketti               package              testaus                        testing
+  globaali   global         paketti   package  testaus      testing
+  muuttuja   variable                                       
 
-  indeksi                   index                               parametri             parameter            toteuttaa                      implement
+  indeksi    index          parametri paramete toteuttaa    implement
+                                      r                     
 
-  julkinen                  public                              periytyminen          inheritance          tuoda                          import
+  julkinen   public         periytymi inherita tuoda        import
+                            nen       nce                   
 
-  keskeytyskohta            breakpoint                          poikkeus              exception            vakio                          constant
+  keskeytysk breakpoint     poikkeus  exceptio vakio        constant
+  ohta                                n                     
 
-  komentorivi               Command Prompt                      poikkeustenhallinta   exception handling   yksikkötestaus-rajapinta       unit testing framework
+  komentoriv Command Prompt poikkeust exceptio yksikkötesta unit testing
+  i                         enhallint n        us-rajapinta framework
+                            a         handling              
 
-  \                         \                                   \                     \                    ylivuoto                       overflow
-                                                                                                                                          
-  ------------------------- ----------------------------------- --------------------- -------------------- ------------------------------ ------------------------------------
+  \          \              \         \        ylivuoto     overflow
+                                                            
+  ---------- -------------- --------- -------- ------------ --------------
+
+
 
 \
- \
-
-Liite: Yleisimmät virheilmoitukset ja niiden syyt
+\
+ Liite: Yleisimmät virheilmoitukset ja niiden syyt
 =================================================
 
 Aloittavan ohjelmoijan voi joskus olla vaikeaa saada selvää kääntäjän
@@ -9958,11 +9864,10 @@ The type or namespace name 'PhysisObject' could not be found (are you missing a 
 Syitä
 
 \
-
--   Oletko kirjoittanut esim. jonkun aliohjelman tai tyypin nimen
-    väärin? Katso sanoja, jotka on väritetty punakynällä. Äskeisessä
-    virheviestissä PhysisObject pitäisi kirjoittaa PhysicsObject. Käytä
-    Visual Studion koodin täydennystä kirjoitusvirheiden välttämiseksi.
+ - Oletko kirjoittanut esim. jonkun aliohjelman tai tyypin nimen väärin?
+Katso sanoja, jotka on väritetty punakynällä. Äskeisessä virheviestissä
+PhysisObject pitäisi kirjoittaa PhysicsObject. Käytä Visual Studion
+koodin täydennystä kirjoitusvirheiden välttämiseksi.
 
 -   Jokin kirjasto puuttuu (kts Kirjastojen liittäminen projektiin:
     [wiki](https://trac.cc.jyu.fi/projects/npo/wiki/KirjastojenLiittaminenKasin),
@@ -9970,6 +9875,8 @@ Syitä
 
 -   Jokin using-lause puuttuu. Jypeli-pelien projektimalleissa ovat
     vakiona seuraavat using-lauseet:
+
+
 
 ``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
  using System;
@@ -10084,22 +9991,19 @@ LIA: Y. Daniel Liang, Introduction to Java programming, 2003
 DEI: Deitel, H.M; Deitel, P.J, Java How to Program, 2003
 
 \
+\
+ ----------------------- --- ---------------------------- Jyväskylän
+yliopisto   University of Jyväskylä
+
+Tietotekniikan laitos Department of Mathematical
+
+  Information Technology
+
+Luentomoniste 17 Lecture Notes 17 ----------------------- ---
+----------------------------
 
 \
-
-  ----------------------- --- ----------------------------
-  Jyväskylän yliopisto    \   University of Jyväskylä
-                              
-  Tietotekniikan laitos       Department of Mathematical
-                              
-  \                           Information Technology
-                              
-  Luentomoniste 17            Lecture Notes 17
-  ----------------------- --- ----------------------------
-
-\
-
-1.
+ 1.
 
 MÄKINEN, RAINO A. E., Numeeriset menetelmät. 1999 (107 s.)
 
@@ -10177,9 +10081,8 @@ MARTTI HYVÖNEN, VESA LAPPALAINEN, ANTTI-JUSSI LAKANEN,\
  Ohjelmointi 1 C\#. 3. korjattu painos, 2013. (158 s.)
 
 \
- \
-
-ISBN 978-951-39-4859-7 (3. korjattu painos)
+\
+ ISBN 978-951-39-4859-7 (3. korjattu painos)
 
 ISSN 1456-9787
 
@@ -10187,6 +10090,7 @@ ISSN 1456-9787
 vaan luo uuden taulukon, kopioi alkuperäisen taulukon kaikki alkiot
 uuteen taulukkoon, ja sen jälkeen korvaa alkuperäisen taulukon
 (viitteen) uudella taulukolla (viitteellä). Ks.
-[http://msdn.microsoft.com/en-us/library/bb348051.aspx](http://msdn.microsoft.com/en-us/library/bb348051.aspx).
+<http://msdn.microsoft.com/en-us/library/bb348051.aspx>.
 
 Jyväskylä 2013
+
