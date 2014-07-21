@@ -35,6 +35,7 @@ def gitCommit(files_root_path : 'str', file_path : 'str', commit_message: 'str',
     :param file_path: The path of the file to commit.
     :param commit_message: The commit message.
     :param author: The author of the commit.
+    :returns: The hash of the change.
     """
     cwd = os.getcwd()
     os.chdir(files_root_path)
