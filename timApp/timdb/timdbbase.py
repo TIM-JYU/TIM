@@ -4,8 +4,16 @@ import os
 from contracts import contract, new_contract
 import collections
 import sqlite3
+from collections import namedtuple
+
+# A document identifier consists of the id of the document and the version hash.
+class DocIdentifier(namedtuple("DocIdentifier", "id hash")):
+    __slots__ = ()
+    def __str__(self):
+        return str(self.id) + ':' + self.hash
 
 new_contract('Connection', sqlite3.Connection)
+new_contract('DocIdentifier', DocIdentifier)
 
 BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE'))
 blocktypes = BLOCKTYPES(0,1,2,3,4)
@@ -15,7 +23,7 @@ class TimDbException(Exception):
     pass
 
 class TimDbBase(object):
-    """Base class for TimDb classes (e.g. Users, Notes)"""
+    """Base class for TimDb classes (e.g. Users, Notes)."""
     
     @contract
     def __init__(self, db : 'Connection', files_root_path : 'str'):
