@@ -38,23 +38,29 @@
         var jsonDoc = JSON.parse({{ text|tojson|safe }});
         var docId = JSON.parse({{docId|tojson|safe}});
         var docName = {{ name|tojson|safe}};
+        var version = {{ version|tojson|safe}};
     </script>
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->  
 </head>
 <body style="background-color: #CCFFFF"  ng-app="timApp" ng-controller="ParCtrl">   
+<!--<div id="topBar">
+    <div class="navigationBar" > 
+        <a href="localhost:5000"> Home </a> 
+    </div>
+</div>-->
 <form enctype="multipart/form-data">
             <input type="file" file-model="myFile"/>
             <button ng-click="uploadFile()">Upload file</button>
 </form> 
 <div class="material"> 
-        <div ng-if="paragraphs.length > 1" class="addParButton b0" ng-click="addParagraph(0);setEditable(0)"><strong> + </strong> </div>
+        <div class="addParButton b0" ng-click="addParagraph(0);setEditable(0)"><strong> + </strong> </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">   
            <span> {{ '{{ par.par }}'}} </span>
            <div style="" id="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html"> </div>
            <button ng-class="par.display ? 'parSaveButton' : 'editButton edit' " ng-click="setEditable(par.par)"></button>
-           <button ng-class="par.display ? 'deleteButton delete' : 'editbutton delete'" ng-click="delParagraph(par.par)"></button> 
+           <!--           <button ng-class="par.display ? 'deleteButton delete' : 'editButton delete'" ng-click="delParagraph(par.par)"></button> -->
            <button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          
            <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display" ng-model="activeEdit.text"></div> 
            <div class="addParButton b{{'{{par.par + 1}}'}}" ng-click="addParagraph(par.par + 1);setEditable(par.par + 1)"><strong> + </strong> </div>  

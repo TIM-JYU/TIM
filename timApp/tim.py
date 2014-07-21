@@ -181,8 +181,9 @@ def removeBlock(docId,blockId):
     timdb.documents.deleteParagraph(getNewest(docId), blockId)
     return "Successfully removed paragraph"
 
-@app.route("/pluginCall/<plugin>/<params>")
-def callHello(plugin, params=""):
+@app.route("/pluginCall/<plugin>/")
+def callHello(plugin):
+    params = request.args.get('param')
     return callPlugin(plugin, params).decode('utf-8')
 
 @app.route("/hello", methods=['POST'])
