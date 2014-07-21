@@ -1,11 +1,11 @@
 var EditCtrl = angular.module('controller', []);
 
 EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(sc, http, q, fileUpload){
-
+            http.defaults.headers.common.Version = version.hash;
             sc.callPlugin = function(plugin, params){
                 var promise = q.defer();
                 var callPlugin = function(plugin, params){
-                    http.get('/pluginCall/' + plugin + '/' + params).
+                    http.get('/pluginCall/' + plugin + '/?param=' + encodeURIComponent(params)).
                         success(function(data, status, headers, config) {
                                  promise.resolve(data);
                         }).
@@ -268,30 +268,29 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                                             "par" : elem.par, 
                                             "text": text
                                     })}).success(function(data){
-                                            promise.resolve(data.reverse());
+                                            promise.resolve(data);
                                     }).error(function(){
                                             promise.reject("Failed to post data");
                                     });
                             };
                             savedPars();
                             promise.promise.then(
-                                            function(data){
-                                                    for(var i = 0; i < data.length; i++){
-                                                            var newParId = (function(i){return i})(elem.par);
-                                                            if(i != 0){
-                                                                sc.addParagraph(newParId);
-                                                            }
-                                                            sc.paragraphs[newParId].html = data[(function(i){return i})(i)];
-                                                            $("." + newParId).get()[0].innerHTML = sc.paragraphs[(function(i){return i})(newParId)].html;   
-                                                            newParId = newParId + 1;
-                                                    }
-                                            sc.sendingNew = false; 
-                                            },
-                                            function(reason){
-                                                    alert(reason);
-                                            },
-                                            function(){
-                                            });
+                                function(data){
+                                    for(var i = 0; i < data.length; i++){
+                                        var newParId = (function(i){return i})(elem.par);
+                                        sc.addParagraph(newParId);
+                                        
+                                        sc.paragraphs[newParId].html = data[(function(i){return i})(i)];
+                                        $("." + newParId).get()[0].innerHTML = sc.paragraphs[(function(i){return i})(newParId)].html;   
+                                        newParId = newParId + 1;
+                                    }
+                                    sc.sendingNew = false; 
+                                    },
+                                    function(reason){
+                                        alert(reason);
+                                    },
+                                    function(){
+                                    });
                     }
             }            
 
@@ -323,6 +322,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                                    sc.editors[z].par = sc.editors[z].par - 1;
                             }
                         }
+                        sc.oldParagraph = "";
                         sc.$apply();
                     }, function(reason) {
                             alert('Failed: ' + reason);
@@ -348,6 +348,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                     sc.sendingNew = true;
                     sc.$apply();
             };
+
             sc.myFile;
             sc.uploadFile = function(){
                 var file = sc.myFile;

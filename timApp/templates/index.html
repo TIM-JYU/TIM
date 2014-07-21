@@ -4,24 +4,15 @@
 <title>TIM</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script
-    src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-<script
-    src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
-<link rel="stylesheet"
-    href="{{url_for('static', filename='stylesheet.css')}}">
-<link
-    href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
-<link
-    href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
-<script
-    src="{{url_for('static', filename='scripts/indexView/indexController.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
+<script src="{{url_for('static', filename='scripts/indexView/indexController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
-
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
 
 <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -48,8 +39,12 @@ table td {
 </style>
 </head>
 
-<body style="background-color: #CCFFFF" ng-app="indexApp"
-    ng-controller="IndexCtrl">
+<body style="background-color: #CCFFFF" ng-app="indexApp" ng-controller="IndexCtrl">
+
+<form enctype="multipart/form-data">
+            <input type="file" file-model="myFile"/>
+            <button ng-click="uploadFile()">Upload file</button>
+</form> 
     {% with messages = get_flashed_messages() %} {% if messages %}
     <ul class="flashes">
         {% for message in messages %}
@@ -60,9 +55,8 @@ table td {
     <div class="material">
         <div style="padding: 5px 5px 5px 5px;">
             <span ng-show="displayIndex">&nbsp;&nbsp; Welcome!
-                Start by choosing a document to view: </span> <img
-                src="{{url_for('static', filename='images/loading.gif')}}"
-                ng-show="!displayIndex">
+                Start by choosing a document to view: </span> 
+            <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
             <div ng-show="displayIndex">
                 <table ng-show="documentList.length > 0">
                     <thead>
@@ -76,31 +70,25 @@ table td {
                     </thead>
                     <tr ng-repeat="doc in documentList">
                         <td>{{ '{{ doc.name }}' }}</td>
-                        <td><a ng-show="doc.canEdit"
-                            href="/documents/{{ '{{ doc.id }}' }}">Edit</a></td>
+                        <td><a ng-show="doc.canEdit" href="/documents/{{ '{{ doc.id }}' }}">Edit</a></td>
                         <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
                         <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
                         <td>{{ '{{ doc.owner ? "Yes" : "No" }}' }}</td>
                     </tr>
                 </table>
                 <p ng-show="documentList.length == 0">There are no documents to show.</p>
-                <a ng-show="!showControls"
-                    ng-click="showControls = true">Create a new
-                    document</a>
+                <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>
                 <div ng-show="showControls">
-                    <label>Document name: <input
-                        ng-model="docName" type="text">
-                    </label> <input ng-disabled="!docName"
-                        ng-click="createDocument(docName)" type="button"
-                        value="Create"> <input
-                        ng-click="showControls = false" type="button"
-                        value="Cancel">
+                    <label>Document name: <input ng-model="docName" type="text"> </label> 
+                    <input ng-disabled="!docName" ng-click="createDocument(docName)" type="button" value="Create"> 
+                    <input ng-click="showControls = false" type="button" value="Cancel">
                 </div>
                 <div>
                     <form method="POST" action="/login">
-                        <label>Log in as: <input type="text"
-                            name="user_name"></label> <input
-                            type="submit" value="Login">
+                        <label>Log in as: 
+                            <input type="text" name="user_name">
+                        </label> 
+                            <input type="submit" value="Login">
                     </form>
                     <form method="POST" action="/logout">
                         <input type="submit" value="Logout">
