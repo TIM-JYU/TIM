@@ -8,10 +8,10 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
 
         $scope.m = {};
 
-        $scope.addNote = function(parIndex, docID) {
+        $scope.addNote = function(parIndex) {
             $http.post('/postNote', {
                 "par_id" : parIndex,
-                "doc_id" : $scope.docID,
+                "doc_id" : $scope.docId,
                 "text" : $scope.m.noteText,
                 // test group
                 "group_id" : 1
