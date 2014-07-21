@@ -49,7 +49,7 @@
             <button ng-click="uploadFile()">Upload file</button>
 </form> 
 <div class="material"> 
-        <div ng-if="paragraphs.length > 1" class="addParButton b0" ng-click="addParagraph(0);setEditable(0)"><strong> + </strong> </div>
+        <div class="addParButton b0" ng-click="addParagraph(0);setEditable(0)"><strong> + </strong> </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">   
            <span> {{ '{{ par.par }}'}} </span>
            <div style="" id="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html"> </div>
