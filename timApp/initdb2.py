@@ -16,13 +16,13 @@ if __name__ == "__main__":
     timdb.users.createAnonymousUser()
     doc_id = timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1 (ei testimuokkauksia!)', 0)
     timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1 (saa testailla vapaasti)', 0)
-    timdb.users.grantViewAccess(0, doc_id)
-    timdb.notes.addNote(0, 'Tämä on testimuistiinpano.', doc_id, 2)
-    timdb.notes.addNote(0, 'Tämä on toinen testimuistiinpano samassa kappaleessa.', doc_id, 2)
+    timdb.users.grantViewAccess(0, doc_id.id)
+    timdb.notes.addNote(0, 'Tämä on testimuistiinpano.', doc_id.id, 2)
+    timdb.notes.addNote(0, 'Tämä on toinen testimuistiinpano samassa kappaleessa.', doc_id.id, 2)
     timdb.notes.addNote(0, """Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
-                        Vielä kolmas muistiinpano, jossa on pitkä teksti.""", doc_id, 4)
+                        Vielä kolmas muistiinpano, jossa on pitkä teksti.""", doc_id.id, 4)
     

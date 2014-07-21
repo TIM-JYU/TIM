@@ -10,7 +10,7 @@ import os
 from containerLink import callPlugin
 from werkzeug.utils import secure_filename
 from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbException
+from timdb.timdbbase import TimDbException, DocIdentifier
 from flask import Response
 
 app = Flask(__name__) 
@@ -53,10 +53,10 @@ def upload_file():
         if allowed_file(doc.filename):
             filename = secure_filename(doc.filename)
             if(".txt" in filename):
-                   doc.save("./uploadedDocs/" + filename)
-                   print("saved file")
-                   timdb.documents.importDocument("./uploadedDocs/" + filename, filename, 0)
-                   return "Succesfully uploaded document"
+                doc.save("./uploadedDocs/" + filename)
+                print("saved file")
+                timdb.documents.importDocument("./uploadedDocs/" + filename, filename, 0)
+                return "Succesfully uploaded document"
             else:
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 print("File contents safe, saving.")
@@ -90,7 +90,7 @@ def getTimDb():
 def getJSON(doc_id):
     timdb = getTimDb()
     try:
-        texts = timdb.documents.getDocumentBlocks(doc_id)
+        texts = timdb.documents.getDocumentBlocks(getNewest(doc_id))
         doc = timdb.documents.getDocument(doc_id)
         return jsonify({"name" : doc['name'], "text" : texts})
     except IOError as err:
@@ -101,8 +101,9 @@ def getJSON(doc_id):
 def getJSON_HTML(doc_id):
     timdb = getTimDb()
     try:
-        blocks = timdb.documents.getDocumentAsHtmlBlocks(doc_id)
-        doc = timdb.documents.getDocument(doc_id)
+        newest = getNewest(doc_id)
+        blocks = timdb.documents.getDocumentAsHtmlBlocks(newest)
+        doc = timdb.documents.getDocument(newest)
         return jsonify({"name" : doc['name'], "text" : blocks})
     except ValueError as err:
         print(err)
@@ -113,13 +114,13 @@ def getJSON_HTML(doc_id):
 
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
+    timdb = getTimDb()
     docId = request.get_json()['docName']
     paragraphText = request.get_json()['text']
     parIndex = request.get_json()['par']
     
-    timdb = getTimDb()
     try:
-        blocks = timdb.documents.modifyMarkDownBlock(docId, int(parIndex), paragraphText)
+        blocks = timdb.documents.modifyMarkDownBlock(getNewest(docId), int(parIndex), paragraphText)
     except IOError as err:
         print(err)
         return "Failed to modify block."
@@ -131,7 +132,7 @@ def createDocument():
     docName = jsondata['doc_name']
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonify({'id' : docId})
+    return jsonify({'id' : docId.id})
 
 @app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
@@ -139,25 +140,31 @@ def getDocument(doc_id):
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to edit this document.")
     try:
-        texts = timdb.documents.getDocumentAsHtmlBlocks(doc_id)
-        doc = timdb.documents.getDocument(doc_id)
-        versions = timdb.documents.getDocumentVersions(doc_id)
-        return render_template('editing.html', docId=doc['id'], name=doc['name'], text=json.dumps(texts), version=versions[0])
+        newest = getNewest(doc_id)
+        doc_metadata = timdb.documents.getDocument(newest)
+        texts = timdb.documents.getDocumentAsHtmlBlocks(newest)
+        return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version=newest.hash)
     except ValueError:
         return redirect(url_for('goat'))
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
     timdb = getTimDb()
-    block = timdb.documents.getBlock(docId, blockId)
+    block = timdb.documents.getBlock(getNewest(docId), blockId)
     return block
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
-    block = timdb.documents.getBlockAsHtml(docId, blockId)
+    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
     return block
 
+def getNewest(docId):
+    docId = int(docId)
+    timdb = getTimDb()
+    version = timdb.documents.getNewestVersion(docId)['hash']
+    return DocIdentifier(docId, version)
+    
 @app.route("/newParagraph/", methods=["POST"])
 def addBlock():
     timdb = getTimDb()
@@ -165,13 +172,13 @@ def addBlock():
     blockText = jsondata['text']
     docId = jsondata['docName']
     paragraph_id = jsondata['par']
-    blocks = timdb.documents.addMarkdownBlock(int(docId), blockText, int(paragraph_id))
+    blocks = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
     return json.dumps(blocks)
 
 @app.route("/deleteParagraph/<int:docId>/<int:blockId>")
 def removeBlock(docId,blockId):
     timdb = getTimDb()
-    timdb.documents.deleteParagraph(docId, blockId)
+    timdb.documents.deleteParagraph(getNewest(docId), blockId)
     return "Successfully removed paragraph"
 
 @app.route("/pluginCall/<plugin>/<params>")
@@ -189,9 +196,11 @@ def viewDocument(doc_id):
         abort(403, "You don't have permission to view this document.")
     try:
         #texts = timdb.getDocumentBlocks(doc_id)
-        doc = timdb.documents.getDocument(doc_id)
         versions = timdb.documents.getDocumentVersions(doc_id)
-        return render_template('view.html', docID=doc['id'], docName=doc['name'], version=versions[0])
+        fullHtml = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
+        doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
+        
+        return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
     except ValueError:
         return redirect(url_for('goat'))
 
