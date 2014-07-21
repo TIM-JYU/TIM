@@ -59,9 +59,11 @@
     content:"Edit";
     }
 .delete:before{
-    content:"Delete"
+    content:"Delete"; 
 }
-
+.delete{
+    top: 3em;
+}
 .editButton {
 	position: absolute;
 	left: 72em;
@@ -166,6 +168,20 @@
 	border: 2px solid;
 	border-radius: 25px;
 	box-shadow: 10px 10px 5px #888888;
+}
+#topBar{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:50px;
+    z-index: 100;
+
+}
+.navigationBar{
+    width: auto;
+    background-color: #00CC00;
+    
 }
 
 .addParButton{
