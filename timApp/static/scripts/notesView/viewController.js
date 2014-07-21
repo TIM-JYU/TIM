@@ -1,4 +1,4 @@
-var controls = angular.module('controllers');
+var controls = angular.module('controller');
 
 controls.controller('ViewCtrl', function($scope, $controller, $http) {
 
@@ -7,22 +7,14 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             $scope : $scope
         });
 
-        // add view-specific functions here
-        $scope.getDocumentAndNotes = function(docID) {
-            $scope.docID = docID;
-            $scope.getDocument(docID);
-            $scope.getNotes();
-        };
-
         $scope.getNotes = function() {
-            $http.get('/notes/' + $scope.docID).success(
+            $http.get('/notes/' + $scope.docId).success(
                     function(data, status, headers, config) {
                         var len = $scope.paragraphs.length;
                         $scope.pars = [];
                         var noteCount = data.length;
                         for ( var i = 0; i < len; i++) {
-                            var par = {};
-                            par.html = $scope.paragraphs[i];
+                            var par = $scope.paragraphs[i];
                             par.notes = [];
 
                             // TODO: This is not efficient; the server should
@@ -32,10 +24,11 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
                                     par.notes.push(data[j]);
                                 }
                             }
-                            $scope.pars.push(par);
                         }
                     }).error(function(data, status, headers, config) {
                 alert("Could not fetch notes.");
             });
-        }
+        };
+        
+        $scope.getNotes();
     });

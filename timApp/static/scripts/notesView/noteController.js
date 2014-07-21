@@ -1,4 +1,4 @@
-var controls = angular.module('controllers');
+var controls = angular.module('controller');
 
 controls.controller('NoteCtrl', function($scope, $controller, $http) {
 
