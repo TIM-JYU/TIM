@@ -105,6 +105,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                     }
                     else{
                             sc.activeEdit.editId = par;
+                            sc.updateEditor(elem, elemId);
                             sc.activeEdit['editor'] = sc.getEditor(par).editor;
                             sc.oldParagraph = sc.activeEdit['editor'].getSession().getValue();
                     }
@@ -163,6 +164,8 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                     }
                 }
             };
+
+            sc.getValue = function(i){return i};
 
 
             sc.getBlockMd = function(blockId){
@@ -247,6 +250,19 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
 
             };
 
+            sc.updateEditor = function(elem, elemId){
+                    var promise = sc.getBlockMd(elem.par);
+                    promise.then(function(data) {                                                    
+                            editor = sc.getEditor(elem.par).editor;                    
+                            editor.getSession().setValue(data);
+                            }, function(reason) {
+                            alert('Failed: ' + reason);
+                    }, function(data) {
+                            alert('Request progressing');
+
+                    });
+
+            };
 
             sc.saveEdits = function(elem, elemId,postingNew){
                     if(sc.activeEdit.editor.getSession().getValue().length <= 0){
@@ -276,12 +292,17 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                             savedPars();
                             promise.promise.then(
                                 function(data){
-                                    for(var i = 0; i < data.length; i++){
-                                        var newParId = (function(i){return i})(elem.par);
-                                        sc.addParagraph(newParId);
-                                        
-                                        sc.paragraphs[newParId].html = data[(function(i){return i})(i)];
-                                        $("." + newParId).get()[0].innerHTML = sc.paragraphs[(function(i){return i})(newParId)].html;   
+                                    var newParId = sc.getValue(elem.par);
+                                    for(var i = 0; i < data.length; i++){                           
+                                        if(i > 0){
+                                            sc.addParagraph(newParId);       
+                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
+                                            $("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
+                                        }else{
+                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
+                                            sc.updateEditor(elem, elemId);
+                                            $("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
+                                        }
                                         newParId = newParId + 1;
                                     }
                                     sc.sendingNew = false; 
@@ -310,7 +331,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
             }
             sc.delParagraph = function(indx){
                     sc.activeEdit = {"editId": "", "editor": ""};
-                   var promise = sc.callDelete(indx);
+                    var promise = sc.callDelete(indx);
                     promise.then(function(data){
                         sc.paragraphs.splice(indx, 1);
                         var i = (function(i){return i})(indx);
