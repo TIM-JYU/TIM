@@ -118,9 +118,10 @@ def postParagraph():
     docId = request.get_json()['docName']
     paragraphText = request.get_json()['text']
     parIndex = request.get_json()['par']
+    version = request.headers.get('Version')
     
     try:
-        blocks = timdb.documents.modifyMarkDownBlock(getNewest(docId), int(parIndex), paragraphText)
+        blocks, version = timdb.documents.modifyMarkDownBlock(DocIdentifier(docId, version), int(parIndex), paragraphText)
     except IOError as err:
         print(err)
         return "Failed to modify block."
@@ -143,7 +144,7 @@ def getDocument(doc_id):
         newest = getNewest(doc_id)
         doc_metadata = timdb.documents.getDocument(newest)
         texts = timdb.documents.getDocumentAsHtmlBlocks(newest)
-        return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version=newest.hash)
+        return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash})
     except ValueError:
         return redirect(url_for('goat'))
 

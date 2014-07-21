@@ -33,19 +33,26 @@ class Documents(TimDbBase):
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
         ec = EphemeralClient(EPHEMERAL_URL)
         blocks = ec.addBlock(document_id, new_block_index, content)
-        
-        #TODO: Update indexes for notes.
+        self.__updateNoteIndexes(document_id, document_id)
         self.commitDocumentChanges(document_id, 'Added a paragraph at index %d' % new_block_index)
         
         return blocks
 
     @contract
     def __insertBlockToDb(self, name : 'str', owner_group_id : 'int', block_type : 'int') -> 'int':
+        """Inserts a block to database.
+        
+        :param name: The name (description) of the block.
+        :param owner_group_id: The owner group of the block.
+        :param block_type: The type of the block.
+        :returns: The id of the block.
+        """
+        
         cursor = self.db.cursor()
         cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [name, owner_group_id, block_type])
-        document_id = cursor.lastrowid
+        block_id = cursor.lastrowid
         self.db.commit()
-        return document_id
+        return block_id
     
     @contract
     def createDocument(self, name : 'str', owner_group_id : 'int') -> 'DocIdentifier':
@@ -107,9 +114,8 @@ class Documents(TimDbBase):
         
         ec = EphemeralClient(EPHEMERAL_URL)
         ec.deleteBlock(document_id, par_id)
-        
+        self.__updateNoteIndexes(document_id, document_id)
         self.commitDocumentChanges(document_id, 'Deleted a paragraph at index %d' % par_id)
-        #TODO: Update indexes for notes.
     
     @contract
     def documentExists(self, document_id : 'DocIdentifier') -> 'bool':
@@ -245,7 +251,16 @@ class Documents(TimDbBase):
         :returns: The path of the document.
         """
         return os.path.join(self.blocks_path, str(document_id.id))
-
+    
+    @contract
+    def getDocumentPathAsRelative(self, document_id : 'DocIdentifier'):
+        return os.path.relpath(self.getDocumentPath(document_id), self.files_root_path).replace('\\', '/')
+    
+    @contract
+    def getDocumentMarkdown(self, document_id : 'DocIdentifier') -> 'str':
+        out, err = gitCommand(self.files_root_path, 'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
+        return out
+        
     @contract
     def getDocumentVersions(self, document_id : 'int') -> 'list(dict(str:str))':
         """Gets the versions of a document.
@@ -260,7 +275,7 @@ class Documents(TimDbBase):
             raise TimDbException('The specified document does not exist.')
         
         output, err = gitCommand(self.files_root_path, 'log --format=%H|%ad --date=relative '
-                                 + os.path.relpath(self.getDocumentPath(docId), self.files_root_path).replace('\\', '/'))
+                                 + self.getDocumentPathAsRelative(docId))
         lines = output.splitlines()
         versions = []
         for line in lines:
@@ -295,6 +310,13 @@ class Documents(TimDbBase):
         return docId
     
     def commitDocumentChanges(self, document_id : 'DocIdentifier', msg : 'str'):
+        """Commits the changes of the specified document to Git.
+        
+        :param document_id: The document identifier.
+        :param msg: The commit message.
+        :returns: The hash of the commit.
+        """
+        
         ec = EphemeralClient(EPHEMERAL_URL)
         #TODO: Is there a better way to commit changes to Git? Is it necessary to commit the full document?
         doc_content = ec.getDocumentFullText(document_id)
@@ -302,25 +324,60 @@ class Documents(TimDbBase):
         with open(self.getDocumentPath(document_id), 'w', encoding='utf-8', newline='\n') as f:
             f.write(doc_content)
         
-        gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), 'docker')
+        return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), 'docker')
     
     @contract
-    def modifyMarkDownBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content : 'str') -> 'list(str)':
+    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier'):
+        """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
+        but before the change is committed to Git.
+        
+        :param old_document_id: The id of the old document.
+        :param new_document_id: The id of the new document.
+        """
+        ec = EphemeralClient(EPHEMERAL_URL)
+        temp = DocIdentifier('temp', '')
+        
+        #TODO: This is temporary until the client is correctly synchronized with the latest version id.
+        old_document_id = DocIdentifier(old_document_id.id, self.getNewestVersion(old_document_id.id)['hash'])
+        
+        #TODO: This may be inefficient, it would be better if Ephemeral had a copy function.
+        ec.loadDocument(temp, bytes(self.getDocumentMarkdown(old_document_id), encoding='utf-8'))
+        
+        mapping = ec.getBlockMapping(new_document_id, temp)
+        
+        cursor = self.db.cursor()
+        cursor.execute('select parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id from BlockRelation where parent_block_id = ?',
+                       [new_document_id.id])
+        notes = self.resultAsDictionary(cursor)
+        for note in notes:
+            note['updated'] = False
+        cursor.execute('delete from BlockRelation where parent_block_id = ?', [new_document_id.id])
+        for par_map in mapping:
+            for note in notes:
+                if not note['updated'] and note['parent_block_specifier'] == par_map[0]:
+                    note['parent_block_specifier'] = par_map[1]
+                    note['updated'] = True
+        
+        for note in notes:
+            cursor.execute('insert into BlockRelation (parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id) values (?,?,?,?)',
+                           [note['parent_block_specifier'], note['parent_block_id'], note['Block_id'], note['parent_block_revision_id']])
+        self.db.commit()
+    
+    @contract
+    def modifyMarkDownBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content : 'str') -> 'tuple(list(str), str)':
         """Modifies the specified block.
         
         :param document_id: The id of the document.
         :param block_id: The id (relative to document) of the paragraph to be modified.
         :param new_content: The new content of the paragraph.
+        :returns: The modified blocks and the version hash as a tuple.
         """
         
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
         ec = EphemeralClient(EPHEMERAL_URL)
         
-        #TODO: This shouldn't modify the document, but it should create a copy of the document and modify that. So we can do the paragraph matching.
         blocks = ec.modifyBlock(document_id, block_id, new_content)
-        
-        self.commitDocumentChanges(document_id, 'Modified a paragraph at index %d' % block_id)
-        
-        #TODO: Update indexes for notes.
-        return blocks
+        self.__updateNoteIndexes(document_id, document_id)
+        version = self.commitDocumentChanges(document_id, 'Modified a paragraph at index %d' % block_id)
+        return blocks, version
