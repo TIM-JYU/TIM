@@ -93,6 +93,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                     sc.saveEdits(elem, elemId,sc.sendingNew);
                     sc.activeEdit = {"editId": "", "editor": ""};
                     sc.sendingNew = false;
+                    sc.oldParagraph = "";
 
                }
                 else {
@@ -119,14 +120,25 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                     //if ( !iOS ) sc.activeEdit['editor'].editor.focus();
                 }               
             };
+
+            sc.deleteEditor = function(id){
+                for(var i = 0;i < sc.editors.length; i++){
+                    if(sc.editors[i].par === id){
+                        sc.editors.splice(i, 1);
+                    }
+                }
+            }
             
             sc.cancelEdit = function(par){
                     if(sc.sendingNew){
+                        sc.deleteEditor(par);
                         sc.delParagraph(par);
                         sc.oldParagraph = "";
+                        sc.sendingNew = false;
                     }else{
                         sc.activeEdit['editor'].getSession().setValue(sc.oldParagraph);
                         sc.paragraphs[par].display = false;
+                        sc.deleteEditor(par);
                         sc.activeEdit = {"editId": "", "editor": ""};
                         sc.sendingNew = false;
                         sc.oldParagraph = "";
@@ -295,7 +307,8 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                                     var newParId = sc.getValue(elem.par);
                                     for(var i = 0; i < data.length; i++){                           
                                         if(i > 0){
-                                            sc.addParagraph(newParId);       
+                                            sc.addParagraph(newParId);
+                                            sc.sendingNew = false;
                                             sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             $("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
                                         }else{
@@ -330,27 +343,34 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                 return deferred.promise;
             }
             sc.delParagraph = function(indx){
+                    sc.editors = [];
                     sc.activeEdit = {"editId": "", "editor": ""};
-                    var promise = sc.callDelete(indx);
-                    promise.then(function(data){
+                    if(sc.sendingNew){
                         sc.paragraphs.splice(indx, 1);
-                        var i = (function(i){return i})(indx);
-                        for(var j = i; j < sc.paragraphs.length;j++){
-                            sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
-                        }
-                        for(var z = 0; z < sc.editors.length; z++){
-                            if(sc.editors[z].par >= indx){
-                                   sc.editors[z].par = sc.editors[z].par - 1;
+                    }else{
+                        var promise = sc.callDelete(indx);
+                    
+                        promise.then(function(data){
+                            sc.paragraphs.splice(indx, 1);
+                            var i = (function(i){return i})(indx);
+                            for(var j = i; j < sc.paragraphs.length;j++){
+                                sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
                             }
-                        }
-                        sc.oldParagraph = "";
-                        sc.$apply();
-                    }, function(reason) {
-                            alert('Failed: ' + reason);
-                    }, function(data) {
-                            alert('Request progressing');
+                            for(var z = 0; z < sc.editors.length; z++){
+                                if(sc.editors[z].par >= indx){
+                                       sc.editors[z].par = sc.editors[z].par - 1;
+                                }
+                            }
+                            sc.oldParagraph = "";
+                            sc.$apply();
+                        }, function(reason) {
+                                alert('Failed: ' + reason);
+                        }, function(data) {
+                                alert('Request progressing');
 
-                    });
+                        });
+                    }
+                    sc.sendingNew = false;
 
 
             };
