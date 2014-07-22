@@ -58,7 +58,7 @@ def upload_file():
                 timdb.documents.importDocument("./uploadedDocs/" + filename, filename, 0)
                 return "Succesfully uploaded document"
             else:
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 print("File contents safe, saving.")
                 return redirect(url_for('uploaded_file', filename=filename))
 
