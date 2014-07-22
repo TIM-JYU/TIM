@@ -1,3 +1,4 @@
+# coding=latin-1
 """Initializes the TIM database."""
 
 from timdb.timdb2 import TimDb
@@ -12,11 +13,20 @@ if __name__ == "__main__":
     FILES_ROOT_PATH = 'tim_files'
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
     initRepo(FILES_ROOT_PATH)
-    timdb.create()
+    timdb.initializeTables()
     timdb.users.createAnonymousUser()
-    doc_id = timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1 (ei testimuokkauksia!)', 0)
-    timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1 (saa testailla vapaasti)', 0)
+    vesa_id = timdb.users.createUser('vesal')
+    vesa_group = timdb.users.createUserGroup('vesal')
+    timdb.users.addUserToGroup(vesa_group, vesa_id)
+    doc_id = timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1', vesa_group)
+    doc_id2 = timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1 (saa testailla vapaasti)', vesa_group)
+    
+    # Grant access to anonymous users
     timdb.users.grantViewAccess(0, doc_id.id)
+    timdb.users.grantViewAccess(0, doc_id2.id)
+    
+    timdb.users.grantEditAccess(0, doc_id2.id)
+    
     timdb.notes.addNote(0, 'Tämä on testimuistiinpano.', doc_id.id, 2)
     timdb.notes.addNote(0, 'Tämä on toinen testimuistiinpano samassa kappaleessa.', doc_id.id, 2)
     timdb.notes.addNote(0, """Vielä kolmas muistiinpano, jossa on pitkä teksti.

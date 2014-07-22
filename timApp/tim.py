@@ -274,8 +274,9 @@ def login():
 
 @app.route("/logout", methods=['POST'])
 def logout():
-    session['user_id'] = None
+    session.pop('user_id', None)
     session['user_name'] = 'Anonymous'
+    flash('You were successfully logged out.')
     return redirect(url_for('indexPage'))
     
 if __name__ == "__main__":

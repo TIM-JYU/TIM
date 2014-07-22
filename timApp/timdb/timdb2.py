@@ -56,7 +56,7 @@ class TimDb(object):
         """Closes the database connection."""
         self.db.close()
     
-    def create(self):
+    def initializeTables(self):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
         with open('schema2.sql', 'r') as schema_file:

@@ -68,6 +68,17 @@ class Users(TimDbBase):
         self.db.commit()
         
     @contract
+    def getOwnerGroup(self, block_id : 'int'):    
+        """Returns the owner group of the specified block.
+        
+        :param block_id: The id of the block.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('select id, name from UserGroup where id in (select UserGroup_id from Block where id = ?)', [block_id])
+        return self.resultAsDictionary(cursor)
+        
+    @contract
     def getUser(self, user_id : 'int') -> 'row':
         """Gets the user with the specified id.
         
@@ -149,9 +160,11 @@ class Users(TimDbBase):
         :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
         """
         
+        if self.userIsOwner(user_id, block_id):
+            return True
         cursor = self.db.cursor()
         cursor.execute("""select id from User where
-                          id = ?
+                          (id = ? or id = 0)
                           and (User.id in 
                               (select User_id from UserGroupMember where UserGroup_id in
                                   (select UserGroup_id from BlockViewAccess where Block_id = ?))
@@ -171,10 +184,12 @@ class Users(TimDbBase):
         :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
         """
         
+        if self.userIsOwner(user_id, block_id):
+            return True
         #TODO: This method is pretty much copy-paste from userHasViewAccess. Should make some common method.
         cursor = self.db.cursor()
         cursor.execute("""select id from User where
-                          id = ?
+                          (id = ? or id = 0)
                           and (User.id in 
                               (select User_id from UserGroupMember where UserGroup_id in
                                   (select UserGroup_id from BlockEditAccess where Block_id = ?))

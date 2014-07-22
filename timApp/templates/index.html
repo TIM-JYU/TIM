@@ -41,22 +41,23 @@ table td {
 
 <body style="background-color: #CCFFFF" ng-app="indexApp" ng-controller="IndexCtrl">
 
-<form enctype="multipart/form-data">
-            <input type="file" file-model="myFile"/>
-            <button ng-click="uploadFile()">Upload file</button>
-</form> 
+    <form enctype="multipart/form-data">
+        <input type="file" file-model="myFile" />
+        <button ng-click="uploadFile()">Upload file</button>
+    </form>
     {% with messages = get_flashed_messages() %} {% if messages %}
     <ul class="flashes">
         {% for message in messages %}
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    <p>Currently logged in as: {{userName}} (user id = {{userId}})</p>
+    <p>{% if not session.user_id %} Currently not logged in. {% else %} Currently logged in as:
+        {{userName}} (user id = {{userId}}) {% endif %}</p>
     <div class="material">
         <div style="padding: 5px 5px 5px 5px;">
-            <span ng-show="displayIndex">&nbsp;&nbsp; Welcome!
-                Start by choosing a document to view: </span> 
-            <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
+            <span ng-show="displayIndex">&nbsp;&nbsp; Welcome! Start by choosing a document
+                to view: </span> <img src="{{url_for('static', filename='images/loading.gif')}}"
+                ng-show="!displayIndex">
             <div ng-show="displayIndex">
                 <table ng-show="documentList.length > 0">
                     <thead>
@@ -79,20 +80,21 @@ table td {
                 <p ng-show="documentList.length == 0">There are no documents to show.</p>
                 <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>
                 <div ng-show="showControls">
-                    <label>Document name: <input ng-model="docName" type="text"> </label> 
-                    <input ng-disabled="!docName" ng-click="createDocument(docName)" type="button" value="Create"> 
-                    <input ng-click="showControls = false" type="button" value="Cancel">
+                    <label>Document name: <input ng-model="docName" type="text">
+                    </label> <input ng-disabled="!docName" ng-click="createDocument(docName)" type="button"
+                        value="Create"> <input ng-click="showControls = false" type="button"
+                        value="Cancel">
                 </div>
                 <div>
                     <form method="POST" action="/login">
-                        <label>Log in as: 
-                            <input type="text" name="user_name">
-                        </label> 
-                            <input type="submit" value="Login">
+                        <label>Log in as: <input ng-model="username" type="text" name="user_name">
+                        </label> <input ng-disabled="!username" type="submit" value="Login">
                     </form>
+                    {% if session.user_id %}
                     <form method="POST" action="/logout">
                         <input type="submit" value="Logout">
                     </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
