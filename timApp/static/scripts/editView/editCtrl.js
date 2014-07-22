@@ -357,14 +357,6 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                         promise.then(function(data){
                             sc.paragraphs.splice(indx, 1);
                             var i = (function(i){return i})(indx);
-                            for(var j = i; j < sc.paragraphs.length;j++){
-                                sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
-                            }
-                            for(var z = 0; z < sc.editors.length; z++){
-                                if(sc.editors[z].par >= indx){
-                                       sc.editors[z].par = sc.editors[z].par - 1;
-                                }
-                            }
                             sc.oldParagraph = "";
                             sc.$apply();
                         }, function(reason) {
@@ -375,13 +367,11 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                         });
                     }
                     sc.sendingNew = false;
-
+                    sc.decreaseIds(indx);
 
             };
-            
-            sc.addParagraph = function(indx){
-                    sc.paragraphs.splice(indx, 0, {"par": indx, "html" : "<empty>", "display" : false});   
-                    var i = (function(i){return i})(indx);
+
+            sc.increaseIds = function(i){
                     for(var j = i+1; j < sc.paragraphs.length;j++){
                         sc.paragraphs[j].par = sc.paragraphs[j].par + 1;
                     }
@@ -390,6 +380,24 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                                     sc.editors[z].par = sc.editors[z].par + 1;
                             }
                     }
+
+            }
+
+            sc.decreaseIds = function(i){
+                            for(var j = i; j < sc.paragraphs.length;j++){
+                                sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
+                            }
+                            for(var z = 0; z < sc.editors.length; z++){
+                                if(sc.editors[z].par >= indx){
+                                       sc.editors[z].par = sc.editors[z].par - 1;
+                                }
+                            }
+            }
+            
+            sc.addParagraph = function(indx){
+                    sc.paragraphs.splice(indx, 0, {"par": indx, "html" : "<empty>", "display" : false});   
+                    var i = (function(i){return i})(indx);
+                    sc.increaseIds(indx);
                     sc.sendingNew = true;
                     sc.$apply();
             };
