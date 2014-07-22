@@ -364,7 +364,7 @@ class Documents(TimDbBase):
         self.db.commit()
     
     @contract
-    def modifyMarkDownBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content : 'str') -> 'tuple(list(str), str)':
+    def modifyMarkDownBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content : 'str') -> 'tuple(list(str), str|None)':
         """Modifies the specified block.
         
         :param document_id: The id of the document.
