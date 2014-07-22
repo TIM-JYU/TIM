@@ -376,7 +376,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                         sc.paragraphs[j].par = sc.paragraphs[j].par + 1;
                     }
                     for(var z = 0; z < sc.editors.length; z++){
-                            if(sc.editors[z].par >= indx){
+                            if(sc.editors[z].par >= i){
                                     sc.editors[z].par = sc.editors[z].par + 1;
                             }
                     }
@@ -388,7 +388,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                                 sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
                             }
                             for(var z = 0; z < sc.editors.length; z++){
-                                if(sc.editors[z].par >= indx){
+                                if(sc.editors[z].par >= i){
                                        sc.editors[z].par = sc.editors[z].par - 1;
                                 }
                             }
