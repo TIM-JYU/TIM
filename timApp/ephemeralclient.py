@@ -139,7 +139,7 @@ class EphemeralClient(object):
         
     @contract
     def __raiseExceptionIfBlockNotFound(self, r : 'Response'):
-        """Raises EphemeralException if the response contains 'no block found'.
+        """Raises EphemeralException if the status code of the response is 404.
         
         :param response: The response string.
         """
@@ -149,7 +149,7 @@ class EphemeralClient(object):
 
     @contract
     def __raiseExceptionIfDocumentNotFound(self, r : 'Response'):
-        """Raises EphemeralException if the response contains 'no block found'.
+        """Raises EphemeralException if the status code of the response is 404.
         
         :param response: The response string.
         """
