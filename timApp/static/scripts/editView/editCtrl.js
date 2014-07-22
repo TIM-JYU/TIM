@@ -193,7 +193,7 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                     });
                 }
                 if(sc.sendingNew){
-                   deferred.resolve("<empty>");
+                   deferred.resolve("");
                 }else{
                     getBlockMd(blockId);
                 }
@@ -277,6 +277,10 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
             };
 
             sc.saveEdits = function(elem, elemId,postingNew){
+                    if(sc.oldParagraph === sc.activeEdit.editor.getSession().getValue()){
+                            sc.cancelEdit(elemId);
+                            return
+                    }
                     if(sc.activeEdit.editor.getSession().getValue().length <= 0){
                             sc.delParagraph(elemId);
                     }else{
