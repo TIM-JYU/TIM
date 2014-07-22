@@ -395,6 +395,12 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
             }
             
             sc.addParagraph = function(indx){
+                    if(sc.activeEdit.editId !== ""){
+                        sc.setEditable(sc.activeEdit.editId);
+                    }
+                    if(sc.sendingNew){
+                            sc.cancelEdit(sc.activeEdit.editId);
+                    }
                     sc.paragraphs.splice(indx, 0, {"par": indx, "html" : "<empty>", "display" : false});   
                     var i = (function(i){return i})(indx);
                     sc.increaseIds(indx);
