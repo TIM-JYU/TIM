@@ -121,6 +121,23 @@ class EphemeralClient(object):
         return r.text
     
     @contract
+    def getSingleBlockMapping(self, first_document_id : 'DocIdentifier', second_document_id : 'DocIdentifier', block_id : 'int'):
+        """Gets a mapping of a single block between two documents.
+        
+        :param first_document_id: The id of the first document.
+        :param second_document_id: The id of the second document.
+        :param block_id: The id of the paragraph to be matched.
+        """
+        
+        try:
+            r = requests.get(url=self.server_path
+                             + '/match/{}/{}/{}'.format(self.__getDocIdForEphemeral(first_document_id), block_id ,
+                                                            self.__getDocIdForEphemeral(second_document_id)))
+        except requests.exceptions.ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        return r.json()
+        
+    @contract
     def getBlockMapping(self, first_document_id : 'DocIdentifier', second_document_id : 'DocIdentifier'):
         """Gets a mapping of blocks between two documents.
         

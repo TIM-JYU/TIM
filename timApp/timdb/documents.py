@@ -18,6 +18,7 @@ class Documents(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path)
+        self.ec = EphemeralClient(EPHEMERAL_URL)
     
     @contract
     def addMarkdownBlock(self, document_id : 'DocIdentifier', content : 'str', new_block_index : 'int') -> 'list(str)':
@@ -31,8 +32,8 @@ class Documents(TimDbBase):
 
         document_path = self.getBlockPath(document_id.id)
         assert os.path.exists(document_path), 'document does not exist: %r' % document_id
-        ec = EphemeralClient(EPHEMERAL_URL)
-        blocks = ec.addBlock(document_id, new_block_index, content)
+        
+        blocks = self.ec.addBlock(document_id, new_block_index, content)
         self.__updateNoteIndexes(document_id, document_id)
         self.commitDocumentChanges(document_id, 'Added a paragraph at index %d' % new_block_index)
         
@@ -78,8 +79,8 @@ class Documents(TimDbBase):
         doc_hash = gitCommit(self.files_root_path, document_path, 'Created document: %s' % name, 'docker')
         
         docId = DocIdentifier(document_id, doc_hash)
-        ec = EphemeralClient(EPHEMERAL_URL)
-        ec.loadDocument(docId, b'Edit me!') #TODO: Use hash as the identifier, or maybe even the combination of doc_id and hash.
+        
+        self.ec.loadDocument(docId, b'Edit me!') #TODO: Use hash as the identifier, or maybe even the combination of doc_id and hash.
         
         return docId
 
@@ -112,8 +113,8 @@ class Documents(TimDbBase):
         :param par_id: The index of the paragraph in the document that should be deleted.
         """
         
-        ec = EphemeralClient(EPHEMERAL_URL)
-        ec.deleteBlock(document_id, par_id)
+        
+        self.ec.deleteBlock(document_id, par_id)
         self.__updateNoteIndexes(document_id, document_id)
         self.commitDocumentChanges(document_id, 'Deleted a paragraph at index %d' % par_id)
     
@@ -181,9 +182,8 @@ class Documents(TimDbBase):
         :param block_id: The id (index) of the block in the document.
         """
         
-        ec = EphemeralClient(EPHEMERAL_URL)
         try:
-            block = ec.getBlock(document_id, block_id)
+            block = self.ec.getBlock(document_id, block_id)
         except EphemeralException as e:
             raise TimDbException(str(e))
         return block
@@ -195,9 +195,8 @@ class Documents(TimDbBase):
         :param block_id: The id (index) of the block in the document.
         """
         
-        ec = EphemeralClient(EPHEMERAL_URL)
         try:
-            block = ec.getBlockAsHtml(document_id, block_id)
+            block = self.ec.getBlockAsHtml(document_id, block_id)
         except EphemeralException as e:
             raise TimDbException(str(e))
         return block
@@ -217,9 +216,9 @@ class Documents(TimDbBase):
         blocks = []
         notEnd = True
         blockIndex = 0
-        ec = EphemeralClient(EPHEMERAL_URL)
+        
         while notEnd:
-            responseStr = ec.getBlock(document_id, blockIndex)
+            responseStr = self.ec.getBlock(document_id, blockIndex)
             notEnd = responseStr != '{"Error":"No block found"}'
             if notEnd:
                 blocks.append({"par": str(blockIndex), "text" : responseStr})
@@ -230,15 +229,13 @@ class Documents(TimDbBase):
     def getDocumentAsHtmlBlocks(self, document_id : 'DocIdentifier') -> 'list(str)':
         """Gets the specified document in HTML form."""
         
-        ec = EphemeralClient(EPHEMERAL_URL)
-        
         try:
-            blocks = ec.getDocumentAsHtmlBlocks(document_id)
+            blocks = self.ec.getDocumentAsHtmlBlocks(document_id)
         except NotInCacheException:
             if self.documentExists(document_id):
                 with open(self.getBlockPath(document_id.id), 'rb') as f:
-                    ec.loadDocument(document_id, f.read())
-                blocks = ec.getDocumentAsHtmlBlocks(document_id)
+                    self.ec.loadDocument(document_id, f.read())
+                blocks = self.ec.getDocumentAsHtmlBlocks(document_id)
             else:
                 raise TimDbException('The requested document was not found.')
         return blocks
@@ -304,8 +301,8 @@ class Documents(TimDbBase):
         docId = DocIdentifier(doc_id.id, doc_hash)
         
         with open(document_file, 'rb') as f:
-            ec = EphemeralClient(EPHEMERAL_URL)
-            ec.loadDocument(docId, f.read())
+            
+            self.ec.loadDocument(docId, f.read())
         
         return docId
     
@@ -317,9 +314,8 @@ class Documents(TimDbBase):
         :returns: The hash of the commit.
         """
         
-        ec = EphemeralClient(EPHEMERAL_URL)
         #TODO: Is there a better way to commit changes to Git? Is it necessary to commit the full document?
-        doc_content = ec.getDocumentFullText(document_id)
+        doc_content = self.ec.getDocumentFullText(document_id)
         
         with open(self.getDocumentPath(document_id), 'w', encoding='utf-8', newline='\n') as f:
             f.write(doc_content)
@@ -327,28 +323,36 @@ class Documents(TimDbBase):
         return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), 'docker')
     
     @contract
-    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier'):
+    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool' = False):
         """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
         but before the change is committed to Git.
         
         :param old_document_id: The id of the old document.
         :param new_document_id: The id of the new document.
+        
         """
-        ec = EphemeralClient(EPHEMERAL_URL)
+        
         temp = DocIdentifier('temp', '')
         
         #TODO: This is temporary until the client is correctly synchronized with the latest version id.
         old_document_id = DocIdentifier(old_document_id.id, self.getNewestVersion(old_document_id.id)['hash'])
         
         #TODO: This may be inefficient, it would be better if Ephemeral had a copy function.
-        ec.loadDocument(temp, bytes(self.getDocumentMarkdown(old_document_id), encoding='utf-8'))
-        
-        mapping = ec.getBlockMapping(new_document_id, temp)
+        self.ec.loadDocument(temp, bytes(self.getDocumentMarkdown(old_document_id), encoding='utf-8'))
         
         cursor = self.db.cursor()
         cursor.execute('select parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id from BlockRelation where parent_block_id = ?',
                        [new_document_id.id])
         notes = self.resultAsDictionary(cursor)
+        
+        if map_all:
+            mapping = self.ec.getBlockMapping(new_document_id, temp)
+        else:
+            mapping = []
+            for note in notes:
+                val = max(self.ec.getSingleBlockMapping(temp, new_document_id, note['parent_block_specifier']), key=lambda x: x[0])
+                mapping.append([note['parent_block_specifier'], val[1], val[0]])
+
         for note in notes:
             note['updated'] = False
         cursor.execute('delete from BlockRelation where parent_block_id = ?', [new_document_id.id])
@@ -375,9 +379,19 @@ class Documents(TimDbBase):
         
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
-        ec = EphemeralClient(EPHEMERAL_URL)
-        
-        blocks = ec.modifyBlock(document_id, block_id, new_content)
+        blocks = self.ec.modifyBlock(document_id, block_id, new_content)
         self.__updateNoteIndexes(document_id, document_id)
         version = self.commitDocumentChanges(document_id, 'Modified a paragraph at index %d' % block_id)
         return blocks, version
+
+    def updateDocument(self, document_id : 'DocIdentifier', new_content : 'str'):
+        """Updates a document.
+        
+        :param document_id: The id of the document to be updated.
+        :param new_content: The new content of the document.
+        """
+        
+        assert self.documentExists(document_id), 'document does not exist: ' + document_id
+        
+        
+        
