@@ -18,8 +18,8 @@ if __name__ == "__main__":
     vesa_id = timdb.users.createUser('vesal')
     vesa_group = timdb.users.createUserGroup('vesal')
     timdb.users.addUserToGroup(vesa_group, vesa_id)
-    doc_id = timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1', vesa_group)
-    doc_id2 = timdb.documents.importDocument('lecture.markdown', 'Ohjelmointi 1 (saa testailla vapaasti)', vesa_group)
+    doc_id = timdb.documents.importDocumentFromFile('lecture.markdown', 'Ohjelmointi 1', vesa_group)
+    doc_id2 = timdb.documents.importDocumentFromFile('lecture.markdown', 'Ohjelmointi 1 (saa testailla vapaasti)', vesa_group)
     
     # Grant access to anonymous users
     timdb.users.grantViewAccess(0, doc_id.id)

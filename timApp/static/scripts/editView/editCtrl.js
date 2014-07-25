@@ -1,6 +1,6 @@
 var EditCtrl = angular.module('controller', []);
 
-EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(sc, http, q, fileUpload){
+EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', '$upload', function(sc, http, q, $upload){
             http.defaults.headers.common.Version = version.hash;
             sc.callPlugin = function(plugin, params){
                 var promise = q.defer();
@@ -407,45 +407,29 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', 'fileUpload', function(
                     sc.sendingNew = true;
                     sc.$apply();
             };
-
-            sc.myFile;
-            sc.uploadFile = function(){
-                var file = sc.myFile;
-                var uploadUrl = '/upload/';
-                fileUpload.uploadFileToUrl(file, uploadUrl);
-            };
-
+            
+            sc.uploadedFile;
+            sc.progress;
+            sc.selectedFile = "";
+            sc.onFileSelect = function(url, $files) {
+                //$files: an array of files selected, each file has name, size, and type.
+                for (var i = 0; i < $files.length; i++) {
+                  var file = $files[i];
+                  sc.upload = $upload.upload({
+                    url: url,
+                    method: 'POST',
+                    file: file,
+                  }).progress(function(evt) {
+                    sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
+                  }).success(function(data, status, headers, config) {
+                    sc.uploadedFile = '/images/' + data.file;
+                    sc.progress = 'Uploading... Done!'
+                  });
+                  //.error(...)
+                }
+              };
+            
         }]);
 
 
 
-EditCtrl.directive('fileModel', ['$parse', function ($parse) {
-                return {
-                       restrict: 'A',
-                       link: function(scope, element, attrs) {
-                                 var model = $parse(attrs.fileModel);
-                                 var modelSetter = model.assign;
-                
-                                 element.bind('change', function(){
-                                    scope.$apply(function(){
-                                        modelSetter(scope, element[0].files[0]);
-                                   });
-                                 });
-        }
-        };
-}]);
-
-EditCtrl.service('fileUpload', ['$http', function ($http) {
-       this.uploadFileToUrl = function(file, uploadUrl){
-                var fd = new FormData();
-              fd.append('file', file);
-                $http.post(uploadUrl, fd, {
-                    transformRequest: angular.identity,
-                     headers: {'Content-Type': undefined}
-             })
-             .success(function(){
-            })
-           .error(function(){
-            });
-     }
-}]); 

@@ -35,7 +35,7 @@ class Documents(TimDbBase):
         
         blocks = self.ec.addBlock(document_id, new_block_index, content)
         self.__updateNoteIndexes(document_id, document_id)
-        self.commitDocumentChanges(document_id, 'Added a paragraph at index %d' % new_block_index)
+        self.__commitDocumentChanges(document_id, 'Added a paragraph at index %d' % (document_id.id, new_block_index))
         
         return blocks
 
@@ -76,11 +76,11 @@ class Documents(TimDbBase):
             self.db.rollback()
             raise
         
-        doc_hash = gitCommit(self.files_root_path, document_path, 'Created document: %s' % name, 'docker')
+        doc_hash = gitCommit(self.files_root_path, document_path, 'Created a new document: %s (id = %d)' % (name, document_id), 'docker')
         
         docId = DocIdentifier(document_id, doc_hash)
         
-        self.ec.loadDocument(docId, b'Edit me!') #TODO: Use hash as the identifier, or maybe even the combination of doc_id and hash.
+        self.ec.loadDocument(docId, b'Edit me!')
         
         return docId
 
@@ -103,7 +103,7 @@ class Documents(TimDbBase):
                 with open(os.path.join(block_directory, str(file)), 'r', encoding='utf-8') as f:
                     tmpfile.write(f.read())
                     tmpfile.write('\n\n')
-        self.importDocument('tmp.temp', document_name, 0)
+        self.importDocumentFromFile('tmp.temp', document_name, 0)
         
     @contract
     def deleteParagraph(self, document_id : 'DocIdentifier', par_id : 'int'):
@@ -113,10 +113,9 @@ class Documents(TimDbBase):
         :param par_id: The index of the paragraph in the document that should be deleted.
         """
         
-        
         self.ec.deleteBlock(document_id, par_id)
         self.__updateNoteIndexes(document_id, document_id)
-        self.commitDocumentChanges(document_id, 'Deleted a paragraph at index %d' % par_id)
+        self.__commitDocumentChanges(document_id, 'Document %d: Deleted a paragraph at index %d' % (document_id.id, par_id))
     
     @contract
     def documentExists(self, document_id : 'DocIdentifier') -> 'bool':
@@ -208,7 +207,6 @@ class Documents(TimDbBase):
         :param document_id: The id of the document.
         :returns: The blocks of the document.
         """
-        #TODO: Get blocks from Ephemeral.
         #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
         
         # So let's make a quick hack to fetch the blocks. This is VERY slow (on Windows at least); it fetches about one block per second when running locally on Windows machine.
@@ -290,23 +288,22 @@ class Documents(TimDbBase):
         return self.getDocumentVersions(document_id)[0]
         
     @contract
-    def importDocument(self, document_file : 'str', document_name : 'str', owner_group_id : 'int') -> 'DocIdentifier':
+    def importDocumentFromFile(self, document_file : 'str', document_name : 'str', owner_group_id : 'int') -> 'DocIdentifier':
         """Imports the specified document in the database."""
         
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
         doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         copyfile(document_file, self.getDocumentPath(doc_id))
         
-        doc_hash = gitCommit(self.files_root_path, self.getDocumentPath(doc_id), 'Imported document: %s' % document_name, 'docker')
+        doc_hash = gitCommit(self.files_root_path, self.getDocumentPath(doc_id), 'Imported document: %s (id = %d)' % (document_name, doc_id.id), 'docker')
         docId = DocIdentifier(doc_id.id, doc_hash)
         
         with open(document_file, 'rb') as f:
-            
             self.ec.loadDocument(docId, f.read())
         
         return docId
     
-    def commitDocumentChanges(self, document_id : 'DocIdentifier', msg : 'str'):
+    def __commitDocumentChanges(self, document_id : 'DocIdentifier', msg : 'str') -> 'str':
         """Commits the changes of the specified document to Git.
         
         :param document_id: The document identifier.
@@ -381,17 +378,22 @@ class Documents(TimDbBase):
         
         blocks = self.ec.modifyBlock(document_id, block_id, new_content)
         self.__updateNoteIndexes(document_id, document_id)
-        version = self.commitDocumentChanges(document_id, 'Modified a paragraph at index %d' % block_id)
+        version = self.__commitDocumentChanges(document_id, 'Document %d: Modified a paragraph at index %d' % (document_id.id, block_id))
         return blocks, version
-
-    def updateDocument(self, document_id : 'DocIdentifier', new_content : 'str'):
+    
+    @contract
+    def updateDocument(self, document_id : 'DocIdentifier', new_content : 'bytes') -> 'DocIdentifier':
         """Updates a document.
         
         :param document_id: The id of the document to be updated.
         :param new_content: The new content of the document.
+        :returns: The version of the new document.
         """
         
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
-        
+        self.ec.loadDocument(document_id, new_content)
+        self.__updateNoteIndexes(document_id, document_id)
+        version = self.__commitDocumentChanges(document_id, "Document %d: Modified as whole" % document_id.id)
+        return DocIdentifier(document_id.id, version)
         

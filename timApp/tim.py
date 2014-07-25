@@ -12,6 +12,9 @@ from werkzeug.utils import secure_filename
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException, DocIdentifier
 from flask import Response
+import imghdr
+from flask.helpers import send_file
+import io
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -53,15 +56,62 @@ def upload_file():
         if allowed_file(doc.filename):
             filename = secure_filename(doc.filename)
             if(".txt" in filename):
+                try:
+                    content = doc.read().decode('utf-8')
+                except UnicodeDecodeError:
+                    response = jsonify({'message': 'The file should be in UTF-8 format.'})
+                    response.status_code = 400
+                    return response
                 doc.save("./uploadedDocs/" + filename)
-                print("saved file")
-                timdb.documents.importDocument("./uploadedDocs/" + filename, filename, 0)
-                return "Succesfully uploaded document"
+                timdb.documents.importDocumentFromFile("./uploadedDocs/" + filename, filename, getCurrentUserGroup())
+                return "Successfully uploaded document"
             else:
-                doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                print("File contents safe, saving.")
-                return redirect(url_for('uploaded_file', filename=filename))
+                content = doc.read()
+                imgtype = imghdr.what(None, h=content)
+                if imgtype is not None:
+                    img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
+                    timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
+                    return Response(json.dumps({"file": str(img_id) + '/' + img_filename}), mimetype='application/json')
+                else:
+                    doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    print("File contents safe, saving.")
+                    return redirect(url_for('uploaded_file', filename=filename))
 
+def jsonResponse(obj):
+    return Response(json.dumps(obj), mimetype='application/json')
+    
+@app.route('/update/<int:doc_id>/<version>', methods=['POST'])
+def updateDocument(doc_id, version):
+    timdb = getTimDb()
+    docId = DocIdentifier(doc_id, version)
+    if not timdb.documents.documentExists(docId):
+        print('asdasd')
+        abort(404)
+    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
+        abort(403)
+    doc = request.files['file']
+    newId = timdb.documents.updateDocument(docId, doc.read())
+    return jsonResponse({'version' : newId.hash})
+
+@app.route('/images/<int:image_id>/<image_filename>/')
+def getImage(image_id, image_filename):
+    timdb = getTimDb()
+    if not timdb.images.imageExists(image_id, image_filename):
+        abort(404)
+    if not timdb.users.userHasViewAccess(getCurrentUserId(), image_id):
+        abort(403, message="You don't have permission to view this image.")
+    img_data = timdb.images.getImage(image_id, image_filename)
+    imgtype = imghdr.what(None, h=img_data)
+    f = io.BytesIO(img_data)
+    return send_file(f, mimetype='image/' + imgtype)
+
+@app.route('/images')
+def getAllImages():
+    timdb = getTimDb()
+    images = timdb.images.getImages()
+    allowedImages = [image for image in images if timdb.users.userHasViewAccess(getCurrentUserId(), image['id'])]
+    return jsonResponse(allowedImages)
+    
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
@@ -74,7 +124,7 @@ def getDocuments():
     for doc in allowedDocs:
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
-    return Response(json.dumps(allowedDocs), mimetype='application/json')
+    return jsonResponse(allowedDocs)
 
 def getCurrentUserId():
     uid = session.get('user_id')
@@ -84,7 +134,6 @@ def getTimDb():
     if not hasattr(g, 'timdb'):
         g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
     return g.timdb
-
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):

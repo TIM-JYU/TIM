@@ -1,4 +1,4 @@
-var indexApp = angular.module('indexApp', [ 'ngSanitize', 'controllers' ]);
+var indexApp = angular.module('indexApp', [ 'ngSanitize', 'controller', 'angularFileUpload' ]);
 indexApp.directive('bindOnce', function() {
     return {
         scope : true,
