@@ -186,7 +186,6 @@ def removeBlock(docId,blockId):
 def pluginCall(plugin):
     params = request.args.get('param')
     html = callPlugin(plugin, params).decode('utf-8')
-    print (html)
     return html
 
 @app.route("/hello", methods=['POST'])

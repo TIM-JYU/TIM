@@ -11,7 +11,6 @@ PLUGINS = [
 def callPlugin(plugin, params=""):
     plug = getPlugin(plugin)
     if(params != ""):
-        print(params)
         request = urllib.request.urlopen(urllib.parse.urljoin(plug['host'], params))
     else:
         request = urllib.request.urlopen(plug['host'])
