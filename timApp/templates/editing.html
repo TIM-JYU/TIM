@@ -60,6 +60,7 @@
             <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
             <span ng-bind="progress"></span>
 </div>
+<p ng-show="uploadedFile">Uploaded file: <a href="{{ '{{ uploadedFile }}' }}">{{ '{{ uploadedFile }}' }}</a></p>
     <div class="material"> 
         <div style="left:1em" class="addParButton b0" ng-click="parAdd(0)"> </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">
