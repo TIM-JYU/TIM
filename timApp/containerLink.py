@@ -2,6 +2,7 @@ import urllib.request
 import urllib
 
 PLUGINS = [
+        {"host" : "http://localhost:8080/", "name" : "csPlugin"},
         {"host" : "http://localhost:8000/", "name" : "typeGame"}
         ]
 
@@ -11,7 +12,7 @@ def callPlugin(plugin, params=""):
     plug = getPlugin(plugin)
     if(params != ""):
         print(params)
-        request = urllib.request.urlopen(plug['host'] + params)
+        request = urllib.request.urlopen(urllib.parse.urljoin(plug['host'], params))
     else:
         request = urllib.request.urlopen(plug['host'])
     return request.read()

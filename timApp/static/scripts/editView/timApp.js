@@ -1,5 +1,5 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'controller']);
-timApp.directive('bindOnce', function() {
+var TimApp = angular.module('timApp', ['ngSanitize', 'controller']);
+TimApp.directive('bindOnce', function() {
         return {
                 scope: true,
         link: function( $scope ) {

@@ -9,13 +9,13 @@
     <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
     <link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
     <link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
-    <script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
     <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script> 
     <script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script> 
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/editView/timApp.js')}}"></script>
+    <!--    <script type="text/javascript" src="{{url_for('static', filename='scripts/editView/timApp.js')}}"></script>-->
+    <script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
     <style type="text/css" media="screen">
     .editor { 
         position: absolute;
@@ -44,28 +44,26 @@
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->  
 </head>
-<body style="background-color: #CCFFFF"  ng-app="timApp" ng-controller="ParCtrl">   
+<body style="background-color: #CCFFFF"  ng-app="controller" ng-controller="ParCtrl">   
 <!--<div id="topBar">
     <div class="navigationBar" > 
         <a href="localhost:5000"> Home </a> 
     </div>
 </div>-->
-<form enctype="multipart/form-data">
+<!--<form enctype="multipart/form-data">
             <input type="file" file-model="myFile"/>
             <button ng-click="uploadFile()">Upload file</button>
-</form> 
-<div class="material"> 
-        <div ng-if="!sendingNew"  class="addParButton b0" ng-click="addParagraph(0);setEditable(0)"><strong> + </strong> </div>
-        <div class="paragraph"  ng-repeat="par in paragraphs">   
-           <span> {{ '{{ par.par }}'}} </span>
-           <div style="" id="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html"> </div>
-           <button ng-class="par.display ? 'parSaveButton' : 'editButton edit' " ng-click="setEditable(par.par)"></button>
-           <button ng-if="par.display" class="deleteButton delete" ng-click="delParagraph(par.par)"></button>
-           <button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          
-           <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display"></div> 
-           <div ng-if="!sendingNew" class="addParButton b{{'{{par.par + 1}}'}}" ng-click="addParagraph(par.par + 1);setEditable(par.par + 1)"><strong> + </strong> </div>  
-       </div>
-   </div>
+</form>--> 
+    <div class="material"> 
+        <div style="left:1em" class="addParButton b0" ng-click="parAdd(0)"> </div>
+        <div class="paragraph"  ng-repeat="par in paragraphs">
+            <div style="" id="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html"> </div> 
+            <button ng-class="par.display ? 'parSaveButton' : 'editButton edit' " ng-click="setEditable(par.par)"></button>
+            <button ng-if="par.display" class="deleteButton delete" ng-click="delParagraph(par.par)"></button>
+            <button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          
+            <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display"></div>
+            <div class="addParButton b{{'{{par.par + 1}}'}}" ng-click="parAdd(par.par + 1)"></div>
+    </div>
 </body>
 
 
