@@ -232,9 +232,10 @@ def removeBlock(docId,blockId):
     return "Successfully removed paragraph"
 
 @app.route("/pluginCall/<plugin>/")
-def callHello(plugin):
+def pluginCall(plugin):
     params = request.args.get('param')
-    return callPlugin(plugin, params).decode('utf-8')
+    html = callPlugin(plugin, params).decode('utf-8')
+    return html
 
 @app.route("/hello", methods=['POST'])
 def hello():

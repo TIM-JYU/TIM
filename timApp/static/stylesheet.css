@@ -91,6 +91,9 @@
 	background: #FF0000;
 	color: white;
 }
+.deleteButton:hover{
+        color:black;
+}
  
 .parSaveButton {
 	position: absolute;
@@ -107,6 +110,11 @@
 	background: #19D119;
 	color: white;
 }
+
+.parSaveButton:hover{
+        color:black;
+}
+
 .parSaveButton:before{
         content:"Save";
 }
@@ -184,20 +192,30 @@
     
 }
 
+.flashEdit{
+    position:absolute;
+    background-color: #FF1919;
+    left:45em;
+    height:10em;
+    width:40em;
+}
 .addParButton{
     z-index: 2;
-    position: absolute;
+    position: relative;
     height:1em;
-    opacity:0.2;
+    opacity:0.1;
     height:2em;
-    width: 15em;
+    background-color:#4DFF4D;
+    width: 6em;
+    border: 1px dotted #338533;
+    border-radius:25px;
     }
 .addParButton:hover{
     display:block;
     background-color:#4DFF4D;
     border: 1px dotted #338533;
     border-radius:25px;
-    opacity: 0.3;
+    opacity: 0.4;
 }
 
 PRE {
