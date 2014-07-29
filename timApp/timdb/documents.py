@@ -35,7 +35,7 @@ class Documents(TimDbBase):
         
         blocks = self.ec.addBlock(document_id, new_block_index, content)
         self.__updateNoteIndexes(document_id, document_id)
-        self.__commitDocumentChanges(document_id, 'Added a paragraph at index %d' % (document_id.id, new_block_index))
+        self.__commitDocumentChanges(document_id, 'Added a paragraph at index %d' % (new_block_index))
         
         return blocks
 
