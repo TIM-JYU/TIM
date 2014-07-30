@@ -3,15 +3,6 @@ from timdb.timdbbase import TimDbBase, blocktypes, TimDbException
 import os
 
 class Notes(TimDbBase):
-    
-    @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str'):
-        """Initializes TimDB with the specified database and root path.
-        
-        :param db_path: The path of the database file.
-        :param files_root_path: The root path where all the files will be stored.
-        """
-        TimDbBase.__init__(self, db_path, files_root_path)
 
     @contract
     def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):

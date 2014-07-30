@@ -8,15 +8,6 @@ new_contract('bytes', bytes)
 IMAGES_DIR = 'img'
 
 class Images(TimDbBase):
-
-    @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str'):
-        """Initializes TimDB with the specified database and root path.
-        
-        :param db_path: The path of the database file.
-        :param files_root_path: The root path where all the files will be stored.
-        """
-        TimDbBase.__init__(self, db_path, files_root_path)
     
     @contract
     def getBlockPath(self, block_id : 'int') -> 'str':
