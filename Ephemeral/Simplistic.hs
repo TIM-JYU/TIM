@@ -27,6 +27,8 @@ import EphemeralPrelude
 import Text.Blaze.Html.Renderer.Text
 import qualified Data.HashSet as Set
 import Data.HashSet (HashSet)
+import Data.UUID
+import Data.UUID.V4
 
 newtype DocID = DocID T.Text deriving(Eq,Ord,Show)
 
@@ -142,6 +144,7 @@ fetchDoc docID (State st) =  hoistMaybe (jsErr $ "No such document: "<> (T.pack 
                                         (liftIO $ LRU.lookup docID st)
 
 
+-- Fetch a Block from a document according to ID.
 fetchBlock :: MonadIO m => DocID -> Int -> State -> EitherT Value m Block
 fetchBlock docID index state = do
     Doc d <- fetchDoc docID state
@@ -159,10 +162,19 @@ rename from to state@(State st) = do
         LRU.delete from   st
     return ()
 
-replace :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> EitherT Value m ()
+-- Replace a block
+replace :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> EitherT Value m DocID
 replace docID index bs state@(State st) = do
     (Doc d) <- fetchDoc docID state
-    liftIO $ LRU.insert docID (Doc $ insertRange d index (fromDoc (convert bs))) st
+    insertNew (Doc . insertRange d index . fromDoc . convert $ bs) state
+
+-- Insert a document into LRU with a generated docID
+insertNew :: MonadIO m => Doc -> State -> m DocID
+insertNew doc state@(State st) = do
+    liftIO $ do
+     uuid <- DocID . T.decodeUtf8 . toASCIIBytes <$> nextRandom
+     LRU.insert uuid doc st
+     return uuid
 
 jsErr :: T.Text -> Value
 jsErr e = object ["error" .= e] 
@@ -178,20 +190,20 @@ hoistMaybe :: Monad m => e -> m (Maybe a) -> EitherT e m a
 hoistMaybe str op = EitherT $ op >>= return . maybe (Left str) Right
         
 
-addParagraph :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> m ()
-addParagraph docID idx bs (State st) = liftIO $ do
-    doc <- LRU.lookup docID st
-    case doc of 
-        Just (Doc d) -> LRU.insert docID (Doc $ s <> fromDoc (convert bs) <> e) st
-            where (s,e) = Seq.splitAt idx d
-        Nothing -> LRU.insert docID (convert bs) st 
+-- Add a new paragraph
+addParagraph :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> EitherT Value m DocID
+addParagraph docID idx bs state@(State st) = do
+    Doc d <- fetchDoc docID state 
+    let (s,e) = Seq.splitAt idx d
+    insertNew (Doc $ s <> fromDoc (convert bs) <> e) state
 
 
-removePar :: MonadIO m => DocID -> Int -> State -> EitherT Value m ()
-removePar docID idx state@(State st) = do
+-- Delete a paragraph
+removePar :: MonadIO m => DocID -> Int -> State -> EitherT Value m DocID
+removePar docID idx state = do
     Doc d <- fetchDoc docID state
     let (s,e) = Seq.splitAt idx d
-    liftIO (LRU.insert docID (Doc $ s <> Seq.drop 1 e) st)
+    insertNew (Doc $ s <> Seq.drop 1 e) state
 
 -- Currently acts as part of replace, removes original block.
 insertRange :: Seq a -> Int -> Seq a -> Seq a
@@ -258,25 +270,30 @@ main = do
             docID <- requireParamE "docID"
             idx   <- requireParamE "idx"
             bd    <- lift (readRequestBody (1024*2000))
-            replace docID idx (LBS.toStrict bd) state
-            let (Doc d) = convert (LBS.toStrict bd)
-            lift (writeLBS . encode . fmap html $ d)
+            ident <- replace docID idx (LBS.toStrict bd) state
+            lift $ writeLBS . encode $ object
+                ["paragraphs" .= (fmap html . fromDoc . convert . LBS.toStrict $ bd)
+                ,"new_id"     .= ident]
+            --let (Doc d) = convert (LBS.toStrict bd)
+            --lift (writeLBS . encode . )
          ),
          -- Add a new paragraph. Required [X]
          ("/new/:docID/:idx", method POST . runFailing $ do
             docID <- requireParamE "docID"
             idx   <- requireParamE "idx"
             bd    <- lift (readRequestBody (1024*2000))
-            lift (addParagraph docID idx (LBS.toStrict bd) state)
-            let (Doc d) = convert (LBS.toStrict bd)
-            lift (writeLBS . encode . fmap html $ d)
-            
+            ident <- addParagraph docID idx (LBS.toStrict bd) state
+            lift $ writeLBS . encode $ object
+                ["paragraphs" .= (fmap html . fromDoc . convert . LBS.toStrict $ bd)
+                ,"new_id"     .= ident]
          ),
          -- Delete a paragraph. Required [X]
-         ("/delete/:docID/:idx", method PUT . runFailing $ do
+         (":docID/:idx", method DELETE . runFailing $ do
             docID <- requireParamE "docID"
             idx   <- requireParamE "idx"
-            removePar docID idx state
+            ident <- removePar docID idx state
+            lift $ writeLBS . encode $ object
+                ["new_id"     .= ident]
          ),
          -- Load an entire markdown document into cache. Required [X]
          ("load/:docID/", method POST . runFailing $ do
