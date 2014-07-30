@@ -143,11 +143,21 @@ fetchDoc docID (State st) =  hoistMaybe (jsErr $ "No such document: "<> (T.pack 
 
 
 fetchBlock :: MonadIO m => DocID -> Int -> State -> EitherT Value m Block
-fetchBlock docID index state@(State st) = do
+fetchBlock docID index state = do
     Doc d <- fetchDoc docID state
     abortIf (index < 0 && index >= Seq.length d)
             (jsErr "Index out of bounds")
     return (Seq.index d index)
+
+-- Rename a block
+-- NOTE: This is NOT Atomic
+rename :: MonadIO m => DocID -> DocID -> State -> EitherT Value m ()
+rename from to state@(State st) = do
+    doc <- fetchDoc from state
+    liftIO $ do
+        LRU.insert to doc st
+        LRU.delete from   st
+    return ()
 
 replace :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> EitherT Value m ()
 replace docID index bs state@(State st) = do
@@ -231,8 +241,17 @@ main = do
          
          -- Send a single block as markdown. Required [?]
          (":docID/:idx", method GET . withBlock $ \block -> writeText (markdown block)),
+
          -- Send a single block as HTML. Required [X]
          (":docID/:idx/html", method GET . withBlock $ \block -> writeLazyText (html block)),
+
+
+         -- Rename a document. Required [X]
+         ("rename/:from/:to", method POST . runFailing $ do
+            from <- requireParamE "from"
+            to   <- requireParamE "to"
+            rename from to state),
+            
 
          -- Replace a block. Required [X]
          (":docID/:idx", method PUT . runFailing $ do
