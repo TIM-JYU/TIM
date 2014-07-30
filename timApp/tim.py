@@ -15,6 +15,8 @@ from flask import Response
 import imghdr
 from flask.helpers import send_file
 import io
+import pluginControl
+import re
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -174,7 +176,10 @@ def postParagraph():
     except IOError as err:
         print(err)
         return "Failed to modify block."
-    return json.dumps(blocks)
+    # Replace appropriate elements with plugin content
+    preparedBlocks = pluginControl.pluginify(blocks, session['user_name'])
+
+    return json.dumps(preparedBlocks)
 
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
@@ -201,12 +206,13 @@ def getDocument(doc_id):
 def getBlockMd(docId, blockId):
     timdb = getTimDb()
     block = timdb.documents.getBlock(getNewest(docId), blockId)
-    return block
+    return jsonify({"md": block})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
     block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
+    print(block)
     return block
 
 def getNewest(docId):
@@ -231,10 +237,10 @@ def removeBlock(docId,blockId):
     timdb.documents.deleteParagraph(getNewest(docId), blockId)
     return "Successfully removed paragraph"
 
-@app.route("/pluginCall/<plugin>/")
+@app.route("/pluginCall/<plugin>", methods=["POST"])
 def pluginCall(plugin):
-    params = request.args.get('param')
-    html = callPlugin(plugin, params)
+    info = request.get_json()
+    html = callPlugin(plugin, info)
     return html
 
 @app.route("/hello", methods=['POST'])

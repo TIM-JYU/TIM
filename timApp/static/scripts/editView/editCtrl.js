@@ -9,10 +9,12 @@ EditApp.controller("ParCtrl", ['$scope',
             http.defaults.headers.common.Version = version.hash;
 
             
-            sc.callPlugin = function(plugin, params){
+            sc.callPlugin = function(plugin, info){
                 var promise = q.defer();
-                var callPlugin = function(plugin, params){
-                    http.get('/pluginCall/' + plugin + '/?param=' + encodeURIComponent(params)).
+                var callPlugin = function(plugin, info){
+                    http({method: "POST",
+                         url: '/pluginCall/'+plugin,
+                         data: JSON.stringify({"content":info})}).
                         success(function(data, status, headers, config) {
                                  promise.resolve(data);
                         }).
@@ -20,7 +22,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                  promise.reject("unspecified plugin");
                         });
                }
-               callPlugin(plugin, params);
+               callPlugin(plugin, info);
                return promise.promise;
 
             };
@@ -39,6 +41,8 @@ EditApp.controller("ParCtrl", ['$scope',
 
         // Various regex patterns for editor
             sc.pluginPat = /\{(.*)}\[(.*)]/;
+
+
             // Initialize paragraphs, jsonDoc is a global variable made by jinja2-template, it resides in viewTemplate (editing.html) 
             sc.paragraphs = [];
             sc.updateParagraphs = function(){
@@ -195,11 +199,12 @@ EditApp.controller("ParCtrl", ['$scope',
                 getBlockMd = function(blockId){
                     http.get('/getBlock/' +sc.docId + "/" + blockId).
                     success(function(data, status, headers, config) {
-                                deferred.resolve(data);
+
+                                deferred.resolve(data.md);
                         
                     }).
                     error(function(data, status, headers, config) {
-                        deferred.reject("Failed to fetch markdown")
+                                deferred.reject("Failed to fetch markdown");
                     });
                 }
                 if(sc.sendingNew){
@@ -212,7 +217,7 @@ EditApp.controller("ParCtrl", ['$scope',
 
             sc.createEditor = function(elem, elemId){
                     var promise = sc.getBlockMd(elem.par);
-                    promise.then(function(data) {                                                    
+                    promise.then(function(data) {                            
                             editor = new ace.edit(elem.par.toString());                    
                             editor.getSession().setValue(data);
                             editor.setTheme("ace/theme/eclipse");
