@@ -2,21 +2,28 @@
 from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
-# Asennetaan python, pip ja flask
+# Asennetaan Python, pip ja muut tarvittavat packaget
 
 run apt-get install -y python3
 run apt-get install -y python3-pip
+run apt-get install -y git-core
 run pip3 install Flask
 run pip3 install markdown
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
 run pip3 install hypothesis
+run pip3 install gitpylib
+run pip3 install requests
 
 # Poistetaan pip. Sitä ei tarvitse enää ja saadaan
 # hitusen pienempi image ja vähemmän ohjelmia potentiaalisen
 # hyökkääjän käyttöön. (Periaate ok. käytännössä tosi marginaalinen
 # toimenpide)
 run apt-get -y --purge remove python3-pip
+
+# Asetetaan nimi ja email gittiä varten.
+run git config --global user.email "agent@docker.com"
+run git config --global user.name "agent"
 
 # Lisätään alkuperäinen hakemisto polkuun /service
 run mkdir /service
@@ -38,6 +45,6 @@ user agent
 expose 5000
 
 # Kun container käynnistyy, suoritetaan:
-cmd cd /service/ && python3 initdb.py && python3 tim.py
+cmd cd /service/ && python3 initdb2.py && python3 tim.py
 
 #volume /tim_files/:/service/tim_files/

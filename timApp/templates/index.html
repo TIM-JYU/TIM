@@ -1,52 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>TIM</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
-    <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-    <link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
-    <link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
-    <script src="{{url_for('static', filename='scripts/indexView/timController.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script> 
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script> 
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/getDocuments.js')}}"></script> 
-    <style type="text/css" media="screen">
-    .editor { 
-        position: absolute;
-        height: 100%;
-        width:45em;       
-        top: 0em; 
-        left: 60em;
-        border: 2px solid;
-        padding: 15px 5px 5px 5px;
-        border-radius: 15px;      
-        text-align: justify;  
-    }
-    </style>
-    
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
+<title>TIM</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
+<script src="{{url_for('static', filename='scripts/indexView/indexController.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
 
-    <!--[if lt IE 9]>
+<!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->  
+    <![endif]-->
+<style type="text/css">
+table {
+	margin: 1em;
+}
 
+thead {
+	font-weight: bold;
+}
+
+table td {
+	padding: 0.2em;
+}
+
+.flashes li {
+	list-style-type: none;
+	border: 1px solid black;
+	border-radius: 3px;
+	padding: 0.5em;
+}
+
+.uploadForm {
+	border: 1px solid black;
+	padding: 1em;
+}
+
+.material {
+	padding: 1em;
+}
+</style>
 </head>
-<body style="background-color: #CCFFFF"  ng-app="indexApp" ng-controller="ParCtrl">   
-        <div class="material">
-            <div style="padding: 5px 5px 5px 5px;"> 
-                    <span ng-show="displayIndex">&nbsp;&nbsp; Welcome! Start by choosing a document to view: </span>
-                    <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex"> </img>
-                    <ul ng-repeat="doc in documentList"> 
-                            <li><a href="{{ '{{ "/documents/" + doc.id }}' }}" ng-bind="doc.name"> </a> </li>         
-                    </ul>                
+
+<body style="background-color: #CCFFFF" ng-app="indexApp" ng-controller="IndexCtrl">
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul class="flashes">
+        {% for message in messages %}
+        <li>{{ message }}</li> {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+    <p>{% if not session.user_id %} Currently not logged in. {% else %} Currently logged in as:
+        {{userName}} (user id = {{userId}}) {% endif %}</p>
+    <form method="POST" action="/login">
+        <label>
+            Log in as:
+            <input ng-model="username" type="text" name="user_name">
+        </label>
+        <input ng-disabled="!username" type="submit" value="Login">
+    </form>
+    {% if session.user_id %}
+    <form method="POST" action="/logout">
+        <input type="submit" value="Logout">
+    </form>
+    {% endif %}
+    <div class="material">
+        <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
+            src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
+        <div ng-show="displayIndex">
+            <table ng-show="documentList.length > 0">
+                <thead>
+                    <tr>
+                        <td>Document name</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>Last modified</td>
+                        <td>Owner?</td>
+                    </tr>
+                </thead>
+                <tr ng-repeat="doc in documentList">
+                    <td>{{ '{{ doc.name }}' }}</td>
+                    <td><a ng-show="doc.canEdit" href="/documents/{{ '{{ doc.id }}' }}">Edit</a></td>
+                    <td><a ng-show="doc.canEdit" ng-click="setCurrentDocument(doc)">Upload</a></td>
+                    <td><a href="/download/{{ '{{ doc.id }}' }}">Download</a></td>
+                    <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
+                    <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
+                    <td>{{ '{{ doc.owner ? "Yes" : "No" }}' }}</td>
+                </tr>
+            </table>
+            <p ng-show="documentList.length == 0">There are no documents to show.</p>
+            <a ng-click="setCurrentDocument({})">Upload a new document</a>
+            <div class="uploadForm" ng-show="m.currDoc">
+                <p ng-show="m.currDoc.id">Upload new version for document: {{ '{{ m.currDoc.name
+                    }}' }}</p>
+                <p ng-show="!m.currDoc.id">Upload a new document</p>
+                <input type="file"
+                    ng-file-select="m.currDoc.id ? updateDocument(m.currDoc, $files) : onFileSelect('/upload/', $files)">
+                <span ng-bind="progress"></span>
+                <input ng-disabled="uploadInProgress" type="button"
+                    value="{{ '{{ progress && !uploadInProgress ? \'Close\' : \'Cancel\' }}' }}"
+                    ng-click="m.currDoc = 0">
+            </div>
+            <div>
+                <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>
+                <div ng-show="showControls">
+                    <label>
+                        Document name:
+                        <input ng-model="docName" type="text">
+                    </label>
+                    <input ng-disabled="!docName" ng-click="createDocument(docName)" type="button"
+                        value="Create">
+                    <input ng-click="showControls = false" type="button" value="Cancel">
+                </div>
             </div>
 
         </div>
-    </body>
+    </div>
+</body>
 </html>

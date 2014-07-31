@@ -1,4 +1,4 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'controllers']);
+var timApp = angular.module('timApp', ['ngSanitize', 'controller', 'angularFileUpload']);
 timApp.directive('bindOnce', function() {
         return {
                 scope: true,

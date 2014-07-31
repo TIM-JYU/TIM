@@ -4,31 +4,21 @@
 <title>{{docName}} - TIM</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script
-    src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-<script
-    src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
-<link rel="stylesheet"
-    href="{{url_for('static', filename='stylesheet.css')}}">
-<link
-    href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
-<link
-    href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
-<script
-    src="{{url_for('static', filename='scripts/notesView/timController.js')}}"></script>
-<script
-    src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
+<script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/notesView/noteController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/getDocuments.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
 <style type="text/css" media="screen">
 .editor {
 	position: absolute;
@@ -42,43 +32,40 @@
 }
 </style>
 
-<script type="text/javascript"
-    src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
 
 <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 <script>
-        
-    </script>
+        // Data from jinja2 template
+        var jsonDoc = JSON.parse({{text|tojson|safe}});
+        var docId = JSON.parse({{docID|tojson|safe}});
+        var docName = {{docName|tojson|safe}};
+        var version = {{version|tojson|safe}};
+</script>
 </head>
-<body style="background-color: #CCFFFF" ng-app="timApp"
-    ng-controller="ViewCtrl" ng-init="getDocumentAndNotes({{docID|e}})">
+<body style="background-color: #CCFFFF" ng-app="timApp" ng-controller="ViewCtrl">
+    <h1>{{docName}}</h1>
     <div class="material">
-        <h1>{{docName}}</h1>
-        <img src="{{url_for('static', filename='images/loading.gif')}}"
-            ng-show="displayIndex">
 
-        <div class="paragraph" ng-repeat="par in pars track by $index">
-            <div style="" class="content {{ '{{ $index }}' }}" bind-once
-                ng-bind-html="par.html"></div>
+        <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 
-            <div class="notes">
-                <div ng-show="par.notes.length > 0" class="note"
-                    ng-repeat="note in par.notes">
+        <div class="paragraph" ng-repeat="par in paragraphs track by $index" ng-init="parIndex = $index">
+            <div style="" class="content {{ '{{ $index }}' }}" bind-once ng-bind-html="par.html"></div>
+
+            <div class="notes" ng-controller="NoteCtrl">
+                <div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
                     {{ '{{ note.content }}' }}
-                    <button ng-click="" class="noteButton">Edit</button>
-                    <button ng-click="deleteNote(note.id, {{docID|e}})"
-                        class="noteButton">Delete</button>
+                    <button ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
+                    <button ng-click="deleteNote(note.id, {{docID|e}})" class="noteButton">Delete</button>
                 </div>
-                <div ng-show="showEditor">
-                    <textarea class="noteeditor" ng-model="note.text"></textarea>
+                <div ng-show="m.showEditor">
+                    <textarea class="noteeditor" ng-model="m.noteText"></textarea>
                 </div>
-                <button class="noteButton"
-                    ng-click="showEditor ? addNote($index, {{docID|e}}) : (showEditor = true)">{{
-                    '{{showEditor ? "Save" : "Add note"}}' }}</button>
-                <button ng-show="showEditor" class="noteButton"
-                    ng-click="showEditor = false">Cancel</button>
+                <button ng-disabled="!m.noteText" ng-show="m.showEditor" class="noteButton" ng-click="saveButtonToggled()">Save</button>
+                <button ng-show="!m.showEditor" class="noteButton" ng-click="addNoteButtonToggled()">Add note</button>
+                <button ng-show="m.showEditor" class="noteButton" ng-click="m.showEditor = false">Cancel</button>
             </div>
         </div>
     </div>

@@ -14,6 +14,7 @@ run cabal update
 run cabal install happy alex
 run cp .cabal/bin/happy /usr/bin
 run cp .cabal/bin/alex /usr/bin
+run cabal install zip-archive
 run cabal install snap-core snap-server pandoc-1.12.3.3 aeson Diff Diff3 
 # Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.

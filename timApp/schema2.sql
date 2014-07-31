@@ -48,7 +48,7 @@ CREATE TABLE Block (
 id INTEGER NOT NULL,
 latest_revision_id INTEGER NULL,
 type_id INTEGER NOT NULL,
-description VARCHAR(100) NULL,
+description VARCHAR(100) NULL, -- better name would be: tag
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT Block_PK 

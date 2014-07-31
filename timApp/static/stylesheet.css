@@ -41,12 +41,10 @@
 
 .editButton:hover {
 	position: absolute;
-	top: 0em;
 	left: 72em;
 	font-size: x-small;
 	width: 5em;
 	height: 3em;
-	top: 0em;
 	border: 2px none;
 	border-radius: 15px;
 	outline: none;
@@ -54,19 +52,106 @@
 	background: #C0C0C0;
 	color: black;
 }
-
+.edit{
+    top: 0em;
+}
+.edit:before{
+    content:"Edit";
+    }
+.delete:before{
+    content:"Delete"; 
+}
+.delete{
+    top: 3em;
+}
 .editButton {
+	position: absolute;
+	left: 72em;
+	font-size: x-small;
+	width: 5em;
+	height: 3em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+	background: #C8FCFD;
+	color: white;
+}
+
+.deleteButton{
+    position: absolute;
+    left:72em;
+	font-size: x-small;
+	width: 5em;
+    z-index: 10;
+	height: 3em;
+	top: 6em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+	background: #FF0000;
+	color: white;
+}
+.deleteButton:hover{
+        color:black;
+}
+ 
+.parSaveButton {
+	position: absolute;
+	top: 0em;
+	left: 72em;
+	font-size: x-small;
+	width: 5em;
+    z-index:10;
+	height: 3em;
+	top: 0em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+	background: #19D119;
+	color: white;
+}
+
+.parSaveButton:hover{
+        color:black;
+}
+
+.parSaveButton:before{
+        content:"Save";
+}
+
+.cancelButton:hover {
 	position: absolute;
 	top: 0em;
 	left: 72em;
 	font-size: x-small;
 	width: 5em;
 	height: 3em;
-	top: 0em;
+    z-index: 10;
+	top: 3em;
 	border: 2px none;
 	border-radius: 15px;
 	outline: none;
-	background: #C8FCFD;
+	visibility: visible; 
+    background: #999966; 
+	color: black;
+}
+.cancelButton:before{
+        content:"Cancel";
+}
+
+.cancelButton {
+	position: absolute;
+    z-index: 10;
+	top: 0em;
+	left: 72em;
+	font-size: x-small;
+	width: 5em;
+	height: 3em;
+	top: 3em;
+	border: 2px none;
+	border-radius: 15px;
+	outline: none;
+    background: #999966;	
 	color: white;
 }
 
@@ -92,9 +177,50 @@
 	border-radius: 25px;
 	box-shadow: 10px 10px 5px #888888;
 }
+#topBar{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:50px;
+    z-index: 100;
+
+}
+.navigationBar{
+    width: auto;
+    background-color: #00CC00;
+    
+}
+
+.flashEdit{
+    position:absolute;
+    background-color: #FF1919;
+    left:45em;
+    height:10em;
+    width:40em;
+}
+.addParButton{
+    z-index: 2;
+    position: relative;
+    height:1em;
+    opacity:0.1;
+    height:2em;
+    background-color:#4DFF4D;
+    width: 6em;
+    border: 1px dotted #338533;
+    border-radius:25px;
+    }
+.addParButton:hover{
+    display:block;
+    background-color:#4DFF4D;
+    border: 1px dotted #338533;
+    border-radius:25px;
+    opacity: 0.4;
+}
 
 PRE {
-	border-style: solid;
+
+        border-style: solid;
 	border-width: 1px;
 	border-radius: 5px;
 	padding: 4px;

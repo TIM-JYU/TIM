@@ -15,7 +15,7 @@ class TestTimDb(unittest.TestCase):
 
     def setUp(self):
         self.db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
-        self.db.create()
+        self.db.initializeTables()
         #self.db.clear()
     
     @given(str)

@@ -1,15 +1,82 @@
-var EditCtrl = angular.module('controller', []);
+//var controllerProvider = null; // For addittional controllers from plugins.
+var EditApp = angular.module('controller', ['ngSanitize', 'angularFileUpload']);
+EditApp.controller("ParCtrl", ['$scope', 
+                               '$http', 
+                               '$q', 
+                               '$upload',
+    function(sc, http, q, $upload){
+            // Set all requests to also sen the version number of current document
+            http.defaults.headers.common.Version = version.hash;
 
-EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
-            sc.paragraphs = [];
-            for(var i = 0; i <= jsonDoc.length; i++){
-                    sc.paragraphs.push({"par": i, "html": jsonDoc[i]});
+            
+            sc.callPlugin = function(plugin, info){
+                var promise = q.defer();
+                var callPlugin = function(plugin, info){
+                    http({method: "POST",
+                         url: '/pluginCall/'+plugin,
+                         data: JSON.stringify({"content":info})}).
+                        success(function(data, status, headers, config) {
+                                 promise.resolve(data);
+                        }).
+                        error(function(data, status, headers, config) {
+                                 promise.reject("unspecified plugin");
+                        });
+               }
+               callPlugin(plugin, info);
+               return promise.promise;
+
+            };
+
+            sc.fetchAndReplace = function(text, wholeMatch, plugin, params){ 
+                    pluginPromise = sc.callPlugin(plugin, params);
+                    pluginPromise.then(function(data){
+                                            sc.tempVariable = data;
+                                       },
+                                       function(){},
+                                       function(){});
+                    receivedText = sc.tempVariable;
+                    return text.replace(wholeMatch, receivedText);
             }
-            sc.pluginPat = /\{plugin}\[(.*)][(.*)]/;
-            sc.documentEdit = false;
+
+
+        // Various regex patterns for editor
+            sc.pluginPat = /\{(.*)}\[(.*)]/;
+
+
+            // Initialize paragraphs, jsonDoc is a global variable made by jinja2-template, it resides in viewTemplate (editing.html) 
+            sc.paragraphs = [];
+            sc.updateParagraphs = function(){
+                    for(var i = 0; i < jsonDoc.length; i++){
+                            (function(i){
+                                    var text = jsonDoc[i];
+                                    sc.paragraphs.push({"par": i, "html": text, "display":false});
+                                    var match = sc.pluginPat.exec(text);
+                                    if(match !== null){
+                                            var promise = sc.callPlugin(match[1], match[2]);
+                                            promise.then(
+                                                    function(data){ 
+                                                            text = text.replace(match[0], data);
+                                                            $("." + i.toString()).get()[0].innerHTML = text;
+                                                    },
+                                                    function(){},
+                                                    function(){});
+                                    }
+                            })(i);
+                    }
+            };
+            sc.updateParagraphs();
+
+            // Meta-data for document, docId and docName are global variables from jinja2-template
             sc.docId = docId;
             sc.docName = docName;
+            
+            // Auxiliary variables
             sc.uploadFile;
+            sc.documentEdit = false;
+            sc.sendingNew = false;
+            sc.tempVariable = ""; // TODO: only serves to act as temporary storage for data fetched, fix           
+            
+            // markdown-html converter, currently unused but for future preview purposes might be useful.
             sc.convertHtml = new Markdown.getSanitizingConverter();
             sc.convertHtml.hooks.chain("preBlockGamut", function (text, runBlockGamut) {
                 var match = sc.pluginPat.exec(text);
@@ -23,75 +90,36 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                 
             });
 
-            // Get document
-            sc.getDocument = function(documentName){
-                sc.displayIndex = false;
-                http({method: 'GET', url: '/getJSON/' + documentName}).
-                    success(function(data, status, headers, config) {
-                        sc.displayIndex = false;
-                        sc.paragraphs = data.text;
-                        sc.updateParagraphs();
-                    }).
-                    error(function(data, status, headers, config) {
-                        sc.displayIndex = false;
-                        alert("Document is not currently available");
-                    });
-            };
 
-            sc.updateParagraphs = function(){
-                for(var i = 0; i < sc.paragraphs.length; i++){
-                   // var text = sc.paragraphs[i].text;
-                   // var match = sc.pluginPat.exec(sc.paragraphs[i].text);
-                   // if(match != null){
-                   //     text = sc.fetchAndReplace(text, match[0], match[1]);
-                   // }
-                    sc.paragraphs[i].html = sc.convertHtml.makeHtml(text);
-                    sc.paragraphs[i].display = false;
-                }
-            }
-            sc.fetchAndReplace = function(text, wholeMatch, match, params){ 
-                    pluginText = sc.callPlugin(match, params);
-                    receivedText = sc.tempVariable;
-                    return text.replace(wholeMatch, receivedText);
-            }
-
-            sc.tempVariable = ""; // TODO: only serves to act as temporary storage for data fetched, fix           
-            sc.callPlugin = function(plugin, params){
-                http.get('/pluginCall/' + plugin + '/' + params).
-                    success(function(data, status, headers, config) {
-                             sc.tempVariable = data;
-                    }).
-                    error(function(data, status, headers, config) {
-                             return "[unspecified plugin]"
-                    });
-            }
-
-
-
+            
+////////////////////////// EDITING ////////////////////////////////////////////
             sc.editors = []; 
             sc.editing = false;
-            sc.activeEdit = {"editId": "", "text" : "", "editor": ""};
+            sc.oldParagraph = "";
+            sc.activeEdit = {"editId": "", "editor": ""};
             sc.setEditable = function(par){
-                var elem = sc.findPar(par);
-                var elemId = sc.findParId(par); 
+                var elem = sc.findPar(par); 
                 if(elem.par === sc.activeEdit['editId']){
-                    sc.saveEdits(elem, elemId);
-                    sc.activeEdit = {"editId": "", "text" : "", "editor": ""};
-                    sc.promiseOfHtml(par);
-               }
+                    sc.saveEdits(elem, elem.par, sc.sendingNew);
+                    sc.activeEdit = {"editId": "", "editor": ""};
+                    sc.sendingNew = false;
+                    sc.oldParagraph = "";
+                }
                 else {
                     if(sc.activeEdit.editId !== ""){
                         sc.setEditable(sc.activeEdit.editId);
                     }
 
                     if(!sc.editorExists(elem.par)){
-                            sc.createEditor(elem,elemId);
+                            editor = sc.createEditor(elem, elem.par);
                     }
                     else{
                             sc.activeEdit.editId = par;
+                            sc.updateEditor(elem, elem.par);
                             sc.activeEdit['editor'] = sc.getEditor(par).editor;
+                            sc.oldParagraph = sc.activeEdit['editor'].getSession().getValue();
                     }
-                    sc.paragraphs[elemId].display = true;
+                    sc.paragraphs[elem.par].display = true;
                     
                     sc.activeEdit.editId = elem.par;
 					var iOS = /(iPad|iPhone|iPod)/g.test( navigator.platform );
@@ -101,37 +129,69 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                     //if ( !iOS ) sc.activeEdit['editor'].editor.focus();
                 }               
             };
+
+            sc.deleteEditor = function(id){
+                for(var i = 0;i < sc.editors.length; i++){
+                    if(sc.editors[i].par === id){
+                        sc.editors.splice(i, 1);
+                    }
+                }
+            }
+            sc.parAdd = function(indx){
+                    if(sc.sendingNew){
+/**                            var element = $("#" + sc.activeEdit.editId.toSring()).toggleClass("flashEdit");
+                            element.toggleClass("flashEdit");
+                            var backgroundInterval = setTimeout(function(){
+                                element.toggleClass("flashEdit");
+                            },100)**/
+                    }else{
+                        sc.addParagraph(indx);
+                        sc.setEditable(indx);
+                    }
+            }
             
+            sc.cancelEdit = function(par){
+                    if(sc.sendingNew){
+                        sc.deleteEditor(par);
+                        sc.delParagraph(par);
+                        sc.oldParagraph = "";
+                        sc.sendingNew = false;
+                    }else{
+                        sc.activeEdit['editor'].getSession().setValue(sc.oldParagraph);
+                        sc.paragraphs[par].display = false;
+                        sc.deleteEditor(par);
+                        sc.activeEdit = {"editId": "", "editor": ""};
+                        sc.sendingNew = false;
+                        sc.oldParagraph = "";
+                    }
+                    
+            }            
+
             sc.editorExists = function(par){
                     for(var i = 0; i < sc.editors.length; i++){
                             if(sc.editors[i].par === par){
                                     return true;
-                            }
-                    }
-                    return false;
-            }
+                    }}return false;}
 
             sc.getEditor = function(par){
                     for(var i = 0; i < sc.editors.length; i++){
                             if(sc.editors[i].par === par){
                                     return sc.editors[i]
-                            }
-                    }
-            }
+            }}}
+
             sc.findParId = function(par){
                 for(var i = 0; i < sc.paragraphs.length; i++){
                     if (sc.paragraphs[i].par === par){
                         return i;
-                    }
-                }
-            };
+            }}};
+
             sc.findPar = function(par){
                 for(var i = 0; i < sc.paragraphs.length; i++){
                     if (sc.paragraphs[i].par === par){
                         return sc.paragraphs[i];
-                    }
-                }
-            };
+            }}};
+
+            sc.getValue = function(i){return i};
 
 
             sc.getBlockMd = function(blockId){
@@ -139,20 +199,144 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                 getBlockMd = function(blockId){
                     http.get('/getBlock/' +sc.docId + "/" + blockId).
                     success(function(data, status, headers, config) {
-                        deferred.resolve(data);
+
+                                deferred.resolve(data.md);
+                        
                     }).
                     error(function(data, status, headers, config) {
-                        deferred.reject("Failed to fetch markdown")
+                                deferred.reject("Failed to fetch markdown");
                     });
                 }
-                getBlockMd(blockId);
+                if(sc.sendingNew){
+                    deferred.resolve("");
+                }else{
+                    getBlockMd(blockId);
+                }
                 return deferred.promise;
             }
 
-            sc.getBlockHtml = function(blockId){
+            sc.createEditor = function(elem, elemId){
+                    var promise = sc.getBlockMd(elem.par);
+                    promise.then(function(data) {                            
+                            editor = new ace.edit(elem.par.toString());                    
+                            editor.getSession().setValue(data);
+                            editor.setTheme("ace/theme/eclipse");
+                            editor.renderer.setPadding(10, 10, 10,10);
+                            editor.getSession().setMode("ace/mode/markdown"); 
+                            editor.getSession().setUseWrapMode(true);
+                            editor.getSession().setWrapLimitRange(0, 79);
+                            editor.setOptions({maxLines:40, minLines:3});
+                            $('.'+elem.par).get()[0].focus();
+                            editor.getSession().on('change', function(e) {
+
+                            });
+                            sc.activeEdit["editor"] = editor;
+                                    
+                            sc.oldParagraph = sc.activeEdit['editor'].getSession().getValue();
+                            if(!sc.editorExists(elem.par)) {
+                                    sc.editors.push({"par" : elem.par, "editor": editor});
+                            }
+                    }, function(reason) {
+                            alert('Failed: ' + reason);
+                    }, function(data) {
+                            alert('Request progressing');
+
+                    });
+
+            };
+
+            sc.updateEditor = function(elem, elemId){
+                    var promise = sc.getBlockMd(elem.par);
+                    promise.then(function(data) {                                                    
+                            editor = sc.getEditor(elem.par).editor;                    
+                            editor.getSession().setValue(data);
+                            }, function(reason) {
+                            alert('Failed: ' + reason);
+                    }, function(data) {
+                            alert('Request progressing');
+
+                    });
+
+            };
+
+            sc.getPlugin = function(text){ 
+                var match = sc.pluginPat.exec(text);
+                if(match !== null){
+                    teksti = sc.fetchAndReplace(text, match[0], match[1], match[2]);
+                    return teksti;
+                }
+                else {
+                    return text;
+                }
+            }
+
+            sc.saveEdits = function(elem, elemId,postingNew){
+                    if(sc.oldParagraph === sc.activeEdit.editor.getSession().getValue()){
+                            sc.cancelEdit(elemId);
+                            return
+                    }
+                    if(sc.activeEdit.editor.getSession().getValue().length <= 0){
+                            sc.delParagraph(elemId);
+                    }else{
+                            text = sc.activeEdit['editor'].getSession().getValue();
+                            sc.paragraphs[elem.par].display = false;
+                            promise = q.defer();
+                            if(postingNew){
+                                    var urli = '/newParagraph/';
+                            }else{
+                                    var urli = '/postParagraph/';
+                            }
+                            var savedPars = function(){
+                                http({method: 'POST',
+                                      url: urli,
+                                      data: JSON.stringify({
+                                            "docName" : sc.docId,
+                                            "par" : elem.par, 
+                                            "text": text
+                                    })}).success(function(data){
+                                            promise.resolve(data);
+                                    }).error(function(){
+                                            promise.reject("Failed to post data");
+                                    });
+                            };
+                            savedPars();
+                            promise.promise.then(
+                                function(data){
+                                    var newParId = sc.getValue(elem.par);
+                                    for(var i = 0; i < data.length; i++){                           
+                                        if(i > 0){
+                                            sc.addParagraph(newParId);
+                                            sc.sendingNew = false;
+                                            var str = sc.getPlugin(data[sc.getValue(i)]);
+                                            sc.paragraphs[newParId].html = str;
+                                            $("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
+                                                
+                                        
+                                        }else{
+                                            var str = sc.getPlugin(data[sc.getValue(i)]);
+                                            sc.paragraphs[newParId].html = str;
+                                            sc.updateEditor(elem, elemId);
+                                            $("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
+                                            
+                                        }
+                                        newParId = newParId + 1;
+                                    }
+                                    sc.sendingNew = false; 
+                                    sc.paragraphs[elemId].loading = "";
+                                    },
+                                    function(reason){
+                                        alert(reason);
+                                    sc.paragraphs[elemId].loading = "";
+                                    },
+                                    function(){
+                                    });
+                    }
+            }            
+
+            sc.callDelete = function(blockId){
                 var deferred = q.defer();
-                getBlockHtml = function(blockId){ 
-                    http.get('/getBlockHtml/' + sc.docId + "/" + blockId).
+                removePar = function(blockId){ 
+                    http.get('/deleteParagraph/' + sc.docId + "/" + blockId).
                         success(function(data, status, headers, config) {
                             deferred.resolve(data);
                         }).
@@ -160,108 +344,92 @@ EditCtrl.controller("ParCtrl", ['$scope', '$http', '$q', function(sc, http, q){
                             deferred.reject("Failed to fetch html")
                         });
                 }
-                getBlockHtml();
+                removePar(blockId);
                 return deferred.promise;
             }
+            sc.delParagraph = function(indx){
+                    if(!(confirm("Delete paragraph?"))){
+                            return
+                    }
+                    sc.editors = [];
+                    sc.activeEdit = {"editId": "", "editor": ""};
+                    if(sc.sendingNew){
+                        sc.paragraphs.splice(indx, 1);
+                    }else{
+                        var promise = sc.callDelete(indx);
+                        promise.then(function(data){
+                            sc.paragraphs.splice(indx, 1);
+                            sc.oldParagraph = "";
+                            sc.$apply();
+                        }, function(reason) {
+                                alert('Failed: ' + reason);
+                        }, function(data) {
+                                alert('Request progressing');
 
-            sc.promiseOfHtml = function(elemId){
-                    var promise = sc.getBlockHtml(elemId);
-                    alert(elemId);
-                    alert($("." + elemId).get()[0].innerHTML);
-                    promise.then(function(data){
-                            $window.alert("LOL");
-                            $("." + elemId).get()[0].innerHTML = data;   
-                    
-                    }, function(reason) {
-                            alert('Failed: ' + reason);
-                    }, function(data) {
-                            alert('Request progressing');
+                        });
+                    }
+                    sc.sendingNew = false;
+                    sc.decreaseIds(indx);
 
-                    });
+            };
+
+            sc.increaseIds = function(i){
+                    for(var j = i+1; j < sc.paragraphs.length;j++){
+                        sc.paragraphs[j].par = sc.paragraphs[j].par + 1;
+                    }
+                    for(var z = 0; z < sc.editors.length; z++){
+                            if(sc.editors[z].par >= i){
+                                    sc.editors[z].par = sc.editors[z].par + 1;
+                            }
+                    }
+
+            }
+
+            sc.decreaseIds = function(i){
+                            for(var j = i; j < sc.paragraphs.length;j++){
+                                sc.paragraphs[j].par = sc.paragraphs[j].par - 1;
+                            }
+                            for(var z = 0; z < sc.editors.length; z++){
+                                if(sc.editors[z].par >= i){
+                                       sc.editors[z].par = sc.editors[z].par - 1;
+                                }
+                            }
             }
             
-            sc.createEditor = function(elem, elemId){
-                    var promise = sc.getBlockMd(elem.par);
-                    promise.then(function(data) {
-                            sc.activeEdit['text'] = data;
-                            editor = new ace.edit(elem.par.toString());                    
-                            editor.getSession().setValue(sc.activeEdit.text);
-                            editor.setTheme("ace/theme/eclipse");
-                            editor.renderer.setPadding(10, 10, 10,10);
-                            editor.getSession().setMode("ace/mode/markdown"); 
-                            editor.getSession().setUseWrapMode(true);
-                            editor.getSession().setWrapLimitRange(0, 79);
-                            $('.'+elem.par).get()[0].focus();
-                            editor.getSession().on('change', function(e) {
-                                    //text = sc.activeEdit['editor'].editor.getSession().getValue();
-                            });
-/**                            editor.on('blur', function(e){
-                                    sc.setEditable(elem.par);
-                            });**/
-                            sc.activeEdit["editor"] = editor;
-                            if(!sc.editorExists(elem.par)) {
-                                    sc.editors.push({"par" : elem.par, "editor": editor});
-                            }
-                            sc.activeEdit['text'] = sc.tempVariable;
-                            // sc.setEditable(elem.par);
-                    }, function(reason) {
-                            alert('Failed: ' + reason);
-                    }, function(data) {
-                            alert('Request progressing');
-
-                    });
-
+            sc.addParagraph = function(indx){
+                    if(sc.activeEdit.editId !== ""){
+                        sc.setEditable(sc.activeEdit.editId);
+                    }
+                    if(sc.sendingNew){
+                            sc.cancelEdit(sc.activeEdit.editId);
+                    }
+                    sc.paragraphs.splice(indx, 0, {"par": indx, "html" : "<empty>", "display" : false});   
+                    var i = (function(i){return i})(indx);
+                    sc.increaseIds(indx);
+                    sc.sendingNew = true;
+                    sc.$apply();
             };
-            sc.saveEdits = function(elem, elemId){
-                    text = sc.activeEdit['editor'].getSession().getValue();
-                    //sc.paragraphs[elemId].text = mdtext; 
-                    //$('.'+elem.par).html(sc.convertHtml.makeHtml(mdtext));
-                    sc.paragraphs[elemId].display = false;
-                    http({method: 'POST',
-                          url: '/postParagraph/',
-                          data: JSON.stringify({
-                                                "docName" : sc.docId,
-                                                "par" : elem.par, 
-                                                "text": text
-                          })});
-            }
-
-
-            sc.uploadFile = function(){
-                var file = $scope.myFile;
-                var uploadUrl = '/upload/';
-                fileUpload.uploadFileToUrl(file, uploadUrl);
-            };
-
+            
+            sc.uploadedFile;
+            sc.progress;
+            sc.selectedFile = "";
+            sc.onFileSelect = function(url, $files) {
+                //$files: an array of files selected, each file has name, size, and type.
+                for (var i = 0; i < $files.length; i++) {
+                  var file = $files[i];
+                  sc.upload = $upload.upload({
+                    url: url,
+                    method: 'POST',
+                    file: file,
+                  }).progress(function(evt) {
+                    sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
+                  }).success(function(data, status, headers, config) {
+                    sc.uploadedFile = '/images/' + data.file;
+                    sc.progress = 'Uploading... Done!'
+                  });
+                  //.error(...)
+                }
+              };
+            
         }]);
 
-EditCtrl.directive('fileModel', ['$parse', function ($parse) {
-                return {
-                       restrict: 'A',
-                       link: function(scope, element, attrs) {
-                                 var model = $parse(attrs.fileModel);
-                                 var modelSetter = model.assign;
-                
-                                 element.bind('change', function(){
-                                    scope.$apply(function(){
-                                        modelSetter(scope, element[0].files[0]);
-                                   });
-                                 });
-        }
-        };
-}]);
-
-EditCtrl.service('fileUpload', ['$http', function ($http) {
-       this.uploadFileToUrl = function(file, uploadUrl){
-                var fd = new FormData();
-              fd.append('file', file);
-                $http.post(uploadUrl, fd, {
-                    transformRequest: angular.identity,
-                     headers: {'Content-Type': undefined}
-             })
-             .success(function(){
-            })
-           .error(function(){
-            });
-     }
-}]); 
