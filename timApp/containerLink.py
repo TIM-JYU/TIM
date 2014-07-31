@@ -3,8 +3,8 @@ import urllib.parse
 import urllib
 
 PLUGINS = [
-        {"host" : "http://localhost:8080/", "name" : "csPlugin"},
-        {"host" : "http://localhost:8000/", "name" : "helloExample"}
+        {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
+        {"host" : "http://localhost:50005/", "name" : "helloExample"}
         ]
 
 # Main plugin call, plugin must match one of the specified plugins in 

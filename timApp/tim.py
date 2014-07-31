@@ -197,7 +197,8 @@ def getDocument(doc_id):
     try:
         newest = getNewest(doc_id)
         doc_metadata = timdb.documents.getDocument(newest)
-        texts = timdb.documents.getDocumentAsHtmlBlocks(newest)
+        xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
+        texts = pluginControl.pluginify(xs, session['user_name'])
         return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash})
     except ValueError:
         return redirect(url_for('goat'))
