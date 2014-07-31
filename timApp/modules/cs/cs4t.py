@@ -82,7 +82,7 @@ def printLines(file,lines,n1,n2):
 	
 class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 	def do_OPTIONS(self):           
-		print "do_OPTIONS =============================================================================================="
+		print "do_OPTIONS =============================================="
 		self.send_response(200, "ok")       
 		self.send_header('Access-Control-Allow-Origin', '*')                
 		self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -91,16 +91,16 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		print self.headers
 
 	def do_GET(self):
-		print "do_GET =============================================================================================="
+		print "do_GET =================================================="
 		self.doAll(getParams(self))
 		
 	def do_POST(self):
-		print "do_POST =============================================================================================="
+		print "do_POST ================================================="
 		self.doAll(postParams(self))
 
 
 	def doAll(self,query):	
-		print "doAll =============================================================================================="
+		print "doAll ==================================================="
 		print self.path
 		print self.headers
 		print query

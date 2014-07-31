@@ -3,6 +3,7 @@ import re
 import cgi
 import json
 from urlparse import urlparse,parse_qs
+from pprint import pprint
 
 def get_param(query,key,default):
 	if not query.has_key(key):
@@ -94,19 +95,43 @@ def getParams(self):
 	return query
 		
 def postParams(self):		
+	# print "postParams ================================================"
+	# print self		
+	# pprint(self.__dict__,indent=2)
+	# print dir(self.request)
 	form = cgi.FieldStorage(
 		fp=self.rfile, 
         headers=self.headers,
         environ={'REQUEST_METHOD':'POST',
                      'CONTENT_TYPE':self.headers['Content-Type'],
                 })
-	print form		
-	print "DATA: "
+	# print self.request.body			
+	# print self.rfile	
+	# print json.dumps(form)	
+	# form = cgi.FieldStorage()
+	# print dir(form)
+	pprint(form.__dict__, indent=2)
+	query = parse_qs(urlparse(self.path).query,keep_blank_values=True)
+	# if ( form['type'].find('json') >= 0 ): 
+	if ( form.list == None ): # Onko JSON vai tavallinen POST
+		s = str(form)
+		i = s.find('{')
+		i2 = s.rfind('\'')
+		js = s[i:i2]
+		js = js.replace("\\\\","\\")
+		# print js
+		jso = json.loads(js)
+		# print jso
+		for field in jso.keys():
+			# print field + ":" + jso[field]
+			query[field] = [str(jso[field])]
+		return query
+	#print form		
+	#print "DATA: "
 	# print form["data"]
-	print form.keys()
+	# print form.keys()
 	#print "Environ: "
 	#print form.environ	
-	query = parse_qs(urlparse(self.path).query,keep_blank_values=True)
 	for field in form.keys():
 		query[field] = [form[field].value]
 	return query	
