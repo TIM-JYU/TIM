@@ -140,6 +140,10 @@ def getCurrentUserId():
     uid = session.get('user_id')
     return uid if uid is not None else 0
 
+def getCurrentUserName():
+    name = session.get('user_name')
+    return name if name is not None else 'Anonymous'
+
 def getTimDb():
     if not hasattr(g, 'timdb'):
         g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
@@ -187,7 +191,7 @@ def postParagraph():
         print(err)
         return "Failed to modify block."
     # Replace appropriate elements with plugin content
-    preparedBlocks = pluginControl.pluginify(blocks, getCurrentUserId())
+    preparedBlocks = pluginControl.pluginify(blocks, getCurrentUserName())
 
     return json.dumps(preparedBlocks)
 
@@ -208,7 +212,7 @@ def getDocument(doc_id):
         newest = getNewest(doc_id)
         doc_metadata = timdb.documents.getDocument(newest)
         xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
-        texts = pluginControl.pluginify(xs, getCurrentUserId())
+        texts = pluginControl.pluginify(xs, getCurrentUserName())
         return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash})
     except ValueError:
         return redirect(url_for('goat'))
