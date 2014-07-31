@@ -17,7 +17,7 @@ def callPlugin(plugin, info):
                 request = urllib.request.urlopen(plug['host'], urllib.parse.urlencode(info).encode('utf-8'))
                 return request.read().decode(encoding="UTF-8")
         return "Unregistered plugin"
-    except URLError:
+    except:
         return "Unable to connect to plugin"
 
 def getPlugin(plug):
