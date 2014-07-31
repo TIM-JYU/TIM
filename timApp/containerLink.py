@@ -10,12 +10,15 @@ PLUGINS = [
 # Main plugin call, plugin must match one of the specified plugins in 
 # PLUGINS
 def callPlugin(plugin, info):
+    try:
     for x in PLUGINS:
         if(x['name'] == plugin):
             plug = getPlugin(plugin)
             request = urllib.request.urlopen(plug['host'], urllib.parse.urlencode(info).encode('utf-8'))
             return request.read().decode(encoding="UTF-8")
     return "Unregistered plugin"
+    except URLError:
+        return "Unable to connect to plugin"
 
 def getPlugin(plug):
     for p in PLUGINS:
