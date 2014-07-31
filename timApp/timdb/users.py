@@ -9,15 +9,6 @@ class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
     
     @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str'):
-        """Initializes TimDB with the specified database and root path.
-        
-        :param db_path: The path of the database file.
-        :param files_root_path: The root path where all the files will be stored.
-        """
-        TimDbBase.__init__(self, db_path, files_root_path)
-    
-    @contract
     def createAnonymousUser(self) -> 'int':
         """Creates an anonymous user and a usergroup for it.
         The user id and its associated usergroup id is 0.

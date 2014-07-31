@@ -63,7 +63,7 @@
                 <div ng-show="m.showEditor">
                     <textarea class="noteeditor" ng-model="m.noteText"></textarea>
                 </div>
-                <button ng-show="m.showEditor" class="noteButton" ng-click="saveButtonToggled()">Save</button>
+                <button ng-disabled="!m.noteText" ng-show="m.showEditor" class="noteButton" ng-click="saveButtonToggled()">Save</button>
                 <button ng-show="!m.showEditor" class="noteButton" ng-click="addNoteButtonToggled()">Add note</button>
                 <button ng-show="m.showEditor" class="noteButton" ng-click="m.showEditor = false">Cancel</button>
             </div>

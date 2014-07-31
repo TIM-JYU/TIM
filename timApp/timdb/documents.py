@@ -253,7 +253,7 @@ class Documents(TimDbBase):
     
     @contract
     def getDocumentMarkdown(self, document_id : 'DocIdentifier') -> 'str':
-        out, err = gitCommand(self.files_root_path, 'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
+        out, _ = gitCommand(self.files_root_path, 'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
         return out
         
     @contract
@@ -269,7 +269,7 @@ class Documents(TimDbBase):
         if not self.documentExists(docId):
             raise TimDbException('The specified document does not exist.')
         
-        output, err = gitCommand(self.files_root_path, 'log --format=%H|%ad --date=relative '
+        output, _ = gitCommand(self.files_root_path, 'log --format=%H|%ad --date=relative '
                                  + self.getDocumentPathAsRelative(docId))
         lines = output.splitlines()
         versions = []
