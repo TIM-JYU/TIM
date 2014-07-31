@@ -24,7 +24,6 @@ def prepPluginCall(htmlStr):
                     multiLineCont = False
                 elif(multiLineCont):
                     multiLineVal = multiLineVal + "\n" + value
-                    print(multiLineVal)
                 elif(":" in value):  # If line does not contain valid value pair, discard it.
                     pair = value.strip().split(':',1)
                     values.append((pair[0].strip(), pair[1].strip()))
