@@ -82,6 +82,7 @@ table td {
                         <td></td>
                         <td></td>
                         <td></td>
+                        <td></td>
                         <td>Last modified</td>
                         <td>Owner?</td>
                     </tr>
@@ -90,6 +91,7 @@ table td {
                     <td>{{ '{{ doc.name }}' }}</td>
                     <td><a ng-show="doc.canEdit" href="/documents/{{ '{{ doc.id }}' }}">Edit</a></td>
                     <td><a ng-show="doc.canEdit" ng-click="setCurrentDocument(doc)">Upload</a></td>
+                    <td><a href="/download/{{ '{{ doc.id }}' }}">Download</a></td>
                     <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
                     <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
                     <td>{{ '{{ doc.owner ? "Yes" : "No" }}' }}</td>

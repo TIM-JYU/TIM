@@ -48,6 +48,14 @@ DATA_PATH = "./static/data/"
 def forbidden(error):
     return render_template('403.html', message=error.description), 403
 
+@app.route('/download/<int:doc_id>')
+def downloadDocument(doc_id):
+    timdb = getTimDb()
+    if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
+        abort(403, "Sorry, you don't have permission to download this document.")
+    doc_data = timdb.documents.getDocumentMarkdown(getNewest(doc_id))
+    return Response(doc_data, mimetype="text/plain")
+
 @app.route('/upload/', methods=['POST'])
 def upload_file():
     timdb = getTimDb()
@@ -169,8 +177,10 @@ def postParagraph():
     parIndex = request.get_json()['par']
     version = request.headers.get('Version')
     
+    identifier = getNewest(docId)#DocIdentifier(docId, version)
+    
     try:
-        blocks, version = timdb.documents.modifyMarkDownBlock(DocIdentifier(docId, version), int(parIndex), paragraphText)
+        blocks, version = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
     except IOError as err:
         print(err)
         return "Failed to modify block."
@@ -222,7 +232,7 @@ def addBlock():
     blockText = jsondata['text']
     docId = jsondata['docName']
     paragraph_id = jsondata['par']
-    blocks = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
+    blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
     return json.dumps(blocks)
 
 @app.route("/deleteParagraph/<int:docId>/<int:blockId>")

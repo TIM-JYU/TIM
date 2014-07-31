@@ -10,7 +10,7 @@ from collections import namedtuple
 class DocIdentifier(namedtuple("DocIdentifier", "id hash")):
     __slots__ = ()
     def __str__(self):
-        return str(self.id) + ':' + self.hash
+        return str(self.id) + ':' + str(self.hash)
 
 new_contract('Connection', sqlite3.Connection)
 new_contract('DocIdentifier', DocIdentifier)

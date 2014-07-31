@@ -21,7 +21,7 @@ class Documents(TimDbBase):
         self.ec = EphemeralClient(EPHEMERAL_URL)
     
     @contract
-    def addMarkdownBlock(self, document_id : 'DocIdentifier', content : 'str', new_block_index : 'int') -> 'list(str)':
+    def addMarkdownBlock(self, document_id : 'DocIdentifier', content : 'str', new_block_index : 'int') -> 'tuple(list(str),str)':
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
@@ -30,14 +30,11 @@ class Documents(TimDbBase):
         :returns: A list of the added blocks.
         """
 
-        document_path = self.getBlockPath(document_id.id)
-        assert os.path.exists(document_path), 'document does not exist: %r' % document_id
+        assert self.documentExists(document_id), 'document does not exist: %r' % document_id
         
-        blocks = self.ec.addBlock(document_id, new_block_index, content)
-        self.__updateNoteIndexes(document_id, document_id)
-        self.__commitDocumentChanges(document_id, 'Added a paragraph at index %d' % (new_block_index))
-        
-        return blocks
+        response = self.ec.addBlock(document_id, new_block_index, content)
+        version = self.__handleModifyResponse(document_id, response, 'Added a paragraph at index %d' % (new_block_index))
+        return response['paragraphs'], version
 
     @contract
     def __insertBlockToDb(self, name : 'str', owner_group_id : 'int', block_type : 'int') -> 'int':
@@ -113,10 +110,10 @@ class Documents(TimDbBase):
         :param par_id: The index of the paragraph in the document that should be deleted.
         """
         
-        self.ec.deleteBlock(document_id, par_id)
-        self.__updateNoteIndexes(document_id, document_id)
-        self.__commitDocumentChanges(document_id, 'Document %d: Deleted a paragraph at index %d' % (document_id.id, par_id))
-    
+        response = self.ec.deleteBlock(document_id, par_id)
+        version = self.__handleModifyResponse(document_id, response, 'Deleted a paragraph at index %d' % (par_id))
+        return version
+        
     @contract
     def documentExists(self, document_id : 'DocIdentifier') -> 'bool':
         """Checks whether a document with the specified id exists.
@@ -303,7 +300,7 @@ class Documents(TimDbBase):
         
         return docId
     
-    def __commitDocumentChanges(self, document_id : 'DocIdentifier', msg : 'str') -> 'str':
+    def __commitDocumentChanges(self, document_id : 'DocIdentifier', doc_content : 'str', msg : 'str') -> 'str':
         """Commits the changes of the specified document to Git.
         
         :param document_id: The document identifier.
@@ -312,7 +309,7 @@ class Documents(TimDbBase):
         """
         
         #TODO: Is there a better way to commit changes to Git? Is it necessary to commit the full document?
-        doc_content = self.ec.getDocumentFullText(document_id)
+        #doc_content = self.ec.getDocumentFullText(document_id)
         
         with open(self.getDocumentPath(document_id), 'w', encoding='utf-8', newline='\n') as f:
             f.write(doc_content)
@@ -329,25 +326,17 @@ class Documents(TimDbBase):
         
         """
         
-        temp = DocIdentifier('temp', '')
-        
-        #TODO: This is temporary until the client is correctly synchronized with the latest version id.
-        old_document_id = DocIdentifier(old_document_id.id, self.getNewestVersion(old_document_id.id)['hash'])
-        
-        #TODO: This may be inefficient, it would be better if Ephemeral had a copy function.
-        self.ec.loadDocument(temp, bytes(self.getDocumentMarkdown(old_document_id), encoding='utf-8'))
-        
         cursor = self.db.cursor()
         cursor.execute('select parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id from BlockRelation where parent_block_id = ?',
                        [new_document_id.id])
         notes = self.resultAsDictionary(cursor)
         
         if map_all:
-            mapping = self.ec.getBlockMapping(new_document_id, temp)
+            mapping = self.ec.getBlockMapping(new_document_id, old_document_id)
         else:
             mapping = []
             for note in notes:
-                val = max(self.ec.getSingleBlockMapping(temp, new_document_id, note['parent_block_specifier']), key=lambda x: x[0])
+                val = max(self.ec.getSingleBlockMapping(old_document_id, new_document_id, note['parent_block_specifier']), key=lambda x: x[0])
                 mapping.append([note['parent_block_specifier'], val[1], val[0]])
 
         for note in notes:
@@ -365,6 +354,24 @@ class Documents(TimDbBase):
         self.db.commit()
     
     @contract
+    def __handleModifyResponse(self, document_id : 'DocIdentifier', response : 'dict', message : 'str'):
+        """Handles the response that comes from Ephemeral when modifying a document in some way.
+        
+        :param document_id: The id of the document that was modified.
+        :param response: The response object from Ephemeral.
+        :param message: The commit message.
+        :returns: The version of the new document.
+        """
+        
+        new_id = DocIdentifier(document_id.id, response['new_id'])
+        self.ec.renameDocumentStr(response['new_id'], str(new_id))
+        self.__updateNoteIndexes(document_id, new_id)
+        new_content = self.ec.getDocumentFullText(new_id)
+        version = self.__commitDocumentChanges(new_id, new_content, message)
+        self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
+        return version
+        
+    @contract
     def modifyMarkDownBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content : 'str') -> 'tuple(list(str), str|None)':
         """Modifies the specified block.
         
@@ -376,9 +383,9 @@ class Documents(TimDbBase):
         
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
-        blocks = self.ec.modifyBlock(document_id, block_id, new_content)
-        self.__updateNoteIndexes(document_id, document_id)
-        version = self.__commitDocumentChanges(document_id, 'Document %d: Modified a paragraph at index %d' % (document_id.id, block_id))
+        response = self.ec.modifyBlock(document_id, block_id, new_content)
+        version = self.__handleModifyResponse(document_id, response, 'Modified a paragraph at index %d' % (block_id))
+        blocks = response['paragraphs']
         return blocks, version
     
     @contract
@@ -392,8 +399,8 @@ class Documents(TimDbBase):
         
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
-        self.ec.loadDocument(document_id, new_content)
-        self.__updateNoteIndexes(document_id, document_id)
-        version = self.__commitDocumentChanges(document_id, "Document %d: Modified as whole" % document_id.id)
-        return DocIdentifier(document_id.id, version)
-        
+        version = self.__commitDocumentChanges(document_id, str(new_content, encoding='utf-8'), "Modified as whole")
+        new_id = DocIdentifier(document_id.id, version)
+        self.ec.loadDocument(new_id, new_content)
+        self.__updateNoteIndexes(document_id, new_id)
+        return new_id

@@ -22,10 +22,10 @@ class EphemeralClient(object):
     
     @contract
     def __getDocIdForEphemeral(self, document_id : 'DocIdentifier'):
-        return document_id.id
+        return document_id
 
     @contract
-    def addBlock(self, document_id : 'DocIdentifier', new_block_index : 'int', content : 'str') -> 'list(str)':
+    def addBlock(self, document_id : 'DocIdentifier', new_block_index : 'int', content : 'str') -> 'dict':
         """Adds a block to a document.
         
         :param document_id: The id of the document.
@@ -48,7 +48,7 @@ class EphemeralClient(object):
         #TODO:
         
     @contract
-    def deleteBlock(self, document_id : 'DocIdentifier', block_id : 'int') -> 'bool':
+    def deleteBlock(self, document_id : 'DocIdentifier', block_id : 'int') -> 'dict':
         """Deletes a block from a document.
         
         :param document_id: The id of the document.
@@ -57,13 +57,13 @@ class EphemeralClient(object):
         """
         
         try:
-            r = requests.put(url=self.server_path + '/delete/{}/{}'.format(self.__getDocIdForEphemeral(document_id), block_id), data="Filler")
+            r = requests.delete(url=self.server_path + '/{}/{}'.format(self.__getDocIdForEphemeral(document_id), block_id), data="Filler")
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
         self.__raiseExceptionIfBlockNotFound(r)
         
-        return True
+        return r.json()
 
     @contract
     def diff(self, first_document_id : 'DocIdentifier', second_document_id : 'DocIdentifier') -> 'str':
@@ -238,7 +238,7 @@ class EphemeralClient(object):
         return True
     
     @contract
-    def modifyBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content: 'str') -> 'list(str)':
+    def modifyBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content: 'str') -> 'dict':
         """Modifies the specified block in the given document.
         
         :param document_id: The id of the document.
@@ -255,3 +255,24 @@ class EphemeralClient(object):
         self.__raiseExceptionIfBlockNotFound(r)
         
         return r.json()
+    
+    @contract
+    def renameDocumentStr(self, document_id : 'str', new_id : 'str'):
+        """Changes the id of a document.
+        
+        :param document_id: The identifier of the document.
+        :param new_id: The new identifier for the document.
+        """
+        
+        try:
+            r = requests.post(url=self.server_path + '/rename/{}/{}'.format(document_id, new_id))
+        except requests.exceptions.ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
+        self.__raiseExceptionIfBlockNotFound(r)
+    
+    @contract
+    def renameDocument(self, document_id : 'DocIdentifier', new_id : 'DocIdentifier'):
+        """"""
+        
+        return self.renameDocumentStr(str(document_id), str(new_id))
