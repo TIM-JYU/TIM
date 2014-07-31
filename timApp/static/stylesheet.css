@@ -319,6 +319,10 @@ a.anchor:hover {
 	visibility: hidden;
 }
 
+.huomautus {
+	background-color: red;
+}
+
 /* pre-blokit, joissa sub/sup - spanit ymp�rill�, v�hennet��n paddingia */
 /*pre.esimerkki-western-sub {
     font-size:1em;
