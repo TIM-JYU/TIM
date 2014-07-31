@@ -41,8 +41,8 @@ instance ToJSON DocID where
 instance ToJSON a => ToJSON (Seq a) where
     toJSON = toJSON . F.toList
 
-data Block = Block {markdown::T.Text, html::LT.Text, bagOfWords :: HashSet T.Text} deriving Eq
-newtype Doc = Doc {fromDoc::Seq Block}
+data Block = Block {markdown::T.Text, html::LT.Text, bagOfWords :: HashSet T.Text} deriving (Show,Eq)
+newtype Doc = Doc {fromDoc::Seq Block} deriving (Eq,Show)
 
 convert :: BS.ByteString -> Doc
 convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 $ bs) of
@@ -86,14 +86,13 @@ performMatch (d1ID,i1) d2ID state = do
 
 performAffinityMap :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(Int,Int,Double)] 
 performAffinityMap d1ID d2ID state = do
-   Doc d1 <- fetchDoc d1ID state
+   d1 <- fetchDoc d1ID state
    Doc d2 <- fetchDoc d2ID state
-   return [(idx1,idx2,aff)
-          | (b,idx1) <- zip (F.toList d2) [0..]
-          , let (aff,idx2) = doMatching d1 b]
- where 
-  doMatching :: Seq Block -> Block -> (Double,Int)
-  doMatching s b = maximumBy (comparing fst) $ zip (map (textAffinity b) (F.toList s)) [0..]
+-- blockMatch :: Doc -> Block -> Maybe (Int, Double, Double)
+   return [(idx1,idx2,cfd)
+          | (matchee,idx1) <- zip (F.toList d2) [0..]
+          , let a@(~(Just (idx2,aff,cfd))) = blockMatch d1 matchee
+          , isJust a]
 
 -- TODO: PerformDiff is really, really slow!
 performDiff :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(DocID,Int)]
@@ -211,14 +210,22 @@ insertRange orig index source =
     let (s,e) = Seq.splitAt index orig
     in  s <> source <> (Seq.drop 1 e)
 
+-- Calculate similarity between two text blocks
 textAffinity :: Block -> Block -> Double
 textAffinity d1 d2 
- | d1 == d2  = 1
- | otherwise = 0.95 * 
-               (Set.size (Set.intersection (bagOfWords d1) (bagOfWords d2))
-               `fdiv`
-               Set.size (Set.union        (bagOfWords d1) (bagOfWords d2)))
+ = (Set.size (Set.intersection (bagOfWords d1) (bagOfWords d2))
+   `fdiv`
+   Set.size  (Set.union        (bagOfWords d1) (bagOfWords d2)))
  where fdiv a b = fromIntegral a / fromIntegral b
+
+-- Determine the closest matching block in given document.
+blockMatch :: Doc -> Block -> Maybe (Int, Double, Double)
+blockMatch (Doc d) block = case sortBy (compare`on`negate.fst3) . map (\(i,x) -> (textAffinity block x,i,x)) . zip [0..] . F.toList $ d of
+                            ((a1,i1,blk1):(a2,_,blk2):_) -> Just (i1, a1,  if blk1==blk2 then 1 else a1-a2)
+                            [(a1,i1,_)]                  -> Just (i1, a1, -1)
+                            []                           -> Nothing
+                        where fst3 (a,_,_) = a 
+
 
 main :: IO ()
 main = do
