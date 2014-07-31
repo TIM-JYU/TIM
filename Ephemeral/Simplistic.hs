@@ -23,6 +23,7 @@ import Snap.Util.Readable
 import Snap.Http.Server
 import qualified Data.Sequence as Seq
 import Data.Sequence (Seq)
+import qualified Data.ByteString.Search as BS
 import EphemeralPrelude
 import Text.Blaze.Html.Renderer.Text
 import qualified Data.HashSet as Set
@@ -45,9 +46,10 @@ data Block = Block {markdown::T.Text, html::LT.Text, bagOfWords :: HashSet T.Tex
 newtype Doc = Doc {fromDoc::Seq Block} deriving (Eq,Show)
 
 convert :: BS.ByteString -> Doc
-convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 $ bs) of
+convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toStrict . normaliseCRLF $ bs) of
               PDC.Pandoc _ blocks -> Doc . Seq.fromList .  map convertBlock $ blocks
             where 
+                normaliseCRLF  = BS.replace "\r\n" ("\n"::BS.ByteString)
                 convertBlock t = let  pdc = PDC.Pandoc mempty . box $ t
                                  in Block
                                      (T.pack       . PDC.writeMarkdown PDC.def $ pdc)
