@@ -187,7 +187,7 @@ def postParagraph():
         print(err)
         return "Failed to modify block."
     # Replace appropriate elements with plugin content
-    preparedBlocks = pluginControl.pluginify(blocks, session['user_name'])
+    preparedBlocks = pluginControl.pluginify(blocks, getCurrentUserId())
 
     return json.dumps(preparedBlocks)
 
