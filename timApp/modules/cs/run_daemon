@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo docker run -d -p 56000:5000 -v /opt/cs:/cs/ cs python /cs/cs.py
