@@ -34,7 +34,6 @@ def prepPluginCall(htmlStr):
                     multilineVal = multiLineVal + pair[1]
                     
         plugins.append({"plugin": name, "values": values})
-        print(plugins)
     return plugins
 
 
