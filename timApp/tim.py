@@ -16,7 +16,6 @@ import imghdr
 from flask.helpers import send_file
 import io
 import pluginControl
-import re
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -50,9 +49,15 @@ DATA_PATH = "./static/data/"
 def forbidden(error):
     return render_template('403.html', message=error.description), 403
 
+@app.errorhandler(404)
+def notFound(error):
+    return render_template('404.html'), 404
+
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
     timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
     if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
         abort(403, "Sorry, you don't have permission to download this document.")
     doc_data = timdb.documents.getDocumentMarkdown(getNewest(doc_id))
@@ -206,16 +211,15 @@ def createDocument():
 @app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to edit this document.")
-    try:
-        newest = getNewest(doc_id)
-        doc_metadata = timdb.documents.getDocument(newest)
-        xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
-        texts = pluginControl.pluginify(xs, getCurrentUserName())
-        return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash})
-    except ValueError:
-        return redirect(url_for('goat'))
+    newest = getNewest(doc_id)
+    doc_metadata = timdb.documents.getDocument(newest)
+    xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
+    texts = pluginControl.pluginify(xs, getCurrentUserName())
+    return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash})
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
@@ -261,10 +265,12 @@ def pluginCall(plugin):
 @app.route("/hello", methods=['POST'])
 def hello():
     html = request.get_json()['html']
-    
+
 @app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
     timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
     if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to view this document.")
     try:
