@@ -287,9 +287,10 @@ def viewDocument(doc_id):
     try:
         #texts = timdb.getDocumentBlocks(doc_id)
         versions = timdb.documents.getDocumentVersions(doc_id)
-        fullHtml = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
+        xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
         doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-        
+        fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
+
         return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
     except ValueError:
         return redirect(url_for('goat'))
