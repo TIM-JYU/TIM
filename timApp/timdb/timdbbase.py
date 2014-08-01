@@ -67,7 +67,8 @@ class TimDbBase(object):
             assert os.path.exists(self.getBlockPath(block_id)), 'the block was in database but the file was not found'
             return True
         return False
-
+    
+    #TODO: contract
     def resultAsDictionary(self, cursor):
         """Converts the result in database cursor object to JSON."""
         
@@ -80,3 +81,8 @@ class TimDbBase(object):
                 result[prop] = val
             results.append(result)
         return results
+    
+    @contract
+    def writeUtf8(self, content : 'str', path : 'str'):
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(content)
