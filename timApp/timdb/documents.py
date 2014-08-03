@@ -66,8 +66,7 @@ class Documents(TimDbBase):
         document_path = os.path.join(self.blocks_path, str(document_id))
         
         try:
-            with open(document_path, 'w', encoding='utf-8', newline='\n') as f:
-                f.write('Edit me!')
+            self.writeUtf8('Edit me!', document_path)
         except OSError:
             print('Couldn\'t open file for writing:' + document_path)
             self.db.rollback()
@@ -101,6 +100,23 @@ class Documents(TimDbBase):
                     tmpfile.write(f.read())
                     tmpfile.write('\n\n')
         self.importDocumentFromFile('tmp.temp', document_name, 0)
+    
+    @contract
+    def deleteDocument(self, document_id : 'DocIdentifier'):
+        """Deletes the specified document.
+        
+        :param document_id: The id of the document to be deleted.
+        """
+        
+        assert self.documentExists(document_id), 'document does not exist: %d' % document_id.id
+        
+        cursor = self.db.cursor()
+        cursor.execute('delete from Block where type_id = ? and id = ?', [blocktypes.DOCUMENT, document_id.id])
+        self.db.commit()
+        
+        os.remove(self.getDocumentPath(document_id))
+        
+        gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Deleted document %d.' % document_id.id, 'docker')
         
     @contract
     def deleteParagraph(self, document_id : 'DocIdentifier', par_id : 'int'):
@@ -300,6 +316,14 @@ class Documents(TimDbBase):
         
         return docId
     
+    @contract
+    def importDocument(self, content : 'str', document_name : 'str', owner_group_id : 'int'):
+        doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
+        doc_hash = self.__commitDocumentChanges(doc_id, content, 'Imported document: %s (id = %d)' % (document_name, doc_id.id))
+        doc_id = DocIdentifier(doc_id.id, doc_hash)
+        self.ec.loadDocument(doc_id, content.encode('utf-8'))
+        return doc_id
+    
     def __commitDocumentChanges(self, document_id : 'DocIdentifier', doc_content : 'str', msg : 'str') -> 'str':
         """Commits the changes of the specified document to Git.
         
@@ -308,11 +332,7 @@ class Documents(TimDbBase):
         :returns: The hash of the commit.
         """
         
-        #TODO: Is there a better way to commit changes to Git? Is it necessary to commit the full document?
-        #doc_content = self.ec.getDocumentFullText(document_id)
-        
-        with open(self.getDocumentPath(document_id), 'w', encoding='utf-8', newline='\n') as f:
-            f.write(doc_content)
+        self.writeUtf8(doc_content, self.getDocumentPath(document_id))
         
         return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), 'docker')
     

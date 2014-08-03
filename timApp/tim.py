@@ -33,15 +33,17 @@ app.config.update(dict(
    ))
 
 def allowed_file(filename):
-        return '.' in filename and \
-                filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 #app.config.from_envvar('TIM_SETTINGS', silent=True)
 
 if os.path.abspath('.') == '/service':
     app.config['DEBUG'] = False
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'txt'])
+DOC_EXTENSIONS = ['txt', 'md', 'markdown']
+PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
+ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
@@ -52,6 +54,11 @@ def forbidden(error):
 @app.errorhandler(404)
 def notFound(error):
     return render_template('404.html'), 404
+
+def jsonResponse(jsondata, status_code=200):
+    response = Response(json.dumps(jsondata), mimetype='application/json')
+    response.status_code = status_code
+    return response
 
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
@@ -68,32 +75,26 @@ def upload_file():
     timdb = getTimDb()
     if request.method == 'POST':
         doc = request.files['file']
-        if allowed_file(doc.filename):
-            filename = secure_filename(doc.filename)
-            if(".txt" in filename):
-                try:
-                    content = doc.read().decode('utf-8')
-                except UnicodeDecodeError:
-                    response = jsonify({'message': 'The file should be in UTF-8 format.'})
-                    response.status_code = 400
-                    return response
-                doc.save("./uploadedDocs/" + filename)
-                timdb.documents.importDocumentFromFile("./uploadedDocs/" + filename, filename, getCurrentUserGroup())
-                return "Successfully uploaded document"
+        if not allowed_file(doc.filename):
+            return jsonResponse({'message': 'The file format is not allowed.'}, 403)
+        filename = secure_filename(doc.filename)
+        if(filename.endswith(tuple(DOC_EXTENSIONS))):
+            try:
+                content = doc.read().decode('utf-8')
+            except UnicodeDecodeError:
+                return jsonResponse({'message': 'The file should be in UTF-8 format.'}, 400)
+            timdb.documents.importDocument(content, filename, getCurrentUserGroup())
+            return "Successfully uploaded document"
+        else:
+            content = doc.read()
+            imgtype = imghdr.what(None, h=content)
+            if imgtype is not None:
+                img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
+                timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
+                return jsonResponse({"file": str(img_id) + '/' + img_filename})
             else:
-                content = doc.read()
-                imgtype = imghdr.what(None, h=content)
-                if imgtype is not None:
-                    img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
-                    timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
-                    return Response(json.dumps({"file": str(img_id) + '/' + img_filename}), mimetype='application/json')
-                else:
-                    doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    print("File contents safe, saving.")
-                    return redirect(url_for('uploaded_file', filename=filename))
-
-def jsonResponse(obj):
-    return Response(json.dumps(obj), mimetype='application/json')
+                doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                return redirect(url_for('uploaded_file', filename=filename))
     
 @app.route('/update/<int:doc_id>/<version>', methods=['POST'])
 def updateDocument(doc_id, version):
@@ -198,7 +199,7 @@ def postParagraph():
     # Replace appropriate elements with plugin content
     preparedBlocks = pluginControl.pluginify(blocks, getCurrentUserName())
 
-    return json.dumps(preparedBlocks)
+    return jsonResponse(preparedBlocks)
 
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
@@ -207,6 +208,16 @@ def createDocument():
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonify({'id' : docId.id})
+
+@app.route("/documents/<int:doc_id>", methods=["DELETE"])
+def deleteDocument(doc_id):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        jsonResponse({'message': 'Document does not exist.'}, 404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        jsonResponse({'message': "You don't have permission to delete this document."}, 403)
+    timdb.documents.deleteDocument(getNewest(doc_id))
+    return "Success"
 
 @app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
@@ -248,7 +259,7 @@ def addBlock():
     docId = jsondata['docName']
     paragraph_id = jsondata['par']
     blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
-    return json.dumps(blocks)
+    return jsonResponse(blocks)
 
 @app.route("/deleteParagraph/<int:docId>/<int:blockId>")
 def removeBlock(docId,blockId):
@@ -276,9 +287,10 @@ def viewDocument(doc_id):
     try:
         #texts = timdb.getDocumentBlocks(doc_id)
         versions = timdb.documents.getDocumentVersions(doc_id)
-        fullHtml = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
+        xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
         doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-        
+        fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
+
         return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
     except ValueError:
         return redirect(url_for('goat'))
@@ -324,7 +336,7 @@ def getNotes(doc_id):
     try:
         #notes = []
         notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
-        return json.dumps(notes)
+        return jsonResponse(notes)
     except ValueError:
         return redirect(url_for('goat'))
 

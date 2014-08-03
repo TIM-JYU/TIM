@@ -22,8 +22,7 @@ class Notes(TimDbBase):
         cursor.execute('insert into BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?,?)',
                        [note_id, block_specifier, block_id, 0])
         
-        with open(self.getBlockPath(note_id), 'w', encoding='utf-8', newline='\n') as f:
-            f.write(content)
+        self.writeUtf8(content, self.getBlockPath(note_id))
         
         self.db.commit()
         
@@ -62,8 +61,7 @@ class Notes(TimDbBase):
         if not self.blockExists(note_id, blocktypes.NOTE):
             raise TimDbException('The requested note was not found.')
         
-        with open(self.getBlockPath(note_id), 'w', encoding='utf-8', newline='\n') as f:
-            f.write(new_content)
+        self.writeUtf8(new_content, self.getBlockPath(note_id))
         
     @contract
     def getNotes(self, user_id : 'int', document_id : 'int'):
