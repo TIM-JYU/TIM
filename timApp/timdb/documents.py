@@ -100,6 +100,23 @@ class Documents(TimDbBase):
                     tmpfile.write(f.read())
                     tmpfile.write('\n\n')
         self.importDocumentFromFile('tmp.temp', document_name, 0)
+    
+    @contract
+    def deleteDocument(self, document_id : 'DocIdentifier'):
+        """Deletes the specified document.
+        
+        :param document_id: The id of the document to be deleted.
+        """
+        
+        assert self.documentExists(document_id), 'document does not exist: %d' % document_id.id
+        
+        cursor = self.db.cursor()
+        cursor.execute('delete from Block where type_id = ? and id = ?', [blocktypes.DOCUMENT, document_id.id])
+        self.db.commit()
+        
+        os.remove(self.getDocumentPath(document_id))
+        
+        gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Deleted document %d.' % document_id.id, 'docker')
         
     @contract
     def deleteParagraph(self, document_id : 'DocIdentifier', par_id : 'int'):

@@ -209,6 +209,16 @@ def createDocument():
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonify({'id' : docId.id})
 
+@app.route("/documents/<int:doc_id>", methods=["DELETE"])
+def deleteDocument(doc_id):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        jsonResponse({'message': 'Document does not exist.'}, 404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        jsonResponse({'message': "You don't have permission to delete this document."}, 403)
+    timdb.documents.deleteDocument(getNewest(doc_id))
+    return "Success"
+
 @app.route("/documents/<int:doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()

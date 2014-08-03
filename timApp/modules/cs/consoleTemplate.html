@@ -1,0 +1,12 @@
+﻿<form name="formKonsoliOhjelma" ng-controller="CsRunController" ng-init='
+##QUERYPARAMS##
+	   '>
+    <textarea cols="80" rows="3" ng-model="byCode" ng-trim="false" ></textarea>
+	<br />
+    <button ng-click='runCode();'>Aja</button>
+    <button ng-click='runCodeJSON();'>Aja JSON</button>
+    <a href="" ng-click='showCode();'>Näytä koko koodi</a>
+    <pre ng-show="viewCode">{{code}}</pre>
+    <pre ng-show="runError">{{error}}</pre>
+    <pre class="console" ng-show="runSuccess">{{result}}</pre>
+</form>
