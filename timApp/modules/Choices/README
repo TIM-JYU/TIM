@@ -1,0 +1,31 @@
+# Prototyyppi monivalintapluginista
+
+## Tila
+
+Testattu ilman TIMiä, siistimättä.
+
+## Tiedostot
+
+Olennaiset kooditiedostot
+
+* `ChoicesPlugin.hs`    -- Varsinainen plugin. Tämä tiedosto kääntyy plugin-web-palvelimeksi.
+* `PluginType.hs`       -- Pluginrajapinta. Tämä hoitaa web-palvelun muodostamisen ja 
+                           eri pyyntöjen serialisoimisen sekä kommunikaation.
+* `HTMLRequest.hs`      -- Tietotyypp `/html` reitin pyyntöjä varten.
+* `AnswerRequest.hs`    -- Tietotyyppi `/answer` reitin pyyntöjä varten.
+* `UtilityPrelude.hs`   -- Lista moduleja, jotka importataan käytännössä aina. Ei tarvitse 
+                           jokaista tiedostoa liata niillä.
+* `MCQTemplate.html`    -- Angularin html-template tiedosto monivalintatehtävää varten
+* `script.js`           -- Monivalintatehtävän asiakaslogiikka. Toteuttaa angular modulin `mcq`,
+                           joka pitää löytyä siis sivun dependensseistä.
+
+Tiedosto testausta varten
+
+* `examples/testGet.sh`        -- Yksinkertainen curl-skripti, jolla palvelua voi testata.
+                                  Esim. `sh examples/testGet.sh examples/html.request` renderöi
+                                  vastaamattoman pluginin testisivulle (stdout).
+* `examples/html.request`      -- Esimerkki vastaamattomasta monivalinnasta. (Ks. `examples/testGet.sh`)
+* `examples/html.2.request`    -- Esimerkki vastatusta monivalinnasta. (Ks. `examples/testGet.sh`)
+* `examples/Answer.1.request`  -- Esimerkki `/answer`-reitin käytöstä. Tätä voi testata komennolla
+                                  `curl -X PUT --data-binary @examples/Answer.1.request localhost:8080/answer/`
+
