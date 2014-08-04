@@ -198,7 +198,7 @@ def getJSON_HTML(doc_id):
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
     timdb = getTimDb()
-    docId = request.get_json()['docName']
+    docId = request.get_json()['docId']
     verifyEditAccess(docId)
     paragraphText = request.get_json()['text']
     parIndex = request.get_json()['par']
@@ -271,7 +271,7 @@ def addBlock():
     timdb = getTimDb()
     jsondata = request.get_json()
     blockText = jsondata['text']
-    docId = jsondata['docName']
+    docId = jsondata['docId']
     verifyEditAccess(docId)
     paragraph_id = jsondata['par']
     blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))

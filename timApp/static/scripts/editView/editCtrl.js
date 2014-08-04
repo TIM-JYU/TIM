@@ -290,7 +290,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                 http({method: 'POST',
                                       url: urli,
                                       data: JSON.stringify({
-                                            "docName" : sc.docId,
+                                            "docId" : sc.docId,
                                             "par" : elem.par, 
                                             "text": text
                                     })}).success(function(data){
