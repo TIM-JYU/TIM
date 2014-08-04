@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, Flask, redirect, url_for, session, abort, flash
+from flask import Flask, redirect, url_for, session, abort, flash
 from flask import render_template
 from flask import g
 from flask import request
@@ -60,13 +60,22 @@ def jsonResponse(jsondata, status_code=200):
     response.status_code = status_code
     return response
 
+def verifyEditAccess(block_id):
+    timdb = getTimDb()
+    if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
+        abort(403, "Sorry, you don't have permission to edit this document.")
+
+def verifyViewAccess(block_id):
+    timdb = getTimDb()
+    if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
+        abort(403, "Sorry, you don't have permission to view this resource.")
+
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
-    if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
-        abort(403, "Sorry, you don't have permission to download this document.")
+    verifyViewAccess(doc_id)
     doc_data = timdb.documents.getDocumentMarkdown(getNewest(doc_id))
     return Response(doc_data, mimetype="text/plain")
 
@@ -114,8 +123,7 @@ def getImage(image_id, image_filename):
     timdb = getTimDb()
     if not timdb.images.imageExists(image_id, image_filename):
         abort(404)
-    if not timdb.users.userHasViewAccess(getCurrentUserId(), image_id):
-        abort(403, message="You don't have permission to view this image.")
+    verifyViewAccess(image_id)
     img_data = timdb.images.getImage(image_id, image_filename)
     imgtype = imghdr.what(None, h=img_data)
     f = io.BytesIO(img_data)
@@ -150,18 +158,23 @@ def getCurrentUserName():
     name = session.get('user_name')
     return name if name is not None else 'Anonymous'
 
+def getCurrentUserGroup():
+    timdb = getTimDb()
+    return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
+
 def getTimDb():
     if not hasattr(g, 'timdb'):
-        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
+        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'], current_user_name=getCurrentUserName())
     return g.timdb
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
     timdb = getTimDb()
+    verifyViewAccess(doc_id)
     try:
         texts = timdb.documents.getDocumentBlocks(getNewest(doc_id))
         doc = timdb.documents.getDocument(doc_id)
-        return jsonify({"name" : doc['name'], "text" : texts})
+        return jsonResponse({"name" : doc['name'], "text" : texts})
     except IOError as err:
         print(err)
         return "No data found"
@@ -169,11 +182,12 @@ def getJSON(doc_id):
 @app.route("/getJSON-HTML/<int:doc_id>")
 def getJSON_HTML(doc_id):
     timdb = getTimDb()
+    verifyViewAccess(doc_id)
     try:
         newest = getNewest(doc_id)
         blocks = timdb.documents.getDocumentAsHtmlBlocks(newest)
         doc = timdb.documents.getDocument(newest)
-        return jsonify({"name" : doc['name'], "text" : blocks})
+        return jsonResponse({"name" : doc['name'], "text" : blocks})
     except ValueError as err:
         print(err)
         return "[]"
@@ -184,11 +198,11 @@ def getJSON_HTML(doc_id):
 @app.route("/postParagraph/", methods=['POST'])
 def postParagraph():
     timdb = getTimDb()
-    docId = request.get_json()['docName']
+    docId = request.get_json()['docId']
+    verifyEditAccess(docId)
     paragraphText = request.get_json()['text']
     parIndex = request.get_json()['par']
     version = request.headers.get('Version')
-    
     identifier = getNewest(docId)#DocIdentifier(docId, version)
     
     try:
@@ -207,15 +221,15 @@ def createDocument():
     docName = jsondata['doc_name']
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonify({'id' : docId.id})
+    return jsonResponse({'id' : docId.id})
 
 @app.route("/documents/<int:doc_id>", methods=["DELETE"])
 def deleteDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        jsonResponse({'message': 'Document does not exist.'}, 404)
+        return jsonResponse({'message': 'Document does not exist.'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        jsonResponse({'message': "You don't have permission to delete this document."}, 403)
+        return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
     timdb.documents.deleteDocument(getNewest(doc_id))
     return "Success"
 
@@ -224,8 +238,7 @@ def getDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
-        abort(403, "You don't have permission to edit this document.")
+    verifyEditAccess(doc_id)
     newest = getNewest(doc_id)
     doc_metadata = timdb.documents.getDocument(newest)
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
@@ -235,12 +248,14 @@ def getDocument(doc_id):
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
     timdb = getTimDb()
+    verifyViewAccess(docId)
     block = timdb.documents.getBlock(getNewest(docId), blockId)
-    return jsonify({"md": block})
+    return jsonResponse({"md": block})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
+    verifyViewAccess(docId)
     block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
     print(block)
     return block
@@ -256,14 +271,16 @@ def addBlock():
     timdb = getTimDb()
     jsondata = request.get_json()
     blockText = jsondata['text']
-    docId = jsondata['docName']
+    docId = jsondata['docId']
+    verifyEditAccess(docId)
     paragraph_id = jsondata['par']
     blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
     return jsonResponse(blocks)
 
 @app.route("/deleteParagraph/<int:docId>/<int:blockId>")
-def removeBlock(docId,blockId):
+def removeBlock(docId, blockId):
     timdb = getTimDb()
+    verifyEditAccess(docId)
     timdb.documents.deleteParagraph(getNewest(docId), blockId)
     return "Successfully removed paragraph"
 
@@ -273,31 +290,17 @@ def pluginCall(plugin):
     html = callPlugin(plugin, info)
     return html
 
-@app.route("/hello", methods=['POST'])
-def hello():
-    html = request.get_json()['html']
-
 @app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
-    if not timdb.users.userHasViewAccess(getCurrentUserId(), doc_id):
-        abort(403, "You don't have permission to view this document.")
-    try:
-        #texts = timdb.getDocumentBlocks(doc_id)
-        versions = timdb.documents.getDocumentVersions(doc_id)
-        xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
-        doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-        fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
-
-        return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
-    except ValueError:
-        return redirect(url_for('goat'))
-
-def getCurrentUserGroup():
-    timdb = getTimDb()
-    return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
+    verifyViewAccess(doc_id)
+    versions = timdb.documents.getDocumentVersions(doc_id)
+    xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
+    doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
+    fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
+    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
@@ -315,6 +318,7 @@ def postNote():
 
 @app.route("/editNote", methods=['POST'])
 def editNote():
+    #TODO: Check access rights
     jsondata = request.get_json()
     noteText = jsondata['text']
     noteId = jsondata['note_id']
@@ -324,6 +328,7 @@ def editNote():
 
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
+    #TODO: Check access rights
     jsondata = request.get_json()
     noteId = int(jsondata['note_id'])
     timdb = getTimDb()
@@ -333,16 +338,12 @@ def deleteNote():
 @app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
     timdb = getTimDb()
-    try:
-        #notes = []
-        notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
-        return jsonResponse(notes)
-    except ValueError:
-        return redirect(url_for('goat'))
+    notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
+    return jsonResponse(notes)
 
 @app.route("/")
 def indexPage():
-    return render_template('index.html', userName=session.get('user_name'), userId=getCurrentUserId())
+    return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
 
 @app.route("/login", methods=['POST'])
 def login():

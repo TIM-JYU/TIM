@@ -1,0 +1,4 @@
+{
+ "markup":{"choices":[{"reason":"Piti valita kissa","text":"Koira","correct":false},{"reason":"Kissat Rulez","text":"Kissa","correct":true},{"reason":"Kissa voi syödä kanin","text":"Kani","correct":false}],"ident":"ekatehtävä","stem":"Valitse kissa"},
+ "state":null
+}

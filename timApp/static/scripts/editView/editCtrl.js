@@ -290,7 +290,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                 http({method: 'POST',
                                       url: urli,
                                       data: JSON.stringify({
-                                            "docName" : sc.docId,
+                                            "docId" : sc.docId,
                                             "par" : elem.par, 
                                             "text": text
                                     })}).success(function(data){
@@ -348,8 +348,8 @@ EditApp.controller("ParCtrl", ['$scope',
                 return deferred.promise;
             }
             sc.delParagraph = function(indx){
-                    if(!(confirm("Delete paragraph?"))){
-                            return
+                    if(!sc.sendingNew && !(confirm("Delete paragraph?"))){
+                            return;
                     }
                     sc.editors = [];
                     sc.activeEdit = {"editId": "", "editor": ""};
