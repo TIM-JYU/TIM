@@ -348,8 +348,8 @@ EditApp.controller("ParCtrl", ['$scope',
                 return deferred.promise;
             }
             sc.delParagraph = function(indx){
-                    if(!(confirm("Delete paragraph?"))){
-                            return
+                    if(!sc.sendingNew && !(confirm("Delete paragraph?"))){
+                            return;
                     }
                     sc.editors = [];
                     sc.activeEdit = {"editId": "", "editor": ""};
