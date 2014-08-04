@@ -11,13 +11,17 @@ angular.module('MCQ', [])
         $scope.plugin = $element.parent().attr("data-plugin");
         $scope.userSelection = null;
         $scope.submit = function () {
+            var message = {input:$scope.userSelection};
+            var localState  = JSON.parse($element.parent().attr("data-state")  || "null");
+            var localMarkup = JSON.parse($element.parent().attr("data-markup") || "null");
+            if (localState!==null) {message.state = localState};
+            if (localMarkup!==null) {message.markup = localMarkup};
+            console.log(JSON.stringify(message));
             $http({method:'PUT'
                   ,url:$scope.plugin+"/answer/"
-                  ,markup:null
-                  ,state:null
-                  ,input:$scope.userSelection})
+                  ,data:message})
              .success(function(data){
-                  $scope.mcq = data;
+                  $scope.mcq = data.web;
                   console.log(["data",data]);
                  })
              .error(function(data,status,hdrs,cfg){

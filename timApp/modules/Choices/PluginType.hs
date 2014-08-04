@@ -95,7 +95,7 @@ getBody :: (MonadSnap m, FromJSON a) => m a
 getBody = do
     f <- readRequestBody 100000
     case decode f of
-        Nothing -> error $ "Could not decode input parameters"
+        Nothing -> error $ "Could not decode input parameters:"++show f
         Just a  -> return a
 
 -- requireParamE :: (MonadSnap m, Readable b) => BS.ByteString -> m b

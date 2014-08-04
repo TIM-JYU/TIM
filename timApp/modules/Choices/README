@@ -19,7 +19,7 @@ Olennaiset kooditiedostot
 * `script.js`           -- Monivalintatehtävän asiakaslogiikka. Toteuttaa angular modulin `mcq`,
                            joka pitää löytyä siis sivun dependensseistä.
 
-Tiedosto testausta varten
+Olennaiset tiedostot testausta varten
 
 * `examples/testGet.sh`        -- Yksinkertainen curl-skripti, jolla palvelua voi testata.
                                   Esim. `sh examples/testGet.sh examples/html.request` renderöi
@@ -29,3 +29,17 @@ Tiedosto testausta varten
 * `examples/Answer.1.request`  -- Esimerkki `/answer`-reitin käytöstä. Tätä voi testata komennolla
                                   `curl -X PUT --data-binary @examples/Answer.1.request localhost:8080/answer/`
 
+## Testaus
+
+Plugin on yritetty koota siten, että sitä voi testata ilman TIM:iä. Sen pitäisi onnistua näin:
+
+~~~{.bash}
+> cabal sandbox init                                     # Käännetään sandboxissa
+> cabal build        
+> dist/build/ChoicesPlugin/ChoicesPlugin -p8080 &        # Käynnistetään plugin porttiin 8080
+> examples/testGet.sh examples/html.request > test.html  # Haetaan esimerkkisivu
+> chromium test.html --disable-web-security              # Avataan selaimella ja otetaan cross origin policy pois päältä. (ÄLÄ SELAA NETTIÄ TÄLLÄ SELAIMELLA!)
+~~~
+
+Tuossa ei tietenkään mikään tallennu, koska ei ole timiä tallettamassa, mutta muuten
+pitäisi toimia jokseenkin.
