@@ -1,0 +1,32 @@
+﻿<form name="formJypeliOhjelma" ng-controller="CsRunController" ng-init='
+       type="jypeli"; 
+       file="https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Jypeli/Jypeli.cs";
+	   replace="INSERT YOUR CODE HERE";
+	   byCode=
+"         Camera.ZoomToLevel();
+
+         GameObject p1 = new GameObject( 200.0, 200.0, Shape.Circle );
+         p1.X = 0.0;
+         p1.Y = Level.Bottom + 100.0;
+         Add( p1 );
+
+         GameObject p2 = new GameObject( 100.0, 100.0, Shape.Circle );
+         p2.X = 0.0;
+         p2.Y = Level.Bottom + 250.0;
+         Add( p2 );
+
+         GameObject p3 = new GameObject( 60.0, 60.0, Shape.Circle );
+         p3.X = 0.0;
+         p3.Y = Level.Bottom + 330.0;
+         Add( p3 );";
+    '>
+    <textarea cols="80" rows="15" ng-model="byCode" ng-trim="false"></textarea>
+	<br />
+    <button ng-click='runCode();'>Aja</button>
+    <a href="" ng-click='showCode();'>Näytä koko koodi</a>
+    <pre ng-show="viewCode">{{code}}</pre>
+    <!-- <pre  class="console" ng-show="runSuccess">{{result}}</pre> -->
+    <p>{{resImage}}</p>
+    <pre ng-show="runError">{{error}}</pre>
+    <img  class="console" src="{{imgURL}}" alt="" width="500" ng-show="runSuccess" />
+</form>

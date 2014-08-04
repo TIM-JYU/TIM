@@ -11,13 +11,13 @@ EPHEMERAL_URL = 'http://localhost:8001'
 class Documents(TimDbBase):
 
     @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str'):
+    def __init__(self, db_path : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
         """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
-        TimDbBase.__init__(self, db_path, files_root_path)
+        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
         self.ec = EphemeralClient(EPHEMERAL_URL)
     
     @contract
@@ -100,6 +100,23 @@ class Documents(TimDbBase):
                     tmpfile.write(f.read())
                     tmpfile.write('\n\n')
         self.importDocumentFromFile('tmp.temp', document_name, 0)
+    
+    @contract
+    def deleteDocument(self, document_id : 'DocIdentifier'):
+        """Deletes the specified document.
+        
+        :param document_id: The id of the document to be deleted.
+        """
+        
+        assert self.documentExists(document_id), 'document does not exist: %d' % document_id.id
+        
+        cursor = self.db.cursor()
+        cursor.execute('delete from Block where type_id = ? and id = ?', [blocktypes.DOCUMENT, document_id.id])
+        self.db.commit()
+        
+        os.remove(self.getDocumentPath(document_id))
+        
+        gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Deleted document %d.' % document_id.id, 'docker')
         
     @contract
     def deleteParagraph(self, document_id : 'DocIdentifier', par_id : 'int'):
@@ -241,7 +258,7 @@ class Documents(TimDbBase):
         :param document_id: The id of the document.
         :returns: The path of the document.
         """
-        return os.path.join(self.blocks_path, str(document_id.id))
+        return self.getBlockPath(document_id.id)
     
     @contract
     def getDocumentPathAsRelative(self, document_id : 'DocIdentifier'):
@@ -317,7 +334,7 @@ class Documents(TimDbBase):
         
         self.writeUtf8(doc_content, self.getDocumentPath(document_id))
         
-        return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), 'docker')
+        return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), self.current_user_name)
     
     @contract
     def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool' = False):

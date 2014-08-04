@@ -1,7 +1,7 @@
 import BaseHTTPServer
 import subprocess
 # import nltk
-from urllib import urlopen
+from urllib import urlopen,urlencode
 import re
 from urlparse import urlparse,parse_qs
 import os.path
@@ -67,6 +67,48 @@ def get_process_children(pid):
     stdout, stderr = p.communicate()
     return [int(p) for p in stdout.split()]
 
+def printFileTo(name, f):	
+	fr = open(name, "r")
+	lines = fr.readlines()    
+	for i in range(0,len(lines)):
+		line = lines[i]
+		f.write(line)
+	fr.close()
+	
+def queryParamsToNG(query):
+	result = "" 
+	for field in query.keys():
+		result = result + field + "=\"" + query[field][0] + "\";\n"
+	# print "QUERY" + str(query)
+	return result
+	
+def queryParamsToMap(query):
+	result = {}
+	for field in query.keys():
+		result[field] = query[field][0]
+	return result
+	
+def printFileToReplaceNG(name, f, whatToReplace, query):	
+	fr = open(name, "r")
+	lines = fr.readlines()    
+	params = queryParamsToNG(query)
+	for i in range(0,len(lines)):
+		line = lines[i].replace(whatToReplace,params)
+		f.write(line)
+	fr.close()
+	
+def printFileToReplaceURL(name, f, whatToReplace, query):	
+	fr = open(name, "r")
+	lines = fr.readlines()    
+	# params = queryParamsToURL(query)
+	map = queryParamsToMap(query)
+	params = urlencode(map)
+	for i in range(0,len(lines)):
+		line = lines[i].replace(whatToReplace,params)
+		f.write(line)
+	fr.close()
+	
+	
 def printLines(file,lines,n1,n2):	
 	linefmt = "{0:03d} "
 	n = len(lines)
@@ -104,13 +146,42 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		print self.path
 		print self.headers
 		print query
+		
+		fullhtml = self.path.find('/fullhtml') >= 0
+		css = self.path.find('/css') >= 0 
+		js = self.path.find('/js') >= 0 
+		iframe = self.path.find('/iframe') >= 0 
+		
 		self.send_response(200)
 		# self.send_header('Access-Control-Allow-Origin', '*')
 		self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
 		self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type") 
-		self.send_header('Content-type',    'text/plain') 
-		#self.send_header('Content-type',    'text/html')
+		type = 'text/plain'
+		if ( fullhtml ): type = 'text/html'
+		if ( css ): type = 'text/css'
+   		if ( js ) : type = 'application/javascript' 
+		self.send_header('Content-type',type) 
 		self.end_headers()
+		# Get the template type
+		ttype = get_param(query, "type", "console").lower()
+
+		if ( css ):
+			printFileTo('cs.css',self.wfile)
+			return
+		if ( js ):
+			printFileTo('aja.js',self.wfile)
+			return
+		if ( fullhtml ):
+			printFileTo('begin.html',self.wfile)
+			if ( ttype == "console" ):
+				printFileToReplaceNG('consoleTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+			else:	
+				printFileToReplaceNG('jypeliTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+			printFileTo('end.html',self.wfile)
+			return
+		if ( iframe ):
+			printFileToReplaceURL('iframeTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+			return
 
 		# Generate random cs and exe filenames
 		basename = generate_filename()
@@ -125,8 +196,6 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 			self.wfile.write("Must give file= -parameter")
 			return
 
-		# Get the template type
-		ttype = get_param(query, "type", "console").lower()
 		printFile = get_param(query, "print", "")
 		print "type=" + ttype
 
@@ -161,6 +230,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		csfile.close()
 		if not os.path.isfile(csfname):
 			self.wfile.write("Could not get the source file\n")
+			print "=== Could not get the source file"
 			return
 
 		# Compile
@@ -172,6 +242,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
 			check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
 			self.wfile.write("*** Success!\n")
+			print "*** Success"
 		except subprocess.CalledProcessError as e:
 			self.wfile.write("!!! Error code " + str(e.returncode) + "\n" )
 			self.wfile.write(e.output)
@@ -180,6 +251,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 			# self.wfile.write(file.read())
 			printLines(self.wfile,lines,0,10000)
 			os.remove(csfname)
+			print "!!! Error code " + str(e.returncode) + "\n" 
 			return
 
 
@@ -188,13 +260,16 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 			run(["convert", "-flip", bmpname, pngname])
 			os.remove(bmpname)
 			self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
+			print ("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
 			# TODO: clean up screenshot directory
 		else:
 			 code, out, err = run(["mono", exename], timeout = 10)
 
 		self.wfile.write(out)
-                self.wfile.write(err)
-
+		self.wfile.write(err)
+		print out
+		print err
+		
 		# Clean up
 		os.remove(csfname)
 		os.remove(exename)

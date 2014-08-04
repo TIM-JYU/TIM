@@ -8,17 +8,17 @@ def prepPluginCall(htmlStr):
     tree = BeautifulSoup(htmlStr)
     plugins = []
     for node in tree.find_all('pre'):
-        values = []
+        values = {}
         name = node['plugin']
         if(len(node['id']) > 0):
-            values.append(("identifier" , node['id']))
+            values["identifier"] = node['id']
         if(len(node.text) > 0):
             multiLineId = ""
             multiLineVal = ""
             multiLineCont = False
             for value in node.string.strip().split('\n'):
                 if("=====" in value):
-                    values.append((multiLineId, multiLineVal))
+                    values[multiLineId] = multiLineVal
                     multiLineId = ""
                     multiLineVal = ""
                     multiLineCont = False
@@ -26,7 +26,7 @@ def prepPluginCall(htmlStr):
                     multiLineVal = multiLineVal + "\n" + value
                 elif(":" in value):  # If line does not contain valid value pair, discard it.
                     pair = value.strip().split(':',1)
-                    values.append((pair[0].strip(), pair[1].strip()))
+                    values[pair[0].strip()] = pair[1].strip()
                 elif("=" in value):
                     multiLineCont = True
                     pair = value.split("=", 1)[0]
@@ -45,7 +45,7 @@ def pluginify(blocks,user):
         if("plugin=" in block and "<code>" in block):
             pluginInfo = prepPluginCall(block)
             for pair in pluginInfo:
-                pair['values'].append(("user_id", user))
+                pair['values']["user_id"] =  user
                 pluginHtml = callPlugin(pair['plugin'], pair['values'])
                 rx = re.compile('<code>.*</code>')
                 block = rx.sub(block, pluginHtml)

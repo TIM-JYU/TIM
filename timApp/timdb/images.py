@@ -5,18 +5,7 @@ import os
 
 new_contract('bytes', bytes)
 
-IMAGES_DIR = 'img'
-
 class Images(TimDbBase):
-    
-    @contract
-    def getBlockPath(self, block_id : 'int') -> 'str':
-        """Gets the path of the specified block.
-        
-        :param block_id: The id of the block.
-        :returns: The path of the block.
-        """
-        return os.path.join(self.files_root_path, IMAGES_DIR, str(block_id))
     
     @contract
     def getImagePath(self, image_id : 'int', image_filename : 'str'):
@@ -27,7 +16,7 @@ class Images(TimDbBase):
         :returns: The path of the image file.
         """
         
-        return os.path.join(self.files_root_path, IMAGES_DIR, str(image_id), image_filename)
+        return os.path.join(self.blocks_path, str(image_id), image_filename)
     
     @contract
     def getImageRelativePath(self, image_id : 'int', image_filename : 'str'):
@@ -38,7 +27,7 @@ class Images(TimDbBase):
         :returns: The path of the image file.
         """
         
-        return os.path.relpath(self.getImagePath(image_id, image_filename), os.path.join(self.files_root_path, IMAGES_DIR))
+        return os.path.relpath(self.getImagePath(image_id, image_filename), self.blocks_path)
         
     @contract
     def saveImage(self, image_data : 'bytes', image_filename : 'str', owner_group_id : 'int') -> 'tuple(int, str)':
