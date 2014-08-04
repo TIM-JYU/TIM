@@ -164,7 +164,7 @@ def getCurrentUserGroup():
 
 def getTimDb():
     if not hasattr(g, 'timdb'):
-        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'])
+        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'], current_user_name=getCurrentUserName())
     return g.timdb
 
 @app.route("/getJSON/<int:doc_id>/")

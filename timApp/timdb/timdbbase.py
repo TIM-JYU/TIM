@@ -19,24 +19,23 @@ BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE'
 blocktypes = BLOCKTYPES(0,1,2,3,4)
 
 class TimDbException(Exception):
-    """The exception that is thrown when an error occurs during TimDb operation."""
+    """The exception that is thrown when an error occurs during a TimDb operation."""
     pass
 
 class TimDbBase(object):
     """Base class for TimDb classes (e.g. Users, Notes)."""
     
     @contract
-    def __init__(self, db : 'Connection', files_root_path : 'str'):
+    def __init__(self, db : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
         """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
         self.files_root_path = os.path.abspath(files_root_path)
+        self.current_user_name = current_user_name
         
-        # TODO: Make sure that files_root_path is valid!
-        
-        self.blocks_path = os.path.join(self.files_root_path, 'blocks')
+        self.blocks_path = os.path.join(self.files_root_path, 'blocks', type_name)
         for path in [self.blocks_path]:
             if not os.path.exists(path):
                 os.makedirs(path)

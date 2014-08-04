@@ -8,6 +8,28 @@ from timdb.timdbbase import TimDbException
 
 #TODO: This should possibly be a class.
 
+def customCommit(files, msg, author, skip_checks=False, include_staged_files=False):
+    """Record changes in the local repository.
+
+  Args:
+    files: the files to commit.
+    msg: the commit message.
+    skip_checks: if the pre-commit hook should be skipped or not. (Defaults to
+      False.)
+    include_staged_files: whether to include the contents of the staging area in
+      the commit or not. (Defaults to False.)
+
+  Returns:
+    the output of the commit command.
+  """
+    cmd = 'commit {0} --author="{1} <>" -m"{2}"'.format('--no-verify ' if skip_checks else '', author, msg)
+    if not files and include_staged_files:
+        return gitpylib.common.safe_git_call(cmd)[0]
+
+    return gitpylib.common.safe_git_call(
+      '{0} {1}-- "{2}"'.format(
+          cmd, '-i ' if include_staged_files else '', '" "'.join(files)))[0]
+
 @contract
 def initRepo(files_root_path : 'str'):
     """Initializes a Git repository. A .gitattributes file is created with the content '* -text'.
@@ -42,7 +64,7 @@ def gitCommit(files_root_path : 'str', file_path : 'str', commit_message: 'str',
     gitpylib.file.stage(file_path)
     # TODO: Set author for the commit (need to call safe_git_call).
     try:
-        gitpylib.sync.commit([file_path], commit_message, skip_checks=False, include_staged_files=False)
+        customCommit([file_path], commit_message, author, skip_checks=False, include_staged_files=False)
         latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
     except Exception as e:
         if 'nothing added to commit' in str(e):
