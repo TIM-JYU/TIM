@@ -30,7 +30,7 @@ def prepPluginCall(htmlStr):
                 elif("=" in value):
                     multiLineCont = True
                     pair = value.split("=", 1)[0]
-                    multiLineId = pair[0]
+                    multiLineId = pair
                     multilineVal = multiLineVal + pair[1]
                     
         plugins.append({"plugin": name, "values": values})
