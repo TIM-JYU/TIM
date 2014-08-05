@@ -6,9 +6,10 @@ from urlparse import urlparse,parse_qs
 from pprint import pprint
 
 def get_param(query,key,default):
-	if not query.has_key(key):
-		return default
-	return query[key][0]
+	if not query.has_key(key): return default
+	value = query[key][0]
+	if value == 'undefined': return default
+	return value
 	
 def do_matcher(key):
 	if not key:

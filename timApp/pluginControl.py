@@ -29,9 +29,9 @@ def prepPluginCall(htmlStr):
                     values[pair[0].strip()] = pair[1].strip()
                 elif("=" in value):
                     multiLineCont = True
-                    pair = value.split("=", 1)[0]
+                    pair = value.split("=", 1)
                     multiLineId = pair[0]
-                    multilineVal = multiLineVal + pair[1]
+                    multiLineVal = multiLineVal + pair[1]
                     
         plugins.append({"plugin": name, "values": values})
     return plugins
