@@ -105,6 +105,7 @@ experiment plugin markup' port = do
     markup <- newIORef markup'
     let context "port"   = pure (T.pack $ show port)
         context "plugin" = LT.toStrict <$> (render plugin <$> readIORef markup <*> readIORef state)
+        context "moduleDeps" = pure . T.pack . show $ [x | NGModule x <- requirements plugin]
         context "app"    = pure "MCQ"
         context x        = pure $ "??"<>x<>"??"
         routes :: Snap ()
@@ -134,12 +135,14 @@ experiment plugin markup' port = do
 \    <!DOCTYPE html> \
 \     <html lang='en'> \
 \     <head> <meta charset='utf-8'> \
-\                 <title>HTML5 boilerplate – all you really need…</title> \
 \                 <script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.17/angular.min.js'></script>\
 \                 <script src='script.js'></script>\
+\                 <script> \
+\                  var mainModule = angular.module('testApp',${moduleDeps}); \
+\                 </script> \
 \    </head> \
 \    \
-\     <body id='home' ng-app='${app}'> \
+\     <body id='home' ng-app='testApp'> \
 \     <h1>Test</h1> \
 \     <div id='testPlugin' data-plugin='http://localhost:${port}'>\
 \      $plugin \
