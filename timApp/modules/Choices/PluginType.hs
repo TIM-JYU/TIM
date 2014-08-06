@@ -6,13 +6,16 @@ import GHC.Generics
 
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text as T
+import qualified Data.Text.Template as TMPL
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HM
 import Data.HashMap.Strict (HashMap,(!))
+import Data.IORef
 
 import Snap.Core
+import Snap.Http.Server
 import Snap.Util.Readable
 import Snap.Util.FileServe
 
@@ -22,13 +25,16 @@ import qualified HTMLRequest   as H
 import System.Directory
 import UtilityPrelude
 
+-- | Simplified interface for TIM plugins
 data Plugin structure state input = Plugin 
         { initial :: state
         , render  :: structure -> state -> LT.Text
         , update  :: structure -> state -> input -> IO [TIMCmd]
         , requirements :: [Requirement]
+        , additionalFiles :: [FilePath]
         , additionalRoutes :: Snap ()}
 
+-- | Simplified interface for ordering TIM to modify its data
 data TIMCmd = Save Value 
             | SaveMarkup Value
             | Web T.Text Value
@@ -42,7 +48,6 @@ web :: (ToJSON a) => T.Text -> a -> TIMCmd
 web key   = Web key    . toJSON
 
 
-
 ngDirective :: ToJSON a => LB.ByteString -> a -> LB.ByteString
 ngDirective tag content = "<"<>tag<>" data-content='"<>encode content<>"'></"<>tag<>">"
 
@@ -53,7 +58,7 @@ noRoutes = return ()
 -- - Server - --
 --            --
 
-
+-- | Various requirements that the plugin might have.
 data Requirement = JS T.Text
                  | CSS T.Text
                  | NGModule T.Text
@@ -64,6 +69,7 @@ instance ToJSON Requirement where
     toJSON (CSS t)      = object ["css" .= t]
     toJSON (NGModule t) = object ["angularModule" .= t]
 
+-- | Serve a plugin
 serve :: (MonadSnap m, MonadIO m, FromJSON structure, FromJSON state, FromJSON input) => Plugin structure state input -> m ()
 serve plugin = route  
         [
@@ -83,23 +89,77 @@ serve plugin = route
            writeLBS . encode $ object ["web" .= web, "save" .= save, "save-markup" .= markup ] 
         )
         ]
-        <|> staticFiles
+        <|> serveStaticFiles plugin
     where 
-     staticFiles = do
+
+serveStaticFiles plugin = do
         locals <- liftIO $ filterM doesFileExist $ [T.unpack file | CSS file <- requirements plugin]
                                                 ++ [T.unpack file | JS  file <- requirements plugin]
         rq <- getSafePath
         when (rq`elem`locals) (serveFile rq)
+        when (rq`elem`additionalFiles plugin) (serveFile rq)
 
+experiment :: forall structure markup state input. (FromJSON structure, FromJSON state, FromJSON input) => Plugin structure state input -> structure -> Int -> IO ()
+experiment plugin markup' port = do 
+    state  <- newIORef (initial plugin)
+    markup <- newIORef markup'
+    let context "port"   = pure (T.pack $ show port)
+        context "plugin" = LT.toStrict <$> (render plugin <$> readIORef markup <*> readIORef state)
+        context "app"    = pure "MCQ"
+        context x        = pure $ "??"<>x<>"??"
+        routes :: Snap ()
+        routes = route [
+          ("/index.html", method GET $ do
+              pg  <- liftIO $ TMPL.renderA defaultPage context
+              writeLazyText pg
+          ) ,
+          ("answer/", method PUT $ do
+             req <- getBody
+             stateVal <- liftIO $ readIORef state
+             tims :: [TIMCmd] <- liftIO $ do
+                            m <- readIORef markup
+                            s <- readIORef state
+                            update plugin m s (fromPlainInput req)
+             let web    = object [key .= val  | Web key val <- tims ]
+             liftIO $ sequence_ [writeIORef state  (fromJSON' save) | Save save <- tims]
+             liftIO $ sequence_ [writeIORef markup (fromJSON' save) | SaveMarkup save <- tims]
+             writeLBS . encode $ object ["web" .= web] 
+          )
+          ] <|> serveStaticFiles plugin
+
+    httpServe (setPort port mempty)
+              (routes)
+    where
+     defaultPage = TMPL.template " \
+\    <!DOCTYPE html> \
+\     <html lang='en'> \
+\     <head> <meta charset='utf-8'> \
+\                 <title>HTML5 boilerplate – all you really need…</title> \
+\                 <script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.17/angular.min.js'></script>\
+\                 <script src='script.js'></script>\
+\    </head> \
+\    \
+\     <body id='home' ng-app='${app}'> \
+\     <h1>Test</h1> \
+\     <div id='testPlugin' data-plugin='http://localhost:${port}'>\
+\      $plugin \
+\     </div> \
+\     </body> \
+\    </html> "
+
+newtype PlainInput a = PI {fromPlainInput :: a}
+instance FromJSON a => FromJSON (PlainInput a) where
+    parseJSON (Object v) = PI <$> v .: "input"
+    parseJSON _ = mzero
+
+fromJSON' a = case fromJSON a of
+    Error s   -> error s
+    Success b -> b
+
+-- | Extract a JSON value from the request body
 getBody :: (MonadSnap m, FromJSON a) => m a
 getBody = do
     f <- readRequestBody 100000
     case decode f of
         Nothing -> error $ "Could not decode input parameters:"++show f
         Just a  -> return a
-
--- requireParamE :: (MonadSnap m, Readable b) => BS.ByteString -> m b
--- requireParamE p = lift (getParam p) >>= \x -> case x of
---                     Just val -> lift $ fromBS val
---                     Nothing  -> error $ T.unpack $ "Parameter " <> T.decodeUtf8 p <> " needed"
--- 

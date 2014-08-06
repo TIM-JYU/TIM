@@ -2,9 +2,9 @@ angular.module('MCQ', [])
   .directive('mcq', function() {
     return {
       restrict: 'E',
-      templateUrl:function(elem,attrs) {
-              return elem.parent().attr('data-plugin')+"MCQTemplate.html";
-                  }, 
+      templateUrl: function(elem,attrs) {
+                    return elem.parent().attr('data-plugin')+"/MCQTemplate.html";
+                   }, 
       replace: true,
       scope: {},
       controller: function($scope, $element, $http) {
