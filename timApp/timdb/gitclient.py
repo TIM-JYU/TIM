@@ -6,6 +6,9 @@ import gitpylib.common
 import gitpylib.sync
 from timdb.timdbbase import TimDbException
 
+class NothingToCommitException(Exception):
+    pass
+
 #TODO: This should possibly be a class.
 
 def customCommit(files, msg, author, skip_checks=False, include_staged_files=False):
@@ -62,14 +65,15 @@ def gitCommit(files_root_path : 'str', file_path : 'str', commit_message: 'str',
     cwd = os.getcwd()
     os.chdir(files_root_path)
     gitpylib.file.stage(file_path)
-    # TODO: Set author for the commit (need to call safe_git_call).
+
     try:
         customCommit([file_path], commit_message, author, skip_checks=False, include_staged_files=False)
         latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
     except Exception as e:
-        if 'nothing added to commit' in str(e):
-            return
-        raise TimDbException('Commit failed. ' + str(e))
+        exText = str(e)
+        if ('nothing added to commit' in exText) or ('no changes added to commit' in exText):
+            raise NothingToCommitException()
+        raise TimDbException('Commit failed. ' + exText)
     finally:
         os.chdir(cwd)
     return latest_hash.rstrip()
