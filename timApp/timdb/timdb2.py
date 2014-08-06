@@ -9,6 +9,7 @@ from timdb.notes import Notes
 from timdb.users import Users
 from timdb.images import Images
 from timdb.documents import Documents
+from timdb.answers import Answers
 import os
 
 
@@ -46,6 +47,7 @@ class TimDb(object):
         self.users = Users(self.db)
         self.images = Images(self.db, files_root_path, 'images', current_user_name)
         self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+        self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
         
     def clear(self):
         """Clears the contents of all database tables."""
