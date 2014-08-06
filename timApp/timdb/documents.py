@@ -5,6 +5,7 @@ import os
 from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException
 from shutil import copyfile
 from .gitclient import gitCommit, gitCommand
+from timdb.gitclient import NothingToCommitException
 
 EPHEMERAL_URL = 'http://localhost:8001'
 
@@ -333,7 +334,6 @@ class Documents(TimDbBase):
         """
         
         self.writeUtf8(doc_content, self.getDocumentPath(document_id))
-        
         return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), self.current_user_name)
     
     @contract
@@ -387,7 +387,11 @@ class Documents(TimDbBase):
         self.ec.renameDocumentStr(response['new_id'], str(new_id))
         self.__updateNoteIndexes(document_id, new_id)
         new_content = self.ec.getDocumentFullText(new_id)
-        version = self.__commitDocumentChanges(new_id, new_content, message)
+        
+        try:
+            version = self.__commitDocumentChanges(new_id, new_content, message)
+        except NothingToCommitException:
+            return document_id.hash
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
         return version
         
@@ -404,6 +408,7 @@ class Documents(TimDbBase):
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
         response = self.ec.modifyBlock(document_id, block_id, new_content)
+        
         version = self.__handleModifyResponse(document_id, response, 'Modified a paragraph at index %d' % (block_id))
         blocks = response['paragraphs']
         return blocks, version
@@ -419,7 +424,10 @@ class Documents(TimDbBase):
         
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
-        version = self.__commitDocumentChanges(document_id, str(new_content, encoding='utf-8'), "Modified as whole")
+        try:
+            version = self.__commitDocumentChanges(document_id, str(new_content, encoding='utf-8'), "Modified as whole")
+        except NothingToCommitException:
+            return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content)
         self.__updateNoteIndexes(document_id, new_id)
