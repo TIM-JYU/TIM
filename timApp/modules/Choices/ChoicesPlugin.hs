@@ -35,9 +35,6 @@ instance FromJSON Choice where
 instance FromJSON a => FromJSON (MCQMarkup a) where
 instance FromJSON MCQState where
 
-testQ = MCM "ekatehtävä" "Valitse kissa" [Choice "Koira" False "Piti valita kissa"
-                                         ,Choice "Kissa" True  "Kissat Rulez"
-                                         ,Choice "Kani"  False "Kissa voi syödä kanin"]
 
 data MCQState = Revealed Integer | Unchecked deriving (Eq,Show,Generic)
 
@@ -64,4 +61,10 @@ simpleMultipleChoice
                                                      ,"state"    .= (Nothing :: Maybe ()) ]
     additionalRoutes = noRoutes
                                 
+main :: IO ()
 main = quickHttpServe $ serve simpleMultipleChoice
+
+testQ :: Markup Choice
+testQ = MCM "ekatehtävä" "Valitse kissa" [Choice "Koira" False "Piti valita kissa"
+                                         ,Choice "Kissa" True  "Kissat Rulez"
+                                         ,Choice "Kani"  False "Kissa voi syödä kanin"]
