@@ -47,7 +47,6 @@ saveMarkup = SaveMarkup . toJSON
 web :: (ToJSON a) => T.Text -> a -> TIMCmd
 web key   = Web key    . toJSON
 
-
 ngDirective :: ToJSON a => LB.ByteString -> a -> LB.ByteString
 ngDirective tag content = "<"<>tag<>" data-content='"<>encode content<>"'></"<>tag<>">"
 
@@ -106,6 +105,12 @@ experiment plugin markup' port = do
     let context "port"   = pure (T.pack $ show port)
         context "plugin" = LT.toStrict <$> (render plugin <$> readIORef markup <*> readIORef state)
         context "moduleDeps" = pure . T.pack . show $ [x | NGModule x <- requirements plugin]
+        context "scripts"    = pure . T.unlines 
+                                        $ ["<script src='"<>x<>"'></script>" 
+                                          | JS x <- requirements plugin]
+        context "csss"       = pure . T.unlines 
+                                        $ ["<link rel='stylesheet' type='text/css' href='"<>x<>"'>" 
+                                          | JS x <- requirements plugin]
         context "app"    = pure "MCQ"
         context x        = pure $ "??"<>x<>"??"
         routes :: Snap ()
@@ -136,7 +141,7 @@ experiment plugin markup' port = do
 \     <html lang='en'> \
 \     <head> <meta charset='utf-8'> \
 \                 <script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.17/angular.min.js'></script>\
-\                 <script src='script.js'></script>\
+\                 ${scripts}\
 \                 <script> \
 \                  var mainModule = angular.module('testApp',${moduleDeps}); \
 \                 </script> \
@@ -150,6 +155,9 @@ experiment plugin markup' port = do
 \     </body> \
 \    </html> "
 
+
+-- | Plain input is used to extract `{"input":..}` messages that the experimentation
+--   mode needs to be able to catch so it can pretend to be TIM.
 newtype PlainInput a = PI {fromPlainInput :: a}
 instance FromJSON a => FromJSON (PlainInput a) where
     parseJSON (Object v) = PI <$> v .: "input"
