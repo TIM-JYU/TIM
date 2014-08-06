@@ -1,15 +1,15 @@
 <div>[{{plugin}}]
-<span>{{mcq.question.stem}}</span>
-<table>
- <tr ng-repeat="choice in mcq.question.choices">
-  <td>
-    <input  ng-if="mcq.state==null" type="radio" ng-model="$parent.$parent.userSelection" ng-value="$index" />
-    <span ng-if="mcq.state==$index&&choice.correct">✓</span>
-    <span ng-if="mcq.state==$index&&!choice.correct">✗</span>
-  </td>
-  <td><span class="MCQItem">{{choice.text}}</span>
-      <span ng-if="choice.reason" class="MCQExpl">({{choice.reason}})</span></td>
- </tr>
-</table>
- <button ng-click="submit()">Check</button>
+    <span>{{mcq.question.stem}}</span>
+    <table>
+     <tr ng-repeat="choice in mcq.question.choices">
+      <td>
+        <input  ng-if="mcq.state==null" type="radio" ng-model="$parent.$parent.userSelection" ng-value="$index" />
+        <span ng-if="mcq.state==$index&&choice.correct">✓</span>
+        <span ng-if="mcq.state==$index&&!choice.correct">✗</span>
+      </td>
+      <td><span class="MCQItem">{{choice.text}}</span>
+          <span ng-if="choice.reason" class="MCQExpl">({{choice.reason}})</span></td>
+     </tr>
+    </table>
+     <button ng-click="submit()">Check</button>
 </div>

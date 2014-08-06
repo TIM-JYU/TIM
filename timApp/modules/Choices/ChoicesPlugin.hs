@@ -47,6 +47,7 @@ simpleMultipleChoice
   where 
     requirements = [JS "script.js"
                   ,NGModule "MCQ"]
+    additionalFiles = ["MCQTemplate.html"]
     initial = Nothing
     update mcm _ i = return $ 
                        [save (Just i)
