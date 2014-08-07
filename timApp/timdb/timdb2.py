@@ -9,6 +9,7 @@ from timdb.notes import Notes
 from timdb.users import Users
 from timdb.images import Images
 from timdb.documents import Documents
+from timdb.answers import Answers
 import os
 
 
@@ -25,7 +26,7 @@ class TimDb(object):
     """Handles saving and retrieving information from TIM database."""
 
     @contract
-    def __init__(self, db_path : 'str', files_root_path : 'str'):
+    def __init__(self, db_path : 'str', files_root_path : 'str', current_user_name='Anonymous'):
         """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.
@@ -42,10 +43,11 @@ class TimDb(object):
         
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
-        self.notes = Notes(self.db, files_root_path)
-        self.users = Users(self.db, files_root_path)
-        self.images = Images(self.db, files_root_path)
-        self.documents = Documents(self.db, files_root_path)
+        self.notes = Notes(self.db, files_root_path, 'notes', current_user_name)
+        self.users = Users(self.db)
+        self.images = Images(self.db, files_root_path, 'images', current_user_name)
+        self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+        self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
         
     def clear(self):
         """Clears the contents of all database tables."""

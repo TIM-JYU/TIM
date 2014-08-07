@@ -82,6 +82,13 @@ def queryParamsToNG(query):
 	# print "QUERY" + str(query)
 	return result
 	
+def queryParamsToAttribute(query):
+	result = "" 
+	for field in query.keys():
+		result = result + field.lower() + "=\'" + query[field][0] + "\'\n"
+	# print "QUERY" + str(query)
+	return result+"";
+	
 def queryParamsToMap(query):
 	result = {}
 	for field in query.keys():
@@ -108,6 +115,15 @@ def printFileToReplaceURL(name, f, whatToReplace, query):
 		f.write(line)
 	fr.close()
 	
+def printFileToReplaceAttribute(name, f, whatToReplace, query):	
+	fr = open(name, "r")
+	lines = fr.readlines()    
+	params = queryParamsToAttribute(query)
+	for i in range(0,len(lines)):
+		line = lines[i].replace(whatToReplace,params)
+		f.write(line)
+	fr.close()
+
 	
 def printLines(file,lines,n1,n2):	
 	linefmt = "{0:03d} "
@@ -148,16 +164,27 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		print query
 		
 		fullhtml = self.path.find('/fullhtml') >= 0
+		html = self.path.find('/html') >= 0
 		css = self.path.find('/css') >= 0 
+		dirjs = self.path.find('/js/dir.js') >= 0 
 		js = self.path.find('/js') >= 0 
-		iframe = self.path.find('/iframe') >= 0 
+		iframeParam = get_param(query, "iframe", "") 
+		iframe = (self.path.find('/iframe') >= 0) or ( iframeParam )
+		if ( iframeParam ) : del query["iframe"]
+		
+		#korjaus kunnes byCode parametri tulee kokonaisena
+		tempBy = get_param(query, "b", "") 
+		if ( tempBy ):
+			query["byCode"] = [tempBy];
+			
+		print query
 		
 		self.send_response(200)
 		# self.send_header('Access-Control-Allow-Origin', '*')
 		self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
 		self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type") 
 		type = 'text/plain'
-		if ( fullhtml ): type = 'text/html'
+		if ( fullhtml or html ): type = 'text/html'
 		if ( css ): type = 'text/css'
    		if ( js ) : type = 'application/javascript' 
 		self.send_header('Content-type',type) 
@@ -168,8 +195,17 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		if ( css ):
 			printFileTo('cs.css',self.wfile)
 			return
+		if ( dirjs ):
+			printFileTo('js/dir.js',self.wfile)
+			return
 		if ( js ):
 			printFileTo('aja.js',self.wfile)
+			return
+		if ( html ):
+			if ( ttype == "console" ):
+				printFileToReplaceAttribute('consoleHTMLTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+			else:	
+				printFileToReplaceAttribute('jypeliHTMLTemplate.html',self.wfile,"##QUERYPARAMS##",query)
 			return
 		if ( fullhtml ):
 			printFileTo('begin.html',self.wfile)

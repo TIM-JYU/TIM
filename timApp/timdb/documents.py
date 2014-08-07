@@ -5,19 +5,20 @@ import os
 from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException
 from shutil import copyfile
 from .gitclient import gitCommit, gitCommand
+from timdb.gitclient import NothingToCommitException
 
 EPHEMERAL_URL = 'http://localhost:8001'
 
 class Documents(TimDbBase):
 
     @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str'):
+    def __init__(self, db_path : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
         """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
-        TimDbBase.__init__(self, db_path, files_root_path)
+        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
         self.ec = EphemeralClient(EPHEMERAL_URL)
     
     @contract
@@ -258,7 +259,7 @@ class Documents(TimDbBase):
         :param document_id: The id of the document.
         :returns: The path of the document.
         """
-        return os.path.join(self.blocks_path, str(document_id.id))
+        return self.getBlockPath(document_id.id)
     
     @contract
     def getDocumentPathAsRelative(self, document_id : 'DocIdentifier'):
@@ -333,8 +334,7 @@ class Documents(TimDbBase):
         """
         
         self.writeUtf8(doc_content, self.getDocumentPath(document_id))
-        
-        return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), 'docker')
+        return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), self.current_user_name)
     
     @contract
     def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool' = False):
@@ -387,7 +387,11 @@ class Documents(TimDbBase):
         self.ec.renameDocumentStr(response['new_id'], str(new_id))
         self.__updateNoteIndexes(document_id, new_id)
         new_content = self.ec.getDocumentFullText(new_id)
-        version = self.__commitDocumentChanges(new_id, new_content, message)
+        
+        try:
+            version = self.__commitDocumentChanges(new_id, new_content, message)
+        except NothingToCommitException:
+            return document_id.hash
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
         return version
         
@@ -404,6 +408,7 @@ class Documents(TimDbBase):
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
         response = self.ec.modifyBlock(document_id, block_id, new_content)
+        
         version = self.__handleModifyResponse(document_id, response, 'Modified a paragraph at index %d' % (block_id))
         blocks = response['paragraphs']
         return blocks, version
@@ -419,7 +424,10 @@ class Documents(TimDbBase):
         
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
-        version = self.__commitDocumentChanges(document_id, str(new_content, encoding='utf-8'), "Modified as whole")
+        try:
+            version = self.__commitDocumentChanges(document_id, str(new_content, encoding='utf-8'), "Modified as whole")
+        except NothingToCommitException:
+            return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content)
         self.__updateNoteIndexes(document_id, new_id)

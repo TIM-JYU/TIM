@@ -9,6 +9,14 @@ class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
     
     @contract
+    def __init__(self, db : 'Connection'):
+        """Initializes TimDB with the specified database and root path.
+        
+        :param db: The database connection.
+        """
+        self.db = db
+        
+    @contract
     def createAnonymousUser(self) -> 'int':
         """Creates an anonymous user and a usergroup for it.
         The user id and its associated usergroup id is 0.
