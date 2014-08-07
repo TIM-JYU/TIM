@@ -51,7 +51,7 @@ simpleMultipleChoice
                        ,web  "state"  i
                        ,web  "question" mcm
                        ]
-    render mcm state = LT.decodeUtf8 $
+    render mcm state = return . LT.decodeUtf8 $
                         case state of
                              Just i  -> ngDirective "mcq" 
                                             $ object ["question" .= mcm 

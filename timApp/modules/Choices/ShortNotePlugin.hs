@@ -26,7 +26,7 @@ shortNote = Plugin{..}
                                        ,"height"  .= height markup
                                        ,"prompt"  .= prompt markup
                                        ,"content" .= state]
-    render markup state = LT.decodeUtf8 $ ngDirective "shortNote" $ encodeState markup state
+    render markup state = return . LT.decodeUtf8 $ ngDirective "shortNote" $ encodeState markup state
     additionalRoutes = noRoutes
                                 
 main :: IO ()

@@ -111,7 +111,6 @@ def updateDocument(doc_id, version):
     timdb = getTimDb()
     docId = DocIdentifier(doc_id, version)
     if not timdb.documents.documentExists(docId):
-        print('asdasd')
         abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)
@@ -363,6 +362,41 @@ def getNotes(doc_id):
     notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
     return jsonResponse(notes)
 
+@app.route("/<int:doc_id>/<plugintype>/<task_id>/answer", methods=['PUT'])
+def saveAnswer(doc_id, plugintype, task_id):
+    timdb = getTimDb()
+    
+    #answerdata = request.get_json()['answer']
+    answerdata = request.form['answer']
+    
+    # Load old state
+    oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
+    
+    # Get the newest
+    state = oldAnswers[0]['content']
+    
+    markup = getPluginMarkup(doc_id, plugintype, task_id)
+    if markup is None:
+        return jsonResponse({'error' : 'The task was not found in the document.'}, 404)
+    
+    # TODO: Call plugin's answer route
+    pluginResponse = callPlugin(plugintype, {'markup' : markup, 'state' : state, 'input' : answerdata})
+    
+    # Assuming the JSON is in a string
+    jsonresp = json.loads(pluginResponse)
+    
+    #Save the new state
+    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['state']), jsonresp['state']['points'])
+    return jsonResponse(jsonresp['web'])
+
+def getPluginMarkup(doc_id, plugintype, task_id):
+    timdb = getTimDb()
+    doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
+    for block in doc_markdown:
+        if('plugin="{}"'.format(plugintype) in block and "<code>" in block and '<pre id="{}"'.format(task_id) in block):
+            return pluginControl.prepPluginCall(block)
+    return None
+    
 @app.route("/")
 def indexPage():
     return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
