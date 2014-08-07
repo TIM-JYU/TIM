@@ -9,37 +9,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                '$templateCache',
     function(sc, http, q, $upload, $templateCache){
             // Set all requests to also sen the version number of current document
-            http.defaults.headers.common.Version = version.hash;
-
-            
-            sc.callPlugin = function(plugin, info){
-                var promise = q.defer();
-                var callPlugin = function(plugin, info){
-                    http({method: "POST",
-                         url: '/pluginCall/'+plugin,
-                         data: JSON.stringify({"content":info})}).
-                        success(function(data, status, headers, config) {
-                                 promise.resolve(data);
-                        }).
-                        error(function(data, status, headers, config) {
-                                 promise.reject("unspecified plugin");
-                        });
-               }
-               callPlugin(plugin, info);
-               return promise.promise;
-
-            };
-
-            sc.fetchAndReplace = function(text, wholeMatch, plugin, params){ 
-                    pluginPromise = sc.callPlugin(plugin, params);
-                    pluginPromise.then(function(data){
-                                            sc.tempVariable = data;
-                                       },
-                                       function(){},
-                                       function(){});
-                    receivedText = sc.tempVariable;
-                    return text.replace(wholeMatch, receivedText);
-            }
+            http.defaults.headers.common.Version = version.hash; 
 
 
         // Various regex patterns for editor
@@ -53,17 +23,6 @@ EditApp.controller("ParCtrl", ['$scope',
                             (function(i){
                                     var text = jsonDoc[i];
                                     sc.paragraphs.push({"par": i, "html": text, "display":false});
-                                    var match = sc.pluginPat.exec(text);
-                                    if(match !== null){
-                                            var promise = sc.callPlugin(match[1], match[2]);
-                                            promise.then(
-                                                    function(data){ 
-                                                            text = text.replace(match[0], data);
-                                                            $("." + i.toString()).get()[0].innerHTML = text;
-                                                    },
-                                                    function(){},
-                                                    function(){});
-                                    }
                             })(i);
                     }
             };
@@ -80,7 +39,7 @@ EditApp.controller("ParCtrl", ['$scope',
             sc.tempVariable = ""; // TODO: only serves to act as temporary storage for data fetched, fix           
             
             // markdown-html converter, currently unused but for future preview purposes might be useful.
-            sc.convertHtml = new Markdown.getSanitizingConverter();
+            /*sc.convertHtml = new Markdown.getSanitizingConverter();
             sc.convertHtml.hooks.chain("preBlockGamut", function (text, runBlockGamut) {
                 var match = sc.pluginPat.exec(text);
                 if(match !== null){
@@ -91,7 +50,7 @@ EditApp.controller("ParCtrl", ['$scope',
                     return text;
                 }
                 
-            });
+            });*/
 
 
             
@@ -261,7 +220,7 @@ EditApp.controller("ParCtrl", ['$scope',
                     });
 
             };
-
+/*
             sc.getPlugin = function(text){ 
                 var match = sc.pluginPat.exec(text);
                 if(match !== null){
@@ -272,6 +231,7 @@ EditApp.controller("ParCtrl", ['$scope',
                     return text;
                 }
             }
+*/
             sc.tempVar = "";
             sc.saveEdits = function(elem, elemId,postingNew){
                     if(sc.oldParagraph === sc.activeEdit.editor.getSession().getValue()){
@@ -308,12 +268,10 @@ EditApp.controller("ParCtrl", ['$scope',
                                     var newParId = sc.getValue(elem.par);
                                     for(var i = 0; i < data.length; i++){                           
                                         if(i > 0){
-                                            $templateCache.put("plugin", data[sc.getValue(i)]);
                                             sc.addParagraph(newParId);
                                             sc.sendingNew = false; 
 //                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
-                                            sc.paragraphs[newParId].html = "<div ng-include src='plugin'></div>";
-                                            $("." + newParId).get()[0].innerHTML = "<div ng-include src='plugin'></div>";
+                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             //$("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
                                                 
                                         
@@ -321,7 +279,6 @@ EditApp.controller("ParCtrl", ['$scope',
                                             $templateCache.put("plugin", data[sc.getValue(i)]);
                                             sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             sc.updateEditor(elem, elemId);
-                                            $("." + newParId).get()[0].innerHTML = "<div ng-include src='plugin'></div>";
                                             //$("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
                                             
                                         }
@@ -438,4 +395,13 @@ EditApp.controller("ParCtrl", ['$scope',
               };
             
         }]);
+
+EditApp.filter('to_trusted', ['$sce', function($sce){
+        return function(text) {
+                return $sce.trustAsHtml(text);
+        };
+}]);
+
+
+
 
