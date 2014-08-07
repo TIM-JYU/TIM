@@ -43,10 +43,12 @@ def prepPluginCall(htmlStr):
 # replace contents with plugin.
 def pluginify(blocks,user): 
     preparedBlocks = []
+    plugins = []
     for block in blocks:
         if("plugin=" in block and "<code>" in block):
             pluginInfo = prepPluginCall(block)
             for pair in pluginInfo:
+                plugins.append(pair['plugin'])
                 pair['values']["user_id"] =  user
                 pluginHtml = callPlugin(pair['plugin'], pair['values'])
                 rx = re.compile('<code>.*</code>')
@@ -54,6 +56,21 @@ def pluginify(blocks,user):
                 preparedBlocks.append(block)
         else:
             preparedBlocks.append(block)
-    return preparedBlocks
+    return (plugins,preparedBlocks)
 
-
+# pluginReqs is json of required files
+def pluginDeps(pluginReqs):
+    js = []
+    jsMods = []
+    css = [] 
+    for f in pluginReqs:
+        if "CSS" in f:
+            for cssF in f['CSS']:
+                css.append(cssF)
+        if "JS" in f:
+            for jsF in f['JS']:
+                js.append(jsF)
+        if "angularModule" in f:
+            for ng in f['angularModule']:
+                jsMods.append(ng)
+    return (js,css, jsMods)
