@@ -7,7 +7,7 @@ from flask import send_from_directory
 from ReverseProxied import ReverseProxied
 import json
 import os
-from containerLink import callPlugin
+import containerLink
 from werkzeug.utils import secure_filename
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException, DocIdentifier
@@ -16,6 +16,7 @@ import imghdr
 from flask.helpers import send_file
 import io
 import pluginControl
+from htmlSanitize import sanitize_html
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -200,7 +201,7 @@ def postParagraph():
     timdb = getTimDb()
     docId = request.get_json()['docId']
     verifyEditAccess(docId)
-    paragraphText = request.get_json()['text']
+    paragraphText = sanitize_html(request.get_json()['text'])
     parIndex = request.get_json()['par']
     version = request.headers.get('Version')
     identifier = getNewest(docId)#DocIdentifier(docId, version)
@@ -210,9 +211,8 @@ def postParagraph():
     except IOError as err:
         print(err)
         return "Failed to modify block."
-    # Replace appropriate elements with plugin content
-    preparedBlocks = pluginControl.pluginify(blocks, getCurrentUserName())
-
+    # Replace appropriate elements with plugin content, load plugin requirements to template
+    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName())
     return jsonResponse(preparedBlocks)
 
 @app.route("/createDocument", methods=["POST"])
@@ -242,8 +242,30 @@ def getDocument(doc_id):
     newest = getNewest(doc_id)
     doc_metadata = timdb.documents.getDocument(newest)
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
-    texts = pluginControl.pluginify(xs, getCurrentUserName())
-    return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash})
+    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
+    jsPaths = []
+    cssPaths = []
+    modules = ["\"ng-sanitize\",", "\"angularFileUpload\","]
+    for p in plugins:
+       print (containerLink.pluginReqs(p))
+       (rawJs,rawCss,modsList) = pluginControl.pluginDeps(containerLink.pluginReqs(p))
+      
+       for src in rawJs:
+           if( "http" in src):
+               jsPaths.append(src)
+           else:
+               x = getPlugin(p)['host']
+               jsPaths.append(x + src)
+       for cssSrc in rawCss:
+           if( "http" in src):
+               cssPaths.append(cssSrc)
+           else:
+               x = getPlugin(p)['host']
+               cssPaths.append(x + src)
+       for mod in modsList:
+           modules.append(mod)
+    print (str(jsPaths) + "\n" + str(cssPaths) + "\n" + str( modules))
+    return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
