@@ -1,30 +1,30 @@
-angular.module('MCQ', [])
-  .directive('mcq', function() {
+function standardDirective(template,extract) {
+ return function() {
     return {
       restrict: 'E',
       templateUrl: function(elem,attrs) {
-                    return elem.parent().attr('data-plugin')+"/MCQTemplate.html";
+                    return elem.parent().attr('data-plugin')+"/"+template;
                    }, 
       replace: true,
       scope: {},
       controller: function($scope, $element, $http) {
         $scope.ident     = $element.parent().attr("id"); 
-        $scope.mcq = JSON.parse($element.attr("data-content"));
+        $scope.content = JSON.parse($element.attr("data-content"));
+        console.log(["initial",$scope.content]);
         $scope.plugin = $element.parent().attr("data-plugin");
-        $scope.userSelection = null;
         $scope.submit = function () {
-            var message = {input:$scope.userSelection};
+            var message = {input:extract($scope)};
+            console.log(["sent",$scope.content.content]);
             var localState  = JSON.parse($element.parent().attr("data-state")  || "null");
             var localMarkup = JSON.parse($element.parent().attr("data-markup") || "null");
             if (localState!==null) {message.state = localState};
             if (localMarkup!==null) {message.markup = localMarkup};
-            console.log(JSON.stringify(message));
             $http({method:'PUT'
                   ,url:$scope.plugin+"/answer/"
                   ,data:message})
              .success(function(data){
-                  $scope.mcq = data.web;
-                  console.log(["data",data]);
+                  $scope.content = data.web
+                  console.log(["data",$scope.content]);
                  })
              .error(function(data,status,hdrs,cfg){
                   alert(["error",data,status,hdrs,cfg]);
@@ -32,4 +32,9 @@ angular.module('MCQ', [])
             };
        }
     }
-  });
+  }
+}
+angular.module('MCQ', [])
+  .directive('mcq', standardDirective("MCQTemplate.html"
+                                     , function(scope){return scope.userSelection;}));
+

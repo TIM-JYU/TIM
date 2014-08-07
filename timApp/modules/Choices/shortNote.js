@@ -23,7 +23,7 @@ function standardDirective(template,extract) {
                   ,url:$scope.plugin+"/answer/"
                   ,data:message})
              .success(function(data){
-                  $scope.content = data.web.content;
+                  $scope.content = data.web;
                   console.log(["data",$scope.content]);
                  })
              .error(function(data,status,hdrs,cfg){

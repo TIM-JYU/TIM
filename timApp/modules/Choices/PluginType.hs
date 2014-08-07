@@ -28,7 +28,7 @@ import UtilityPrelude
 -- | Simplified interface for TIM plugins
 data Plugin structure state input = Plugin 
         { initial :: state
-        , render  :: structure -> state -> LT.Text
+        , render  :: structure -> state -> IO LT.Text
         , update  :: structure -> state -> input -> IO [TIMCmd]
         , requirements :: [Requirement]
         , additionalFiles :: [FilePath]
@@ -74,7 +74,7 @@ serve plugin = route
         [
         ("html/", method POST $ do
             req <- getBody
-            writeLazyText $ render plugin (H.markup req) (fromMaybe (initial plugin) (H.state req))
+            writeLazyText =<< liftIO (render plugin (H.markup req) (fromMaybe (initial plugin) (H.state req)))
         ),
         ("reqs/", method GET $ do
             writeLBS . encode $ requirements plugin
@@ -103,7 +103,10 @@ experiment plugin markup' port = do
     state  <- newIORef (initial plugin)
     markup <- newIORef markup'
     let context "port"   = pure (T.pack $ show port)
-        context "plugin" = LT.toStrict <$> (render plugin <$> readIORef markup <*> readIORef state)
+        context "plugin" = do
+                            m <- readIORef markup 
+                            s <-  readIORef state
+                            LT.toStrict <$> render plugin m s
         context "moduleDeps" = pure . T.pack . show $ [x | NGModule x <- requirements plugin]
         context "scripts"    = pure . T.unlines 
                                         $ ["<script src='"<>x<>"'></script>" 
