@@ -125,10 +125,10 @@ class Users(TimDbBase):
         assert access_type in ['view', 'edit'], 'invalid value for access_type'
         cursor = self.db.cursor()
         if access_type == 'view':
-            cursor.execute('insert into BlockViewAccess (Block_id,UserGroup_id,visible_from) values (?,?,date(\'now\'))'
+            cursor.execute('insert into BlockViewAccess (Block_id,UserGroup_id,visible_from) values (?,?,CURRENT_TIMESTAMP)'
                        , [block_id, group_id])
         else:
-            cursor.execute('insert into BlockEditAccess (Block_id,UserGroup_id,editable_from) values (?,?,date(\'now\'))'
+            cursor.execute('insert into BlockEditAccess (Block_id,UserGroup_id,editable_from) values (?,?,CURRENT_TIMESTAMP)'
                        , [block_id, group_id])
         self.db.commit()
         
