@@ -1,10 +1,13 @@
 //var controllerProvider = null; // For addittional controllers from plugins.
 var EditApp = angular.module('controller', ['ngSanitize', 'angularFileUpload']);
+
+
 EditApp.controller("ParCtrl", ['$scope', 
                                '$http', 
                                '$q', 
                                '$upload',
-    function(sc, http, q, $upload){
+                               '$templateCache',
+    function(sc, http, q, $upload, $templateCache){
             // Set all requests to also sen the version number of current document
             http.defaults.headers.common.Version = version.hash;
 
@@ -269,7 +272,7 @@ EditApp.controller("ParCtrl", ['$scope',
                     return text;
                 }
             }
-
+            sc.tempVar = "";
             sc.saveEdits = function(elem, elemId,postingNew){
                     if(sc.oldParagraph === sc.activeEdit.editor.getSession().getValue()){
                             sc.cancelEdit(elemId);
@@ -305,18 +308,21 @@ EditApp.controller("ParCtrl", ['$scope',
                                     var newParId = sc.getValue(elem.par);
                                     for(var i = 0; i < data.length; i++){                           
                                         if(i > 0){
+                                            $templateCache.put("plugin", data[sc.getValue(i)]);
                                             sc.addParagraph(newParId);
-                                            sc.sendingNew = false;
-                                            var str = sc.getPlugin(data[sc.getValue(i)]);
-                                            sc.paragraphs[newParId].html = str;
-                                            $("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
+                                            sc.sendingNew = false; 
+//                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
+                                            sc.paragraphs[newParId].html = "<div ng-include src='plugin'></div>";
+                                            $("." + newParId).get()[0].innerHTML = "<div ng-include src='plugin'></div>";
+                                            //$("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
                                                 
                                         
-                                        }else{
-                                            var str = sc.getPlugin(data[sc.getValue(i)]);
-                                            sc.paragraphs[newParId].html = str;
+                                        }else{                                            
+                                            $templateCache.put("plugin", data[sc.getValue(i)]);
+                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             sc.updateEditor(elem, elemId);
-                                            $("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
+                                            $("." + newParId).get()[0].innerHTML = "<div ng-include src='plugin'></div>";
+                                            //$("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
                                             
                                         }
                                         newParId = newParId + 1;

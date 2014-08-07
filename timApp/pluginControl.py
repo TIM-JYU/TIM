@@ -10,8 +10,10 @@ def prepPluginCall(htmlStr):
     for node in tree.find_all('pre'):
         values = {}
         name = node['plugin']
-        if(len(node['id']) > 0):
+        try:
             values["identifier"] = node['id']
+        except KeyError:
+            values['identifier'] = " "
         if(len(node.text) > 0):
             multiLineId = ""
             multiLineVal = ""
