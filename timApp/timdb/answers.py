@@ -33,7 +33,7 @@ class Answers(TimDbBase):
         """
         
         cursor = self.db.cursor()
-        cursor.execute("""select * from Answer where task_id = ?
+        cursor.execute("""select id, task_id, content, points, answered_on from Answer where task_id = ?
                           and id in
                               (select answer_id from UserAnswer where user_id = ?)
                           order by answered_on desc""", [task_id, user_id])
@@ -48,7 +48,7 @@ class Answers(TimDbBase):
         """
         
         cursor = self.db.cursor()
-        sql = """select * from Answer where task_id = ?
+        sql = """select id, task_id, content, points, answered_on from Answer where task_id = ?
                           %s
                           order by answered_on desc""" % (" ".join(["and id in (select answer_id from UserAnswer where user_id = %d)" % user_id for user_id in user_ids]))
         print(sql)
