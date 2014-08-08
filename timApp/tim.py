@@ -246,23 +246,23 @@ def getDocument(doc_id):
     cssPaths = []
     modules = ["\"ng-sanitize\",", "\"angularFileUpload\","]
     for p in plugins:
-       print (containerLink.pluginReqs(p))
-       (rawJs,rawCss,modsList) = pluginControl.pluginDeps(containerLink.pluginReqs(p))
+        print (containerLink.pluginReqs(p))
+        (rawJs,rawCss,modsList) = pluginControl.pluginDeps(containerLink.pluginReqs(p))
       
-       for src in rawJs:
-           if( "http" in src):
-               jsPaths.append(src)
-           else:
-               x = getPlugin(p)['host']
-               jsPaths.append(x + src)
-       for cssSrc in rawCss:
-           if( "http" in src):
-               cssPaths.append(cssSrc)
-           else:
-               x = getPlugin(p)['host']
-               cssPaths.append(x + src)
-       for mod in modsList:
-           modules.append(mod)
+        for src in rawJs:
+            if( "http" in src):
+                jsPaths.append(src)
+            else:
+                x = getPlugin(p)['host']
+                jsPaths.append(x + src)
+        for cssSrc in rawCss:
+            if( "http" in src):
+                cssPaths.append(cssSrc)
+            else:
+                x = getPlugin(p)['host']
+                cssPaths.append(x + src)
+        for mod in modsList:
+            modules.append(mod)
     print (str(jsPaths) + "\n" + str(cssPaths) + "\n" + str( modules))
     return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
 
