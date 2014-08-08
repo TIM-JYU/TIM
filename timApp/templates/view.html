@@ -19,6 +19,7 @@
 <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <style type="text/css" media="screen">
 .editor {
 	position: absolute;
@@ -51,8 +52,8 @@
 
         <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 
-        <div class="paragraph" ng-repeat="par in paragraphs track by $index" ng-init="parIndex = $index">
-            <div style="" class="content {{ '{{ $index }}' }}" bind-once ng-bind-html="par.html"></div>
+        <div class="paragraph" ng-repeat="par in paragraphs" ng-init="parIndex = par.par">
+            <div style="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html | to_trusted"></div>
 
             <div class="notes" ng-controller="NoteCtrl">
                 <div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
