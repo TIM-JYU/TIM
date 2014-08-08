@@ -11,7 +11,6 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             $http.get('/notes/' + $scope.docId).success(
                     function(data, status, headers, config) {
                         var len = $scope.paragraphs.length;
-                        $scope.pars = [];
                         var noteCount = data.length;
                         for ( var i = 0; i < len; i++) {
                             var par = $scope.paragraphs[i];
