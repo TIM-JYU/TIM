@@ -223,12 +223,11 @@
 }
 
 PRE {
-
-        border-style: solid;
+    border-style: solid;
 	border-width: 1px;
 	border-radius: 5px;
 	padding: 4px;
-	margin-left: 2.00cm;
+	margin-left: 2em;
 	margin-right: 0.00cm;
 	line-height: 1em;
 	font-size: 1em;
