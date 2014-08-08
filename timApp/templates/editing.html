@@ -64,7 +64,7 @@
     <div class="material"> 
         <div style="left:1em" class="addParButton b0" ng-click="parAdd(0)"> </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">
-            <div style="" id="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html | to_trusted"> </div> 
+            <div style="" id="par-{{ '{{ par.par }}' }}" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html | to_trusted"> </div> 
             <button ng-class="par.display ? 'parSaveButton' : 'editButton edit' " ng-click="setEditable(par.par)"></button>
             <button ng-if="par.display && !sendingNew" class="deleteButton delete" ng-click="delParagraph(par.par)"></button>
             <button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          

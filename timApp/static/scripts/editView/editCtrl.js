@@ -272,8 +272,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                             sc.sendingNew = false; 
 //                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             sc.paragraphs[newParId].html = data[sc.getValue(i)];
-                                            //$("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
-                                                
+                                            //$("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;
                                         
                                         }else{                                            
                                             $templateCache.put("plugin", data[sc.getValue(i)]);
@@ -282,6 +281,8 @@ EditApp.controller("ParCtrl", ['$scope',
                                             //$("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
                                             
                                         }
+                                        sc.$apply();
+                                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "par-" + newParId]);
                                         newParId = newParId + 1;
                                     }
                                     sc.sendingNew = false; 
