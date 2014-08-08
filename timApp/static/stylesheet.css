@@ -10,6 +10,10 @@
 	margin-top: 1em;
 }
 
+.material img {
+	max-width: 95%;
+}
+
 .notes {
 	position: absolute;
 	left: 45em;
