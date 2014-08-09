@@ -204,22 +204,28 @@
     width:40em;
 }
 .addParButton{
+	content:"ADD"
     z-index: 2;
-    position: relative;
-    height:1em;
-    opacity:0.1;
-    height:2em;
-    background-color:#4DFF4D;
-    width: 6em;
+	left:-3.5em;
+	bottom:-1.3em;
+    height:1.5em;
+	width:2em;
+    position: absolute;
+    opacity:1;
+    background-color:#BDF9F9;
     border: 1px dotted #338533;
-    border-radius:25px;
+    border-radius:10px;
+	color: black;
     }
 .addParButton:hover{
+	content:"Add new paragraph here";
     display:block;
     background-color:#4DFF4D;
     border: 1px dotted #338533;
     border-radius:25px;
-    opacity: 0.4;
+    opacity: 1;
+	width:20em;
+	color: black;
 }
 
 PRE {
@@ -519,7 +525,7 @@ a.anchor:hover {
 		border: 2px none;
 		border-radius: 15px;
 		outline: none;
-		background: #C8FCFD;
+		background: #B8F9F9;
 		color: white;
 	}
 	body {
