@@ -10,6 +10,10 @@
 	margin-top: 1em;
 }
 
+ul {
+	margin-left: 2em;
+}
+
 .material img {
 	max-width: 95%;
 }
@@ -230,7 +234,7 @@
 .addParButton{
     z-index: 2;
 	left:72em;
-	bottom:-1.3em;
+	bottom:-1.8em;
     height:2em;
 	width:5em;
     position: absolute;

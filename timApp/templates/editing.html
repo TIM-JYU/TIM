@@ -65,7 +65,7 @@
         <div style="left:1em" class="addParButton b0" ng-click="parAdd(0)"> </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">
             <div style="" id="par-{{ '{{ par.par }}' }}" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html | to_trusted"> </div> 
-            <button class="editButton edit" ng-if="true || !par.display"  ng-click="setEditable(par.par)" ></button> 
+            <button class="editButton edit" ng-if="!par.display"  ng-click="setEditable(par.par)" ></button> 
 			<div class="editorArea" ng-show="true || par.display" >
 				<button class="parSaveButton" ng-if="par.display" ng-click="setEditable(par.par)"></button>
 				<button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          
