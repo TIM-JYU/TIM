@@ -84,7 +84,7 @@ table td {
                         <td></td>
                         <td></td>
                         <td>Last modified</td>
-                        <td>Owner?</td>
+                        <td>Owner</td>
                         <td></td>
                     </tr>
                 </thead>
@@ -95,8 +95,8 @@ table td {
                     <td><a href="/download/{{ '{{ doc.id }}' }}">Download</a></td>
                     <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
                     <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
-                    <td>{{ '{{ doc.owner ? "Yes" : "No" }}' }}</td>
-                    <td><a ng-show="doc.owner" ng-click="deleteDocument(doc.id)">Delete</a></td>
+                    <td>{{ '{{ doc.owner.name }}' }}</td>
+                    <td><a ng-show="doc.isOwner" ng-click="deleteDocument(doc.id)">Delete</a></td>
                 </tr>
             </table>
             <p ng-show="documentList.length == 0">There are no documents to show.</p>

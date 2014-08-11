@@ -147,7 +147,8 @@ def getDocuments():
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
     for doc in allowedDocs:
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
-        doc['owner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
     return jsonResponse(allowedDocs)
 
 def getCurrentUserId():
