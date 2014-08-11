@@ -7,6 +7,7 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
     // });
 
     $scope.m = {};
+    $scope.visibility = 'everyone';
 
     $scope.addNote = function(parIndex) {
         $http.post('/postNote', {
