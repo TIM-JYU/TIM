@@ -1,11 +1,25 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase, blocktypes, TimDbException
+from timdb.timdbbase import TimDbBase, blocktypes, TimDbException, DocIdentifier
+from ephemeralclient import EphemeralClient, EPHEMERAL_URL, NotInCacheException
 import os
 
 class Notes(TimDbBase):
+    
+    def getDocIdentifierForNote(self, note_id):
+        return DocIdentifier('note', note_id)
+    
+    @contract
+    def __init__(self, db_path : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
+        """Initializes TimDB with the specified database and root path.
+        
+        :param db_path: The path of the database file.
+        :param files_root_path: The root path where all the files will be stored.
+        """
+        TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
+        self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
-    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int'):
+    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int') -> 'str':
         """Adds a note to the document.
         
         :param usergroup_id: The usergroup who owns the note.
@@ -28,7 +42,8 @@ class Notes(TimDbBase):
         
         #TODO: Do notes need to be versioned?
         
-        return
+        self.ec.loadDocument(self.getDocIdentifierForNote(note_id), content)
+        return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
     
     @contract
     def deleteNote(self, note_id : 'int'):
@@ -51,7 +66,7 @@ class Notes(TimDbBase):
         self.db.commit()
         
     @contract
-    def modifyNote(self, note_id : 'int', new_content : 'str'):
+    def modifyNote(self, note_id : 'int', new_content : 'str') -> 'str':
         """Modifies an existing note.
         
         :param note_id: The id of the note to be modified.
@@ -63,8 +78,11 @@ class Notes(TimDbBase):
         
         self.writeUtf8(new_content, self.getBlockPath(note_id))
         
+        self.ec.loadDocument(self.getDocIdentifierForNote(note_id), new_content.encode('utf-8'))
+        return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
+        
     @contract
-    def getNotes(self, user_id : 'int', document_id : 'int'):
+    def getNotes(self, user_id : 'int', document_id : 'int') -> 'list(dict)':
         """Gets all the notes for a document for a user.
         
         :param user_id: The id of the user whose notes will be fetched.
@@ -87,4 +105,12 @@ class Notes(TimDbBase):
             with open(self.getBlockPath(note_id), 'r', encoding='utf-8') as f:
                 note['content'] = f.read()
             notes.append(note)
+        
+        for note in notes:
+            try:
+                note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
+            except NotInCacheException:
+                self.ec.loadDocument(self.getDocIdentifierForNote(note['id']), note['content'].encode('utf-8'))
+                note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
+        
         return notes

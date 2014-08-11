@@ -4,6 +4,8 @@ An Ephemeral client that can communicate with Ephemeral server.
 import requests
 from contracts import contract, new_contract
 
+EPHEMERAL_URL = 'http://localhost:8001'
+
 new_contract('bytes', bytes)
 new_contract('Response', requests.Response)
 
@@ -206,6 +208,22 @@ class EphemeralClient(object):
         self.__raiseExceptionIfDocumentNotFound(r)
         return r.json()
     
+    @contract
+    def getDocumentFullHtml(self, document_id : 'DocIdentifier') -> 'str':
+        """Gets the whole document in HTML form.
+        
+        :param document_id: The id of the document to be retrieved.
+        :returns: The HTML of the document.
+        """
+        
+        try:
+            r = requests.get(url=self.server_path + '/html/{}'.format(self.__getDocIdForEphemeral(document_id)))
+        except requests.exceptions.ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
+        self.__raiseExceptionIfBlockNotFound(r)
+        return r.text
+        
     @contract
     def getDocumentFullText(self, document_id : 'DocIdentifier') -> 'str':
         """Gets the full text of a document.
