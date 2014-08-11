@@ -1,5 +1,5 @@
 //var controllerProvider = null; // For addittional controllers from plugins.
-var EditApp = angular.module('controller', ['ngSanitize', 'angularFileUpload']);
+//var EditApp = angular.module('controller', ['ngSanitize', 'angularFileUpload']);
 
 
 EditApp.controller("ParCtrl", ['$scope', 
@@ -7,7 +7,8 @@ EditApp.controller("ParCtrl", ['$scope',
                                '$q', 
                                '$upload',
                                '$templateCache',
-    function(sc, http, q, $upload, $templateCache){
+                               '$compile',
+    function(sc, http, q, $upload, $templateCache, $compile){
             // Set all requests to also sen the version number of current document
             http.defaults.headers.common.Version = version.hash; 
 
@@ -270,30 +271,31 @@ EditApp.controller("ParCtrl", ['$scope',
                                         if(i > 0){
                                             sc.addParagraph(newParId);
                                             sc.sendingNew = false; 
-//                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
-                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
-                                            //$("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;   
+                                            sc.$apply(function(){
+                                                    sc.paragraphs[newParId].html = data[sc.getValue(i)];
+                                            });
                                                 
                                         
                                         }else{                                            
-                                            $templateCache.put("plugin", data[sc.getValue(i)]);
-                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
+                                            sc.$apply(function(){
+                                                sc.paragraphs[newParId].html = $compile(data[sc.getValue(i)]);
+                                            });
                                             sc.updateEditor(elem, elemId);
-                                            //$("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
                                             
                                         }
                                         newParId = newParId + 1;
                                     }
                                     sc.sendingNew = false; 
                                     sc.paragraphs[elemId].loading = "";
+                                    sc.$apply();
                                     },
                                     function(reason){
                                         alert(reason);
-                                    sc.paragraphs[elemId].loading = "";
+                                        sc.paragraphs[elemId].loading = "";
                                     },
                                     function(){
                                     });
-                    }
+                     }
             }            
 
             sc.callDelete = function(blockId){
