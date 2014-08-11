@@ -111,9 +111,9 @@ experiment plugin markup' port = do
         context "scripts"    = pure . T.unlines 
                                         $ ["<script src='"<>x<>"'></script>" 
                                           | JS x <- requirements plugin]
-        context "csss"       = pure . T.unlines 
+        context "styles"       = pure . T.unlines 
                                         $ ["<link rel='stylesheet' type='text/css' href='"<>x<>"'>" 
-                                          | JS x <- requirements plugin]
+                                          | CSS x <- requirements plugin]
         context "app"    = pure "MCQ"
         context x        = pure $ "??"<>x<>"??"
         routes :: Snap ()
@@ -145,6 +145,7 @@ experiment plugin markup' port = do
 \     <head> <meta charset='utf-8'> \
 \                 <script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.17/angular.min.js'></script>\
 \                 ${scripts}\
+\                 ${styles}\
 \                 <script> \
 \                  var mainModule = angular.module('testApp',${moduleDeps}); \
 \                 </script> \
