@@ -1,0 +1,12 @@
+{ "markup": 
+   { "jiframe": "true",
+     "height": "50em",
+     "type": "jypeli",
+     "file": "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Jypeli/Jypeli.cs",
+     "replace": "INSERT YOUR CODE HERE",
+     "byCode": "GameObject p1 = new GameObject( 200.0, 200.0, Shape.Circle);\np1.X = 0.0;\np1.Y = Level.Bottom + 100.0;\nAdd( p1 );\n\nGameObject p2 = new GameObject( 100.0, 100.0, Shape.Circle );\np2.X = 0.0;\np2.Y = Level.Bottom + 250.0;\nAdd( p2 );\n\nGameObject p3 = new GameObject( 60.0, 60.0, Shape.Circle );\np3.X = 0.0;\np3.Y = Level.Bottom + 330.0;\nAdd( p3 );\n\nCamera.ZoomToAllObjects();\n" },
+  "state": 
+   { "points": "1",
+     "usercode": "System.Console.WriteLine(\"Moi\");", 
+     "output": "Moi" }  
+}
