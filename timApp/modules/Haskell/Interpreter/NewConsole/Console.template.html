@@ -1,0 +1,25 @@
+<div class="web-console {{currentSize}}"
+     ng-keydown="handleKey($event)" >
+     
+ <code class="console-output">
+  <div class="console-output-elem" 
+       ng-repeat="item in history track by $index">
+    <span class="console-oldinput">
+     <span class="console-in">in_{{$index}}: </span>
+     <span class="console-userInput">{{item.input}}</span>
+    </span>
+    <br/>
+    <span class="console-oldresponse">
+     <span class="console-out">out_{{$index}}: </span>
+     <span class="console-response" ng-class="{error:item.error}"><span ng-bind-html="item.response"></span></span> <!-- Double span since ng-bind eats the innermost one --!>
+    </span>
+  </div>
+  <span class="console-expander-sym"
+        ng-click="toggleSize()"></span>
+ </code>
+ <span class="console-curIndex">in_{{cursor}}</span>
+ <input type="text" 
+        placeholder="expr?"
+        class="console-input"
+        ng-model="currentInput" />
+</div>

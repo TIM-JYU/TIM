@@ -35,11 +35,11 @@ Plugin on yritetty koota siten, että sitä voi testata ilman TIM:iä. Sen pitä
 
 ~~~{.bash}
 > cabal sandbox init                                     # Käännetään sandboxissa
-> cabal build        
-> dist/build/ChoicesPlugin/ChoicesPlugin -p8080 &        # Käynnistetään plugin porttiin 8080
-> examples/testGet.sh examples/html.request > test.html  # Haetaan esimerkkisivu
-> chromium test.html --disable-web-security              # Avataan selaimella ja otetaan cross origin policy pois päältä. (ÄLÄ SELAA NETTIÄ TÄLLÄ SELAIMELLA!)
+> cabal sandbox add-source ../PluginConstructionKit/     # Otetaan PCK mukaan
+> cabal install --only-dependencies                      # Käännetään dependenssit
+> cabal exec ghci ChoicesPlugin.hs                       # Tai joku muu *Plugin.hs
+> experiment simpleMultipleChoice testQ 8080
 ~~~
 
-Tuossa ei tietenkään mikään tallennu, koska ei ole timiä tallettamassa, mutta muuten
-pitäisi toimia jokseenkin.
+Ja sitten selaimella localhost:8080/index.html esiin.
+

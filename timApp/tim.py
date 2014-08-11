@@ -147,7 +147,8 @@ def getDocuments():
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
     for doc in allowedDocs:
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
-        doc['owner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
     return jsonResponse(allowedDocs)
 
 def getCurrentUserId():
@@ -232,8 +233,9 @@ def deleteDocument(doc_id):
     timdb.documents.deleteDocument(getNewest(doc_id))
     return "Success"
 
+@app.route("/edit/<int:doc_id>")
 @app.route("/documents/<int:doc_id>")
-def getDocument(doc_id):
+def editDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
