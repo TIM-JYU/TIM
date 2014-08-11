@@ -42,7 +42,7 @@ class Notes(TimDbBase):
         
         #TODO: Do notes need to be versioned?
         
-        self.ec.loadDocument(self.getDocIdentifierForNote(note_id), content)
+        self.ec.loadDocument(self.getDocIdentifierForNote(note_id), content.encode('utf-8'))
         return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
     
     @contract
