@@ -242,29 +242,9 @@ def getDocument(doc_id):
     doc_metadata = timdb.documents.getDocument(newest)
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
     (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
-    jsPaths = []
-    cssPaths = []
-    modules = ["\"ng-sanitize\",", "\"angularFileUpload\","]
-    for p in plugins:
-       print (containerLink.pluginReqs(p))
-       (rawJs,rawCss,modsList) = pluginControl.pluginDeps(containerLink.pluginReqs(p))
-      
-       for src in rawJs:
-           if( "http" in src):
-               jsPaths.append(src)
-           else:
-               x = getPlugin(p)['host']
-               jsPaths.append(x + src)
-       for cssSrc in rawCss:
-           if( "http" in src):
-               cssPaths.append(cssSrc)
-           else:
-               x = getPlugin(p)['host']
-               cssPaths.append(x + src)
-       for mod in modsList:
-           modules.append(mod)
-    print (str(jsPaths) + "\n" + str(cssPaths) + "\n" + str( modules))
+    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
+
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
