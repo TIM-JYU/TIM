@@ -19,8 +19,9 @@
 <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <style type="text/css" media="screen">
-.editor {
+.editor { 
 	position: absolute;
 	height: 100%;
 	width: 45em;
@@ -39,7 +40,7 @@
     <![endif]-->
 <script>
         // Data from jinja2 template
-        var jsonDoc = JSON.parse({{text|tojson|safe}});
+        var jsonDoc = JSON.parse({{text|tojson|safe}}); 
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
@@ -51,22 +52,26 @@
 
         <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 
-        <div class="paragraph" ng-repeat="par in paragraphs track by $index" ng-init="parIndex = $index">
-            <div style="" class="content {{ '{{ $index }}' }}" bind-once ng-bind-html="par.html"></div>
+        <div class="paragraph" ng-repeat="par in paragraphs" ng-init="parIndex = par.par">
+            <div style="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html | to_trusted"></div>
 
-            <div class="notes" ng-controller="NoteCtrl">
-                <div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
-                    {{ '{{ note.content }}' }}
-                    <button ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
-                    <button ng-click="deleteNote(note.id, {{docID|e}})" class="noteButton">Delete</button>
-                </div>
-                <div ng-show="m.showEditor">
-                    <textarea class="noteeditor" ng-model="m.noteText"></textarea>
-                </div>
-                <button ng-disabled="!m.noteText" ng-show="m.showEditor" class="noteButton" ng-click="saveButtonToggled()">Save</button>
-                <button ng-show="!m.showEditor" class="noteButton" ng-click="addNoteButtonToggled()">Add note</button>
-                <button ng-show="m.showEditor" class="noteButton" ng-click="m.showEditor = false">Cancel</button>
-            </div>
+            <div ng-controller="NoteCtrl">
+				<div class="notes">
+					<div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
+						<button ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
+						{{ '{{ note.content }}' }}
+					</div>
+				</div>	
+				<button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Add note</button>
+				<div class="noteEditorArea" ng-if="m.showEditor">	
+					<button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
+					<button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>
+					<button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}})" class="deleteButton">Delete</button>
+					<div ng-show="m.showEditor">
+						<textarea class="noteeditor" ng-model="m.noteText"></textarea>
+					</div>
+				</div>
+			</div>
         </div>
     </div>
 </body>

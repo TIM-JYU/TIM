@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from containerLink import callPlugin
+from containerLink import pluginReqs
 import re
+import json
 
 # Receive html-string with plugin in it, 
 # extract values from contents
@@ -74,3 +76,35 @@ def pluginDeps(pluginReqs):
             for ng in f['angularModule']:
                 jsMods.append(ng)
     return (js,css, jsMods)
+
+
+def getPluginDatas(plugins):
+    jsPaths = []
+    cssPaths = []
+    modules = ["\"ngSanitize\",", "\"angularFileUpload\","]
+    i = 0
+    for p in plugins: 
+        try:
+            (rawJs,rawCss,modsList) = pluginDeps(json.loads(pluginReqs(p)))      
+            for src in rawJs:
+                if( "http" in src):
+                    jsPaths.append(src)
+                else:
+                    x = getPlugin(p)['host']
+                    jsPaths.append(x + src)
+            for cssSrc in rawCss:
+                if( "http" in src):
+                    cssPaths.append(cssSrc)
+                else:
+                    x = getPlugin(p)['host']
+                    cssPaths.append(x + src)
+            for mod in modsList:
+                modules.append("\""+mod+"\"")
+        except: 
+            continue
+    return (jsPaths, cssPaths, modules)
+
+
+
+
+

@@ -274,7 +274,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                             sc.$apply(function(){
                                                     sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             });
-                                                
+
                                         
                                         }else{                                            
                                             sc.$apply(function(){
@@ -283,6 +283,8 @@ EditApp.controller("ParCtrl", ['$scope',
                                             sc.updateEditor(elem, elemId);
                                             
                                         }
+                                        sc.$apply();
+                                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "par-" + newParId]);
                                         newParId = newParId + 1;
                                     }
                                     sc.sendingNew = false; 

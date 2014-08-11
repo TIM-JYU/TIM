@@ -115,6 +115,14 @@ def printFileToReplaceURL(name, f, whatToReplace, query):
 		f.write(line)
 	fr.close()
 	
+def printStringToReplaceURL(line, f, whatToReplace, query):	
+	map = queryParamsToMap(query)
+	params = urlencode(map)
+	line = line.replace(whatToReplace,params)
+	height = get_param(query, "height", "100%")
+	line = line.replace('##HEIGHT##',height)
+	f.write(line)
+	
 def printFileToReplaceAttribute(name, f, whatToReplace, query):	
 	fr = open(name, "r")
 	lines = fr.readlines()    
@@ -124,6 +132,12 @@ def printFileToReplaceAttribute(name, f, whatToReplace, query):
 		f.write(line)
 	fr.close()
 
+	
+def printStringToReplaceAttribute(line, f, whatToReplace, query):	
+	params = queryParamsToAttribute(query)
+	line = line.replace(whatToReplace,params)
+	f.write(line)
+	
 	
 def printLines(file,lines,n1,n2):	
 	linefmt = "{0:03d} "
@@ -156,6 +170,10 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		print "do_POST ================================================="
 		self.doAll(postParams(self))
 
+	def do_PUT(self):
+		print "do_PUT ================================================="
+		self.doAll(postParams(self))
+
 
 	def doAll(self,query):	
 		print "doAll ==================================================="
@@ -166,16 +184,17 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		fullhtml = self.path.find('/fullhtml') >= 0
 		html = self.path.find('/html') >= 0
 		css = self.path.find('/css') >= 0 
-		dirjs = self.path.find('/js/dir.js') >= 0 
 		js = self.path.find('/js') >= 0 
+		reqs = self.path.find('/reqs') >= 0 
 		iframeParam = get_param(query, "iframe", "") 
 		iframe = (self.path.find('/iframe') >= 0) or ( iframeParam )
 		if ( iframeParam ) : del query["iframe"]
 		
+		
 		#korjaus kunnes byCode parametri tulee kokonaisena
-		tempBy = get_param(query, "b", "") 
-		if ( tempBy ):
-			query["byCode"] = [tempBy];
+		#tempBy = get_param(query, "b", "") 
+		#if ( tempBy ):
+		#	query["byCode"] = [tempBy];
 			
 		print query
 		
@@ -184,6 +203,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
 		self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type") 
 		type = 'text/plain'
+		if ( reqs ): type = "application/json"
 		if ( fullhtml or html ): type = 'text/html'
 		if ( css ): type = 'text/css'
    		if ( js ) : type = 'application/javascript' 
@@ -192,31 +212,35 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		# Get the template type
 		ttype = get_param(query, "type", "console").lower()
 
+		if ( reqs ):
+			resultJSON = [{"JS":"js/dir.js"},{"angularModule":"csApp"},{"CSS":"css/cs.css"}]
+			resultStr = json.dumps(resultJSON)
+			self.wfile.write(resultStr);
+			return 
+		
+		
 		if ( css ):
 			printFileTo('cs.css',self.wfile)
 			return
-		if ( dirjs ):
-			printFileTo('js/dir.js',self.wfile)
-			return
 		if ( js ):
-			printFileTo('aja.js',self.wfile)
+			printFileTo('js/dir.js',self.wfile)
 			return
 		if ( html ):
 			if ( ttype == "console" ):
-				printFileToReplaceAttribute('consoleHTMLTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n></cs-runner>',self.wfile,"##QUERYPARAMS##",query)
 			else:	
-				printFileToReplaceAttribute('jypeliHTMLTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n></cs-jypeli-runner>',self.wfile,"##QUERYPARAMS##",query)
 			return
 		if ( fullhtml ):
 			printFileTo('begin.html',self.wfile)
 			if ( ttype == "console" ):
-				printFileToReplaceNG('consoleTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n></cs-runner>',self.wfile,"##QUERYPARAMS##",query)
 			else:	
-				printFileToReplaceNG('jypeliTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n></cs-jypeli-runner>',self.wfile,"##QUERYPARAMS##",query)
 			printFileTo('end.html',self.wfile)
 			return
 		if ( iframe ):
-			printFileToReplaceURL('iframeTemplate.html',self.wfile,"##QUERYPARAMS##",query)
+			printStringToReplaceURL('<iframe frameborder="0"  src="http://tim-beta.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" style="overflow:hidden;height:##HEIGHT##;width:100%"  seamless></iframe>',self.wfile,"##QUERYPARAMS##",query)
 			return
 
 		# Generate random cs and exe filenames

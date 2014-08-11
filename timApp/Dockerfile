@@ -14,6 +14,7 @@ run pip3 install pycontracts
 run pip3 install hypothesis
 run pip3 install gitpylib
 run pip3 install requests
+run pip3 install bleach
 
 # Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
 # hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen

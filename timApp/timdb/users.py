@@ -75,7 +75,7 @@ class Users(TimDbBase):
         
         cursor = self.db.cursor()
         cursor.execute('select id, name from UserGroup where id in (select UserGroup_id from Block where id = ?)', [block_id])
-        return self.resultAsDictionary(cursor)
+        return self.resultAsDictionary(cursor)[0]
         
     @contract
     def getUser(self, user_id : 'int') -> 'row':
