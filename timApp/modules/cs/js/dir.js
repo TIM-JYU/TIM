@@ -1,4 +1,4 @@
-﻿		var csApp = angular.module('csApp.directives', []);
+﻿		var csApp = angular.module('csApp', []);
 		csApp.directive('csRunner',function() {
 			return {
 			    link: function (scope, element, attrs) {
@@ -9,9 +9,11 @@
 					if ( attrs.rows ) scope.rows = attrs.rows;
 					if ( attrs.bycode ) scope.byCode = attrs.bycode;
 				},		
+                scope: {},				
+				controller: csApp.Controller,
 				restrict: 'AE',
 				replace: 'true',
-				template: '<div ng-controller="CsRunController" >'+
+				template: '<div >'+
 						  '    <textarea cols="80" rows={{rows}} ng-model="byCode" ng-trim="false" ></textarea>'+
 						  '	<br />'+
 						  '    <button ng-click="runCode();">Aja</button>'+ 
@@ -34,9 +36,11 @@
 					if ( attrs.rows ) scope.rows = attrs.rows;
 					if ( attrs.bycode ) scope.byCode = attrs.bycode;
 				},		
+                scope: {},				
+				controller: csApp.Controller,
 				restrict: 'AE',
 				replace: 'true',
-				template: '<div ng-controller="CsRunController" >'+
+				template: '<div >'+
 						  '<textarea cols="80" rows={{rows}} ng-model="byCode" ng-trim="false"></textarea>'+
 						  '<br />'+ 
 						  '<button ng-click="runCode();">Aja</button>'+
@@ -50,7 +54,7 @@
 				// templateUrl: 'csTempl.html'
 			}; 
 		});
-        csApp.controller("CsRunController",  function($scope,$http) {
+        csApp.Controller = function($scope,$http) {
 		            $scope.rows = 5;
                     $scope.errors = [];
                     /* $scope.msgs = [];*/
@@ -192,4 +196,4 @@
                                     $scope.errors.push(status);
                                 })
                     };
-                });
+                };

@@ -55,7 +55,7 @@ convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toSt
                 convertBlock t = let  pdc = PDC.Pandoc mempty . box $ t
                                  in Block
                                      (T.pack       . PDC.writeMarkdown PDC.def $ pdc)
-                                     (renderHtml   . PDC.writeHtml PDC.def     $ pdc)
+                                     (renderHtml   . PDC.writeHtml    opts     $ pdc)
                                      (Set.fromList . map T.pack . words . PDC.writeMarkdown PDC.def $ pdc)
                             
 

@@ -147,7 +147,8 @@ def getDocuments():
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
     for doc in allowedDocs:
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
-        doc['owner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
     return jsonResponse(allowedDocs)
 
 def getCurrentUserId():
@@ -232,8 +233,9 @@ def deleteDocument(doc_id):
     timdb.documents.deleteDocument(getNewest(doc_id))
     return "Success"
 
+@app.route("/edit/<int:doc_id>")
 @app.route("/documents/<int:doc_id>")
-def getDocument(doc_id):
+def editDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
@@ -246,23 +248,23 @@ def getDocument(doc_id):
     cssPaths = []
     modules = ["\"ng-sanitize\",", "\"angularFileUpload\","]
     for p in plugins:
-       print (containerLink.pluginReqs(p))
-       (rawJs,rawCss,modsList) = pluginControl.pluginDeps(containerLink.pluginReqs(p))
+        print (containerLink.pluginReqs(p))
+        (rawJs,rawCss,modsList) = pluginControl.pluginDeps(containerLink.pluginReqs(p))
       
-       for src in rawJs:
-           if( "http" in src):
-               jsPaths.append(src)
-           else:
-               x = getPlugin(p)['host']
-               jsPaths.append(x + src)
-       for cssSrc in rawCss:
-           if( "http" in src):
-               cssPaths.append(cssSrc)
-           else:
-               x = getPlugin(p)['host']
-               cssPaths.append(x + src)
-       for mod in modsList:
-           modules.append(mod)
+        for src in rawJs:
+            if( "http" in src):
+                jsPaths.append(src)
+            else:
+                x = getPlugin(p)['host']
+                jsPaths.append(x + src)
+        for cssSrc in rawCss:
+            if( "http" in src):
+                cssPaths.append(cssSrc)
+            else:
+                x = getPlugin(p)['host']
+                cssPaths.append(x + src)
+        for mod in modsList:
+            modules.append(mod)
     print (str(jsPaths) + "\n" + str(cssPaths) + "\n" + str( modules))
     return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
 
@@ -320,7 +322,7 @@ def viewDocument(doc_id):
     versions = timdb.documents.getDocumentVersions(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
     doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-    fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
+    plugins, fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
     return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
 
 @app.route("/postNote", methods=['POST'])
