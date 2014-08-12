@@ -213,6 +213,9 @@ def postParagraph():
         return "Failed to modify block."
     # Replace appropriate elements with plugin content, load plugin requirements to template
     (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName())
+
+   # (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
+   # (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     return jsonResponse(preparedBlocks)
 
 @app.route("/createDocument", methods=["POST"])
@@ -244,6 +247,7 @@ def getDocument(doc_id):
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
     (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
+
     return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
 
 
@@ -252,6 +256,7 @@ def getBlockMd(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
     block = timdb.documents.getBlock(getNewest(docId), blockId)
+
     return jsonResponse({"md": block})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
@@ -259,7 +264,7 @@ def getBlockHtml(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
     block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
-    print(block)
+    
     return block
 
 def getNewest(docId):
