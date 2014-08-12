@@ -182,20 +182,6 @@ ul {
 	color: white;
 }
 
-.saveButton {
-	position: absolute;
-	top: 0em;
-	left: 49em;
-	font-size: x-small;
-	width: 5em;
-	height: 3em;
-	top: 0em;
-	border: 2px none;
-	border-radius: 25px;
-	outline: none;
-	background-color: #30FF30;
-}
-
 .material {
 	background-color: white;
 	display: inline-block;
