@@ -1,13 +1,14 @@
 //var controllerProvider = null; // For addittional controllers from plugins.
-var EditApp = angular.module('controller', ['ngSanitize', 'angularFileUpload']);
+//var EditApp = angular.module('controller', ['ngSanitize', 'angularFileUpload']);
 
 
 EditApp.controller("ParCtrl", ['$scope', 
                                '$http', 
                                '$q', 
                                '$upload',
-                               '$templateCache',
-    function(sc, http, q, $upload, $templateCache){
+                               '$injector',
+                               '$compile',
+    function(sc, http, q, $upload, $injector, $compile){
             // Set all requests to also sen the version number of current document
             http.defaults.headers.common.Version = version.hash; 
 
@@ -16,6 +17,10 @@ EditApp.controller("ParCtrl", ['$scope',
             sc.pluginPat = /\{(.*)}\[(.*)]/;
 
 
+            sc.compileHtml = function(parId){
+                    el = angular.element(document.getElementById('par-' + parId));
+                    el.html(sc.paragraphs[parId].html);
+            }
             // Initialize paragraphs, jsonDoc is a global variable made by jinja2-template, it resides in viewTemplate (editing.html) 
             sc.paragraphs = [];
             sc.updateParagraphs = function(){
@@ -23,6 +28,7 @@ EditApp.controller("ParCtrl", ['$scope',
                             (function(i){
                                     var text = jsonDoc[i];
                                     sc.paragraphs.push({"par": i, "html": text, "display":false});
+                                    sc.compileHtml(i);
                             })(i);
                     }
             };
@@ -264,21 +270,31 @@ EditApp.controller("ParCtrl", ['$scope',
                             };
                             savedPars();
                             promise.promise.then(
-                                function(data){
+                                function(datas){
+                                    alert(datas);
+                                    var js = datas['js'];
+                                    var css = datas['css'];
+                                    var modules = datas['angularModule'];
+                                    jsCssPromise = sc.loadjscssFiles(js, css); 
+                                    jsCssPromise.then(function(){
+                                        alert(modules); 
+                                        $injector.loadNewModules(modules);
+                                        alert($injector);
+                                        sc.$apply();
+                                       
+                                    },
+                                    function(){},
+                                    function(){});
+                                    var data = datas['texts'];
                                     var newParId = sc.getValue(elem.par);
                                     for(var i = 0; i < data.length; i++){                           
                                         if(i > 0){
                                             sc.addParagraph(newParId);
                                             sc.sendingNew = false; 
-//                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
-                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
-                                            //$("." + (newParId).toString()).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;
-                                        
+                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];                                        
                                         }else{                                            
-                                            $templateCache.put("plugin", data[sc.getValue(i)]);
                                             sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             sc.updateEditor(elem, elemId);
-                                            //$("." + newParId).get()[0].innerHTML = sc.paragraphs[sc.getValue(newParId)].html;  
                                             
                                         }
                                         sc.$apply();
@@ -287,14 +303,16 @@ EditApp.controller("ParCtrl", ['$scope',
                                     }
                                     sc.sendingNew = false; 
                                     sc.paragraphs[elemId].loading = "";
+
+                                    sc.$apply();
                                     },
                                     function(reason){
                                         alert(reason);
-                                    sc.paragraphs[elemId].loading = "";
+                                        sc.paragraphs[elemId].loading = "";
                                     },
                                     function(){
                                     });
-                    }
+                     }
             }            
 
             sc.callDelete = function(blockId){
@@ -373,7 +391,28 @@ EditApp.controller("ParCtrl", ['$scope',
                     sc.sendingNew = true;
                     sc.$apply();
             };
-            
+            sc.loadjscssFiles = function(js,css){
+                    for(var i = 0; i < js.length;i++){
+                            promise = q.defer();
+                            $.getScript(js[i]).done(function(){
+                                promise.resolve();
+                            });
+                            //$.ajax({
+                            //        url: js[i],
+                            //        dataType: "script",
+                            //        success: function(){
+                            //                promise.resolve(); 
+                            //        },
+                            //        async:false
+                            //});
+                    }
+                    for(var i = 0; i < css.length;i++){
+                            //        loadjscssfile(css[i], "css");
+                    }
+                    return promise.promise;
+            }
+
+
             sc.uploadedFile;
             sc.progress;
             sc.selectedFile = "";
@@ -404,5 +443,24 @@ EditApp.filter('to_trusted', ['$sce', function($sce){
 }]);
 
 
+EditApp.directive('compile', ['$compile', function ($compile) {
+        return function(scope, element, attrs) {
+                scope.$watch(
+                        function(scope) {
+                                //watch the 'compile' expression for changes
+                        return scope.$eval(attrs.compile);
+                        },
+                        function(value) {
+                                // when the 'compile' expression changes
+                                // assign it into the current DOM
+                                element.html(value);
 
-
+                                // compile the new DOM and link it to the current
+                                // scope.
+                                // NOTE: we only compile .childNodes so that
+                                // we don't get into infinite loop compiling ourselves
+                                $compile(element.contents())(scope);
+                        }
+                        );
+        };
+}]);
