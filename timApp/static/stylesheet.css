@@ -3,6 +3,16 @@
 	text-align: justify;
 }
 
+.note p {
+	margin-left : 0;
+	margin-top: 0;
+	margin-bottom: 5px;
+}
+
+.note p:last-child {
+	margin-bottom : 0;
+}
+
 .paragraph {
 	position: relative;
 	max-width: 43em;
