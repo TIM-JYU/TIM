@@ -47,12 +47,12 @@
 						<div ng-bind-html="note.htmlContent"></div>
 					</div>
 				</div>	
-				<button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Add note</button>
+				<button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
 				<div class="noteEditorArea" ng-if="m.showEditor">	
 					<button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
 					<button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>
 					<button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}})" class="deleteButton">Delete</button>
-					<textarea class="noteeditor" ng-model="m.noteText"></textarea>
+					<textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
                     <div style="width: 30em; position: absolute; top: 6em;">
                         Show note to:
                         <label><input type="radio" ng-model="visibility" value="everyone">Everyone (anonymously)</label>
