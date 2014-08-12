@@ -20,7 +20,8 @@
  <div class="console-examples-box">
      <span class="examples-title"
            ng-click="examplesVisible=!examplesVisible" >
-           ▼ examples ▲</span>
+           ▼ example epressions ▲</span>
+     <div>Click to load:</div>
      <ul >
          <li ng-repeat="example in examples track by $index">
          <a ng-click="loadExample($index)">{{example.title||example.expr}}</a>
