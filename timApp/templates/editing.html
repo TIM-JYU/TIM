@@ -21,7 +21,7 @@
     <script>
         var EditApp = angular.module("controller", [
                         {% for dep in jsMods %}
-                            {{ dep|safe}}
+                            "{{ dep|safe}}",
                         {% endfor %}
                         
                         ]);
@@ -29,6 +29,7 @@
     <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
     <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
+
     <!-- <script src="http://localhost:50004/exampleJs.js"> </script> -->
     <style type="text/css" media="screen">
     .editor { 

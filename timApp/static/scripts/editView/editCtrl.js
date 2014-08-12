@@ -6,9 +6,9 @@ EditApp.controller("ParCtrl", ['$scope',
                                '$http', 
                                '$q', 
                                '$upload',
-                               '$templateCache',
+                               '$injector',
                                '$compile',
-    function(sc, http, q, $upload, $templateCache, $compile){
+    function(sc, http, q, $upload, $injector, $compile){
             // Set all requests to also sen the version number of current document
             http.defaults.headers.common.Version = version.hash; 
 
@@ -270,7 +270,22 @@ EditApp.controller("ParCtrl", ['$scope',
                             };
                             savedPars();
                             promise.promise.then(
-                                function(data){
+                                function(datas){
+                                    alert(datas);
+                                    var js = datas['js'];
+                                    var css = datas['css'];
+                                    var modules = datas['angularModule'];
+                                    jsCssPromise = sc.loadjscssFiles(js, css); 
+                                    jsCssPromise.then(function(){
+                                        alert(modules); 
+                                        $injector.loadNewModules(modules);
+                                        alert($injector);
+                                        sc.$apply();
+                                       
+                                    },
+                                    function(){},
+                                    function(){});
+                                    var data = datas['texts'];
                                     var newParId = sc.getValue(elem.par);
                                     for(var i = 0; i < data.length; i++){                           
                                         if(i > 0){
@@ -288,6 +303,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                     }
                                     sc.sendingNew = false; 
                                     sc.paragraphs[elemId].loading = "";
+
                                     sc.$apply();
                                     },
                                     function(reason){
@@ -375,7 +391,28 @@ EditApp.controller("ParCtrl", ['$scope',
                     sc.sendingNew = true;
                     sc.$apply();
             };
-            
+            sc.loadjscssFiles = function(js,css){
+                    for(var i = 0; i < js.length;i++){
+                            promise = q.defer();
+                            $.getScript(js[i]).done(function(){
+                                promise.resolve();
+                            });
+                            //$.ajax({
+                            //        url: js[i],
+                            //        dataType: "script",
+                            //        success: function(){
+                            //                promise.resolve(); 
+                            //        },
+                            //        async:false
+                            //});
+                    }
+                    for(var i = 0; i < css.length;i++){
+                            //        loadjscssfile(css[i], "css");
+                    }
+                    return promise.promise;
+            }
+
+
             sc.uploadedFile;
             sc.progress;
             sc.selectedFile = "";
