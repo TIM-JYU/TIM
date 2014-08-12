@@ -247,7 +247,7 @@ def editDocument(doc_id):
     jsPaths = []
     cssPaths = []
     modules = ["\"ng-sanitize\",", "\"angularFileUpload\","]
-    for p in plugins:
+    for p in []:
         print (containerLink.pluginReqs(p))
         (rawJs,rawCss,modsList) = pluginControl.pluginDeps(containerLink.pluginReqs(p))
       
