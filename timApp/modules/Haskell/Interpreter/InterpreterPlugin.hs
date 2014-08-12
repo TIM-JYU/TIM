@@ -12,8 +12,11 @@ import PluginType
 import CallApiHec
 import HecIFace as H
 
-data InterpreterMarkup  = I {context::FilePath} deriving (Show,Generic)
+data Example = Example {title :: Maybe String, expr::String} deriving (Show,Generic)
+data InterpreterMarkup  = I {context::FilePath,examples::[Example]} deriving (Show,Generic)
 data InterpreterCommand = Evaluate String deriving (Show,Generic)
+instance FromJSON Example where
+instance ToJSON   Example where
 instance FromJSON InterpreterMarkup where
 instance ToJSON   InterpreterMarkup where
 instance FromJSON InterpreterCommand where
@@ -38,7 +41,8 @@ mkInterpreter = do
                                 H.NonTermination -> return $ [web "reply" ("<span class='warning'>Your expression is diverging (ie. does not terminate)</span>"::String)] 
                                 H.TimeOut -> return $ [web "reply" ("<span class='warning'>Your expression did not terminate on time</span>"::String)] 
                                 H.ProtocolError e -> return $ [web "reply" $ "<span class='warning'>Interactive interpreter is broken. Please report this to a human:"++e++"</span>"]  -- TODO: SANITIZE!!
-        render markup state = return . LT.decodeUtf8 $ ngDirective "console" ()
+        render markup state = return . LT.decodeUtf8 . ngDirective "console" . object $
+                                    ["examples" .= examples markup]
         additionalRoutes = noRoutes
     return Plugin{..}
                                 
@@ -46,4 +50,5 @@ main :: IO ()
 main = mkInterpreter >>= quickHttpServe . serve 
 
 testInterp :: InterpreterMarkup 
-testInterp = I "" 
+testInterp = I "" [Example (Just "This is fun") "take 10 [1..]"
+                  ,Example Nothing "reverse . reverse"]

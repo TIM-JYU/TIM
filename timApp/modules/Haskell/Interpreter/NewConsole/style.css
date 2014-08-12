@@ -8,7 +8,7 @@
 }
 .web-console .console-curIndex {
     font-family: 'Droid Sans Mono', 'Courier', monospace !important;
-    font-size:110%;
+    font-size:90%;
     width:20%;
     color:#e0e4cc;
     margin-right:3px;
@@ -24,7 +24,7 @@
     border-radius: 3px 3px 3px;
     background-color:#CCC;
     font-family: 'Droid Sans Mono', 'Courier', monospace !important;
-    font-size:110%;
+    font-size:90%;
     outline-color:#0A0;
     //color:#0F0;
     //background-color:black;
@@ -38,6 +38,7 @@
  min-height:14em;
  max-height:14em;
  overflow:auto;
+ transition: 0.5s;
 }
 
 .enlarged .console-output {
@@ -74,7 +75,7 @@ content:"▲";
 .console-output-elem{
 margin-bottom:3px;
 font-family: 'Droid Sans Mono', 'Courier', monospace !important;
-font-size:normal;
+//font-size:normal;
 }
 
 .console-userInput {
@@ -104,4 +105,41 @@ color:#e0e4cc;
 width:9ex;
 display: inline-block;
 }
+
+.console-examples-box li {
+    cursor:pointer;
+}
+
+.examples-title {
+    cursor:pointer;
+    display:block;
+    text-align:center;
+}
+
+.console-examples-box {
+transition: 0.5s;
+color: #E0E4CC;
+background:rgba(255,255,255,0.3);
+overflow:hidden;
+position: absolute;
+top:0px;
+right:0px;
+height:1.5em;
+font-family: 'Droid Sans Mono', 'Courier', monospace !important;
+font-size:80%;
+border-radius: 0px 6px 0px 6px;
+width:40%;
+}
+
+.console-examples-box:hover {
+background:rgb(76,76,76);
+opacity:1;
+height:85%;
+}
+
+.expandedExamplesBox {
+ height:85%;
+}
+
+
 
