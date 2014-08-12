@@ -64,12 +64,73 @@ def jsonResponse(jsondata, status_code=200):
 def verifyEditAccess(block_id):
     timdb = getTimDb()
     if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
-        abort(403, "Sorry, you don't have permission to edit this document.")
+        abort(403, "Sorry, you don't have permission to edit this resource.")
 
 def verifyViewAccess(block_id):
     timdb = getTimDb()
     if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
+
+@app.route("/manage/<int:doc_id>")
+def manage(doc_id):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
+    editors = timdb.users.getEditors(doc_id)
+    viewers = timdb.users.getViewers(doc_id)
+    return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
+
+@app.route("/getPermissions/<int:doc_id>")
+def getPermissions(doc_id):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
+    editors = timdb.users.getEditors(doc_id)
+    viewers = timdb.users.getViewers(doc_id)
+    return jsonResponse({'doc' : doc_data, 'editors' : editors, 'viewers' : viewers})
+
+@app.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
+def addPermission(doc_id, group_name, perm_type):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    
+    groups = timdb.users.getUserGroupsByName(group_name)
+    if len(groups) == 0:
+        return jsonResponse({'message' : 'No user group with this name was found.'}, 404)
+    
+    group_id = groups[0]['id']
+    
+    if perm_type == 'edit':
+        timdb.users.grantEditAccess(group_id, doc_id)
+    elif perm_type == 'view':
+        timdb.users.grantViewAccess(group_id, doc_id)
+    else:
+        abort(400)
+    return "Success"
+
+@app.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
+def removePermission(doc_id, group_id, perm_type):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    if perm_type == 'edit':
+        timdb.users.removeEditAccess(group_id, doc_id)
+    elif perm_type == 'view':
+        timdb.users.removeViewAccess(group_id, doc_id)
+    else:
+        abort(400)
+    return "Success"
 
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
@@ -341,20 +402,20 @@ def postNote():
 
 @app.route("/editNote", methods=['POST'])
 def editNote():
-    #TODO: Check access rights
     jsondata = request.get_json()
     noteText = jsondata['text']
     noteId = jsondata['note_id']
     timdb = getTimDb()
+    verifyEditAccess(noteId)
     timdb.notes.modifyNote(noteId, noteText)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
-    #TODO: Check access rights
     jsondata = request.get_json()
     noteId = int(jsondata['note_id'])
     timdb = getTimDb()
+    verifyEditAccess(noteId)
     timdb.notes.deleteNote(noteId)
     return "Success"
 
