@@ -8,11 +8,19 @@ angular.module('console',['ngSanitize'])
         $scope.ident     = $element.parent().attr("id"); 
         $scope.plugin    = $element.parent().attr("data-plugin");
         var reqPath      = $scope.plugin+"/"+$scope.ident+"/";  
+        $scope.content = JSON.parse($element.attr("data-content"));
         // End of generally re-usable TIM stuff
 
-        $scope.history = [{input:"1+2",response:"3-0"},
-                          {input:"1+1",response:"error"}];
+        $scope.examples = $scope.content.examples;
 
+        $scope.history = []; 
+
+        $scope.loadExample=function(i){$scope.currentInput=$scope.examples[i].expr;$scope.focusOnInput()};
+        $scope.focusOnInput=function(){
+               var el = $element[0].querySelector(".console-input");
+               el.focus();
+        
+        };
         $scope.handler=function(e){
             $http({method:'PUT'
                   ,url:$scope.plugin+"/answer/"

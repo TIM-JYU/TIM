@@ -17,6 +17,17 @@
   <span class="console-expander-sym"
         ng-click="toggleSize()"></span>
  </code>
+ <div class="console-examples-box">
+     <span class="examples-title"
+           ng-click="examplesVisible=!examplesVisible" >
+           ▼ examples ▲</span>
+     <ul >
+         <li ng-repeat="example in examples track by $index">
+         <a ng-click="loadExample($index)">{{example.title||example.expr}}</a>
+         </li>
+     <ul>
+ </div>
+
  <span class="console-curIndex">in_{{cursor}}</span>
  <input type="text" 
         placeholder="expr?"

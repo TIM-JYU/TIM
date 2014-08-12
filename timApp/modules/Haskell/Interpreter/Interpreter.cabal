@@ -30,4 +30,6 @@ executable GraphVizPlugin
       , directory >= 1.2
       , either >= 4.3
       , HecIFace >= 0.1
+      , visual >= 0.1
+      , smallcheck >= 1.1
   default-language:    Haskell2010
