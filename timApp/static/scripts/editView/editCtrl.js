@@ -17,6 +17,10 @@ EditApp.controller("ParCtrl", ['$scope',
             sc.pluginPat = /\{(.*)}\[(.*)]/;
 
 
+            sc.compileHtml = function(parId){
+                    el = angular.element(document.getElementById('par-' + parId));
+                    el.html(sc.paragraphs[parId].html);
+            }
             // Initialize paragraphs, jsonDoc is a global variable made by jinja2-template, it resides in viewTemplate (editing.html) 
             sc.paragraphs = [];
             sc.updateParagraphs = function(){
@@ -24,6 +28,7 @@ EditApp.controller("ParCtrl", ['$scope',
                             (function(i){
                                     var text = jsonDoc[i];
                                     sc.paragraphs.push({"par": i, "html": text, "display":false});
+                                    sc.compileHtml(i);
                             })(i);
                     }
             };
@@ -271,15 +276,9 @@ EditApp.controller("ParCtrl", ['$scope',
                                         if(i > 0){
                                             sc.addParagraph(newParId);
                                             sc.sendingNew = false; 
-                                            sc.$apply(function(){
-                                                    sc.paragraphs[newParId].html = data[sc.getValue(i)];
-                                            });
-
-                                        
+                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];                                        
                                         }else{                                            
-                                            sc.$apply(function(){
-                                                sc.paragraphs[newParId].html = $compile(data[sc.getValue(i)]);
-                                            });
+                                            sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             sc.updateEditor(elem, elemId);
                                             
                                         }
@@ -407,5 +406,24 @@ EditApp.filter('to_trusted', ['$sce', function($sce){
 }]);
 
 
+EditApp.directive('compile', ['$compile', function ($compile) {
+        return function(scope, element, attrs) {
+                scope.$watch(
+                        function(scope) {
+                                //watch the 'compile' expression for changes
+                        return scope.$eval(attrs.compile);
+                        },
+                        function(value) {
+                                // when the 'compile' expression changes
+                                // assign it into the current DOM
+                                element.html(value);
 
-
+                                // compile the new DOM and link it to the current
+                                // scope.
+                                // NOTE: we only compile .childNodes so that
+                                // we don't get into infinite loop compiling ourselves
+                                $compile(element.contents())(scope);
+                        }
+                        );
+        };
+}]);

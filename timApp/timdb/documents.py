@@ -2,12 +2,10 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
 import os
-from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException
+from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException, EPHEMERAL_URL
 from shutil import copyfile
 from .gitclient import gitCommit, gitCommand
 from timdb.gitclient import NothingToCommitException
-
-EPHEMERAL_URL = 'http://localhost:8001'
 
 class Documents(TimDbBase):
 

@@ -3,6 +3,16 @@
 	text-align: justify;
 }
 
+.note p {
+	margin-left : 0;
+	margin-top: 0;
+	margin-bottom: 5px;
+}
+
+.note p:last-child {
+	margin-bottom : 0;
+}
+
 .paragraph {
 	position: relative;
 	max-width: 43em;
@@ -180,20 +190,6 @@ ul {
 	outline: none;
     background: #999966;	
 	color: white;
-}
-
-.saveButton {
-	position: absolute;
-	top: 0em;
-	left: 49em;
-	font-size: x-small;
-	width: 5em;
-	height: 3em;
-	top: 0em;
-	border: 2px none;
-	border-radius: 25px;
-	outline: none;
-	background-color: #30FF30;
 }
 
 .material {

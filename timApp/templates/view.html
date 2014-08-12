@@ -9,8 +9,6 @@
 <script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
 <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-<link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
-<link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
 <script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/notesView/noteController.js')}}"></script>
@@ -20,19 +18,6 @@
 <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
 <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-<style type="text/css" media="screen">
-.editor { 
-	position: absolute;
-	height: 100%;
-	width: 45em;
-	top: 0em;
-	border: 2px solid;
-	padding: 15px 5px 5px 5px;
-	border-radius: 15px;
-	text-align: left;
-}
-</style>
-
 <script type="text/javascript" src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
 
 <!--[if lt IE 9]>
@@ -52,24 +37,32 @@
 
         <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 
-        <div class="paragraph" ng-repeat="par in paragraphs" ng-init="parIndex = par.par">
+        <div id="par-{{ '{{par.par}}' }}" class="paragraph" ng-repeat="par in paragraphs" ng-init="parIndex = par.par">
             <div style="" class="content {{ '{{ par.par }}' }}" ng-bind-html="par.html | to_trusted"></div>
 
             <div ng-controller="NoteCtrl">
 				<div class="notes">
 					<div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
-						<button ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
-						{{ '{{ note.content }}' }}
+						<button ng-show="!m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
+						<div ng-bind-html="note.htmlContent"></div>
 					</div>
 				</div>	
-				<button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Add note</button>
+				<button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
 				<div class="noteEditorArea" ng-if="m.showEditor">	
 					<button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
 					<button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>
 					<button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}})" class="deleteButton">Delete</button>
-					<div ng-show="m.showEditor">
-						<textarea class="noteeditor" ng-model="m.noteText"></textarea>
-					</div>
+					<textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
+                    <div style="width: 30em; position: absolute; top: 6em;">
+                        Show note to:
+                        <label><input type="radio" ng-model="visibility" value="everyone">Everyone (anonymously)</label>
+                        <label><input type="radio" ng-model="visibility" value="justme">Just me</label>
+                        <div class="tags" ng-show="visibility === 'everyone'">
+                            <label><input type="checkbox">The text is difficult to understand</label>
+                            <br>
+                            <label><input type="checkbox">The text is unclear</label>
+                        </div>
+                    </div>
 				</div>
 			</div>
         </div>
