@@ -274,10 +274,9 @@ def postParagraph():
         return "Failed to modify block."
     # Replace appropriate elements with plugin content, load plugin requirements to template
     (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName())
+    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
 
-   # (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
-   # (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
-    return jsonResponse(preparedBlocks)
+    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
 
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
@@ -309,7 +308,11 @@ def editDocument(doc_id):
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
     (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
+    modules.append("ngSanitize")
+    modules.append("angularFileUpload")
+    print(modules)
     return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
+
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
@@ -340,7 +343,9 @@ def addBlock():
     verifyEditAccess(docId)
     paragraph_id = jsondata['par']
     blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
-    return jsonResponse(blocks)
+    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName()) 
+    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
+    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
 
 @app.route("/deleteParagraph/<int:docId>/<int:blockId>")
 def removeBlock(docId, blockId):

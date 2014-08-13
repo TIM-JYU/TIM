@@ -26,6 +26,7 @@ def pluginReqs(plugin):
     try:
         plug = getPlugin(plugin)
         request = urllib.request.urlopen(plug['host'] + "reqs/" , timeout=5)
+
         return request.read().decode(encoding="UTF-8")
     except:
         return "Could not connect to plugin" 

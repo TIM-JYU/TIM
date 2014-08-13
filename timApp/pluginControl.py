@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from containerLink import callPlugin
 from containerLink import pluginReqs
+from containerLink import getPlugin
 import yaml
 import re
 import json
@@ -59,7 +60,7 @@ def prepPluginCall(htmlStr):
                 values["identifier"] = node['id']
         except KeyError:
             values['identifier'] = " "
-        plugins.append({"plugin":name, "values":values})
+        plugins.append({"plugin":name, "markup":values})
     return plugins
 
 
@@ -76,9 +77,8 @@ def pluginify(blocks,user):
             else:
                 for pair in pluginInfo:
                     plugins.append(pair['plugin'])
-                    print(type(pair['values']))
-                    pair['values']["user_id"] =  user
-                    pluginHtml = callPlugin(pair['plugin'], pair['values'])
+                    pair['markup']["user_id"] =  user
+                    pluginHtml = callPlugin(pair['plugin'], pair['markup'])
                     rx = re.compile('<code>.*</code>')
                     block = rx.sub(block, pluginHtml)
                     preparedBlocks.append(block)
@@ -107,9 +107,9 @@ def pluginDeps(p):
 def getPluginDatas(plugins):
     jsPaths = []
     cssPaths = []
-    modules = ["\"ngSanitize\",", "\"angularFileUpload\","]
+    modules = []
     i = 0
-    for p in plugins: 
+    for p in plugins:
         try:
             (rawJs,rawCss,modsList) = pluginDeps(json.loads(pluginReqs(p)))     
             for src in rawJs:
@@ -125,9 +125,13 @@ def getPluginDatas(plugins):
                     x = getPlugin(p)['host']
                     cssPaths.append(x + src)
             for mod in modsList:
-                modules.append("\""+mod+"\",")
-        except: 
+                modules.append(mod)
+        except:
+            print("Failed plugin call in plugincontrol getPluginDatas ")
             continue
+    print(jsPaths)
+    print(cssPaths)
+    print(modules)
     return (jsPaths, cssPaths, modules)
 
 
