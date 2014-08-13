@@ -235,7 +235,7 @@ def deleteDocument(doc_id):
     timdb.documents.deleteDocument(getNewest(doc_id))
     return "Success"
 
-@app.route("/documents/<int:doc_id>")
+@app.route("/edit/<int:doc_id>")
 def getDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):

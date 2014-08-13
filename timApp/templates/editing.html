@@ -33,7 +33,7 @@
     <!-- <script src="http://localhost:50004/exampleJs.js"> </script> -->
     <style type="text/css" media="screen">
     .editor { 
-        position: absolute;
+        position: relative;
         top: 0em; 
         height: 100%;
         text-align: left;    
@@ -69,7 +69,7 @@
             <input type="file" file-model="myFile"/>
             <button ng-click="uploadFile()">Upload file</button>
 </form>-->  
-<div>
+<div> 
             <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
             <span ng-bind="progress"></span>
 </div>
@@ -78,12 +78,14 @@
         <div style="left:1em" class="addParButton b0" ng-click="parAdd(0)"> </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">
             <div style="" id="par-{{ '{{ par.par }}' }}" class="content {{ '{{ par.par }}' }}" compile ng-bind-html="par.html | to_trusted"> </div>
-            <button class="editButton edit" ng-if="!par.display"  ng-click="setEditable(par.par)" ></button> 
-			<div class="editorArea" ng-show="true || par.display" >
+            <button class="editButton edit" ng-if="true || !par.display"  ng-click="setEditable(par.par)" ></button> 
+			<div class="editorArea" ng-show="par.display" >
+			  <div class="editButtonArea"> 
 				<button class="parSaveButton" ng-if="par.display" ng-click="setEditable(par.par)"></button>
 				<button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          
 				<button ng-if="par.display && !sendingNew" class="deleteButton delete" ng-click="delParagraph(par.par)"></button>
-				<div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display"></div>
+			  </div>
+			  <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display"></div>
         </div><br>
             <div class="addParButton b{{'{{par.par + 1}}'}}" ng-click="parAdd(par.par + 1)"></div>
     </div>
