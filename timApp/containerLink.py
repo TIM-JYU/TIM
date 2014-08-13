@@ -13,7 +13,7 @@ def callPlugin(plugin, info):
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
-                request = requests.post(url=plug['host'] + "html/", data=bytes(info, encoding='utf-8'), timeout=5)
+                request = requests.post(url=plug['host'] + "html/", data=info, timeout=5)
                 request.encoding = 'utf-8'
                 return request.text
         return "Unregistered plugin"
