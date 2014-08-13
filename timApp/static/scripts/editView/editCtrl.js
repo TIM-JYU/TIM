@@ -279,7 +279,6 @@ EditApp.controller("ParCtrl", ['$scope',
                                     jsCssPromise.then(function(){
                                         alert(modules); 
                                         $injector.loadNewModules(modules);
-                                        alert($injector);
                                         sc.$apply();
                                        
                                     },
@@ -289,9 +288,16 @@ EditApp.controller("ParCtrl", ['$scope',
                                     var newParId = sc.getValue(elem.par);
                                     for(var i = 0; i < data.length; i++){                           
                                         if(i > 0){
+
                                             sc.addParagraph(newParId);
                                             sc.sendingNew = false; 
                                             sc.paragraphs[newParId].html = data[sc.getValue(i)];                                        
+                                            var $div = angular.element($("par-" + newParId));
+                                            
+                                            angular.element(document).injector().invoke(function($compile) {
+                                                      var scope = angular.element($div).scope();
+                                                        $compile($div)(scope);
+                                            });
                                         }else{                                            
                                             sc.paragraphs[newParId].html = data[sc.getValue(i)];
                                             sc.updateEditor(elem, elemId);
