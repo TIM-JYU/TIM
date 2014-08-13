@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>TIM</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
+<link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
+<script src="{{url_for('static', filename='scripts/manageView/manageCtrl.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
+
+<!--[if lt IE 9]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+<style type="text/css">
+table {
+	margin: 1em;
+}
+
+thead {
+	font-weight: bold;
+}
+
+table td {
+	padding: 0.2em;
+}
+
+.flashes li {
+	list-style-type: none;
+	border: 1px solid black;
+	border-radius: 3px;
+	padding: 0.5em;
+}
+
+.uploadForm {
+	border: 1px solid black;
+	padding: 1em;
+}
+
+.material {
+	padding: 1em;
+}
+</style>
+<script type="text/javascript">
+var doc = {{doc|tojson|safe}};
+var editors = {{editors|tojson|safe}};
+var viewers = {{viewers|tojson|safe}};
+console.log(doc);
+console.log(editors);
+console.log(viewers);
+</script>
+</head>
+
+<body style="background-color: #CCFFFF" ng-app="permApp" ng-controller="PermCtrl">
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul class="flashes">
+        {% for message in messages %}
+        <li>{{ message }}</li> {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+    <h1>Managing document: {{doc.name}}</h1>
+    <div class="material">
+        <div>
+            Editors:
+            <p ng-show="editors.length == 0">This document doesn't have editors.</p>
+            <ul>
+                <li ng-repeat="editor in editors">{{ '{{editor.name}}' }} (<a
+                    ng-click="removeConfirm(editor, 'edit')">remove</a>)
+                </li>
+            </ul>
+            <a ng-click="showAddEditor = true; focusEditor = true">Add editor</a>
+            <div ng-show="showAddEditor">
+                <form ng-submit="addPermission(editorName, 'edit')">
+                    <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
+                    <input type="submit" value="Add" ng-disabled="!editorName">
+                    <input type="button" value="Cancel" ng-click="showAddEditor = false">
+                </form>
+            </div>
+        </div>
+        <br>
+        <div>
+            Viewers:
+            <p ng-show="viewers.length == 0">This document doesn't have viewers.</p>
+            <ul>
+                <li ng-repeat="viewer in viewers">{{ '{{viewer.name}}' }} (<a
+                    ng-click="removeConfirm(viewer, 'view')">remove</a>)
+                </li>
+            </ul>
+            <a ng-click="showAddViewer = true; focusViewer = true">Add viewer</a>
+            <div ng-show="showAddViewer">
+                <form ng-submit="addPermission(viewerName, 'view')">
+                    <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
+                    <input type="submit" value="Add" ng-disabled="!viewerName">
+                    <input type="button" value="Cancel" ng-click="showAddViewer = false">
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
