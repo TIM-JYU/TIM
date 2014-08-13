@@ -132,6 +132,17 @@ def removePermission(doc_id, group_id, perm_type):
         abort(400)
     return "Success"
 
+@app.route("/rename/<int:doc_id>", methods=["PUT"])
+def renameDocument(doc_id):
+    timdb = getTimDb()
+    new_name = request.get_json()['new_name']
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
+    return "Success"
+    
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
     timdb = getTimDb()

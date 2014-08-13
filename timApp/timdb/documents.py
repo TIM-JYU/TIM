@@ -412,6 +412,20 @@ class Documents(TimDbBase):
         return blocks, version
     
     @contract
+    def renameDocument(self, document_id : 'DocIdentifier', new_name : 'str'):
+        """Renames a document.
+        
+        :param document_id: The id of the document to be renamed.
+        :param new_name: The new name for the document.
+        """
+        
+        assert self.documentExists(document_id), 'document does not exist: ' + document_id
+        
+        cursor = self.db.cursor()
+        cursor.execute('update Block set description = ? where type_id = ? and id = ?', [new_name, blocktypes.DOCUMENT, document_id.id])
+        self.db.commit()
+        
+    @contract
     def updateDocument(self, document_id : 'DocIdentifier', new_content : 'bytes') -> 'DocIdentifier':
         """Updates a document.
         

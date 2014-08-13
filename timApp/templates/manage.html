@@ -51,9 +51,6 @@ table td {
 var doc = {{doc|tojson|safe}};
 var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
-console.log(doc);
-console.log(editors);
-console.log(viewers);
 </script>
 </head>
 
@@ -64,7 +61,7 @@ console.log(viewers);
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    <h1>Managing document: {{doc.name}}</h1>
+    <h1>Managing document: {{ '{{doc.name}}' }}</h1>
     <div class="material">
         <div>
             Editors:
@@ -104,12 +101,14 @@ console.log(viewers);
             </div>
         </div>
         <br>
-        <form>
+        <form ng-submit="renameDocument(newName)">
         <label>Document name:
-            <input type="text" ng-model="doc.name">
+            <input type="text" ng-model="newName">
         </label>
-            <input type="button" value="Update">
+            <input type="submit" value="Update" ng-disabled="newName === doc.name">
         </form>
+        <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
+    
 </body>
 </html>
