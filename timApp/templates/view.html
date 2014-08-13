@@ -60,11 +60,13 @@
 				</div>	
 				<button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
 				<div class="noteEditorArea" ng-if="m.showEditor">	
+                <div class="editButtonArea"> 
 					<button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
 					<button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>
 					<button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}})" class="deleteButton">Delete</button>
+                </div>
 					<textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
-                    <div style="width: 30em; position: absolute; top: 6em;">
+                    <div>
                         Show note to:
                         <label><input type="radio" ng-model="visibility" value="everyone">Everyone (anonymously)</label>
                         <label><input type="radio" ng-model="visibility" value="justme">Just me</label>
