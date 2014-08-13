@@ -74,12 +74,13 @@ console.log(viewers);
                     ng-click="removeConfirm(editor, 'edit')">remove</a>)
                 </li>
             </ul>
-            <a ng-click="showAddEditor = true; focusEditor = true">Add editor</a>
+            <a ng-show="!showAddEditor" ng-click="showAddEditor = true; focusEditor = true">Add editor</a>
             <div ng-show="showAddEditor">
                 <form ng-submit="addPermission(editorName, 'edit')">
                     <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
                     <input type="submit" value="Add" ng-disabled="!editorName">
                     <input type="button" value="Cancel" ng-click="showAddEditor = false">
+                    <input type="button" value="Add everyone" ng-click="addPermission('all', 'edit')">
                 </form>
             </div>
         </div>
@@ -92,12 +93,13 @@ console.log(viewers);
                     ng-click="removeConfirm(viewer, 'view')">remove</a>)
                 </li>
             </ul>
-            <a ng-click="showAddViewer = true; focusViewer = true">Add viewer</a>
+            <a ng-show="!showAddViewer" ng-click="showAddViewer = true; focusViewer = true">Add viewer</a>
             <div ng-show="showAddViewer">
                 <form ng-submit="addPermission(viewerName, 'view')">
                     <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
                     <input type="submit" value="Add" ng-disabled="!viewerName">
                     <input type="button" value="Cancel" ng-click="showAddViewer = false">
+                    <input type="button" value="Add everyone" ng-click="addPermission('all', 'view')">
                 </form>
             </div>
         </div>
