@@ -1,7 +1,4 @@
-import urllib.request
-import urllib.parse
-import urllib
-import sys
+import requests
 
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
@@ -16,8 +13,9 @@ def callPlugin(plugin, info):
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
-                request = urllib.request.urlopen(plug['host'] + "html/", urllib.parse.urlencode(info).encode('utf-8'), timeout=5)
-                return request.read().decode(encoding="UTF-8")
+                request = requests.post(url=plug['host'] + "html/", data=bytes(info, encoding='utf-8'), timeout=5)
+                request.encoding = 'utf-8'
+                return request.text
         return "Unregistered plugin"
     except:
         return "Could not connect to plugin" 
@@ -25,9 +23,9 @@ def callPlugin(plugin, info):
 def pluginReqs(plugin):
     try:
         plug = getPlugin(plugin)
-        request = urllib.request.urlopen(plug['host'] + "reqs/" , timeout=5)
-
-        return request.read().decode(encoding="UTF-8")
+        request = requests.get(url=plug['host'] + "reqs/", timeout=5)
+        request.encoding = 'utf-8'
+        return request.text
     except:
         return "Could not connect to plugin" 
 
@@ -36,5 +34,3 @@ def getPlugin(plug):
         if plug == p["name"]:
             return p
     return "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system"
-
-
