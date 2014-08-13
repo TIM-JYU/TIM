@@ -4,7 +4,6 @@ import Data.Aeson
 import GHC.Generics
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as LT
-import Snap.Http.Server
 import Data.List
 import Data.Maybe
 import Control.Applicative
@@ -15,7 +14,7 @@ import CallApiHec
 import HecIFace as H
 
 data Example = Example {title :: Maybe String
-                       ,expr::String
+                       ,expr  :: String
                        } 
                        deriving (Show,Generic)
 data Goal = Goal {cond::String,reply::String} deriving(Show,Generic)

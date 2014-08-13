@@ -34,6 +34,30 @@ data Plugin structure state input = Plugin
         , additionalFiles :: [FilePath]
         , additionalRoutes :: Snap ()}
 
+-- | A more monomorphic plugin
+data WrappedPlugin a = 
+    WPlugin
+        { 
+          wRender           :: IO LT.Text
+        , wUpdate           :: a -> IO [TIMCmd]
+        , wRequirements     :: [Requirement]
+        , wAdditionalFiles  :: [FilePath]
+        , wAdditionalRoutes :: Snap ()
+        }
+
+wrapPlugin :: structure -> IO (Maybe state) -> (a -> IO input) -> Plugin structure state input -> WrappedPlugin a
+wrapPlugin str sta inp pl = WPlugin{
+          wRender = render pl str =<< (fromMaybe (initial pl) <$> sta)
+        , wUpdate = \a -> do 
+                        s <- (fromMaybe (initial pl) <$> sta) 
+                        i <- inp a
+                        update pl str s i
+        , wRequirements = requirements pl
+        , wAdditionalFiles  = additionalFiles pl
+        , wAdditionalRoutes = additionalRoutes pl
+        }
+    
+
 -- | Simplified interface for ordering TIM to modify its data
 data TIMCmd = Save Value 
             | SaveMarkup Value
@@ -88,12 +112,12 @@ serve plugin = route
            writeLBS . encode $ object ["web" .= web, "save" .= save, "save-markup" .= markup ] 
         )
         ]
-        <|> serveStaticFiles plugin
+        <|> serveStaticFiles "." plugin
     where 
 
-serveStaticFiles plugin = do
-        locals <- liftIO $ filterM doesFileExist $ [T.unpack file | CSS file <- requirements plugin]
-                                                ++ [T.unpack file | JS  file <- requirements plugin]
+serveStaticFiles from plugin = do
+        locals <- liftIO $ filterM doesFileExist $ [from++"/"++T.unpack file | CSS file <- requirements plugin]
+                                                ++ [from++"/"++T.unpack file | JS  file <- requirements plugin]
         rq <- getSafePath
         when (rq`elem`locals) (serveFile rq)
         when (rq`elem`additionalFiles plugin) (serveFile rq)
@@ -134,7 +158,7 @@ experiment plugin markup' port = do
              liftIO $ sequence_ [writeIORef markup (fromJSON' save) | SaveMarkup save <- tims]
              writeLBS . encode $ object ["web" .= web] 
           )
-          ] <|> serveStaticFiles plugin
+          ] <|> serveStaticFiles "." plugin
 
     httpServe (setPort port mempty)
               (routes)
