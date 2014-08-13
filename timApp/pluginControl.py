@@ -46,20 +46,20 @@ def prepPluginCall(htmlStr):
     tree = BeautifulSoup(htmlStr)
     plugins = []
     for node in tree.find_all('pre'):
-        values = {}
-        name = node['plugin']
-        if(len(node.text) > 0):
-            try:
+        try: 
+            values = {}
+            name = node['plugin']
+            if(len(node.text) > 0):
                 values = yaml.load(node.text)
 
-            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
+            try:
+                if(type(values) != str):
+                    values["identifier"] = node['id']
+            except KeyError:
+                values['identifier'] = " "
+        except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 print("Malformed yaml string")
                 return "YAMLERROR: Malformed string"
-        try:
-            if(type(values) != str):
-                values["identifier"] = node['id']
-        except KeyError:
-            values['identifier'] = " "
         plugins.append({"plugin":name, "markup":values})
     return plugins
 
@@ -76,12 +76,16 @@ def pluginify(blocks,user):
                 preparedBlocks.append("Malformed yaml string")
             else:
                 for pair in pluginInfo:
-                    plugins.append(pair['plugin'])
-                    pair['markup']["user_id"] =  user
-                    pluginHtml = callPlugin(pair['plugin'], pair['markup'])
-                    rx = re.compile('<code>.*</code>')
-                    block = rx.sub(block, pluginHtml)
-                    preparedBlocks.append(block)
+                    try:
+                        plugins.append(pair['plugin'])
+                        print(pair)
+                        pair['markup']["user_id"] =  user
+                        pluginHtml = callPlugin(pair['plugin'], pair['markup'])
+                        rx = re.compile('<code>.*</code>')
+                        block = rx.sub(block, pluginHtml)
+                        preparedBlocks.append(block)
+                    except TypeError:
+                        continue
         else:
             preparedBlocks.append(block)
     return (plugins,preparedBlocks)
