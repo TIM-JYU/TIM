@@ -7,7 +7,7 @@ from flask import send_from_directory
 from ReverseProxied import ReverseProxied
 import json
 import os
-import containerLink
+from containerLink import callPlugin
 from werkzeug.utils import secure_filename
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException, DocIdentifier
