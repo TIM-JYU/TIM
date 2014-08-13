@@ -13,7 +13,7 @@
     <script src=" {{ script }}"> </script> 
     {% endfor %}
     <script>
-        var timApp = angular.module("controller", [
+        var EditApp = angular.module("controller", [
                         {% for dep in jsMods %}
                             "{{ dep|safe}}",
                         {% endfor %}
