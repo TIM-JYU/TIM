@@ -67,6 +67,34 @@ class Users(TimDbBase):
         self.db.commit()
         
     @contract
+    def getEditors(self, block_id : 'int'):
+        """Gets the users that are allowed to edit the speficied block.
+        
+        :param block_id: The id of the block.
+        :returns: The list of users who can edit the block.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute("""select b.UserGroup_id, b.editable_from, b.editable_to, u.name from BlockEditAccess b
+                          join UserGroup u on b.UserGroup_id = u.id
+                               where Block_id = ?""", [block_id])
+        return self.resultAsDictionary(cursor)
+        
+    @contract
+    def getViewers(self, block_id : 'int'):
+        """Gets the users that are allowed to view the speficied block.
+        
+        :param block_id: The id of the block.
+        :returns: The list of users who can view the block.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute("""select b.UserGroup_id, b.visible_from, b.visible_to, u.name from BlockViewAccess b
+                          join UserGroup u on b.UserGroup_id = u.id
+                               where Block_id = ?""", [block_id])
+        return self.resultAsDictionary(cursor)
+        
+    @contract
     def getOwnerGroup(self, block_id : 'int'):    
         """Returns the owner group of the specified block.
         
@@ -102,6 +130,17 @@ class Users(TimDbBase):
         return result[0] if result is not None else None
     
     @contract
+    def getUserGroupsByName(self, name : 'str'):
+        """Gets the usergroup that has the specified name.
+        
+        :param name: The name of the usergroup to be retrieved.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute('select id from UserGroup where name = ?', [name])
+        return self.resultAsDictionary(cursor)
+        
+    @contract
     def getUserGroups(self, user_id : 'int') -> 'list(dict)':
         """Gets the user groups of a user.
         
@@ -125,10 +164,10 @@ class Users(TimDbBase):
         assert access_type in ['view', 'edit'], 'invalid value for access_type'
         cursor = self.db.cursor()
         if access_type == 'view':
-            cursor.execute('insert into BlockViewAccess (Block_id,UserGroup_id,visible_from) values (?,?,CURRENT_TIMESTAMP)'
+            cursor.execute('insert or ignore into BlockViewAccess (Block_id,UserGroup_id,visible_from) values (?,?,CURRENT_TIMESTAMP)'
                        , [block_id, group_id])
         else:
-            cursor.execute('insert into BlockEditAccess (Block_id,UserGroup_id,editable_from) values (?,?,CURRENT_TIMESTAMP)'
+            cursor.execute('insert or ignore into BlockEditAccess (Block_id,UserGroup_id,editable_from) values (?,?,CURRENT_TIMESTAMP)'
                        , [block_id, group_id])
         self.db.commit()
         
@@ -151,6 +190,30 @@ class Users(TimDbBase):
         """
 
         self.__grantAccess(group_id, block_id, 'edit')
+
+    @contract
+    def removeViewAccess(self, group_id : 'int', block_id : 'int'):
+        """Removes view access from a user for a block.
+        
+        :param group_id: The id of the group from which to remove view access.
+        :param block_id: The block id.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute("delete from BlockViewAccess where UserGroup_id = ? and Block_id = ?", [group_id, block_id])
+        self.db.commit()
+
+    @contract
+    def removeEditAccess(self, group_id : 'int', block_id : 'int'):
+        """Removes edit access from a user for a block.
+        
+        :param group_id: The id of the group from which to remove edit access.
+        :param block_id: The block id.
+        """
+        
+        cursor = self.db.cursor()
+        cursor.execute("delete from BlockEditAccess where UserGroup_id = ? and Block_id = ?", [group_id, block_id])
+        self.db.commit()
 
     @contract
     def userHasViewAccess(self, user_id : 'int', block_id : 'int') -> 'bool':

@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from containerLink import callPlugin
 from containerLink import pluginReqs
+from containerLink import getPlugin
 import yaml
 import re
 import json
@@ -45,21 +46,21 @@ def prepPluginCall(htmlStr):
     tree = BeautifulSoup(htmlStr)
     plugins = []
     for node in tree.find_all('pre'):
-        values = {}
-        name = node['plugin']
-        if(len(node.text) > 0):
-            try:
+        try: 
+            values = {}
+            name = node['plugin']
+            if(len(node.text) > 0):
                 values = yaml.load(node.text)
 
-            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
+            try:
+                if(type(values) != str):
+                    values["identifier"] = node['id']
+            except KeyError:
+                values['identifier'] = " "
+        except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 print("Malformed yaml string")
                 return "YAMLERROR: Malformed string"
-        try:
-            if(type(values) != str):
-                values["identifier"] = node['id']
-        except KeyError:
-            values['identifier'] = " "
-        plugins.append({"plugin":name, "values":values})
+        plugins.append({"plugin":name, "markup":values})
     return plugins
 
 
@@ -75,13 +76,16 @@ def pluginify(blocks,user):
                 preparedBlocks.append("Malformed yaml string")
             else:
                 for pair in pluginInfo:
-                    plugins.append(pair['plugin'])
-                    print(type(pair['values']))
-                    pair['values']["user_id"] =  user
-                    pluginHtml = callPlugin(pair['plugin'], pair['values'])
-                    rx = re.compile('<code>.*</code>')
-                    block = rx.sub(block, pluginHtml)
-                    preparedBlocks.append(block)
+                    try:
+                        plugins.append(pair['plugin'])
+                        print(pair)
+                        pair['markup']["user_id"] =  user
+                        pluginHtml = callPlugin(pair['plugin'], pair['markup'])
+                        rx = re.compile('<code>.*</code>')
+                        block = rx.sub(block, pluginHtml)
+                        preparedBlocks.append(block)
+                    except TypeError:
+                        continue
         else:
             preparedBlocks.append(block)
     return (plugins,preparedBlocks)
@@ -107,9 +111,9 @@ def pluginDeps(p):
 def getPluginDatas(plugins):
     jsPaths = []
     cssPaths = []
-    modules = ["\"ngSanitize\",", "\"angularFileUpload\","]
+    modules = []
     i = 0
-    for p in plugins: 
+    for p in plugins:
         try:
             (rawJs,rawCss,modsList) = pluginDeps(json.loads(pluginReqs(p)))     
             for src in rawJs:
@@ -125,9 +129,13 @@ def getPluginDatas(plugins):
                     x = getPlugin(p)['host']
                     cssPaths.append(x + src)
             for mod in modsList:
-                modules.append("\""+mod+"\",")
-        except: 
+                modules.append(mod)
+        except:
+            print("Failed plugin call in plugincontrol getPluginDatas ")
             continue
+    print(jsPaths)
+    print(cssPaths)
+    print(modules)
     return (jsPaths, cssPaths, modules)
 
 

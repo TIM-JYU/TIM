@@ -7,7 +7,7 @@ from flask import send_from_directory
 from ReverseProxied import ReverseProxied
 import json
 import os
-import containerLink
+from containerLink import callPlugin
 from werkzeug.utils import secure_filename
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException, DocIdentifier
@@ -64,12 +64,73 @@ def jsonResponse(jsondata, status_code=200):
 def verifyEditAccess(block_id):
     timdb = getTimDb()
     if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
-        abort(403, "Sorry, you don't have permission to edit this document.")
+        abort(403, "Sorry, you don't have permission to edit this resource.")
 
 def verifyViewAccess(block_id):
     timdb = getTimDb()
     if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
+
+@app.route("/manage/<int:doc_id>")
+def manage(doc_id):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
+    editors = timdb.users.getEditors(doc_id)
+    viewers = timdb.users.getViewers(doc_id)
+    return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
+
+@app.route("/getPermissions/<int:doc_id>")
+def getPermissions(doc_id):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
+    editors = timdb.users.getEditors(doc_id)
+    viewers = timdb.users.getViewers(doc_id)
+    return jsonResponse({'doc' : doc_data, 'editors' : editors, 'viewers' : viewers})
+
+@app.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
+def addPermission(doc_id, group_name, perm_type):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    
+    groups = timdb.users.getUserGroupsByName(group_name)
+    if len(groups) == 0:
+        return jsonResponse({'message' : 'No user group with this name was found.'}, 404)
+    
+    group_id = groups[0]['id']
+    
+    if perm_type == 'edit':
+        timdb.users.grantEditAccess(group_id, doc_id)
+    elif perm_type == 'view':
+        timdb.users.grantViewAccess(group_id, doc_id)
+    else:
+        abort(400)
+    return "Success"
+
+@app.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
+def removePermission(doc_id, group_id, perm_type):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    if perm_type == 'edit':
+        timdb.users.removeEditAccess(group_id, doc_id)
+    elif perm_type == 'view':
+        timdb.users.removeViewAccess(group_id, doc_id)
+    else:
+        abort(400)
+    return "Success"
 
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
@@ -213,10 +274,9 @@ def postParagraph():
         return "Failed to modify block."
     # Replace appropriate elements with plugin content, load plugin requirements to template
     (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName())
+    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
 
-   # (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
-   # (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
-    return jsonResponse(preparedBlocks)
+    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
 
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
@@ -236,8 +296,9 @@ def deleteDocument(doc_id):
     timdb.documents.deleteDocument(getNewest(doc_id))
     return "Success"
 
+@app.route("/edit/<int:doc_id>")
 @app.route("/documents/<int:doc_id>")
-def getDocument(doc_id):
+def editDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
@@ -247,6 +308,9 @@ def getDocument(doc_id):
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
     (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
+    modules.append("ngSanitize")
+    modules.append("angularFileUpload")
+    print(modules)
     return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
 
 
@@ -261,7 +325,7 @@ def getBlockMd(docId, blockId):
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)    
+    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
     return block
 
 def getNewest(docId):
@@ -279,7 +343,9 @@ def addBlock():
     verifyEditAccess(docId)
     paragraph_id = jsondata['par']
     blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
-    return jsonResponse(blocks)
+    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName()) 
+    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
+    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
 
 @app.route("/deleteParagraph/<int:docId>/<int:blockId>")
 def removeBlock(docId, blockId):
@@ -303,8 +369,11 @@ def viewDocument(doc_id):
     versions = timdb.documents.getDocumentVersions(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
     doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-    plugins, fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
-    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
+    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
+    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
+    modules.append("ngSanitize")
+    modules.append("angularFileUpload")
+    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, css=cssPaths, jsMods=modules)
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
@@ -322,20 +391,20 @@ def postNote():
 
 @app.route("/editNote", methods=['POST'])
 def editNote():
-    #TODO: Check access rights
     jsondata = request.get_json()
     noteText = jsondata['text']
     noteId = jsondata['note_id']
     timdb = getTimDb()
+    verifyEditAccess(noteId)
     timdb.notes.modifyNote(noteId, noteText)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
-    #TODO: Check access rights
     jsondata = request.get_json()
     noteId = int(jsondata['note_id'])
     timdb = getTimDb()
+    verifyEditAccess(noteId)
     timdb.notes.deleteNote(noteId)
     return "Success"
 
@@ -349,11 +418,13 @@ def getNotes(doc_id):
 def saveAnswer(doc_id, plugintype, task_id):
     timdb = getTimDb()
     
-    #answerdata = request.get_json()['answer']
-    answerdata = request.form['answer']
+    answerdata = request.get_json()['answer']
+    #answerdata = request.form['answer']
+    
+    doc_task_id = "{}.{}".format(doc_id, task_id)
     
     # Load old state
-    oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
+    oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), doc_task_id)
     
     # Get the newest
     state = oldAnswers[0]['content']
@@ -369,7 +440,7 @@ def saveAnswer(doc_id, plugintype, task_id):
     jsonresp = json.loads(pluginResponse)
     
     #Save the new state
-    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['state']), jsonresp['state']['points'])
+    timdb.answers.saveAnswer([getCurrentUserId()], doc_task_id, json.dumps(jsonresp['state']), jsonresp['state']['points'])
     return jsonResponse(jsonresp['web'])
 
 def getPluginMarkup(doc_id, plugintype, task_id):
@@ -411,6 +482,5 @@ def logout():
 if __name__ == "__main__":
 #    app.debug = True
 #    app.run()
-    app.wsgi_app = ReverseProxied(app.wsgi_app)	
+    app.wsgi_app = ReverseProxied(app.wsgi_app)    
     app.run(host='0.0.0.0',port=5000)
-

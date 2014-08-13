@@ -1,4 +1,4 @@
-.content {
+.content { 
 	max-width: 46em;
 	text-align: justify;
 }
@@ -41,7 +41,6 @@ ul {
 }
 
 .noteeditor {
-	position: absolute;
 	left: 5em;
 	width: 30em;
 	height: 6.5em;
@@ -127,7 +126,7 @@ ul {
 
 
 .deleteButton{
-    position: absolute;
+    /* position: absolute; */
     left:0em;
 	font-size: x-small;
 	width: 5em;
@@ -145,13 +144,13 @@ ul {
 }
  
 .parSaveButton {
-	position: absolute;
+    /* position: absolute; */
 	top: 0em;
 	left: 0em;
 	font-size: x-small;
 	width: 5em;
     z-index:10;
-	height: 3em;
+	height: 3em; 
 	top: 0em;
 	border: 2px none;
 	border-radius: 15px;
@@ -177,7 +176,7 @@ ul {
 }
 
 .cancelButton {
-	position: absolute;
+    /* position: absolute; */
     z-index: 10;
 	top: 0em;
 	left: 0em;
@@ -493,40 +492,50 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	position: absolute;
+	/* position: absolute; */
 	height: 100%;
-	width: 45em;
+	width: 45em; 
 	top: 0em;
-	left: 5em;
+	left: 3px;
 	border: 2px solid;
 	padding: 15px 5px 5px 5px;
 	border-radius: 15px;
-	text-align: justify;
+	text-align: left;
+	float: left;
 }
 
 .editorArea,  .noteEditorArea {
 	z-index: 10;
 	position: absolute;
-	height: 100%;
+	width: 100%;
 	top: 0em;
 	left: 49em;
     background-color: #B0B0B0;
     min-height:6.5em;
+	border-radius: 15px;
+}
+
+.editButtonArea {
+	width: 3.5em;
+	float: left;
+}
+	
+
+
+.console {
+  font-family:Courier;
+  color: #ccc;
+  background: #000000;
+  border: 3px double #ccc;
+  padding: 10px;
+  width: 40em;
 }
 
 @media only screen and (max-device-width: 1200px) {
 	.editor {
-		position: absolute;
-		height: 5em;
-		width: 100%;
-		top: 0em;
-		left: 15em;
-		border: 2px solid;
-		padding: 15px 5px 5px 5px;
-		border-radius: 15px;
-		text-align: justify;
+		/* height: 5em; */
 	}
-	.content {
+	.content { 
 		max-width: 45em;
 		text-align: justify;
 	}
@@ -564,13 +573,12 @@ a.anchor:hover {
 	}
 	.editorArea {
 		position: relative;
-		height: 100%;
 		top: 0em;
 		left: 0%;
 	}
+	
 	.noteEditorArea {
 		position: relative;
-		height: 100%;
 		top: 0em;
 		left: 100%;
 	}
@@ -611,6 +619,8 @@ a.anchor:hover {
 		left: 0em;
 	*/	
 	}
+
+	
 }
 
 @media only screen and (max-device-width: 500px) {
