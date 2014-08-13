@@ -15,6 +15,7 @@ run pip3 install hypothesis
 run pip3 install gitpylib
 run pip3 install requests
 run pip3 install bleach
+run pip3 install pyaml
 
 # Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
 # hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen
@@ -36,11 +37,11 @@ run chown -R agent /service
 
 # Varmuudeksi estet‰‰n root login ja poistetaan rootin salasana,
 # jos sellainen on.
-run usermod -p '!' root
-run passwd -l root
-
-# Asetetaan container k‰ynnistym‰‰n tunnuksella agent.
-user agent
+##run usermod -p '!' root
+##run passwd -l root
+##
+### Asetetaan container k‰ynnistym‰‰n tunnuksella agent.
+##user agent
 
 # Avataan portti 5000 ulos containerista.
 expose 5000

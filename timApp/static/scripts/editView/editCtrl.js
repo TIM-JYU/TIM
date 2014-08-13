@@ -271,15 +271,15 @@ EditApp.controller("ParCtrl", ['$scope',
                             savedPars();
                             promise.promise.then(
                                 function(datas){
-                                    alert(datas);
+                                    
                                     var js = datas['js'];
                                     var css = datas['css'];
                                     var modules = datas['angularModule'];
                                     jsCssPromise = sc.loadjscssFiles(js, css); 
                                     jsCssPromise.then(function(){
-                                        alert(modules); 
+                                         
                                         $injector.loadNewModules(modules);
-                                        alert($injector);
+                                        
                                         sc.$apply();
                                        
                                     },
