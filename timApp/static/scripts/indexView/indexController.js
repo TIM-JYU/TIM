@@ -71,15 +71,4 @@ function(sc, controller, http, q, $upload) {
         sc.progress = '';
     };
 
-    sc.deleteDocument = function(doc) {
-        if (confirm('Are you sure you want to delete this document?')) {
-            http.delete('/documents/' + doc)
-            .success(function(data, status, headers, config) {
-                sc.getDocs();
-            }).error(function(data, status, headers, config) {
-                alert(data.message);
-            });
-        }
-    }
-
 } ]);

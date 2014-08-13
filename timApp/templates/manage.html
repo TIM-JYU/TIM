@@ -46,6 +46,12 @@ table td {
 .material {
 	padding: 1em;
 }
+
+.margin {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
 </style>
 <script type="text/javascript">
 var doc = {{doc|tojson|safe}};
@@ -63,7 +69,7 @@ var viewers = {{viewers|tojson|safe}};
     {% endif %} {% endwith %}
     <h1>Managing document: {{ '{{doc.name}}' }}</h1>
     <div class="material">
-        <div>
+        <div class="margin">
             Editors:
             <p ng-show="editors.length == 0">This document doesn't have editors.</p>
             <ul>
@@ -81,8 +87,7 @@ var viewers = {{viewers|tojson|safe}};
                 </form>
             </div>
         </div>
-        <br>
-        <div>
+        <div class="margin">
             Viewers:
             <p ng-show="viewers.length == 0">This document doesn't have viewers.</p>
             <ul>
@@ -100,13 +105,15 @@ var viewers = {{viewers|tojson|safe}};
                 </form>
             </div>
         </div>
-        <br>
         <form ng-submit="renameDocument(newName)">
         <label>Document name:
             <input type="text" ng-model="newName">
         </label>
             <input type="submit" value="Update" ng-disabled="newName === doc.name">
         </form>
+        <div class="margin">
+            <a ng-click="deleteDocument(doc.id)">Delete document</a>
+        </div>
         <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
     
