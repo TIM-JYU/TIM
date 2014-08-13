@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>TIM</title>
+<title>Manage document</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
@@ -80,7 +80,7 @@ console.log(viewers);
                     <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
                     <input type="submit" value="Add" ng-disabled="!editorName">
                     <input type="button" value="Cancel" ng-click="showAddEditor = false">
-                    <input type="button" value="Add everyone" ng-click="addPermission('all', 'edit')">
+                    <input type="button" value="Add all" ng-click="addPermission('all', 'edit')">
                 </form>
             </div>
         </div>
@@ -99,10 +99,17 @@ console.log(viewers);
                     <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
                     <input type="submit" value="Add" ng-disabled="!viewerName">
                     <input type="button" value="Cancel" ng-click="showAddViewer = false">
-                    <input type="button" value="Add everyone" ng-click="addPermission('all', 'view')">
+                    <input type="button" value="Add all" ng-click="addPermission('all', 'view')">
                 </form>
             </div>
         </div>
+        <br>
+        <form>
+        <label>Document name:
+            <input type="text" ng-model="doc.name">
+        </label>
+            <input type="button" value="Update">
+        </form>
     </div>
 </body>
 </html>
