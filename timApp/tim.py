@@ -369,8 +369,11 @@ def viewDocument(doc_id):
     versions = timdb.documents.getDocumentVersions(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
     doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-    plugins, fullHtml = pluginControl.pluginify(xs, getCurrentUserName())
-    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(fullHtml), version=versions[0])
+    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
+    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
+    modules.append("ngSanitize")
+    modules.append("angularFileUpload")
+    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, css=cssPaths, jsMods=modules)
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
