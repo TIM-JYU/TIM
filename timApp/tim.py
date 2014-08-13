@@ -418,8 +418,8 @@ def getNotes(doc_id):
 def saveAnswer(doc_id, plugintype, task_id):
     timdb = getTimDb()
     
-    #answerdata = request.get_json()['answer']
-    answerdata = request.form['answer']
+    answerdata = request.get_json()['answer']
+    #answerdata = request.form['answer']
     
     # Load old state
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
@@ -438,7 +438,7 @@ def saveAnswer(doc_id, plugintype, task_id):
     jsonresp = json.loads(pluginResponse)
     
     #Save the new state
-    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['state']), jsonresp['state']['points'])
+    timdb.answers.saveAnswer([getCurrentUserId()], "{}.{}".format(doc_id, task_id), json.dumps(jsonresp['state']), jsonresp['state']['points'])
     return jsonResponse(jsonresp['web'])
 
 def getPluginMarkup(doc_id, plugintype, task_id):
