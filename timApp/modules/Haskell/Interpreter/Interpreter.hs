@@ -8,6 +8,7 @@ import Data.List
 import Data.Maybe
 import Control.Applicative
 import Control.Monad.Trans.Either
+import Data.Aeson.Types
 
 import PluginType
 import CallApiHec
@@ -18,13 +19,17 @@ data Example = Example {title :: Maybe String
                        } 
                        deriving (Show,Generic)
 data Goal = Goal {cond::String,reply::String} deriving(Show,Generic)
-data InterpreterMarkup  = I {context::FilePath,examples::[Example],goals::[Goal]} deriving (Show,Generic)
+data InterpreterMarkup  = I {context::Maybe FilePath,examples::Maybe [Example],goals::Maybe [Goal]} deriving (Show,Generic)
 data InterpreterCommand = Evaluate String deriving (Show,Generic)
+
+parsingOptions = defaultOptions{omitNothingFields=True}
 instance FromJSON Goal where
 instance ToJSON   Goal where
 instance FromJSON Example where
+    parseJSON = genericParseJSON parsingOptions
 instance ToJSON   Example where
 instance FromJSON InterpreterMarkup where
+    parseJSON = genericParseJSON parsingOptions
 instance ToJSON   InterpreterMarkup where
 instance FromJSON InterpreterCommand where
 instance ToJSON   InterpreterCommand where
@@ -40,16 +45,16 @@ mkInterpreter = do
         additionalFiles = ["NewConsole/Console.template.html"]
         initial = ()
         update markup _ (Evaluate expr) = do
-             let ctx = Interpreter.context markup
+             let ctx = maybe (StringContext "") FileContext (Interpreter.context markup)
              res <- if ":t" `isPrefixOf` expr 
                      then callApiHec evaluator $ Input (TypeOf $ drop 2 expr) ctx
-                     else callApiHec evaluator $ Input (Eval expr) ctx
+                     else callApiHec evaluator $ Input (Eval expr)            ctx
              case res of
                 H.Plain s  -> do
-                            chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (goals markup)
+                            chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
                             return $ [web "reply" $ "<span>"++s++"</span>"++fromMaybe "" chkRes] -- TODO: SANITIZE s!!
                 H.Html  s  -> do
-                            chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (goals markup)
+                            chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
                             return $ [web "reply" $ s++fromMaybe "" chkRes] -- TODO: SANITIZE s!!
                 H.Error ss -> return $ [web "reply" $ "<pre class='error'>"++unlines ss++"</pre>"] -- TODO: SANITIZE ss!! 
                 H.NonTermination -> return $ [web "reply" ("<span class='warning'>Your expression is diverging (ie. does not terminate)</span>"::String)] 

@@ -35,21 +35,21 @@ data Plugin structure state input = Plugin
         , additionalRoutes :: Snap ()}
 
 -- | A more monomorphic plugin
-data WrappedPlugin a = 
+data WrappedPlugin s a = 
     WPlugin
         { 
-          wRender           :: IO LT.Text
-        , wUpdate           :: a -> IO [TIMCmd]
+          wRender           :: s -> IO LT.Text
+        , wUpdate           :: s -> a -> IO [TIMCmd]
         , wRequirements     :: [Requirement]
         , wAdditionalFiles  :: [FilePath]
         , wAdditionalRoutes :: Snap ()
         }
 
-wrapPlugin :: structure -> IO (Maybe state) -> (a -> IO input) -> Plugin structure state input -> WrappedPlugin a
+wrapPlugin :: structure -> (s -> IO (Maybe state)) -> (a -> IO input) -> Plugin structure state input -> WrappedPlugin s a
 wrapPlugin str sta inp pl = WPlugin{
-          wRender = render pl str =<< (fromMaybe (initial pl) <$> sta)
-        , wUpdate = \a -> do 
-                        s <- (fromMaybe (initial pl) <$> sta) 
+          wRender = \s -> render pl str =<< (fromMaybe (initial pl) <$> sta s)
+        , wUpdate = \s a -> do 
+                        s <- (fromMaybe (initial pl) <$> sta s) 
                         i <- inp a
                         update pl str s i
         , wRequirements = requirements pl
