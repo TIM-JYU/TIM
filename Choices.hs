@@ -1,5 +1,5 @@
 {-#LANGUAGE OverloadedStrings, ScopedTypeVariables, RecordWildCards, DeriveGeneric#-}
-module Choice where
+module Choices where
 
 import Data.Aeson
 import GHC.Generics
@@ -17,13 +17,12 @@ instance ToJSON Blind where
     toJSON (Blind t) = object ["text" .= t]
 
 blind :: MCQMarkup Choice -> MCQMarkup Blind
-blind MCM{..} = MCM ident stem (map hide choices) 
+blind MCM{..} = MCM stem (map hide choices) 
 hide :: Choice -> Blind
 hide = Blind . text
 
 data MCQMarkup choice 
-    = MCM {ident   :: T.Text
-          ,stem    :: T.Text
+    = MCM {stem    :: T.Text
           ,choices :: [choice]} 
       deriving (Show,Generic)
 
@@ -36,7 +35,7 @@ instance FromJSON MCQState where
 
 data MCQState = Revealed Integer | Unchecked deriving (Eq,Show,Generic)
 
-simpleMultipleChoice :: Plugin (MCQMarkup Choice) (Maybe Integer) Integer
+simpleMultipleChoice :: Plugin (MCQMarkup Choice) (Maybe Integer) Integer Value
 simpleMultipleChoice 
    = Plugin{..}
   where 
@@ -44,12 +43,8 @@ simpleMultipleChoice
                   ,NGModule "MCQ"]
     additionalFiles = ["MCQTemplate.html"]
     initial = Nothing
-    update mcm _ i = return $ 
-                       [save (Just i)
-                       ,web  "state"  i
-                       ,web  "question" mcm
-                       ]
-    render mcm state = return . LT.decodeUtf8 $
+    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=mcm])
+    render (mcm,state) = return . LT.decodeUtf8 $
                         case state of
                              Just i  -> ngDirective "mcq" 
                                             $ object ["question" .= mcm 
