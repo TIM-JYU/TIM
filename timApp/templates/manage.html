@@ -48,10 +48,9 @@ table td {
 }
 
 .margin {
-    margin-top: 1em; 
-    margin-bottom: 1em;
+	margin-top: 1em;
+	margin-bottom: 1em;
 }
-
 </style>
 <script type="text/javascript">
 var doc = {{doc|tojson|safe}};
@@ -69,15 +68,15 @@ var viewers = {{viewers|tojson|safe}};
     {% endif %} {% endwith %}
     <h1>Managing document: {{ '{{doc.name}}' }}</h1>
     <div class="material">
+        Document owner: {{ '{{ doc.owner.name }}' }}
         <div class="margin">
             Editors:
             <p ng-show="editors.length == 0">This document doesn't have editors.</p>
             <ul>
-                <li ng-repeat="editor in editors">{{ '{{editor.name}}' }} (<a
-                    ng-click="removeConfirm(editor, 'edit')">remove</a>)
+                <li ng-repeat="editor in editors">{{ '{{editor.name}}' }} (<a ng-click="removeConfirm(editor, 'edit')">remove</a>)
                 </li>
             </ul>
-            <a ng-show="!showAddEditor" ng-click="showAddEditor = true; focusEditor = true">Add editor</a>
+            <button ng-show="!showAddEditor" ng-click="showAddEditor = true; focusEditor = true">Add editor</button>
             <div ng-show="showAddEditor">
                 <form ng-submit="addPermission(editorName, 'edit')">
                     <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
@@ -91,11 +90,10 @@ var viewers = {{viewers|tojson|safe}};
             Viewers:
             <p ng-show="viewers.length == 0">This document doesn't have viewers.</p>
             <ul>
-                <li ng-repeat="viewer in viewers">{{ '{{viewer.name}}' }} (<a
-                    ng-click="removeConfirm(viewer, 'view')">remove</a>)
+                <li ng-repeat="viewer in viewers">{{ '{{viewer.name}}' }} (<a ng-click="removeConfirm(viewer, 'view')">remove</a>)
                 </li>
             </ul>
-            <a ng-show="!showAddViewer" ng-click="showAddViewer = true; focusViewer = true">Add viewer</a>
+            <button ng-show="!showAddViewer" ng-click="showAddViewer = true; focusViewer = true">Add viewer</button>
             <div ng-show="showAddViewer">
                 <form ng-submit="addPermission(viewerName, 'view')">
                     <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
@@ -106,16 +104,39 @@ var viewers = {{viewers|tojson|safe}};
             </div>
         </div>
         <form ng-submit="renameDocument(newName)">
-        <label>Document name:
-            <input type="text" ng-model="newName">
-        </label>
+            <label>Document name: <input type="text" ng-model="newName">
+            </label>
             <input type="submit" value="Update" ng-disabled="newName === doc.name">
         </form>
-        <div class="margin">
-            <a ng-click="deleteDocument(doc.id)">Delete document</a>
+        <div class="uploadForm margin">
+            Upload a new version for this document
+            <div>
+                <input type="file" ng-file-select="updateDocument(doc, $files)">
+                <span ng-bind="progress"></span>
+            </div>
         </div>
+        <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
+        <div class="margin">
+            <button ng-click="deleteDocument(doc.id)">Delete document</button>
+        </div>
+        <p>Document version history</p>
+        <table>
+            <thead>
+                <tr>
+                    <td>Time</td>
+                    <td>User</td>
+                    <td>Message</td>
+                    <td>Hash</td>
+                </tr>
+            </thead>
+            <tr ng-repeat="version in doc.versions">
+                <td>{{ '{{ version.timestamp }}' }}</td>
+                <td>{{ '{{ version.user }}' }}</td>
+                <td>{{ '{{ version.message }}' }}</td>
+                <td>{{ '{{ version.hash }}' }}</td>
+            </tr>
+        </table>
         <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
-    
 </body>
 </html>

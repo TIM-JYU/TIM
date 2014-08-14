@@ -61,10 +61,10 @@ def jsonResponse(jsondata, status_code=200):
     response.status_code = status_code
     return response
 
-def verifyEditAccess(block_id):
+def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):
     timdb = getTimDb()
     if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
-        abort(403, "Sorry, you don't have permission to edit this resource.")
+        abort(403, message)
 
 def verifyViewAccess(block_id):
     timdb = getTimDb()
@@ -80,6 +80,7 @@ def manage(doc_id):
         abort(403)
     doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
     doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
+    doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
@@ -149,7 +150,7 @@ def downloadDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
-    verifyViewAccess(doc_id)
+    verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     doc_data = timdb.documents.getDocumentMarkdown(getNewest(doc_id))
     return Response(doc_data, mimetype="text/plain")
 

@@ -80,20 +80,14 @@ table td {
                     <tr>
                         <td>Document name</td>
                         <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
                         <td>Last modified</td>
                         <td>Owner</td>
                         <td></td>
                     </tr>
                 </thead>
                 <tr ng-repeat="doc in documentList">
-                    <td>{{ '{{ doc.name }}' }}</td>
+                    <td><a href="/view/{{ '{{ doc.id }}' }}">{{ '{{ doc.name }}' }}</a></td>
                     <td><a ng-show="doc.canEdit" href="/edit/{{ '{{ doc.id }}' }}">Edit</a></td>
-                    <td><a ng-show="doc.canEdit" ng-click="setCurrentDocument(doc)">Upload</a></td>
-                    <td><a href="/download/{{ '{{ doc.id }}' }}">Download</a></td>
-                    <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
                     <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td><a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a></td>
