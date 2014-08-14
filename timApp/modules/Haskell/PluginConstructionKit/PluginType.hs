@@ -26,50 +26,19 @@ import System.Directory
 import UtilityPrelude
 
 -- | Simplified interface for TIM plugins
-data Plugin structure state input = Plugin 
+-- type Plugin stucture state input output = PrimPlugin (structure,state) (structure,state,input) (TIMCmd state output)
+
+data Plugin structure state input output = Plugin 
         { initial :: state
-        , render  :: structure -> state -> IO LT.Text
-        , update  :: structure -> state -> input -> IO [TIMCmd]
+        , render  :: (structure, state) -> IO LT.Text
+        , update  :: (structure, state, input) -> IO (TIMCmd state output)
         , requirements :: [Requirement]
         , additionalFiles :: [FilePath]
         , additionalRoutes :: Snap ()}
 
--- | A more monomorphic plugin
-data WrappedPlugin s a = 
-    WPlugin
-        { 
-          wRender           :: s -> IO LT.Text
-        , wUpdate           :: s -> a -> IO [TIMCmd]
-        , wRequirements     :: [Requirement]
-        , wAdditionalFiles  :: [FilePath]
-        , wAdditionalRoutes :: Snap ()
-        }
-
-wrapPlugin :: structure -> (s -> IO (Maybe state)) -> (a -> IO input) -> Plugin structure state input -> WrappedPlugin s a
-wrapPlugin str sta inp pl = WPlugin{
-          wRender = \s -> render pl str =<< (fromMaybe (initial pl) <$> sta s)
-        , wUpdate = \s a -> do 
-                        s <- (fromMaybe (initial pl) <$> sta s) 
-                        i <- inp a
-                        update pl str s i
-        , wRequirements = requirements pl
-        , wAdditionalFiles  = additionalFiles pl
-        , wAdditionalRoutes = additionalRoutes pl
-        }
-    
-
 -- | Simplified interface for ordering TIM to modify its data
-data TIMCmd = Save Value 
-            | SaveMarkup Value
-            | Web T.Text Value
+data TIMCmd save web = TC {save :: save, web :: web}
             deriving (Show, Generic)
-
-save,saveMarkup :: (ToJSON a) => a -> TIMCmd
-save       = Save       . toJSON
-saveMarkup = SaveMarkup . toJSON
-
-web :: (ToJSON a) => T.Text -> a -> TIMCmd
-web key   = Web key    . toJSON
 
 ngDirective :: ToJSON a => LB.ByteString -> a -> LB.ByteString
 ngDirective tag content = "<"<>tag<>" data-content='"<>encode content<>"'></"<>tag<>">"
@@ -93,23 +62,20 @@ instance ToJSON Requirement where
     toJSON (NGModule t) = object ["angularModule" .= t]
 
 -- | Serve a plugin
-serve :: (MonadSnap m, MonadIO m, FromJSON structure, FromJSON state, FromJSON input) => Plugin structure state input -> m ()
+serve :: (MonadSnap m, MonadIO m, FromJSON structure, FromJSON state, FromJSON input, ToJSON state, ToJSON output) => Plugin structure state input output -> m ()
 serve plugin = route  
         [
         ("html/", method POST $ do
             req <- getBody
-            writeLazyText =<< liftIO (render plugin (H.markup req) (fromMaybe (initial plugin) (H.state req)))
+            writeLazyText =<< liftIO (render plugin (H.markup req, fromMaybe (initial plugin) (H.state req)))
         ),
         ("reqs/", method GET $ do
             writeLBS . encode $ requirements plugin
         ),
         ("answer/", method PUT $ do
            req  <- getBody
-           tims <- liftIO (update plugin (A.markup req) (fromMaybe (initial plugin) (A.state req)) (A.input req))
-           let web    = object [key .= val | Web key val <- tims ]
-               save   = toJSON $ listToMaybe [save | Save save <- tims ]
-               markup = toJSON $ listToMaybe [save | SaveMarkup save <- tims ]
-           writeLBS . encode $ object ["web" .= web, "save" .= save, "save-markup" .= markup ] 
+           tims <- liftIO (update plugin (A.markup req,fromMaybe (initial plugin) (A.state req), A.input req))
+           writeLBS . encode $ object ["web" .= web tims, "save" .= save tims] -- , "save-markup" .= markup ] 
         )
         ]
         <|> serveStaticFiles "." plugin
@@ -122,7 +88,9 @@ serveStaticFiles from plugin = do
         when (rq`elem`locals) (serveFile rq)
         when (rq`elem`additionalFiles plugin) (serveFile rq)
 
-experiment :: forall structure markup state input. (FromJSON structure, FromJSON state, FromJSON input) => Plugin structure state input -> structure -> Int -> IO ()
+experiment :: forall structure markup state input output. 
+                (FromJSON structure, FromJSON state, ToJSON output, FromJSON input) => 
+                    Plugin structure state input output -> structure -> Int -> IO ()
 experiment plugin markup' port = do 
     state  <- newIORef (initial plugin)
     markup <- newIORef markup'
@@ -130,7 +98,7 @@ experiment plugin markup' port = do
         context "plugin" = do
                             m <- readIORef markup 
                             s <-  readIORef state
-                            LT.toStrict <$> render plugin m s
+                            LT.toStrict <$> render plugin (m,s)
         context "moduleDeps" = pure . T.pack . show $ [x | NGModule x <- requirements plugin]
         context "scripts"    = pure . T.unlines 
                                         $ ["<script src='"<>x<>"'></script>" 
@@ -149,14 +117,12 @@ experiment plugin markup' port = do
           ("answer/", method PUT $ do
              req <- getBody
              stateVal <- liftIO $ readIORef state
-             tims :: [TIMCmd] <- liftIO $ do
+             tims :: TIMCmd state output <- liftIO $ do
                             m <- readIORef markup
                             s <- readIORef state
-                            update plugin m s (fromPlainInput req)
-             let web    = object [key .= val  | Web key val <- tims ]
-             liftIO $ sequence_ [writeIORef state  (fromJSON' save) | Save save <- tims]
-             liftIO $ sequence_ [writeIORef markup (fromJSON' save) | SaveMarkup save <- tims]
-             writeLBS . encode $ object ["web" .= web] 
+                            update plugin (m, s, fromPlainInput req)
+             liftIO $ writeIORef state (save tims)
+             writeLBS . encode $ object ["web" .= web tims] 
           )
           ] <|> serveStaticFiles "." plugin
 

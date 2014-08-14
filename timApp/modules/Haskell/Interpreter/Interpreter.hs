@@ -34,7 +34,7 @@ instance ToJSON   InterpreterMarkup where
 instance FromJSON InterpreterCommand where
 instance ToJSON   InterpreterCommand where
 
-mkInterpreter :: IO (Plugin InterpreterMarkup () InterpreterCommand)
+mkInterpreter :: IO (Plugin InterpreterMarkup () InterpreterCommand String)
 mkInterpreter = do
     evaluator <- eitherT error return findApiHec
     let
@@ -44,22 +44,23 @@ mkInterpreter = do
                        ,NGModule "console"]
         additionalFiles = ["NewConsole/Console.template.html"]
         initial = ()
-        update markup _ (Evaluate expr) = do
+        update (markup,_,Evaluate expr) = do
              let ctx = maybe (StringContext "") FileContext (Interpreter.context markup)
              res <- if ":t" `isPrefixOf` expr 
                      then callApiHec evaluator $ Input (TypeOf $ drop 2 expr) ctx
                      else callApiHec evaluator $ Input (Eval expr)            ctx
+             let reply x = return $ TC () x 
              case res of
                 H.Plain s  -> do
                             chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
-                            return $ [web "reply" $ "<span>"++s++"</span>"++fromMaybe "" chkRes] -- TODO: SANITIZE s!!
+                            reply $  "<span>"++s++"</span>"++fromMaybe "" chkRes -- TODO: SANITIZE s!!
                 H.Html  s  -> do
                             chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
-                            return $ [web "reply" $ s++fromMaybe "" chkRes] -- TODO: SANITIZE s!!
-                H.Error ss -> return $ [web "reply" $ "<pre class='error'>"++unlines ss++"</pre>"] -- TODO: SANITIZE ss!! 
-                H.NonTermination -> return $ [web "reply" ("<span class='warning'>Your expression is diverging (ie. does not terminate)</span>"::String)] 
-                H.TimeOut -> return $ [web "reply" ("<span class='warning'>Your expression did not terminate on time</span>"::String)] 
-                H.ProtocolError e -> return $ [web "reply" $ "<span class='warning'>Interactive interpreter is broken. Please report this to a human:"++e++"</span>"]  -- TODO: SANITIZE e!!
+                            reply $ s++fromMaybe "" chkRes -- TODO: SANITIZE s!!
+                H.Error ss -> reply $  "<pre class='error'>"++unlines ss++"</pre>" -- TODO: SANITIZE ss!! 
+                H.NonTermination -> reply ("<span class='warning'>Your expression is diverging (ie. does not terminate)</span>"::String)
+                H.TimeOut -> reply $ ("<span class='warning'>Your expression did not terminate on time</span>"::String)
+                H.ProtocolError e -> reply $ "<span class='warning'>Interactive interpreter is broken. Please report this to a human:"++e++"</span>"  -- TODO: SANITIZE e!!
 
              
         check ctx expr (Goal cond desc) = do
@@ -68,7 +69,7 @@ mkInterpreter = do
                         CheckResult True  -> return . Just $ "<span class='success'>"++desc++"</span>"
                         CheckResult False -> return Nothing
                         x                 -> print ("ERROR"++ show x) >> return Nothing -- TODO: Log an error!
-        render markup state = return . LT.decodeUtf8 . ngDirective "console" . object $
+        render (markup,state) = return . LT.decodeUtf8 . ngDirective "console" . object $
                                     ["examples" .= examples markup]
         additionalRoutes = noRoutes
     return Plugin{..}
