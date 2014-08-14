@@ -26,7 +26,7 @@ angular.module('console',['ngSanitize'])
                   ,url:$scope.plugin+"/"+$scope.ident+"/answer/"
                   ,data:{"input":$scope.currentInput}})
              .success(function(data){
-                  $scope.submit(data.web.reply);
+                  $scope.submit(data.web);
                   console.log(["data",data.web]);
                  })
              .error(function(data,status,hdrs,cfg){

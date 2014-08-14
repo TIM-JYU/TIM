@@ -124,7 +124,7 @@ experiment plugin markup' port = do
              liftIO $ writeIORef state (save tims)
              writeLBS . encode $ object ["web" .= web tims] 
           )
-          ] <|> serveStaticFiles "." plugin
+          ] <|> serveDirectory "." -- serveStaticFiles "." plugin
 
     httpServe (setPort port mempty)
               (routes)

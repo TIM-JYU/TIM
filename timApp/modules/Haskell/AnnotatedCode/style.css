@@ -1,0 +1,26 @@
+.Tipped{background:rgba(0,0,0,0.05); cursor:pointer; border-radius:3px; -webkit-border-radius:3px;}
+// .Tipped:after{content:"?"; font-size:6pt; vertical-align:super;}
+.Tipped:hover:after, .Tipped.ihover{
+    font-size: 12px;
+    content:attr(data-tooltip);
+    position: absolute;
+    padding: 2px;
+    //top: 2.1em;
+    //left: 0;
+    margin-top:1.2em;
+    background-color:white;
+    border: solid 1px blue; 
+    background: white;
+    text-width:350px;
+    box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.4);
+    border:solid 1px #333;
+    border-radius: 7px;    
+    visibility: visible;
+    z-index: 1;
+    transition-delay:.1s;
+    -webkit-transition-delay:.1s;
+}
+.tip-right:before{left:2.1em;}
+.tip-left:before{left: 0;}
+.tip-top:before{top: -2.1em}
+.tip-bottom:before{top: 2.1em;}
