@@ -1,0 +1,37 @@
+Requirements: 
+    - python 3
+        - flask >= 0.10.1
+        - beautifulsoup
+        - ReverseProxied
+        - requests
+        - (continuing list later)
+           
+ 
+    - ghc => 7.6.1
+    - cabal >= 1.10
+        - plenty of dependencies, installed while building
+    
+0. clone tim from yousource:
+    - git clone git@yousource.it.jyu.fi:tim/tim.git
+
+1. launch Ephemeral
+
+    - Ephemeral is located in tim/Ephemeral
+    - Build the cabal package as usual
+        - cd to tim/Ephemeral
+        - install dependencies (needed only on first 
+          installing depending on your setup): 
+             "cabal install --only-dependencies"
+
+        - build: "cabal build"
+        - Launch Ephemeral on correct port (currently tim uses 8001):
+             "./dist/build/Ephemeral/Ephemeral -p 8001"
+
+2. Initialize database 
+    - cd tim/timApp
+    - run: python initdb2.py
+
+3. run tim
+    - cd tim/timApp
+    - python tim.py
+ 
