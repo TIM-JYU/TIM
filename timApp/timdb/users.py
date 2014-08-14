@@ -261,8 +261,7 @@ class Users(TimDbBase):
                               (select UserGroup_id from Block where Block.id = ?))
                               ))""", [user_id, block_id, block_id])
         result = cursor.fetchall()
-        assert len(result) <= 1, 'rowcount should be 1 at most'
-        return len(result) == 1
+        return len(result) > 0
     
     @contract
     def userIsOwner(self, user_id : 'int', block_id : 'int') -> 'bool':
