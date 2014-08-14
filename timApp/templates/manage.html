@@ -48,7 +48,7 @@ table td {
 }
 
 .margin {
-    margin-top: 1em;
+    margin-top: 1em; 
     margin-bottom: 1em;
 }
 
@@ -60,7 +60,7 @@ var viewers = {{viewers|tojson|safe}};
 </script>
 </head>
 
-<body style="background-color: #CCFFFF" ng-app="permApp" ng-controller="PermCtrl">
+<body  ng-app="permApp" ng-controller="PermCtrl">
     {% with messages = get_flashed_messages() %} {% if messages %}
     <ul class="flashes">
         {% for message in messages %}
