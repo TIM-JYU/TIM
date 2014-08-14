@@ -1,4 +1,4 @@
-var PermApp = angular.module('permApp', [ 'ngSanitize' ]);
+var PermApp = angular.module('permApp', [ 'ngSanitize', 'angularFileUpload']);
 
 PermApp.directive('focusMe', function($timeout) {
     return {
@@ -19,7 +19,8 @@ PermApp.directive('focusMe', function($timeout) {
 PermApp.controller("PermCtrl", [
         '$scope',
         '$http',
-        function(sc, $http) {
+        '$upload',
+        function(sc, $http, $upload) {
             sc.editors = editors;
             sc.viewers = viewers;
             sc.doc = doc;
@@ -79,6 +80,39 @@ PermApp.controller("PermCtrl", [
                         alert(data.message);
                     });
                 }
+            };
+            
+            sc.uploadedFile;
+            sc.progress;
+            sc.uploadInProgress;
+            sc.selectedFile = "";
+            sc.onFileSelect = function(url, $files) {
+                // $files: an array of files selected, each file has name, size,
+                // and type.
+                sc.progress = 'Uploading... ';
+                sc.uploadInProgress = true;
+                for (var i = 0; i < $files.length; i++) {
+                    var file = $files[i];
+                    sc.upload = $upload.upload({
+                        url : url,
+                        method : 'POST',
+                        file : file,
+                    }).progress(function(evt) {
+                        sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
+                    }).success(function(data, status, headers, config) {
+                        sc.uploadedFile = '/images/' + data.file;
+                        sc.progress = 'Uploading... Done!';
+                        sc.uploadInProgress = false;
+                    }).error(function(data, status, headers, config) {
+                        sc.progress = 'Error occurred: ' + data.message;
+                        sc.uploadInProgress = false;
+                    });
+                    // 
+                }
+            };
+
+            sc.updateDocument = function(doc, $files) {
+                sc.onFileSelect('/update/' + doc.id + '/' + doc.versions[0].hash, $files);
             };
 
         } ]);

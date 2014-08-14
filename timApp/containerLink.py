@@ -9,25 +9,25 @@ PLUGINS = [
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
 def callPlugin(plugin, info):
+    return callPluginRoute(plugin, "html/", "post", info)
+
+def callPluginRoute(plugin, route, callMethod="get", params=None):
     try:
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
-                request = requests.post(url=plug['host'] + "html/", data=info, timeout=5)
+                request = requests.request(url=plug['host'] + route, method=callMethod, data=params, timeout=5)
                 request.encoding = 'utf-8'
                 return request.text
         return "Unregistered plugin"
     except:
-        return "Could not connect to plugin" 
+        return "Could not connect to plugin"
+
+def callPluginAnswer(plugin, params):
+    return callPluginRoute(plugin, "answer/", "put", params)
 
 def pluginReqs(plugin):
-    try:
-        plug = getPlugin(plugin)
-        request = requests.get(url=plug['host'] + "reqs/", timeout=5)
-        request.encoding = 'utf-8'
-        return request.text
-    except:
-        return "Could not connect to plugin" 
+    return callPluginRoute(plugin, "reqs/")
 
 def getPlugin(plug):
     for p in PLUGINS:
