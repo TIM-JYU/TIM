@@ -79,6 +79,7 @@ def manage(doc_id):
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
     doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
+    doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
