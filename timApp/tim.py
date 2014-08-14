@@ -273,16 +273,19 @@ def postParagraph():
     timdb = getTimDb()
     docId = request.get_json()['docId']
     verifyEditAccess(docId)
-    paragraphText = sanitize_html(request.get_json()['text'])
+    paragraphText = request.get_json()['text']
     parIndex = request.get_json()['par']
     version = request.headers.get('Version')
     identifier = getNewest(docId)#DocIdentifier(docId, version)
     
     try:
-        blocks, version = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
+        blocks1, version = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
     except IOError as err:
         print(err)
         return "Failed to modify block."
+    blocks = [] 
+    for block in blocks1:
+        blocks.append(sanitize_html(block))
     # Replace appropriate elements with plugin content, load plugin requirements to template
     (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName())
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
@@ -321,8 +324,10 @@ def editDocument(doc_id):
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
-    print(modules)
-    return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
+    blocks = []
+    for block in texts:
+        blocks.append(sanitize_html(block))  
+    return render_template('editing.html', docId=doc_metadata['id'], name=doc_metadata['name'], text=json.dumps(blocks), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
 
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
@@ -353,7 +358,10 @@ def addBlock():
     docId = jsondata['docId']
     verifyEditAccess(docId)
     paragraph_id = jsondata['par']
-    blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
+    blocks1, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
+    blocks = []
+    for block in blocks1:
+        blocks.append(sanitize_html(block))
     (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName()) 
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
