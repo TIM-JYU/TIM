@@ -132,6 +132,17 @@ def removePermission(doc_id, group_id, perm_type):
         abort(400)
     return "Success"
 
+@app.route("/rename/<int:doc_id>", methods=["PUT"])
+def renameDocument(doc_id):
+    timdb = getTimDb()
+    new_name = request.get_json()['new_name']
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        abort(404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        abort(403)
+    timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
+    return "Success"
+    
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
     timdb = getTimDb()
@@ -438,9 +449,21 @@ def saveAnswer(doc_id, plugintype, task_id):
     
     # Assuming the JSON is in a string
     jsonresp = json.loads(pluginResponse)
+    if type(jsonresp) is not dict:
+        return jsonResponse({'error' : 'The plugin response was not a dictionary.'}, 400)
     
-    #Save the new state
-    timdb.answers.saveAnswer([getCurrentUserId()], doc_task_id, json.dumps(jsonresp['state']), jsonresp['state']['points'])
+    if not 'save' in jsonresp:
+        return jsonResponse({'error' : 'The key "save" was not found from plugin response.'}, 400)
+    
+    if not 'web' in jsonresp:
+        return jsonResponse({'error' : 'The key "web" was not found from plugin response.'}, 400)
+    
+    points = jsonresp['state']['points'] if 'points' in jsonresp['save'] else None
+    
+    # Save the new state
+    # TODO: Save tags
+    timdb.answers.saveAnswer([getCurrentUserId()], doc_task_id, json.dumps(jsonresp['save']), points)
+    
     return jsonResponse(jsonresp['web'])
 
 def getPluginMarkup(doc_id, plugintype, task_id):

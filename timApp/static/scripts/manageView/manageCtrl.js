@@ -23,6 +23,7 @@ PermApp.controller("PermCtrl", [
             sc.editors = editors;
             sc.viewers = viewers;
             sc.doc = doc;
+            sc.newName = doc.name;
 
             sc.removeConfirm = function(group, type) {
                 if (confirm("Are you sure you want to remove this usergroup?")) {
@@ -46,7 +47,7 @@ PermApp.controller("PermCtrl", [
                         }).error(function(data, status, headers, config) {
                     alert(data.message);
                 });
-            }
+            };
 
             sc.addPermission = function(groupname, type) {
                 $http.put('/addPermission/' + sc.doc.id + '/' + groupname + '/' + type).success(
@@ -57,6 +58,27 @@ PermApp.controller("PermCtrl", [
                 });
                 sc.showAddEditor = false;
                 sc.showAddViewer = false;
-            }
+            };
+
+            sc.renameDocument = function(newName) {
+                $http.put('/rename/' + sc.doc.id, {
+                    'new_name' : newName
+                }).success(function(data, status, headers, config) {
+                    sc.doc.name = newName;
+                }).error(function(data, status, headers, config) {
+                    alert(data.message);
+                });
+            };
+            
+            sc.deleteDocument = function(doc) {
+                if (confirm('Are you sure you want to delete this document?')) {
+                    $http.delete('/documents/' + doc)
+                    .success(function(data, status, headers, config) {
+                        location.replace('/');
+                    }).error(function(data, status, headers, config) {
+                        alert(data.message);
+                    });
+                }
+            };
 
         } ]);

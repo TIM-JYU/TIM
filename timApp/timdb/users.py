@@ -24,7 +24,7 @@ class Users(TimDbBase):
         
         cursor = self.db.cursor()
         cursor.execute('insert into User (id, name) values (?, ?)', [0, 'Anonymous'])
-        cursor.execute('insert into UserGroup (id, name) values (?, ?)', [0, 'Anonymous group'])
+        cursor.execute('insert into UserGroup (id, name) values (?, ?)', [0, 'all'])
         cursor.execute('insert into UserGroupMember (User_id, UserGroup_id) values (?, ?)', [0, 0])
         self.db.commit()
         return 0

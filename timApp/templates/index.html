@@ -86,7 +86,6 @@ table td {
                         <td>Last modified</td>
                         <td>Owner</td>
                         <td></td>
-                        <td></td>
                     </tr>
                 </thead>
                 <tr ng-repeat="doc in documentList">
@@ -97,7 +96,6 @@ table td {
                     <td><a href="/view/{{ '{{ doc.id }}' }}">View</a></td>
                     <td>{{ '{{ doc.versions[0].timestamp }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
-                    <td><a ng-show="doc.isOwner" ng-click="deleteDocument(doc.id)">Delete</a></td>
                     <td><a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a></td>
                 </tr>
             </table>

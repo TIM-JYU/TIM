@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>TIM</title>
+<title>Manage document</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
@@ -46,14 +46,17 @@ table td {
 .material {
 	padding: 1em;
 }
+
+.margin {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
 </style>
 <script type="text/javascript">
 var doc = {{doc|tojson|safe}};
 var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
-console.log(doc);
-console.log(editors);
-console.log(viewers);
 </script>
 </head>
 
@@ -64,9 +67,9 @@ console.log(viewers);
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    <h1>Managing document: {{doc.name}}</h1>
+    <h1>Managing document: {{ '{{doc.name}}' }}</h1>
     <div class="material">
-        <div>
+        <div class="margin">
             Editors:
             <p ng-show="editors.length == 0">This document doesn't have editors.</p>
             <ul>
@@ -74,17 +77,17 @@ console.log(viewers);
                     ng-click="removeConfirm(editor, 'edit')">remove</a>)
                 </li>
             </ul>
-            <a ng-click="showAddEditor = true; focusEditor = true">Add editor</a>
+            <a ng-show="!showAddEditor" ng-click="showAddEditor = true; focusEditor = true">Add editor</a>
             <div ng-show="showAddEditor">
                 <form ng-submit="addPermission(editorName, 'edit')">
                     <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
                     <input type="submit" value="Add" ng-disabled="!editorName">
                     <input type="button" value="Cancel" ng-click="showAddEditor = false">
+                    <input type="button" value="Add all" ng-click="addPermission('all', 'edit')">
                 </form>
             </div>
         </div>
-        <br>
-        <div>
+        <div class="margin">
             Viewers:
             <p ng-show="viewers.length == 0">This document doesn't have viewers.</p>
             <ul>
@@ -92,15 +95,27 @@ console.log(viewers);
                     ng-click="removeConfirm(viewer, 'view')">remove</a>)
                 </li>
             </ul>
-            <a ng-click="showAddViewer = true; focusViewer = true">Add viewer</a>
+            <a ng-show="!showAddViewer" ng-click="showAddViewer = true; focusViewer = true">Add viewer</a>
             <div ng-show="showAddViewer">
                 <form ng-submit="addPermission(viewerName, 'view')">
                     <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
                     <input type="submit" value="Add" ng-disabled="!viewerName">
                     <input type="button" value="Cancel" ng-click="showAddViewer = false">
+                    <input type="button" value="Add all" ng-click="addPermission('all', 'view')">
                 </form>
             </div>
         </div>
+        <form ng-submit="renameDocument(newName)">
+        <label>Document name:
+            <input type="text" ng-model="newName">
+        </label>
+            <input type="submit" value="Update" ng-disabled="newName === doc.name">
+        </form>
+        <div class="margin">
+            <a ng-click="deleteDocument(doc.id)">Delete document</a>
+        </div>
+        <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
+    
 </body>
 </html>
