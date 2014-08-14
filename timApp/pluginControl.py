@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from containerLink import callPlugin
 from containerLink import pluginReqs
 from containerLink import getPlugin
+import htmlSanitize
 import yaml
 import re
 import json
@@ -87,7 +88,7 @@ def pluginify(blocks,user):
                     except TypeError:
                         continue
         else:
-            preparedBlocks.append(block)
+            preparedBlocks.append(htmlSanitize.sanitize_html(block))
     return (plugins,preparedBlocks)
 
 # p is json of plugin requirements in form:
