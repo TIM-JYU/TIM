@@ -54,3 +54,8 @@ simpleMultipleChoice
                                                      ,"state"    .= (Nothing :: Maybe ()) ]
     additionalRoutes = noRoutes
                                 
+
+testQ :: MCQMarkup Choice
+testQ = MCM "Valitse kissa" [Choice "Koira" False "Piti valita kissa"
+                            ,Choice "Kissa" True  "Kissat Rulez"
+                            ,Choice "Kani"  False "Kissa voi syödä kanin"]
