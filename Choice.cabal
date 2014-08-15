@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 library 
   exposed-modules:           Choices
-  build-depends:       base >=4.6 && <4.7
+  build-depends:       base >=4.6
       , PluginConstructionKit >= 0.1
       , text >=1.1 && <1.2
       , bytestring >=0.10 && <0.11
@@ -35,7 +35,7 @@ library
 
 executable ChoicesPlugin
   main-is:            ChoicesPlugin.hs
-  build-depends:       base >=4.6 && <4.7
+  build-depends:       base >=4.6
       , PluginConstructionKit >= 0.1
       , text >=1.1 && <1.2
       , bytestring >=0.10 && <0.11
@@ -52,7 +52,7 @@ executable ChoicesPlugin
 
 executable ShortNotePlugin
   main-is:            ShortNotePlugin.hs
-  build-depends:       base >=4.6 && <4.7
+  build-depends:       base >=4.6
       , PluginConstructionKit >= 0.1
       , text >=1.1 && <1.2
       , bytestring >=0.10 && <0.11
@@ -69,7 +69,7 @@ executable ShortNotePlugin
 
 executable GraphVizPlugin
   main-is:            GraphVizPlugin.hs
-  build-depends:       base >=4.6 && <4.7
+  build-depends:       base >=4.6
       , PluginConstructionKit >= 0.1
       , text >=1.1 && <1.2
       , bytestring >=0.10 && <0.11
