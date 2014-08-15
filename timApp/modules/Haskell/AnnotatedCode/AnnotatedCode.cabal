@@ -22,6 +22,7 @@ library
       , aeson >=0.7 
       , mtl >=2.1 
       , unordered-containers >= 0.2.4
+      , blaze-html >= 0.7
       , directory >= 1.2
       , either >= 4.3
       , Markup >= 0.1
