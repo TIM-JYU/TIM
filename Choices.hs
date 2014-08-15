@@ -39,9 +39,9 @@ simpleMultipleChoice :: Plugin (MCQMarkup Choice) (Maybe Integer) Integer Value
 simpleMultipleChoice 
    = Plugin{..}
   where 
-    requirements = [JS "script.js"
+    requirements = [JS "script2.js"
                   ,NGModule "MCQ"]
-    additionalFiles = ["MCQTemplate.html"]
+    additionalFiles = ["MMCQTemplate.html"]
     initial = Nothing
     update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=mcm])
     render (mcm,state) = return . LT.decodeUtf8 $

@@ -1,0 +1,23 @@
+<div class="mcq">
+    <span style="font-weight:bold">Check your understanding</span><br>
+    <span>{{content.question.stem}}</span>
+    <table>
+     <tr><th>True</th><th>False</th><th ng-if="checked">Correct</th><th></th><th ng-if="checked">Reason</th></tr>
+     <tr ng-repeat="choice in content.question.choices">
+      <td>
+        <input ng-disabled="!active" type="checkbox" ng-model="$parent.answer[$index]" ng-value="true" />
+      </td>
+      <td>
+        <input ng-disabled="!active" type="checkbox" ng-model="$parent.answer[$index]" ng-false-value="true" ng-true-value="false" />
+      </td>
+      <td ng-if="checked">
+	{{answer[$index]}} vs. {{choice.correct}}
+        <span ng-if="answer[$index] == choice.correct">Correct!</span>
+        <span ng-if="answer[$index] !==choice.correct">Wrong!</span>
+      </td>
+      <td><span class="MCQItem">{{choice.text}}</span>
+          <span ng-if="choice.reason" class="MCQExpl">({{choice.reason}})</span></td>
+     </tr>
+    </table>
+     <button ng-if="active" ng-click="submit()">Check</button>
+</div>
