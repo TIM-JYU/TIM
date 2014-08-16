@@ -11,9 +11,9 @@
         <input ng-disabled="!active" type="checkbox" ng-model="$parent.answer[$index]" ng-false-value="true" ng-true-value="false" />
       </td>
       <td ng-if="checked">
-	{{answer[$index]}} vs. {{choice.correct}}
-        <span ng-if="answer[$index] == choice.correct">Correct!</span>
-        <span ng-if="answer[$index] !==choice.correct">Wrong!</span>
+	<!---{{answer[$index]}} vs. {{choice.correct}}---!>
+        <span ng-if="answer[$index] == choice.correct" class="correct">Correct!</span>
+        <span ng-if="answer[$index] !==choice.correct" class="wrong">Wrong!</span>
       </td>
       <td><span class="MCQItem">{{choice.text}}</span>
           <span ng-if="choice.reason" class="MCQExpl">({{choice.reason}})</span></td>

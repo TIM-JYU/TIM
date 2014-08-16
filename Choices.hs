@@ -26,12 +26,14 @@ data MCQMarkup choice
           ,choices :: [choice]} 
       deriving (Show,Generic)
 
+isMMC :: MCQMarkup Choice -> Bool
+isMMC = length . filter correct . choices
+
 instance ToJSON a => ToJSON (MCQMarkup a) where
 instance ToJSON (MCQState) where
 instance FromJSON Choice where
 instance FromJSON a => FromJSON (MCQMarkup a) where
 instance FromJSON MCQState where
-
 
 data MCQState = Revealed Integer | Unchecked deriving (Eq,Show,Generic)
 
@@ -39,8 +41,10 @@ simpleMultipleChoice :: Plugin (MCQMarkup Choice) (Maybe Integer) Integer Value
 simpleMultipleChoice 
    = Plugin{..}
   where 
-    requirements = [JS "script2.js"
-                  ,NGModule "MCQ"]
+    requirements = [
+                    JS "SimpleDirective.js"  
+                   ,JS "script2.js"
+                   ,NGModule "MCQ"]
     additionalFiles = ["MMCQTemplate.html"]
     initial = Nothing
     update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=mcm])
