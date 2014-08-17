@@ -8,7 +8,7 @@ angular.module('MCQ', [])
 					for(var j=0;j++;j<$scope.answer.length) {$scope.answer[j]=false;};
 					//
 				     }
-                                     , function(scope){return scope.answer;}))
+                                     , function(scope){scope.active=false;return scope.answer;})) //TODO: cleanup
   .directive('mcq', standardDirective("MCQTemplate.html"
 				     , function($scope){return;}
                                      , function(scope){return scope.userSelection;}));

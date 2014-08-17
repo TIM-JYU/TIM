@@ -16,29 +16,24 @@ newtype Blind = Blind T.Text deriving (Show, Generic)
 instance ToJSON Blind where
     toJSON (Blind t) = object ["text" .= t]
 
-blind :: MCQMarkup Choice -> MCQMarkup Blind
+blind :: MCQMarkup a Choice -> MCQMarkup a Blind
 blind MCM{..} = MCM stem (map hide choices) 
 hide :: Choice -> Blind
 hide = Blind . text
 
-data MCQMarkup choice 
+data MC
+data MMC
+data MCQMarkup mckind choice 
     = MCM {stem    :: T.Text
           ,choices :: [choice]} 
       deriving (Show,Generic)
 
-isMMC :: MCQMarkup Choice -> Bool
-isMMC = length . filter correct . choices
-
-instance ToJSON a => ToJSON (MCQMarkup a) where
-instance ToJSON (MCQState) where
+instance ToJSON a => ToJSON (MCQMarkup x a) where
+instance FromJSON a => FromJSON (MCQMarkup x a) where
 instance FromJSON Choice where
-instance FromJSON a => FromJSON (MCQMarkup a) where
-instance FromJSON MCQState where
 
-data MCQState = Revealed Integer | Unchecked deriving (Eq,Show,Generic)
-
-simpleMultipleChoice :: Plugin (MCQMarkup Choice) (Maybe Integer) Integer Value
-simpleMultipleChoice 
+multipleMultipleChoice :: Plugin (MCQMarkup MMC Choice) (Maybe [Bool]) [Bool] Value
+multipleMultipleChoice  
    = Plugin{..}
   where 
     requirements = [
@@ -46,6 +41,29 @@ simpleMultipleChoice
                    ,JS "script2.js"
                    ,NGModule "MCQ"]
     additionalFiles = ["MMCQTemplate.html"]
+    initial = Nothing
+    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=mcm])
+    render (mcm,state) = return . LT.decodeUtf8 $
+                        case state of
+                             Just i  -> ngDirective "mmcq" 
+                                            $ object ["question" .= mcm 
+                                                     ,"state"    .= Just i]
+                             Nothing -> ngDirective "mmcq"
+                                            $ object ["question" .= blind mcm 
+                                                     ,"state"    .= (Nothing :: Maybe ()) ]
+    additionalRoutes = noRoutes
+                                
+
+
+simpleMultipleChoice :: Plugin (MCQMarkup MC Choice) (Maybe Integer) Integer Value
+simpleMultipleChoice 
+   = Plugin{..}
+  where 
+    requirements = [
+                    JS "SimpleDirective.js"  
+                   ,JS "script2.js"
+                   ,NGModule "MCQ"]
+    additionalFiles = ["MCQTemplate.html"]
     initial = Nothing
     update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=mcm])
     render (mcm,state) = return . LT.decodeUtf8 $
@@ -59,7 +77,12 @@ simpleMultipleChoice
     additionalRoutes = noRoutes
                                 
 
-testQ :: MCQMarkup Choice
+testQ :: MCQMarkup MC Choice
 testQ = MCM "Valitse kissa" [Choice "Koira" False "Piti valita kissa"
                             ,Choice "Kissa" True  "Kissat Rulez"
                             ,Choice "Kani"  False "Kissa voi syödä kanin"]
+
+testMQ :: MCQMarkup MMC Choice
+testMQ = MCM "Valitse eläin" [Choice "Koira" True "Joo"
+                            ,Choice "Kissa" True  "On"
+                            ,Choice "Perl"  False "Ei oo"]
