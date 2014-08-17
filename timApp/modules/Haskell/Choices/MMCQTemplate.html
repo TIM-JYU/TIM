@@ -15,8 +15,8 @@
         <span ng-if="answer[$index] == choice.correct" class="correct">Correct!</span>
         <span ng-if="answer[$index] !==choice.correct" class="wrong">Wrong!</span>
       </td>
-      <td><span class="MCQItem">{{choice.text}}</span>
-          <span ng-if="choice.reason" class="MCQExpl">({{choice.reason}})</span></td>
+      <td><span class="MCQItem">{{choice.text}}</span></td>
+      <td> <span ng-if="choice.reason" class="MCQExpl">({{choice.reason}})</span></td>
      </tr>
     </table>
      <button ng-if="active" ng-click="submit()">Check</button>
