@@ -65,7 +65,7 @@ multipleMultipleChoice
                    ,NGModule "MCQ"]
     additionalFiles = ["MMCQTemplate.html"]
     initial = Nothing
-    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=mcm])
+    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=typeset mcm])
     render (mcm,state) = return . LT.decodeUtf8 $
                         case state of
                              Just i  -> ngDirective "mmcq" 
