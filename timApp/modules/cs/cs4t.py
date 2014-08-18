@@ -83,10 +83,12 @@ def queryParamsToNG(query):
 	# print "QUERY" + str(query)
 	return result
 	
-def queryParamsToAttribute(query):
+def queryParamsToAttribute(query, leaveAway):
 	result = "" 
+	print "leaveAway " + leaveAway
 	for field in query.keys():
-		result = result + field.lower() + "=\'" + query[field][0] + "\'\n"
+		if ( not (leaveAway and field == leaveAway) ):
+			result = result + field.lower() + "=\'" + query[field][0] + "\'\n"
 	# print "QUERY" + str(query)
 	return result+"";
 	
@@ -135,9 +137,13 @@ def printFileToReplaceAttribute(name, f, whatToReplace, query):
 
 	
 def printStringToReplaceAttribute(line, f, whatToReplace, query):	
-	params = queryParamsToAttribute(query.query)
+	leaveAway = None;
+	if ( line.index("##USERCODE##") >= 0 ): leaveAway = "byCode"
+	params = queryParamsToAttribute(query.query,leaveAway)
 	line = line.replace(whatToReplace,params)
+	line = line.replace("##USERCODE##",get_param(query,"byCode",""))
 	f.write(line)
+	print(line)
 	
 	
 def printLines(file,lines,n1,n2):	
@@ -166,7 +172,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		print "do_OPTIONS =============================================="
 		self.send_response(200, "ok")       
 		self.send_header('Access-Control-Allow-Origin', '*')                
-		self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+		self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
 		self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type") 
 		print self.path
 		print self.headers
@@ -214,7 +220,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		
 		self.send_response(200)
 		# self.send_header('Access-Control-Allow-Origin', '*')
-		self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+		self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
 		self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type") 
 		type = 'text/plain'
 		if ( reqs ): type = "application/json"
@@ -227,7 +233,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		ttype = get_param(query, "type", "console").lower()
 
 		if ( reqs ):
-			resultJSON = [{"js":["js/dir.js"]},{"angularModule":["csApp"]},{"css":["css/cs.css"]}]
+			resultJSON = {"js":["js/dir.js"],"angularModule":["csApp"],"css":["css/cs.css"]}
 			resultStr = json.dumps(resultJSON)
 			self.wfile.write(resultStr);
 			return 
@@ -235,6 +241,8 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		# if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
 		usercode = getJSOParam(query.jso,"state","usercode",None )
 		if ( usercode ): query.query["usercode"] = [usercode]
+		
+		
 		
 		print "Muutos ========"
 		pprint(query.__dict__, indent=2)
@@ -246,17 +254,22 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 			printFileTo('js/dir.js',self.wfile)
 			return
 		if ( html and not iframe ):
+			print "HTML:=============="
 			if ( ttype == "console" ):
-				printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n></cs-runner>',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',self.wfile,"##QUERYPARAMS##",query)
+			elif ( ttype == "comtest" ):
+				printStringToReplaceAttribute('<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',self.wfile,"##QUERYPARAMS##",query)
 			else:	
-				printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n></cs-jypeli-runner>',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-jypeli-runner>',self.wfile,"##QUERYPARAMS##",query)
 			return
 		if ( fullhtml ):
 			printFileTo('begin.html',self.wfile)
 			if ( ttype == "console" ):
-				printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n></cs-runner>',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',self.wfile,"##QUERYPARAMS##",query)
+			elif ( ttype == "console" ):
+				printStringToReplaceAttribute('<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',self.wfile,"##QUERYPARAMS##",query)
 			else:	
-				printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n></cs-jypeli-runner>',self.wfile,"##QUERYPARAMS##",query)
+				printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-jypeli-runner>',self.wfile,"##QUERYPARAMS##",query)
 			printFileTo('end.html',self.wfile)
 			return
 		if ( iframe ):
@@ -287,6 +300,10 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 			bmpname = "/tmp/%s.bmp" % (basename)
 			pngname = "/cs/images/%s.png" % (basename)
 			pass
+		elif ( ttype == "comtest" ):
+			# ComTest test cases
+			testcs = "/tmp/%sTest.cs" % (basename)
+			testdll = "/tmp/%sTest.dll" % (basename)
 		else:
 			# Unknown template
 			self.wfile.write("Invalid project type given (type=" + ttype + ")")
@@ -318,6 +335,8 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 		try:
 			if ( ttype == "jypeli" ):
 				cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (exename, csfname)
+			elif ( ttype == "comtest" ):
+				cmdline = "java -jar /tmp/ComTest.jar nunit && mcs /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s && nunit %s" % (csfname, csfname, testcs, testdll)
 			else:
 				cmdline = "mcs /out:%s %s" % (exename, csfname)
 
@@ -360,6 +379,10 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 			p = re.compile( 'Number of joysticks:.*\n.*')
 			# out = out.replace("Number of joysticks:.*","")
 			out = p.sub("",out)
+		elif ( ttype == "comtest" ):
+			code, out, err = run(["nunit", testdll], timeout = 10)
+			os.remove(testcs)
+			os.remove(testdll)
 		else:
 			code, out, err = run(["mono", exename], timeout = 10)
 
