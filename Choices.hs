@@ -4,7 +4,10 @@ module Choices where
 import Data.Aeson
 import GHC.Generics
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Encoding as LT
+import Text.Pandoc
+import Text.Blaze.Html.Renderer.Text
 
 import PluginType
 
@@ -32,7 +35,27 @@ instance ToJSON a => ToJSON (MCQMarkup x a) where
 instance FromJSON a => FromJSON (MCQMarkup x a) where
 instance FromJSON Choice where
 
-multipleMultipleChoice :: Plugin (MCQMarkup MMC Choice) (Maybe [Bool]) [Bool] Value
+formatMarkdown :: T.Text -> T.Text
+formatMarkdown = LT.toStrict . LT.concatMap escapeQuotes . renderHtml . writeHtml def . readMarkdown def . T.unpack
+
+escapeQuotes '\'' = "&#39"
+escapeQuotes '\"' = "&#34"
+escapeQuotes x    = LT.singleton x
+
+class Typesettable a where
+   typeset :: a -> a
+
+instance Typesettable a => Typesettable (MCQMarkup x a) where
+    typeset (MCM stem choices) = MCM (formatMarkdown stem) (map typeset choices)
+
+instance Typesettable Choice where
+    typeset (Choice t c r) = Choice (formatMarkdown t) c (formatMarkdown r)
+
+instance Typesettable Blind where
+    typeset (Blind t) = Blind (formatMarkdown t)
+
+
+multipleMultipleChoice :: Plugin (MCQMarkup MMC Choice) (Maybe [Maybe Bool]) [Maybe Bool] Value
 multipleMultipleChoice  
    = Plugin{..}
   where 
@@ -46,10 +69,10 @@ multipleMultipleChoice
     render (mcm,state) = return . LT.decodeUtf8 $
                         case state of
                              Just i  -> ngDirective "mmcq" 
-                                            $ object ["question" .= mcm 
+                                            $ object ["question" .= typeset mcm 
                                                      ,"state"    .= Just i]
                              Nothing -> ngDirective "mmcq"
-                                            $ object ["question" .= blind mcm 
+                                            $ object ["question" .= typeset (blind mcm)
                                                      ,"state"    .= (Nothing :: Maybe ()) ]
     additionalRoutes = noRoutes
                                 
@@ -65,14 +88,14 @@ simpleMultipleChoice
                    ,NGModule "MCQ"]
     additionalFiles = ["MCQTemplate.html"]
     initial = Nothing
-    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=mcm])
+    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=typeset mcm])
     render (mcm,state) = return . LT.decodeUtf8 $
                         case state of
                              Just i  -> ngDirective "mcq" 
-                                            $ object ["question" .= mcm 
+                                            $ object ["question" .= typeset mcm 
                                                      ,"state"    .= Just i]
                              Nothing -> ngDirective "mcq"
-                                            $ object ["question" .= blind mcm 
+                                            $ object ["question" .= typeset (blind mcm)
                                                      ,"state"    .= (Nothing :: Maybe ()) ]
     additionalRoutes = noRoutes
                                 
