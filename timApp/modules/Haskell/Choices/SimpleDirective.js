@@ -1,4 +1,4 @@
-function standardDirective(template,extract) {
+function standardDirective(template,build,extract) {
  return function() {
     return {
       restrict: 'E',
@@ -12,6 +12,7 @@ function standardDirective(template,extract) {
         $scope.content = JSON.parse($element.attr("data-content"));
         console.log(["initial",$scope.content]);
         $scope.plugin = $element.parent().attr("data-plugin");
+        build($scope,$element);
         $scope.submit = function () {
             var message = {input:extract($scope)};
             var localState  = JSON.parse($element.parent().attr("data-state")  || "null");
@@ -24,6 +25,7 @@ function standardDirective(template,extract) {
              .success(function(data){
                   $scope.content = data.web
                   console.log(["data",$scope.content]);
+                  $scope.checked = true; 			
                  })
              .error(function(data,status,hdrs,cfg){
                   alert(["error",data,status,hdrs,cfg]);
@@ -33,7 +35,3 @@ function standardDirective(template,extract) {
     }
   }
 }
-angular.module('MCQ', [])
-  .directive('mcq', standardDirective("MCQTemplate.html"
-                                     , function(scope){return scope.userSelection;}));
-

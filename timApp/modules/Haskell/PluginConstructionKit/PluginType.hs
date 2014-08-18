@@ -114,7 +114,7 @@ experiment plugin markup' port = do
               pg  <- liftIO $ TMPL.renderA defaultPage context
               writeLazyText pg
           ) ,
-          ("answer/", method PUT $ do
+          ("testPlugin/answer/", method PUT $ do
              req <- getBody
              stateVal <- liftIO $ readIORef state
              tims :: TIMCmd state output <- liftIO $ do
