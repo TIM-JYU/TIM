@@ -4,12 +4,14 @@ angular.module('MCQ', [])
 					$scope.active  = false;
 					$scope.checked = true;
 					$scope.answer = $scope.content.state; //new Array($scope.content.question.length);
-					if ($scope.answer==null) 
+					if ($scope.answer==null||$scope.answer==undefined) 
                         {
                         $scope.checked = false;
                         $scope.active  = true;
+                        $scope.answer = new Array($scope.content.question.choices.length);
     					for(var j=0;j++;j<$scope.answer.length) {$scope.answer[j]=false;};
 	    			    }
+                    console.log(["ANSWER",$scope.answer]);
                     }
                     , function(scope){scope.active=false;return scope.answer;})) //TODO: cleanup
   .directive('mcq', standardDirective("MCQTemplate.html"
