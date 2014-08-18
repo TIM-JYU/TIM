@@ -11,10 +11,10 @@
      <tr ng-repeat="choice in content.question.choices">
       <td><span style="white-space:nowrap" class="MCQItem" ng-bind-html="choice.text"></span></td>
       <td>
-        <input ng-disabled="!active" type="checkbox" ng-model="$parent.answer[$index]" ng-value="true" />
+        <input  type="checkbox" ng-model="$parent.answer[$index]" ng-value="true" />
       </td>
       <td>
-        <input ng-disabled="!active" type="checkbox" ng-model="$parent.answer[$index]" ng-false-value="true" ng-true-value="false" />
+        <input  type="checkbox" ng-model="$parent.answer[$index]" ng-false-value="true" ng-true-value="false" />
       </td>
       <td ng-if="checked">
         <span ng-if="answer[$index] == choice.correct" class="correct">Correct!</span>
@@ -23,5 +23,5 @@
       <td> <span ng-if="choice.reason" class="MCQExpl" ng-bind-html="choice.reason"></span></td>
      </tr>
     </table>
-     <button ng-if="active" ng-click="submit()">Check</button>
+     <button  ng-click="submit()">Submit</button>
 </div>
