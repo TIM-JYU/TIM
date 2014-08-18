@@ -12,7 +12,7 @@ function standardDirective(template,build,extract) {
         $scope.content = JSON.parse($element.attr("data-content"));
         console.log(["initial",$scope.content]);
         $scope.plugin = $element.parent().attr("data-plugin");
-	build($scope,$element);
+        build($scope,$element);
         $scope.submit = function () {
             var message = {input:extract($scope)};
             var localState  = JSON.parse($element.parent().attr("data-state")  || "null");
