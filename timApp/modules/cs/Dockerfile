@@ -13,6 +13,9 @@ run apt-get install -y libsdl-mixer1.2
 run apt-get install -y xvfb
 run apt-get install -y python
 run apt-get install -y imagemagick
+run apt-get install -y openjdk-7-jre-headless
+run apt-get install -y nunit-console
+run apt-get install -y wget
 
 # Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
 # hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen
