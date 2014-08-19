@@ -8,6 +8,7 @@ import qualified Data.Text.Lazy as LT
 import qualified Data.Text as T
 import qualified Data.Text.Template as TMPL
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HM
@@ -40,8 +41,17 @@ data Plugin structure state input output = Plugin
 data TIMCmd save web = TC {save :: save, web :: web}
             deriving (Show, Generic)
 
-ngDirective :: ToJSON a => LB.ByteString -> a -> LB.ByteString
-ngDirective tag content = "<"<>tag<>" data-content='"<>encode content<>"'></"<>tag<>">"
+ngDirective :: ToJSON a => LT.Text -> a -> LT.Text
+ngDirective tag content = "<"<>tag<>" data-content='"
+                             <>escape (LT.decodeUtf8 (encode content))
+                             <>"'></"<>tag<>">"
+
+escape :: LT.Text -> LT.Text
+escape = LT.concatMap esc
+ where
+  esc '\'' = "&#39;"
+  esc '\"' = "&#34;"
+  esc x    = LT.singleton x
 
 noRoutes :: Snap ()    
 noRoutes = return ()

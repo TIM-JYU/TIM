@@ -69,7 +69,7 @@ mkInterpreter = do
                         CheckResult True  -> return . Just $ "<span class='success'>"++desc++"</span>"
                         CheckResult False -> return Nothing
                         x                 -> print ("ERROR"++ show x) >> return Nothing -- TODO: Log an error!
-        render (markup,state) = return . LT.decodeUtf8 . ngDirective "console" . object $
+        render (markup,state) = return . ngDirective "console" . object $
                                     ["examples" .= examples markup]
         additionalRoutes = noRoutes
     return Plugin{..}
