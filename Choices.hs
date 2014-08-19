@@ -36,11 +36,7 @@ instance FromJSON a => FromJSON (MCQMarkup x a) where
 instance FromJSON Choice where
 
 formatMarkdown :: T.Text -> T.Text
-formatMarkdown = LT.toStrict . LT.concatMap escapeQuotes . renderHtml . writeHtml def . readMarkdown def . T.unpack
-
-escapeQuotes '\'' = "&#39"
-escapeQuotes '\"' = "&#34"
-escapeQuotes x    = LT.singleton x
+formatMarkdown = LT.toStrict . renderHtml . writeHtml def . readMarkdown def . T.unpack
 
 class Typesettable a where
    typeset :: a -> a
@@ -66,7 +62,7 @@ multipleMultipleChoice
     additionalFiles = ["MMCQTemplate.html"]
     initial = Nothing
     update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=typeset mcm])
-    render (mcm,state) = return . LT.decodeUtf8 $
+    render (mcm,state) = return $
                         case state of
                              Just i  -> ngDirective "mmcq" 
                                             $ object ["question" .= typeset mcm 
@@ -89,7 +85,7 @@ simpleMultipleChoice
     additionalFiles = ["MCQTemplate.html"]
     initial = Nothing
     update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=typeset mcm])
-    render (mcm,state) = return . LT.decodeUtf8 $
+    render (mcm,state) = return  $
                         case state of
                              Just i  -> ngDirective "mcq" 
                                             $ object ["question" .= typeset mcm 
