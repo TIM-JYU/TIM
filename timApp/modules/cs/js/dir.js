@@ -1,13 +1,51 @@
 ﻿var csApp = angular.module('csApp', ['ngSanitize']);
-csApp.directive('csRunner',function() {	return csApp.directiveFunction('console'); });
-csApp.directive('csJypeliRunner',function() { return csApp.directiveFunction('jypeli'); });
+csApp.directive('csRunner',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }]);
+csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli'); }]);
+csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest'); }]);
+// csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
+
+csApp.directive('contenteditable', ['$sce', function($sce) {
+    return {
+      restrict: 'A', // only activate on element attribute
+      require: '?ngModel', // get a hold of NgModelController
+      link: function(scope, element, attrs, ngModel) {
+        if(!ngModel) return; // do nothing if no ng-model
+
+        // Specify how UI should be updated
+        ngModel.$render = function() {
+          // element.html($sce.getTrustedHtml(ngModel.$viewValue || ''));
+          element.text(ngModel.$viewValue || '');
+        };
+
+        // Listen for change events to enable binding
+        element.on('blur keyup change', function() {
+          scope.$apply(read);
+        });
+        read(); // initialize
+
+        // Write data to the model
+        function read() {
+          // var html = element.html();
+          var text = element.html();
+		  // if ( text.indexOf("<div>") >= 0 )  { text = text.replace("<div>","").replace("</div>","\n"); element.html(text); }
+          text = element.text();
+          // When we clear the content editable the browser leaves a <br> behind
+          // If strip-br attribute is provided then we strip this out
+          // if( attrs.stripBr && html == '<br>' ) {
+          //   html = '';
+          // }
+          ngModel.$setViewValue(text);
+        }
+      }
+    };
+  }]);
 
 
 csApp.commentTrim = function(s) {
 	if ( !s ) return;
 	n = s.indexOf("//\n");
 	if ( n < 0 ) return s;
-	return s.substr(3);
+	return s.substr(3); 
 }
 
 csApp.getHeading = function(a,key,$scope) {
@@ -15,7 +53,7 @@ csApp.getHeading = function(a,key,$scope) {
 	var h = a[key];
 	if ( !h ) return "";
 	// if ( h.toLowerCase().indexOf("script") >= 0 ) return "";
-	var st = h.split("!!");
+	var st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
 	var elem = "h4";
 	var val = st[0];
 	var attributes = "";
@@ -25,10 +63,10 @@ csApp.getHeading = function(a,key,$scope) {
 	if ( i >= 0 ) ea = [elem.substring(0,i),elem.substring(i)];
 	// var ea = elem.split(" ",2);
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
-	if ( elem.toLowerCase().indexOf("script") >= 0 ) return "";
-	attributes = "";  // ei laiteta näitä, niin on vähän turvallisempi
+	// if ( elem.toLowerCase().indexOf("script") >= 0 ) return "";
+	// attributes = "";  // ei laiteta näitä, niin on vähän turvallisempi
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
-	// html = $sanitize(html);
+	html = csApp.sanitize(html);
 	return html;
 }
 
@@ -39,6 +77,8 @@ csApp.directiveFunction = function(t) {
 			scope.type = attrs.type;
 			scope.replace = attrs.replace;
 			scope.rows = 1;
+			scope.codeunder = false;
+			scope.codeunder = false;
 			scope.taskId = "omanimi";
 			if ( t == "jypeli" ) {
 				scope.taskId = "lumiukko";
@@ -49,6 +89,8 @@ csApp.directiveFunction = function(t) {
 			scope.placeholder = "Write your code here";
 			
 			if ( attrs.usercode ) scope.usercode = attrs.usercode;
+			if ( attrs.codeunder ) scope.codeunder = attrs.codeunder;
+			if ( attrs.codeover ) scope.codeover = attrs.codeover;
 			if ( attrs.rows ) scope.rows = attrs.rows;
 			scope.minRows = csApp.getInt(scope.rows);
 			if ( attrs.maxrows )scope.maxRows = csApp.getInt(attrs.maxrows);
@@ -77,20 +119,26 @@ csApp.directiveFunction = function(t) {
 		transclude: true,
 		replace: 'true',
 		template: '<div class="csRunDiv">' +
-				  '<p>Hero comes header</p>' +
+				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-show="stem" class="csRunStem" >{{stem}}</p>' +
-				  '<p><textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea></p>'+
+				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
+				  '<div class="csRunCode">'+
+				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
+				  '<textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+				  //'<div class="csRunArea" contentEditable ng-model="usercode" ng-trim="false" "></div>'+
+				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
+				  '</div>'+
 				  //'<br />'+ 
-				  '<p><button ng-click="runCode();">Aja</button>'+
-				  '<a href="" ng-click="showCode();">Näytä koko koodi</a> '+
+				  '<p class="csRunMenu"><button ng-click="runCode();">Aja</button>&nbsp&nbsp'+
+				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
 				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
-				  '<pre ng-show="viewCode">{{code}}</pre>'+
-				  '<pre  class="console" ng-show="result">{{result}}</pre>'+
+				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
+				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
-				  '<pre ng-show="runError">{{error}}</pre>'+
-				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="500" ng-show="runSuccess" />' : "") +
-				  '<p>Hero comes footer</p>'+
+				  '<pre ng-if="runError">{{error}}</pre>'+
+				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="500" ng-if="runSuccess" />' : "") +
+				  '<p>Here comes footer</p>'+
 				  '</div>'
 		// templateUrl: 'csTempl.html'
 	}; 
@@ -232,18 +280,30 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( $scope.localcode == "" ) { $scope.code = $scope.usercode; return; }
 		var st = $scope.localcode.split("\n");
 		var r = "";
+		var rp = ["",""]; // alkuosa, loppuosa
+		var step = 0;
 		var nl = "";
+		var nls = "";
 		for (i in st) {
 			var s = st[i];
-			if ( s.indexOf($scope.replace) >= 0 ) r += nl + $scope.usercode;
-			else r += nl + s;
-			nl = "\n";
+			if ( s.indexOf($scope.replace) >= 0 ) {
+				r += nl + $scope.usercode;
+				if ( step == 0 ) { step++; nls = ""; continue; }
+			} else { 
+				r += nl + s;
+				rp[step] += nls + s;
+			}
+			nl = nls = "\n";
 		}
 		$scope.code = r;
+		$scope.precode = rp[0];
+		$scope.postcode = rp[1];
 	}	
 		
 		
 	$scope.showCodeNow = function() {
+	    // var copyEvent = new ClipboardEvent('copy', { dataType: 'text/plain', data: 'kissa' } );
+        // document.dispatchEvent(copyEvent);
 		if ( !$scope.viewCode ) return;
 		if ( angular.isDefined($scope.localcode) ) { $scope.showCodeLocal(); return; } 
 		if ( !$scope.file ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }

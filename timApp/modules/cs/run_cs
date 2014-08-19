@@ -1,5 +1,5 @@
 #!/bin/sh
-
+ 
 # For X server emulation
 Xvfb :1 -screen 0 1280x1024x24 &
 export DISPLAY=:1
@@ -7,6 +7,13 @@ export DISPLAY=:1
 # Copy Jypeli dll's to temp directory
 cp /cs/jypeli/* /tmp/
 
+# Get ComTest
+cd /tmp
+rm ComTest.jar*
+wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar
+cd /cs
+
 # Run the server
 python /cs/cs4t.py
 
+ 

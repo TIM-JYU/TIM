@@ -1,5 +1,5 @@
 import BaseHTTPServer
-import subprocess
+import subprocess 
 import cStringIO
 # import nltk
 from urllib import urlopen, urlencode
@@ -176,6 +176,15 @@ def jsOnError(file, err):
     print
     "ERROR:======== " + err
 
+	
+def remove_before(what,s):
+	i = s.find(what)
+	if i < 0: return s
+	s = s[i+1:]
+	i = s.find("\n")
+	if i < 0: return ""
+	return s[i+1:]
+	
 
 class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -269,6 +278,8 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
             printFileTo('cs.css', self.wfile)
             return
         if ( js ):
+            if self.path.find('rikki') >= 0 : 
+                printFileTo('js/dirRikki.js', self.wfile)
             printFileTo('js/dir.js', self.wfile)
             return
         if ( html and not iframe ):
@@ -289,7 +300,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
             if ( ttype == "console" ):
                 printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>', self.wfile,
                                               "##QUERYPARAMS##", query)
-            elif ( ttype == "console" ):
+            elif ( ttype == "comtest" ):
                 printStringToReplaceAttribute('<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
                                               self.wfile, "##QUERYPARAMS##", query)
             else:
@@ -368,8 +379,8 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
                     exename, csfname)
             elif ( ttype == "comtest" ):
-                cmdline = "java -jar /tmp/ComTest.jar nunit && mcs /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s && nunit %s" % (
-                    csfname, csfname, testcs, testdll)
+                cmdline = "java -jar /tmp/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
+                    csfname, testdll, csfname, testcs)
             else:
                 cmdline = "mcs /out:%s %s" % (exename, csfname)
 
@@ -411,16 +422,34 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
             p = re.compile('Number of joysticks:.*\n.*')
             # out = out.replace("Number of joysticks:.*","")
             out = p.sub("", out)
+            os.remove(exename)
         elif ( ttype == "comtest" ):
-            code, out, err = run(["nunit", testdll], timeout=10)
+            code, out, err = run(["nunit-console", testdll], timeout=10)
+            out = remove_before("Execution Runtime:",out)
+            out = out[1:] # alussa oleva . pois
+            out = re.sub("at .*","",out,flags=re.M)
+            out = re.sub("\n\n+","",out,flags=re.M)
+            eri = out.find("Test Failure");
+            if eri >= 0:
+                lni = out.find(", line ") 
+                if ( lni >= 0 ): 
+                    lns = out[lni+7:]
+                    lns = lns[0:lns.find("\n")]
+                    lnro = int(lns)
+                    lines = open(csfname,"r").readlines()
+                    # print("Line nr: "+str(lnro))
+                    out += "\n" + str(lnro) + " " + lines[lnro-1]
             os.remove(testcs)
             os.remove(testdll)
         else:
             code, out, err = run(["mono", exename], timeout=10)
+            os.remove(exename)
 
         web["console"] = out
         result["web"] = web
 
+	# Clean up
+        os.remove(csfname)
 
         # self.wfile.write(out)
         # self.wfile.write(err)
@@ -434,10 +463,6 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
         out
         print
         err
-
-        # Clean up
-        os.remove(csfname)
-        os.remove(exename)
 
 
 def keep_running():

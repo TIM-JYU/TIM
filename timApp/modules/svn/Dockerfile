@@ -4,23 +4,15 @@ maintainer vesal "vesal@jyu.fi"
 
 # Asennetaan python, pip ja flask
 
-#run apt-get install -y python3
-#run apt-get install -y python3-pip
-#run pip3 install Flask
-run apt-get install -y mono-complete
-run apt-get install -y libsdl1.2debian
-run apt-get install -y libsdl-mixer1.2
-run apt-get install -y xvfb
-run apt-get install -y python
-run apt-get install -y imagemagick
-run apt-get install -y openjdk-7-jre-headless
-run apt-get install -y nunit-console
+run apt-get install -y python3
+run apt-get install -y python3-pip
+run pip3 install Flask
 run apt-get install -y wget
 
 # Poistetaan pip. Sitä ei tarvitse enää ja saadaan
 # hitusen pienempi image ja vähemmän ohjelmia potentiaalisen
 # hyökkääjän käyttöön. (Periaate ok. käytännössä tosi marginaalinen
-# toimenpide)
+# toimenpide) 
 # run apt-get -y --purge remove python3-pip
 
 # Lisätään alkuperäinen hakemisto polkuun /service
@@ -28,8 +20,7 @@ run mkdir /service
 
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
-#run useradd -M agent 
-run useradd -m agent
+run useradd -M agent 
 run chown -R agent /service
 
 # testejä varten
