@@ -52,14 +52,14 @@
         // Data from jinja2 template
         var jsonDoc = JSON.parse({{ text|tojson|safe }});
         var docId = JSON.parse({{docId|tojson|safe}});
-        var docName = {{ name|tojson|safe}};
+        var docName = {{ docName|tojson|safe}};
         var version = {{ version|tojson|safe}};
     </script>
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->  
 </head>
-<body ng-app="controller" ng-controller="ParCtrl">   
+<body  ng-app="controller" ng-controller="ParCtrl">   
 <!--<div id="topBar">
     <div class="navigationBar" > 
         <a href="localhost:5000"> Home </a> 
@@ -85,10 +85,15 @@
 				<button class="cancelButton" ng-if="par.display" ng-click="cancelEdit(par.par)"></button>          
 				<button ng-if="par.display && !sendingNew" class="deleteButton delete" ng-click="delParagraph(par.par)"></button>
 			  </div>
-			  <div id="{{'{{ par.par }}'}}" class="editor" ng-show="par.display"></div>
+			  <div id="{{'{{ par.par }}'}}" class="editor"  ng-show="par.display"></div>
         </div><br>
             <div class="addParButton b{{'{{par.par + 1}}'}}" ng-click="parAdd(par.par + 1)"></div>
     </div>
+
+    <script> 
+        $(".ace_editor").attr("onresize", function(){activeEdit.editor.editor.resize()});
+        $(".ace_editor").css("resize", "both");
+    </script>
 </body>
 
 

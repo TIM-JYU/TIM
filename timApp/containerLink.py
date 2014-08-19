@@ -1,4 +1,8 @@
+import urllib.request
+import urllib.parse
+import urllib
 import requests
+import sys
 
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
@@ -9,28 +13,44 @@ PLUGINS = [
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
 def callPlugin(plugin, info):
-    return callPluginRoute(plugin, "html/", "post", info)
-
-def callPluginRoute(plugin, route, callMethod="get", params=None):
     try:
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
-                request = requests.request(url=plug['host'] + route, method=callMethod, data=params, timeout=5)
-                request.encoding = 'utf-8'
-                return request.text
+                request = urllib.request.urlopen(plug['host'] + "html/", urllib.parse.urlencode(info).encode('utf-8'), timeout=5)
+                return request.read().decode(encoding="UTF-8")
         return "Unregistered plugin"
     except:
-        return "Could not connect to plugin"
+        return "Could not connect to plugin" 
 
-def callPluginAnswer(plugin, params):
-    return callPluginRoute(plugin, "answer/", "put", params)
+
+# plugin answer call, plugin must match one of the specified plugins in 
+# PLUGINS
+def callPluginAnswer(plugin, answerData):
+#    try:
+    for x in PLUGINS:
+        if(x['name'] == plugin):
+            plug = getPlugin(plugin)
+            request = requests.put( url=plug['host'] + "answer/", data=answerData, timeout=5)
+            return request.text
+    return "Unregistered plugin or plugin not answering. Contact document administrator for details"
+#    except:
+#        return "Could not connect to plugin" 
+
 
 def pluginReqs(plugin):
-    return callPluginRoute(plugin, "reqs/")
+    try:
+        plug = getPlugin(plugin)
+        request = urllib.request.urlopen(plug['host'] + "reqs/" , timeout=5)
+
+        return request.read().decode(encoding="UTF-8")
+    except:
+        return "Could not connect to plugin" 
 
 def getPlugin(plug):
     for p in PLUGINS:
         if plug == p["name"]:
             return p
     return "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system"
+
+

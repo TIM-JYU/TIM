@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
 from containerLink import callPlugin
 from containerLink import pluginReqs
 from containerLink import getPlugin
-import htmlSanitize
 import yaml
 import re
 import json
@@ -47,48 +47,63 @@ def prepPluginCall(htmlStr):
     tree = BeautifulSoup(htmlStr)
     plugins = []
     for node in tree.find_all('pre'):
-        try: 
-            values = {}
-            name = node['plugin']
-            if(len(node.text) > 0):
+        values = {}
+        name = node['plugin']
+        if(len(node.text) > 0):
+            try:
                 values = yaml.load(node.text)
 
-            try:
-                if(type(values) != str):
-                    values["identifier"] = node['id']
-            except KeyError:
-                values['identifier'] = " "
-        except (yaml.parser.ParserError, yaml.scanner.ScannerError):
+            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 print("Malformed yaml string")
                 return "YAMLERROR: Malformed string"
-        plugins.append({"plugin":name, "markup":values})
+        try:
+            if(type(values) != str):
+                values["identifier"] = node['id']
+        except KeyError:
+            values['identifier'] = " "
+        plugins.append({"plugin":name, "markup":values, "html":node.html})
     return plugins
 
+
+def getBlockYaml(block):
+    tree = BeautifulSoup(block)
+    for node in tree.find_all('pre'):
+        values = {}
+        if(len(node.text) > 0):
+            try:
+                values = yaml.load(node.text)
+            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
+                print("Malformed yaml string")
+                return "YAMLERROR: Malformed string"
+    return values
 
 # Take a set of blocks and search for plugin markers,
 # replace contents with plugin.
 def pluginify(blocks,user): 
     preparedBlocks = []
     plugins = []
+    pluginInfos = []
     for block in blocks:
         if("plugin=" in block and "<code>" in block):
             pluginInfo = prepPluginCall(block)
             if(pluginInfo == "YAMLERROR: Malformed string"):
                 preparedBlocks.append("Malformed yaml string")
             else:
-                for pair in pluginInfo:
+                for vals in pluginInfo:
                     try:
-                        plugins.append(pair['plugin'])
-                        print(pair)
-                        pair['markup']["user_id"] =  user
-                        pluginHtml = callPlugin(pair['plugin'], pair['markup'])
-                        rx = re.compile('<code>.*</code>')
-                        block = rx.sub(block, pluginHtml)
+                        plugins.append(vals['plugin'])
+                        vals['markup']["user_id"] =  user
+                        pluginHtml = callPlugin(vals['plugin'], vals['markup'])
+                        rx = re.compile('<code>(.*?)</code>', re.DOTALL)
+                        block = rx.sub(pluginHtml,block)
                         preparedBlocks.append(block)
                     except TypeError:
+                        preparedBlock.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team. You will find no contact page yet, if you see this error, you should probably just knock on our door\n or pray to your favorite deity.'")
                         continue
         else:
-            preparedBlocks.append(htmlSanitize.sanitize_html(block))
+            preparedBlocks.append(block)
+
+    print(preparedBlocks)                    
     return (plugins,preparedBlocks)
 
 # p is json of plugin requirements in form:
@@ -134,9 +149,7 @@ def getPluginDatas(plugins):
         except:
             print("Failed plugin call in plugincontrol getPluginDatas ")
             continue
-    print(jsPaths)
-    print(cssPaths)
-    print(modules)
+
     return (jsPaths, cssPaths, modules)
 
 
