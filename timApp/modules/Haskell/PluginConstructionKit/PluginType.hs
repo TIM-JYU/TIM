@@ -70,7 +70,18 @@ serve plugin = route
             writeLazyText =<< liftIO (render plugin (H.markup req, fromMaybe (initial plugin) (H.state req)))
         ),
         ("reqs/", method GET $ do
-            writeLBS . encode $ requirements plugin
+            writeLBS . encode $ 
+                object [
+                        "js"  .= [x | JS  x <- requirements plugin]
+                       ,"css" .= [x | CSS x <- requirements plugin]
+                       ,"angularModule" .= [x | NGModule x <- requirements plugin]
+                       ,"type" .= ("embedded"::T.Text)
+                       ]
+--       Sample
+--       {"js" : ["munSkripti1.js", "http://path/to/js.js"],
+--       "css":["munStyylit.css", "http://path/to/css.css"],
+--       "angularModule" : ["mun-moduli1", "mun-moduli2"],
+--       "type": "embedded"}` 
         ),
         ("answer/", method PUT $ do
            req  <- getBody
