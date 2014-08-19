@@ -1,6 +1,6 @@
 <div class="mcq">
     <span style="font-weight:bold">Check your understanding</span><br>
-    <span>{{content.question.stem}}</span>
+    <span ng-bind-html="content.question.stem"></span>
     <table>
      <tr ng-repeat="choice in content.question.choices">
       <td>
@@ -8,8 +8,8 @@
         <span ng-if="content.state==$index&&choice.correct">✓</span>
         <span ng-if="content.state==$index&&!choice.correct">✗</span>
       </td>
-      <td><span class="MCQItem">{{choice.text}}</span>
-          <span ng-if="choice.reason" class="MCQExpl">({{choice.reason}})</span></td>
+      <td><span class="MCQItem" ng-bind-html="choice.text"></span>
+          <span ng-if="choice.reason" class="MCQExpl" ng-bind-html="choice.reason"></span></td>
      </tr>
     </table>
      <button ng-if="content.state==null" ng-click="submit()">Check</button>
