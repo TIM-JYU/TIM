@@ -93,7 +93,7 @@ def pluginify(blocks,user):
                     try:
                         plugins.append(vals['plugin'])
                         vals['markup']["user_id"] =  user
-                        pluginHtml = callPlugin(vals['plugin'], vals['markup'])
+                        pluginHtml = callPlugin(vals['plugin'], vals['markup'], [])
                         rx = re.compile('<code>(.*?)</code>', re.DOTALL)
                         block = rx.sub(pluginHtml,block)
                         preparedBlocks.append(block)
@@ -102,8 +102,7 @@ def pluginify(blocks,user):
                         continue
         else:
             preparedBlocks.append(block)
-
-    print(preparedBlocks)                    
+                    
     return (plugins,preparedBlocks)
 
 # p is json of plugin requirements in form:
@@ -131,7 +130,7 @@ def getPluginDatas(plugins):
     i = 0
     for p in plugins:
         try:
-            (rawJs,rawCss,modsList) = pluginDeps(json.loads(pluginReqs(p)))     
+            (rawJs,rawCss,modsList) = pluginDeps(json.loads(pluginReqs(p)))
             for src in rawJs:
                 if( "http" in src):
                     jsPaths.append(src)
@@ -149,7 +148,8 @@ def getPluginDatas(plugins):
         except:
             print("Failed plugin call in plugincontrol getPluginDatas ")
             continue
-
+    print(jsPaths)
+    print(modules)
     return (jsPaths, cssPaths, modules)
 
 

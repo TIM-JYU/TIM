@@ -3,22 +3,25 @@ import urllib.parse
 import urllib
 import requests
 import sys
+import json
 
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
         {"host" : "http://172.17.42.1:50005/", "name" : "helloExample"},
-        {"host" : "http://localhost:8080/", "name" : "exampleServ"}
+        {"host" : "http://localhost:8080/", "name" : "exampleServ"},
+        {"host" : "http://localhost:8002/", "name" : "mmcq"}
         ]
 
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
-def callPlugin(plugin, info):
+def callPlugin(plugin, info, state):
     try:
         for x in PLUGINS:
             if(x['name'] == plugin):
+            
                 plug = getPlugin(plugin)
-                request = urllib.request.urlopen(plug['host'] + "html/", urllib.parse.urlencode(info).encode('utf-8'), timeout=5)
-                return request.read().decode(encoding="UTF-8")
+                request = requests.post(plug['host'] + "html/", data=json.dumps({"markup" : info, "state": None}), timeout=5)
+                return request.text
         return "Unregistered plugin"
     except:
         return "Could not connect to plugin" 
@@ -30,8 +33,7 @@ def callPluginAnswer(plugin, answerData):
 #    try:
     for x in PLUGINS:
         if(x['name'] == plugin):
-            plug = getPlugin(plugin)
-            request = requests.put( url=plug['host'] + "answer/", data=answerData, timeout=5)
+            request = requests.put( url=x['host'] + "answer/", data=answerData, timeout=5)
             return request.text
     return "Unregistered plugin or plugin not answering. Contact document administrator for details"
 #    except:
