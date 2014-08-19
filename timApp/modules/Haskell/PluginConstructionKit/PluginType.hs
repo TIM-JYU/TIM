@@ -103,9 +103,10 @@ serve plugin = route
     where 
 
 serveStaticFiles from plugin = do
-        locals <- liftIO $ filterM doesFileExist $ [from++"/"++T.unpack file | CSS file <- requirements plugin]
-                                                ++ [from++"/"++T.unpack file | JS  file <- requirements plugin]
+        let locals = [T.unpack file | CSS file <- requirements plugin]
+                     ++ [T.unpack file | JS  file <- requirements plugin]
         rq <- getSafePath
+        liftIO $ print (rq,locals,additionalFiles plugin)
         when (rq`elem`locals) (serveFile rq)
         when (rq`elem`additionalFiles plugin) (serveFile rq)
 
