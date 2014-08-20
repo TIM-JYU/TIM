@@ -96,8 +96,8 @@ def pluginify(blocks,user):
                         vals['markup']["user_id"] =  user
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], [])
                         pluginUrl = getPlugin(vals['plugin'])['host'][:-1]
-                        if("http://172.17.42.1" in pluginUrl):
-                            pluginUrl = pluginUrl.replace("http://172.17.42.1", "http://tim-beta.it.jyu.fi")
+                        if("172.17.42.1" in pluginUrl):
+                            pluginUrl = "http://tim-beta.it.jyu.fi"
                         preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],pluginUrl) + pluginHtml + "</div>")
                     except TypeError:
                         preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team.")
