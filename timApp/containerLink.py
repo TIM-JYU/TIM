@@ -13,6 +13,7 @@ PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/svn/image/", "name" : "showImage"},
         {"host" : "http://tim-beta.it.jyu.fi/svn/video/", "name" : "showVideo"},
         {"host" : "http://172.17.42.1:57000/", "name" : "mmcq"},
+
         ]
 
 # plugin html call, plugin must match one of the specified plugins in 
@@ -32,13 +33,13 @@ def callPlugin(plugin, info, state):
 
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
-def callPluginResource(plugin, info):
+def callPluginResource(plugin, fileName):
     try:
         for x in PLUGINS:
             if(x['name'] == plugin):
             
                 plug = getPlugin(plugin)
-                request = requests.get(plug['host'] + "html/", data=json.dumps({"files" : info}), timeout=5)
+                request = requests.get(plug['host'] + fileName, timeout=5)
                 return request.text
         return "Unregistered plugin"
     except:
