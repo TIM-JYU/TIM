@@ -14,19 +14,19 @@ data NoteCommands = SaveNote T.Text | SubmitNote T.Text deriving (Show,Generic)
 instance FromJSON NoteMarkup where
 instance ToJSON NoteMarkup where
 
-shortNote :: Plugin NoteMarkup T.Text T.Text
+shortNote :: Plugin NoteMarkup T.Text T.Text Value
 shortNote = Plugin{..}
   where 
     requirements = [JS "shortNote.js"
                    ,NGModule "Note"]
     additionalFiles = ["ShortNoteTemplate.html"]
     initial = ""
-    update markup _ i = return $ [save i,web "content" (encodeState markup i)]
+    update (markup,_,i) = return $ TC i (object ["content" .= encodeState markup i])
     encodeState markup state =  object ["width"   .= width markup
                                        ,"height"  .= height markup
                                        ,"prompt"  .= prompt markup
                                        ,"content" .= state]
-    render markup state = return . LT.decodeUtf8 $ ngDirective "shortNote" $ encodeState markup state
+    render (markup,state) = return $ ngDirective "shortNote" $ encodeState markup state
     additionalRoutes = noRoutes
                                 
 main :: IO ()

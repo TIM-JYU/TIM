@@ -23,10 +23,10 @@ angular.module('console',['ngSanitize'])
         };
         $scope.handler=function(e){
             $http({method:'PUT'
-                  ,url:$scope.plugin+"/answer/"
+                  ,url:$scope.plugin+"/"+$scope.ident+"/answer/"
                   ,data:{"input":$scope.currentInput}})
              .success(function(data){
-                  $scope.submit(data.web.reply);
+                  $scope.submit(data.web);
                   console.log(["data",data.web]);
                  })
              .error(function(data,status,hdrs,cfg){
@@ -70,7 +70,9 @@ angular.module('console',['ngSanitize'])
          if (ev.which===38) {$scope.cursor--;$scope.load();}
         };
       },
-     templateUrl: 'NewConsole/Console.template.html',
+      templateUrl: function(elem,attrs) {
+                    return elem.parent().attr('data-plugin')+"/"+'NewConsole/Console.template.html';
+                   }, 
      replace: true
     };
   });

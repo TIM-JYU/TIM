@@ -34,6 +34,17 @@ def get_param_del(query,key,default):
 	if value == 'undefined': return default
 	return value
 	
+def replace_param(query,key,newValue):
+	if not query.query.has_key(key): 
+		if ( query.jso == None ): return
+		if ( not query.jso.has_key("markup") ): return
+		if ( query.jso["markup"].has_key(key) ): 
+			query.jso["markup"][key] = newValue
+		return default
+	value = query.query[key][0]
+	if value == 'undefined': return
+	query.query[key][0] = newValue
+	
 def do_matcher(key):
 	if not key:
 		return False
@@ -54,6 +65,7 @@ def getJSOParam(jso,key1,key2,default):
 	if ( not jso[key1].has_key(key2) ): return default
 	return jso[key1][key2];
 		
+		
 class FileParams:
 	def __init__(self, query, nr,url):
 		self.url = get_param(query,"file"+nr,"")
@@ -69,6 +81,7 @@ class FileParams:
 		self.include = get_param(query,"include"+nr,"")
 		self.replace = do_matcher(get_param(query,"replace"+nr,""))
 		self.by = get_param(query,"by"+nr,"")
+
 		usercode = getJSOParam(query.jso,"input"+nr,"usercode",None);
 		# if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
 		if ( usercode ): self.by = usercode
@@ -114,10 +127,19 @@ class FileParams:
 		if n1 < 0:  n1 = 0
 		if n2 >= n:	n2 = n-1
 		
-		ni = 0		
+		ni = 0	
+		
+		replaceBy = self.by
+		if ( replaceBy ):
+			rep = replaceBy.split("\n");
+			if ( len(rep) > 0 and rep[0].strip() == "//" ): 
+				del rep[0]
+				replaceBy = "\n".join(rep)
+
+		
 		for i in range(n1,n2+1):
 			line = lines[i]
-			if ( check(self.replace,line) ): line = self.by.replace("\\n","\n") + "\n";
+			if ( check(self.replace,line) ): line = replaceBy + "\n";
 			ln = self.linefmt.format(i+1)
 			file.write(ln + line)
 			if ( i+1 >= self.lastn ): break

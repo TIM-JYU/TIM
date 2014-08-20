@@ -9,6 +9,7 @@ main :: IO ()
 main = mkInterpreter >>= quickHttpServe . serve 
 
 testInterp :: InterpreterMarkup 
-testInterp = I "" [Example (Just "This is fun") "take 10 [1..]"
-                  ,Example Nothing "reverse . reverse"]
-                  [Goal "(==11)" "Great, that's eleven"]
+testInterp = I Nothing 
+                  (Just [Example (Just "This is fun") "take 10 [1..]"
+                        ,Example Nothing "reverse . reverse"])
+                  (Just [Goal "(==11)" "Great, that's eleven"])
