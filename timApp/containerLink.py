@@ -30,6 +30,20 @@ def callPlugin(plugin, info, state):
         return "Could not connect to plugin" 
 
 
+# plugin html call, plugin must match one of the specified plugins in 
+# PLUGINS
+def callPluginResource(plugin, info):
+    try:
+        for x in PLUGINS:
+            if(x['name'] == plugin):
+            
+                plug = getPlugin(plugin)
+                request = requests.get(plug['host'] + "html/", data=json.dumps({"files" : info}), timeout=5)
+                return request.text
+        return "Unregistered plugin"
+    except:
+        return "Could not connect to plugin" 
+
 # plugin answer call, plugin must match one of the specified plugins in 
 # PLUGINS
 def callPluginAnswer(plugin, answerData):

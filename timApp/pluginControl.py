@@ -60,7 +60,7 @@ def prepPluginCall(htmlStr):
         try:
             plugins.append({"plugin":name, "markup":values, "identifier": node['id']})
         except KeyError:
-            plugins.append({"plugin":name, "markup":values, "identifier": ""})
+            return "Missing identifier"
     return plugins
 
 
@@ -95,8 +95,10 @@ def pluginify(blocks,user):
                         plugins.append(vals['plugin'])
                         vals['markup']["user_id"] =  user
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], [])
-
-                        preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],getPlugin(vals['plugin'])['host'][:-1]) + pluginHtml + "</div>")
+                        pluginUrl = getPlugin(vals['plugin'])['host'][:-1]
+                        if("http://172.17.42.1" in pluginUrl):
+                            pluginUrl = pluginUrl.replace("http://172.17.42.1", "http://tim-beta.it.jyu.fi")
+                        preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],pluginUrl) + pluginHtml + "</div>")
                     except TypeError:
                         preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team.")
                         continue
