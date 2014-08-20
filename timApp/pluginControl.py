@@ -49,6 +49,7 @@ def prepPluginCall(htmlStr):
     for node in tree.find_all('pre'):
         values = {}
         name = node['plugin']
+        
         if(len(node.text) > 0):
             try:
                 values = yaml.load(node.text)
@@ -57,11 +58,9 @@ def prepPluginCall(htmlStr):
                 print("Malformed yaml string")
                 return "YAMLERROR: Malformed string"
         try:
-            if(type(values) != str):
-                values["identifier"] = node['id']
+            plugins.append({"plugin":name, "markup":values, "identifier": node['id']})
         except KeyError:
-            values['identifier'] = " "
-        plugins.append({"plugin":name, "markup":values, "html":node.html})
+            return "Missing identifier"
     return plugins
 
 
@@ -88,17 +87,18 @@ def pluginify(blocks,user):
             pluginInfo = prepPluginCall(block)
             if(pluginInfo == "YAMLERROR: Malformed string"):
                 preparedBlocks.append("Malformed yaml string")
+            elif(pluginInfo == "Missing identifier"):
+                preparedBlocks.append("pluginInformation lacking, identifier missing")
             else:
                 for vals in pluginInfo:
                     try:
                         plugins.append(vals['plugin'])
                         vals['markup']["user_id"] =  user
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], [])
-                        rx = re.compile('<code>(.*?)</code>', re.DOTALL)
-                        block = rx.sub(pluginHtml,block)
-                        preparedBlocks.append(block)
+
+                        preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],getPlugin(vals['plugin'])['host'][:-1]) + pluginHtml + "</div>")
                     except TypeError:
-                        preparedBlock.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team. You will find no contact page yet, if you see this error, you should probably just knock on our door\n or pray to your favorite deity.'")
+                        preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team. You will find no contact page yet, if you see this error, you should probably just knock on our door\n or pray to your favorite deity.'")
                         continue
         else:
             preparedBlocks.append(block)
@@ -123,11 +123,20 @@ def pluginDeps(p):
     return (js,css, jsMods)
 
 
+def removeDups(xs):
+    us = []
+    for x in xs:
+        if x not in us:
+            us.append(x)
+    return us
+
 def getPluginDatas(plugins):
     jsPaths = []
     cssPaths = []
     modules = []
-    i = 0
+
+    plugins = removeDups(plugins)
+    print(plugins)
     for p in plugins:
         try:
             (rawJs,rawCss,modsList) = pluginDeps(json.loads(pluginReqs(p)))
@@ -148,8 +157,6 @@ def getPluginDatas(plugins):
         except:
             print("Failed plugin call in plugincontrol getPluginDatas ")
             continue
-    print(jsPaths)
-    print(modules)
     return (jsPaths, cssPaths, modules)
 
 
