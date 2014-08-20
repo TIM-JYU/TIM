@@ -6,6 +6,7 @@ import re
 import os.path
 import uuid
 import io
+import codecs
 from os import kill
 import signal
 #from signal import alarm, signal, SIGALRM, SIGKILL
@@ -91,6 +92,8 @@ def jsOnError(file, err):
 
 
 def remove_before(what, s):
+    print("=================================== WHAT ==============")
+    print(what," ",s)
     i = s.find(what)
     if i < 0: return s
     s = s[i + 1:]
@@ -256,7 +259,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             csfile = self.wfile
             enc = True
         else:
-            csfile = open(csfname, "w")
+            csfile = codecs.open(csfname,"w","utf-8")  # open(csfname, "w")
         p0.printFile(csfile,enc)
         p0.printInclude(csfile,enc)
         u = p0.url
@@ -299,9 +302,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 			printLines(self.wfile,lines,0,10000)
 			'''
             errorStr = "!!! Error code " + str(e.returncode) + "\n"
-            errorStr += str(e.output)
+            errorStr += e.output.decode("utf-8") + "\n"
             output = io.StringIO()
-            file = open(csfname, 'r')
+            file = codecs.open(csfname, 'r',"utf-8")
             lines = file.read().splitlines()
             file.close()
             printLines(output, lines, 0, 10000)
@@ -314,6 +317,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if ( ttype == "jypeli" ):
             code, out, err = run(["mono", exename, bmpname], timeout=10)
+            out = out.decode()
             run(["convert", "-flip", bmpname, pngname])
             os.remove(bmpname)
             # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
@@ -325,11 +329,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             out = p.sub("", out)
             os.remove(exename)
         elif ( ttype == "comtest" ):
-            code, out, err = run(["nunit-console", testdll], timeout=10)
+            code, out, err = run(["nunit-console", "-nologo", "-nodots",testdll], timeout=10)
+            out = out.decode()
             out = remove_before("Execution Runtime:", out)
-            out = out[1:]  # alussa oleva . pois
-            out = re.sub("at .*", "", out, flags=re.M)
-            out = re.sub("\n\n+", "", out, flags=re.M)
+            # out = out[1:]  # alussa oleva . pois
+            # out = re.sub("at .*", "", out, flags=re.M)
+            # out = re.sub("\n\n+", "", out, flags=re.M)
+            out = re.sub("^at .*\n", "", out, flags=re.M)
+            out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
+            out = out.strip(' \t\n\r')
             eri = out.find("Test Failure")
             web["testGreen"] = True
             if eri >= 0:
@@ -340,17 +348,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     lns = out[lni + 7:]
                     lns = lns[0:lns.find("\n")]
                     lnro = int(lns)
-                    lines = open(csfname, "r").readlines()
+                    lines = codecs.open(csfname, "r","utf-8").readlines()
                     # print("Line nr: "+str(lnro))
-                    out += "\n" + str(lnro) + " " + lines[lnro - 1]
+                    ## out += "\n" + str(lnro) + " " + lines[lnro - 1]
+                    web["comtestError"] = str(lnro) + " " + lines[lnro - 1];
             os.remove(testcs)
             os.remove(testdll)
         else:
             print("Exe: ",exename)
             code, out, err = run(["mono", exename], timeout=10)
+            out = out.decode()
             os.remove(exename)
 
-        web["console"] = out.decode()
+        web["console"] = out
         result["web"] = web
 
         # Clean up

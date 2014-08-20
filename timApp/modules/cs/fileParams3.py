@@ -125,7 +125,7 @@ class FileParams:
         for i in range(0, n):
             line = lines[i].decode('utf-8-sig').replace("\n","")
             lines[i] = line
-            print(i,": ",line)
+            # print(i,": ",line)
             if not doprint and check(self.start, line):
                 startcnt -= 1
                 # print "startcnt {0} endcnt {1}".format(startcnt,endcnt)
@@ -160,7 +160,7 @@ class FileParams:
             if escapeHTML: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
             nln = ln + line + "\n"
-            if enc: file.write(nln.encode())
+            if enc: file.write(nln.encode("UTF8"))
             else: file.write(nln)
             if i + 1 >= self.lastn: break
             ni += 1
@@ -204,7 +204,7 @@ def postParams(self):
     f = self.rfile.read(content_length)
     print(f)
     print(type(f))
-    u = f.decode(encoding="UTF-8")
+    u = f.decode("UTF8")
     print(u)
     print(type(u))
 
@@ -359,5 +359,5 @@ def printStringToReplaceAttribute(line, f, whatToReplace, query):
     line = line.replace(whatToReplace, params)
     line = line.replace("##USERCODE##", get_param(query, "byCode", ""))
     f.write(line.encode())
-    # print(line)
+    print(line.encode())
 
