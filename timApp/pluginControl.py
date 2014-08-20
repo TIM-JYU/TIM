@@ -79,7 +79,6 @@ def pluginify(blocks,user):
                 for pair in pluginInfo:
                     try:
                         plugins.append(pair['plugin'])
-                        print(pair)
                         pair['markup']["user_id"] =  user
                         pluginHtml = callPlugin(pair['plugin'], pair['markup'])
                         rx = re.compile('<code>.*</code>')

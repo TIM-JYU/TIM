@@ -2,6 +2,10 @@ import requests
 
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
+        {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # rikkinäisen demonstroimiseksi
+        {"host" : "http://tim-beta.it.jyu.fi/svn/", "name" : "showCode"},
+        {"host" : "http://tim-beta.it.jyu.fi/svn/image/", "name" : "showImage"},
+        {"host" : "http://tim-beta.it.jyu.fi/svn/video/", "name" : "showVideo"},
         {"host" : "http://172.17.42.1:50005/", "name" : "helloExample"},
         {"host" : "http://localhost:8080/", "name" : "exampleServ"}
         ]
