@@ -98,7 +98,7 @@ def pluginify(blocks,user):
 
                         preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],getPlugin(vals['plugin'])['host'][:-1]) + pluginHtml + "</div>")
                     except TypeError:
-                        preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team. You will find no contact page yet, if you see this error, you should probably just knock on our door\n or pray to your favorite deity.'")
+                        preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team.")
                         continue
         else:
             preparedBlocks.append(block)
