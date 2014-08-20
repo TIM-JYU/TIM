@@ -292,7 +292,7 @@ def removeBlock(docId, blockId):
     timdb.documents.deleteParagraph(getNewest(docId), blockId)
     return "Successfully removed paragraph"
 
-@app.route("/pluginCall/<plugin>/<fileName>")
+@app.route("/<plugin>/<fileName>")
 def pluginCall(plugin, fileName):
     fileCont = containerLink.callPluginResource(plugin, fileName)
     return fileCont
