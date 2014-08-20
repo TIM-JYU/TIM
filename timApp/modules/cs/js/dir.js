@@ -134,6 +134,8 @@ csApp.directiveFunction = function(t) {
 				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
 				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
+				  (t == "comtest" ? '<div class="unitTestGreen"  ng-if="runTestGreen" />' : "") +
+				  (t == "comtest" ? '<div class="unitTestRed"    ng-if="runTestRed" />' : "") +
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
 				  '<pre ng-if="runError">{{error}}</pre>'+
@@ -203,6 +205,9 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.runSuccess = false;
 		$scope.runError = true;
 		$scope.result = "";
+		$scope.runTestGreen = false;
+		$scope.runTestRed = false;
+
 
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
@@ -221,6 +226,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 			$scope.runError = !$scope.runSuccess;
 
 			imgURL = data.web.image;
+			if ( data.web.testGreen ) $scope.runTestGreen = true;
+			if ( data.web.testRed ) $scope.runTestRed = true;
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
 				$scope.imgURL = imgURL;
