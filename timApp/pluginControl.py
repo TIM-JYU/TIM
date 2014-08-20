@@ -60,7 +60,7 @@ def prepPluginCall(htmlStr):
         try:
             plugins.append({"plugin":name, "markup":values, "identifier": node['id']})
         except KeyError:
-            return "Missing identifier"
+            plugins.append({"plugin":name, "markup":values, "identifier": ""})
     return plugins
 
 
