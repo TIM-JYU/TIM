@@ -2,6 +2,7 @@
 module Main where
 
 import Data.Aeson
+import Data.Monoid
 import GHC.Generics
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as LT
@@ -21,7 +22,9 @@ shortNote = Plugin{..}
                    ,NGModule "Note"]
     additionalFiles = ["ShortNoteTemplate.html"]
     initial = ""
-    update (markup,_,i) = return $ TC i (object ["content" .= encodeState markup i])
+    update (markup,_,i) = return $ 
+                            mempty & save i
+                                   & web (object ["content" .= encodeState markup i])
     encodeState markup state =  object ["width"   .= width markup
                                        ,"height"  .= height markup
                                        ,"prompt"  .= prompt markup
