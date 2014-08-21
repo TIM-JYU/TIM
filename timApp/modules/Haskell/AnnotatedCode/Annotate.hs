@@ -42,7 +42,7 @@ annotate = Plugin{..}
                       -- ,NGModule "Note"]
     additionalFiles = [] 
     initial = ()
-    update _ = return $ TC () ()
+    update _ = return $ mempty 
     render (markup,()) = let
                            bytes = T.encodeUtf8 . code $ markup
                            stringify = map (\(a,b) -> (T.unpack a, T.unpack b))

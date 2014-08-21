@@ -667,8 +667,8 @@ csRunArea:focus {
 }
 
 .unitTestRed {
-  background: #FF0000;
-  width: 30%;
+  background: #FF7777;
+  /* width: 30%; */
   height: 1em;
 }
 

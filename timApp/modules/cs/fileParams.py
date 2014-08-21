@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from urllib import urlopen
 import re
 import cgi
@@ -59,11 +60,15 @@ def check(matcher,line):
 		
 
 def getJSOParam(jso,key1,key2,default):
-	if ( jso == None ): return default
-	if ( not jso.has_key(key1) ): return default
-	if ( not key2 ): return jso[key1]
-	if ( not jso[key1].has_key(key2) ): return default
-	return jso[key1][key2];
+	try:
+		if ( jso == None ): return default
+		if ( not jso.has_key(key1) ): return default
+		if ( not key2 ): return jso[key1]
+		if ( not jso[key1] ): return default
+		if ( not jso[key1].has_key(key2) ): return default
+		return jso[key1][key2];
+	except:	
+		print "JSO XXXXXXXXXXXXX",jso, "KEY1=", key1, "KEY2=",key2
 		
 		
 class FileParams:
@@ -163,11 +168,16 @@ def postParams(self):
 	# print self		
 	# pprint(self.__dict__,indent=2)
 	# print dir(self.request)
+	# print dir(self.headers)
+	print(self.path)
+	# print self.headers
+	content_type = "application/json";
+	if self.headers.has_key('Content-Type'): content_type = self.headers['Content-Type']
 	form = cgi.FieldStorage(
 		fp=self.rfile, 
         headers=self.headers,
         environ={'REQUEST_METHOD':'POST',
-                     'CONTENT_TYPE':self.headers['Content-Type'],
+                 'CONTENT_TYPE':content_type
                 })
 	# print self.request.body			
 	# print self.rfile	
@@ -184,16 +194,18 @@ def postParams(self):
 		i2 = s.rfind('\'')
 		js = s[i:i2]
 		js = js.replace("\\\\","\\")
-		print "js:======================\n"
-		print js
-		print "\n======================\n"
+		print("js:======================\n")
+		print(js)
+		print("\n======================\n")
 		result.jso = json.loads(js)
 		# print jso
 		for field in result.jso.keys():
 			# print field + ":" + jso[field]
 			if ( field == "markup" ):
 				for f in result.jso[field].keys():
-					result.query[f] = [str(result.jso[field][f])]
+					print(f +" => ")
+					print `result.jso[field][f]`
+					result.query[f] = [str(`result.jso[field][f]`)]
 			else:
 				if ( field != "state" ): result.query[field] = [str(result.jso[field])]
 		return result
