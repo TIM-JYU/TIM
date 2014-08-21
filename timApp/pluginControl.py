@@ -97,7 +97,7 @@ def pluginify(blocks,user):
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], [])
                         pluginUrl = getPlugin(vals['plugin'])['host'][:-1]
                         if("172.17.42.1" in pluginUrl):
-                            pluginUrl = "http://tim-beta.it.jyu.fi"
+                            pluginUrl = "http://tim-beta.it.jyu.fi/" + vals['plugin'] 
                         preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],pluginUrl) + pluginHtml + "</div>")
                     except TypeError:
                         preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team.")
@@ -147,13 +147,13 @@ def getPluginDatas(plugins):
                     jsPaths.append(src)
                 else:
                     x = getPlugin(p)['host']
-                    jsPaths.append(x + src)
+                    jsPaths.append("http://tim-beta.it.jyu.fi/"+ p + "/" + src)
             for cssSrc in rawCss:
                 if( "http" in src):
                     cssPaths.append(cssSrc)
                 else:
                     x = getPlugin(p)['host']
-                    cssPaths.append(x + src)
+                    cssPaths.append("http://tim-beta.it.jyu.fi/"+ p + "/" + src)
             for mod in modsList:
                 modules.append(mod)
         except:
