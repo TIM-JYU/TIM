@@ -13,6 +13,9 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HM
 import Data.HashMap.Strict (HashMap,(!))
+import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
+import Data.List
 import Data.IORef
 
 import Snap.Core
@@ -38,8 +41,32 @@ data Plugin structure state input output = Plugin
         , additionalRoutes :: Snap ()}
 
 -- | Simplified interface for ordering TIM to modify its data
-data TIMCmd save web = TC {save :: save, web :: web}
+data TIMCmd save web = TC {_save :: First save, _web :: First web
+                          ,_blackboard :: [BlackboardCommand]}
             deriving (Show, Generic)
+
+instance Monoid (TIMCmd a b) where
+    mempty  = TC mempty mempty mempty
+    mappend (TC a b c) (TC e f g) = TC (a<>e) (b<>f) (c<>g)
+
+-- Stolen from Control.Lens
+(&) :: a -> (a -> b) -> b
+a & f = f a
+{-# INLINE (&) #-}
+
+save i tc        = tc{_save= _save tc <> First (Just i)} 
+web i tc         = tc{_web= _web tc <> First (Just i)} 
+blackboard i tc  = tc{_blackboard= _blackboard tc <> i} 
+
+
+
+
+data BlackboardCommand = Put T.Text | Delete T.Text deriving (Eq,Ord,Show)
+
+execBBCs hm bbcs = foldl' execBBC hm bbcs
+
+execBBC hm (Put t)    = HashSet.insert t hm
+execBBC hm (Delete t) = HashSet.delete t hm
 
 ngDirective :: ToJSON a => LT.Text -> a -> LT.Text
 ngDirective tag content = "<"<>tag<>" data-content='"
@@ -87,20 +114,21 @@ serve plugin = route
                        ,"angularModule" .= [x | NGModule x <- requirements plugin]
                        ,"type" .= ("embedded"::T.Text)
                        ]
---       Sample
---       {"js" : ["munSkripti1.js", "http://path/to/js.js"],
---       "css":["munStyylit.css", "http://path/to/css.css"],
---       "angularModule" : ["mun-moduli1", "mun-moduli2"],
---       "type": "embedded"}` 
         ),
         ("answer/", method PUT $ do
            req  <- getBody
            tims <- liftIO (update plugin (A.markup req,fromMaybe (initial plugin) (A.state req), A.input req))
-           writeLBS . encode $ object ["web" .= web tims, "save" .= save tims] -- , "save-markup" .= markup ] 
+           writeLBS . encode . object $ 
+                [] & ins "web"  (_web tims)
+                   & ins "save" (_save tims)
+                -- ["web" .= web_ tims], "save" .= save_ tims] 
         )
         ]
         <|> serveStaticFiles "." plugin
-    where 
+
+-- Quick helper for building objects
+ins key (First Nothing)  x = x 
+ins key (First (Just v)) x = (key.=v):x 
 
 serveStaticFiles from plugin = do
         let locals = [T.unpack file | CSS file <- requirements plugin]
@@ -115,7 +143,8 @@ experiment :: forall structure markup state input output.
                     Plugin structure state input output -> structure -> Int -> IO ()
 experiment plugin markup' port = do 
     state  <- newIORef (initial plugin)
-    markup <- newIORef markup'
+    markup <- newIORef markup' 
+    blackboard <- newIORef (mempty :: HashSet T.Text)
     let context "port"   = pure (T.pack $ show port)
         context "plugin" = do
                             m <- readIORef markup 
@@ -143,8 +172,12 @@ experiment plugin markup' port = do
                             m <- readIORef markup
                             s <- readIORef state
                             update plugin (m, s, fromPlainInput req)
-             liftIO $ writeIORef state (save tims)
-             writeLBS . encode $ object ["web" .= web tims] 
+             liftIO $ maybe (return ())
+                            (writeIORef state)
+                            (getFirst (_save tims))
+             writeLBS . encode . object $
+               [] & ins "web" (_web tims)
+               -- ["web" .= _web tims] 
           )
           ] <|> serveDirectory "." -- serveStaticFiles "." plugin
 

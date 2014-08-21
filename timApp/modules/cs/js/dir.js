@@ -65,7 +65,7 @@ csApp.getHeading = function(a,key,$scope) {
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
 	// if ( elem.toLowerCase().indexOf("script") >= 0 ) return "";
 	// attributes = "";  // ei laiteta näitä, niin on vähän turvallisempi
-    var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
+    var html = "<" + elem + attributes + ">" + decodeURIComponent(escape(val)) + "</" + elem + ">";
 	html = csApp.sanitize(html);
 	return html;
 }
@@ -85,7 +85,7 @@ csApp.directiveFunction = function(t) {
 			}
 			scope.usercode = "";
 			
-			scope.stem = attrs.stem;
+			scope.stem = decodeURIComponent(escape(attrs.stem));
 			scope.placeholder = "Write your code here";
 			
 			if ( attrs.usercode ) scope.usercode = attrs.usercode;
@@ -97,8 +97,8 @@ csApp.directiveFunction = function(t) {
 			if ( attrs.bycode ) scope.byCode = attrs.bycode;
 			if ( scope.usercode == "" )  scope.usercode = scope.byCode;
 			if ( attrs.placeholder ) scope.placeholder = attrs.placeholder;
-			scope.usercode = csApp.commentTrim(scope.usercode);
-			scope.byCode = csApp.commentTrim(scope.byCode);
+			scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
+			scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
 			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
 			head = csApp.getHeading(attrs,"header",scope);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope);
@@ -118,12 +118,12 @@ csApp.directiveFunction = function(t) {
 		*/
 		transclude: true,
 		replace: 'true',
-		template: '<div class="csRunDiv">' +
+		template: '<div class="csRunDiv">' + 
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
-				  '<p ng-show="stem" class="csRunStem" >{{stem}}</p>' +
+				  '<p ng-if="stem" class="csRunStem" >{{stem}}</p>' +
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
-				  '<div class="csRunCode">'+
+				  '<div class="csRunCode">'+'<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
 				  '<textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
 				  //'<div class="csRunArea" contentEditable ng-model="usercode" ng-trim="false" "></div>'+
@@ -134,10 +134,12 @@ csApp.directiveFunction = function(t) {
 				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
 				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
+				  (t == "comtest" ? '<p class="unitTestGreen"  ng-if="runTestGreen" />' : "") +
+				  (t == "comtest" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
 				  '<pre ng-if="runError">{{error}}</pre>'+
-				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="500" ng-if="runSuccess" />' : "") +
+				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
 				  '<p>Here comes footer</p>'+
 				  '</div>'
 		// templateUrl: 'csTempl.html'
@@ -160,6 +162,7 @@ csApp.countChars = function (s,c) {
 
 
 csApp.updateEditSize = function(scope) {
+//return;
     if ( !scope ) return;
 	if ( !scope.usercode ) return;
     n = csApp.countChars(scope.usercode,'\n') + 1;
@@ -203,6 +206,9 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.runSuccess = false;
 		$scope.runError = true;
 		$scope.result = "";
+		$scope.runTestGreen = false;
+		$scope.runTestRed = false;
+
 
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
@@ -221,6 +227,9 @@ csApp.Controller = function($scope,$http,$transclude) {
 			$scope.runError = !$scope.runSuccess;
 
 			imgURL = data.web.image;
+			if ( data.web.testGreen ) $scope.runTestGreen = true;
+			if ( data.web.testRed ) $scope.runTestRed = true;
+			$scope.comtestError = data.web.comtestError;
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
 				$scope.imgURL = imgURL;

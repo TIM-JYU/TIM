@@ -7,6 +7,7 @@ import json
 from urllib.parse import urlparse, parse_qs
 from pprint import pprint
 import urllib
+import codecs
 
 
 class QueryClass:
@@ -66,11 +67,17 @@ def check(matcher, line):
 
 
 def getJSOParam(jso, key1, key2, default):
-    if jso is None: return default
-    if key1 not in jso: return default
-    if not key2: return jso[key1]
-    if key2 not in jso[key1]: return default
-    return jso[key1][key2];
+    try:
+        if jso is None: return default
+        if key1 not in jso: return default
+        if not key2: return jso[key1]
+        if not jso[key1]: return default
+        if key2 not in jso[key1]: return default
+        return jso[key1][key2];
+    except:
+        # print("JSO XXXXXXXXXXXXX", jso)
+        print("KEY1=", key1, "KEY2=", key2)
+        return default
 
 
 class FileParams:
@@ -97,7 +104,7 @@ class FileParams:
         if u and not self.url: self.url = url
         if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
-    def printFile(self, file, escapeHTML=False):
+    def printFile(self, file, enc=True, escapeHTML=False):
         if not self.url:
             if not self.by: return
             file.write(self.by.replace("\\n", "\n").encode())
@@ -116,7 +123,9 @@ class FileParams:
         if doprint: n1 = 0
 
         for i in range(0, n):
-            line = lines[i].decode('UTF8')
+            line = lines[i].decode('utf-8-sig').replace("\n","")
+            lines[i] = line
+            # print(i,": ",line)
             if not doprint and check(self.start, line):
                 startcnt -= 1
                 # print "startcnt {0} endcnt {1}".format(startcnt,endcnt)
@@ -144,21 +153,26 @@ class FileParams:
                 replaceBy = "\n".join(rep)
 
         for i in range(n1, n2 + 1):
-            line = lines[i].decode('UTF8')
-            if check(self.replace, line): line = replaceBy + "\n";
+            line = lines[i]
+            # if enc or True: line = line.decode('UTF8')
+            # else: line = str(line)
+            if check(self.replace, line):  line = replaceBy + "\n"
             if escapeHTML: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
-            file.write((ln + line).encode())
+            nln = ln + line + "\n"
+            if enc: file.write(nln.encode("UTF8"))
+            else: file.write(nln)
             if i + 1 >= self.lastn: break
             ni += 1
             if ni >= self.maxn: break
 
 
-    def printInclude(self, file, escapeHTML=False):
+    def printInclude(self, file, enc=True, escapeHTML=False):
         if not self.include: return
         data = self.include.replace("\\n", "\n")
         if escapeHTML: data = html.escape(data)
-        file.write(data.encode())
+        if enc: file.write(data.encode())
+        else: file.write(data)
 
 
 def getParams(self):
@@ -190,7 +204,7 @@ def postParams(self):
     f = self.rfile.read(content_length)
     print(f)
     print(type(f))
-    u = f.decode(encoding="UTF-8")
+    u = f.decode("UTF8")
     print(u)
     print(type(u))
 
@@ -199,13 +213,15 @@ def postParams(self):
 
     if len(u) == 0: return result
     if content_type.find("json") < 0:  # ei JSON
-        q = parse_qs(urlparse(u).query, keep_blank_values=True)
+        print("POSTPARAMS============")
+        q = parse_qs(urlparse('k/?'+u).query, keep_blank_values=True)
         for field in list(q.keys()):
-            result.query[field] = [q[field].value]
+            print("FIELD=",field)
+            result.query[field] = [q[field][0]]
         return result
 
     jso = json.loads(u)
-    print(jso)
+    # print(jso.repr())
     print("====================================================")
     result = QueryClass()
     # print jso
@@ -218,6 +234,8 @@ def postParams(self):
         else:
             if field != "state": result.query[field] = [str(result.jso[field])]
     return result
+
+
 '''
     # print self.request.body
     # print self.rfile
@@ -257,6 +275,7 @@ def postParams(self):
         result.query[field] = [form[field].value]
     return result
 '''
+
 
 def printFileTo(name, f):
     fr = open(name, encoding="utf-8")
@@ -340,5 +359,5 @@ def printStringToReplaceAttribute(line, f, whatToReplace, query):
     line = line.replace(whatToReplace, params)
     line = line.replace("##USERCODE##", get_param(query, "byCode", ""))
     f.write(line.encode())
-    print(line)
+    print(line.encode())
 

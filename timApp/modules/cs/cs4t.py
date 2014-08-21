@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import BaseHTTPServer
 import subprocess 
 import cStringIO
@@ -188,30 +189,24 @@ def remove_before(what,s):
 
 class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
-        print
-        "do_OPTIONS =============================================="
+        print("do_OPTIONS ==============================================")
         self.send_response(200, "ok")
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
-        print
-        self.path
-        print
-        self.headers
+        print(self.path)
+        print(self.headers)
 
     def do_GET(self):
-        print
-        "do_GET =================================================="
+        print("do_GET ==================================================")
         self.doAll(getParams(self))
 
     def do_POST(self):
-        print
-        "do_POST ================================================="
+        print("do_POST =================================================")
         self.doAll(postParams(self))
 
     def do_PUT(self):
-        print
-        "do_PUT ================================================="
+        print("do_PUT =================================================")
         self.doAll(postParams(self))
 
 
@@ -221,12 +216,9 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
         web = {}
         result["web"] = web
 
-        print
-        "doAll ==================================================="
-        print
-        self.path
-        print
-        self.headers
+        print("doAll ===================================================")
+        print(self.path)
+        print(self.headers)
         # print query
 
         fullhtml = self.path.find('/fullhtml') >= 0
@@ -261,7 +253,7 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
         ttype = get_param(query, "type", "console").lower()
 
         if ( reqs ):
-            resultJSON = {"js": ["js/dir.js"], "angularModule": ["csApp"], "css": ["css/cs.css"]}
+            resultJSON = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"], "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"]}
             resultStr = json.dumps(resultJSON)
             self.wfile.write(resultStr);
             return
@@ -321,17 +313,14 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # Check query parameters
         p0 = FileParams(query, "", "")
-        print
-        "p0="
-        print
-        p0.replace
+        print("p0=")
+        print(p0.replace)
         if ( p0.url == "" and p0.replace == "" ):
             self.wfile.write("Must give file= -parameter")
             return
 
         printFile = get_param(query, "print", "")
-        print
-        "type=" + ttype
+        print("type=" + ttype)
 
         if ( ttype == "console" ):
             # Console program
@@ -430,7 +419,10 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
             out = re.sub("at .*","",out,flags=re.M)
             out = re.sub("\n\n+","",out,flags=re.M)
             eri = out.find("Test Failure");
+            web["testGreen"] = True
             if eri >= 0:
+                web["testGreen"] = False
+                web["testRed"] = True
                 lni = out.find(", line ") 
                 if ( lni >= 0 ): 
                     lns = out[lni+7:]
@@ -455,14 +447,10 @@ class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # self.wfile.write(err)
         sresult = json.dumps(result)
         self.wfile.write(sresult)
-        print
-        "Result ========"
-        print
-        sresult
-        print
-        out
-        print
-        err
+        print("Result ========")
+        print(sresult)
+        print(out)
+        print(err)
 
 
 def keep_running():

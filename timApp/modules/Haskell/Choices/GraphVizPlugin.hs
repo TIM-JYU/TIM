@@ -26,7 +26,7 @@ graphViz = Plugin{..}
     requirements = []
     additionalFiles = []
     initial = ()
-    update (markup,_,_) = return $ TC () ()
+    update (markup,_,_) = return $ mempty
     render (markup,_)   = case gvType markup of
         "dot"        -> runGV markup "dot"
         "neato"      -> runGV markup "neato"

@@ -147,7 +147,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         resultJSON = {}
 
         if video_reqs:
-            resultJSON = {"js": ["js/video.js"], "angularModule": ["videoApp"]}
+            resultJSON = {"js": ["http://tim-beta.it.jyu.fi/svn/video/js/video.js"], "angularModule": ["videoApp"]}
 
         if reqs:
             resultStr = json.dumps(resultJSON)
