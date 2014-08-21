@@ -308,7 +308,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( angular.isDefined($scope.localcode) ) { $scope.showCodeLocal(); return; } 
 		if ( !$scope.file ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
 		
-		params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
+		params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		$http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		).success(function(data, status, headers, config) {
 			if (data.msg != '')

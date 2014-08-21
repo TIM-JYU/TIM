@@ -5,6 +5,8 @@ import requests
 import sys
 import json
 
+TIM_URL = "http://tim-beta.it.jyu.fi"
+
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
         {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # rikkinäisen demonstroimiseksi
@@ -23,7 +25,7 @@ def callPlugin(plugin, info, state):
             if(x['name'] == plugin):
             
                 plug = getPlugin(plugin)
-                request = requests.post(plug['host'] + "html/", data=json.dumps({"markup" : info, "state": None}), timeout=5)
+                request = requests.post(plug['host'] + "html/", data=json.dumps({"markup" : info, "state": None}), timeout=5) #TODO: SET STATE
                 return request.text
         return "Unregistered plugin"
     except:
@@ -72,4 +74,8 @@ def getPlugin(plug):
             return p
     return "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system"
 
-
+def getPluginTimUrl(plug):
+    for p in PLUGINS:
+        if plug == p["name"]:
+            return TIM_URL + "/" + p['name']
+    return "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system"
