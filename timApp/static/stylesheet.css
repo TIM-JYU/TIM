@@ -17,8 +17,9 @@ body {
     border-radius: 12px;
 	outline: none;
 	border: 2px none;
+	line-height: 0.8em;
 }
-
+ 
 .material {
 	background-color: white;
 }
@@ -56,7 +57,9 @@ ul {
 }
 
 .material img {
-	max-width: 95%;
+  max-width: 95%;
+  display:block; 
+  margin: 0 auto;
 }
 
 .figure {
@@ -258,7 +261,7 @@ ul {
 	width:5em;
     position: absolute;
 }
-	
+	 
 .addParButton:hover{
 	content:"Add new paragraph here";
     display:block;
@@ -282,6 +285,8 @@ PRE {
 	font-size: 1em;
 	box-shadow: 10px 10px 5px #888888;
 }
+
+
 
 code {
 	margin-right: 0.00cm;
@@ -425,13 +430,13 @@ a:hover {
 
 sub {
 	font-size: 0.8em;
-	/* gecko-pohjaisilla selaimilla sub n�kyy liian ylh��ll�, ellei fonttia pienenn� */
+	/* gecko-pohjaisilla selaimilla sub nakyy liian ylhaalla, ellei fonttia pienenna */
 }
 
 br {
 	margin: 0;
 	padding: 0;
-	line-height: 0.4; /* pienempi v�li monisteen kansia varten */
+	line-height: 0.4; /* pienempi vali monisteen kansia varten */
 }
 
 /* lukujen #-linkit */
@@ -556,17 +561,106 @@ a.anchor:hover {
 	float: left;
 }
 	
+video {
+  display:block; 
+  margin: 0 auto;
+}
 
+img.console {
+  margin-left: 2em;
+}
 
+/* csRun-tyylit ================================================== */
 .console {
   font-family:Courier;
   color: #ccc;
   background: #000000;
   border: 3px double #ccc;
   padding: 10px;
-  width: 40em;
+  width: 90%;
 }
 
+p.csRunStem {
+  margin-bottom: 1em;
+}
+
+.csRunPre, .csRunPost {
+	margin-left: 0em;
+    border-style: none;
+	box-shadow: none;
+	padding: 0px;
+	margin-bottom: 0em;
+	margin-top: 0em;
+	line-height: 1.1em;
+
+}
+
+.csRunPre {
+	margin-bottom: 0em;
+}
+
+.csRunPost {
+	margin-top: 0em;
+}
+
+
+.csRunCode {
+    font-family:Courier;
+	margin-left: 2em;
+    border-style: solid;
+	border-width: 1px;
+	border-radius: 5px;
+	padding: 4px;
+	margin-right: 0em;
+	line-height: 1em;
+	font-size: 1em;
+	box-shadow: 10px 10px 5px #888888;
+	/* width: 98%; */
+}
+
+.csRunArea {
+    font-family:Courier;
+	margin-top: 0em;
+	margin-bottom: 0em;
+    border-style: none;
+	border-width: 0px;
+	border-radius: 0px;
+	padding: 1px;
+	margin-left: 0em;
+	margin-right: 0em;
+	line-height: 1.1em;
+	font-size: 0.96em;
+	box-shadow: none;
+	width: 100%;
+	min-width: 600px;
+	white-space: pre;
+	border-left: thin solid #0066FF;
+}
+
+.showVideo {
+	margin-left: 10em;
+	margin-right: 0em;
+}
+
+csRunArea:focus {
+    border-style: solid;
+	border-width: 1px;
+	border-radius: 5px;
+	padding: 4px;
+	margin-left: 2em;
+	margin-right: 0.00cm;
+	line-height: 1em;
+	font-size: 1em;
+	box-shadow: 10px 10px 5px #888888;
+	width: 100%; 
+}
+
+.csRunMenu {
+	margin-top: 0.9em;
+}
+
+
+/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 1200px) {
 	.editor {
 		/* height: 5em; */
@@ -579,7 +673,7 @@ a.anchor:hover {
 		position: relative;
 		max-width: 43em;
 		margin-left: 0em;
-		margin-top: 0em;
+		margin-top: 1em;
 	}
 	.addNoteButton {
 		position: absolute;
@@ -651,10 +745,11 @@ a.anchor:hover {
 	
 }
 
+/* Kännyköiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 500px) {
 	P {
-		margin-top: 0.5cm;
-		margin-bottom: 0.5cm;
+		margin-top: 0.0em;
+		margin-bottom: 0.0em;
 		margin-left: 1px; 
 		margin-right: 5px;
 	}

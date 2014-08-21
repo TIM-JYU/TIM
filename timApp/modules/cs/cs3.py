@@ -1,39 +1,23 @@
-# server to get a file from selected range
-# Get parameters:
-#   file    = URL for file to get
-#   start   = regexp that much match to start printing (default = first line)
-#   startcnt= int: how many times the start must match before start (default=1)
-#   startn  = int: how many lines to move print forward or backward from start-point (default = 0)  
-#   end     = regexp to stop printing (default = last line)
-#   endcnt  = int: how many times the end must match before end (default=1)
-#   endn    = int: how many lines to move end forward or backward from end-point (default = 0)
-#   linefmt = format for line number, f.exe linefmt={0:03d}%20 (default = "") 
-#   maxn    = max number of lines to print (default=10000)
-#   lastn   = last linenumber to print (default=1000000) 
-#
-# Examples
-#    ?file=http://example.org/Hello.java&start=main&end=}       -> print from main to first }
-#    ?file=http://example.org/Hello.java                        -> print whole file
-#    ?file=http://example.org/Hello.java&start=startn=1&endn=-1 -> print file except first and last line
-#    ?file=http://example.org/Hello.java&start=main&end=.       -> print only the first line where is main 
-#    ?file=http://example.org/Hello.java&start=main&end=.&endn=1  -> print only the first line where is main and next line
-#   
-import BaseHTTPServer 
+# -*- coding: utf-8 -*-
+import http.server
 import subprocess
-# import nltk 
-from urllib import urlopen
+# import nltk
 import re
-from urlparse import urlparse,parse_qs
 import os.path
 import uuid
+import io
+import codecs
 from os import kill
-from signal import alarm, signal, SIGALRM, SIGKILL
+import signal
+#from signal import alarm, signal, SIGALRM, SIGKILL
 from subprocess import PIPE, Popen, check_output
+from fileParams3 import *
 
-PORT=5000
+PORT = 5000
 
-def run_while_true(server_class=BaseHTTPServer.HTTPServer,
-                   handler_class=BaseHTTPServer.BaseHTTPRequestHandler):
+
+def run_while_true(server_class=http.server.HTTPServer,
+                   handler_class=http.server.BaseHTTPRequestHandler):
     """
     This assumes that keep_running() is a function of no arguments which
     is tested initially and after each request.  If its return value
@@ -44,179 +28,357 @@ def run_while_true(server_class=BaseHTTPServer.HTTPServer,
     while keep_running():
         httpd.handle_request()
 
-def get_param(query,key,default):
-	if not query.has_key(key):
-		return default
-	return query[key][0]
-	
-def do_matcher(key):
-	if not key:
-		return False
-	return re.compile(key)
-		
-		
-def check(matcher,line):
-	if not matcher:
-		return False
-	match = matcher.search(line)
-	return match
-		
+
 def generate_filename():
-	return str(uuid.uuid4())
+    return str(uuid.uuid4())
 
-def run(args, cwd = None, shell = False, kill_tree = True, timeout = -1, env = None):
-	class Alarm(Exception):
-		pass
-	def alarm_handler(signum, frame):
-		raise Alarm
 
-	p = Popen(args, shell = shell, cwd = cwd, stdout = PIPE, stderr = PIPE, env = env)
-	if timeout != -1:
-		signal(SIGALRM, alarm_handler)
-		alarm(timeout)
+def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None):
+    class Alarm(Exception):
+        pass
 
-	try:
-		stdout, stderr = p.communicate()
-		if timeout != -1:
-			alarm(0)
-	except Alarm:
-		pids = [p.pid]
-		if kill_tree:
-			pids.extend(get_process_children(p.pid))
-		for pid in pids:
-			# process might have died before getting to this line
-			# so wrap to avoid OSError: no such process
-			try: 
-				kill(pid, SIGKILL)
-			except OSError:
-				pass	
-		return -9, '', ''
 
-	return p.returncode, stdout, stderr
+    def alarm_handler(signum, frame):
+        raise Alarm
+
+    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env)
+    if timeout != -1:
+        signal.signal(signal.SIGALRM, alarm_handler)
+        signal.alarm(timeout)
+    try:
+        stdout, stderr = p.communicate()
+        if timeout != -1:
+            signal.alarm(0)
+    except Alarm:
+        pids = [p.pid]
+        if kill_tree:
+            pids.extend(get_process_children(p.pid))
+        for pid in pids:
+            # process might have died before getting to this line
+            # so wrap to avoid OSError: no such process
+            try:
+                kill(pid, signal.SIGKILL)
+            except OSError:
+                pass
+        return -9, '', ''
+    return p.returncode, stdout, stderr
+
 
 def get_process_children(pid):
-    p = Popen('ps --no-headers -o pid --ppid %d' % pid, shell = True,
-              stdout = PIPE, stderr = PIPE)
+    p = Popen('ps --no-headers -o pid --ppid %d' % pid, shell=True,
+              stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     return [int(p) for p in stdout.split()]
-		
-		
-class TIMServer(BaseHTTPServer.BaseHTTPRequestHandler):
-	def do_GET(self):
-		print self.path
-		print self.headers
-		query = parse_qs(urlparse(self.path).query,keep_blank_values=True)
-		print query
-		self.send_response(200)
-		self.send_header("Access-Control-Allow-Origin","*")
-		self.end_headers()
-		# self.wfile.write("kissa")
-		# subprocess.call(["svn","export","https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2014/luennot/live03/src/hello/Hello.java","--force"], shell=False)
-		# filecontent = open("Hello.java").read()
-		# url = "https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2014/luennot/live03/src/hello/Hello.java"
-		url = get_param(query,"file","")
-		start = do_matcher(get_param(query,"start",""))
-		startcnt = int(get_param(query,"startcnt","1"))
-		startn = int(get_param(query,"startn","0"))
-		end = do_matcher(get_param(query,"end",""))
-		endcnt = int(get_param(query,"endcnt","1"))
-		endn = int(get_param(query,"endn","0"))
-		linefmt = get_param(query,"linefmt","")
-		maxn = int(get_param(query,"maxn","10000"))
-		lastn = int(get_param(query,"lastn","1000000"))
-		
-		print "url: " + url + " " + linefmt + "\n"
-		# print "startcnt {0} endcnt {1}".format(startcnt,endcnt)
-		if ( url == "" ):
-			self.wfile.write("Must give file= -parameter")
-			return
-		lines = urlopen(url).readlines()    
-		# filecontent = nltk.clean_html(html)  
-		
-		doprint = not ( start )
-		n  = len(lines)
-		n1 = n
-		n2 = n
-		if ( doprint ):
-			n1 = 0
-		
-		for i in range(0,n):
-			line = lines[i]
-			if not doprint and check(start,line): 
-				startcnt = startcnt - 1
-				# print "startcnt {0} endcnt {1}".format(startcnt,endcnt)
-				if ( startcnt <= 0 ):
-					doprint = True
-					n1 = i
-			if doprint and check(end,line): 
-				endcnt = endcnt - 1
-				if ( endcnt <=0 ):
-					n2 = i
-					break
 
-		n1 += startn				
-		n2 += endn
-		if n1 < 0:
-			n1 = 0
-		if n2 >= n:
-			n2 = n-1
 
-		# Generate random cs and exe filenames
-		basename = generate_filename()
-		csfname = "/tmp/%s.cs" % (basename)
-		exename = "/tmp/%s.exe" % (basename)
+def printLines(file, lines, n1, n2):
+    linefmt = "{0:03d} "
+    n = len(lines)
+    if n1 < 0:  n1 = 0
+    if n2 >= n:    n2 = n - 1
 
-		# Open the file and write it
-		csfile = open(csfname, "w")
+    ni = 0
+    for i in range(n1, n2 + 1):
+        line = lines[i]
+        ln = linefmt.format(i + 1)
+        file.write((ln + line + "\n"))
 
-		ni = 0		
-		for i in range(n1,n2+1):
-			line = lines[i]
-			#ln = linefmt.format(i+1)
-			#self.wfile.write(ln + line)
-			csfile.write(line)
-			if ( i+1 >= lastn ):
-				break
-			ni = ni + 1
-			if ( ni >= maxn ):
-				break
-	
-		# Close the file and check it exists
-		csfile.close()
 
-		if not os.path.isfile(csfname):
-			self.wfile.write("Could not get the source file\n")
-			return
+def jsOnError(file, err):
+    result = {"web": {"error": err}}
+    resultStr = json.dumps(result)
+    file.write(resultStr.encode())
+    print("ERROR:======== ", err)
 
-		# Compile
-		try:
-			#subprocess.check_output(["mcs", "-out:" + exename, csfname], stderr=subprocess.STDOUT, shell=True)
-			cmdline = "mcs -out:%s %s" % (exename, csfname)
-			check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
-			self.wfile.write("*** Success!\n")
-		except subprocess.CalledProcessError as e:
-			self.wfile.write("!!! Error code " + str(e.returncode) + "\n" )
-			self.wfile.write(e.output)
-			os.remove(csfname)
-			return
 
-		# Execute and write the output
-#		try:
-#			cmdline = "mono " + exename
-#			output = subprocess.check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
-#			self.wfile.write(output)
-#		except subprocess.CalledProcessError as e:
-#			self.wfile.write("!!! Error code " + str(e.returncode) + "\n" )
-#                        self.wfile.write(e.output)
+def remove_before(what, s):
+    print("=================================== WHAT ==============")
+    print(what," ",s)
+    i = s.find(what)
+    if i < 0: return s
+    s = s[i + 1:]
+    i = s.find("\n")
+    if i < 0: return ""
+    return s[i + 1:]
 
-		code, out, err = run(["mono", exename], timeout = 10)
-		self.wfile.write(out)
 
-		# Clean up
-		os.remove(csfname)
-		os.remove(exename)
+class TIMServer(http.server.BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        print("do_OPTIONS ==============================================")
+        self.send_response(200, "ok")
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
+        print(self.path)
+        print(self.headers)
+
+    def do_GET(self):
+        print("do_GET ==================================================")
+        self.doAll(getParams(self))
+
+    def do_POST(self):
+        print("do_POST =================================================")
+        self.doAll(postParams(self))
+
+    def do_PUT(self):
+        print("do_PUT =================================================")
+        self.doAll(postParams(self))
+
+
+    def doAll(self, query):
+        result = query.jso
+        if ( not result ): result = {}
+        web = {}
+        result["web"] = web
+
+        print("doAll ===================================================")
+        print(self.path)
+        print(self.headers)
+        # print query
+
+        fullhtml = self.path.find('/fullhtml') >= 0
+        html = self.path.find('/html') >= 0
+        css = self.path.find('/css') >= 0
+        js = self.path.find('/js') >= 0
+        reqs = self.path.find('/reqs') >= 0
+        iframeParam = get_param_del(query, "iframe", "")
+        iframe = (self.path.find('/iframe') >= 0) or ( iframeParam )
+        answer = self.path.find('/answer') >= 0
+
+
+        # korjaus kunnes byCode parametri tulee kokonaisena
+        # tempBy = get_param(query, "b", "")
+        #if ( tempBy ):
+        #	query["byCode"] = [tempBy];
+
+        # print query
+
+        self.send_response(200)
+        # self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
+        type = 'text/plain'
+        if ( reqs ): type = "application/json"
+        if ( fullhtml or html ): type = 'text/html'
+        if ( css ): type = 'text/css'
+        if ( js or answer ): type = 'application/javascript'
+        self.send_header('Content-type', type)
+        self.end_headers()
+        # Get the template type
+        ttype = get_param(query, "type", "console").lower()
+
+        if ( reqs ):
+            resultJSON = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
+                          "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"]}
+            resultStr = json.dumps(resultJSON)
+            self.wfile.write(resultStr.encode())
+            return
+
+        # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
+        usercode = getJSOParam(query.jso, "state", "usercode", None)
+        if ( usercode ): query.query["usercode"] = [usercode]
+
+        print("Muutos ========")
+        # pprint(query.__dict__, indent=2)
+
+        if ( css ):
+            printFileTo('cs.css', self.wfile)
+            return
+        if ( js ):
+            if self.path.find('rikki') >= 0:
+                printFileTo('js/dirRikki.js', self.wfile)
+            printFileTo('js/dir.js', self.wfile)
+            return
+        if ( html and not iframe ):
+            print("HTML:==============")
+            if ( ttype == "console" ):
+                printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>', self.wfile,
+                                              "##QUERYPARAMS##", query)
+            elif ( ttype == "comtest" ):
+                printStringToReplaceAttribute('<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
+                                              self.wfile, "##QUERYPARAMS##", query)
+            else:
+                printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-jypeli-runner>',
+                                              self.wfile, "##QUERYPARAMS##", query)
+            return
+        if ( fullhtml ):
+            printFileTo('begin.html', self.wfile)
+            if ( ttype == "console" ):
+                printStringToReplaceAttribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>', self.wfile,
+                                              "##QUERYPARAMS##", query)
+            elif ( ttype == "comtest" ):
+                printStringToReplaceAttribute('<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
+                                              self.wfile, "##QUERYPARAMS##", query)
+            else:
+                printStringToReplaceAttribute('<cs-jypeli-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-jypeli-runner>',
+                                              self.wfile, "##QUERYPARAMS##", query)
+            printFileTo('end.html', self.wfile)
+            return
+        if ( iframe ):
+            printStringToReplaceURL(
+                '<iframe frameborder="0"  src="http://tim-beta.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" style="overflow:hidden;height:##HEIGHT##;width:100%"  seamless></iframe>',
+                self.wfile, "##QUERYPARAMS##", query)
+            return
+
+        # Generate random cs and exe filenames
+        basename = generate_filename()
+        csfname = "/tmp/%s.cs" % (basename)
+        exename = "/tmp/%s.exe" % (basename)
+
+        # Check query parameters
+        p0 = FileParams(query, "", "")
+        print("p0=")
+        print(p0.replace)
+        if ( p0.url == "" and p0.replace == "" ):
+            self.wfile.write("Must give file= -parameter".encode())
+            return
+
+        printFile = get_param(query, "print", "")
+        print("type=" + ttype)
+
+        if ( ttype == "console" ):
+            # Console program
+            pass
+        elif ( ttype == "jypeli" ):
+            # Jypeli game
+            bmpname = "/tmp/%s.bmp" % (basename)
+            pngname = "/cs/images/%s.png" % (basename)
+            pass
+        elif ( ttype == "comtest" ):
+            # ComTest test cases
+            testcs = "/tmp/%sTest.cs" % (basename)
+            testdll = "/tmp/%sTest.dll" % (basename)
+        else:
+            # Unknown template
+            self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
+            return
+
+        # Open the file and write it
+        enc = False
+        if ( printFile ):
+            csfile = self.wfile
+            enc = True
+        else:
+            csfile = codecs.open(csfname,"w","utf-8")  # open(csfname, "w")
+        p0.printFile(csfile,enc)
+        p0.printInclude(csfile,enc)
+        u = p0.url
+        for i in range(1, 10):
+            p = FileParams(query, str(i), u)
+            p.printFile(csfile,enc)
+            p.printInclude(csfile,enc)
+            if ( p.url ): u = p.url
+
+        if ( printFile ): return
+
+        csfile.close()
+        if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
+            jsOnError(self.wfile, "Could not get the source file")
+            # self.wfile.write("Could not get the source file\n")
+            # print "=== Could not get the source file"
+            return
+
+        # Compile
+        try:
+            if ( ttype == "jypeli" ):
+                cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
+                    exename, csfname)
+            elif ( ttype == "comtest" ):
+                cmdline = "java -jar /tmp/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
+                    csfname, testdll, csfname, testcs)
+            else:
+                cmdline = "mcs /out:%s %s" % (exename, csfname)
+
+            check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
+            # self.wfile.write("*** Success!\n")
+            print("*** Success")
+        except subprocess.CalledProcessError as e:
+            '''
+			self.wfile.write(("!!! Error code " + str(e.returncode) + "\n").encode() )
+			self.wfile.write((e.output).encode())
+			file = open(csfname, 'r')
+			lines = file.read().splitlines()
+			# self.wfile.write(file.read())
+			printLines(self.wfile,lines,0,10000)
+			'''
+            errorStr = "!!! Error code " + str(e.returncode) + "\n"
+            errorStr += e.output.decode("utf-8") + "\n"
+            output = io.StringIO()
+            file = codecs.open(csfname, 'r',"utf-8")
+            lines = file.read().splitlines()
+            file.close()
+            printLines(output, lines, 0, 10000)
+            errorStr += output.getvalue()
+            output.close()
+
+            # os.remove(csfname)
+            jsOnError(self.wfile, errorStr)
+            return
+
+        if ( ttype == "jypeli" ):
+            code, out, err = run(["mono", exename, bmpname], timeout=10)
+            out = out.decode()
+            run(["convert", "-flip", bmpname, pngname])
+            os.remove(bmpname)
+            # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
+            print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
+            # TODO: clean up screenshot directory
+            web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
+            p = re.compile('Number of joysticks:.*\n.*')
+            # out = out.replace("Number of joysticks:.*","")
+            out = p.sub("", out)
+            os.remove(exename)
+        elif ( ttype == "comtest" ):
+            code, out, err = run(["nunit-console", "-nologo", "-nodots",testdll], timeout=10)
+            out = out.decode()
+            out = remove_before("Execution Runtime:", out)
+            # out = out[1:]  # alussa oleva . pois
+            # out = re.sub("at .*", "", out, flags=re.M)
+            # out = re.sub("\n\n+", "", out, flags=re.M)
+            out = re.sub("^at .*\n", "", out, flags=re.M)
+            out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
+            out = out.strip(' \t\n\r')
+            eri = out.find("Test Failure")
+            web["testGreen"] = True
+            if eri >= 0:
+                web["testGreen"] = False
+                web["testRed"] = True
+                lni = out.find(", line ")
+                if ( lni >= 0 ):
+                    lns = out[lni + 7:]
+                    lns = lns[0:lns.find("\n")]
+                    lnro = int(lns)
+                    lines = codecs.open(csfname, "r","utf-8").readlines()
+                    # print("Line nr: "+str(lnro))
+                    ## out += "\n" + str(lnro) + " " + lines[lnro - 1]
+                    web["comtestError"] = str(lnro) + " " + lines[lnro - 1];
+            os.remove(testcs)
+            os.remove(testdll)
+        else:
+            print("Exe: ",exename)
+            code, out, err = run(["mono", exename], timeout=10)
+            out = out.decode()
+            os.remove(exename)
+
+        web["console"] = out
+        result["web"] = web
+
+        # Clean up
+        os.remove(csfname)
+
+        # self.wfile.write(out)
+        # self.wfile.write(err)
+        sresult = json.dumps(result)
+        self.wfile.write(sresult.encode())
+        print("Result ========")
+        print(sresult)
+        print(out)
+        print(err)
+
 
 def keep_running():
-	return True
-	
+    return True
+
+
 run_while_true(handler_class=TIMServer)
+
