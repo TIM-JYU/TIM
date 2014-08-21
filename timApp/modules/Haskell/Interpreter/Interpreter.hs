@@ -1,6 +1,8 @@
 {-#LANGUAGE RecordWildCards, DeriveGeneric, OverloadedStrings #-}
 module Interpreter where
+
 import Data.Aeson
+import Data.Monoid
 import GHC.Generics
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as LT
@@ -49,7 +51,8 @@ mkInterpreter = do
              res <- if ":t" `isPrefixOf` expr 
                      then callApiHec evaluator $ Input (TypeOf $ drop 2 expr) ctx
                      else callApiHec evaluator $ Input (Eval expr)            ctx
-             let reply x = return $ TC () x 
+             let  reply :: String -> IO (TIMCmd () String)
+                  reply x = return $ mempty & web x
              case res of
                 H.Plain s  -> do
                             chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)

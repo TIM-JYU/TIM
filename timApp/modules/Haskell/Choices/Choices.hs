@@ -2,6 +2,7 @@
 module Choices where
 
 import Data.Aeson
+import Data.Monoid
 import GHC.Generics
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
@@ -61,7 +62,10 @@ multipleMultipleChoice
                    ,NGModule "MCQ"]
     additionalFiles = ["MMCQTemplate.html"]
     initial = Nothing
-    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=typeset mcm])
+    update (mcm,_,i) = return $ mempty
+                                  & save (Just i)
+                                  & web  (object ["state".=i
+                                                 ,"question".=typeset mcm])
     render (mcm,state) = return $
                         case state of
                              Just i  -> ngDirective "mmcq" 
@@ -84,7 +88,8 @@ simpleMultipleChoice
                    ,NGModule "MCQ"]
     additionalFiles = ["MCQTemplate.html"]
     initial = Nothing
-    update (mcm,_,i) = return $ TC (Just i) (object ["state".=i,"question".=typeset mcm])
+    update (mcm,_,i) = return $ mempty & save (Just i)
+                                       & web (object ["state".=i,"question".=typeset mcm])
     render (mcm,state) = return  $
                         case state of
                              Just i  -> ngDirective "mcq" 
