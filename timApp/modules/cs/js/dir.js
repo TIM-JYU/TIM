@@ -48,13 +48,13 @@ csApp.commentTrim = function(s) {
 	return s.substr(3); 
 }
 
-csApp.getHeading = function(a,key,$scope) {
+csApp.getHeading = function(a,key,$scope,defElem) {
 	if ( !a ) return "";
 	var h = a[key];
 	if ( !h ) return "";
 	// if ( h.toLowerCase().indexOf("script") >= 0 ) return "";
 	var st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
-	var elem = "h4";
+	var elem = defElem;
 	var val = st[0];
 	var attributes = "";
 	if ( st.length >= 2 ) { elem = st[0]; val = st[1]; }
@@ -65,60 +65,17 @@ csApp.getHeading = function(a,key,$scope) {
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
 	// if ( elem.toLowerCase().indexOf("script") >= 0 ) return "";
 	// attributes = "";  // ei laiteta näitä, niin on vähän turvallisempi
-    var html = "<" + elem + attributes + ">" + decodeURIComponent(escape(val)) + "</" + elem + ">";
+	try {
+	  val = decodeURIComponent(escape(val))
+	} catch(err) {}
+    var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
 	html = csApp.sanitize(html);
 	return html;
 }
 
-csApp.directiveFunction = function(t) {
-	return {
-		link: function (scope, element, attrs) {
-			scope.file = attrs.file;
-			scope.type = attrs.type;
-			scope.replace = attrs.replace;
-			scope.rows = 1;
-			scope.codeunder = false;
-			scope.codeunder = false;
-			scope.taskId = "omanimi";
-			if ( t == "jypeli" ) {
-				scope.taskId = "lumiukko";
-			}
-			scope.usercode = "";
-			
-			scope.stem = decodeURIComponent(escape(attrs.stem));
-			scope.placeholder = "Write your code here";
-			
-			if ( attrs.usercode ) scope.usercode = attrs.usercode;
-			if ( attrs.codeunder ) scope.codeunder = attrs.codeunder;
-			if ( attrs.codeover ) scope.codeover = attrs.codeover;
-			if ( attrs.rows ) scope.rows = attrs.rows;
-			scope.minRows = csApp.getInt(scope.rows);
-			if ( attrs.maxrows )scope.maxRows = csApp.getInt(attrs.maxrows);
-			if ( attrs.bycode ) scope.byCode = attrs.bycode;
-			if ( scope.usercode == "" )  scope.usercode = scope.byCode;
-			if ( attrs.placeholder ) scope.placeholder = attrs.placeholder;
-			scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
-			scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
-			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
-			head = csApp.getHeading(attrs,"header",scope);
-			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope);
-			var n = element[0].childNodes.length;
-			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope);
-        //    scope.header = head;
-		//	scope.getHeader = function() { return head; };
-		//	csApp.updateEditSize(scope);
-		},		
-		scope: {},				
-		controller: csApp.Controller,
-		restrict: 'AE',
-		/*
-		compile: function(tElement, attrs) {
-			var content = tElement.children();
-		},
-		*/
-		transclude: true,
-		replace: 'true',
-		template: '<div class="csRunDiv">' + 
+
+csApp.directiveTemplateCS = function(t) {
+  return  '<div class="csRunDiv">' + 
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-if="stem" class="csRunStem" >{{stem}}</p>' +
@@ -138,6 +95,82 @@ csApp.directiveFunction = function(t) {
 				  (t == "comtest" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
+				  // '<p>Testi valituksesta</p>' +
+				  '<pre ng-if="runError">{{error}}</pre>'+
+				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
+				  '<p>Here comes footer</p>'+
+				  '</div>';
+}
+
+csApp.directiveFunction = function(t) {
+	return {
+		link: function (scope, element, attrs) {
+			scope.file = attrs.file;
+			scope.type = attrs.type;
+			scope.replace = attrs.replace;
+			scope.rows = 1;
+			scope.codeunder = false;
+			scope.codeunder = false;
+			scope.taskId = "omanimi";
+			if ( t == "jypeli" ) {
+				scope.taskId = "lumiukko";
+			}
+			scope.usercode = "";
+			
+			if ( attrs.stem ) scope.stem = decodeURIComponent(escape(attrs.stem));
+			scope.placeholder = "Write your code here";
+			
+			if ( attrs.usercode ) scope.usercode = attrs.usercode;
+			if ( attrs.codeunder ) scope.codeunder = attrs.codeunder;
+			if ( attrs.codeover ) scope.codeover = attrs.codeover;
+			if ( attrs.rows ) scope.rows = attrs.rows;
+			scope.minRows = csApp.getInt(scope.rows);
+			if ( attrs.maxrows )scope.maxRows = csApp.getInt(attrs.maxrows);
+			if ( attrs.bycode ) scope.byCode = attrs.bycode;
+			if ( scope.usercode == "" )  scope.usercode = scope.byCode;
+			if ( attrs.placeholder ) scope.placeholder = attrs.placeholder;
+			scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
+			scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
+			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
+			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
+			var n = element[0].childNodes.length;
+			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,"p");
+        //    scope.header = head;
+		//	scope.getHeader = function() { return head; };
+		//	csApp.updateEditSize(scope);
+		},		
+		scope: {},				
+		controller: csApp.Controller,
+		restrict: 'AE',
+		/*
+		compile: function(tElement, attrs) {
+			var content = tElement.children();
+		},
+		*/
+		transclude: true,
+		replace: 'true',
+		template: csApp.directiveTemplateCS(t),
+		ttemplate: '<div class="csRunDiv">' + 
+				  '<p>Here comes header</p>' +
+				//  '<p ng-bind-html="getHeader()"></p>
+				  '<p ng-if="stem" class="csRunStem" >{{stem}}</p>' +
+				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
+				  '<div class="csRunCode">'+'<p></p>'+
+				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
+				  '<textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+				  //'<div class="csRunArea" contentEditable ng-model="usercode" ng-trim="false" "></div>'+
+				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
+				  '</div>'+
+				  //'<br />'+ 
+				  '<p class="csRunMenu"><button ng-click="runCode();">Aja</button>&nbsp&nbsp'+
+				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
+				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
+				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
+				  (t == "comtest" ? '<p class="unitTestGreen"  ng-if="runTestGreen" />' : "") +
+				  (t == "comtest" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
+				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
+				  // '<p>{{resImage}}</p>'+
+				  // '<p>Testi valituksesta</p>' +
 				  '<pre ng-if="runError">{{error}}</pre>'+
 				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
 				  '<p>Here comes footer</p>'+
@@ -317,7 +350,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( angular.isDefined($scope.localcode) ) { $scope.showCodeLocal(); return; } 
 		if ( !$scope.file ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
 		
-		params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
+		params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		$http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		).success(function(data, status, headers, config) {
 			if (data.msg != '')

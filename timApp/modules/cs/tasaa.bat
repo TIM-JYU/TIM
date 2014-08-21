@@ -1,4 +1,4 @@
-@cd E:\kurssit\ttim\timApp\modules\cs
+@cd E:\kurssit\tim\timApp\modules\cs
 @cd t:\cs
 @t:
 @kopioi *.js e: /q /s
