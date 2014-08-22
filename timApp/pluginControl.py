@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from containerLink import callPlugin
 from containerLink import pluginReqs
 from containerLink import getPlugin
+from containerLink import getPluginTimUrl
 import yaml
 import re
 import json
@@ -95,9 +96,10 @@ def pluginify(blocks,user):
                         plugins.append(vals['plugin'])
                         vals['markup']["user_id"] =  user
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], [])
-                        pluginUrl = getPlugin(vals['plugin'])['host'][:-1]
-                        if("http://172.17.42.1" in pluginUrl):
-                            pluginUrl = pluginUrl.replace("http://172.17.42.1", "http://tim-beta.it.jyu.fi")
+                        #pluginUrl = getPlugin(vals['plugin'])['host'][:-1
+                        #if("http://172.17.42.1" in pluginUrl):
+                            #pluginUrl = pluginUrl.replace("http://172.17.42.1", "http://tim-beta.it.jyu.fi")
+                        pluginUrl = getPluginTimUrl(vals['plugin'])
                         preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],pluginUrl) + pluginHtml + "</div>")
                     except TypeError:
                         preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team. You will find no contact page yet, if you see this error, you should probably just knock on our door\n or pray to your favorite deity.'")
@@ -138,7 +140,6 @@ def getPluginDatas(plugins):
     modules = []
 
     plugins = removeDups(plugins)
-    print(plugins)
     for p in plugins:
         try:
             (rawJs,rawCss,modsList) = pluginDeps(json.loads(pluginReqs(p)))
@@ -146,13 +147,13 @@ def getPluginDatas(plugins):
                 if( "http" in src):
                     jsPaths.append(src)
                 else:
-                    x = getPlugin(p)['host']
+                    x = getPluginTimUrl(p) + "/"
                     jsPaths.append(x + src)
             for cssSrc in rawCss:
                 if( "http" in src):
                     cssPaths.append(cssSrc)
                 else:
-                    x = getPlugin(p)['host']
+                    x = getPluginTimUrl(p) + "/"
                     cssPaths.append(x + src)
             for mod in modsList:
                 modules.append(mod)

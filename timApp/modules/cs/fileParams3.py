@@ -2,17 +2,17 @@
 from urllib.request import urlopen
 import re
 import html
-import cgi
 import json
 from urllib.parse import urlparse, parse_qs
-from pprint import pprint
 import urllib
+import pprint
 import codecs
 
 
 class QueryClass:
-    query = {}
-    jso = None
+    def __init__(self):
+        self.query = {}
+        self.jso = None
 
 
 def get_param(query, key, default):
@@ -66,14 +66,14 @@ def check(matcher, line):
     return match
 
 
-def getJSOParam(jso, key1, key2, default):
+def get_json_param(jso, key1, key2, default):
     try:
         if jso is None: return default
         if key1 not in jso: return default
         if not key2: return jso[key1]
         if not jso[key1]: return default
         if key2 not in jso[key1]: return default
-        return jso[key1][key2];
+        return jso[key1][key2]
     except:
         # print("JSO XXXXXXXXXXXXX", jso)
         print("KEY1=", key1, "KEY2=", key2)
@@ -96,7 +96,7 @@ class FileParams:
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = get_param(query, "by" + nr, "")
 
-        usercode = getJSOParam(query.jso, "input" + nr, "usercode", None);
+        usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
         if usercode: self.by = usercode
 
@@ -104,15 +104,14 @@ class FileParams:
         if u and not self.url: self.url = url
         if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
-    def printFile(self, file, enc=True, escapeHTML=False):
+    def get_file(self, escape_html=False):
         if not self.url:
-            if not self.by: return
-            file.write(self.by.replace("\\n", "\n").encode())
-            return
+            if not self.by: return ""
+            return self.by.replace("\\n", "\n")
         try:
             lines = urlopen(self.url).readlines()
         except:
-            return
+            return "File not found " + self.url
         # filecontent = nltk.clean_html(html)
         startcnt = self.startcnt
         endcnt = self.endcnt
@@ -145,43 +144,44 @@ class FileParams:
 
         ni = 0
 
-        replaceBy = self.by
-        if replaceBy:
-            rep = replaceBy.split("\n");
+        result = ""
+
+        replace_by = self.by
+        if replace_by:
+            rep = replace_by.split("\n")
             if len(rep) > 0 and rep[0].strip() == "//":
                 del rep[0]
-                replaceBy = "\n".join(rep)
+                replace_by = "\n".join(rep)
 
         for i in range(n1, n2 + 1):
             line = lines[i]
             # if enc or True: line = line.decode('UTF8')
             # else: line = str(line)
-            if check(self.replace, line):  line = replaceBy + "\n"
-            if escapeHTML: line = html.escape(line)
+            if check(self.replace, line):  line = replace_by + "\n"
+            if escape_html: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
-            nln = ln + line + "\n"
-            if enc: file.write(nln.encode("UTF8"))
-            else: file.write(nln)
+            result += ln + line + "\n"
             if i + 1 >= self.lastn: break
             ni += 1
             if ni >= self.maxn: break
+        
+        return result
 
-
-    def printInclude(self, file, enc=True, escapeHTML=False):
-        if not self.include: return
+		
+    def get_include(self, escapeHTML=False):
+        if not self.include:  return ""
         data = self.include.replace("\\n", "\n")
         if escapeHTML: data = html.escape(data)
-        if enc: file.write(data.encode())
-        else: file.write(data)
+        return data
 
 
-def getParams(self):
+def get_params(self):
     result = QueryClass()
     result.query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
     return result
 
 
-def postParams(self):
+def post_params(self):
     # print "postParams ================================================"
     # print self
     # pprint(self.__dict__,indent=2)
@@ -205,11 +205,14 @@ def postParams(self):
     print(f)
     print(type(f))
     u = f.decode("UTF8")
-    print(u)
-    print(type(u))
+    # print(u)
+    # print(type(u))
 
     result = QueryClass()
     result.query = {}  # parse_qs(urlparse(self.path).query, keep_blank_values=True)
+    print("result.query ================================== ")
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(result.query)
 
     if len(u) == 0: return result
     if content_type.find("json") < 0:  # ei JSON
@@ -224,6 +227,8 @@ def postParams(self):
     # print(jso.repr())
     print("====================================================")
     result = QueryClass()
+    print("result.query ================================== ")
+    pp.pprint(result.query)
     # print jso
     result.jso = jso
     for field in list(result.jso.keys()):
@@ -236,57 +241,18 @@ def postParams(self):
     return result
 
 
-'''
-    # print self.request.body
-    # print self.rfile
-    # print json.dumps(form)
-    # form = cgi.FieldStorage()
-    # print dir(form)
-    result = QueryClass()
-    pprint(form.__dict__, indent=2)
-    result.query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
-    # if ( form['type'].find('json') >= 0 ):
-    if form.list is None:  # Onko JSON vai tavallinen POST
-        s = str(form)
-        i = s.find('{')
-        i2 = s.rfind('\'')
-        js = s[i:i2]
-        js = js.replace("\\\\", "\\")
-        print("js:======================\n")
-        print(js)
-        print("\n======================\n")
-        result.jso = json.loads(js)
-        # print jso
-        for field in list(result.jso.keys()):
-            # print field + ":" + jso[field]
-            if field == "markup":
-                for f in list(result.jso[field].keys()):
-                    result.query[f] = [str(result.jso[field][f])]
-            else:
-                if field != "state": result.query[field] = [str(result.jso[field])]
-        return result
-    # print form
-    # print "DATA: "
-    # print form["data"]
-    # print form.keys()
-    # print "Environ: "
-    # print form.environ
-    for field in list(form.keys()):
-        result.query[field] = [form[field].value]
-    return result
-'''
-
-
-def printFileTo(name, f):
-    fr = open(name, encoding="utf-8")
+def file_to_string(name):
+    fr = codecs.open(name, encoding="utf-8-sig")
     lines = fr.readlines()
+    result = ""
     for i in range(0, len(lines)):
         line = lines[i]
-        f.write(line.encode())
+        result += line
     fr.close()
+    return result
 
 
-def queryParamsToNG(query):
+def query_params_to_angular(query):
     result = ""
     for field in query.keys():
         result = result + field + "=\"" + query[field][0] + "\";\n"
@@ -294,70 +260,75 @@ def queryParamsToNG(query):
     return result
 
 
-def queryParamsToAttribute(query, leaveAway):
+def query_params_to_attribute(query, leave_away):
     result = ""
-    # print("leaveAway " + leaveAway)
+    # print("leave_away " + leave_away)
     for field in query.keys():
-        if not (leaveAway and field == leaveAway):
+        if not (leave_away and field == leave_away):
             result = result + field.lower() + "=\'" + query[field][0] + "\'\n"
     # print "QUERY" + str(query)
     return result + ""
 
 
-def queryParamsToMap(query):
+def query_params_to_map(query):
     result = {}
     for field in query.keys():
         result[field] = query[field][0]
     return result
 
 
-def printFileToReplaceNG(name, f, whatToReplace, query):
-    fr = open(name, "r")
+def file_to_string_replace_ng(name, what_to_replace, query):
+    fr = codecs.open(name, encoding="utf-8-sig")
     lines = fr.readlines()
-    params = queryParamsToNG(query.query)
+    result = ""
+    params = query_params_to_angular(query.query)
     for i in range(0, len(lines)):
-        line = lines[i].replace(whatToReplace, params)
-        f.write(line.encode())
+        line = lines[i].replace(what_to_replace, params)
+        result += line
     fr.close()
+    return result
 
 
-def printFileToReplaceURL(name, f, whatToReplace, query):
-    fr = open(name, "r")
+def file_to_string_replace_url(name, what_to_replace, query):
+    fr = codecs.open(name, encoding="utf-8-sig")
     lines = fr.readlines()
     # params = queryParamsToURL(query)
-    qmap = queryParamsToMap(query.query)
+    qmap = query_params_to_map(query.query)
     params = urllib.parse.urlencode(qmap)
+    result = ""
     for i in range(0, len(lines)):
-        line = lines[i].replace(whatToReplace, params)
-        f.write(line.encode())
+        line = lines[i].replace(what_to_replace, params)
+        result += line
     fr.close()
 
 
-def printStringToReplaceURL(line, f, whatToReplace, query):
-    qmap = queryParamsToMap(query.query)
+def string_to_string_replace_url(line, what_to_replace, query):
+    qmap = query_params_to_map(query.query)
     params = urllib.parse.urlencode(qmap)
-    line = line.replace(whatToReplace, params)
+    line = line.replace(what_to_replace, params)
     height = get_param(query, "height", "100%")
     line = line.replace('##HEIGHT##', height)
-    f.write(line.encode())
+    return line
 
 
-def printFileToReplaceAttribute(name, f, whatToReplace, query):
-    fr = open(name, "r")
+def file_to_string_replace_attribute(name, what_to_replace, query):
+    fr = codecs.open(name, encoding="utf-8-sig")
     lines = fr.readlines()
-    params = queryParamsToAttribute(query.query)
+    params = query_params_to_attribute(query.query)
+    result = ""
     for i in range(0, len(lines)):
-        line = lines[i].replace(whatToReplace, params)
-        f.write(line)
+        line = lines[i].replace(what_to_replace, params)
+        result += line
     fr.close()
+    return result
 
 
-def printStringToReplaceAttribute(line, f, whatToReplace, query):
-    leaveAway = None;
-    if "##USERCODE##" in line: leaveAway = "byCode"
-    params = queryParamsToAttribute(query.query, leaveAway)
-    line = line.replace(whatToReplace, params)
+def string_to_string_replace_attribute(line, what_to_replace, query):
+    leave_away = None
+    if "##USERCODE##" in line: leave_away = "byCode"
+    params = query_params_to_attribute(query.query, leave_away)
+    line = line.replace(what_to_replace, params)
     line = line.replace("##USERCODE##", get_param(query, "byCode", ""))
-    f.write(line.encode())
     print(line.encode())
+    return line
 
