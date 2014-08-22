@@ -20,14 +20,14 @@ data GVMarkup = GV {gvType::T.Text, size::Size, gvData::T.Text} deriving (Show,G
 instance FromJSON GVMarkup where
 instance ToJSON   GVMarkup where
 
-graphViz :: Plugin GVMarkup () () ()
+graphViz :: Plugin (Markup GVMarkup) () ()
 graphViz = Plugin{..}
   where 
     requirements = []
     additionalFiles = []
-    initial = ()
-    update (markup,_,_) = return $ mempty
-    render (markup,_)   = case gvType markup of
+    initial   = ()
+    update () = return ()
+    render (Markup markup)   = case gvType markup of
         "dot"        -> runGV markup "dot"
         "neato"      -> runGV markup "neato"
         "osage"      -> runGV markup "neato"

@@ -101,16 +101,26 @@ instance ToJSON Requirement where
 data Stage = Render | Update deriving (Eq,Show)
 
 data AR (s::k) a = AR (EitherT String IO a) deriving Functor
+instance Monad (AR s)  where
+    return = pure
+    (AR eit) >>= fb = AR $ do
+                        a <- eit
+                        let AR b = fb a
+                        b
+
+                         
 instance Applicative (AR s)  where
     pure x = AR (pure x)
     (AR a)<*>(AR b) = AR (a<*>b) 
 
 runAR (AR x) = runEitherT x
 
+ar (AR x) toLeft toRight = eitherT toLeft toRight x
+
 class Available s a where
     getIt :: s -> AR s a
 
-instance Available Value () where
+instance Available x () where
     getIt _ = pure ()
 
 instance (Available x a, Available x b) => Available x (a,b) where
@@ -125,7 +135,7 @@ instance (Available x a, Available x b, Available x c, Available x d) => Availab
 class Reply s a where
     putIt :: s -> a -> IO s
 
-instance Reply Value () where
+instance Reply x () where
     putIt s _ = pure s
 
 instance (Reply x a, Reply x b) => Reply x (a,b) where
@@ -173,7 +183,7 @@ instance FromJSON a => Available TimUpdate (Markup a) where
 instance FromJSON a => Available TimUpdate (Input a) where
     getIt (TimUpdate x) = Input <$> getField "input" x 
 
-getField f (Object v) = case HashMap.lookup "state" v of
+getField f (Object v) = case HashMap.lookup f v of
                     Nothing -> AR $ left ("No key '"++show f++"' in "++show (Object v))
                     Just s  -> case fromJSON s of
                         Error e   -> AR $ left e
@@ -215,8 +225,6 @@ serve plugin = route
            eps <- liftIO $ runAR ar
            case eps of
                 Left err -> modifyResponse (setResponseCode 400) >> writeLazyText "Unable to parse required parameters"
-                Right ps -> f ps
-
 -- Quick helper for building objects
 ins key (First Nothing)  x = x 
 ins key (First (Just v)) x = (key.=v):x 
