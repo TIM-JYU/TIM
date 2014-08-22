@@ -1,4 +1,4 @@
-{-#LANGUAGE RecordWildCards, DeriveGeneric, OverloadedStrings #-}
+{-#LANGUAGE RecordWildCards, DeriveGeneric, OverloadedStrings, NoMonomorphismRestriction #-}
 module Interpreter where
 
 import Data.Aeson
@@ -12,7 +12,8 @@ import Control.Applicative
 import Control.Monad.Trans.Either
 import Data.Aeson.Types
 
-import PluginType
+import PluginType hiding (Input)
+import qualified PluginType as PT
 import CallApiHec
 import HecIFace as H
 
@@ -36,7 +37,9 @@ instance ToJSON   InterpreterMarkup where
 instance FromJSON InterpreterCommand where
 instance ToJSON   InterpreterCommand where
 
-mkInterpreter :: IO (Plugin InterpreterMarkup () InterpreterCommand String)
+mkInterpreter :: IO (Plugin (PT.Markup InterpreterMarkup) 
+                            (PT.Markup InterpreterMarkup,PT.Input InterpreterCommand) 
+                            (PT.Web String))
 mkInterpreter = do
     evaluator <- eitherT error return findApiHec
     let
@@ -45,14 +48,13 @@ mkInterpreter = do
                        ,CSS "NewConsole/style.css"
                        ,NGModule "console"]
         additionalFiles = ["NewConsole/Console.template.html"]
-        initial = ()
-        update (markup,_,Evaluate expr) = do
+        update (PT.Markup markup, PT.Input (Evaluate expr)) = do
              let ctx = maybe (StringContext "") FileContext (Interpreter.context markup)
              res <- if ":t" `isPrefixOf` expr 
                      then callApiHec evaluator $ Input (TypeOf $ drop 2 expr) ctx
                      else callApiHec evaluator $ Input (Eval expr)            ctx
-             let  reply :: String -> IO (TIMCmd () String)
-                  reply x = return $ mempty & web x
+             let  reply :: String -> IO (Web String)
+                  reply x = return $ Web x
              case res of
                 H.Plain s  -> do
                             chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
@@ -72,7 +74,6 @@ mkInterpreter = do
                         CheckResult True  -> return . Just $ "<span class='success'>"++desc++"</span>"
                         CheckResult False -> return Nothing
                         x                 -> print ("ERROR"++ show x) >> return Nothing -- TODO: Log an error!
-        render (markup,state) = return . ngDirective "console" . object $
-                                    ["examples" .= examples markup]
+        render (Markup markup) = return . ngDirective "console" . object $ ["examples" .= examples markup]
         additionalRoutes = noRoutes
     return Plugin{..}

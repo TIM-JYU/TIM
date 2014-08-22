@@ -15,21 +15,21 @@ data NoteCommands = SaveNote T.Text | SubmitNote T.Text deriving (Show,Generic)
 instance FromJSON NoteMarkup where
 instance ToJSON NoteMarkup where
 
-shortNote :: Plugin NoteMarkup T.Text T.Text Value
+shortNote :: Plugin (Markup NoteMarkup, State T.Text)
+                    (Markup NoteMarkup, Input T.Text)
+                    (Save T.Text, Web Value)
 shortNote = Plugin{..}
   where 
     requirements = [JS "shortNote.js"
                    ,NGModule "Note"]
     additionalFiles = ["ShortNoteTemplate.html"]
     initial = ""
-    update (markup,_,i) = return $ 
-                            mempty & save i
-                                   & web (object ["content" .= encodeState markup i])
+    update (Markup markup,Input i) = return $ (Save i, Web (object ["content" .= encodeState markup i]))
     encodeState markup state =  object ["width"   .= width markup
                                        ,"height"  .= height markup
                                        ,"prompt"  .= prompt markup
                                        ,"content" .= state]
-    render (markup,state) = return $ ngDirective "shortNote" $ encodeState markup state
+    render (Markup markup,State state) = return $ ngDirective "shortNote" $ encodeState markup state
     additionalRoutes = noRoutes
                                 
 main :: IO ()
