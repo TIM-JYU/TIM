@@ -52,7 +52,9 @@ instance Typesettable Blind where
     typeset (Blind t) = Blind (formatMarkdown t)
 
 
-multipleMultipleChoice :: Plugin (MCQMarkup MMC Choice) (Maybe [Maybe Bool]) [Maybe Bool] Value
+multipleMultipleChoice :: Plugin (Markup (MCQMarkup MMC Choice), State (Maybe [Maybe Bool])) 
+                                 (Markup (MCQMarkup MMC Choice), Input ([Maybe Bool])) 
+                                 (Save (Maybe [Maybe Bool]),Web Value)
 multipleMultipleChoice  
    = Plugin{..}
   where 
@@ -61,12 +63,11 @@ multipleMultipleChoice
                    ,JS "script2.js"
                    ,NGModule "MCQ"]
     additionalFiles = ["MMCQTemplate.html"]
-    initial = Nothing
-    update (mcm,_,i) = return $ mempty
-                                  & save (Just i)
-                                  & web  (object ["state".=i
-                                                 ,"question".=typeset mcm])
-    render (mcm,state) = return $
+    update (Markup mcm,Input i) = return $ 
+                                   (Save (Just i)
+                                   ,Web  (object ["state".=i
+                                                 ,"question".=typeset mcm]))
+    render (Markup mcm,State state) = return $
                         case state of
                              Just i  -> ngDirective "mmcq" 
                                             $ object ["question" .= typeset mcm 
@@ -78,7 +79,9 @@ multipleMultipleChoice
                                 
 
 
-simpleMultipleChoice :: Plugin (MCQMarkup MC Choice) (Maybe Integer) Integer Value
+simpleMultipleChoice :: Plugin (Markup (MCQMarkup MMC Choice), State (Maybe [Maybe Bool])) 
+                                 (Markup (MCQMarkup MMC Choice), Input Integer) 
+                                 (Save (Maybe Integer),Web Value)
 simpleMultipleChoice 
    = Plugin{..}
   where 
@@ -87,10 +90,8 @@ simpleMultipleChoice
                    ,JS "script2.js"
                    ,NGModule "MCQ"]
     additionalFiles = ["MCQTemplate.html"]
-    initial = Nothing
-    update (mcm,_,i) = return $ mempty & save (Just i)
-                                       & web (object ["state".=i,"question".=typeset mcm])
-    render (mcm,state) = return  $
+    update (Markup mcm,Input i) = return $ (Save (Just i), Web (object ["state".=i,"question".=typeset mcm]))
+    render (Markup mcm,State state) = return  $
                         case state of
                              Just i  -> ngDirective "mcq" 
                                             $ object ["question" .= typeset mcm 
