@@ -8,7 +8,7 @@ function(sc, controller, http, q, $upload) {
         http.post('/createDocument', {
             "doc_name" : name
         }).success(function(data, status, headers, config) {
-            window.location.href = "/documents/" + data.id;
+            window.location.href = "/edit/" + data.id;
         }).error(function(data, status, headers, config) {
             alert("Could not create the document.");
         });
