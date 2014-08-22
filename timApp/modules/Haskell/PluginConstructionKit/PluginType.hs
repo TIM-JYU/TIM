@@ -55,6 +55,7 @@ instance FromJSON BlackboardCommand where
     parseJSON (String x) 
         | "!" `T.isPrefixOf` x = pure $ Delete (T.tail x)
         | otherwise            = pure $ Put x
+    parseJSON e = fail ("Expected String, got "++show e)
 
 instance ToJSON BlackboardCommand where
     toJSON (Put t) = String t
@@ -113,6 +114,10 @@ instance Applicative (AR s)  where
     pure x = AR (pure x)
     (AR a)<*>(AR b) = AR (a<*>b) 
 
+instance Alternative (AR s) where
+    empty = AR $ left "empty"
+    AR a<|>AR b = AR $ a<|> b
+
 runAR (AR x) = runEitherT x
 
 ar (AR x) toLeft toRight = eitherT toLeft toRight x
@@ -150,10 +155,12 @@ instance (Reply x a, Reply x b, Reply x c, Reply x d) => Reply x (a,b,c,d) where
 newtype State  a = State a deriving (Eq,Show)
 newtype Markup a = Markup a deriving (Eq,Show)
 newtype Input  a = Input a deriving (Eq,Show)
+newtype User   = User T.Text deriving (Eq,Show)
+newtype Blackboard = Blackboard (HashSet T.Text) deriving (Eq,Show)
 
 newtype Save a = Save a deriving (Eq,Show)
 newtype Web a  = Web a deriving (Eq,Show)
-newtype Blackboard = Blackboard [BlackboardCommand]  deriving (Eq,Show)
+newtype BlackboardOut = BlackboardOut [BlackboardCommand]  deriving (Eq,Show)
 newtype TimResult  = TR [(T.Text,Value)] deriving Show
 instance ToJSON TimResult where
     toJSON (TR a) = object a
@@ -164,8 +171,8 @@ instance (ToJSON a) => Reply TimResult (Save a) where
 instance (ToJSON a) => Reply TimResult (Web a) where
     putIt (TR x) (Web v) = return $ TR (("web".=v):x)
 
-instance Reply TimResult Blackboard where
-    putIt (TR x) (Blackboard bc) = return $ TR (("bb".=bc):x)
+instance Reply TimResult BlackboardOut where
+    putIt (TR x) (BlackboardOut bc) = return $ TR (("bb".=bc):x)
 
 -- PluginSpecific
 newtype TimRender = TimRender Value

@@ -12,4 +12,4 @@ testInterp :: InterpreterMarkup
 testInterp = I Nothing 
                   (Just [Example (Just "This is fun") "take 10 [1..]"
                         ,Example Nothing "reverse . reverse"])
-                  (Just [Goal "(==11)" "Great, that's eleven"])
+                  (Just [Goal "(==11)" "Great, that's eleven" "Ding!"])
