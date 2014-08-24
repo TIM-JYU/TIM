@@ -347,10 +347,10 @@ def get_heading(query, key, def_elem):
     i = elem.find(' ')
     ea = [elem]
     if i >= 0:
-        ea = [elem[0:i],elem[i]]
+        ea = [elem[0:i],elem[i:]]
     if len(ea) > 1:
         elem = ea[0]
-        attributes = " " + ea[1] + " "
+        attributes = ea[1] + " "
     result_html = "<" + elem + attributes +">" + val +  "</" + elem + ">\n"
     return result_html
 
@@ -360,5 +360,5 @@ def get_surrounding_headers(query, inside):
     stem = get_param(query,"stem",None)
     if stem:  result += '<p class="stem" >' + stem + '</p>\n'
     result += inside +'\n'
-    result += get_heading(query,"footer",' p class="footer"')
+    result += get_heading(query,"footer",'p class="footer"')
     return result
