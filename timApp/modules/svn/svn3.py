@@ -46,34 +46,27 @@ def run_while_true(server_class=http.server.HTTPServer,
         httpd.handle_request()
 
 
-def get_image_html(self, query):
+def get_image_html(query):
     """
     Muodostaa kuvan näyttämiseksi tarvittavan HTML-koodin
-    :param self: olio josta löytyy tarvittava tietovirta
     :param query: pyynnön paramterit
-    :return:
+    :return: kuvan html-jono
     """
-    url = get_param(query, "file", "")
-    w = get_param(query, "width", "")
-    h = get_param(query, "height", "")
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
     result = get_surrounding_headers(query,'<img ' + w + h + 'src="' + url + '">')
     return result
 
 
-def get_video_html(self, query):
+def get_video_html(query):
     """
     Muodostaa videon näyttämiseksi tarvittavan HTML-koodin
-    :param self: olio josta löytyy tarvittava tietovirta
     :param query: pyynnön paramterit
-    :return:
+    :return: videon html-jono
     """
-    url = get_param(query, "file", "")
-    w = get_param(query, "width", "")
-    h = get_param(query, "height", "")
-    if w: w = 'width="' + w + '" '
-    if h: h = 'height="' + h + '" '
     iframe = get_param(query, "iframe", False) or True
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
@@ -81,11 +74,18 @@ def get_video_html(self, query):
         s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
         return s
 
-    elif iframe:
-        result = '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
-    else:
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
+    if w: w = 'width="' + w + '" '
+    if h: h = 'height="' + h + '" '
+
+    if iframe:
+        return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
+
+
         #        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
-        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
+    result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
     return result
 
 
@@ -137,12 +137,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         if is_image:
-            s = get_image_html(self, query)
+            s = get_image_html(query)
             self.wout(s)
             return
 
         if is_video:
-            s = get_video_html(self, query)
+            s = get_video_html(query)
             self.wout(s)
             return
 
@@ -165,22 +165,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(file_to_string('js/video.js'))
             return
 
+        # Was none of special, so print the file(s) in query
+
         if show_html: self.wout('<pre class="showCode">')
-
-        p0 = FileParams(query, "", "")
-        if p0.url == "":
-            self.wout("Must give file= -parameter")
-            if show_html: self.wout('</pre>')
-            return
-        s = p0.get_file(show_html)
-        s += p0.get_include(show_html)
-        u = p0.url
-        for i in range(1, 10):
-            p = FileParams(query, str(i), u)
-            s += p.get_file(show_html)
-            s += p.get_include(show_html)
-            if p.url: u = p.url
-
+        s = get_file_to_output(query,show_html)
         self.wout(s)
         if show_html: self.wout('</pre>')
 
