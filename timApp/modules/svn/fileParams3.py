@@ -332,3 +332,33 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     print(line.encode())
     return line
 
+
+def get_heading(query, key, def_elem):
+    if not query: return ""
+    h = get_param(query, key, None)
+    if not h: return ""
+    st = h.split("!!") # h4 class="h3" width="23"!!Tehtava 1
+    elem = def_elem
+    val = st[0]
+    attributes = ""
+    if len(st) >= 2:
+        elem = st[0]
+        val = st[1]
+    i = elem.find(' ')
+    ea = [elem]
+    if i >= 0:
+        ea = [elem[0:i],elem[i]]
+    if len(ea) > 1:
+        elem = ea[0]
+        attributes = " " + ea[1] + " "
+    result_html = "<" + elem + attributes +">" + val +  "</" + elem + ">\n"
+    return result_html
+
+
+def get_surrounding_headers(query, inside):
+    result = get_heading(query,"header","h4")
+    stem = get_param(query,"stem",None)
+    if stem:  result += '<p class="stem" >' + stem + '</p>\n'
+    result += inside +'\n'
+    result += get_heading(query,"footer",' p class="footer"')
+    return result

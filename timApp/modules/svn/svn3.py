@@ -46,7 +46,7 @@ def run_while_true(server_class=http.server.HTTPServer,
         httpd.handle_request()
 
 
-def show_image(self, query):
+def get_image_html(self, query):
     """
     Muodostaa kuvan näyttämiseksi tarvittavan HTML-koodin
     :param self: olio josta löytyy tarvittava tietovirta
@@ -58,12 +58,11 @@ def show_image(self, query):
     h = get_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
-    result = '<img ' + w + h + 'src="' + url + '">'
-    self.wfile.write(result.encode())
-    return
+    result = get_surrounding_headers(query,'<img ' + w + h + 'src="' + url + '">')
+    return result
 
 
-def show_video(self, query):
+def get_video_html(self, query):
     """
     Muodostaa videon näyttämiseksi tarvittavan HTML-koodin
     :param self: olio josta löytyy tarvittava tietovirta
@@ -75,22 +74,19 @@ def show_video(self, query):
     h = get_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
-    iframe = get_param(query, "iframe", False)
-    iframe = True
+    iframe = get_param(query, "iframe", False) or True
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
     if video_app:
         s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        self.wout(s)
-        return
+        return s
 
     elif iframe:
         result = '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
     else:
         #        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
         result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
-    self.wout(result)
-    return
+    return result
 
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
@@ -141,11 +137,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         if is_image:
-            show_image(self, query)
+            s = get_image_html(self, query)
+            self.wout(s)
             return
 
         if is_video:
-            show_video(self, query)
+            s = get_video_html(self, query)
+            self.wout(s)
             return
 
         result_json = {}
