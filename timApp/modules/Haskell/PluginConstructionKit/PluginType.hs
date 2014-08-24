@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HM
 import Data.HashMap.Strict (HashMap,(!))
+import Data.Hashable
 import qualified Data.HashMap.Strict as HashMap
 import Data.HashSet (HashSet)
 import qualified Data.HashSet as HashSet
@@ -157,6 +158,17 @@ newtype Markup a = Markup a deriving (Eq,Show)
 newtype Input  a = Input a deriving (Eq,Show)
 newtype User   = User T.Text deriving (Eq,Show)
 newtype Blackboard = Blackboard (HashSet T.Text) deriving (Eq,Show)
+newtype TaskID  = TID {getTaskID :: T.Text} deriving (Eq,Show)
+instance Hashable TaskID where
+    hashWithSalt s (TID d) = hashWithSalt (s*7) d
+instance Readable TaskID where
+    fromBS = return . TID . T.decodeUtf8
+instance FromJSON TaskID where
+  parseJSON (String s) = pure (TID s)
+  parseJSON x = fail $ "Expected taskID, got "++show x
+
+instance ToJSON TaskID where
+    toJSON (TID x) = String x
 
 newtype Save a = Save a deriving (Eq,Show)
 newtype Web a  = Web a deriving (Eq,Show)

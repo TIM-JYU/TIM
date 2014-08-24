@@ -16,6 +16,7 @@ import PluginType hiding (Input)
 import qualified PluginType as PT
 import CallApiHec
 import HecIFace as H
+import           Data.Configurator       (Worth(..), load, require)
 
 data Example = Example {title :: Maybe String
                        ,expr  :: String
@@ -43,6 +44,8 @@ mkInterpreter :: IO (Plugin (PT.Markup InterpreterMarkup)
                             (PT.Markup InterpreterMarkup,PT.Input InterpreterCommand) 
                             (PT.Web String,PT.BlackboardOut))
 mkInterpreter = do
+    conf   <- load [Required "Interpreter.conf"]
+    contextPath <- require conf "contextpath" 
     evaluator <- eitherT error return findApiHec
     let
         requirements = [JS "NewConsole/Console.js"
@@ -51,7 +54,8 @@ mkInterpreter = do
                        ,NGModule "console"]
         additionalFiles = ["NewConsole/Console.template.html"]
         update (PT.Markup markup, PT.Input (Evaluate expr)) = do
-             let ctx = maybe (StringContext "") FileContext (Interpreter.context markup)
+             let ctx = maybe (StringContext "") (FileContext.((contextPath++"/")++)) (Interpreter.context markup)
+             print ("Context:",ctx)
              res <- if ":t" `isPrefixOf` expr 
                      then callApiHec evaluator $ Input (TypeOf $ drop 2 expr) ctx
                      else callApiHec evaluator $ Input (Eval expr)            ctx
