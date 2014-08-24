@@ -127,13 +127,13 @@ class FileParams:
         for i in range(0, n):
             line = lines[i]
             try:
-                line = line.decode('utf-8-sig').replace("\n","")
+                line = line.decode('utf-8-sig')
             except:
                 try:
                     line = line.decode(encoding='iso8859_15')
                 except:
                     line = str(line)
-            lines[i] = line
+            lines[i] = line.replace("\n","")
             # print(i,": ",line)
             if not doprint and check(self.start, line):
                 startcnt -= 1
