@@ -43,7 +43,7 @@ videoApp.directiveFunction = function(t) {
 			head = videoApp.getHeading(attrs,"header",scope,"h4");
 			element[0].childNodes[0].outerHTML = head;
 			var n = element[0].childNodes.length;
-			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,"p");
+			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="footer"');
 		},		
 		scope: {},				
 		controller: videoApp.Controller,
@@ -57,11 +57,11 @@ videoApp.directiveFunction = function(t) {
 		replace: 'true',
 		template: '<div class="videoRunDiv">' +
 				  '<p>Here comes header</p>' +
-				  '<p ng-if="stem" class="videoRunStem" >{{stem}}</p>' +
+				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 				  '<div ><p></p></div>' + 
-				  '<div ng-if="!videoOn" class="showVideoHolder"><a ng-click="showVideo()">Click here to show the video</a></div>' +
-				  '<p ng-if="videoOn" style="text-align: right;" ><a ng-click="hideVideo()">hide video</a></p>'+
-				  '<p>Here comes footer</p>'+
+				  '<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
+				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">hide video</a></p>'+
+				  '<p class="footer">Here comes footer</p>'+
 				  '</div>'
 		// templateUrl: 'csTempl.html'
 	}; 

@@ -1,0 +1,1 @@
+curl -H "Content-Type: application/json" --data-binary @video.json http://localhost:5000/video/html
