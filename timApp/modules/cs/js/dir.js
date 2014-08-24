@@ -2,7 +2,10 @@
 csApp.directive('csRunner',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }]);
 csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli'); }]);
 csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest'); }]);
+csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno'); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
+
+csApp.taunoNr = 0;
 
 csApp.directive('contenteditable', ['$sce', function($sce) {
     return {
@@ -75,10 +78,18 @@ csApp.getHeading = function(a,key,$scope,defElem) {
 
 
 csApp.directiveTemplateCS = function(t) {
-  return  '<div class="csRunDiv">' + 
+	csApp.taunoPHIndex = 3;
+	return  '<div class="csRunDiv">' + 
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-if="stem" class="csRunStem" >{{stem}}</p>' +
+  				  (t == "tauno" ? 
+				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">hide Tauno</a></p>' +
+				    '<div ><p></p></div>' + // Tauno code place holder nr 3!!
+				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">Click here to show Tauno</a></p>' +
+				    '<p ng-if="taunoOn" class="pluginHide"" ><a ng-click="copyTauno()">copy from Tauno</a> | <a ng-click="hideTauno()">hide Tauno</a></p>' +
+				    '<p ng-if="taunoOn" class="taunoOhje">Kopioi Taunon tuottama koodi ilman int[] t= -riviä ja liitä se alla olevaan ohjelma-alueeseen. Sitten paina Aja-painiketta.</a></p>' +
+					"" : "") +   
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
 				  '<div class="csRunCode">'+'<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
@@ -87,18 +98,20 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
 				  '</div>'+
 				  //'<br />'+ 
-				  '<p class="csRunMenu"><button ng-click="runCode();">Aja</button>&nbsp&nbsp'+
+				  '<p class="csRunMenu" >'+
+				  '<button ng-if="isRun"  ng-click="runCode();">Aja</button>&nbsp&nbsp'+
+				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
 				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
-				  (t == "comtest" ? '<p class="unitTestGreen"  ng-if="runTestGreen" />' : "") +
-				  (t == "comtest" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
+				  (t == "comtest" || t == "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" />' : "") +
+				  (t == "comtest" || t == "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre ng-if="runError">{{error}}</pre>'+
 				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
-				  '<p>Here comes footer</p>'+
+				  '<p class="footer">Here comes footer</p>'+
 				  '</div>';
 }
 
@@ -106,18 +119,33 @@ csApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
 			scope.file = attrs.file;
-			scope.type = attrs.type;
+			scope.type = "console";
+			if ( attrs.type ) scope.type = attrs.type;
+			scope.width = attrs.width;
+			scope.height = attrs.height;
+			scope.table = attrs.table;
+			scope.variables = attrs.variables;
+			scope.indices = attrs.indices;
+
 			scope.replace = attrs.replace;
 			scope.rows = 1;
+			scope.maxrows = 10;
 			scope.codeunder = false;
 			scope.codeunder = false;
 			scope.taskId = "omanimi";
+			scope.taunotype = attrs.taunotype;
 			if ( t == "jypeli" ) {
 				scope.taskId = "lumiukko";
 			}
 			scope.usercode = "";
+			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0);
+			scope.isTest = scope.type.indexOf("comtest") >= 0;
+			
 			
 			if ( attrs.stem ) scope.stem = decodeURIComponent(escape(attrs.stem));
+			if ( attrs.iframe ) scope.iframe = true;
+			scope.taunoHtml = element[0].childNodes[csApp.taunoPHIndex]; // Check this carefully, where is Tauno placeholder
+			
 			scope.placeholder = "Write your code here";
 			
 			if ( attrs.usercode ) scope.usercode = attrs.usercode;
@@ -134,7 +162,7 @@ csApp.directiveFunction = function(t) {
 			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
-			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,"p");
+			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,'p class="footer"');
         //    scope.header = head;
 		//	scope.getHeader = function() { return head; };
 		//	csApp.updateEditSize(scope);
@@ -150,31 +178,6 @@ csApp.directiveFunction = function(t) {
 		transclude: true,
 		replace: 'true',
 		template: csApp.directiveTemplateCS(t),
-		ttemplate: '<div class="csRunDiv">' + 
-				  '<p>Here comes header</p>' +
-				//  '<p ng-bind-html="getHeader()"></p>
-				  '<p ng-if="stem" class="csRunStem" >{{stem}}</p>' +
-				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
-				  '<div class="csRunCode">'+'<p></p>'+
-				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
-				  '<textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
-				  //'<div class="csRunArea" contentEditable ng-model="usercode" ng-trim="false" "></div>'+
-				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
-				  '</div>'+
-				  //'<br />'+ 
-				  '<p class="csRunMenu"><button ng-click="runCode();">Aja</button>&nbsp&nbsp'+
-				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
-				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
-				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
-				  (t == "comtest" ? '<p class="unitTestGreen"  ng-if="runTestGreen" />' : "") +
-				  (t == "comtest" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
-				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
-				  // '<p>{{resImage}}</p>'+
-				  // '<p>Testi valituksesta</p>' +
-				  '<pre ng-if="runError">{{error}}</pre>'+
-				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
-				  '<p>Here comes footer</p>'+
-				  '</div>'
 		// templateUrl: 'csTempl.html'
 	}; 
 }
@@ -205,6 +208,23 @@ csApp.updateEditSize = function(scope) {
 	scope.rows = n;
 }
 
+csApp.ifIs = function(value,name,def) {
+	if ( !value && !def ) return "";
+	if ( !value  ) return name+'="'+def+'" ';
+	return name+'="'+value+'" ';
+}
+		
+csApp.doVariables = function(v,name) {
+	if ( !v ) return "";
+	var r = "";
+	var va = v.split(";");
+	var n;
+	for ( n in va ) {
+		nv = va[n].trim();
+		if ( nv ) r += name+nv+"&";
+	}
+	return r.replace(/ /g,"");
+}
 		
 csApp.Controller = function($scope,$http,$transclude) {
 	$scope.byCode ="";
@@ -215,6 +235,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.header = "";
 	$scope.rows = 5;
 	$scope.errors = [];
+	$scope.taunoOn = false;
 	$scope.type = "jypeli";
 	// $scope.replace = "INSERT YOUR CODE HERE";
 	// $scope.file = "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Jypeli/Jypeli.cs";
@@ -232,6 +253,16 @@ csApp.Controller = function($scope,$http,$transclude) {
 	
 	
 	$scope.runCode = function() {
+		var t = "console";
+		if ( $scope.type.indexOf("jypeli") >= 0 ) t = "jypeli";
+		$scope.doRunCode(t);
+	}
+	
+	$scope.runTest = function() {
+		$scope.doRunCode("comtest");
+	}
+	
+	$scope.doRunCode = function(runType) {
 		// $scope.viewCode = false;
 		$scope.error = "... running ...";
 		$scope.resImage = "";
@@ -242,10 +273,12 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
 
+		var t = runType;
+		// if ( t == "tauno" ) t = "comtest";
 
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
-		params = {'markup': {'type':$scope.type, 'file': $scope.file, 'replace': $scope.replace}, 
+		params = {'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace}, 
 				  'taskId': $scope.taskId,
 				  'input': {'usercode':$scope.usercode}};
 		//		  alert($scope.usercode);
@@ -279,6 +312,52 @@ csApp.Controller = function($scope,$http,$transclude) {
 			$scope.error = data.error;
 		})
 	};
+	
+	$scope.hideTauno = function() {
+		$scope.taunoOn = false;
+		$scope.taunoHtml.innerHTML = "<p></p>";
+	}
+
+	
+	$scope.copyTauno = function() {
+		var f = document.getElementById($scope.taunoId);
+		// var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
+		var s = f.contentWindow.getUserCodeFromTauno();
+		$scope.usercode = s;
+	}
+	
+	
+	$scope.showTauno = function() {
+		csApp.taunoNr++;
+		var vid = 'tauno'+csApp.taunoNr;
+		$scope.taunoId = vid;
+		var w = csApp.ifIs($scope.width,"width",700);
+		var h = csApp.ifIs($scope.height,"height",500);
+		var p = "";
+		var tt = "http://users.jyu.fi/~ji/js/tdbg/";
+		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://users.jyu.fi/~vesal/js/ptauno/index.html";
+		if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://tim-beta.it.jyu.fi/cs/ptauno/index.html";
+		var taunoUrl = tt+"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
+		var s = $scope.table;
+		if ( s && s.length > 0) {
+			if ( s[0] == 's' ) p = "ts="+s.substring(1) + "&"; // table it's size param "table: s10"
+			else p = "t="+s.trim() + "&";                      // table by it's items
+		}
+		 
+		p += csApp.doVariables($scope.variables,"m");
+		p += csApp.doVariables($scope.indices,"i");
+		
+		taunoUrl = taunoUrl + p;
+		$scope.iframe = true;
+		if ( $scope.iframe )
+			$scope.taunoHtml.innerHTML = 
+			// '<p class="pluginHide"" ><a ng-click="hideTauno()">hide Tauno</a></p>' + // ng-click ei toimi..
+			'<iframe id="'+vid+'" class="showTauno" src="' + taunoUrl + '" ' + w + h + ' ></iframe>';
+			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
+		else   
+			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+vid+'" />';
+		$scope.taunoOn = true;	
+	}
 	
 	
 	$scope.initCode = function() {
