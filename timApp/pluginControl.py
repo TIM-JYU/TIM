@@ -59,7 +59,7 @@ def prepPluginCall(htmlStr):
                 print("Malformed yaml string")
                 return "YAMLERROR: Malformed string"
         try:
-            plugins.append({"plugin":name, "markup":values, "identifier": node['id']})
+            plugins.append({"plugin":name, "markup":values, "taskId": node['id']})
         except KeyError:
             return "Missing identifier"
     return plugins
@@ -94,14 +94,15 @@ def pluginify(blocks,user,answerDb,doc_id,user_id):
                     try:
                         plugins.append(vals['plugin'])
                         vals['markup']["user_id"] =  user
-                        states = answerDb.getAnswers(user_id, "{}.{}".format(doc_id, vals['identifier']))
+                        taskId = "{}.{}".format(doc_id, vals['taskId'])
+                        states = answerDb.getAnswers(user_id, taskId)
                         state = None if len(states) == 0 else states[0]['content']
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], state)
                         #pluginUrl = getPlugin(vals['plugin'])['host'][:-1
                         #if("http://172.17.42.1" in pluginUrl):
                             #pluginUrl = pluginUrl.replace("http://172.17.42.1", "http://tim-beta.it.jyu.fi")
                         pluginUrl = getPluginTimUrl(vals['plugin'])
-                        preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(vals['identifier'],pluginUrl) + pluginHtml + "</div>")
+                        preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(taskId,pluginUrl) + pluginHtml + "</div>")
                     except TypeError:
                         preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team.")
                         continue
