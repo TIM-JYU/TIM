@@ -426,7 +426,7 @@ def getNotes(doc_id):
     notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
     return jsonResponse(notes)
 
-@app.route("/<plugintype>/<task_id>/answer", methods=['PUT'])
+@app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
     
