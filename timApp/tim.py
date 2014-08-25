@@ -433,10 +433,12 @@ def saveAnswer(plugintype, task_id):
     # Assuming task_id is of the form "22.palindrome"
     pieces = task_id.split('.')
     if len(pieces) != 2:
-        return jsonResponse({'error' : 'The format of task_id is invalid.'}, 400)
+        return jsonResponse({'error' : 'The format of task_id is invalid. Expected exactly one dot character.'}, 400)
     doc_id = int(pieces[0])
     task_id = pieces[1]
-    answerdata = request.get_json()['answer']
+    if not 'input' in request.get_json():
+        return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
+    answerdata = request.get_json()['input']
 
     # Load old answers
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
@@ -461,8 +463,9 @@ def saveAnswer(plugintype, task_id):
         return jsonResponse({'error' : 'Plugin response missing "save" key.'}, 400)
     
     #Save the new state
-    points = jsonresp['save']['points'] if 'points' in jsonresp['save'] else "0"
-    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['save']), points)
+    points = jsonresp['save']['points'] if 'points' in jsonresp['save'] else None
+    tags = jsonresp['save']['tags'] if 'tags' in jsonresp['save'] else []
+    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['save']), points, tags)
     return jsonResponse({'web':jsonresp['web']})
 
 def getPluginMarkup(doc_id, plugintype, task_id):

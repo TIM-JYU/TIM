@@ -5,7 +5,7 @@ from contracts import contract
 class Answers(TimDbBase):
     
     @contract
-    def saveAnswer(self, user_ids : 'list(int)', task_id : 'str', content : 'str', points : 'str|None'):
+    def saveAnswer(self, user_ids : 'list(int)', task_id : 'str', content : 'str', points : 'str|None', tags : 'list(str)'):
         """Saves an answer to the database.
         
         :param user_ids: The id of the usergroup to which the answer belongs.
@@ -21,6 +21,9 @@ class Answers(TimDbBase):
         
         for user_id in user_ids:
             cursor.execute('insert into UserAnswer (user_id, answer_id) values (?,?)', [user_id, answer_id])
+        
+        for tag in tags:
+            cursor.execute('insert into AnswerTag (answer_id, tag) values (?,?)', [answer_id, tag])
         
         self.db.commit()
         
