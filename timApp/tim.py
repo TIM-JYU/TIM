@@ -33,6 +33,10 @@ app.config.update(dict(
     MAX_CONTENT_LENGTH = 16 * 1024 * 1025 
    ))
 
+logger = app.logger
+
+logger.warning("Testing logging")
+
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
