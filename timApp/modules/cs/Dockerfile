@@ -7,6 +7,7 @@ maintainer vesal "vesal@jyu.fi"
 run apt-get install -y python3
 run apt-get install -y python3-pip
 run pip3 install Flask
+run pip3 install bleach
 run apt-get install -y mono-complete
 run apt-get install -y libsdl1.2debian
 run apt-get install -y libsdl-mixer1.2

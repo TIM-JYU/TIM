@@ -1,21 +1,3 @@
-/*************************************************************************
-    Pauno, A playground for teaching arrays
-    Copyright (C) 2014 Jonne Itkonen
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
- 
 /**********************************************************************
  TODO:
  [ ]  indeksoi-metodiin indeksin nimeäminen & indeksin siirto muuttujan arvon mukaan
@@ -247,16 +229,6 @@ function Ohjelma(divi, vk) {
     this.pc = 0;
 }
 
-Ohjelma.prototype.tekstinä = function (mittee) {
-    var ohj = '';
-	var sep = '';
-    for (var pc=0; pc < this.askeleet.length; ++pc) {
-        ohj += sep + this.askeleet[pc].tekstinä(); sep = '\n';
-    }
-    return ohj;
-};
-
-
 Ohjelma.prototype.tila = function () {
     return this.vk.tila();
 };
@@ -274,15 +246,8 @@ Ohjelma.prototype.poista_viimeisin = function () {
     return this.askeleet.pop();
 };
 
-
-Ohjelma.prototype.lisaaNakyviin = function (uusiDiv) {
-    var ohj=this.divi; // document.getElementById('ohjelma');
-    ohj.appendChild(uusiDiv);
-    ohj.scrollTop = uusiDiv.offsetTop;  
-}
-
-
 Ohjelma.prototype.sijoitus = function (mihin, mistä) {
+    var ohj=document.getElementById('ohjelma');
     var s = new Sijoitus(mihin, mistä);
     var uusi_tila = s.sovita(this.tila());  // TODO entä jos ei onnistu?
     var a = new Askel(s, uusi_tila, this.viimeisin_askel());
@@ -290,10 +255,13 @@ Ohjelma.prototype.sijoitus = function (mihin, mistä) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    ohj.appendChild(a.divinä());
+
+    ohj.children[ohj.childElementCount-1].scrollIntoView(false);
 };
 
 Ohjelma.prototype.unplus = function (mihin) {
+    var ohj=document.getElementById('ohjelma');
     var up = new UnaariPlus(mihin);
     var uusi_tila = up.sovita(this.tila());  // TODO entä jos ei onnistu?
     var a = new Askel(up, uusi_tila, this.viimeisin_askel());
@@ -301,10 +269,13 @@ Ohjelma.prototype.unplus = function (mihin) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    ohj.appendChild(a.divinä());
+
+    ohj.children[ohj.childElementCount-1].scrollIntoView(false);
 };
 
 Ohjelma.prototype.unmiinus = function (mihin) {
+    var ohj=document.getElementById('ohjelma');
     var um = new UnaariMiinus(mihin);
     var uusi_tila = um.sovita(this.tila());  // TODO entä jos ei onnistu?
     var a = new Askel(um, uusi_tila, this.viimeisin_askel());
@@ -312,7 +283,9 @@ Ohjelma.prototype.unmiinus = function (mihin) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    ohj.appendChild(a.divinä());
+
+    ohj.children[ohj.childElementCount-1].scrollIntoView(false);
 };
 
 
@@ -324,7 +297,8 @@ Ohjelma.prototype.uusi_muuttuja = function (nimi, arvo) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    this.divi.appendChild(a.divinä());
+    this.divi.children[this.divi.childElementCount-1].scrollIntoView(false); // TODO tee tästä metodi
 };
 
 function Askel(lause, tila, edellinen) {
@@ -335,10 +309,6 @@ function Askel(lause, tila, edellinen) {
 
 Askel.prototype.divinä = function () {
     return this.lause.divinä(this.tila); // TODO tartteeko arg.ina vanhan tilan
-};
-
-Askel.prototype.tekstinä = function () {
-    return this.lause.tekstinä(this.tila); // TODO kts. Askel.divinä
 };
 
 function Lause() {
@@ -397,9 +367,6 @@ Sijoitus.prototype.divinä = function (tila) {
     return this.divi;
 };
 
-Sijoitus.prototype.tekstinä = function (tila) {
-    return this.mihin.htmlksi(tila)+' = '+this.mistä.htmlksi(tila)+';';
-};
 
 function UnaariPlus(mihin) {
     this.mihin = mihin;
@@ -425,15 +392,6 @@ UnaariPlus.prototype.divinä = function (tila) {
     			 'title':     '++'+this.mihin.nimi()+';',
     			 'innerHTML': '++'+this.mihin.nimi()+';<br/>'});
     return this.divi;
-};
-
-/*
-UnaariPlus.prototype.tekstinä = function (tila) {
-    return  this.mihin.nimi()+' += ' + this.määrä.arvo();
-};
-*/
-UnaariPlus.prototype.tekstinä = function (tila) {
-    return  '++' + this.mihin.nimi() +';';
 };
 
 function UnaariMiinus(mihin) {
@@ -462,9 +420,6 @@ UnaariMiinus.prototype.divinä = function (tila) {
     return this.divi;
 };
 
-UnaariMiinus.prototype.tekstinä = function (tila) {
-    return  '--' + this.mihin.nimi() +';';
-};
 
 
 function LuoMuuttuja(nimi, arvo) {
@@ -486,21 +441,16 @@ LuoMuuttuja.prototype.sovita = function (tila) {
 };
 
 LuoMuuttuja.prototype.divinä = function (tila) {
-    var lause = this.tekstinä(tila);
+    var lause = 'int '+this.nimi;
+    if (this._arvo !== null)
+	lause += ' = ' + this._arvo;
+    lause += ';';
 
     this.divi = luo_div('luo_muuttuja'+this.nimi+this._arvo,
 			{'className': 'lause luo_muuttuja',
 			 'title': lause,
 			 'innerHTML': lause+'<br/>'});
     return this.divi;
-};
-
-LuoMuuttuja.prototype.tekstinä = function (tila) {
-    var lause = 'int '+this.nimi;
-    if (this._arvo !== null)
-        lause += ' = ' + this._arvo;
-    lause += ';';
-    return lause;
 };
 
 
@@ -518,10 +468,6 @@ Luku.prototype.divinä = function (tila) {
 				  'title' : this.sisältö.toString(),
 				  'innerHTML' : this.sisältö.toString()});
     return this.divi;
-};
-
-Luku.prototype.tekstinä = function (tila) {
-    return this.sisältö.toString();
 };
 
 function Tila(taulukko, muuttujat) {
@@ -1293,9 +1239,5 @@ window.addEventListener('unload', function (event) {}, false);
 };
 
 function getUserCodeFromTauno() {
-    return vk.ohjelma.tekstinä();
-}
-
-function koodivalistus(v) {
-    alert(vk.ohjelma.tekstinä());
+   return "Kissa\nistuu";
 }

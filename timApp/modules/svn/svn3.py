@@ -130,9 +130,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         content_type = 'text/plain'
         if is_reqs: content_type = "application/json"
-        if show_html: content_type = 'text/html'
+        if show_html: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
+
+        # self.send_header('charset', 'UTF-8')
         self.send_header('Content-type', content_type)
         self.end_headers()
 
@@ -167,10 +169,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Was none of special, so print the file(s) in query
 
-        if show_html: self.wout('<pre class="showCode">')
-        s = get_file_to_output(query,show_html)
-        self.wout(s)
-        if show_html: self.wout('</pre>')
+        s = ""
+        if show_html:  s+= '<pre class="showCode">'
+        s += get_file_to_output(query,show_html)
+        if show_html: s += '</pre>'
+        s = get_surrounding_headers(query,s)
+        return self.wout(s)
 
 
 def keep_running():
