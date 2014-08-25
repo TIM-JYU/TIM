@@ -38,7 +38,7 @@ app.config.update(dict(
 LOG_FILENAME = "../tim_logs/timLog.log"
 
 # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-formatter = logging.Formatter("[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s")
+formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
 handler = logging.FileHandler(LOG_FILENAME)
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
@@ -59,8 +59,13 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
+#def logMessage(message, level):
+    #app.logger.
+#    pass
+
 @app.errorhandler(403)
 def forbidden(error):
+
     return render_template('403.html', message=error.description), 403
 
 @app.errorhandler(404)
