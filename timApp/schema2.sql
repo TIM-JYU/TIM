@@ -53,6 +53,8 @@ id INTEGER NOT NULL,
 answer_id INTEGER NOT NULL,
 tag VARCHAR(255) NOT NULL,
 
+CONSTRAINT AnswerTag_PK
+    PRIMARY KEY (id),
 CONSTRAINT AnswerTag_id
 	FOREIGN KEY (answer_id)
 	REFERENCES Answer (id)
