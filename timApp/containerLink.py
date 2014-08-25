@@ -14,9 +14,10 @@ PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/svn/", "name" : "showCode"},
         {"host" : "http://tim-beta.it.jyu.fi/svn/image/", "name" : "showImage"},
         {"host" : "http://tim-beta.it.jyu.fi/svn/video/", "name" : "showVideo"},
+        {"host" : "http://tim-beta.it.jyu.fi/cs/tauno/", "name" : "taunoPlugin"},
         {"host" : "http://172.17.42.1:57000/", "name" : "mcq"},
 
-        ]
+        ] 
 
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
