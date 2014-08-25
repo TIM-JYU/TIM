@@ -27,7 +27,7 @@ def callPlugin(plugin, info, state):
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
                 headers = {'Content-type': 'application/json'}
-                request = requests.post(plug['host'] + "html/", data={"markup" : info, "state": state}, timeout=5, headers=headers)
+                request = requests.post(plug['host'] + "html/", data=json.dumps({"markup" : info, "state": state}), timeout=5, headers=headers)
                 return request.text
         return "Unregistered plugin"
     except:
@@ -54,7 +54,7 @@ def callPluginAnswer(plugin, answerData):
     for x in PLUGINS:
         if(x['name'] == plugin):
             headers = {'Content-type': 'application/json'}
-            request = requests.put( url=x['host'] + "answer/", data=answerData, headers=headers,timeout=5)
+            request = requests.put( url=x['host'] + "answer/", data=json.dumps(answerData), headers=headers,timeout=5)
             return request.text
     return "Unregistered plugin or plugin not answering. Contact document administrator for details"
 #    except:
