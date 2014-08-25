@@ -217,7 +217,7 @@ def uploaded_file(filename):
 @app.route("/getDocuments/")
 def getDocuments():
     timdb = getTimDb()
-    docs = timdb.documents.getDocuments()
+    docs = timdb.documents.getDocuments(historylimit=1)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
     for doc in allowedDocs:
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])

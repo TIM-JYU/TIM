@@ -152,7 +152,7 @@ class Documents(TimDbBase):
         return self.resultAsDictionary(cursor)[0]
     
     @contract
-    def getDocuments(self) -> 'list(dict)':
+    def getDocuments(self, historylimit : 'int'=100) -> 'list(dict)':
         """Gets all the documents in the database.
         
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
@@ -161,7 +161,7 @@ class Documents(TimDbBase):
         cursor.execute('select id,description as name from Block where type_id = ?', [blocktypes.DOCUMENT])
         results = self.resultAsDictionary(cursor)
         for result in results:
-            result['versions'] = self.getDocumentVersions(result['id'])
+            result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
         return results
     
     @contract
@@ -183,7 +183,7 @@ class Documents(TimDbBase):
         
         assert os.path.exists(document_path), 'document does not exist: %d' % document_id
         
-        #TODO: Get ids of the document from Ephemeral. If the ids are indexes, maybe only count is needed?
+        # TODO: Get ids of the document from Ephemeral. If the ids are indexes, maybe only count is needed?
     
     @contract
     def getBlock(self, document_id : 'DocIdentifier', block_id : 'int') -> 'str':
@@ -219,7 +219,7 @@ class Documents(TimDbBase):
         :param document_id: The id of the document.
         :returns: The blocks of the document.
         """
-        #TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
+        # TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
         
         # So let's make a quick hack to fetch the blocks. This is VERY slow (on Windows at least); it fetches about one block per second when running locally on Windows machine.
         responseStr = None
@@ -269,7 +269,7 @@ class Documents(TimDbBase):
         return out
         
     @contract
-    def getDocumentVersions(self, document_id : 'int') -> 'list(dict(str:str))':
+    def getDocumentVersions(self, document_id : 'int', limit : 'int'=100) -> 'list(dict(str:str))':
         """Gets the versions of a document.
         
         :param document_id: The id of the document whose versions will be fetched.
@@ -281,7 +281,7 @@ class Documents(TimDbBase):
         if not self.documentExists(docId):
             raise TimDbException('The specified document does not exist.')
         
-        output, _ = gitCommand(self.files_root_path, 'log --format=%H|%ad|%cn|%s --date=relative '
+        output, _ = gitCommand(self.files_root_path, 'log --format=%H|%ad|%cn|%s --date=relative -{}'.format(limit)
                                  + self.getDocumentPathAsRelative(docId))
         lines = output.splitlines()
         versions = []
@@ -335,7 +335,7 @@ class Documents(TimDbBase):
         return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), self.current_user_name)
     
     @contract
-    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool' = False):
+    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool'=False):
         """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
         but before the change is committed to Git.
         
