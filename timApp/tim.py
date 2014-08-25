@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, session, abort, flash
+from flask import Flask, redirect, url_for, session, abort, flash, current_app
 from flask import render_template
 from flask import g
 from flask import request
 from flask import send_from_directory
+import logging
 from ReverseProxied import ReverseProxied
 import json
 import os
@@ -33,9 +34,14 @@ app.config.update(dict(
     MAX_CONTENT_LENGTH = 16 * 1024 * 1025 
    ))
 
-logger = app.logger
+LOG_FILENAME = "../tim_logs/timLog.log"
 
-logger.warning("Testing logging")
+# current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
+formatter = logging.Formatter("[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s")
+handler = logging.FileHandler(LOG_FILENAME)
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -281,6 +287,7 @@ def postParagraph():
     verifyEditAccess(docId)
     paragraphText = sanitize_html(request.get_json()['text'])
     parIndex = request.get_json()['par']
+    app.logger.info("Editing file: {}, paragraph {}".format(docId, parIndex ))
     version = request.headers.get('Version')
     identifier = getNewest(docId)#DocIdentifier(docId, version)
     
