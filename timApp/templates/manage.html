@@ -68,6 +68,10 @@ var viewers = {{viewers|tojson|safe}};
     {% endif %} {% endwith %}
     <h1>Managing document: {{ '{{doc.name}}' }}</h1>
     <div class="material">
+        <div class="margin">
+            <a href="/view/{{ '{{doc.id}}' }}">View this document</a> <br>
+            <a href="/edit/{{ '{{doc.id}}' }}">Edit this document</a>
+        </div>
         Document owner: {{ '{{ doc.owner.name }}' }}
         <div class="margin">
             Editors:
