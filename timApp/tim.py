@@ -17,6 +17,7 @@ from flask.helpers import send_file
 import io
 import pluginControl
 from htmlSanitize import sanitize_html
+import collections
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -70,6 +71,13 @@ def verifyViewAccess(block_id):
     timdb = getTimDb()
     if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
+
+def verifyLoggedIn():
+    if not loggedIn():
+        abort(403, "You have to be logged in to perform this action.")
+
+def loggedIn():
+    return getCurrentUserId() != 0
 
 @app.route("/manage/<int:doc_id>")
 def manage(doc_id):
@@ -156,6 +164,8 @@ def downloadDocument(doc_id):
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
+    if not loggedIn():
+        return jsonResponse({'message': 'You have to be logged in to upload a file.'}, 403)
     timdb = getTimDb()
     if request.method == 'POST':
         doc = request.files['file']
@@ -217,7 +227,7 @@ def uploaded_file(filename):
 @app.route("/getDocuments/")
 def getDocuments():
     timdb = getTimDb()
-    docs = timdb.documents.getDocuments()
+    docs = timdb.documents.getDocuments(historylimit=1)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
     for doc in allowedDocs:
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
@@ -293,6 +303,8 @@ def postParagraph():
 
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
+    if not loggedIn():
+        return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
     jsondata = request.get_json()
     docName = jsondata['doc_name']
     timdb = getTimDb()
@@ -426,43 +438,51 @@ def getNotes(doc_id):
     notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
     return jsonResponse(notes)
 
-@app.route("/<plugintype>/<task_id>/answer", methods=['PUT'])
+@app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
     
     # Assuming task_id is of the form "22.palindrome"
     pieces = task_id.split('.')
     if len(pieces) != 2:
-        return jsonResponse({'error' : 'The format of task_id is invalid.'}, 400)
+        return jsonResponse({'error' : 'The format of task_id is invalid. Expected exactly one dot character.'}, 400)
     doc_id = int(pieces[0])
-    task_id = pieces[1]
-    answerdata = request.get_json()['answer']
+    task_id_name = pieces[1]
+    if not 'input' in request.get_json():
+        return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
+    answerdata = request.get_json()['input']
 
     # Load old answers
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
     # Get the newest answer (state)
-    if(len(oldAnswers) > 0):
-        state = oldAnswers[0]['content']
-    else: 
-        state = []
+    state = oldAnswers[0]['content'] if len(oldAnswers) > 0 else None
     
-    markup = getPluginMarkup(doc_id, plugintype, task_id)
+    markup = getPluginMarkup(doc_id, plugintype, task_id_name)
     if markup is None or markup == "YAMLERROR: Malformed string":
         return jsonResponse({'error' : 'The task was not found in the document, or there was a problem handling plugin data'}, 404)
 
-    # TODO: Call plugin's answer route
     pluginResponse = containerLink.callPluginAnswer(plugintype, {'markup' : markup, 'state' : state, 'input' : answerdata})
   
-    # Assuming the JSON is in a string
-    jsonresp = json.loads(pluginResponse)
+    try:
+        jsonresp = json.loads(pluginResponse)
+    except ValueError:
+        return jsonResponse({'error' : 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
     
     if not 'save' in jsonresp:
         return jsonResponse({'error' : 'Plugin response missing "save" key.'}, 400)
     
+    saveObject = jsonresp['save']
+    
     #Save the new state
-    points = jsonresp['save']['points'] if 'points' in jsonresp['save'] else "0"
-    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['save']), points)
+    if isinstance(saveObject, collections.Iterable):
+        points = jsonresp['save']['points'] if 'points' in saveObject else None
+        tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
+    else:
+        points = None
+        tags = []
+    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
+    
     return jsonResponse({'web':jsonresp['web']})
 
 def getPluginMarkup(doc_id, plugintype, task_id):
