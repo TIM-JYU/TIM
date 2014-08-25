@@ -10,7 +10,7 @@ function(sc, controller, http, q, $upload) {
         }).success(function(data, status, headers, config) {
             window.location.href = "/edit/" + data.id;
         }).error(function(data, status, headers, config) {
-            alert("Could not create the document.");
+            alert(data.message);
         });
     };
 
@@ -55,7 +55,7 @@ function(sc, controller, http, q, $upload) {
                 sc.getDocs();
                 sc.uploadInProgress = false;
             }).error(function(data, status, headers, config) {
-                sc.progress = 'Error occurred: ' + data.message;
+                sc.progress = 'Error: ' + data.message;
                 sc.uploadInProgress = false;
             });
             // 

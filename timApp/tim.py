@@ -72,6 +72,13 @@ def verifyViewAccess(block_id):
     if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
 
+def verifyLoggedIn():
+    if not loggedIn():
+        abort(403, "You have to be logged in to perform this action.")
+
+def loggedIn():
+    return getCurrentUserId() != 0
+
 @app.route("/manage/<int:doc_id>")
 def manage(doc_id):
     timdb = getTimDb()
@@ -157,6 +164,8 @@ def downloadDocument(doc_id):
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
+    if not loggedIn():
+        return jsonResponse({'message': 'You have to be logged in to upload a file.'}, 403)
     timdb = getTimDb()
     if request.method == 'POST':
         doc = request.files['file']
@@ -294,6 +303,8 @@ def postParagraph():
 
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
+    if not loggedIn():
+        return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
     jsondata = request.get_json()
     docName = jsondata['doc_name']
     timdb = getTimDb()
