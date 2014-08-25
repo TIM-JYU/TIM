@@ -10,7 +10,7 @@ TIM_URL = "http://tim-beta.it.jyu.fi"
 
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
-        {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # rikkinäisen demonstroimiseksi
+        {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # rikkinï¿½isen demonstroimiseksi
         {"host" : "http://tim-beta.it.jyu.fi/svn/", "name" : "showCode"},
         {"host" : "http://tim-beta.it.jyu.fi/svn/image/", "name" : "showImage"},
         {"host" : "http://tim-beta.it.jyu.fi/svn/video/", "name" : "showVideo"},
@@ -26,7 +26,8 @@ def callPlugin(plugin, info, state):
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
-                request = requests.post(plug['host'] + "html/", data={"markup" : info, "state": state}, timeout=5)
+                headers = {'Content-type': 'application/json'}
+                request = requests.post(plug['host'] + "html/", data={"markup" : info, "state": state}, timeout=5, headers=headers)
                 return request.text
         return "Unregistered plugin"
     except:
@@ -39,7 +40,6 @@ def callPluginResource(plugin, fileName):
     try:
         for x in PLUGINS:
             if(x['name'] == plugin):
-            
                 plug = getPlugin(plugin)
                 request = requests.get(plug['host'] + fileName, timeout=5)
                 return request.text
@@ -53,6 +53,7 @@ def callPluginAnswer(plugin, answerData):
 #    try:
     for x in PLUGINS:
         if(x['name'] == plugin):
+            headers = {'Content-type': 'application/json'}
             request = requests.put( url=x['host'] + "answer/", data=answerData, headers=headers,timeout=5)
             return request.text
     return "Unregistered plugin or plugin not answering. Contact document administrator for details"
