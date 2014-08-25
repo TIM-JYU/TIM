@@ -82,7 +82,6 @@ def getBlockYaml(block):
 def pluginify(blocks,user,answerDb,doc_id,user_id): 
     preparedBlocks = []
     plugins = []
-    pluginInfos = []
     for block in blocks:
         if("plugin=" in block and "<code>" in block):
             pluginInfo = prepPluginCall(block)
@@ -96,7 +95,7 @@ def pluginify(blocks,user,answerDb,doc_id,user_id):
                         plugins.append(vals['plugin'])
                         vals['markup']["user_id"] =  user
                         states = answerDb.getAnswers(user_id, "{}.{}".format(doc_id, vals['identifier']))
-                        state = [] if len(states) == 0 else states[0]
+                        state = [] if len(states) == 0 else states[0]['content']
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], state)
                         #pluginUrl = getPlugin(vals['plugin'])['host'][:-1
                         #if("http://172.17.42.1" in pluginUrl):
