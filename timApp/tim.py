@@ -435,7 +435,7 @@ def saveAnswer(plugintype, task_id):
     if len(pieces) != 2:
         return jsonResponse({'error' : 'The format of task_id is invalid. Expected exactly one dot character.'}, 400)
     doc_id = int(pieces[0])
-    task_id = pieces[1]
+    task_id_name = pieces[1]
     if not 'input' in request.get_json():
         return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -444,20 +444,18 @@ def saveAnswer(plugintype, task_id):
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
     # Get the newest answer (state)
-    if(len(oldAnswers) > 0):
-        state = oldAnswers[0]['content']
-    else: 
-        state = []
+    state = oldAnswers[0]['content'] if len(oldAnswers) > 0 else None
     
-    markup = getPluginMarkup(doc_id, plugintype, task_id)
+    markup = getPluginMarkup(doc_id, plugintype, task_id_name)
     if markup is None or markup == "YAMLERROR: Malformed string":
         return jsonResponse({'error' : 'The task was not found in the document, or there was a problem handling plugin data'}, 404)
 
-    # TODO: Call plugin's answer route
     pluginResponse = containerLink.callPluginAnswer(plugintype, {'markup' : markup, 'state' : state, 'input' : answerdata})
   
-    # Assuming the JSON is in a string
-    jsonresp = json.loads(pluginResponse)
+    try:
+        jsonresp = json.loads(pluginResponse)
+    except ValueError:
+        return jsonResponse({'error' : 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
     
     if not 'save' in jsonresp:
         return jsonResponse({'error' : 'Plugin response missing "save" key.'}, 400)
