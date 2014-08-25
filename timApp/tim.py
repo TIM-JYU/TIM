@@ -286,7 +286,7 @@ def postParagraph():
         print(err)
         return "Failed to modify block."
     # Replace appropriate elements with plugin content, load plugin requirements to template
-    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName()) 
+    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
 
     return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
@@ -319,7 +319,7 @@ def editDocument(doc_id):
     newest = getNewest(doc_id)
     doc_metadata = timdb.documents.getDocument(newest)
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
-    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
+    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
@@ -355,7 +355,7 @@ def addBlock():
     verifyEditAccess(docId)
     paragraph_id = jsondata['par']
     blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
-    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName()) 
+    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
 
@@ -380,7 +380,7 @@ def viewDocument(doc_id):
     versions = timdb.documents.getDocumentVersions(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
     doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName()) 
+    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
@@ -426,15 +426,24 @@ def getNotes(doc_id):
     notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
     return jsonResponse(notes)
 
-@app.route("/<int:doc_id>/<plugintype>/<task_id>/answer", methods=['PUT'])
-def saveAnswer(doc_id, plugintype, task_id):
+@app.route("/<plugintype>/<task_id>/answer", methods=['PUT'])
+def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
-    answerdata = request.get_json()['answer']
+    
+    # Assuming task_id is of the form "22.palindrome"
+    pieces = task_id.split('.')
+    if len(pieces) != 2:
+        return jsonResponse({'error' : 'The format of task_id is invalid. Expected exactly one dot character.'}, 400)
+    doc_id = int(pieces[0])
+    task_id = pieces[1]
+    if not 'input' in request.get_json():
+        return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
+    answerdata = request.get_json()['input']
 
-    # Load old state
+    # Load old answers
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
-    # Get the newest
+    # Get the newest answer (state)
     if(len(oldAnswers) > 0):
         state = oldAnswers[0]['content']
     else: 
@@ -449,12 +458,14 @@ def saveAnswer(doc_id, plugintype, task_id):
   
     # Assuming the JSON is in a string
     jsonresp = json.loads(pluginResponse)
- 
+    
+    if not 'save' in jsonresp:
+        return jsonResponse({'error' : 'Plugin response missing "save" key.'}, 400)
+    
     #Save the new state
-    try:
-        timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['save']), jsonresp['save']['points'])
-    except (KeyError, TypeError):
-        timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['save']), "0")
+    points = jsonresp['save']['points'] if 'points' in jsonresp['save'] else None
+    tags = jsonresp['save']['tags'] if 'tags' in jsonresp['save'] else []
+    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['save']), points, tags)
     return jsonResponse({'web':jsonresp['web']})
 
 def getPluginMarkup(doc_id, plugintype, task_id):
@@ -463,10 +474,7 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     for block in doc_markdown:
         if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'taskId="{}"'.format(task_id) in block):
             markup = pluginControl.getBlockYaml(block)
-            if(markup != "YAMLERROR: Malformed string"):
-                return markup
-            else:
-                return "YAMLERROR: Malformed string"
+            return markup
     return None
     
 @app.route("/")

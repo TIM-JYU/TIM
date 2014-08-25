@@ -139,14 +139,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
     def get_html(self, ttype, query):
-        if ttype == "console":
-            s = string_to_string_replace_attribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
+        s = string_to_string_replace_attribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
                                                    "##QUERYPARAMS##", query)
-        elif ttype == "comtest":
+        if "comtest" in ttype:
             s = string_to_string_replace_attribute(
-                '<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
+                '<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-comtest-runner>',
                 "##QUERYPARAMS##", query)
-        else:
+        if "tauno" in ttype:
+            s = string_to_string_replace_attribute(
+                '<cs-tauno-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-tauno-runner>',
+                "##QUERYPARAMS##", query)
+        if "jypeli" in ttype:
             s = string_to_string_replace_attribute(
                 '<cs-jypeli-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-jypeli-runner>',
                 "##QUERYPARAMS##", query)
@@ -165,13 +168,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print query
 
         is_fullhtml = self.path.find('/fullhtml') >= 0
-        is_html = self.path.find('/html') >= 0
-        is_css = self.path.find('/css') >= 0
-        is_js = self.path.find('/js') >= 0
+        is_html = self.path.find('/html') >= 0 or self.path.find('.html') >= 0
+        is_css = self.path.find('.css') >= 0
+        is_js = self.path.find('.js') >= 0
         is_reqs = self.path.find('/reqs') >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
         is_iframe = (self.path.find('/iframe') >= 0) or is_iframe_param
         is_answer = self.path.find('/answer') >= 0
+        is_tauno = self.path.find('/tauno') >= 0
+        is_ptauno = self.path.find('/ptauno') >= 0
 
 
         # korjaus kunnes byCode parametri tulee kokonaisena
@@ -191,8 +196,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_js or is_answer: content_type = 'application/javascript'
         self.send_header('Content-type', content_type)
         self.end_headers()
+		
+        if is_ptauno:
+            if self.path.find('.html') >= 0: self.wout(file_to_string('ptauno/index.html'))
+            if self.path.find('.cs') >= 0: self.wout(file_to_string('ptauno/taulukko.css'))
+            if self.path.find('.js') >= 0: self.wout(file_to_string('ptauno/taulukko.js'))
+            return        
+		
+		
         # Get the template type
         ttype = get_param(query, "type", "console").lower()
+        if is_tauno: ttype = 'tauno'
 
         if is_reqs:
             result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
@@ -253,22 +267,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print_file = get_param(query, "print", "")
         print("type=" + ttype)
 
-        if ttype == "console":
+        # if ttype == "console":
             # Console program
-            pass
-        elif ttype == "jypeli":
+        if "jypeli" in ttype:
             # Jypeli game
             bmpname = "/tmp/%s.bmp" % basename
             pngname = "/cs/images/%s.png" % basename
-            pass
-        elif ttype == "comtest":
+        if "comtest" in ttype:
             # ComTest test cases
             testcs = "/tmp/%sTest.cs" % basename
             testdll = "/tmp/%sTest.dll" % basename
-        else:
+			
             # Unknown template
-            self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
-            return
+            # self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
+            # return
 
         s = p0.get_file()
         # print("FILE: XXXXX",s)
@@ -388,14 +400,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if type(out) != type(''): out = out.decode()
             if code == -9: 
                 out = "Runtime exceeded, maybe loop forever\n" + out
-            self.remove(exename)
+            # self.remove(exename)
 			
         out = out[0:2000]
         web["console"] = out
         result["web"] = web
 
         # Clean up
-        self.remove(csfname)
+        print("FILE NAME:",csfname)
+        # self.remove(csfname)
 
         # self.wfile.write(out)
         # self.wfile.write(err)

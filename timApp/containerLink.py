@@ -26,8 +26,7 @@ def callPlugin(plugin, info, state):
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
-                headers = {'content-type': 'application/json'}
-                request = requests.post(plug['host'] + "html/", data=json.dumps({"markup" : info, "state": None}),headers=headers, timeout=5)
+                request = requests.post(plug['host'] + "html/", data={"markup" : info, "state": state}, timeout=5)
                 return request.text
         return "Unregistered plugin"
     except:

@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qs
 import urllib
 import pprint
 import codecs
+import bleach
 
 
 class QueryClass:
@@ -109,7 +110,9 @@ class FileParams:
             if not self.by: return ""
             return self.by.replace("\\n", "\n")
         try:
-            lines = urlopen(self.url).readlines()
+            req = urlopen(self.url)
+            ftype = req.headers['content-type']
+            lines = req.readlines()
         except:
             return "File not found " + self.url
         # filecontent = nltk.clean_html(html)
@@ -122,8 +125,15 @@ class FileParams:
         if doprint: n1 = 0
 
         for i in range(0, n):
-            line = lines[i].decode('utf-8-sig').replace("\n","")
-            lines[i] = line
+            line = lines[i]
+            try:
+                line = line.decode('utf-8-sig')
+            except:
+                try:
+                    line = line.decode(encoding='iso8859_15')
+                except:
+                    line = str(line)
+            lines[i] = line.replace("\n","")
             # print(i,": ",line)
             if not doprint and check(self.start, line):
                 startcnt -= 1
@@ -179,6 +189,22 @@ def get_params(self):
     result = QueryClass()
     result.query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
     return result
+
+
+def get_file_to_output(query, show_html):
+    s = ""
+    p0 = FileParams(query, "", "")
+    if p0.url == "":
+        return "Must give file= -parameter"
+    s = p0.get_file(show_html)
+    s += p0.get_include(show_html)
+    u = p0.url
+    for i in range(1, 10):
+        p = FileParams(query, str(i), u)
+        s += p.get_file(show_html)
+        s += p.get_include(show_html)
+        if p.url: u = p.url
+    return s
 
 
 def post_params(self):
@@ -332,3 +358,58 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     print(line.encode())
     return line
 
+
+def allow(s):
+    tags = ['em', 'strong', 'tt','a','b','code','i','kbd']
+    attrs = {
+        'a': ['href']
+    }
+    return  bleach.clean(s, tags, attrs)
+
+
+def clean(s):
+    s = s.replace('"','') # kannattaako, tällä poistetaam katkaisun mahdollisuus?
+    return  bleach.clean(s)
+
+
+def get_heading(query, key, def_elem):
+    if not query: return ""
+    h = get_param(query, key, None)
+    if not h: return ""
+    st = h.split("!!") # h4 class="h3" width="23"!!Tehtava 1
+    elem = def_elem
+    val = st[0]
+    attributes = ""
+    if len(st) >= 2:
+        elem = st[0]
+        val = st[1]
+    i = elem.find(' ')
+    ea = [elem]
+    if i >= 0:
+        ea = [elem[0:i],elem[i:]]
+    if len(ea) > 1:
+        elem = ea[0]
+        attributes = ea[1] + " "
+    val =  allow(val)
+    result_html = "<" + elem + attributes +">" + val +  "</" + elem + ">\n"
+    attrs = {
+        '*': ['id','class'],
+        'a': ['href']
+    }
+    tags = ['a','p', 'em', 'strong', 'tt', 'h1','h2','h3','h4','h5','h6','i','b','code']
+    result_html = bleach.clean(result_html, tags, attrs)
+    return result_html
+
+
+def get_surrounding_headers(query, inside):
+    result = get_heading(query,"header","h4")
+    stem = allow(get_param(query,"stem",None))
+    if stem:  result += '<p class="stem" >' + stem + '</p>\n'
+    result += inside +'\n'
+    result += get_heading(query,"footer",'p class="footer"')
+    return result
+
+
+def get_clean_param(query, key, default):
+    s = get_param(query,key, default)
+    return clean(s)

@@ -26,7 +26,6 @@ data AnnotateMarkup = CodeListing {code :: T.Text, tips :: Maybe (HashMap T.Text
                     | Derivation  {code :: T.Text, tips :: Maybe (HashMap T.Text T.Text)}
     deriving (Show,Generic)
 
-parsingOptions = defaultOptions{omitNothingFields=True}
 instance FromJSON AnnotateMarkup where
     parseJSON (Object v) = do
         cl <- optional (CodeListing <$> v .: "code"       <*> (optional (v .: "tips")))
