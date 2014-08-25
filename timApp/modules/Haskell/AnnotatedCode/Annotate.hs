@@ -26,7 +26,6 @@ data AnnotateMarkup = CodeListing {code :: T.Text, tips :: Maybe (HashMap T.Text
                     | Derivation  {code :: T.Text, tips :: Maybe (HashMap T.Text T.Text)}
     deriving (Show,Generic)
 
-parsingOptions = defaultOptions{omitNothingFields=True}
 instance FromJSON AnnotateMarkup where
     parseJSON (Object v) = do
         cl <- optional (CodeListing <$> v .: "code"       <*> (optional (v .: "tips")))
@@ -35,15 +34,15 @@ instance FromJSON AnnotateMarkup where
     parseJSON x = empty
 instance ToJSON AnnotateMarkup where
 
-annotate :: Plugin AnnotateMarkup () () ()
+annotate :: Plugin (Markup AnnotateMarkup) () ()
 annotate = Plugin{..}
   where 
     requirements = [CSS "style.css"] -- [JS "shortNote.js"
                       -- ,NGModule "Note"]
     additionalFiles = [] 
     initial = ()
-    update _ = return $ mempty 
-    render (markup,()) = let
+    update () = return $ () 
+    render (Markup markup) = let
                            bytes = T.encodeUtf8 . code $ markup
                            stringify = map (\(a,b) -> (T.unpack a, T.unpack b))
                           in case parseCode bytes of

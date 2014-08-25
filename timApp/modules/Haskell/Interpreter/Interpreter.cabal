@@ -24,6 +24,7 @@ library
       , bytestring >=0.10 
       , aeson >=0.7 
       , mtl >=2.1 
+      , configurator >= 0.3
       , snap-core >=0.9 
       , snap-server >=0.9 
       , containers >= 0.5
@@ -45,6 +46,7 @@ executable InterpreterPlugin
       , mtl >=2.1 
       , snap-core >=0.9 
       , snap-server >=0.9 
+      , configurator >= 0.3
       , containers >= 0.5
       , unordered-containers >= 0.2.4
       , directory >= 1.2

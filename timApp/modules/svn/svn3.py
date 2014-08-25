@@ -46,50 +46,47 @@ def run_while_true(server_class=http.server.HTTPServer,
         httpd.handle_request()
 
 
-def show_image(self, query):
+def get_image_html(query):
     """
     Muodostaa kuvan näyttämiseksi tarvittavan HTML-koodin
-    :param self: olio josta löytyy tarvittava tietovirta
     :param query: pyynnön paramterit
-    :return:
+    :return: kuvan html-jono
     """
-    url = get_param(query, "file", "")
-    w = get_param(query, "width", "")
-    h = get_param(query, "height", "")
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
-    result = '<img ' + w + h + 'src="' + url + '">'
-    self.wfile.write(result.encode())
-    return
+    result = get_surrounding_headers(query,'<img ' + w + h + 'src="' + url + '">')
+    return result
 
 
-def show_video(self, query):
+def get_video_html(query):
     """
     Muodostaa videon näyttämiseksi tarvittavan HTML-koodin
-    :param self: olio josta löytyy tarvittava tietovirta
     :param query: pyynnön paramterit
-    :return:
+    :return: videon html-jono
     """
-    url = get_param(query, "file", "")
-    w = get_param(query, "width", "")
-    h = get_param(query, "height", "")
+    iframe = get_param(query, "iframe", False) or True
+    # print ("iframe " + iframe + " url: " + url)
+    video_app = True
+    if video_app:
+        s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        return s
+
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
-    iframe = get_param(query, "iframe", False)
-    iframe = True
-    # print ("iframe " + iframe + " url: " + url)
-    videoApp = True
-    if videoApp:
-        printStringToReplaceAttribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', self.wfile, "##QUERYPARAMS##", query)
-        return
 
-    elif iframe:
-        result = '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
-    else:
+    if iframe:
+        return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
+
+
         #        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
-        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
-    self.wfile.write(result.encode())
-    return
+    result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
+    return result
 
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
@@ -102,26 +99,29 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(self.headers)
 
     def do_GET(self):
-        self.doAll(getParams(self))
+        self.do_all(get_params(self))
 
     def do_POST(self):
-        self.doAll(postParams(self))
+        self.do_all(post_params(self))
 
     def do_PUT(self):
-        self.doAll(postParams(self))
+        self.do_all(post_params(self))
 
-    def doAll(self, query):
+    def wout(self, s):
+        self.wfile.write(s.encode("UTF-8"))
+
+    def do_all(self, query):
         print(self.path)
         print(self.headers)
         # print query
 
         show_html = self.path.find('/html') >= 0
-        css = self.path.find('/css') >= 0
-        js = self.path.find('/js') >= 0
-        reqs = self.path.find('/reqs') >= 0
-        image = self.path.find('/image/html') >= 0
-        video = self.path.find('/video/html') >= 0
-        video_reqs = self.path.find('/video/reqs') >= 0
+        is_css = self.path.find('/css') >= 0
+        is_js = self.path.find('/js') >= 0
+        is_reqs = self.path.find('/reqs') >= 0
+        is_image = self.path.find('/image/html') >= 0
+        is_video = self.path.find('/video/html') >= 0
+        is_video_reqs = self.path.find('/video/reqs') >= 0
 
         self.send_response(200)
         # self.send_header('Access-Control-Allow-Origin', '*')
@@ -129,57 +129,48 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
 
         content_type = 'text/plain'
-        if reqs: content_type = "application/json"
+        if is_reqs: content_type = "application/json"
         if show_html: content_type = 'text/html'
-        if css: content_type = 'text/css'
-        if js: content_type = 'application/javascript'
+        if is_css: content_type = 'text/css'
+        if is_js: content_type = 'application/javascript'
         self.send_header('Content-type', content_type)
         self.end_headers()
 
-        if image:
-            show_image(self, query)
+        if is_image:
+            s = get_image_html(query)
+            self.wout(s)
             return
 
-        if video:
-            show_video(self, query)
+        if is_video:
+            s = get_video_html(query)
+            self.wout(s)
             return
 
-        resultJSON = {}
+        result_json = {}
 
-        if video_reqs:
-            resultJSON = {"js": ["http://tim-beta.it.jyu.fi/svn/video/js/video.js"], "angularModule": ["videoApp"]}
+        if is_video_reqs:
+            result_json = {"js": ["http://tim-beta.it.jyu.fi/svn/video/js/video.js"], "angularModule": ["videoApp"]}
 
-        if reqs:
-            resultStr = json.dumps(resultJSON)
-            self.wfile.write(resultStr.encode())
+        if is_reqs:
+            result_str = json.dumps(result_json)
+            self.wout(result_str)
             return
 
-        if css:
+        if is_css:
             # printFileTo('cs.css',self.wfile)
             return
         
-        if js:
+        if is_js:
             print(content_type)
-            printFileTo('js/video.js', self.wfile)
+            self.wout(file_to_string('js/video.js'))
             return
 
-        if show_html: self.wfile.write('<pre class="showCode">'.encode())
+        # Was none of special, so print the file(s) in query
 
-        p0 = FileParams(query, "", "")
-        if p0.url == "":
-            self.wfile.write("Must give file= -parameter".encode())
-            if show_html: self.wfile.write('</pre>'.encode())
-            return
-        p0.printFile(self.wfile, show_html)
-        p0.printInclude(self.wfile, show_html)
-        u = p0.url
-        for i in range(1, 10):
-            p = FileParams(query, str(i), u)
-            p.printFile(self.wfile, show_html)
-            p.printInclude(self.wfile, show_html)
-            if p.url: u = p.url
-
-        if show_html: self.wfile.write('</pre>'.encode())
+        if show_html: self.wout('<pre class="showCode">')
+        s = get_file_to_output(query,show_html)
+        self.wout(s)
+        if show_html: self.wout('</pre>')
 
 
 def keep_running():

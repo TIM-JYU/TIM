@@ -1,4 +1,4 @@
-{-#LANGUAGE RecordWildCards, DeriveGeneric, OverloadedStrings #-}
+{-#LANGUAGE RecordWildCards, DeriveGeneric, OverloadedStrings, NoMonomorphismRestriction #-}
 module Interpreter where
 
 import Data.Aeson
@@ -12,15 +12,19 @@ import Control.Applicative
 import Control.Monad.Trans.Either
 import Data.Aeson.Types
 
-import PluginType
+import PluginType hiding (Input)
+import qualified PluginType as PT
 import CallApiHec
 import HecIFace as H
+import           Data.Configurator       (Worth(..), load, require)
 
 data Example = Example {title :: Maybe String
                        ,expr  :: String
                        } 
                        deriving (Show,Generic)
-data Goal = Goal {cond::String,reply::String} deriving(Show,Generic)
+data Goal = Goal {cond::String
+                 ,reply::String
+                 ,tag::T.Text} deriving(Show,Generic)
 data InterpreterMarkup  = I {context::Maybe FilePath,examples::Maybe [Example],goals::Maybe [Goal]} deriving (Show,Generic)
 data InterpreterCommand = Evaluate String deriving (Show,Generic)
 
@@ -36,8 +40,12 @@ instance ToJSON   InterpreterMarkup where
 instance FromJSON InterpreterCommand where
 instance ToJSON   InterpreterCommand where
 
-mkInterpreter :: IO (Plugin InterpreterMarkup () InterpreterCommand String)
+mkInterpreter :: IO (Plugin (PT.Markup InterpreterMarkup) 
+                            (PT.Markup InterpreterMarkup,PT.Input InterpreterCommand) 
+                            (PT.Web String,PT.BlackboardOut))
 mkInterpreter = do
+    conf   <- load [Required "Interpreter.conf"]
+    contextPath <- require conf "contextpath" 
     evaluator <- eitherT error return findApiHec
     let
         requirements = [JS "NewConsole/Console.js"
@@ -45,34 +53,35 @@ mkInterpreter = do
                        ,CSS "NewConsole/style.css"
                        ,NGModule "console"]
         additionalFiles = ["NewConsole/Console.template.html"]
-        initial = ()
-        update (markup,_,Evaluate expr) = do
-             let ctx = maybe (StringContext "") FileContext (Interpreter.context markup)
+        update (PT.Markup markup, PT.Input (Evaluate expr)) = do
+             let ctx = maybe (StringContext "") (FileContext.((contextPath++"/")++)) (Interpreter.context markup)
+             print ("Context:",ctx)
              res <- if ":t" `isPrefixOf` expr 
                      then callApiHec evaluator $ Input (TypeOf $ drop 2 expr) ctx
                      else callApiHec evaluator $ Input (Eval expr)            ctx
-             let  reply :: String -> IO (TIMCmd () String)
-                  reply x = return $ mempty & web x
+             let  reply :: [BlackboardCommand] -> String -> IO (PT.Web String, PT.BlackboardOut)
+                  reply ts x = return $ (Web x,BlackboardOut ts)
              case res of
                 H.Plain s  -> do
-                            chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
-                            reply $  "<span>"++s++"</span>"++fromMaybe "" chkRes -- TODO: SANITIZE s!!
+                            (chkTags,chkOut) <- mconcat . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
+                            reply chkTags $  "<span>"++s++"</span>"++chkOut 
+                            -- TODO: SANITIZE s!!
                 H.Html  s  -> do
-                            chkRes <- listToMaybe . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
-                            reply $ s++fromMaybe "" chkRes -- TODO: SANITIZE s!!
-                H.Error ss -> reply $  "<pre class='error'>"++unlines ss++"</pre>" -- TODO: SANITIZE ss!! 
-                H.NonTermination -> reply ("<span class='warning'>Your expression is diverging (ie. does not terminate)</span>"::String)
-                H.TimeOut -> reply $ ("<span class='warning'>Your expression did not terminate on time</span>"::String)
-                H.ProtocolError e -> reply $ "<span class='warning'>Interactive interpreter is broken. Please report this to a human:"++e++"</span>"  -- TODO: SANITIZE e!!
+                            (chkTags,chkOut) <- mconcat . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
+                            reply chkTags $ s++chkOut -- TODO: SANITIZE s!!
+                H.Error ss -> reply [] $  "<pre class='error'>"++unlines ss++"</pre>" -- TODO: SANITIZE ss!! 
+                H.NonTermination -> reply [] ("<span class='warning'>Your expression is diverging (ie. does not terminate)</span>"::String)
+                H.TimeOut -> reply []  ("<span class='warning'>Your expression did not terminate on time</span>"::String)
+                H.ProtocolError e -> reply [] $ "<span class='warning'>Interactive interpreter is broken. Please report this to a human:"++e++"</span>"  -- TODO: SANITIZE e!!
 
              
-        check ctx expr (Goal cond desc) = do
+        check ctx expr (Goal cond desc tag) = do
                     res <- callApiHec evaluator $ Input (Check cond expr) ctx
                     case res of
-                        CheckResult True  -> return . Just $ "<span class='success'>"++desc++"</span>"
+                        CheckResult True  -> return (Just ([Put tag], "<span class='success'>"++desc++"</span>"))
                         CheckResult False -> return Nothing
                         x                 -> print ("ERROR"++ show x) >> return Nothing -- TODO: Log an error!
-        render (markup,state) = return . ngDirective "console" . object $
-                                    ["examples" .= examples markup]
+
+        render (Markup markup) = return . ngDirective "console" . object $ ["examples" .= examples markup]
         additionalRoutes = noRoutes
     return Plugin{..}

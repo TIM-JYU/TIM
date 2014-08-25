@@ -21,6 +21,9 @@ videoApp.getHeading = function(a,key,$scope,deftype) {
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
 	// if ( elem.toLowerCase().indexOf("script") >= 0 ) return "";
 	// attributes = "";  // ei laiteta näitä niin on vähän turvallisempi
+	try {
+	  val = decodeURIComponent(escape(val))
+	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
 	html = videoApp.sanitize(html);
 	return html;
@@ -34,11 +37,13 @@ videoApp.directiveFunction = function(t) {
 			scope.height = attrs.height;
 			scope.start = attrs.start;
 			scope.end = attrs.end;
-			scope.videoHtml = element[0].childNodes[1]
+			if ( attrs.stem ) scope.stem = decodeURIComponent(escape(attrs.stem));
+			if ( attrs.iframe ) scope.iframe = true;
+			scope.videoHtml = element[0].childNodes[2]
 			head = videoApp.getHeading(attrs,"header",scope,"h4");
 			element[0].childNodes[0].outerHTML = head;
 			var n = element[0].childNodes.length;
-			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,"p");
+			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="footer"');
 		},		
 		scope: {},				
 		controller: videoApp.Controller,
@@ -52,8 +57,11 @@ videoApp.directiveFunction = function(t) {
 		replace: 'true',
 		template: '<div class="videoRunDiv">' +
 				  '<p>Here comes header</p>' +
-				  '<a ng-click="showVideo()">Click here to show the video</a>' +
-				  '<p>Here comes footer</p>'+
+				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+				  '<div ><p></p></div>' + 
+				  '<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
+				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">hide video</a></p>'+
+				  '<p class="footer">Here comes footer</p>'+
 				  '</div>'
 		// templateUrl: 'csTempl.html'
 	}; 
@@ -73,18 +81,32 @@ videoApp.Controller = function($scope,$http,$transclude) {
 	$scope.header = "";
 	$scope.rows = 5;
 	$scope.errors = [];
+	$scope.videoOn = false;
 	
 	$scope.runVideo = function() {
 		// $scope.viewCode = false;
 	};
 
+	$scope.hideVideo = function() {
+		$scope.videoOn = false;
+		$scope.videoHtml.innerHTML = "<p></p>";
+	}
+	
 	$scope.showVideo = function() {
 		videoApp.nr++;
 		var vid = 'vid'+videoApp.nr;
 		var w = videoApp.ifIs($scope.width,"width");
 		var h = videoApp.ifIs($scope.height,"height");
-		$scope.videoHtml.outerHTML = '<video id="'+vid+'" src="'+ $scope.file + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';
+		var t = "";
+		if ( $scope.start ) t = "&start="+$scope.start+"&end="+$scope.end+"&position=$scope.start";
+		if ( $scope.iframe )
+			$scope.videoHtml.innerHTML = '<iframe class="showVideo" src="' + $scope.file +"?rel=0"+ t + '" ' + w + h + 'autoplay="true" start=100 position=833 frameborder="0" allowfullscreen></iframe>';
+			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
+		else   
+			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';
+		$scope.videoOn = true;	
 		$scope.myvid = document.getElementById(vid);
+		if ( !$scope.myvid ) return;
 		$scope.myvid.addEventListener('loadedmetadata', function() {
 			this.currentTime = $scope.start || 0;
 			}, false);
