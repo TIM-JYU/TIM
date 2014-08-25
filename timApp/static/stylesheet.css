@@ -660,6 +660,18 @@ csRunArea:focus {
 }
 
 
+.unitTestGreen {
+  background: #00FF00;
+  width: 30%;
+  height: 1em;
+}
+
+.unitTestRed {
+  background: #FF7777;
+  /* width: 30%; */
+  height: 1em;
+}
+
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 1200px) {
 	.editor {
