@@ -17,6 +17,7 @@ from flask.helpers import send_file
 import io
 import pluginControl
 from htmlSanitize import sanitize_html
+import collections
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -460,10 +461,17 @@ def saveAnswer(plugintype, task_id):
     if not 'save' in jsonresp:
         return jsonResponse({'error' : 'Plugin response missing "save" key.'}, 400)
     
+    saveObject = jsonresp['save']
+    
     #Save the new state
-    points = jsonresp['save']['points'] if 'points' in jsonresp['save'] else None
-    tags = jsonresp['save']['tags'] if 'tags' in jsonresp['save'] else []
-    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(jsonresp['save']), points, tags)
+    if isinstance(saveObject, collections.Iterable):
+        points = jsonresp['save']['points'] if 'points' in saveObject else None
+        tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
+    else:
+        points = None
+        tags = []
+    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
+    
     return jsonResponse({'web':jsonresp['web']})
 
 def getPluginMarkup(doc_id, plugintype, task_id):
