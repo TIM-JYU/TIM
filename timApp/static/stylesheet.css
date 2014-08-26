@@ -727,8 +727,9 @@ p.stem {
 	.noteEditorArea {
 		position: relative;
 		top: 0em;
-		left: 100%;
+		left: 0%;
 	}
+	
 	.addParButton{
 		left: 106%;
     }
