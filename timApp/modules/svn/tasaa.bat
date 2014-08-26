@@ -1,5 +1,5 @@
-@cd E:\kurssit\tim\timApp\modules\cs
-@cd t:\cs
+@cd E:\kurssit\tim\timApp\modules\svn
+@cd t:\svn
 @t:
 @kopioi *.js e:    /q /s
 @kopioi *.html e:  /q /s

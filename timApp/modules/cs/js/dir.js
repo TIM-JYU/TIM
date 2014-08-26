@@ -82,13 +82,13 @@ csApp.directiveTemplateCS = function(t) {
 	return  '<div class="csRunDiv">' + 
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
-				  '<p ng-if="stem" class="csRunStem" >{{stem}}</p>' +
+				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
   				  (t == "tauno" ? 
 				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">hide Tauno</a></p>' +
 				    '<div ><p></p></div>' + // Tauno code place holder nr 3!!
 				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">Click here to show Tauno</a></p>' +
 				    '<p ng-if="taunoOn" class="pluginHide"" ><a ng-click="copyTauno()">copy from Tauno</a> | <a ng-click="hideTauno()">hide Tauno</a></p>' +
-				    '<p ng-if="taunoOn" class="taunoOhje">Kopioi Taunon tuottama koodi ilman int[] t= -riviä ja liitä se alla olevaan ohjelma-alueeseen. Sitten paina Aja-painiketta.</a></p>' +
+				    '<p ng-if="taunoOn" class="taunoOhje">Kopioi Taunolla tekemäsi koodi "copy from Tauno"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa että ajossa voi olla eri taulukko kuin Taunossa!</a></p>' +
 					"" : "") +   
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
 				  '<div class="csRunCode">'+'<p></p>'+
@@ -104,7 +104,7 @@ csApp.directiveTemplateCS = function(t) {
 				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
 				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
-				  (t == "comtest" || t == "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" />' : "") +
+				  (t == "comtest" || t == "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
 				  (t == "comtest" || t == "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
@@ -142,7 +142,8 @@ csApp.directiveFunction = function(t) {
 			scope.isTest = scope.type.indexOf("comtest") >= 0;
 			
 			
-			if ( attrs.stem ) scope.stem = decodeURIComponent(escape(attrs.stem));
+			// if ( attrs.stem ) scope.stem = decodeURIComponent(escape(attrs.stem));
+			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
 			scope.taunoHtml = element[0].childNodes[csApp.taunoPHIndex]; // Check this carefully, where is Tauno placeholder
 			
@@ -244,8 +245,11 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.imgURL = "";
 	$scope.viewCode = false;
 	$scope.runSuccess = false;
+	$scope.copyingFromTauno = false;
 
 	$scope.$watch('[usercode]', function() {
+		if ( !$scope.copyingFromTauno) $scope.muokattu = true;
+		$scope.copyingFromTauno = false
 		if ( $scope.minRows < $scope.maxRows ) 
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
@@ -264,6 +268,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	
 	$scope.doRunCode = function(runType) {
 		// $scope.viewCode = false;
+		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
 		$scope.error = "... running ...";
 		$scope.resImage = "";
 		$scope.imgURL = "";
@@ -323,18 +328,22 @@ csApp.Controller = function($scope,$http,$transclude) {
 		var f = document.getElementById($scope.taunoId);
 		// var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
 		var s = f.contentWindow.getUserCodeFromTauno();
+		$scope.copyingFromTauno = true;
 		$scope.usercode = s;
+		$scope.muokattu = false;
 	}
 	
 	
 	$scope.showTauno = function() {
+	
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
 		$scope.taunoId = vid;
 		var w = csApp.ifIs($scope.width,"width",700);
 		var h = csApp.ifIs($scope.height,"height",500);
 		var p = "";
-		var tt = "http://users.jyu.fi/~ji/js/tdbg/";
+		// var tt = "http://users.jyu.fi/~ji/js/tdbg/";
+		var tt = "http://tim-beta.it.jyu.fi/cs/ptauno/indexi.html";
 		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://users.jyu.fi/~vesal/js/ptauno/index.html";
 		if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://tim-beta.it.jyu.fi/cs/ptauno/index.html";
 		var taunoUrl = tt+"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
@@ -361,6 +370,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	
 	
 	$scope.initCode = function() {
+		$scope.muokattu = false;
 		$scope.usercode = $scope.byCode;
 		$scope.resImage = "";
 		$scope.imgURL = "";
