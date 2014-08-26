@@ -22,12 +22,14 @@ PLUGINS = [
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
 def callPlugin(plugin, info, state):
+    pluginData = json.dumps({"markup" : info, "state": state})
+    print("Calling plugin HTML route with data: " + pluginData)
     try:
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
                 headers = {'Content-type': 'application/json'}
-                request = requests.post(plug['host'] + "html/", data=json.dumps({"markup" : info, "state": state}), timeout=5, headers=headers)
+                request = requests.post(plug['host'] + "html/", data=pluginData, timeout=5, headers=headers)
                 return request.text
         return "Unregistered plugin"
     except:
