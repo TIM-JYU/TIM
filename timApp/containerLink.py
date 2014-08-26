@@ -51,6 +51,7 @@ def callPluginResource(plugin, fileName):
 # PLUGINS
 def callPluginAnswer(plugin, answerData):
 #    try:
+    print("Calling plugin answer route with data: " + answerData)
     for x in PLUGINS:
         if(x['name'] == plugin):
             headers = {'Content-type': 'application/json'}
