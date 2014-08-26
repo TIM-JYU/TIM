@@ -59,9 +59,23 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
-#def logMessage(message, level):
-    #app.logger.
-#    pass
+LOG_LEVELS = {"CRITICAL" : app.logger.critical, 
+              "ERROR" : app.logger.error,
+              "WARNING" : app.logger.warning,
+              "INFO": app.logger.info,
+              "DEBUG" : app.logger.debug}
+              #"NOTSET" : app.logger.notset}
+
+
+# Logger call
+@app.route("/log/", methods=["POST"])
+def logMessage():
+    try:
+        message = request.get_json()['message']
+        LOG_LEVELS[level](message)
+    except KeyError:
+        app.logger.error("Failed logging call: " + str(request.get_data()))
+    
 
 @app.errorhandler(403)
 def forbidden(error):
