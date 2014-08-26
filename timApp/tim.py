@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, session, abort, flash
+from flask import Flask, redirect, url_for, session, abort, flash, current_app
 from flask import render_template
 from flask import g
 from flask import request
 from flask import send_from_directory
+import logging
 from ReverseProxied import ReverseProxied
 import json
 import os
@@ -34,6 +35,15 @@ app.config.update(dict(
     MAX_CONTENT_LENGTH = 16 * 1024 * 1025 
    ))
 
+LOG_FILENAME = "../tim_logs/timLog.log"
+
+# current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
+formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
+handler = logging.FileHandler(LOG_FILENAME)
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
+
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
@@ -49,8 +59,13 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
+#def logMessage(message, level):
+    #app.logger.
+#    pass
+
 @app.errorhandler(403)
 def forbidden(error):
+
     return render_template('403.html', message=error.description), 403
 
 @app.errorhandler(404)
@@ -287,6 +302,7 @@ def postParagraph():
     verifyEditAccess(docId)
     paragraphText = sanitize_html(request.get_json()['text'])
     parIndex = request.get_json()['par']
+    app.logger.info("Editing file: {}, paragraph {}".format(docId, parIndex ))
     version = request.headers.get('Version')
     identifier = getNewest(docId)#DocIdentifier(docId, version)
     

@@ -19,12 +19,29 @@
     <script src=" {{ script }}"> </script> 
     {% endfor %}
     <script>
-        var EditApp = angular.module("controller", [
-                        {% for dep in jsMods %}
-                            "{{ dep|safe}}",
-                        {% endfor %}
-                        
-                        ]);
+    var checkModules = function(xs){
+            ys = [];
+            for(var i = 0; i < xs.length; i++){
+                    try {
+                        angular.module(xs[i]);
+                        if(ys.indexOf(xs[i] === -1)){
+                                ys.push(xs[i]);
+                        }
+                    }
+                    catch(err) {
+                            console.log("Some modules not defined: " + x) 
+                    }
+            }
+            return ys;
+    };
+    var modules = checkModules( [
+        {% for dep in jsMods %}
+        "{{ dep|safe}}",
+        {% endfor %}
+
+        ]);
+
+    var EditApp = angular.module("controller", modules );
     </script> 
     <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
     <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
@@ -50,7 +67,7 @@
     </style>
     <script>
         // Data from jinja2 template
-        var jsonDoc = JSON.parse({{ text|tojson|safe }});
+    var jsonDoc = JSON.parse({{ text|tojson|safe }});
         var docId = JSON.parse({{docId|tojson|safe}});
         var docName = {{ docName|tojson|safe}};
         var version = {{ version|tojson|safe}};
