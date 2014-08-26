@@ -15,25 +15,11 @@
     <script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
     {% for script in js %}
     <script src=" {{ script }}"> </script> 
     {% endfor %}
     <script>
-    var checkModules = function(xs){
-            ys = [];
-            for(var i = 0; i < xs.length; i++){
-                    try {
-                        angular.module(xs[i]);
-                        if(ys.indexOf(xs[i] === -1)){
-                                ys.push(xs[i]);
-                        }
-                    }
-                    catch(err) {
-                            console.log("Some modules not defined: " + xs[i]); 
-                    }
-            }
-            return ys;
-    };
     var modules = checkModules( [
         {% for dep in jsMods %}
         "{{ dep|safe}}",
