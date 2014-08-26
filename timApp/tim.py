@@ -537,7 +537,7 @@ def login():
     #For now we just create a user if it doesn't exist.
     if userId is None:
         uid = timdb.users.createUser(userName)
-        gid = timdb.users.createUserGroup('group of user %s' % userName)
+        gid = timdb.users.createUserGroup(userName)
         timdb.users.addUserToGroup(gid, uid)
         userId = uid
     session['user_id'] = userId
