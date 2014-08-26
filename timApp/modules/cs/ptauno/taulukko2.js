@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
- 
+
 /**********************************************************************
  TODO:
  [ ]  indeksoi-metodiin indeksin nimeäminen & indeksin siirto muuttujan arvon mukaan
@@ -249,9 +249,8 @@ function Ohjelma(divi, vk) {
 
 Ohjelma.prototype.tekstinä = function (mittee) {
     var ohj = '';
-	var sep = '';
-    for (var pc=0; pc < this.askeleet.length; ++pc) {
-        ohj += sep + this.askeleet[pc].tekstinä(); sep = '\n';
+    for (pc=0; pc < this.askeleet.length; ++pc) {
+        ohj += this.askeleet[pc].tekstinä()+'\n';
     }
     return ohj;
 };
@@ -274,15 +273,8 @@ Ohjelma.prototype.poista_viimeisin = function () {
     return this.askeleet.pop();
 };
 
-
-Ohjelma.prototype.lisaaNakyviin = function (uusiDiv) {
-    var ohj=this.divi; // document.getElementById('ohjelma');
-    ohj.appendChild(uusiDiv);
-    ohj.scrollTop = uusiDiv.offsetTop;  
-}
-
-
 Ohjelma.prototype.sijoitus = function (mihin, mistä) {
+    var ohj=document.getElementById('ohjelma');
     var s = new Sijoitus(mihin, mistä);
     var uusi_tila = s.sovita(this.tila());  // TODO entä jos ei onnistu?
     var a = new Askel(s, uusi_tila, this.viimeisin_askel());
@@ -290,10 +282,13 @@ Ohjelma.prototype.sijoitus = function (mihin, mistä) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    ohj.appendChild(a.divinä());
+
+    ohj.children[ohj.childElementCount-1].scrollIntoView(false);
 };
 
 Ohjelma.prototype.unplus = function (mihin) {
+    var ohj=document.getElementById('ohjelma');
     var up = new UnaariPlus(mihin);
     var uusi_tila = up.sovita(this.tila());  // TODO entä jos ei onnistu?
     var a = new Askel(up, uusi_tila, this.viimeisin_askel());
@@ -301,10 +296,13 @@ Ohjelma.prototype.unplus = function (mihin) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    ohj.appendChild(a.divinä());
+
+    ohj.children[ohj.childElementCount-1].scrollIntoView(false);
 };
 
 Ohjelma.prototype.unmiinus = function (mihin) {
+    var ohj=document.getElementById('ohjelma');
     var um = new UnaariMiinus(mihin);
     var uusi_tila = um.sovita(this.tila());  // TODO entä jos ei onnistu?
     var a = new Askel(um, uusi_tila, this.viimeisin_askel());
@@ -312,7 +310,9 @@ Ohjelma.prototype.unmiinus = function (mihin) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    ohj.appendChild(a.divinä());
+
+    ohj.children[ohj.childElementCount-1].scrollIntoView(false);
 };
 
 
@@ -324,7 +324,8 @@ Ohjelma.prototype.uusi_muuttuja = function (nimi, arvo) {
     this.tilaksi(uusi_tila);
     this.askeleet.push(a);
 
-    this.lisaaNakyviin(a.divinä());
+    this.divi.appendChild(a.divinä());
+    this.divi.children[this.divi.childElementCount-1].scrollIntoView(false); // TODO tee tästä metodi
 };
 
 function Askel(lause, tila, edellinen) {
@@ -427,13 +428,8 @@ UnaariPlus.prototype.divinä = function (tila) {
     return this.divi;
 };
 
-/*
 UnaariPlus.prototype.tekstinä = function (tila) {
     return  this.mihin.nimi()+' += ' + this.määrä.arvo();
-};
-*/
-UnaariPlus.prototype.tekstinä = function (tila) {
-    return  '++' + this.mihin.nimi() +';';
 };
 
 function UnaariMiinus(mihin) {
@@ -463,7 +459,7 @@ UnaariMiinus.prototype.divinä = function (tila) {
 };
 
 UnaariMiinus.prototype.tekstinä = function (tila) {
-    return  '--' + this.mihin.nimi() +';';
+    return  this.mihin.nimi()+' -= ' + this.määrä.arvo();
 };
 
 
