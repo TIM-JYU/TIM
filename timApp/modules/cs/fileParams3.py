@@ -108,6 +108,31 @@ def scan_lines(lines, n, i, scanner, direction):
     return i
 
 
+def get_url_lines(url):
+    try:
+        req = urlopen(url)
+        ftype = req.headers['content-type']
+        lines = req.readlines()
+    except:
+        return False
+    # filecontent = nltk.clean_html(html)
+
+    n = len(lines)
+
+    for i in range(0, n):
+        line = lines[i]
+        try:
+            line = line.decode('utf-8-sig')
+        except:
+            try:
+                line = line.decode(encoding='iso8859_15')
+            except:
+                line = str(line)
+        lines[i] = line.replace("\n", "").replace("\r", "")
+
+    return lines
+
+
 class FileParams:
     def __init__(self, query, nr, url):
         self.url = get_param(query, "file" + nr, "")
@@ -141,53 +166,24 @@ class FileParams:
             # print("SELF.BY:", self.by.encode());
             if not self.by: return ""
             return self.by.replace("\\n", "\n")
-        try:
-            req = urlopen(self.url)
-            ftype = req.headers['content-type']
-            lines = req.readlines()
-        except:
-            return "File not found " + self.url
-        # filecontent = nltk.clean_html(html)
-        startcnt = self.startcnt
-        endcnt = self.endcnt
-        doprint = not self.start
+
+        lines = get_url_lines(self.url)
+        if not lines: return "File not found " + self.url
+
+        return self.scan_needed_lines(lines, escape_html)
+
+    def scan_needed_lines(self, lines, escape_html=False):
         n = len(lines)
-        n1 = n
-        n2 = n
-        if doprint: n1 = 0
-
-        for i in range(0, n):
-            line = lines[i]
-            try:
-                line = line.decode('utf-8-sig')
-            except:
-                try:
-                    line = line.decode(encoding='iso8859_15')
-                except:
-                    line = str(line)
-            lines[i] = line.replace("\n", "").replace("\r", "")
-
-        for i in range(0, n):
-            line = lines[i]
-            # print(i,": ",line)
-            if not doprint and check(self.start, line):
-                startcnt -= 1
-                # print "startcnt {0} endcnt {1}".format(startcnt,endcnt)
-                if startcnt <= 0:
-                    doprint = True
-                    n1 = i
-            if doprint and check(self.end, line):
-                endcnt -= 1
-                if endcnt <= 0:
-                    n2 = i
-                    break
-
+        n1 = scan_lines(lines, n, 0, self.start, 1)
+        n2 = n1
         n1 = scan_lines(lines, n, n1, self.start_scan, self.start_scan_dir)
-        n2 = scan_lines(lines, n, n2, self.end_scan, self.end_scan_dir)
-
         n1 += self.startn
-        n2 += self.endn
         if n1 < 0: n1 = 0
+        if n2 < n1: n2 = n1  # if n1 went forward
+
+        n2 = scan_lines(lines, n, n2, self.end, 1)
+        n2 = scan_lines(lines, n, n2, self.end_scan, self.end_scan_dir)
+        n2 += self.endn
         if n2 >= n: n2 = n - 1
 
         ni = 0
@@ -197,11 +193,9 @@ class FileParams:
         replace_by = self.by
         if replace_by:
             rep = replace_by.split("\n")
-            if len(rep) > 0 and rep[0].strip() == "//":
+            if len(rep) > 0 and rep[0].strip() == "//": # remove empty comment on first line (due YAML limatations)
                 del rep[0]
                 replace_by = "\n".join(rep)
-
-
 
         for i in range(n1, n2 + 1):
             line = lines[i]
