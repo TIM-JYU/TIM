@@ -97,7 +97,7 @@ def pluginify(blocks,user,answerDb,doc_id,user_id):
                         taskId = "{}.{}".format(doc_id, vals['taskId'])
                         states = answerDb.getAnswers(user_id, taskId)
                         state = None if len(states) == 0 else states[0]['content']
-                        print("Calling plugin HTML route with state: " + state)
+                        print("Calling plugin HTML route with state: " + state if state is not None else "(None)")
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], state)
                         #pluginUrl = getPlugin(vals['plugin'])['host'][:-1
                         #if("http://172.17.42.1" in pluginUrl):
