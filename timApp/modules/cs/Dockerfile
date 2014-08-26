@@ -17,6 +17,8 @@ run apt-get install -y imagemagick
 run apt-get install -y openjdk-7-jre-headless
 run apt-get install -y nunit-console
 run apt-get install -y wget
+run locale-gen en_US.UTF-8 
+run locale-gen fi_FI.UTF-8 
 
 # Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
 # hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen

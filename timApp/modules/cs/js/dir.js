@@ -118,7 +118,10 @@ csApp.directiveTemplateCS = function(t) {
 csApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
+            scope.plugin = element.parent().attr("data-plugin");
+            scope.taskId  = element.parent().attr("id");  
 			scope.file = attrs.file;
+			if ( attrs.lang ) scope.lang = attrs.lang;
 			scope.type = "console";
 			if ( attrs.type ) scope.type = attrs.type;
 			scope.width = attrs.width;
@@ -132,11 +135,8 @@ csApp.directiveFunction = function(t) {
 			scope.maxrows = 10;
 			scope.codeunder = false;
 			scope.codeunder = false;
-			scope.taskId = "omanimi";
 			scope.taunotype = attrs.taunotype;
-			if ( t == "jypeli" ) {
-				scope.taskId = "lumiukko";
-			}
+            
 			scope.usercode = "";
 			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0);
 			scope.isTest = scope.type.indexOf("comtest") >= 0;
@@ -158,8 +158,10 @@ csApp.directiveFunction = function(t) {
 			if ( attrs.bycode ) scope.byCode = attrs.bycode;
 			if ( scope.usercode == "" )  scope.usercode = scope.byCode;
 			if ( attrs.placeholder ) scope.placeholder = attrs.placeholder;
-			scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
-			scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
+			scope.usercode = csApp.commentTrim(scope.usercode);
+			scope.byCode = csApp.commentTrim(scope.byCode);
+			// scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
+			// scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
 			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
@@ -283,11 +285,16 @@ csApp.Controller = function($scope,$http,$transclude) {
 
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
-		params = {'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace}, 
-				  'taskId': $scope.taskId,
-				  'input': {'usercode':$scope.usercode}};
+		params = {
+                  //   'input': 1
+				  'input': {'usercode':$scope.usercode,
+                            'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId}, 
+                           }
+                  };
 		//		  alert($scope.usercode);
-		$http({method: 'PUT', url:"http://tim-beta.it.jyu.fi/cs/input", data:params, headers: {'Content-Type': 'application/json'}}
+        url = "http://tim-beta.it.jyu.fi/cs/answer";
+        // if ( $scope.plugin ) url = $scope.plugin + "/" + $scope.taskId + "/answer/";
+		$http({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}}
 		).success(function(data, status, headers, config) {
 			if ( data.web.error ) {
 				$scope.error = data.web.error;
