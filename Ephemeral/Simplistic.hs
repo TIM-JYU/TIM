@@ -2,6 +2,7 @@
 {-#LANGUAGE OverloadedStrings, ScopedTypeVariables#-}
 module Main where
 import qualified Text.Pandoc as PDC
+import qualified Text.Pandoc.Options as PDC_Opt
 import Data.Cache.LRU.IO as LRU
 import qualified Data.Foldable as F
 import qualified Data.Text as T
@@ -23,6 +24,7 @@ import Snap.Util.Readable
 import Snap.Http.Server
 import qualified Data.Sequence as Seq
 import Data.Sequence (Seq)
+import qualified Data.Set as DSB
 import qualified Data.ByteString.Search as BS
 import EphemeralPrelude
 import Text.Blaze.Html.Renderer.Text
@@ -52,9 +54,10 @@ convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toSt
                 normaliseCRLF  = BS.replace "\r\n" ("\n"::BS.ByteString)
                 opts = PDC.def{PDC.writerHTMLMathMethod=PDC.MathJax 
                             "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"}
+                html_opts =  PDC.def{PDC.writerExtensions = DSB.singleton PDC_Opt.Ext_markdown_in_html_blocks}
                 convertBlock t = let  pdc = PDC.Pandoc mempty . box $ t
                                  in Block
-                                     (T.pack       . PDC.writeMarkdown PDC.def $ pdc)
+                                     (T.pack       . PDC.writeMarkdown html_opts $ pdc) -- Laajennos pois: html_optsin tilalle PDC.def
                                      (renderHtml   . PDC.writeHtml    opts     $ pdc)
                                      (Set.fromList . map T.pack . words . PDC.writeMarkdown PDC.def $ pdc)
                             
