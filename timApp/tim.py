@@ -52,7 +52,7 @@ def allowed_file(filename):
 
 #app.config.from_envvar('TIM_SETTINGS', silent=True)
 
-if os.path.abspath('.') == '/service':
+if os.path.abspath('..') == '/service':
     app.config['DEBUG'] = False
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
