@@ -475,8 +475,10 @@ def saveAnswer(plugintype, task_id):
     state = oldAnswers[0]['content'] if len(oldAnswers) > 0 else None
     
     markup = getPluginMarkup(doc_id, plugintype, task_id_name)
-    if markup is None or markup == "YAMLERROR: Malformed string":
-        return jsonResponse({'error' : 'The task was not found in the document, or there was a problem handling plugin data'}, 404)
+    if markup is None:
+        return jsonResponse({'error' : 'The task was not found in the document.'}, 404)
+    if markup == "YAMLERROR: Malformed string":
+        return jsonResponse({'error' : 'Plugin markup YAML is malformed.'}, 400)
 
     answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata}
 
@@ -507,7 +509,7 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     timdb = getTimDb()
     doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
     for block in doc_markdown:
-        if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'taskId="{}"'.format(task_id) in block):
+        if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block):
             markup = pluginControl.getBlockYaml(block)
             return markup
     return None
