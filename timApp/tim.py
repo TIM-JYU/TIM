@@ -52,7 +52,7 @@ def allowed_file(filename):
 
 #app.config.from_envvar('TIM_SETTINGS', silent=True)
 
-if os.path.abspath('.') == '/service':
+if os.path.abspath('..') == '/service':
     app.config['DEBUG'] = False
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
@@ -61,9 +61,23 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
-#def logMessage(message, level):
-    #app.logger.
-#    pass
+LOG_LEVELS = {"CRITICAL" : app.logger.critical, 
+              "ERROR" : app.logger.error,
+              "WARNING" : app.logger.warning,
+              "INFO": app.logger.info,
+              "DEBUG" : app.logger.debug}
+              #"NOTSET" : app.logger.notset}
+
+
+# Logger call
+@app.route("/log/", methods=["POST"])
+def logMessage():
+    try:
+        message = request.get_json()['message']
+        LOG_LEVELS[level](message)
+    except KeyError:
+        app.logger.error("Failed logging call: " + str(request.get_data()))
+    
 
 @app.errorhandler(403)
 def forbidden(error):
@@ -494,19 +508,20 @@ def saveAnswer(plugintype, task_id):
     except ValueError:
         return jsonResponse({'error' : 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
     
-    if not 'save' in jsonresp:
-        return jsonResponse({'error' : 'Plugin response missing "save" key.'}, 400)
+    if not 'web' in jsonresp:
+        return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
     
-    saveObject = jsonresp['save']
-    
-    #Save the new state
-    if isinstance(saveObject, collections.Iterable):
-        points = jsonresp['save']['points'] if 'points' in saveObject else None
-        tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
-    else:
-        points = None
-        tags = []
-    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
+    if 'save' in jsonresp:
+        saveObject = jsonresp['save']
+        
+        #Save the new state
+        if isinstance(saveObject, collections.Iterable):
+            points = jsonresp['save']['points'] if 'points' in saveObject else None
+            tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
+        else:
+            points = None
+            tags = []
+        timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
     
     return jsonResponse({'web':jsonresp['web']})
 
