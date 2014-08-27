@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import urllib.request
-import urllib.parse
-import urllib
 import requests
-import sys
 import json
+
+class PluginException(Exception):
+    """The exception that is thrown when an error occurs during a plugin call."""
+    pass
 
 TIM_URL = "http://tim-beta.it.jyu.fi"
 
@@ -45,9 +46,9 @@ def callPluginResource(plugin, fileName):
                 plug = getPlugin(plugin)
                 request = requests.get(plug['host'] + fileName, timeout=5, stream=True)
                 return request
-        return "Unregistered plugin"
+        raise PluginException("Unregistered plugin: " + plugin)
     except:
-        return "Could not connect to plugin" 
+        raise PluginException("Could not connect to plugin: " + plugin)
 
 # plugin answer call, plugin must match one of the specified plugins in 
 # PLUGINS

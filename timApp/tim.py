@@ -20,6 +20,7 @@ import io
 import pluginControl
 from htmlSanitize import sanitize_html
 import collections
+from containerLink import PluginException
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -397,8 +398,11 @@ def removeBlock(docId, blockId):
 
 @app.route("/<plugin>/<path:fileName>")
 def pluginCall(plugin, fileName):
-    req = containerLink.callPluginResource(plugin, fileName)
-    return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
+    try:
+        req = containerLink.callPluginResource(plugin, fileName)
+        return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
+    except PluginException:
+        abort(404)
 
 @app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
