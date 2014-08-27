@@ -508,19 +508,20 @@ def saveAnswer(plugintype, task_id):
     except ValueError:
         return jsonResponse({'error' : 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
     
-    if not 'save' in jsonresp:
-        return jsonResponse({'error' : 'Plugin response missing "save" key.'}, 400)
+    if not 'web' in jsonresp:
+        return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
     
-    saveObject = jsonresp['save']
-    
-    #Save the new state
-    if isinstance(saveObject, collections.Iterable):
-        points = jsonresp['save']['points'] if 'points' in saveObject else None
-        tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
-    else:
-        points = None
-        tags = []
-    timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
+    if 'save' in jsonresp:
+        saveObject = jsonresp['save']
+        
+        #Save the new state
+        if isinstance(saveObject, collections.Iterable):
+            points = jsonresp['save']['points'] if 'points' in saveObject else None
+            tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
+        else:
+            points = None
+            tags = []
+        timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
     
     return jsonResponse({'web':jsonresp['web']})
 
