@@ -4,6 +4,7 @@ module Choices where
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Monoid
+import Data.Maybe
 import GHC.Generics
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
@@ -63,7 +64,7 @@ instance Typesettable Blind where
 
 
 multipleMultipleChoice :: Plugin (Markup (MCQMarkup MMC Choice), State (Maybe [Maybe Bool])) 
-                                 (Markup (MCQMarkup MMC Choice), Input ([Maybe Bool])) 
+                                 (Markup (MCQMarkup MMC Choice), TaskID, Input ([Maybe Bool])) 
                                  (Save (Maybe [Maybe Bool]),Web Value,BlackboardOut)
 multipleMultipleChoice  
    = Plugin{..}
@@ -73,11 +74,12 @@ multipleMultipleChoice
                    ,JS "script2.js"
                    ,NGModule "MCQ"]
     additionalFiles = ["MMCQTemplate.html"]
-    update (Markup mcm,Input i) = return $ 
+    update (Markup mcm,TID taskID, Input i) = return $ 
                                    (Save (Just i)
                                    ,Web  (object ["state".=i
                                                  ,"question".=typeset mcm])
-                                   ,BlackboardOut (maybe [] (\x->[Put x]) (onTry mcm)))
+                                   ,BlackboardOut (catMaybes [fmap Put (onTry mcm)
+                                                             ,Just (Put taskID)]))
     render (Markup mcm,State state) = return $
                         case state of
                              Just i  -> ngDirective "mmcq" 
@@ -90,8 +92,8 @@ multipleMultipleChoice
                                 
 
 
-simpleMultipleChoice :: Plugin (Markup (MCQMarkup MMC Choice), State (Maybe [Maybe Bool])) 
-                                 (Markup (MCQMarkup MMC Choice), Input Integer) 
+simpleMultipleChoice :: Plugin (Markup (MCQMarkup MC Choice), State (Maybe [Maybe Bool])) 
+                                 (Markup (MCQMarkup MC Choice), Input Integer) 
                                  (Save (Maybe Integer),Web Value)
 simpleMultipleChoice 
    = Plugin{..}
