@@ -3,7 +3,7 @@
 # server to get a file from selected range
 # Get parameters (every param can have n after, f.ex file1=)
 # file    = URL for file to get
-#   start   = regexp that much match to start printing (default = first line)
+# start   = regexp that much match to start printing (default = first line)
 #   startcnt= int: how many times the start must match before start (default=1)
 #   startn  = int: how many lines to move print forward or backward from start-point (default = 0)
 #   end     = regexp to stop printing (default = last line)
@@ -57,7 +57,7 @@ def get_image_html(query):
     h = get_clean_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
-    result = get_surrounding_headers(query,'<img ' + w + h + 'src="' + url + '">')
+    result = get_surrounding_headers(query, '<img ' + w + h + 'src="' + url + '">')
     return result
 
 
@@ -71,7 +71,8 @@ def get_video_html(query):
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
     if video_app:
-        s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##",
+                                               query)
         return s
 
     url = get_clean_param(query, "file", "")
@@ -161,7 +162,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_css:
             # printFileTo('cs.css',self.wfile)
             return
-        
+
         if is_js:
             print(content_type)
             self.wout(file_to_string('js/video.js'))
@@ -169,11 +170,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Was none of special, so print the file(s) in query
 
+        cla = get_param(query, "class", "")
+        w = get_param(query, "width", "")
+        if w: w = ' style="width:' + w + '"'
+        if cla: cla = " " + cla
+
         s = ""
-        if show_html:  s+= '<pre class="showCode">'
-        s += get_file_to_output(query,show_html)
+        if show_html: s += '<pre class="showCode' + cla + '"' + w + '>'
+        s += get_file_to_output(query, show_html)
         if show_html: s += '</pre>'
-        s = get_surrounding_headers(query,s)
+        s = get_surrounding_headers(query, s)
         return self.wout(s)
 
 

@@ -199,6 +199,11 @@ instance FromJSON a => Available TimRender (Markup a) where
 instance FromJSON a => Available TimUpdate (Markup a) where
     getIt (TimUpdate x) = Markup <$> getField "markup" x
 
+instance Available TimRender TaskID where
+    getIt (TimRender x) = TID <$> getField "taskID" x 
+instance Available TimUpdate TaskID where
+    getIt (TimUpdate x) = TID <$> getField "taskID" x
+
 instance FromJSON a => Available TimUpdate (Input a) where
     getIt (TimUpdate x) = Input <$> getField "input" x 
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, redirect, url_for, session, abort, flash, current_app
+from flask import stream_with_context
 from flask import render_template
 from flask import g
 from flask import request
@@ -19,6 +20,7 @@ import io
 import pluginControl
 from htmlSanitize import sanitize_html
 import collections
+from containerLink import PluginException
 
 app = Flask(__name__) 
 app.config.from_object(__name__)
@@ -410,8 +412,11 @@ def removeBlock(docId, blockId):
 
 @app.route("/<plugin>/<path:fileName>")
 def pluginCall(plugin, fileName):
-    fileCont = containerLink.callPluginResource(plugin, fileName)
-    return fileCont
+    try:
+        req = containerLink.callPluginResource(plugin, fileName)
+        return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
+    except PluginException:
+        abort(404)
 
 @app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
@@ -489,10 +494,14 @@ def saveAnswer(plugintype, task_id):
     state = oldAnswers[0]['content'] if len(oldAnswers) > 0 else None
     
     markup = getPluginMarkup(doc_id, plugintype, task_id_name)
-    if markup is None or markup == "YAMLERROR: Malformed string":
-        return jsonResponse({'error' : 'The task was not found in the document, or there was a problem handling plugin data'}, 404)
+    if markup is None:
+        return jsonResponse({'error' : 'The task was not found in the document.'}, 404)
+    if markup == "YAMLERROR: Malformed string":
+        return jsonResponse({'error' : 'Plugin markup YAML is malformed.'}, 400)
 
-    pluginResponse = containerLink.callPluginAnswer(plugintype, {'markup' : markup, 'state' : state, 'input' : answerdata})
+    answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata}
+
+    pluginResponse = containerLink.callPluginAnswer(plugintype, answerCallData)
   
     try:
         jsonresp = json.loads(pluginResponse)
@@ -519,7 +528,7 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     timdb = getTimDb()
     doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
     for block in doc_markdown:
-        if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'taskId="{}"'.format(task_id) in block):
+        if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block):
             markup = pluginControl.getBlockYaml(block)
             return markup
     return None
