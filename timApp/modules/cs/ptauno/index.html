@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <title>Taulukko</title>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" type="text/css" href="taulukko.css">
+    <!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+    <script src="taulukko.js"></script>
+  </head>
+  <body class="taunoBody">
+    <div id="naytto" class="nayttod">
+      <div id="tiedot" class="tiedotd"><p class="muuttujan-nimi">t:</p>
+	<div id="taulunaytto" class="syottod">
+	  <div id="taulukko" class="taulukko"  title="taulukollinen numeroita työstettäväksi, raahailepa niitä">
+	  </div>
+	</div>
+      </div>
+      
+      <div id="toiminta" class="toiminta">
+	<div id="vasen" class="vasen">
+	  <div class="vasen-top">
+	  muuttujat: <button id="uusi-muuttuja" onclick="vk.lisää_muuttuja('muuttujat')">uusi muuttuja</button>
+	  <div draggable="false" ondrop="muuttujiin_pudotus(event,this)" ondragover="event.preventDefault();"
+	       ondragleave="event.preventDefault();" ondragenter="event.preventDefault();"
+	       id="muuttujat" class="muuttujatd"
+	       title="muuttujalista, lisää muuttuja yllä olevasta painikkeesta"><!--  hyi, globaali vk! TODO XXX --></div>
+      </div>
+	  <div class="scratch" id="scratch">
+	    <div class="compound-statements" id="compound-statements" draggable="false"
+		 ondrop-not="lausekkeisiin_pudotus(event,this)" ondragover="event.preventDefault();"
+		 ondragleave="event.preventDefault();" ondragenter="event.preventDefault();"
+		 title="täytä lausekkeen puuttuvat osat raahaamalla, ja raahaa sitten tulos kohteeseen">
+	    </div>
+	    <!--	<div class="compound-mode" id="mode">
+			<span><span class="if-sana">if</span><span class="if-ehto">ehto</span></span>
+			<button>end-if</button><p>esimerkki ui:sta, ei toimi vielä</p>
+			</div>
+	      -->
+	    <div id="tools" class="tools">
+	    </div>
+	  </div>
+	</div>
+	<div id="oikea" class="oikea">ohjelma:
+	  <div id="ohjelma" class="ohjelma">
+	  </div>
+	</div>
+      </div>
+      
+      <div id="echo" class="echo" title="Viestialue, johon ohjelma tulostaa viestejä toiminnastaan. Puhdista klikkaamalla."></div>
+    </div>
+    
+  </body>
+</html>

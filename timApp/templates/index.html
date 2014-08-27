@@ -94,6 +94,7 @@ table td {
                 </tr>
             </table>
             <p ng-show="documentList.length == 0">There are no documents to show.</p>
+            {% if session.user_id %}
             <a ng-click="setCurrentDocument({})">Upload a new document</a>
             <div class="uploadForm" ng-show="m.currDoc">
                 <p ng-show="m.currDoc.id">Upload new version for document: {{ '{{ m.currDoc.name
@@ -118,7 +119,9 @@ table td {
                     <input ng-click="showControls = false" type="button" value="Cancel">
                 </div>
             </div>
-
+            {% else %}
+            To create or upload new documents, log in.
+            {% endif %}
         </div>
     </div>
 </body>

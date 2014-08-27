@@ -7,6 +7,7 @@ maintainer vesal "vesal@jyu.fi"
 run apt-get install -y python3
 run apt-get install -y python3-pip
 run pip3 install Flask
+run pip3 install bleach
 run apt-get install -y mono-complete
 run apt-get install -y libsdl1.2debian
 run apt-get install -y libsdl-mixer1.2
@@ -16,6 +17,8 @@ run apt-get install -y imagemagick
 run apt-get install -y openjdk-7-jre-headless
 run apt-get install -y nunit-console
 run apt-get install -y wget
+run locale-gen en_US.UTF-8 
+run locale-gen fi_FI.UTF-8 
 
 # Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
 # hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen

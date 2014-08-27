@@ -132,21 +132,24 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
 
-    def remove(self,fname):
+    def remove(self, fname):
         try:
             os.remove(fname)
         except:
             return
 
     def get_html(self, ttype, query):
-        if ttype == "console":
-            s = string_to_string_replace_attribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
-                                                   "##QUERYPARAMS##", query)
-        elif ttype == "comtest":
+        s = string_to_string_replace_attribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
+                                               "##QUERYPARAMS##", query)
+        if "comtest" in ttype:
             s = string_to_string_replace_attribute(
-                '<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
+                '<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-comtest-runner>',
                 "##QUERYPARAMS##", query)
-        else:
+        if "tauno" in ttype:
+            s = string_to_string_replace_attribute(
+                '<cs-tauno-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-tauno-runner>',
+                "##QUERYPARAMS##", query)
+        if "jypeli" in ttype:
             s = string_to_string_replace_attribute(
                 '<cs-jypeli-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-jypeli-runner>',
                 "##QUERYPARAMS##", query)
@@ -154,8 +157,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
 
     def do_all(self, query):
-        result = query.jso
+        result = {} # query.jso
         if not result: result = {}
+        save = {}
         web = {}
         result["web"] = web
 
@@ -164,42 +168,55 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(self.headers)
         # print query
 
+        if self.path.find('/favicon.ico') >= 0:
+            self.send_response(404)
+            return
+			
+        if self.path.find('/login') >= 0:
+            query = post_params(self)
+            return
+            
+
         is_fullhtml = self.path.find('/fullhtml') >= 0
-        is_html = self.path.find('/html') >= 0
-        is_css = self.path.find('/css') >= 0
-        is_js = self.path.find('/js') >= 0
+        is_html = self.path.find('/html') >= 0 or self.path.find('.html') >= 0
+        is_css = self.path.find('.css') >= 0
+        is_js = self.path.find('.js') >= 0
         is_reqs = self.path.find('/reqs') >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
         is_iframe = (self.path.find('/iframe') >= 0) or is_iframe_param
         is_answer = self.path.find('/answer') >= 0
+        is_tauno = self.path.find('/tauno') >= 0
+        is_ptauno = self.path.find('/ptauno') >= 0
 
-
-        # korjaus kunnes byCode parametri tulee kokonaisena
-        # tempBy = get_param(query, "b", "")
-        # if ( tempBy ):
-        # query["byCode"] = [tempBy];
-
-        # print query
         self.send_response(200)
         # self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
         content_type = 'text/plain'
         if is_reqs: content_type = "application/json"
-        if is_fullhtml or is_html: content_type = 'text/html'
+        if is_fullhtml or is_html: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js or is_answer: content_type = 'application/javascript'
         self.send_header('Content-type', content_type)
         self.end_headers()
-        # Get the template type
+
+        if is_ptauno:
+            p = self.path.split("?")
+            self.wout(file_to_string(p[0]))
+            return
+
+
+            # Get the template type
         ttype = get_param(query, "type", "console").lower()
+        if is_tauno: ttype = 'tauno'
 
         if is_reqs:
-            result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
-                           "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"]}
+            # result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
+            #               "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"]}
+            result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
+                           "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)
-            self.wout(result_str)
-            return
+            return self.wout(result_str)
 
         # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
         usercode = get_json_param(query.jso, "state", "usercode", None)
@@ -209,20 +226,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # pprint(query.__dict__, indent=2)
 
         if is_css:
-            self.wout(file_to_string('cs.css'))
-            return
+            return self.wout(file_to_string('cs.css'))
 
         if is_js:
             if self.path.find('rikki') >= 0:
-                self.wout(file_to_string('js/dirRikki.js'))
-                return
-            self.wout(file_to_string('js/dir.js'))
-            return
+                return self.wout(file_to_string('js/dirRikki.js'))
+            return self.wout(file_to_string('js/dir.js'))
 
         if is_html and not is_iframe:
             print("HTML:==============")
-            self.wout(self.get_html(ttype, query))
-            return
+            return self.wout(self.get_html(ttype, query))
 
         if is_fullhtml:
             self.wout(file_to_string('begin.html'))
@@ -232,71 +245,59 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_iframe:
             s = string_to_string_replace_url(
-                '<iframe frameborder="0"  src="http://tim-beta.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" style="overflow:hidden;height:##HEIGHT##;width:100%"  seamless></iframe>',
+                '<iframe frameborder="0"  src="http://tim-beta.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
                 "##QUERYPARAMS##", query)
-            self.wout(s)
-            return
+            return self.wout(s)
 
         # Generate random cs and exe filenames
         basename = generate_filename()
         csfname = "/tmp/%s.cs" % basename
         exename = "/tmp/%s.exe" % basename
 
+        # if ttype == "console":
+        # Console program
+        if "jypeli" in ttype:
+            # Jypeli game
+            bmpname = "/tmp/%s.bmp" % basename
+            pngname = "/cs/images/%s.png" % basename
+        if "comtest" in ttype:
+            # ComTest test cases
+            testcs = "/tmp/%sTest.cs" % basename
+            testdll = "/tmp/%sTest.dll" % basename
+
+            # Unknown template
+            # self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
+            # return
+
+
         # Check query parameters
         p0 = FileParams(query, "", "")
         print("p0=")
         print(p0.replace)
-        if p0.url == "" and p0.replace == "":
-            self.wfile.write("Must give file= -parameter".encode())
-            return
+        if p0.url == "" and p0.replace == "": return self.wout("Must give file= -parameter")
 
         print_file = get_param(query, "print", "")
         print("type=" + ttype)
 
-        if ttype == "console":
-            # Console program
-            pass
-        elif ttype == "jypeli":
-            # Jypeli game
-            bmpname = "/tmp/%s.bmp" % basename
-            pngname = "/cs/images/%s.png" % basename
-            pass
-        elif ttype == "comtest":
-            # ComTest test cases
-            testcs = "/tmp/%sTest.cs" % basename
-            testdll = "/tmp/%sTest.dll" % basename
-        else:
-            # Unknown template
-            self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
-            return
-
-        s = p0.get_file()
-        # print("FILE: XXXXX",s)
-        s += p0.get_include()
-        u = p0.url
-        for i in range(1, 10):
-            p = FileParams(query, str(i), u)
-            s += p.get_file()
-            s += p.get_include()
-            if p.url: u = p.url
-
+        s = ""
+        #if p0.url != "": 
+        s = get_file_to_output(query, False and print_file)
 
         # Open the file and write it
-        if print_file:
-            self.wout(s)
-            return
+        if print_file: return self.wout(s)
+
         csfile = codecs.open(csfname, "w", "utf-8")  # open(csfname, "w")
         csfile.write(s)
         csfile.close()
 
         if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
-            write_json_error(self.wfile, "Could not get the source file")
+            return write_json_error(self.wfile, "Could not get the source file")
             # self.wfile.write("Could not get the source file\n")
             # print "=== Could not get the source file"
-            return
 
         # Compile
         try:
+			
             if ttype == "jypeli":
                 cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
                     exename, csfname)
@@ -321,7 +322,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             error_str = "!!! Error code " + str(e.returncode) + "\n"
             error_str += e.output.decode("utf-8") + "\n"
             # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
-            error_str = error_str.replace(csfname,"tmp.cs")
+            error_str = error_str.replace(csfname, "tmp.cs")
             output = io.StringIO()
             file = codecs.open(csfname, 'r', "utf-8")
             lines = file.read().splitlines()
@@ -331,11 +332,23 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             output.close()
 
             self.remove(csfname)
-            write_json_error(self.wfile, error_str)
-            return
+            return write_json_error(self.wfile, error_str)
 
+        lang = ""
+        plang = get_param(query, "lang", "")
+        env = dict(os.environ)
+        if plang:
+            if plang.find("fi") == 0: lang = "fi_FI.UTF-8"
+            if plang.find("en") == 0: lang = "en_US.UTF-8"
+            
+        if lang: 
+            env["LANG"]=lang
+            env["LC_ALL"]=lang
+        print("Lang= ",lang)
+        
+                
         if ttype == "jypeli":
-            code, out, err = run(["mono", exename, bmpname], timeout=10)
+            code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
             if type(out) != type(''): out = out.decode()
             run(["convert", "-flip", bmpname, pngname])
             self.remove(bmpname)
@@ -345,18 +358,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             p = re.compile('Number of joysticks:.*\n.*')
             # out = out.replace("Number of joysticks:.*","")
             out = p.sub("", out)
-            if code == -9: 
+            if code == -9:
                 out = "Runtime exceeded, maybe loop forever\n" + out
             else:
                 web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
             self.remove(exename)
         elif ttype == "comtest":
-            eri = -1		
-            code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], timeout=10)
+            eri = -1
+            code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], timeout=10, env=env)
             if type(out) != type(''): out = out.decode()
             # print(code,out,err)
             out = remove_before("Execution Runtime:", out)
-            if code == -9: 
+            if code == -9:
                 out = "Runtime exceeded, maybe loop forever\n" + out
                 eri = 0
             # out = out[1:]  # alussa oleva . pois
@@ -378,24 +391,31 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     lnro = int(lns)
                     lines = codecs.open(csfname, "r", "utf-8").readlines()
                     # print("Line nr: "+str(lnro))
-                    ## out += "\n" + str(lnro) + " " + lines[lnro - 1]
+                    # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                     web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
             self.remove(testcs)
             self.remove(testdll)
         else:
             print("Exe: ", exename)
-            code, out, err = run(["mono", exename], timeout=10)
-            if type(out) != type(''): out = out.decode()
-            if code == -9: 
-                out = "Runtime exceeded, maybe loop forever\n" + out
-            self.remove(exename)
-			
+            code, out, err = run(["mono", exename], timeout=10, env=env)
+            print(code, out, err)
+            #if type(out) != type(''): out = out.decode()
+            if out[0] in [254,255]: out = out.decode('UTF16')
+            elif type(out) != type(''): out = out.decode('utf-8-sig')
+            if code == -9: out = "Runtime exceeded, maybe loop forever\n" + out
+                # self.remove(exename)
+
         out = out[0:2000]
         web["console"] = out
+        usercode = get_json_param(query.jso, "input", "usercode", None)
+        save["usercode"] = usercode
+        
         result["web"] = web
+        result["save"] = save
 
         # Clean up
-        self.remove(csfname)
+        print("FILE NAME:", csfname)
+        # self.remove(csfname)
 
         # self.wfile.write(out)
         # self.wfile.write(err)
@@ -403,7 +423,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.wout(sresult)
         print("Result ========")
         print(sresult)
-        print(out)
+        #print(out)
         print(err)
 
 

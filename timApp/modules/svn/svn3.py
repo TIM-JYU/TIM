@@ -3,7 +3,7 @@
 # server to get a file from selected range
 # Get parameters (every param can have n after, f.ex file1=)
 # file    = URL for file to get
-#   start   = regexp that much match to start printing (default = first line)
+# start   = regexp that much match to start printing (default = first line)
 #   startcnt= int: how many times the start must match before start (default=1)
 #   startn  = int: how many lines to move print forward or backward from start-point (default = 0)
 #   end     = regexp to stop printing (default = last line)
@@ -46,51 +46,48 @@ def run_while_true(server_class=http.server.HTTPServer,
         httpd.handle_request()
 
 
-def show_image(self, query):
+def get_image_html(query):
     """
     Muodostaa kuvan näyttämiseksi tarvittavan HTML-koodin
-    :param self: olio josta löytyy tarvittava tietovirta
     :param query: pyynnön paramterit
-    :return:
+    :return: kuvan html-jono
     """
-    url = get_param(query, "file", "")
-    w = get_param(query, "width", "")
-    h = get_param(query, "height", "")
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
-    result = '<img ' + w + h + 'src="' + url + '">'
-    self.wfile.write(result.encode())
-    return
+    result = get_surrounding_headers(query, '<img ' + w + h + 'src="' + url + '">')
+    return result
 
 
-def show_video(self, query):
+def get_video_html(query):
     """
     Muodostaa videon näyttämiseksi tarvittavan HTML-koodin
-    :param self: olio josta löytyy tarvittava tietovirta
     :param query: pyynnön paramterit
-    :return:
+    :return: videon html-jono
     """
-    url = get_param(query, "file", "")
-    w = get_param(query, "width", "")
-    h = get_param(query, "height", "")
-    if w: w = 'width="' + w + '" '
-    if h: h = 'height="' + h + '" '
-    iframe = get_param(query, "iframe", False)
-    iframe = True
+    iframe = get_param(query, "iframe", False) or True
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
     if video_app:
-        s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        self.wout(s)
-        return
+        s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##",
+                                               query)
+        return s
 
-    elif iframe:
-        result = '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
-    else:
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
+    if w: w = 'width="' + w + '" '
+    if h: h = 'height="' + h + '" '
+
+    if iframe:
+        return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
+
+
         #        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
-        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
-    self.wout(result)
-    return
+    result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
+    return result
 
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
@@ -134,18 +131,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         content_type = 'text/plain'
         if is_reqs: content_type = "application/json"
-        if show_html: content_type = 'text/html'
+        if show_html: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
+
+        # self.send_header('charset', 'UTF-8')
         self.send_header('Content-type', content_type)
         self.end_headers()
 
         if is_image:
-            show_image(self, query)
+            s = get_image_html(query)
+            self.wout(s)
             return
 
         if is_video:
-            show_video(self, query)
+            s = get_video_html(query)
+            self.wout(s)
             return
 
         result_json = {}
@@ -161,30 +162,25 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_css:
             # printFileTo('cs.css',self.wfile)
             return
-        
+
         if is_js:
             print(content_type)
             self.wout(file_to_string('js/video.js'))
             return
 
-        if show_html: self.wout('<pre class="showCode">')
+        # Was none of special, so print the file(s) in query
 
-        p0 = FileParams(query, "", "")
-        if p0.url == "":
-            self.wout("Must give file= -parameter")
-            if show_html: self.wout('</pre>')
-            return
-        s = p0.get_file(show_html)
-        s += p0.get_include(show_html)
-        u = p0.url
-        for i in range(1, 10):
-            p = FileParams(query, str(i), u)
-            s += p.get_file(show_html)
-            s += p.get_include(show_html)
-            if p.url: u = p.url
+        cla = get_param(query, "class", "")
+        w = get_param(query, "width", "")
+        if w: w = ' style="width:' + w + '"'
+        if cla: cla = " " + cla
 
-        self.wout(s)
-        if show_html: self.wout('</pre>')
+        s = ""
+        if show_html: s += '<pre class="showCode' + cla + '"' + w + '>'
+        s += get_file_to_output(query, show_html)
+        if show_html: s += '</pre>'
+        s = get_surrounding_headers(query, s)
+        return self.wout(s)
 
 
 def keep_running():

@@ -15,16 +15,19 @@
     <script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
     {% for script in js %}
     <script src=" {{ script }}"> </script> 
     {% endfor %}
     <script>
-        var EditApp = angular.module("controller", [
-                        {% for dep in jsMods %}
-                            "{{ dep|safe}}",
-                        {% endfor %}
-                        
-                        ]);
+    var modules = checkModules( [
+        {% for dep in jsMods %}
+        "{{ dep|safe}}",
+        {% endfor %}
+
+        ]);
+
+    var EditApp = angular.module("controller", modules );
     </script> 
     <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
     <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
@@ -50,7 +53,7 @@
     </style>
     <script>
         // Data from jinja2 template
-        var jsonDoc = JSON.parse({{ text|tojson|safe }});
+    var jsonDoc = JSON.parse({{ text|tojson|safe }});
         var docId = JSON.parse({{docId|tojson|safe}});
         var docName = {{ docName|tojson|safe}};
         var version = {{ version|tojson|safe}};
@@ -75,7 +78,10 @@
 </div>
 <p ng-show="uploadedFile">Uploaded file: <a href="{{ '{{ uploadedFile }}' }}">{{ '{{ uploadedFile }}' }}</a></p>
     <div class="material"> 
-        <div style="left:1em;top:40px" class="addParButton b0" ng-click="parAdd(0)"> </div>
+        <div class="paragraph">
+             <div class="addParButton b0" ng-click="parAdd(0)"> </div>
+             <br>
+        </div>
         <div class="paragraph"  ng-repeat="par in paragraphs">
             <div style="" id="par-{{ '{{ par.par }}' }}" class="content {{ '{{ par.par }}' }}" compile ng-bind-html="par.html | to_trusted"> </div>
             <button class="editButton edit" ng-if="true || !par.display"  ng-click="setEditable(par.par)" ></button> 
