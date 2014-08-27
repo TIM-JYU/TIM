@@ -43,8 +43,8 @@ def callPluginResource(plugin, fileName):
         for x in PLUGINS:
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
-                request = requests.get(plug['host'] + fileName, timeout=5)
-                return request.text
+                request = requests.get(plug['host'] + fileName, timeout=5, stream=True)
+                return request
         return "Unregistered plugin"
     except:
         return "Could not connect to plugin" 

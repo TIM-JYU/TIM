@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, redirect, url_for, session, abort, flash, current_app
+from flask import stream_with_context
 from flask import render_template
 from flask import g
 from flask import request
@@ -396,8 +397,8 @@ def removeBlock(docId, blockId):
 
 @app.route("/<plugin>/<path:fileName>")
 def pluginCall(plugin, fileName):
-    fileCont = containerLink.callPluginResource(plugin, fileName)
-    return fileCont
+    req = containerLink.callPluginResource(plugin, fileName)
+    return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
 
 @app.route("/view/<int:doc_id>")
 def viewDocument(doc_id):
