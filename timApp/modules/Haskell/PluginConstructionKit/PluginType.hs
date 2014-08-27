@@ -249,6 +249,8 @@ serve plugin = route
            eps <- liftIO $ runAR ar
            case eps of
                 Left err -> modifyResponse (setResponseCode 400) >> writeLazyText "Unable to parse required parameters"
+                Right v  -> f v
+
 -- Quick helper for building objects
 ins key (First Nothing)  x = x 
 ins key (First (Just v)) x = (key.=v):x 
