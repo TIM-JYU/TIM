@@ -18,7 +18,6 @@ import imghdr
 from flask.helpers import send_file
 import io
 import pluginControl
-from htmlSanitize import sanitize_html
 import collections
 from containerLink import PluginException
 
@@ -316,7 +315,7 @@ def postParagraph():
     timdb = getTimDb()
     docId = request.get_json()['docId']
     verifyEditAccess(docId)
-    paragraphText = sanitize_html(request.get_json()['text'])
+    paragraphText = request.get_json()['text']
     parIndex = request.get_json()['par']
     app.logger.info("Editing file: {}, paragraph {}".format(docId, parIndex ))
     version = request.headers.get('Version')

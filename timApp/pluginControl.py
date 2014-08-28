@@ -5,6 +5,7 @@ from containerLink import pluginReqs
 from containerLink import getPlugin
 from containerLink import getPluginTimUrl
 import yaml
+from htmlSanitize import sanitize_html
 import re
 import json
 
@@ -103,19 +104,16 @@ def pluginify(blocks,user,answerDb,doc_id,user_id):
                             if state is not None:
                                 state = json.loads(state)
                         except ValueError:
-                            pass
-                        
+                            pass 
                         pluginHtml = callPlugin(vals['plugin'], vals['markup'], state)
-                        #pluginUrl = getPlugin(vals['plugin'])['host'][:-1
-                        #if("http://172.17.42.1" in pluginUrl):
-                            #pluginUrl = pluginUrl.replace("http://172.17.42.1", "http://tim-beta.it.jyu.fi")
                         pluginUrl = getPluginTimUrl(vals['plugin'])
                         preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(taskId,pluginUrl) + pluginHtml + "</div>")
                     except TypeError:
                         preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team.")
                         continue
         else:
-            preparedBlocks.append(block)
+            preparedBlocks.append(sanitize_html(block))
+            #preparedBlocks.append(block)
                     
     return (plugins,preparedBlocks)
 
