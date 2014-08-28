@@ -190,10 +190,12 @@ instance Reply TimResult BlackboardOut where
 newtype TimRender = TimRender Value
 newtype TimUpdate = TimUpdate Value
 
-instance FromJSON a => Available TimRender (State a) where
-    getIt (TimRender x) = State <$> getField "state" x
-instance FromJSON a => Available TimUpdate (State a) where
-    getIt (TimUpdate x) = State <$> getField "state" x 
+instance (Monoid a, FromJSON a) => Available TimRender (State a) where
+    getIt (TimRender x) = (State <$> getField "state" x)
+                          <|> pure (State mempty)
+instance (Monoid a, FromJSON a) => Available TimUpdate (State a) where
+    getIt (TimUpdate x) = (State <$> getField "state" x)
+                          <|> pure (State mempty)
 instance FromJSON a => Available TimRender (Markup a) where
     getIt (TimRender x) = Markup <$> getField "markup" x 
 instance FromJSON a => Available TimUpdate (Markup a) where
