@@ -54,10 +54,10 @@ convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toSt
                 normaliseCRLF  = BS.replace "\r\n" ("\n"::BS.ByteString)
                 opts = PDC.def{PDC.writerHTMLMathMethod=PDC.MathJax 
                             "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"}
-                html_opts =  PDC.def{PDC.writerExtensions = DSB.singleton PDC_Opt.Ext_markdown_in_html_blocks}
+                -- html_opts =  PDC.def{PDC.writerExtensions = DSB.singleton PDC_Opt.Ext_markdown_in_html_blocks}
                 convertBlock t = let  pdc = PDC.Pandoc mempty . box $ t
                                  in Block
-                                     (T.pack       . PDC.writeMarkdown html_opts $ pdc) -- Laajennos pois: html_optsin tilalle PDC.def
+                                     (T.pack       . PDC.writeMarkdown PDC.def $ pdc) -- Laajennos pois: html_optsin tilalle PDC.def
                                      (renderHtml   . PDC.writeHtml    opts     $ pdc)
                                      (Set.fromList . map T.pack . words . PDC.writeMarkdown PDC.def $ pdc)
                             

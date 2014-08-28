@@ -18,7 +18,6 @@ import imghdr
 from flask.helpers import send_file
 import io
 import pluginControl
-from htmlSanitize import sanitize_html
 import collections
 from containerLink import PluginException
 
@@ -316,7 +315,7 @@ def postParagraph():
     timdb = getTimDb()
     docId = request.get_json()['docId']
     verifyEditAccess(docId)
-    paragraphText = sanitize_html(request.get_json()['text'])
+    paragraphText = request.get_json()['text']
     parIndex = request.get_json()['par']
     app.logger.info("Editing file: {}, paragraph {}".format(docId, parIndex ))
     version = request.headers.get('Version')
@@ -490,8 +489,8 @@ def saveAnswer(plugintype, task_id):
     # Load old answers
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
-    # Get the newest answer (state)
-    state = oldAnswers[0]['content'] if len(oldAnswers) > 0 else None
+    # Get the newest answer (state). Only for logged in users.
+    state = oldAnswers[0]['content'] if loggedIn() and len(oldAnswers) > 0 else None
     
     markup = getPluginMarkup(doc_id, plugintype, task_id_name)
     if markup is None:
@@ -502,7 +501,7 @@ def saveAnswer(plugintype, task_id):
     answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata}
 
     pluginResponse = containerLink.callPluginAnswer(plugintype, answerCallData)
-  
+    
     try:
         jsonresp = json.loads(pluginResponse)
     except ValueError:
