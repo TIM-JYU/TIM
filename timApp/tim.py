@@ -491,7 +491,7 @@ def saveAnswer(plugintype, task_id):
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
     # Get the newest answer (state)
-    state = oldAnswers[0]['content'] if len(oldAnswers) > 0 else None
+    state = oldAnswers[0]['content'] if loggedIn() and len(oldAnswers) > 0 else None
     
     markup = getPluginMarkup(doc_id, plugintype, task_id_name)
     if markup is None:
@@ -511,7 +511,7 @@ def saveAnswer(plugintype, task_id):
     if not 'web' in jsonresp:
         return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
     
-    if 'save' in jsonresp:
+    if loggedIn() and 'save' in jsonresp:
         saveObject = jsonresp['save']
         
         #Save the new state
