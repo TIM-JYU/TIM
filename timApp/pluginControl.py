@@ -96,7 +96,9 @@ def pluginify(blocks,user,answerDb,doc_id,user_id):
                         vals['markup']["user_id"] =  user
                         taskId = "{}.{}".format(doc_id, vals['taskId'])
                         states = answerDb.getAnswers(user_id, taskId)
-                        state = None if len(states) == 0 else states[0]['content']
+                        
+                        # Don't show state for anonymous users.
+                        state = None if user_id == 0 or len(states) == 0 else states[0]['content']
                         try:
                             if state is not None:
                                 state = json.loads(state)
