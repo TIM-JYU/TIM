@@ -2,7 +2,7 @@
 import bleach
 
 
-tags = bleach.ALLOWED_TAGS + ['video', 'p', 'code','div','span', 'pre','img', 'h1','h2','h3','h4','h5','h6','h7','table','tbody','thead','tfoot','td','tr','th','caption','colgroup']
+tags = bleach.ALLOWED_TAGS + ['video','p','code','div','span','br','pre','img','h1','h2','h3','h4','h5','h6','h7','table','tbody','thead','tfoot','td','tr','th','caption','colgroup']
 
 tim_attrs = {'*':['class', 'id','align'], 'video':['src','controls'], 'img':['src','width','height']}
 bleach.ALLOWED_ATTRIBUTES.update(tim_attrs)
