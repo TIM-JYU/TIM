@@ -155,14 +155,17 @@ def getPluginDatas(plugins):
                 if( "http" in src):
                     jsPaths.append(src)
                 else:
-                    x = getPluginTimUrl(p) + "/"
-                    jsPaths.append(x + src)
+                    path = getPluginTimUrl(p) + "/" + src
+                    if not path in jsPaths:
+                        jsPaths.append(path)
             for cssSrc in rawCss:
                 if( "http" in src):
-                    cssPaths.append(cssSrc)
+                    if not cssSrc in cssPaths:
+                        cssPaths.append(cssSrc)
                 else:
-                    x = getPluginTimUrl(p) + "/"
-                    cssPaths.append(x + src)
+                    path = getPluginTimUrl(p) + "/" + src
+                    if not path in cssPaths:
+                        cssPaths.append(path)
             for mod in modsList:
                 modules.append(mod)
         except:
