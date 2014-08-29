@@ -7,9 +7,7 @@ class PluginException(Exception):
     """The exception that is thrown when an error occurs during a plugin call."""
     pass
 
-PLUGIN_URL = "http://tim-beta.it.jyu.fi"
-TIM_URL = "http://tim.it.jyu.fi"
-
+TIM_URL = ""
 
 # Most plugins are currently running on tim-beta.it.jyu.fi
 # Plugins with numeric IP-address are running there as well, they just don't have routes
