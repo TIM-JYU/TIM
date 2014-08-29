@@ -7,8 +7,16 @@ class PluginException(Exception):
     """The exception that is thrown when an error occurs during a plugin call."""
     pass
 
-TIM_URL = "http://tim-beta.it.jyu.fi"
+PLUGIN_URL = "http://tim-beta.it.jyu.fi"
+TIM_URL = "http://tim.it.jyu.fi"
 
+
+# Most plugins are currently running on tim-beta.it.jyu.fi
+# Plugins with numeric IP-address are running there as well, they just don't have routes
+# defined in nginx, and as such must be accessed through tim-beta localhost. However
+# as TIM is ran from a docker container, pointing to tim-beta's localhost
+# must be made through special bridge, which for docker containers is 
+# by default 172.17.42.1
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
         {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # rikkin�isen demonstroimiseksi
@@ -67,6 +75,7 @@ def callPluginAnswer(plugin, answerData):
 #        return "Could not connect to plugin" 
 
 
+# Get lists of js and css files required by plugin, as well as list of Angular modules they define. 
 def pluginReqs(plugin):
     try:
         plug = getPlugin(plugin)
@@ -76,12 +85,14 @@ def pluginReqs(plugin):
     except:
         return "Could not connect to plugin" 
 
+# Get plugin name
 def getPlugin(plug):
     for p in PLUGINS:
         if plug == p["name"]:
             return p
     return "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system"
 
+# Get address towards which the plugin must send its further requests, such as answers
 def getPluginTimUrl(plug):
     for p in PLUGINS:
         if plug == p["name"]:

@@ -494,10 +494,10 @@ def saveAnswer(plugintype, task_id):
     
     markup = getPluginMarkup(doc_id, plugintype, task_id_name)
     if markup is None:
-        return jsonResponse({'error' : 'The task was not found in the document.'}, 404)
+        return jsonResponse({'error' : 'The task was not found in the document. ' + str(doc_id) + ' ' + task_id_name}, 404)
     if markup == "YAMLERROR: Malformed string":
         return jsonResponse({'error' : 'Plugin markup YAML is malformed.'}, 400)
-
+ 
     answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata}
 
     pluginResponse = containerLink.callPluginAnswer(plugintype, answerCallData)
