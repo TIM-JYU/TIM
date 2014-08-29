@@ -3,6 +3,7 @@ from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 # Asennetaan python, pip ja flask
+add . .
 run apt-get update
 run apt-get install -y ghc
 run apt-get install -y cabal-install
@@ -11,8 +12,7 @@ run apt-get install -y libgmp10
 env LANG en_US.UTF-8
 
 run cabal update
-run cabal install --only-dependencies
-run cabal configure
+run cabal install PluginConstructionKit/ Choices/
 
 # Avataan portti 5000 ulos containerista.
 expose 5000
