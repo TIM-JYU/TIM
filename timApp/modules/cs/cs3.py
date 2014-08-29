@@ -8,6 +8,7 @@ import os.path
 import uuid
 import io
 import codecs
+import binascii
 from os import kill
 import signal
 # from signal import alarm, signal, SIGALRM, SIGKILL
@@ -86,8 +87,8 @@ def print_lines(file, lines, n1, n2):
         file.write((ln + line + "\n"))
 
 
-def write_json_error(file, err):
-    result = {"web": {"error": err}}
+def write_json_error(file, err, result):
+    result["web"] = {"error": err}
     result_str = json.dumps(result)
     file.write(result_str.encode())
     print("ERROR:======== ", err.encode("UTF8"))
@@ -104,13 +105,27 @@ def remove_before(what, s):
     return s[i + 1:]
 
 
+def get_html(ttype, query):
+    js = query_params_to_map(query.query)
+    jso = json.dumps(js)
+    runner = 'cs-runner'
+    if "comtest" in ttype: runner = 'cs-comtest-runner'
+    if "tauno" in ttype: runner = 'cs-tauno-runner'
+    if "jypeli" in ttype: runner = 'cs-jypeli-runner'
+    s = '<' + runner + '>xxxJSONxxx' + jso + '</' + runner + '>'
+    if ttype == "c1" or True: # c1 oli testejä varten ettei sinä aikana rikota muita.
+        hx = binascii.hexlify(jso.encode("UTF8"))
+        s = '<' + runner + '>xxxHEXJSONxxx' + hx.decode() + '</' + runner + '>'
+    return s
+
+
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         print("do_OPTIONS ==============================================")
         self.send_response(200, "ok")
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
         print(self.path)
         print(self.headers)
 
@@ -138,26 +153,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         except:
             return
 
-    def get_html(self, ttype, query):
-        s = string_to_string_replace_attribute('<cs-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-runner>',
-                                               "##QUERYPARAMS##", query)
-        if "comtest" in ttype:
-            s = string_to_string_replace_attribute(
-                '<cs-comtest-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-comtest-runner>',
-                "##QUERYPARAMS##", query)
-        if "tauno" in ttype:
-            s = string_to_string_replace_attribute(
-                '<cs-tauno-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-tauno-runner>',
-                "##QUERYPARAMS##", query)
-        if "jypeli" in ttype:
-            s = string_to_string_replace_attribute(
-                '<cs-jypeli-runner \n##QUERYPARAMS##\n>##USERCODE##</cs-jypeli-runner>',
-                "##QUERYPARAMS##", query)
-        return s
-
 
     def do_all(self, query):
-        result = {} # query.jso
+        result = {}  # query.jso
         if not result: result = {}
         save = {}
         web = {}
@@ -171,11 +169,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if self.path.find('/favicon.ico') >= 0:
             self.send_response(404)
             return
-			
+
         if self.path.find('/login') >= 0:
             query = post_params(self)
             return
-            
 
         is_fullhtml = self.path.find('/fullhtml') >= 0
         is_html = self.path.find('/html') >= 0 or self.path.find('.html') >= 0
@@ -189,16 +186,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_ptauno = self.path.find('/ptauno') >= 0
 
         self.send_response(200)
-        # self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
         content_type = 'text/plain'
-        if is_reqs: content_type = "application/json"
+        if is_reqs  or is_answer: content_type = "application/json"
         if is_fullhtml or is_html: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
-        if is_js or is_answer: content_type = 'application/javascript'
+        if is_js: content_type = 'application/javascript'
         self.send_header('Content-type', content_type)
         self.end_headers()
+
+        if self.path.find("refresh") >= 0:
+            self.wout(get_chache_keys())
+            clear_cache()
+            return
 
         if is_ptauno:
             p = self.path.split("?")
@@ -211,16 +213,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_tauno: ttype = 'tauno'
 
         if is_reqs:
-            # result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
-            #               "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"]}
-            result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
-                           "css": ["css/cs.css"]}
+            result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
+                          "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"]}
+            #result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
+            #               "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)
             return self.wout(result_str)
 
         # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
         usercode = get_json_param(query.jso, "state", "usercode", None)
         if usercode: query.query["usercode"] = [usercode]
+        print("USERCODE: XXXXX = ", usercode)
 
         print("Muutos ========")
         # pprint(query.__dict__, indent=2)
@@ -235,11 +238,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_html and not is_iframe:
             print("HTML:==============")
-            return self.wout(self.get_html(ttype, query))
+            s = get_html(ttype, query)
+            print(s)
+            return self.wout(s)
 
         if is_fullhtml:
             self.wout(file_to_string('begin.html'))
-            self.wout(self.get_html(ttype, query))
+            self.wout(get_html(ttype, query))
             self.wout(file_to_string('end.html'))
             return
 
@@ -274,30 +279,33 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         p0 = FileParams(query, "", "")
         print("p0=")
         print(p0.replace)
-        if p0.url == "" and p0.replace == "": return self.wout("Must give file= -parameter")
+        if p0.url == "" and p0.replace == "": p0.replace = "XXXX";
 
         print_file = get_param(query, "print", "")
         print("type=" + ttype)
 
         s = ""
-        #if p0.url != "": 
+        # if p0.url != "":
         s = get_file_to_output(query, False and print_file)
 
         # Open the file and write it
         if print_file: return self.wout(s)
 
-        csfile = codecs.open(csfname, "w", "utf-8")  # open(csfname, "w")
-        csfile.write(s)
-        csfile.close()
+        # /answer-path comes here
+        usercode = get_json_param(query.jso, "input", "usercode", None)
+        save["usercode"] = usercode
+        result["save"] = save
+
+        if not s.startswith("File not found"): codecs.open(csfname, "w", "utf-8").write(s)
 
         if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
-            return write_json_error(self.wfile, "Could not get the source file")
+            return write_json_error(self.wfile, "Could not get the source file", result)
             # self.wfile.write("Could not get the source file\n")
             # print "=== Could not get the source file"
 
         # Compile
         try:
-			
+
             if ttype == "jypeli":
                 cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
                     exename, csfname)
@@ -332,7 +340,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             output.close()
 
             self.remove(csfname)
-            return write_json_error(self.wfile, error_str)
+            return write_json_error(self.wfile, error_str, result)
 
         lang = ""
         plang = get_param(query, "lang", "")
@@ -340,13 +348,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if plang:
             if plang.find("fi") == 0: lang = "fi_FI.UTF-8"
             if plang.find("en") == 0: lang = "en_US.UTF-8"
-            
-        if lang: 
-            env["LANG"]=lang
-            env["LC_ALL"]=lang
-        print("Lang= ",lang)
-        
-                
+
+        if lang:
+            env["LANG"] = lang
+            env["LC_ALL"] = lang
+        print("Lang= ", lang)
+
         if ttype == "jypeli":
             code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
             if type(out) != type(''): out = out.decode()
@@ -399,19 +406,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             print("Exe: ", exename)
             code, out, err = run(["mono", exename], timeout=10, env=env)
             print(code, out, err)
-            #if type(out) != type(''): out = out.decode()
-            if out[0] in [254,255]: out = out.decode('UTF16')
-            elif type(out) != type(''): out = out.decode('utf-8-sig')
+            # if type(out) != type(''): out = out.decode()
+            if out[0] in [254, 255]:
+                out = out.decode('UTF16')
+            elif type(out) != type(''):
+                out = out.decode('utf-8-sig')
             if code == -9: out = "Runtime exceeded, maybe loop forever\n" + out
-                # self.remove(exename)
+            # self.remove(exename)
 
         out = out[0:2000]
         web["console"] = out
-        usercode = get_json_param(query.jso, "input", "usercode", None)
-        save["usercode"] = usercode
-        
+
         result["web"] = web
-        result["save"] = save
 
         # Clean up
         print("FILE NAME:", csfname)
@@ -423,7 +429,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.wout(sresult)
         print("Result ========")
         print(sresult)
-        #print(out)
+        # print(out)
         print(err)
 
 
