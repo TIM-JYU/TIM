@@ -32,7 +32,7 @@ PLUGINS = [
 # PLUGINS
 def callPlugin(plugin, info, state):
     pluginData = json.dumps({"markup" : info, "state": state})
-    print("Calling plugin HTML route with data: " + pluginData)
+    print("Calling plugin {} HTML route with data: {}".format(plugin, pluginData))
     try:
         for x in PLUGINS:
             if(x['name'] == plugin):
@@ -62,7 +62,7 @@ def callPluginResource(plugin, fileName):
 # PLUGINS
 def callPluginAnswer(plugin, answerData):
 #    try:
-    print("Calling plugin answer route with data: " + json.dumps(answerData))
+    print("Calling plugin {} answer route with data: {}".format(plugin, json.dumps(answerData)))
     for x in PLUGINS:
         if(x['name'] == plugin):
             headers = {'Content-type': 'application/json'}
