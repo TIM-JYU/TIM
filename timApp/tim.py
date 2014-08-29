@@ -366,7 +366,7 @@ def editDocument(doc_id):
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
-    return render_template('editing.html', docId=doc_metadata['id'], docName=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, css=cssPaths, jsMods=modules)
+    return render_template('editing.html', docId=doc_metadata['id'], docName=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, cssFiles=cssPaths, jsMods=modules)
 
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
@@ -430,7 +430,7 @@ def viewDocument(doc_id):
     (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
-    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, css=cssPaths, jsMods=modules)
+    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, cssFiles=cssPaths, jsMods=modules)
 
 
 @app.route("/postNote", methods=['POST'])

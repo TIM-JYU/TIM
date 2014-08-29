@@ -4,17 +4,19 @@
 <title>{{docName}} - TIM</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
 <script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
-<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-<script type="text/javascript" src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
-    {% for script in js %}
-    <script src=" {{ script }}"> </script> 
-    {% endfor %}
-    <script>
+<script src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
+
+{% for script in js %}
+<script src=" {{ script }}"> </script>
+{% endfor %}
+
+<script>
     
     var modules = checkModules( [
                                  {% for dep in jsMods %}
@@ -24,17 +26,21 @@
                                  ]);
 
                              var EditApp = angular.module("controller", modules );
-    </script> 
+</script>
+
 <script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/notesView/noteController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
+<script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
 
-<script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
-<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
+{% for cssFile in cssFiles %}
+<link rel="stylesheet" href="{{ cssFile }}">
+{% endfor %}
 
 <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -47,7 +53,7 @@
         var version = {{version|tojson|safe}};
 </script>
 </head>
-<body ng-app="timApp" ng-controller="ViewCtrl"> 
+<body ng-app="timApp" ng-controller="ViewCtrl">
     <h1>{{docName}}</h1>
     <div class="material">
 
@@ -57,32 +63,40 @@
             <div style="" class="content {{ '{{ par.par }}' }}" compile ng-bind-html="par.html | to_trusted"></div>
 
             <div ng-controller="NoteCtrl">
-				<div class="notes">
-					<div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
-						<button ng-show="!m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
-						<div ng-bind-html="note.htmlContent"></div>
-					</div>
-				</div>	
-				<button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
-				<div class="noteEditorArea" ng-if="m.showEditor">	
-                <div class="editButtonArea"> 
-					<button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
-					<button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>
-					<button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}})" class="deleteButton">Delete</button>
+                <div class="notes">
+                    <div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
+                        <button ng-show="!m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
+                        <div ng-bind-html="note.htmlContent"></div>
+                    </div>
                 </div>
-					<textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
+                <button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
+                <div class="noteEditorArea" ng-if="m.showEditor">
+                    <div class="editButtonArea">
+                        <button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
+                        <button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>
+                        <button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}})" class="deleteButton">Delete</button>
+                    </div>
+                    <textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
                     <div>
                         Show note to:
-                        <label><input type="radio" ng-model="visibility" value="everyone">Everyone (anonymously)</label>
-                        <label><input type="radio" ng-model="visibility" value="justme">Just me</label>
+                        <label>
+                            <input type="radio" ng-model="visibility" value="everyone"> Everyone (anonymously)
+                        </label>
+                        <label>
+                            <input type="radio" ng-model="visibility" value="justme"> Just me
+                        </label>
                         <div class="tags" ng-show="visibility === 'everyone'">
-                            <label><input type="checkbox">The text is difficult to understand</label>
+                            <label>
+                                <input type="checkbox"> The text is difficult to understand
+                            </label>
                             <br>
-                            <label><input type="checkbox">The text is unclear</label>
+                            <label>
+                                <input type="checkbox"> The text is unclear
+                            </label>
                         </div>
                     </div>
-				</div>
-			</div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
