@@ -63,7 +63,7 @@ class TimDbBase(object):
         cursor.execute('select exists(select id from Block where id = ? and type_id = ? limit 1)', [block_id, block_type])
         result = cursor.fetchone()
         if result[0] == 1:
-            assert os.path.exists(self.getBlockPath(block_id)), 'the block was in database but the file was not found'
+            assert os.path.exists(self.getBlockPath(block_id)), 'the block {} was in database but the file was not found'.format(block_id)
             return True
         return False
     
