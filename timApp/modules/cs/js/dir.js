@@ -146,7 +146,7 @@ csApp.directiveFunction = function(t) {
 			csApp.set(scope,attrs,"codeunder",false);
 			csApp.set(scope,attrs,"codeover",false);
 			csApp.set(scope,attrs,"rows",1);
-			csApp.set(scope,attrs,"maxrows",10);
+			csApp.set(scope,attrs,"maxrows",-1);
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder","Write your code here");
 
@@ -158,6 +158,11 @@ csApp.directiveFunction = function(t) {
 			// scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
 			// scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
 
+            if ( scope.usercode ) {
+                var rowCount = csApp.countChars(scope.usercode,'\n') + 1;
+                if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
+            } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
+            
 			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0);
 			scope.isTest = scope.type.indexOf("comtest") >= 0;
 

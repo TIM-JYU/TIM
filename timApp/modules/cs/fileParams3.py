@@ -18,7 +18,7 @@ class QueryClass:
 
 
 def get_param(query, key, default):
-    dvalue = default;
+    dvalue = default
     if key in query.query: dvalue = query.query[key][0]
     if dvalue == 'undefined': dvalue = default
 
@@ -176,6 +176,20 @@ class FileParams:
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = get_param(query, "by" + nr, "")
 
+        self.reps = []
+
+        for i in range(1, 10):
+            rep = do_matcher(get_param(query, "replace" + str(i), ""))
+            if not rep: break
+            byc = get_param(query, "byCode" + str(i), "")
+            if byc:
+                bycs = byc.split("\n")
+                if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
+                    del bycs[0]
+                    byc = "\n".join(bycs)
+            self.reps.append({"by": rep, "bc": byc})
+
+
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
         if usercode:
@@ -231,7 +245,10 @@ class FileParams:
             line = lines[i]
             # if enc or True: line = line.decode('UTF8')
             # else: line = str(line)
-            if check(self.replace, line):  line = replace_by  # + "\n"
+            if check(self.replace, line): line = replace_by  # + "\n"
+            for r in self.reps:
+                if check(r["by"], line): line = r["bc"]  # + "\n"
+
             if escape_html: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
@@ -266,7 +283,7 @@ def get_file_to_output(query, show_html):
     s += p0.get_include(show_html)
     u = p0.url
     for i in range(1, 10):
-        p = FileParams(query, str(i), u)
+        p = FileParams(query, "."+str(i), u)
         s += p.get_file(show_html)
         s += p.get_include(show_html)
         if p.url: u = p.url

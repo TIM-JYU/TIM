@@ -1,0 +1,22 @@
+{
+    "state": {
+        "usercode": null
+    }, 
+    "input": {
+        "markup": {
+            "file": "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Tauno/Kasittele.cs", 
+            "replace": "TODO: Kopioi", 
+            "taskId": "103.t2", 
+            "type": "comtest"
+        }
+    },  
+    "markup": {
+        "file": "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Tauno/Kasittele.cs", 
+        "type": "console/comtest", 
+        "replace": "TODO: Kopioi", 
+        "byCode": "",
+        "replace1": "TODO: TESTIT TAHAN" , 
+        "byCode1": "23, 45, 12, 9, 3, 7 | 23, 23, 23, 23, 23, 23" 
+    } 
+}
+    

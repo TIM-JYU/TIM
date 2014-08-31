@@ -210,7 +210,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Get the template type
         ttype = get_param(query, "type", "console").lower()
-        if is_tauno: ttype = 'tauno'
+        if is_tauno and not is_answer: ttype = 'tauno' # answe is newer tauno
 
         if is_reqs:
             result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
