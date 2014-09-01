@@ -583,7 +583,7 @@ img.console {
   background: #000000;
   border: 3px double #ccc;
   padding: 10px;
-  width: 90%;
+  width: 92% !important; 
 }
 
 p.stem {
@@ -637,8 +637,8 @@ p.stem {
 	line-height: 1.1;
 	font-size: 0.96em;
 	box-shadow: none;
-	width: 100%;
-	min-width: 600px;
+	width: 100% !important;
+	min-width: 600px !important;
 	white-space: pre;
 	border-left: thin solid #0066FF;
 }
@@ -647,8 +647,8 @@ p.stem {
 	display: block;
 	margin: 0 auto;
 }
-
-.showVideoHolder {
+ 
+.showVideoHolder { 
 	text-align:center;
 	display: block;
 	margin: 0 auto;
@@ -663,7 +663,7 @@ p.stem {
     border-style: solid;
 	border-width: 1px;
 	border-radius: 5px;
-	width: 100%; 
+	width: 100% !important; 
 }
 
 .csRunMenu {
