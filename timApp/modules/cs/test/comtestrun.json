@@ -1,0 +1,18 @@
+{"state": null, 
+ "markup": {"byCode": "//\n       System.Console.WriteLine(\"Moi 1\"); //ä\n       System.Console.WriteLine(\"Moi 2\");", 
+ "maxrows": 5, 
+ "rows": 2, 
+ "header": 
+ "h4!! Tehtava 1", 
+ "file": "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Pohja/Pohja.cs", 
+ "type": "console", 
+ "replace": "Console", 
+ "stem": "Muuta koodia niin, että se tulostaa nimesi:"}, 
+ "input": {"markup": 
+    {"replace": "return 0;", 
+     "taskId": "22.omanimi", 
+     "file": "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Pohja/KeskiarvoPohja.cs", 
+     "type": "comtest"
+    }
+ }
+}

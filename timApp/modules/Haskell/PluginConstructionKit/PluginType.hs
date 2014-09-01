@@ -250,7 +250,10 @@ serve plugin = route
      runArM ar f = do
            eps <- liftIO $ runAR ar
            case eps of
-                Left err -> modifyResponse (setResponseCode 400) >> writeLazyText "Unable to parse required parameters"
+                Left err -> modifyResponse (setContentType "text/plain" . setResponseCode 400) >> 
+                            writeLazyText "Unable to parse required parameters" >>
+                            writeText (T.pack err)
+
                 Right v  -> f v
 
 -- Quick helper for building objects

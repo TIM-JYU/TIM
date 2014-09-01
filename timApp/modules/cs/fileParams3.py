@@ -12,21 +12,26 @@ import bleach
 
 class QueryClass:
     def __init__(self):
+        self.get_query = {}
         self.query = {}
         self.jso = None
 
 
 def get_param(query, key, default):
-    if key not in query.query:
-        if query.jso is None: return default
+    dvalue = default
+    if key in query.query: dvalue = query.query[key][0]
+    if dvalue == 'undefined': dvalue = default
+
+    if key not in query.get_query:
+        if query.jso is None: return dvalue
         if "input" in query.jso and "markup" in query.jso["input"] and key in query.jso["input"]["markup"]:
             value = query.jso["input"]["markup"][key]
             if value != 'undefined': return value
-        
-        if "markup" not in query.jso: return default
+
+        if "markup" not in query.jso: return dvalue
         if key in query.jso["markup"]: return query.jso["markup"][key]
-        return default
-    value = query.query[key][0]
+        return dvalue
+    value = query.get_query[key][0]
     if value == 'undefined': return default
     return value
 
@@ -46,16 +51,16 @@ def get_param_del(query, key, default):
     return value
 
 
-def replace_param(query, key, newValue):
+def replace_param(query, key, new_value):
     if key not in query.query:
         if query.jso is None: return
         if "markup" not in query.jso: return
         if key in query.jso["markup"]:
-            query.jso["markup"][key] = newValue
+            query.jso["markup"][key] = new_value
         return
     value = query.query[key][0]
     if value == 'undefined': return
-    query.query[key][0] = newValue
+    query.query[key][0] = new_value
 
 
 def do_matcher(key):
@@ -84,6 +89,7 @@ def get_json_param(jso, key1, key2, default):
         print("KEY1=", key1, "KEY2=", key2)
         return default
 
+
 def get_scan_value(s):
     direction = 1
     if s:
@@ -104,11 +110,29 @@ def scan_lines(lines, n, i, scanner, direction):
         if check(scanner, line): return i
         i += direction
     if i < 0: i = 0
-    if i >= n: i = n-1
+    if i >= n: i = n - 1
     return i
 
 
+cache = {}
+
+
+def clear_cache():
+    global cache
+    cache = {}
+
+
+def get_chache_keys():
+    global cache
+    s = ""
+    for key in cache.keys(): s += key + "\n"
+    return s
+
 def get_url_lines(url):
+    global cache
+    # print("========= CACHE KEYS ==========\n", get_chache_keys())
+    if url in cache: return cache[url]
+
     try:
         req = urlopen(url)
         ftype = req.headers['content-type']
@@ -130,6 +154,7 @@ def get_url_lines(url):
                 line = str(line)
         lines[i] = line.replace("\n", "").replace("\r", "")
 
+    cache[url] = lines
     return lines
 
 
@@ -151,12 +176,28 @@ class FileParams:
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = get_param(query, "by" + nr, "")
 
+        self.reps = []
+
+        for i in range(1, 10):
+            rep = do_matcher(get_param(query, "replace" + str(i), ""))
+            if not rep: break
+            byc = get_param(query, "byCode" + str(i), "")
+            if byc:
+                bycs = byc.split("\n")
+                if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
+                    del bycs[0]
+                    byc = "\n".join(bycs)
+            self.reps.append({"by": rep, "bc": byc})
+
+
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
-        if usercode: self.by = usercode
+        if usercode:
+            self.by = usercode
+        else:
+            usercode = get_json_param(query.jso, "state" + nr, "usercode", None)
+            if usercode: self.by = usercode
 
-        # if usercode: print("USERCODE: ",usercode.encode())
-		
         u = get_param(query, "url" + nr, "")
         if u and not self.url: self.url = url
         if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
@@ -181,8 +222,11 @@ class FileParams:
         if n1 < 0: n1 = 0
         if n2 < n1: n2 = n1  # if n1 went forward
 
-        n2 = scan_lines(lines, n, n2, self.end, 1)
-        n2 = scan_lines(lines, n, n2, self.end_scan, self.end_scan_dir)
+        if self.end:
+            n2 = scan_lines(lines, n, n2, self.end, 1)
+            n2 = scan_lines(lines, n, n2, self.end_scan, self.end_scan_dir)
+        else:
+            n2 = n - 1
         n2 += self.endn
         if n2 >= n: n2 = n - 1
 
@@ -193,7 +237,7 @@ class FileParams:
         replace_by = self.by
         if replace_by:
             rep = replace_by.split("\n")
-            if len(rep) > 0 and rep[0].strip() == "//": # remove empty comment on first line (due YAML limatations)
+            if len(rep) > 0 and rep[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
                 del rep[0]
                 replace_by = "\n".join(rep)
 
@@ -201,17 +245,20 @@ class FileParams:
             line = lines[i]
             # if enc or True: line = line.decode('UTF8')
             # else: line = str(line)
-            if check(self.replace, line):  line = replace_by # + "\n"
+            if check(self.replace, line): line = replace_by  # + "\n"
+            for r in self.reps:
+                if check(r["by"], line): line = r["bc"]  # + "\n"
+
             if escape_html: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
             if i + 1 >= self.lastn: break
             ni += 1
             if ni >= self.maxn: break
-        
+
         return result
 
-		
+
     def get_include(self, escapeHTML=False):
         if not self.include:  return ""
         data = self.include.replace("\\n", "\n")
@@ -221,6 +268,7 @@ class FileParams:
 
 def get_params(self):
     result = QueryClass()
+    result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
     result.query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
     return result
 
@@ -230,12 +278,12 @@ def get_file_to_output(query, show_html):
     p0 = FileParams(query, "", "")
     # if p0.url == "":
     s = p0.get_file(show_html)
-    if not s:
-        return "Must give file= -parameter"
+    # if not s:
+    #    return "Must give file= -parameter"
     s += p0.get_include(show_html)
     u = p0.url
     for i in range(1, 10):
-        p = FileParams(query, str(i), u)
+        p = FileParams(query, "."+str(i), u)
         s += p.get_file(show_html)
         s += p.get_include(show_html)
         if p.url: u = p.url
@@ -278,9 +326,9 @@ def post_params(self):
     if len(u) == 0: return result
     if content_type.find("json") < 0:  # ei JSON
         print("POSTPARAMS============")
-        q = parse_qs(urlparse('k/?'+u).query, keep_blank_values=True)
+        q = parse_qs(urlparse('k/?' + u).query, keep_blank_values=True)
         for field in list(q.keys()):
-            print("FIELD=",field)
+            print("FIELD=", field)
             result.query[field] = [q[field][0]]
         return result
 
@@ -298,7 +346,8 @@ def post_params(self):
             for f in list(result.jso[field].keys()):
                 result.query[f] = [str(result.jso[field][f])]
         else:
-            if field != "state": result.query[field] = [str(result.jso[field])]
+            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
+    # print(jso)
     return result
 
 
@@ -335,6 +384,11 @@ def query_params_to_map(query):
     result = {}
     for field in query.keys():
         result[field] = query[field][0]
+    return result
+
+
+def query_params_to_json(query):
+    result = json.dumps(query_params_to_map(query))
     return result
 
 
@@ -389,29 +443,33 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     if "##USERCODE##" in line: leave_away = "byCode"
     params = query_params_to_attribute(query.query, leave_away)
     line = line.replace(what_to_replace, params)
-    line = line.replace("##USERCODE##", get_param(query, "byCode", ""))
+    by = get_param(query, "byCode", "")
+    by = get_param(query, "usercode", by)
+    print("BY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", by.encode())
+    line = line.replace("##USERCODE##", by)
     print(line.encode())
     return line
 
 
 def allow(s):
-    tags = ['em', 'strong', 'tt','a','b','code','i','kbd']
+    tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd']
     attrs = {
         'a': ['href']
     }
-    return  bleach.clean(s, tags, attrs)
+    return bleach.clean(s, tags, attrs)
 
 
 def clean(s):
-    s = s.replace('"','') # kannattaako, tällä poistetaam katkaisun mahdollisuus?
-    return  bleach.clean(s)
+    s = str(s)
+    s = s.replace('"', '')  # kannattaako, tällä poistetaam katkaisun mahdollisuus?
+    return bleach.clean(s)
 
 
 def get_heading(query, key, def_elem):
     if not query: return ""
     h = get_param(query, key, None)
     if not h: return ""
-    st = h.split("!!") # h4 class="h3" width="23"!!Tehtava 1
+    st = h.split("!!")  # h4 class="h3" width="23"!!Tehtava 1
     elem = def_elem
     val = st[0]
     attributes = ""
@@ -421,30 +479,30 @@ def get_heading(query, key, def_elem):
     i = elem.find(' ')
     ea = [elem]
     if i >= 0:
-        ea = [elem[0:i],elem[i:]]
+        ea = [elem[0:i], elem[i:]]
     if len(ea) > 1:
         elem = ea[0]
         attributes = ea[1] + " "
-    val =  allow(val)
-    result_html = "<" + elem + attributes +">" + val +  "</" + elem + ">\n"
+    val = allow(val)
+    result_html = "<" + elem + attributes + ">" + val + "</" + elem + ">\n"
     attrs = {
-        '*': ['id','class'],
+        '*': ['id', 'class'],
         'a': ['href']
     }
-    tags = ['a','p', 'em', 'strong', 'tt', 'h1','h2','h3','h4','h5','h6','i','b','code']
+    tags = ['a', 'p', 'em', 'strong', 'tt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'b', 'code']
     result_html = bleach.clean(result_html, tags, attrs)
     return result_html
 
 
 def get_surrounding_headers(query, inside):
-    result = get_heading(query,"header","h4")
-    stem = allow(get_param(query,"stem",None))
+    result = get_heading(query, "header", "h4")
+    stem = allow(get_param(query, "stem", None))
     if stem:  result += '<p class="stem" >' + stem + '</p>\n'
-    result += inside +'\n'
-    result += get_heading(query,"footer",'p class="footer"')
+    result += inside + '\n'
+    result += get_heading(query, "footer", 'p class="footer"')
     return result
 
 
 def get_clean_param(query, key, default):
-    s = get_param(query,key, default)
+    s = get_param(query, key, default)
     return clean(s)

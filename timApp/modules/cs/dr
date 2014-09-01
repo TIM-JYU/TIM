@@ -1,0 +1,3 @@
+#!/bin/sh
+docker rm csPlugin
+docker run --name csPlugin -t -i -p 56000:5000 -v /opt/cs:/cs/ cs3 /bin/bash  

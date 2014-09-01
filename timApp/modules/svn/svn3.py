@@ -139,6 +139,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.send_header('Content-type', content_type)
         self.end_headers()
 
+        if self.path.find("refresh") >= 0:
+            self.wout(get_chache_keys())
+            clear_cache()
+            return
+
         if is_image:
             s = get_image_html(query)
             self.wout(s)
@@ -176,9 +181,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if cla: cla = " " + cla
 
         s = ""
+        ffn = get_param(query,"file","")
+        fn = ffn
+        i = ffn.rfind("/")
+        if i >= 0: fn = ffn[i+1:]
+
         if show_html: s += '<pre class="showCode' + cla + '"' + w + '>'
         s += get_file_to_output(query, show_html)
-        if show_html: s += '</pre>'
+        if show_html: s += '</pre><p class="smalllink"><a href="' + ffn + '" target="_blank">'+fn+'</a>'
         s = get_surrounding_headers(query, s)
         return self.wout(s)
 

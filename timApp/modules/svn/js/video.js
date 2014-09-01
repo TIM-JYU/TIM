@@ -37,7 +37,7 @@ videoApp.directiveFunction = function(t) {
 			scope.height = attrs.height;
 			scope.start = attrs.start;
 			scope.end = attrs.end;
-			if ( attrs.stem ) scope.stem = decodeURIComponent(escape(attrs.stem));
+			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
 			scope.videoHtml = element[0].childNodes[2]
 			head = videoApp.getHeading(attrs,"header",scope,"h4");
@@ -59,7 +59,8 @@ videoApp.directiveFunction = function(t) {
 				  '<p>Here comes header</p>' +
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 				  '<div ><p></p></div>' + 
-				  '<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
+				  //'<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
+				  '<img src="http://www.reiwired.com/media/uploads/thumbnails/video-default.png" ng-if="!videoOn" ng-click="showVideo()" width="200" alt="Click here to show the video" />' +
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">hide video</a></p>'+
 				  '<p class="footer">Here comes footer</p>'+
 				  '</div>'
@@ -97,10 +98,14 @@ videoApp.Controller = function($scope,$http,$transclude) {
 		var vid = 'vid'+videoApp.nr;
 		var w = videoApp.ifIs($scope.width,"width");
 		var h = videoApp.ifIs($scope.height,"height");
-		var t = "";
-		if ( $scope.start ) t = "&start="+$scope.start+"&end="+$scope.end+"&position=$scope.start";
+		var moniviestin = $scope.file.indexOf("m3.jyu.fi") >= 0;
+		var t = "?";
+		if ( $scope.start )
+		    if ( moniviestin ) t = "#position="+$scope.start;
+		    else t = "?start="+$scope.start+"&end="+$scope.end;
 		if ( $scope.iframe )
-			$scope.videoHtml.innerHTML = '<iframe class="showVideo" src="' + $scope.file +"?rel=0"+ t + '" ' + w + h + 'autoplay="true" start=100 position=833 frameborder="0" allowfullscreen></iframe>';
+			$scope.videoHtml.innerHTML = '<iframe class="showVideo" src="' + $scope.file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
+			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
 		else   
 			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';

@@ -52,8 +52,7 @@ csApp.commentTrim = function(s) {
 }
 
 csApp.getHeading = function(a,key,$scope,defElem) {
-	if ( !a ) return "";
-	var h = a[key];
+	var h = csApp.set($scope,a,key,"");
 	if ( !h ) return "";
 	// if ( h.toLowerCase().indexOf("script") >= 0 ) return "";
 	var st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
@@ -115,53 +114,58 @@ csApp.directiveTemplateCS = function(t) {
 				  '</div>';
 }
 
+
+csApp.set = function(scope,attrs,name,def) {
+    scope[name] = def;
+    if ( attrs && attrs[name] ) scope[name] = attrs[name];
+    if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
+    return scope[name];
+}
+
+
 csApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
-            scope.plugin = element.parent().attr("data-plugin");
-            scope.taskId  = element.parent().attr("id");  
-			scope.file = attrs.file;
-			if ( attrs.lang ) scope.lang = attrs.lang;
-			scope.type = "console";
-			if ( attrs.type ) scope.type = attrs.type;
-			scope.width = attrs.width;
-			scope.height = attrs.height;
-			scope.table = attrs.table;
-			scope.variables = attrs.variables;
-			scope.indices = attrs.indices;
-
-			scope.replace = attrs.replace;
-			scope.rows = 1;
-			scope.maxrows = 10;
-			scope.codeunder = false;
-			scope.codeunder = false;
-			scope.taunotype = attrs.taunotype;
-            
-			scope.usercode = "";
-			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0);
-			scope.isTest = scope.type.indexOf("comtest") >= 0;
-			
-			
-			// if ( attrs.stem ) scope.stem = decodeURIComponent(escape(attrs.stem));
-			if ( attrs.stem ) scope.stem = attrs.stem;
-			if ( attrs.iframe ) scope.iframe = true;
 			scope.taunoHtml = element[0].childNodes[csApp.taunoPHIndex]; // Check this carefully, where is Tauno placeholder
-			
-			scope.placeholder = "Write your code here";
-			
-			if ( attrs.usercode ) scope.usercode = attrs.usercode;
-			if ( attrs.codeunder ) scope.codeunder = attrs.codeunder;
-			if ( attrs.codeover ) scope.codeover = attrs.codeover;
-			if ( attrs.rows ) scope.rows = attrs.rows;
+            scope.plugin = element.parent().attr("data-plugin");
+            scope.taskId  = element.parent().attr("id");
+
+			csApp.set(scope,attrs,"file");
+			csApp.set(scope,attrs,"lang");
+			csApp.set(scope,attrs,"type","console");
+			csApp.set(scope,attrs,"width");
+			csApp.set(scope,attrs,"height");
+			csApp.set(scope,attrs,"table");
+			csApp.set(scope,attrs,"variables");
+			csApp.set(scope,attrs,"indices");
+			csApp.set(scope,attrs,"replace");
+			csApp.set(scope,attrs,"taunotype");
+			csApp.set(scope,attrs,"stem");
+			csApp.set(scope,attrs,"iframe",false);
+			csApp.set(scope,attrs,"usercode","");
+			csApp.set(scope,attrs,"codeunder",false);
+			csApp.set(scope,attrs,"codeover",false);
+			csApp.set(scope,attrs,"rows",1);
+			csApp.set(scope,attrs,"maxrows",-1);
+			csApp.set(scope,attrs,"attrs.bycode");
+			csApp.set(scope,attrs,"placeholder","Write your code here");
+
 			scope.minRows = csApp.getInt(scope.rows);
-			if ( attrs.maxrows )scope.maxRows = csApp.getInt(attrs.maxrows);
-			if ( attrs.bycode ) scope.byCode = attrs.bycode;
+			scope.maxRows = csApp.getInt(scope.maxrows);
 			if ( scope.usercode == "" )  scope.usercode = scope.byCode;
-			if ( attrs.placeholder ) scope.placeholder = attrs.placeholder;
 			scope.usercode = csApp.commentTrim(scope.usercode);
 			scope.byCode = csApp.commentTrim(scope.byCode);
 			// scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
 			// scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
+
+            if ( scope.usercode ) {
+                var rowCount = csApp.countChars(scope.usercode,'\n') + 1;
+                if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
+            } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
+            
+			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0);
+			scope.isTest = scope.type.indexOf("comtest") >= 0;
+
 			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
@@ -228,18 +232,39 @@ csApp.doVariables = function(v,name) {
 	}
 	return r.replace(/ /g,"");
 }
-		
+
+csApp.Hex2Str = function (s) {
+  var result = '';
+  for (var i=0; i<s.length; i+=2) {
+    c = String.fromCharCode(parseInt(s[i]+s[i+1],16));
+    result += c;
+  }
+  return result;
+}
+
+
 csApp.Controller = function($scope,$http,$transclude) {
 	$scope.byCode ="";
+	$scope.attrs = {};
+
 	$transclude(function(clone, scope) {
-		if ( clone[0] )
-			$scope.byCode = clone[0].textContent;
+		if ( !clone[0] ) return;
+		var markJSON = "xxxJSONxxx";
+		var markHex = "xxxHEXJSONxxx";
+		var s = clone[0].textContent;
+		var chex = s.indexOf(markHex) == 0;
+		var cjson = s.indexOf(markJSON) == 0;
+		if ( !chex && !cjson ) {
+		    $scope.byCode = s;
+		    return;
+        }
+        if ( cjson ) s = s.substring(markJSON.length);
+        if ( chex ) s = csApp.Hex2Str(s.substring(markHex.length));
+        $scope.attrs = JSON.parse(s);
+	    $scope.byCode = $scope.attrs.by || $scope.attrs.byCode;
 	});
-	$scope.header = "";
-	$scope.rows = 5;
 	$scope.errors = [];
 	$scope.taunoOn = false;
-	$scope.type = "jypeli";
 	// $scope.replace = "INSERT YOUR CODE HERE";
 	// $scope.file = "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Jypeli/Jypeli.cs";
 	$scope.result = "";
@@ -293,7 +318,13 @@ csApp.Controller = function($scope,$http,$transclude) {
                   };
 		//		  alert($scope.usercode);
         url = "http://tim-beta.it.jyu.fi/cs/answer";
-        // if ( $scope.plugin ) url = $scope.plugin + "/" + $scope.taskId + "/answer/";
+        if ( $scope.plugin ) {
+            // url = "/csPlugin" + /*$scope.plugin + */ "/" + $scope.taskId + "/answer/"; // Häck to get same origin
+            url = $scope.plugin;
+            var i = url.lastIndexOf("/");
+            if ( i > 0 ) url = url.substring(i);
+            url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+        }
 		$http({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}}
 		).success(function(data, status, headers, config) {
 			if ( data.web.error ) {
@@ -350,9 +381,11 @@ csApp.Controller = function($scope,$http,$transclude) {
 		var h = csApp.ifIs($scope.height,"height",500);
 		var p = "";
 		// var tt = "http://users.jyu.fi/~ji/js/tdbg/";
-		var tt = "http://tim-beta.it.jyu.fi/cs/ptauno/indexi.html";
+		// var tt = "http://tim-beta.it.jyu.fi/cs/ptauno/indexi.html";
+		var tt = "/cs/ptauno/indexi.html";
 		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://users.jyu.fi/~vesal/js/ptauno/index.html";
-		if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://tim-beta.it.jyu.fi/cs/ptauno/index.html";
+		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://tim-beta.it.jyu.fi/cs/ptauno/index.html";
+		if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "/cs/ptauno/index.html";
 		var taunoUrl = tt+"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
 		var s = $scope.table;
 		if ( s && s.length > 0) {
@@ -447,7 +480,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( !$scope.file ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
 		
 		params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
-		$http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
+		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
+		$http({method: 'POST', url:"/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		).success(function(data, status, headers, config) {
 			if (data.msg != '')
 			{
