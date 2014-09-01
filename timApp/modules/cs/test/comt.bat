@@ -1,0 +1,1 @@
+curl -H "Content-Type: application/json" --data-binary @comtestrun.json localhost:5000/answer
