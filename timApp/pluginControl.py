@@ -105,7 +105,7 @@ def pluginify(blocks,user,answerDb,doc_id,user_id):
                                 state = json.loads(state)
                         except ValueError:
                             pass 
-                        pluginHtml = callPlugin(vals['plugin'], vals['markup'], state)
+                        pluginHtml = callPlugin(vals['plugin'], vals['markup'], state, taskId)
                         pluginUrl = getPluginTimUrl(vals['plugin'])
                         preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(taskId,pluginUrl) + pluginHtml + "</div>")
                     except TypeError:

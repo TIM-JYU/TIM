@@ -30,8 +30,8 @@ PLUGINS = [
 
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
-def callPlugin(plugin, info, state):
-    pluginData = json.dumps({"markup" : info, "state": state})
+def callPlugin(plugin, info, state, taskID=None):
+    pluginData = json.dumps({"markup" : info, "state": state, "taskID": taskID})
     print("Calling plugin {} HTML route with data: {}".format(plugin, pluginData))
     try:
         for x in PLUGINS:
