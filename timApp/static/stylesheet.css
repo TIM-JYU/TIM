@@ -9,7 +9,7 @@
 body {
 	background-color: #d5d5d5;
 }
-.noteButton, .addNoteButton,  .addParButton, .editButton {
+.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton {
     background-color: #d0d0d0;
 	color: white;
 	font-size: x-small;
@@ -87,7 +87,6 @@ ul {
 
 .noteButton {
 	z-index: 3;
-    font-size: x-small;
     width: 5em;
     height: 1.8em;
     top: 0em;
@@ -98,7 +97,6 @@ ul {
     position: absolute;
 	left: 72em;
 	z-index: 3;
-    font-size: x-small;
     width: 5em;
     height: 3em;
     top: 0em;
@@ -134,7 +132,6 @@ ul {
     z-index: 3;
 	position: absolute;
 	left: 72em;
-	font-size: x-small;
 	width: 5em;
 	height: 3em;
 	outline: none;
@@ -152,7 +149,6 @@ ul {
 .deleteButton{
     /* position: absolute; */
     left:0em;
-	font-size: x-small;
 	width: 5em;
     z-index: 10;
 	height: 3em;
@@ -171,7 +167,6 @@ ul {
     /* position: absolute; */
 	top: 0em;
 	left: 0em;
-	font-size: x-small;
 	width: 5em;
     z-index:10;
 	height: 3em; 
@@ -204,7 +199,6 @@ ul {
     z-index: 10;
 	top: 0em;
 	left: 0em;
-	font-size: x-small;
 	width: 5em;
 	height: 3em;
 	top: 3em;
@@ -291,8 +285,11 @@ PRE {
     background-color:white;
 }
 
+p code {
+    font-size: 1.2em;
+}
 
-code {
+pre code {
 	margin-right: 0.00cm;
 	line-height: 1;
 	font-size: 1em;
@@ -583,7 +580,7 @@ img.console {
   background: #000000;
   border: 3px double #ccc;
   padding: 10px;
-  width: 90%;
+  width: 92% !important;  
 }
 
 p.stem {
@@ -637,8 +634,8 @@ p.stem {
 	line-height: 1.1;
 	font-size: 0.96em;
 	box-shadow: none;
-	width: 100%;
-	min-width: 600px;
+	width: 100% !important;
+	min-width: 600px !important;
 	white-space: pre;
 	border-left: thin solid #0066FF;
 }
@@ -663,7 +660,7 @@ p.stem {
     border-style: solid;
 	border-width: 1px;
 	border-radius: 5px;
-	width: 100%; 
+	width: 100% !important; 
 }
 
 .csRunMenu {
