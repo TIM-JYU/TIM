@@ -71,7 +71,7 @@ angular.module('console',['ngSanitize'])
         };
       },
       templateUrl: function(elem,attrs) {
-                    return elem.parent().attr('data-plugin')+"/"+'NewConsole/Console.template.html';
+                    return "http://"+elem.parent().attr('data-plugin')+"/"+'NewConsole/Console.template.html';
                    }, 
      replace: true
     };
