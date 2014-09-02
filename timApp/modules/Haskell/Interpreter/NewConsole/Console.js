@@ -23,7 +23,7 @@ angular.module('console',['ngSanitize'])
         };
         $scope.handler=function(e){
             $http({method:'PUT'
-                  ,url:$scope.plugin+"/"+$scope.ident+"/answer/"
+                  ,url:"http://"+$scope.plugin+"/"+$scope.ident+"/answer/"
                   ,data:{"input":$scope.currentInput}})
              .success(function(data){
                   $scope.submit(data.web);
