@@ -149,6 +149,7 @@ csApp.directiveFunction = function(t) {
 			csApp.set(scope,attrs,"maxrows",-1);
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder","Write your code here");
+            csApp.set(scope,attrs,"indent",-1);
 
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
@@ -165,6 +166,10 @@ csApp.directiveFunction = function(t) {
             
 			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0);
 			scope.isTest = scope.type.indexOf("comtest") >= 0;
+            
+			scope.indent = csApp.getInt(scope.indent);
+            if ( scope.indent < 0 )
+                if ( scope.file ) scope.indent = 8; else scope.indent = 0;
 
 			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
@@ -280,6 +285,15 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( $scope.minRows < $scope.maxRows ) 
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
+
+		/* // tällä koodilla on se vika, että ei voi pyyhkiä alusta välilyönteä ja yhdistää rivejä
+		if ( $scope.carretPos && $scope.carretPos >= 0 ) {
+		    $scope.edit[0].selectionStart = $scope.carretPos;
+		    $scope.edit[0].selectionEnd = $scope.carretPos;
+		    $scope.carretPos = -1;
+		}
+		else $scope.checkIndent(); // ongelmia saada kursori paikalleen
+		*/
 	}, true);
 	
 	
@@ -296,6 +310,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.doRunCode = function(runType) {
 		// $scope.viewCode = false;
 		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
+		$scope.checkIndent();
 		$scope.error = "... running ...";
 		$scope.resImage = "";
 		$scope.imgURL = "";
@@ -445,6 +460,35 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.showCodeNow();
 	}
 		
+        
+    $scope.checkIndent = function() {
+        if ( !$scope.indent || !$scope.usercode ) return;
+        var start = $scope.edit[0].selectionStart;
+        var spaces = "";
+        for (var i=0; i<$scope.indent; i++) spaces += " ";
+        var n = 0;
+        var len = 0;
+		var st = $scope.usercode.split("\n");
+        for (var i in st) {
+			var s = st[i];
+			var l = s.length;
+			len += l;
+			var j = 0
+			for ( ; j<s.length; j++) if ( s[j] != " " ) break;
+			// if ( s.lastIndexOf(spaces,0) == 0 ) continue;
+			if ( j >= spaces.length ) continue;
+			s = spaces + s.substring(j);
+			var dl = s.length - l;
+			if ( len - l < start ) start += dl;
+			len += dl;
+			st[i] = s;
+			n++;
+        }
+        if ( !n ) return;
+        $scope.usercode = st.join("\n");
+        // $scope.edit[0].selectionStart = start; // aiheuttaa uuden tapahtuman
+        $scope.carretPos = start; // seuraava tapahtuma nappaa tämän ja siirtää vain kursorin.
+    }
 		
 	$scope.showCodeLocal = function() {
 		// $scope.code = $scope.localcode;
@@ -479,9 +523,11 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( angular.isDefined($scope.localcode) ) { $scope.showCodeLocal(); return; } 
 		if ( !$scope.file ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
 		
-		params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
+		// params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
+		params = $scope.attrs;
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
-		$http({method: 'POST', url:"/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
+		$http({method: 'POST', url: '/cs/?print=1&replace=', data:params, headers: {'Content-Type': 'application/json'}}
+		// $http({method: 'POST', url:"/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		).success(function(data, status, headers, config) {
 			if (data.msg != '')
 			{
