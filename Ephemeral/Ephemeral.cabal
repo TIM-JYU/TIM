@@ -19,7 +19,7 @@ executable Ephemeral
   main-is:             Simplistic.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.6 && <4.7
+  build-depends:       base >=4.6
       , pandoc >=1.12 && <1.13
       , lrucache >=1.1 && <1.2
       , text >=1.1 && <1.2
