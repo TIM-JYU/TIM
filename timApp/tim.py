@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, session, abort, flash, current_app
+from flask import Flask, redirect, url_for, session, abort, flash
 from flask import stream_with_context
 from flask import render_template
 from flask import g
@@ -21,26 +21,15 @@ import pluginControl
 import collections
 from containerLink import PluginException
 
-app = Flask(__name__) 
-app.config.from_object(__name__)
+app = Flask(__name__)
+app.config.from_pyfile('defaultconfig.py', silent=False)
+app.config.from_envvar('TIM_SETTINGS', silent=True)
 
-# Load default config and override config from an environment variable
-app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'tim_files/tim.db'),
-    DEBUG=True,
-    SECRET_KEY='development key',
-    USERNAME='admin',
-    PASSWORD='default',
-    FILES_PATH='tim_files',
-    UPLOAD_FOLDER = "./media/images/",
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1025 
-   ))
-
-LOG_FILENAME = "../tim_logs/timLog.log"
+print('Debug mode: {}'.format(app.config['DEBUG']))
 
 # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
 formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
-handler = logging.FileHandler(LOG_FILENAME)
+handler = logging.FileHandler(app.config['LOG_PATH'])
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
@@ -65,14 +54,13 @@ LOG_LEVELS = {"CRITICAL" : app.logger.critical,
               "WARNING" : app.logger.warning,
               "INFO": app.logger.info,
               "DEBUG" : app.logger.debug}
-              #"NOTSET" : app.logger.notset}
-
 
 # Logger call
 @app.route("/log/", methods=["POST"])
 def logMessage():
     try:
         message = request.get_json()['message']
+        level = request.get_json()['level']
         LOG_LEVELS[level](message)
     except KeyError:
         app.logger.error("Failed logging call: " + str(request.get_data()))
