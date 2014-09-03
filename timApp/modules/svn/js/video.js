@@ -29,14 +29,27 @@ videoApp.getHeading = function(a,key,$scope,deftype) {
 	return html;
 } 
 
+videoApp.muunna = function(value) {
+  if ( !value ) return value;
+  var s = "0 0 0 " + value.replace(/,/g," ").replace(/\//g," ").replace(/;/g," ").replace(/\./g," ").replace(/:/g," ");
+  s = s.trim();
+  var sc = s.split(" ");
+  var n = sc.length;
+  var h = sc[n-3];
+  var m = sc[n-2];
+  var s = sc[n-1];
+  return  h*3600.0 + m*60.0 + s*1.0;
+}
+
+
 videoApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
 			scope.file = attrs.file;
 			scope.width = attrs.width;
 			scope.height = attrs.height;
-			scope.start = attrs.start;
-			scope.end = attrs.end;
+			scope.start = videoApp.muunna(attrs.start);
+			scope.end = videoApp.muunna(attrs.end);
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
 			scope.videoHtml = element[0].childNodes[2]

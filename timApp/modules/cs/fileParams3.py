@@ -32,7 +32,7 @@ def get_param(query, key, default):
         if key in query.jso["markup"]: return query.jso["markup"][key]
         return dvalue
     value = query.get_query[key][0]
-    if value == 'undefined': return default
+    if value == 'undefined': return dvalue
     return value
 
 
@@ -330,24 +330,27 @@ def post_params(self):
         for field in list(q.keys()):
             print("FIELD=", field)
             result.query[field] = [q[field][0]]
-        return result
+    else:
+        jso = json.loads(u)
+        # print(jso.repr())
+        print("====================================================")
+        result = QueryClass()
+        print("result.query ================================== ")
+        pp.pprint(result.query)
+        # print jso
+        result.jso = jso
+        for field in list(result.jso.keys()):
+            # print field + ":" + jso[field]
+            if field == "markup":
+                for f in list(result.jso[field].keys()):
+                    result.query[f] = [str(result.jso[field][f])]
+            else:
+                if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
+        # print(jso)
 
-    jso = json.loads(u)
-    # print(jso.repr())
-    print("====================================================")
-    result = QueryClass()
-    print("result.query ================================== ")
-    pp.pprint(result.query)
-    # print jso
-    result.jso = jso
-    for field in list(result.jso.keys()):
-        # print field + ":" + jso[field]
-        if field == "markup":
-            for f in list(result.jso[field].keys()):
-                result.query[f] = [str(result.jso[field][f])]
-        else:
-            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
-    # print(jso)
+    result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+    for f in result.get_query:
+        result.query[f] = [result.get_query[f][0]]
     return result
 
 

@@ -25,6 +25,19 @@ body {
 	background-color: white;
 }
 
+.uudenMuuttujanAlue {
+    visibility: collapse;
+    top: 6em;
+    position: absolute;
+    background: lightgray;
+    float: left;
+    padding: 0.5em;
+    border-radius: 5px;
+    border: solid;
+    border-width: 1px;
+    border-color: black;
+}
+
 /* From http://www.html5rocks.com/en/tutorials/dnd/basics/ */
 /* Prevent the text contents of draggable elements from being selectable. */
 [draggable] {
