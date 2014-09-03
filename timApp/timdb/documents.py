@@ -281,7 +281,7 @@ class Documents(TimDbBase):
         if not self.documentExists(docId):
             raise TimDbException('The specified document does not exist.')
         
-        output, _ = gitCommand(self.files_root_path, 'log --format=%H|%ad|%cn|%s --date=relative  -n {} '.format(limit)
+        output, _ = gitCommand(self.files_root_path, 'log --format=%H|%ad|%an|%s --date=relative  -n {} '.format(limit)
                                  + self.getDocumentPathAsRelative(docId))
         lines = output.splitlines()
         versions = []
