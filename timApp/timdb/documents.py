@@ -213,26 +213,22 @@ class Documents(TimDbBase):
         return block
     
     @contract
-    def getDocumentBlocks(self, document_id : 'DocIdentifier') -> 'list(dict[2](str: str))':
-        """Gets all the blocks of the specified document.
+    def getDocumentAsBlocks(self, document_id : 'DocIdentifier') -> 'list(str)':
+        """Gets all the blocks of the specified document in markdown format.
         
         :param document_id: The id of the document.
-        :returns: The blocks of the document.
+        :returns: The blocks of the document in markdown format.
         """
-        # TODO: Ephemeral doesn't support this (at least not as well as it could). Cannot know how many blocks there are!
-        
-        # So let's make a quick hack to fetch the blocks. This is VERY slow (on Windows at least); it fetches about one block per second when running locally on Windows machine.
-        responseStr = None
-        blocks = []
-        notEnd = True
-        blockIndex = 0
-        
-        while notEnd:
-            responseStr = self.ec.getBlock(document_id, blockIndex)
-            notEnd = responseStr != '{"Error":"No block found"}'
-            if notEnd:
-                blocks.append({"par": str(blockIndex), "text" : responseStr})
-            blockIndex += 1
+
+        try:
+            blocks = self.ec.getDocumentAsBlocks(document_id)
+        except NotInCacheException:
+            if self.documentExists(document_id):
+                with open(self.getBlockPath(document_id.id), 'rb') as f:
+                    self.ec.loadDocument(document_id, f.read())
+                blocks = self.ec.getDocumentAsBlocks(document_id)
+            else:
+                raise TimDbException('The requested document was not found.')
         return blocks
         
     @contract
