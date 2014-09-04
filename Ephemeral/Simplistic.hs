@@ -255,11 +255,14 @@ main = do
         [
          -- Send the whole doc as markdown. Required: [?]
          (":docID", method GET . withDoc $ \(Doc d) ->
-                traverse (\x -> writeText (markdown x) >> writeText "\n\n") d >> return ())
+                traverse (\x -> writeText (markdown x) >> writeText "\n\n") d >> return ()),
          
          -- Send the whole doc as json containing html for the blocks. Required: [X]
-         ,("/json-html/:docID", method GET . withDoc $ \(Doc d) -> 
+         ("/json-html/:docID", method GET . withDoc $ \(Doc d) -> 
                 writeLBS . encode . fmap html $ d),
+         
+         ("/json/:docID", method GET . withDoc $ \(Doc d) -> 
+                writeLBS . encode . fmap markdown $ d),
          
          -- Send the whole doc as html. Required: [?]
          ("/html/:docID", method GET . withDoc $ \(Doc d) ->
