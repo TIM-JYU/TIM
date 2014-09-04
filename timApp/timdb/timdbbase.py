@@ -1,6 +1,5 @@
 """"""
 import os
-#import time
 from contracts import contract, new_contract
 import collections
 import sqlite3
@@ -15,8 +14,8 @@ class DocIdentifier(namedtuple("DocIdentifier", "id hash")):
 new_contract('Connection', sqlite3.Connection)
 new_contract('DocIdentifier', DocIdentifier)
 
-BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE'))
-blocktypes = BLOCKTYPES(0,1,2,3,4)
+BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING'))
+blocktypes = BLOCKTYPES(0,1,2,3,4,5)
 
 class TimDbException(Exception):
     """The exception that is thrown when an error occurs during a TimDb operation."""
@@ -85,3 +84,15 @@ class TimDbBase(object):
     def writeUtf8(self, content : 'str', path : 'str'):
         with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write(content)
+    
+    @contract
+    def getBlockRelations(self, block_id : 'int', user_id : 'int', relation_type : 'int') -> 'list(dict)':
+        cursor = self.db.cursor()
+        cursor.execute("""select id, parent_block_specifier, description from Block,BlockRelation where
+                             Block.id = BlockRelation.Block_id
+                          and id in
+                             (select Block_id from BlockRelation where parent_block_id = ?)
+                          and type_id = ?
+                          and UserGroup_id in
+                                 (select UserGroup_id from UserGroupMember where User_id = ?)""", [block_id, relation_type, user_id])
+        return self.resultAsDictionary(cursor)
