@@ -10,6 +10,7 @@ from timdb.users import Users
 from timdb.images import Images
 from timdb.documents import Documents
 from timdb.answers import Answers
+from timdb.readings import Readings
 import os
 
 
@@ -44,10 +45,12 @@ class TimDb(object):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.notes = Notes(self.db, files_root_path, 'notes', current_user_name)
+        self.readings = Readings(self.db, files_root_path, 'notes', current_user_name)
         self.users = Users(self.db)
         self.images = Images(self.db, files_root_path, 'images', current_user_name)
         self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
         self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
+        
         
     def clear(self):
         """Clears the contents of all database tables."""
