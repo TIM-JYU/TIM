@@ -88,20 +88,12 @@ class Notes(TimDbBase):
         :param user_id: The id of the user whose notes will be fetched.
         :param block_id: The id of the block whose notes will be fetched.
         """
-        cursor = self.db.cursor()
-        cursor.execute("""select id, parent_block_specifier from Block,BlockRelation where
-                             Block.id = BlockRelation.Block_id
-                          and id in
-                             (select Block_id from BlockRelation where parent_block_id = ?)
-                          and type_id = ?
-                          and UserGroup_id in
-                                 (select UserGroup_id from UserGroupMember where User_id = ?)""", [document_id, blocktypes.NOTE, user_id])
-        rows = [x for x in cursor.fetchall()]
+        rows = self.getBlockRelations(document_id, user_id, blocktypes.NOTE)
         
         notes = []
         for row in rows:
-            note_id = row[0]
-            note = {'id' : note_id, 'specifier' : row[1]}
+            note_id = row['id']
+            note = {'id' : note_id, 'specifier' : row['parent_block_specifier']}
             with open(self.getBlockPath(note_id), 'r', encoding='utf-8') as f:
                 note['content'] = f.read()
             notes.append(note)
