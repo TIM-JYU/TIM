@@ -75,6 +75,15 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         $scope.m.editingNote = -1;
     }
 
+    $scope.setAsRead = function(docID, par) {
+        $http.put('/read/' + docID + '/' + par.par)
+        .success(function(data, status, headers, config) {
+            $scope.getReadPars();
+        }).error(function(data, status, headers, config) {
+            alert('Could not set the reading status: ' + data.error);
+        });
+    }
+
     $scope.deleteNote = function(docID) {
         console.log(docID);
         $http.post('/deleteNote', {

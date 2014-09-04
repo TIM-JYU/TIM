@@ -456,9 +456,33 @@ def deleteNote():
 
 @app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
+    verifyViewAccess(doc_id)
     timdb = getTimDb()
     notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
     return jsonResponse(notes)
+
+@app.route("/read/<int:doc_id>", methods=['GET'])
+def getReadParagraphs(doc_id):
+    verifyViewAccess(doc_id)
+    timdb = getTimDb()
+    readings = timdb.readings.getReadings(getCurrentUserId(), doc_id)
+    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
+    for reading in readings:
+        if blocks[reading['specifier']] != reading['text']:
+            reading['status'] = 'modified'
+        else:
+            reading['status'] = 'read'
+    return jsonResponse(readings)
+
+@app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
+def setReadParagraph(doc_id, specifier):
+    verifyViewAccess(doc_id)
+    timdb = getTimDb()
+    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
+    if len(blocks) <= specifier:
+        return jsonResponse({'error' : 'Invalid paragraph specifier.'}, 400)
+    timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, specifier, blocks[specifier])
+    return "Success"
 
 @app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):

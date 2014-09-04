@@ -31,9 +31,20 @@ body {
 table th {
 	background-color: #dedede;
 }
+
+.readline {
+	background-color: red;
+}
 	
 /*=============================================*/
 
+.readline.read {
+	display: none;
+}
+
+.readline.modified {
+	background-color: yellow;
+}
 
 .note p {
 	margin-left : 0;
@@ -99,6 +110,15 @@ ul {
 	z-index: 3;
     width: 5em;
     height: 3em;
+    top: 0em;
+}
+
+.readline {
+    position: absolute;
+	left: 43em;
+	z-index: 3;
+    width: 1em;
+    height: 2em;
     top: 0em;
 }
 
@@ -717,6 +737,12 @@ p.stem {
 		left: 106%;
 		outline: none;
 	}
+	.readline {
+		position: absolute;
+		top: 0em;
+		left: 100%;
+		
+	}
 	.notes {
 		position: absolute;
 		left: 116%;
@@ -822,6 +848,11 @@ p.stem {
 		top: 0em;
 		left: 101%;
 		outline: none;
+	}
+	.readline {
+		position: absolute;
+		top: 0em;
+		left: 99%;
 	}
 	.notes {
 		position: absolute;

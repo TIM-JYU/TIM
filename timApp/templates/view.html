@@ -69,8 +69,10 @@
                         <div ng-bind-html="note.htmlContent"></div>
                     </div>
                 </div>
+                <div ng-click="setAsRead({{docID|e}}, par)" ng-class="['readline', par.readStatus]" title="Click to mark this paragraph as read"></div>
                 <button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
                 <div class="noteEditorArea" ng-if="m.showEditor">
+
                     <div class="editButtonArea">
                         <button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
                         <button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>

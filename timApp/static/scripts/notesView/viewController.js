@@ -28,6 +28,28 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             alert("Could not fetch notes.");
         });
     };
+    
+    $scope.getReadPars = function() {
+        $http.get('/read/' + $scope.docId).success(function(data, status, headers, config) {
+            var len = $scope.paragraphs.length;
+            var readCount = data.length;
+
+            for (var i = 0; i < len; i++) {
+                $scope.paragraphs[i].readStatus = "unread";
+            }
+
+            for (var i = 0; i < readCount; i++) {
+                var readPar = data[i];
+                if (readPar.specifier < $scope.paragraphs.length) {
+                    var par = $scope.paragraphs[readPar.specifier];
+                    par.readStatus = readPar.status;
+                }
+            }
+        }).error(function(data, status, headers, config) {
+            alert("Could not fetch reading info.");
+        });
+    };
 
     $scope.getNotes();
+    $scope.getReadPars();
 });
