@@ -7,4 +7,6 @@
 @kopioi *.py e:    /q /s
 @kopioi *.bat e:   /q
 @kopioi *. e:      /q
+@xcopy  ptauno\index.html E:\kurssit\pauno\taulukko.html /d /Y
+@xcopy  ptauno\taulukko.* E:\kurssit\pauno\  /d /Y
 

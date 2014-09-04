@@ -23,11 +23,11 @@ html, body {
 body {
     /* background-color: #fdf6e3; */
 	background-color: white;
-}
+} 
 
 .uudenMuuttujanAlue {
     visibility: collapse;
-    top: 6em;
+    top: 5em;
     position: absolute;
     background: lightgray;
     float: left;

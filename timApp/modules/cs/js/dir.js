@@ -367,7 +367,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 
 		}).error(function(data, status) {
 			$scope.errors.push(status);
-			$scope.error = data.error;
+			$scope.error = data;
 		})
 	};
 	

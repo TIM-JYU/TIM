@@ -66,8 +66,11 @@ def callPluginAnswer(plugin, answerData):
     for x in PLUGINS:
         if(x['name'] == plugin):
             headers = {'Content-type': 'application/json'}
-            request = requests.put( url=x['host'] + "answer/", data=json.dumps(answerData), headers=headers,timeout=5)
-            return request.text
+            try:
+                request = requests.put( url=x['host'] + "answer/", data=json.dumps(answerData), headers=headers,timeout=20)
+                return request.text
+            except:
+                return "Plugin call took too long!" # should this be JSON?
     return "Unregistered plugin or plugin not answering. Contact document administrator for details"
 #    except:
 #        return "Could not connect to plugin" 

@@ -11,6 +11,7 @@ import codecs
 import binascii
 from os import kill
 import signal
+import socketserver
 # from signal import alarm, signal, SIGALRM, SIGKILL
 from subprocess import PIPE, Popen, check_output
 from fileParams3 import *
@@ -19,6 +20,9 @@ print("Kaynnistyy")
 
 PORT = 5000
 
+
+class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    pass
 
 def run_while_true(server_class=http.server.HTTPServer,
                    handler_class=http.server.BaseHTTPRequestHandler):
@@ -44,15 +48,17 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None):
     def alarm_handler(signum, frame):
         raise Alarm
 
-    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env)
-    if timeout != -1:
-        signal.signal(signal.SIGALRM, alarm_handler)
-        signal.alarm(timeout)
+    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env) #, timeout=timeout)
+    #if timeout != -1:
+    #    signal.signal(signal.SIGALRM, alarm_handler)
+    #    signal.alarm(timeout)
+    print(p.pid)
     try:
-        stdout, stderr = p.communicate()
-        if timeout != -1:
-            signal.alarm(0)
-    except Alarm:
+        stdout, stderr = p.communicate(timeout=timeout)
+        #if timeout != -1:
+        #    signal.alarm(0)
+    except  subprocess.TimeoutExpired:
+        '''
         pids = [p.pid]
         if kill_tree:
             pids.extend(get_process_children(p.pid))
@@ -63,6 +69,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None):
                 kill(pid, signal.SIGKILL)
             except OSError:
                 pass
+        '''        
         return -9, '', ''
     return p.returncode, stdout, stderr
 
@@ -404,10 +411,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.remove(testdll)
         else:
             print("Exe: ", exename)
-            code, out, err = run(["mono", exename], timeout=10, env=env)
+            code, out, err = run(["mono", exename], timeout=5, env=env)
             print(code, out, err)
             # if type(out) != type(''): out = out.decode()
-            if out[0] in [254, 255]:
+            if out and out[0] in [254, 255]:
                 out = out.decode('UTF16')
             elif type(out) != type(''):
                 out = out.decode('utf-8-sig')
@@ -437,5 +444,6 @@ def keep_running():
     return True
 
 
-run_while_true(handler_class=TIMServer)
+# run_while_true(handler_class=TIMServer)
 
+ThreadingServer(('', PORT), TIMServer).serve_forever()
