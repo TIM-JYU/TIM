@@ -209,6 +209,22 @@ class EphemeralClient(object):
         return r.json()
     
     @contract
+    def getDocumentAsBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
+        """Gets the document as a list of markdown blocks.
+        
+        :param document_id: The id of the document.
+        :returns: The document as a list of markdown blocks.
+        """
+        
+        try:
+            r = requests.get(url=self.server_path + '/json/{}'.format(self.__getDocIdForEphemeral(document_id)))
+        except requests.exceptions.ConnectionError:
+            raise EphemeralException('Cannot connect to Ephemeral.')
+        r.encoding = 'utf-8'
+        self.__raiseExceptionIfDocumentNotFound(r)
+        return r.json()
+    
+    @contract
     def getDocumentFullHtml(self, document_id : 'DocIdentifier') -> 'str':
         """Gets the whole document in HTML form.
         
