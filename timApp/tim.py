@@ -472,6 +472,7 @@ def getReadParagraphs(doc_id):
             reading['status'] = 'modified'
         else:
             reading['status'] = 'read'
+        reading.pop('text', None)
     return jsonResponse(readings)
 
 @app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
