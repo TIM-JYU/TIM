@@ -1,0 +1,16 @@
+{% with messages = get_flashed_messages(category_filter=["loginmsg"]) %}
+{% if messages %}
+<ul class="flashes">
+    {% for message in messages %}
+    <li>{{ message }}</li> {% endfor %}
+</ul>
+{% endif %} {% endwith %} {% if session.user_id %}
+<p>Logged in as: {{session.user_name}}</p>
+<form method="POST" action="/logout">
+    <input type="submit" value="Logout">
+</form>
+{% else %}
+<form method="GET" action="/login">
+    <input type="submit" value="Login using Korppi"> <input type="hidden" name="came_from" value="{{request.path}}">
+</form>
+{% endif %}

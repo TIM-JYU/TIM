@@ -79,6 +79,7 @@
             <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
             <span ng-bind="progress"></span>
 </div>
+{% include 'loginlogout.html' %}
 <p ng-show="uploadedFile">Uploaded file: <a href="{{ '{{ uploadedFile }}' }}">{{ '{{ uploadedFile }}' }}</a></p>
     <div class="material"> 
         <div class="paragraph">
