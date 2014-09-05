@@ -69,16 +69,17 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         $scope.m.showEditor = false;
     }
 
-    $scope.addNoteButtonToggled = function() {
+    $scope.addNoteButtonToggled = function() {  
         $scope.m.showEditor = true;
-        $scope.focusArea = true;
+        $scope.focusArea = true; 
         $scope.m.editingNote = -1;
     }
 
     $scope.setAsRead = function(docID, par) {
+        par.readStatus = "read";
         $http.put('/read/' + docID + '/' + par.par)
         .success(function(data, status, headers, config) {
-            $scope.getReadPars();
+//            $scope.getReadPars();
         }).error(function(data, status, headers, config) {
             alert('Could not set the reading status: ' + data.error);
         });
