@@ -2,8 +2,7 @@
 from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
-# Asennetaan python, pip ja flask
-run apt-get update
+#run apt-get update
 run apt-get install -y ghc
 run apt-get install -y cabal-install
 run apt-get install -y zlib1g-dev
@@ -14,8 +13,11 @@ run cabal update
 run cabal install happy alex
 run cp .cabal/bin/happy /usr/bin
 run cp .cabal/bin/alex /usr/bin
-run cabal install zip-archive
-run cabal install snap-core snap-server pandoc-1.12.3.3 aeson Diff Diff3 
+
+add . /Ephemeral-build
+run cd /Ephemeral-build && cabal install --only-dependencies
+run cd /Ephemeral-build && cabal build
+
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 #run chown -R dev /service
