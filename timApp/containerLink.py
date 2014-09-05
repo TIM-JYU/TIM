@@ -17,7 +17,7 @@ TIM_URL = ""
 # by default 172.17.42.1
 PLUGINS = [
         {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
-        {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # rikkin�isen demonstroimiseksi
+        {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # demonstrates a broken plugin
         {"host" : "http://tim-beta.it.jyu.fi/svn/", "name" : "showCode"},
         {"host" : "http://tim-beta.it.jyu.fi/svn/image/", "name" : "showImage"},
         {"host" : "http://tim-beta.it.jyu.fi/svn/video/", "name" : "showVideo"},
