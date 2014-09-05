@@ -6,6 +6,7 @@ from flask import g
 from flask import request
 from flask import send_from_directory
 import logging
+import requests
 from ReverseProxied import ReverseProxied
 import json
 import os
@@ -17,6 +18,7 @@ from flask import Response
 import imghdr
 from flask.helpers import send_file
 import io
+import codecs
 import pluginControl
 import collections
 from containerLink import PluginException
@@ -550,30 +552,44 @@ def getPluginMarkup(doc_id, plugintype, task_id):
 def indexPage():
     return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
 
-@app.route("/login", methods=['POST'])
-def login():
-    userName = request.form['user_name']
+@app.route("/logout", methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    session.pop('appcookie', None)
+    session['user_name'] = 'Anonymous'
+    flash('You were successfully logged out.', 'loginmsg')
+    return redirect(url_for('indexPage'))
+
+@app.route("/login")
+def loginWithKorppi():
+    urlfile = request.url_root + "login"
+    if request.args.get('came_from'):
+        session['came_from'] = request.args.get('came_from')
+        print('came from was set to ' + session['came_from'])
+    if not session.get('appcookie'):
+        randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
+        session['appcookie'] = randomHex
+    url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
+    r = requests.get(url, params={'request': session['appcookie']})
+    userName = r.text
+    print("url_root is: "+ request.url_root)
+    if not userName:
+        return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
+    
     timdb = getTimDb()
     userId = timdb.users.getUserByName(userName)
     
-    #For now we just create a user if it doesn't exist.
     if userId is None:
         uid = timdb.users.createUser(userName)
         gid = timdb.users.createUserGroup(userName)
         timdb.users.addUserToGroup(gid, uid)
         userId = uid
+        print('New user from Korppi: ' + userName)
     session['user_id'] = userId
     session['user_name'] = userName
-    flash('You were successfully logged in.')
-    return redirect(url_for('indexPage'))
+    flash('You were successfully logged in.', 'loginmsg')
+    return redirect(session['came_from'])
 
-@app.route("/logout", methods=['POST'])
-def logout():
-    session.pop('user_id', None)
-    session['user_name'] = 'Anonymous'
-    flash('You were successfully logged out.')
-    return redirect(url_for('indexPage'))
-    
 if __name__ == "__main__":
 #    app.debug = True
 #    app.run()

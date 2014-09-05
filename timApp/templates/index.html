@@ -51,26 +51,7 @@ table td {
 </head>
 
 <body ng-app="indexApp" ng-controller="IndexCtrl">
-    {% with messages = get_flashed_messages() %} {% if messages %}
-    <ul class="flashes">
-        {% for message in messages %}
-        <li>{{ message }}</li> {% endfor %}
-    </ul>
-    {% endif %} {% endwith %}
-    <p>{% if not session.user_id %} Currently not logged in. {% else %} Currently logged in as:
-        {{userName}} (user id = {{userId}}) {% endif %}</p>
-    <form method="POST" action="/login">
-        <label>
-            Log in as:
-            <input ng-model="username" type="text" name="user_name">
-        </label>
-        <input ng-disabled="!username" type="submit" value="Login">
-    </form>
-    {% if session.user_id %}
-    <form method="POST" action="/logout">
-        <input type="submit" value="Logout">
-    </form>
-    {% endif %}
+    {% include 'loginlogout.html' %}
     <div class="material">
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
