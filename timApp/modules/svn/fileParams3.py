@@ -18,7 +18,7 @@ class QueryClass:
 
 
 def get_param(query, key, default):
-    dvalue = default;
+    dvalue = default
     if key in query.query: dvalue = query.query[key][0]
     if dvalue == 'undefined': dvalue = default
 
@@ -32,7 +32,7 @@ def get_param(query, key, default):
         if key in query.jso["markup"]: return query.jso["markup"][key]
         return dvalue
     value = query.get_query[key][0]
-    if value == 'undefined': return default
+    if value == 'undefined': return dvalue
     return value
 
 
@@ -176,6 +176,20 @@ class FileParams:
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = get_param(query, "by" + nr, "")
 
+        self.reps = []
+
+        for i in range(1, 10):
+            rep = do_matcher(get_param(query, "replace" + str(i), ""))
+            if not rep: break
+            byc = get_param(query, "byCode" + str(i), "")
+            if byc:
+                bycs = byc.split("\n")
+                if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
+                    del bycs[0]
+                    byc = "\n".join(bycs)
+            self.reps.append({"by": rep, "bc": byc})
+
+
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
         if usercode:
@@ -231,7 +245,10 @@ class FileParams:
             line = lines[i]
             # if enc or True: line = line.decode('UTF8')
             # else: line = str(line)
-            if check(self.replace, line):  line = replace_by  # + "\n"
+            if check(self.replace, line): line = replace_by  # + "\n"
+            for r in self.reps:
+                if check(r["by"], line): line = r["bc"]  # + "\n"
+
             if escape_html: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
@@ -252,6 +269,7 @@ class FileParams:
 def get_params(self):
     result = QueryClass()
     result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+    result.query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
     return result
 
 
@@ -260,12 +278,12 @@ def get_file_to_output(query, show_html):
     p0 = FileParams(query, "", "")
     # if p0.url == "":
     s = p0.get_file(show_html)
-    if not s:
-        return "Must give file= -parameter"
+    # if not s:
+    #    return "Must give file= -parameter"
     s += p0.get_include(show_html)
     u = p0.url
     for i in range(1, 10):
-        p = FileParams(query, str(i), u)
+        p = FileParams(query, "."+str(i), u)
         s += p.get_file(show_html)
         s += p.get_include(show_html)
         if p.url: u = p.url
@@ -312,24 +330,27 @@ def post_params(self):
         for field in list(q.keys()):
             print("FIELD=", field)
             result.query[field] = [q[field][0]]
-        return result
+    else:
+        jso = json.loads(u)
+        # print(jso.repr())
+        print("====================================================")
+        result = QueryClass()
+        print("result.query ================================== ")
+        pp.pprint(result.query)
+        # print jso
+        result.jso = jso
+        for field in list(result.jso.keys()):
+            # print field + ":" + jso[field]
+            if field == "markup":
+                for f in list(result.jso[field].keys()):
+                    result.query[f] = [str(result.jso[field][f])]
+            else:
+                if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
+        # print(jso)
 
-    jso = json.loads(u)
-    # print(jso.repr())
-    print("====================================================")
-    result = QueryClass()
-    print("result.query ================================== ")
-    pp.pprint(result.query)
-    # print jso
-    result.jso = jso
-    for field in list(result.jso.keys()):
-        # print field + ":" + jso[field]
-        if field == "markup":
-            for f in list(result.jso[field].keys()):
-                result.query[f] = [str(result.jso[field][f])]
-        else:
-            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
-    # print(jso)
+    result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+    for f in result.get_query:
+        result.query[f] = [result.get_query[f][0]]
     return result
 
 
@@ -404,7 +425,7 @@ def string_to_string_replace_url(line, what_to_replace, query):
     params = urllib.parse.urlencode(qmap)
     line = line.replace(what_to_replace, params)
     height = get_param(query, "height", "100%")
-    line = line.replace('##HEIGHT##', height)
+    line = line.replace('##HEIGHT##', str(height))
     return line
 
 

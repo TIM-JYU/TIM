@@ -15,11 +15,38 @@ import socketserver
 # from signal import alarm, signal, SIGALRM, SIGKILL
 from subprocess import PIPE, Popen, check_output
 from fileParams3 import *
+from requests import Request, Session
+from http import cookies
 
 print("Kaynnistyy")
 
 PORT = 5000
 
+'''
+def check_korppi_user(self,appname):
+    # C = cookies.SimpleCookie()
+    #data = C["korppiusername"]
+    # if data: return data
+    urlfile = "http://tim.it.jyu.fi/cs/login"
+    appcookie = "kissa1"
+    url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
+    param = "request=" + appcookie
+    s = Session()
+    req = Request('GET', url+"?"+param)
+    prepped = req.prepare()
+    resp = s.send(prepped)
+    data = resp.text
+    
+    if not data:
+        self.send_response(303)
+        self.send_header('Location', url+"?authorize="+appcookie+"&returnTo="+urlfile)
+        self.end_headers()
+        # self.redirect(url+"?authorize="+appcookie+"&returnTo="+urlfile)
+        return ""
+
+    # C["korppiusername"] = data;
+    return data;
+'''
 
 class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     pass
@@ -176,11 +203,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if self.path.find('/favicon.ico') >= 0:
             self.send_response(404)
             return
-
+        '''
         if self.path.find('/login') >= 0:
-            query = post_params(self)
+            username = check_korppi_user(self,"tim")
+            if not username: return 
+            
+            self.send_response(200)
+            content_type = 'text/plain'
+            self.send_header('Content-type', content_type)
+            self.end_headers()
+            self.wout("Username = " + username)
             return
-
+        '''
+            
         is_fullhtml = self.path.find('/fullhtml') >= 0
         is_html = self.path.find('/html') >= 0 or self.path.find('.html') >= 0
         is_css = self.path.find('.css') >= 0
@@ -363,8 +398,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if ttype == "jypeli":
             code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
+            print(err)
             if type(out) != type(''): out = out.decode()
-            run(["convert", "-flip", bmpname, pngname])
+            run(["convert", "-flip", bmpname, pngname],timeout=20)
+            print(bmpname, pngname)
             self.remove(bmpname)
             # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
             print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % basename)
@@ -377,6 +414,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             else:
                 web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
             self.remove(exename)
+            self.remove(csfname)
         elif ttype == "comtest":
             eri = -1
             code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], timeout=10, env=env)
@@ -411,7 +449,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.remove(testdll)
         else:
             print("Exe: ", exename)
-            code, out, err = run(["mono", exename], timeout=5, env=env)
+            code, out, err = run(["mono", exename], timeout=10, env=env)
             print(code, out, err)
             # if type(out) != type(''): out = out.decode()
             if out and out[0] in [254, 255]:
@@ -419,8 +457,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif type(out) != type(''):
                 out = out.decode('utf-8-sig')
             if code == -9: out = "Runtime exceeded, maybe loop forever\n" + out
-            # self.remove(exename)
+            self.remove(exename)
 
+        self.remove(csfname)
+        
         out = out[0:2000]
         web["console"] = out
 

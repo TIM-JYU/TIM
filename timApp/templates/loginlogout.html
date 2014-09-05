@@ -9,8 +9,8 @@
 <form method="POST" action="/logout">
     <input type="submit" value="Logout">
 </form>
-{% else %}
+{% else %} 
 <form method="GET" action="/login">
-    <input type="submit" value="Login using Korppi"> <input type="hidden" name="came_from" value="{{request.path}}">
+    <input type="submit" value="Login using Korppi" class="loginButton"> <input type="hidden" name="came_from" value="{{request.path}}">
 </form>
 {% endif %}

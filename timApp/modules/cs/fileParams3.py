@@ -425,7 +425,7 @@ def string_to_string_replace_url(line, what_to_replace, query):
     params = urllib.parse.urlencode(qmap)
     line = line.replace(what_to_replace, params)
     height = get_param(query, "height", "100%")
-    line = line.replace('##HEIGHT##', height)
+    line = line.replace('##HEIGHT##', str(height))
     return line
 
 

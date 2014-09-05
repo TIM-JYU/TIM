@@ -51,10 +51,10 @@
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
-</script>
+</script> 
 </head>
 <body ng-app="timApp" ng-controller="ViewCtrl">
-{% include 'loginlogout.html' %}
+<div class="viewLogin">{% include 'loginlogout.html' %}</div>
     <h1>{{docName}}</h1>
     <div class="material">
 

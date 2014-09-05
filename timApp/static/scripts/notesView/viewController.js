@@ -8,7 +8,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
     });
 
     $scope.getNotes = function() {
-        var rn = "?rand=" + Math.floor(Math.random()*1001);
+        var rn = "?rand=" + Math.floor(Math.random()*100001);
         $http.get('/notes/' + $scope.docId + rn).success(function(data, status, headers, config) {
             var len = $scope.paragraphs.length;
             var noteCount = data.length;
@@ -31,7 +31,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
     };
     
     $scope.getReadPars = function() {
-        var rn = "?rand=" + Math.floor(Math.random()*1001);
+        var rn = "?rand=" + Math.floor(Math.random()*100001);
         $http.get('/read/' + $scope.docId+rn).success(function(data, status, headers, config) {
             var len = $scope.paragraphs.length;
             var readCount = data.length;

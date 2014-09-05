@@ -9,7 +9,7 @@
 body {
 	background-color: #d5d5d5;
 }
-.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton {
+.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
     background-color: #d0d0d0;
 	color: white;
 	font-size: x-small;
@@ -18,6 +18,19 @@ body {
 	outline: none;
 	border: 2px none;
 	line-height: 0.8;
+	width: 5em;
+	height: 3em;
+}
+
+.viewLogin .loginButton:hover {
+    width:auto;
+}
+ 
+.viewLogin .loginButton {
+    width:3em;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
  
 .material {
@@ -33,18 +46,26 @@ table th {
 }
 
 .readline {
-	background-color: red;
+	border-color: red;
 }
 	
-/*=============================================*/
-
+.readline:hover {
+	background: red;
+}
+	
 .readline.read {
 	display: none;
 }
 
 .readline.modified {
-	background-color: yellow;
+	border-color: yellow;
 }
+
+.readline.modified:hover {
+	background: yellow;
+}
+
+/*=============================================*/
 
 .note p {
 	margin-left : 0;
@@ -98,7 +119,6 @@ ul {
 
 .noteButton {
 	z-index: 3;
-    width: 5em;
     height: 1.8em;
     top: 0em;
 	float: left;
@@ -106,20 +126,20 @@ ul {
 
 .addNoteButton {
     position: absolute;
-	left: 72em;
+	right:-8.2em;
 	z-index: 3;
-    width: 5em;
-    height: 3em;
     top: 0em;
 }
 
 .readline {
     position: absolute;
-	left: 43em;
-	z-index: 3;
+    right: -1.2em;
+    z-index: 3;
     width: 1em;
-    height: 2em;
+    height: 100%;
     top: 0em;
+    border-right: 0.5em solid;
+    border-color: red;
 }
 
 .addNoteButton:hover {
@@ -151,12 +171,7 @@ ul {
 .editButton {
     z-index: 3;
 	position: absolute;
-	left: 72em;
-	width: 5em;
-	height: 3em;
-	outline: none;
-/*
-*/	
+	right:-8.2em;
 }
 
 .editButton:hover {
@@ -169,16 +184,11 @@ ul {
 .deleteButton{
     /* position: absolute; */
     left:0em;
-	width: 5em;
     z-index: 10;
-	height: 3em;
 	top: 6em;
-	border: 2px none;
-	border-radius: 15px;
-	outline: none;
 	background: #FF0000;
-	color: white;
 }
+
 .deleteButton:hover{
         color:black;
 }
@@ -187,15 +197,8 @@ ul {
     /* position: absolute; */
 	top: 0em;
 	left: 0em;
-	width: 5em;
     z-index:10;
-	height: 3em; 
-	top: 0em;
-	border: 2px none;
-	border-radius: 15px;
-	outline: none;
 	background: #19D119;
-	color: white;
 }
 
 .parSaveButton:hover{
@@ -219,14 +222,8 @@ ul {
     z-index: 10;
 	top: 0em;
 	left: 0em;
-	width: 5em;
-	height: 3em;
 	top: 3em;
-	border: 2px none;
-	border-radius: 15px;
-	outline: none;
     background: #999966;	
-	color: white;
 }
 
 .material {
@@ -269,10 +266,10 @@ ul {
 
 .addParButton{
     z-index: 2;
-	left:72em;
-	bottom:-1.8em;
-    height:2em;
-	width:5em;
+	right:-8.2em;
+	bottom:-1.5em;
+    height:1.5em;
+    padding-top:0.5em;
     position: absolute;
 }
 	 
@@ -804,6 +801,9 @@ p.stem {
 		left: 0em;
 	*/	
 	}
+    .readline {
+        margin-left: 0.7em;
+    }
 
 	
 }
@@ -860,4 +860,9 @@ p.stem {
 		width: 17em;
 		top: 0em;
 	}
+    .readline {
+        margin-left: -1.3em;
+    }
+	
+
 }
