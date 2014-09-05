@@ -1,4 +1,4 @@
-# coding=latin-1
+
 """Initializes the TIM database."""
 
 from timdb.timdb2 import TimDb
@@ -27,12 +27,12 @@ if __name__ == "__main__":
     
     timdb.users.grantEditAccess(0, doc_id2.id)
     
-    timdb.notes.addNote(0, 'T‰m‰ on testimuistiinpano.', doc_id.id, 2)
-    timdb.notes.addNote(0, 'T‰m‰ on toinen testimuistiinpano samassa kappaleessa.', doc_id.id, 2)
-    timdb.notes.addNote(0, """Viel‰ kolmas muistiinpano, jossa on pitk‰ teksti.
-                        Viel‰ kolmas muistiinpano, jossa on pitk‰ teksti.
-                        Viel‰ kolmas muistiinpano, jossa on pitk‰ teksti.
-                        Viel‰ kolmas muistiinpano, jossa on pitk‰ teksti.
-                        Viel‰ kolmas muistiinpano, jossa on pitk‰ teksti.
-                        Viel‰ kolmas muistiinpano, jossa on pitk‰ teksti.""", doc_id.id, 4)
+    timdb.notes.addNote(0, 'T√§m√§ on testimuistiinpano.', doc_id.id, 2)
+    timdb.notes.addNote(0, 'T√§m√§ on toinen testimuistiinpano samassa kappaleessa.', doc_id.id, 2)
+    timdb.notes.addNote(0, """Viel√§ kolmas muistiinpano, jossa on pitk√§ teksti.
+                        Viel√§ kolmas muistiinpano, jossa on pitk√§ teksti.
+                        Viel√§ kolmas muistiinpano, jossa on pitk√§ teksti.
+                        Viel√§ kolmas muistiinpano, jossa on pitk√§ teksti.
+                        Viel√§ kolmas muistiinpano, jossa on pitk√§ teksti.
+                        Viel√§ kolmas muistiinpano, jossa on pitk√§ teksti.""", doc_id.id, 4)
     

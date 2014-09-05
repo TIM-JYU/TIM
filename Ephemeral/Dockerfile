@@ -16,11 +16,11 @@ run cp .cabal/bin/happy /usr/bin
 run cp .cabal/bin/alex /usr/bin
 run cabal install zip-archive
 run cabal install snap-core snap-server pandoc-1.12.3.3 aeson Diff Diff3 
-# Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
+# Lis√§t√§√§n k√§ytt√§j√§ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 #run chown -R dev /service
 
-# Varmuudeksi estet‰‰n root login ja poistetaan rootin salasana,
+# Varmuudeksi estet√§√§n root login ja poistetaan rootin salasana,
 # jos sellainen on.
 #run usermod -p '!' root
 #run passwd -l root
@@ -28,5 +28,5 @@ run cabal install snap-core snap-server pandoc-1.12.3.3 aeson Diff Diff3
 # Avataan portti 5000 ulos containerista.
 expose 5000
 
-# Kun container k‰ynnistyy, suoritetaan:
+# Kun container k√§ynnistyy, suoritetaan:
 cmd /bin/bash
