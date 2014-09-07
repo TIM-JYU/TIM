@@ -72,8 +72,8 @@
                 </div>
                 {% if session.user_id %}
                 <div class="readline" ng-click="setAsRead({{docID|e}}, par)" ng-class="par.readStatus" title="Click to mark this paragraph as read"></div>
-                {% endif %}
                 <button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
+                {% endif %}
                 <div class="noteEditorArea" ng-if="m.showEditor">
 
                     <div class="editButtonArea">

@@ -427,6 +427,7 @@ def viewDocument(doc_id):
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
+    verifyLoggedIn()
     jsondata = request.get_json()
     noteText = jsondata['text']
     visibility = jsondata['visibility']
@@ -448,6 +449,7 @@ def postNote():
 
 @app.route("/editNote", methods=['POST'])
 def editNote():
+    verifyLoggedIn()
     jsondata = request.get_json()
     noteText = jsondata['text']
     noteId = jsondata['note_id']
@@ -462,6 +464,7 @@ def editNote():
 
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
+    verifyLoggedIn()
     jsondata = request.get_json()
     noteId = int(jsondata['note_id'])
     timdb = getTimDb()
