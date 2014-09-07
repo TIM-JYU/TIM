@@ -20,16 +20,16 @@ controls.directive('focusMe', function($timeout) {
 controls.controller('NoteCtrl', function($scope, $controller, $http) {
 
     $scope.m = {};
-    $scope.visibility = 'everyone';
+    $scope.m.visibility = 'everyone';
 
     $scope.addNote = function(parIndex) {
         $http.post('/postNote', {
             "par_id" : parIndex,
             "doc_id" : $scope.docId,
             "text" : $scope.m.noteText,
-            // test group
-            "group_id" : 1
-
+            "visibility" : $scope.m.visibility,
+            "difficult" : $scope.m.difficult,
+            "unclear" : $scope.m.unclear
         }).success(function(data, status, headers, config) {
             // TODO: Maybe fetch notes only for this paragraph and not the
             // whole document.
@@ -42,7 +42,9 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
     $scope.editNote = function() {
         $http.post('/editNote', {
             "note_id" : $scope.m.editingNote,
-            "text" : $scope.m.noteText
+            "text" : $scope.m.noteText,
+            "difficult" : $scope.m.difficult,
+            "unclear" : $scope.m.unclear
         }).success(function(data, status, headers, config) {
             // TODO: Maybe fetch notes only for this paragraph and not the
             // whole document.
@@ -56,6 +58,8 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         $scope.m.editingNote = note.id;
         $scope.m.noteText = note.content;
         $scope.m.showEditor = true;
+        $scope.m.difficult = note.difficult;
+        $scope.m.unclear = note.unclear;
         $scope.focusArea = true;
     }
 

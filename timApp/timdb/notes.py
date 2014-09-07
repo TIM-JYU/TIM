@@ -19,7 +19,7 @@ class Notes(TimDbBase):
         self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
-    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int') -> 'str':
+    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int', tags: 'list(str)') -> 'tuple(int,str)':
         """Adds a note to the document.
         
         :param usergroup_id: The usergroup who owns the note.
@@ -30,7 +30,8 @@ class Notes(TimDbBase):
         """
         #TODO: Needs revision id.
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, usergroup_id, blocktypes.NOTE])
+        cursor.execute('insert into Block (description, UserGroup_id, type_id, created) values (?, ?, ?, CURRENT_TIMESTAMP)',
+                       [",".join(tags), usergroup_id, blocktypes.NOTE])
         note_id = cursor.lastrowid
         assert note_id is not None, 'note_id was None'
         cursor.execute('insert into BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?,?)',
@@ -43,7 +44,7 @@ class Notes(TimDbBase):
         #TODO: Do notes need to be versioned?
         
         self.ec.loadDocument(self.getDocIdentifierForNote(note_id), content.encode('utf-8'))
-        return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
+        return note_id, self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
     
     @contract
     def deleteNote(self, note_id : 'int'):
@@ -66,7 +67,7 @@ class Notes(TimDbBase):
         self.db.commit()
         
     @contract
-    def modifyNote(self, note_id : 'int', new_content : 'str') -> 'str':
+    def modifyNote(self, note_id : 'int', new_content : 'str', tags : 'list(str)') -> 'str':
         """Modifies an existing note.
         
         :param note_id: The id of the note to be modified.
@@ -75,34 +76,53 @@ class Notes(TimDbBase):
         
         if not self.blockExists(note_id, blocktypes.NOTE):
             raise TimDbException('The requested note was not found.')
-        
+
+        cursor = self.db.cursor()
+        cursor.execute('update Block set description = ?, modified = CURRENT_TIMESTAMP where id = ? and type_id = ?',
+                       [",".join(tags), note_id, blocktypes.NOTE])
+
         self.writeUtf8(new_content, self.getBlockPath(note_id))
-        
+        self.db.commit()
         self.ec.loadDocument(self.getDocIdentifierForNote(note_id), new_content.encode('utf-8'))
         return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
-        
-    @contract
-    def getNotes(self, user_id : 'int', document_id : 'int') -> 'list(dict)':
-        """Gets all the notes for a document for a user.
-        
-        :param user_id: The id of the user whose notes will be fetched.
-        :param block_id: The id of the block whose notes will be fetched.
-        """
-        rows = self.getBlockRelations(document_id, user_id, blocktypes.NOTE)
-        
+
+    def processRows(self, rows):
         notes = []
         for row in rows:
             note_id = row['id']
-            note = {'id' : note_id, 'specifier' : row['parent_block_specifier']}
+            note = {'id': note_id,
+                    'specifier': row['parent_block_specifier'],
+                    'tags': (row['description'] or "").split(','),
+                    'created': row['created'],
+                    'modified': row['modified']}
             with open(self.getBlockPath(note_id), 'r', encoding='utf-8') as f:
                 note['content'] = f.read()
             notes.append(note)
-        
         for note in notes:
             try:
                 note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
             except NotInCacheException:
                 self.ec.loadDocument(self.getDocIdentifierForNote(note['id']), note['content'].encode('utf-8'))
                 note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
-        
         return notes
+
+    @contract
+    def getNotes(self, user_id : 'int', document_id : 'int') -> 'list(dict)':
+        """Gets all the notes for a document for a user.
+        
+        :param user_id: The id of the user whose notes will be fetched.
+        :param document_id: The id of the block whose notes will be fetched.
+        """
+        rows = self.getOwnedBlockRelations(document_id, user_id, blocktypes.NOTE)
+
+        return self.processRows(rows)
+
+    @contract
+    def getAllNotes(self, document_id : 'int') -> 'list(dict)':
+        """Gets all the notes for a document.
+
+        :param document_id: The id of the block whose notes will be fetched.
+        """
+        rows = self.getBlockRelations(document_id, blocktypes.NOTE)
+
+        return self.processRows(rows)

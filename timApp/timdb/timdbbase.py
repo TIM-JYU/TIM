@@ -86,13 +86,23 @@ class TimDbBase(object):
             f.write(content)
     
     @contract
-    def getBlockRelations(self, block_id : 'int', user_id : 'int', relation_type : 'int') -> 'list(dict)':
+    def getOwnedBlockRelations(self, block_id : 'int', user_id : 'int', relation_type : 'int') -> 'list(dict)':
         cursor = self.db.cursor()
-        cursor.execute("""select id, parent_block_specifier, description from Block,BlockRelation where
+        cursor.execute("""select id, parent_block_specifier, description, created, modified from Block,BlockRelation where
                              Block.id = BlockRelation.Block_id
                           and id in
                              (select Block_id from BlockRelation where parent_block_id = ?)
                           and type_id = ?
                           and UserGroup_id in
                                  (select UserGroup_id from UserGroupMember where User_id = ?)""", [block_id, relation_type, user_id])
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def getBlockRelations(self, block_id : 'int', relation_type : 'int') -> 'list(dict)':
+        cursor = self.db.cursor()
+        cursor.execute("""select id, parent_block_specifier, description, created, modified from Block,BlockRelation where
+                             Block.id = BlockRelation.Block_id
+                          and id in
+                             (select Block_id from BlockRelation where parent_block_id = ?)
+                          and type_id = ?""", [block_id, relation_type])
         return self.resultAsDictionary(cursor)

@@ -10,7 +10,7 @@ class Readings(TimDbBase):
         :param user_id: The id of the user whose readings will be fetched.
         :param block_id: The id of the block whose readings will be fetched.
         """
-        rows = self.getBlockRelations(document_id, user_id, blocktypes.READING)
+        rows = self.getOwnedBlockRelations(document_id, user_id, blocktypes.READING)
         return [{'id' : row['id'], 'specifier' : row['parent_block_specifier'], 'text' : row['description']} for row in rows]
 
     @contract

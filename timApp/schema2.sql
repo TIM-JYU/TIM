@@ -88,6 +88,8 @@ id INTEGER NOT NULL,
 latest_revision_id INTEGER NULL,
 type_id INTEGER NOT NULL,
 description VARCHAR(100) NULL, -- better name would be: tag
+created TIMESTAMP NULL,
+modified TIMESTAMP NULL,
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT Block_PK 

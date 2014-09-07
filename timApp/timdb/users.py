@@ -149,7 +149,9 @@ class Users(TimDbBase):
         """
         
         cursor = self.db.cursor()
-        cursor.execute("""select id, name from UserGroup where id in (select UserGroup_id from UserGroupMember where User_id = ?)""", [user_id])
+        cursor.execute("""select id, name from UserGroup where id in
+                          (select UserGroup_id from UserGroupMember where User_id = ?)
+                          order by id asc""", [user_id])
         return self.resultAsDictionary(cursor)
     
     def __grantAccess(self, group_id : 'int', block_id : 'int', access_type : 'str'):

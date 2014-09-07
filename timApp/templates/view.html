@@ -13,7 +13,7 @@
 <script src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
 
 {% for script in js %}
-<script src=" {{ script }}"> </script>
+<script src=" {{script}}"> </script>
 {% endfor %}
 
 <script>
@@ -39,7 +39,7 @@
 <script src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
 
 {% for cssFile in cssFiles %}
-<link rel="stylesheet" href="{{ cssFile }}">
+<link rel="stylesheet" href="{{cssFile}}">
 {% endfor %}
 
 <!--[if lt IE 9]>
@@ -65,13 +65,13 @@
 
             <div ng-controller="NoteCtrl">
                 <div class="notes">
-                    <div ng-show="par.notes.length > 0" class="note" ng-repeat="note in par.notes">
-                        <button ng-show="!m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
+                    <div ng-show="par.notes.length > 0" class="note" ng-class="{difficult: note.difficult, unclear:note.unclear}" ng-repeat="note in par.notes">
+                        <button ng-show="note.editable && !m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
                         <div ng-bind-html="note.htmlContent"></div>
                     </div>
                 </div>
                 {% if session.user_id %}
-                <div ng-click="setAsRead({{docID|e}}, par)" ng-class="['readline', par.readStatus]" title="Click to mark this paragraph as read"></div>
+                <div class="readline" ng-click="setAsRead({{docID|e}}, par)" ng-class="par.readStatus" title="Click to mark this paragraph as read"></div>
                 {% endif %}
                 <button ng-show="!m.showEditor" class="addNoteButton" ng-click="addNoteButtonToggled()">Note / comment</button>
                 <div class="noteEditorArea" ng-if="m.showEditor">
@@ -83,20 +83,22 @@
                     </div>
                     <textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
                     <div>
+                        <div ng-show="m.editingNote === -1">
                         Show note to:
                         <label>
-                            <input type="radio" ng-model="visibility" value="everyone"> Everyone (anonymously)
+                            <input type="radio" ng-model="m.visibility" value="everyone"> Everyone (anonymously)
                         </label>
                         <label>
-                            <input type="radio" ng-model="visibility" value="justme"> Just me
+                            <input type="radio" ng-model="m.visibility" value="justme"> Just me
                         </label>
-                        <div class="tags" ng-show="visibility === 'everyone'">
+                        </div>
+                        <div class="tags">
                             <label>
-                                <input type="checkbox"> The text is difficult to understand
+                                <input type="checkbox" ng-model="m.difficult"> The text is difficult to understand
                             </label>
                             <br>
                             <label>
-                                <input type="checkbox"> The text is unclear
+                                <input type="checkbox" ng-model="m.unclear"> The text is unclear
                             </label>
                         </div>
                     </div>

@@ -29,6 +29,8 @@ app.config.from_envvar('TIM_SETTINGS', silent=True)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
+KNOWN_TAGS = ['difficult', 'unclear']
+
 # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
 formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
 handler = logging.FileHandler(app.config['LOG_PATH'])
@@ -427,13 +429,20 @@ def viewDocument(doc_id):
 def postNote():
     jsondata = request.get_json()
     noteText = jsondata['text']
+    visibility = jsondata['visibility']
+    #print(visibility)
     #group_id = jsondata['group_id']
-    
+    tags = []
+    for tag in KNOWN_TAGS:
+        if jsondata[tag]:
+            tags.append(tag)
     docId = jsondata['doc_id']
     paragraph_id = jsondata['par_id']
     timdb = getTimDb()
     group_id = timdb.users.getUserGroups(getCurrentUserId())[0]['id']
-    timdb.notes.addNote(group_id, noteText, int(docId), int(paragraph_id))
+    note_id, html = timdb.notes.addNote(group_id, noteText, int(docId), int(paragraph_id), tags)
+    if visibility == 'everyone':
+        timdb.users.grantViewAccess(0, note_id)
     #TODO: Handle error.
     return "Success"
 
@@ -442,9 +451,13 @@ def editNote():
     jsondata = request.get_json()
     noteText = jsondata['text']
     noteId = jsondata['note_id']
+    tags = []
+    for tag in KNOWN_TAGS:
+        if jsondata[tag]:
+            tags.append(tag)
     timdb = getTimDb()
     verifyEditAccess(noteId)
-    timdb.notes.modifyNote(noteId, noteText)
+    timdb.notes.modifyNote(noteId, noteText, tags)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
@@ -460,7 +473,12 @@ def deleteNote():
 def getNotes(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
-    notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
+    notes = [note for note in timdb.notes.getAllNotes(doc_id) if timdb.users.userHasViewAccess(getCurrentUserId(), note['id'])]
+    for note in notes:
+        note['editable'] = timdb.users.userHasEditAccess(getCurrentUserId(), note['id'])
+        for tag in KNOWN_TAGS:
+            note[tag] = tag in note['tags']
+        note.pop('tags', None)
     return jsonResponse(notes)
 
 @app.route("/read/<int:doc_id>", methods=['GET'])
@@ -593,6 +611,6 @@ def loginWithKorppi():
 if __name__ == "__main__":
 #    app.debug = True
 #    app.run()
-    app.wsgi_app = ReverseProxied(app.wsgi_app)	
+    app.wsgi_app = ReverseProxied(app.wsgi_app)
     app.run(host='0.0.0.0',port=5000)
 
