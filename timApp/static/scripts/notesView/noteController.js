@@ -75,7 +75,9 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
 
     $scope.addNoteButtonToggled = function() {  
         $scope.m.showEditor = true;
-        $scope.focusArea = true; 
+        $scope.focusArea = true;
+        $scope.m.difficult = false;
+        $scope.m.unclear = false;
         $scope.m.editingNote = -1;
     }
 
