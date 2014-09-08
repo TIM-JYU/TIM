@@ -80,7 +80,7 @@ def notFound(error):
     return render_template('404.html'), 404
 
 def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata), mimetype='application/json')
+    response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
     response.status_code = status_code
     return response
 
