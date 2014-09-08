@@ -5,6 +5,7 @@ from flask import render_template
 from flask import g
 from flask import request
 from flask import send_from_directory
+from flask.ext.compress import Compress
 import logging
 import requests
 from ReverseProxied import ReverseProxied
@@ -26,6 +27,7 @@ from containerLink import PluginException
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
+Compress(app)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
