@@ -611,7 +611,7 @@ def loginWithKorppi():
     session['user_id'] = userId
     session['user_name'] = userName
     flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session['came_from'])
+    return redirect(session.get('came_from', '/'))
 
 if __name__ == "__main__":
 #    app.debug = True
