@@ -24,10 +24,11 @@ body {
 
 .viewLogin .loginButton:hover {
     width:auto;
-}
+} 
+
  
 .viewLogin .loginButton {
-    width:3em;
+    width:auto;
     position: fixed;
     top: 0;
     left: 0;
@@ -329,6 +330,10 @@ table {
 	border-collapse: collapse;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+table code {
+    font-size: 1.2em;
 }
 
 table th {
@@ -768,15 +773,6 @@ p.stem {
 		left: 106%;
     }
 	
-	.cancelButton {
-	}
-	
-	.deleteButton{
-	}
-	 
-	.parSaveButton {
-	}
-	
 	
 	body {
 		max-width: 45em;
@@ -832,16 +828,15 @@ p.stem {
 		line-height: 1.2;
 	}
 	PRE {
-		border-style: solid;
-		border-width: 1px;
-		border-radius: 5px;
-		padding: 4px;
-		margin-left: 1em;
+		margin-left: 0.5em;
 		margin-right: 0.00cm;
-		line-height: 1;
-		font-size: 1em;
-		box-shadow: 10px 10px 5px #888888;
 	}
+
+    .csRunCode {
+        margin-left: 0.5em;
+        /*width: 98%;  */
+    }
+
 	.addNoteButton {
 		position: absolute;
 		line-height:0.8;
@@ -849,11 +844,7 @@ p.stem {
 		left: 101%;
 		outline: none;
 	}
-	.readline {
-		position: absolute;
-		top: 0em;
-		left: 99%;
-	}
+
 	.notes {
 		position: absolute;
 		left: 115%;
@@ -861,8 +852,16 @@ p.stem {
 		top: 0em;
 	}
     .readline {
+		position: absolute;
+		top: 0em;
+        right 0em;
         margin-left: -1.3em;
+        border-right: 0.25em solid red;
     }
 	
+    .huomautus {
+        margin-left: 0.1em;
+        text-align: left;
+    }
 
 }
