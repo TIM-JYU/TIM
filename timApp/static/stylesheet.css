@@ -25,7 +25,6 @@ body {
 .viewLogin .loginButton:hover {
     width:auto;
 } 
-
  
 .viewLogin .loginButton {
     width:auto;
@@ -831,7 +830,6 @@ p.stem {
 		margin-left: 0.5em;
 		margin-right: 0.00cm;
 	}
-
     .csRunCode {
         margin-left: 0.5em;
         /*width: 98%;  */
@@ -863,5 +861,8 @@ p.stem {
         margin-left: 0.1em;
         text-align: left;
     }
-
+    blockquote {
+        margin-left: 0.2em;
+        margin-right: 0.2em;
+    }
 }

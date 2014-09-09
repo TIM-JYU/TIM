@@ -17,6 +17,7 @@ from subprocess import PIPE, Popen, check_output
 from fileParams3 import *
 from requests import Request, Session
 from http import cookies
+import datetime
 
 print("Kaynnistyy")
 
@@ -79,12 +80,12 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None):
     #if timeout != -1:
     #    signal.signal(signal.SIGALRM, alarm_handler)
     #    signal.alarm(timeout)
-    print(p.pid)
+    # print(p.pid)
     try:
         stdout, stderr = p.communicate(timeout=timeout)
         #if timeout != -1:
         #    signal.alarm(0)
-    except  subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired:
         '''
         pids = [p.pid]
         if kill_tree:
@@ -129,8 +130,8 @@ def write_json_error(file, err, result):
 
 
 def remove_before(what, s):
-    print("=================================== WHAT ==============")
-    print(what, " ", s)
+    # print("=================================== WHAT ==============")
+    # print(what, " ", s)
     i = s.find(what)
     if i < 0: return s
     s = s[i + 1:]
@@ -153,6 +154,19 @@ def get_html(ttype, query):
     return s
 
 
+def log(self):
+    t = datetime.datetime.now()
+    agent = " :AG: "+ self.headers["User-Agent"]
+    if agent.find("ython") >= 0: agent = ""
+    logfile = "/cs/images/log.txt"
+    try:
+        open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path +  agent + "\n")
+    except:
+        return
+
+    return
+
+
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         print("do_OPTIONS ==============================================")
@@ -165,17 +179,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
 
     def do_GET(self):
-        print("do_GET ==================================================")
+        # print("do_GET ==================================================")
         self.do_all(get_params(self))
 
 
     def do_POST(self):
-        print("do_POST =================================================")
+        # print("do_POST =================================================")
         self.do_all(post_params(self))
 
 
     def do_PUT(self):
-        print("do_PUT =================================================")
+        # print("do_PUT =================================================")
         self.do_all(post_params(self))
 
     def wout(self, s):
@@ -195,14 +209,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web = {}
         result["web"] = web
 
-        print("doAll ===================================================")
-        print(self.path)
-        print(self.headers)
+        # print("doAll ===================================================")
+        # print(self.path)
+        # print(self.headers)
         # print query
 
         if self.path.find('/favicon.ico') >= 0:
             self.send_response(404)
             return
+
+        log(self)
         '''
         if self.path.find('/login') >= 0:
             username = check_korppi_user(self,"tim")
@@ -265,9 +281,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
         usercode = get_json_param(query.jso, "state", "usercode", None)
         if usercode: query.query["usercode"] = [usercode]
-        print("USERCODE: XXXXX = ", usercode)
+        # print("USERCODE: XXXXX = ", usercode)
 
-        print("Muutos ========")
+        # print("Muutos ========")
         # pprint(query.__dict__, indent=2)
 
         if is_css:
@@ -279,9 +295,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return self.wout(file_to_string('js/dir.js'))
 
         if is_html and not is_iframe:
-            print("HTML:==============")
+            # print("HTML:==============")
             s = get_html(ttype, query)
-            print(s)
+            # print(s)
             return self.wout(s)
 
         if is_fullhtml:
@@ -319,12 +335,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Check query parameters
         p0 = FileParams(query, "", "")
-        print("p0=")
-        print(p0.replace)
+        # print("p0=")
+        # print(p0.replace)
         if p0.url == "" and p0.replace == "": p0.replace = "XXXX";
 
         print_file = get_param(query, "print", "")
-        print("type=" + ttype)
+        # print("type=" + ttype)
 
         s = ""
         # if p0.url != "":
@@ -347,6 +363,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Compile
         try:
+            log(self)
 
             if ttype == "jypeli":
                 cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
@@ -359,7 +376,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
             # self.wfile.write("*** Success!\n")
-            print("*** Success")
+            print("*** Compile Success")
         except subprocess.CalledProcessError as e:
             '''
             self.wout("!!! Error code " + str(e.returncode) + "\n")
@@ -394,14 +411,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if lang:
             env["LANG"] = lang
             env["LC_ALL"] = lang
-        print("Lang= ", lang)
+        # print("Lang= ", lang)
 
         if ttype == "jypeli":
             code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
             print(err)
             if type(out) != type(''): out = out.decode()
             run(["convert", "-flip", bmpname, pngname],timeout=20)
-            print(bmpname, pngname)
+            # print(bmpname, pngname)
             self.remove(bmpname)
             # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
             print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % basename)
@@ -467,17 +484,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         result["web"] = web
 
         # Clean up
-        print("FILE NAME:", csfname)
+        # print("FILE NAME:", csfname)
         # self.remove(csfname)
 
         # self.wfile.write(out)
         # self.wfile.write(err)
         sresult = json.dumps(result)
         self.wout(sresult)
-        print("Result ========")
-        print(sresult)
+        # print("Result ========")
+        # print(sresult)
         # print(out)
-        print(err)
+        # print(err)
 
 
 def keep_running():

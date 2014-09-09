@@ -295,8 +295,8 @@ def post_params(self):
     # print self
     # pprint(self.__dict__,indent=2)
     # print dir(self.request)
-    print(self.path)
-    print(self.headers)
+    # print(self.path)
+    # print(self.headers)
     content_length = int(self.headers['Content-Length'])
     content_type = "application/json"
     if 'Content-Type' in self.headers: content_type = self.headers['Content-Type']
@@ -311,32 +311,32 @@ def post_params(self):
     '''
 
     f = self.rfile.read(content_length)
-    print(f)
-    print(type(f))
+    # print(f)
+    # print(type(f))
     u = f.decode("UTF8")
     # print(u)
     # print(type(u))
 
     result = QueryClass()
     result.query = {}  # parse_qs(urlparse(self.path).query, keep_blank_values=True)
-    print("result.query ================================== ")
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(result.query)
+    # print("result.query ================================== ")
+    # pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(result.query)
 
     if len(u) == 0: return result
     if content_type.find("json") < 0:  # ei JSON
-        print("POSTPARAMS============")
+        # print("POSTPARAMS============")
         q = parse_qs(urlparse('k/?' + u).query, keep_blank_values=True)
         for field in list(q.keys()):
-            print("FIELD=", field)
+            # print("FIELD=", field)
             result.query[field] = [q[field][0]]
     else:
         jso = json.loads(u)
         # print(jso.repr())
-        print("====================================================")
+        # print("====================================================")
         result = QueryClass()
-        print("result.query ================================== ")
-        pp.pprint(result.query)
+        # print("result.query ================================== ")
+        # pp.pprint(result.query)
         # print jso
         result.jso = jso
         for field in list(result.jso.keys()):
@@ -448,9 +448,9 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     line = line.replace(what_to_replace, params)
     by = get_param(query, "byCode", "")
     by = get_param(query, "usercode", by)
-    print("BY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", by.encode())
+    # print("BY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", by.encode())
     line = line.replace("##USERCODE##", by)
-    print(line.encode())
+    # print(line.encode())
     return line
 
 

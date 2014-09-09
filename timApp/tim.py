@@ -5,6 +5,7 @@ from flask import render_template
 from flask import g
 from flask import request
 from flask import send_from_directory
+from flask.ext.compress import Compress
 import logging
 import requests
 from ReverseProxied import ReverseProxied
@@ -26,6 +27,7 @@ from containerLink import PluginException
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
+Compress(app)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
@@ -80,7 +82,7 @@ def notFound(error):
     return render_template('404.html'), 404
 
 def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata), mimetype='application/json')
+    response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
     response.status_code = status_code
     return response
 
@@ -609,7 +611,7 @@ def loginWithKorppi():
     session['user_id'] = userId
     session['user_name'] = userName
     flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session['came_from'])
+    return redirect(session.get('came_from', '/'))
 
 if __name__ == "__main__":
 #    app.debug = True
