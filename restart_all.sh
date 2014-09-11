@@ -29,10 +29,10 @@ docker rm GraphVizPlug &
 wait
 
 # Start csPlugin
-docker run --name csPlugin -p 56000:5000 -v /opt/cs:/cs/ -d -t -i cs3 /bin/bash -c '/cs/run_cs3 ; /bin/bash'
+docker run --name csPlugin -p 56000:5000 -v /opt/cs:/cs/ -d -t -i cs3 /bin/bash -c 'cd /cs && ./run_cs3 ; /bin/bash'
 
 # Start showFile-plugin
-docker run --name showFile -p 55000:5000 -v /home/vesal/svn:/svn/ -d -t -i svn /bin/bash -c 'python3 /svn/svn3.py ; /bin/bash'
+docker run --name showFile -p 55000:5000 -v /home/vesal/svn:/svn/ -d -t -i svn /bin/bash -c 'cd /svn && python3 svn3.py ; /bin/bash'
 
 # Start Haskell plugins
 docker run --name ChoicePlug -p 57000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/ChoicesPlugin/ChoicesPlugin -p 5000 ; /bin/bash'
