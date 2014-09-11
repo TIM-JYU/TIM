@@ -15,10 +15,11 @@
       </td>
       <td style="width:2%;">
         <input  type="checkbox" ng-model="$parent.answer[$index]" ng-false-value="true" ng-true-value="false" />
+        <!-- <input  type="checkbox" ng-model="$parent.answer[$index]" ng-value="false"  />  -->
       </td>
       <td style="width:5%;" ng-if="checked">
-        <span ng-if="answer[$index] == choice.correct" class="correct">Correct!</span>
-        <span ng-if="answer[$index] !==choice.correct" class="wrong">Wrong!</span>
+        <span ng-if="''+answer[$index] == ''+choice.correct" class="correct">Correct!</span>
+        <span ng-if="''+answer[$index] !==''+choice.correct" class="wrong">Wrong!</span>
       </td>
       <td width="width:46%;"> 
         <span ng-if="choice.reason" class="MCQExpl" ng-bind-html="choice.reason"></span></td>
