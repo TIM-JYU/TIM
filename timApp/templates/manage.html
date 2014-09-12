@@ -112,13 +112,14 @@ var viewers = {{viewers|tojson|safe}};
             </label>
             <input type="submit" value="Update" ng-disabled="newName === doc.name">
         </form>
-        <div class="uploadForm margin">
+        <form class="uploadForm margin">
             Upload a new version for this document
             <div>
-                <input type="file" ng-file-select="updateDocument(doc, $files)">
+                <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
                 <span ng-bind="progress"></span>
             </div>
-        </div>
+            <button id="reset" type="reset" value="Reset">Clear</button>
+        </form>
         <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
         <div class="margin">
             <button ng-click="deleteDocument(doc.id)">Delete document</button>

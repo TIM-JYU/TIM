@@ -9,11 +9,18 @@ angular.module('MCQ', [])
                         $scope.checked = false;
                         $scope.active  = true;
                         $scope.answer = new Array($scope.content.question.choices.length);
-    					for(var j=0;j++;j<$scope.answer.length) {$scope.answer[j]=false;};
+    					// for(var j=0;j<$scope.answer.length;j++) {$scope.answer[j]=false;};
 	    			    }
                     console.log(["ANSWER",$scope.answer]);
                     }
-                    , function(scope){scope.active=false;return scope.answer;})) //TODO: cleanup
+                    , function(scope){
+                        for(var j=0;j<scope.answer.length;j++) {
+                            if ( scope.answer[j] == "false") scope.answer[j]=false;
+                            if ( scope.answer[j] == "true") scope.answer[j]=true;
+                        }
+                        scope.active=false;
+                        return scope.answer;
+                    })) //TODO: cleanup
   .directive('mcq', standardDirective("MCQTemplate.html"
 				     , function($scope){return;}
                                      , function(scope){return parseInt(scope.userSelection);}));

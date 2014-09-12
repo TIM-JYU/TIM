@@ -2,67 +2,37 @@
 from bs4 import BeautifulSoup
 from containerLink import callPlugin
 from containerLink import pluginReqs
-from containerLink import getPlugin
 from containerLink import getPluginTimUrl
 import yaml
 from htmlSanitize import sanitize_html
-import re
 import json
 
-# Receive html-string with plugin in it, 
-# extract values from contents
-#def prepPluginCall(htmlStr):
-#    tree = BeautifulSoup(htmlStr)
-#    plugins = []
-#    for node in tree.find_all('pre'):
-#        values = {}
-#        name = node['plugin']
-#        try:
-#            values["identifier"] = node['id']
-#        except KeyError:
-#            values['identifier'] = " "
-#        if(len(node.text) > 0):
-#            multiLineId = ""
-#            multiLineVal = ""
-#            multiLineCont = False
-#            for value in node.string.strip().split('\n'):
-#                if("=====" in value):
-#                    values[multiLineId] = multiLineVal
-#                    multiLineId = ""
-#                    multiLineVal = ""
-#                    multiLineCont = False
-#                elif(multiLineCont):
-#                    multiLineVal = multiLineVal + "\n" + value
-#                elif(":" in value):  # If line does not contain valid value pair, discard it.
-#                    pair = value.strip().split(':',1)
-#                    values[pair[0].strip()] = pair[1].strip()
-#                elif("=" in value):
-#                    multiLineCont = True
-#                    pair = value.split("=", 1)
-#                    multiLineId = pair[0]
-#                    multiLineVal = multiLineVal + pair[1]
-#                    
-#        plugins.append({"plugin": name, "values": values})
-#    return plugins
 
-def prepPluginCall(htmlStr):
-    tree = BeautifulSoup(htmlStr)
+def prepPluginCall(nodes):
     plugins = []
-    for node in tree.find_all('pre'):
+    for node in nodes:
         values = {}
         name = node['plugin']
-        
-        if(len(node.text) > 0):
+
+        if len(node.text) > 0:
             try:
                 values = yaml.load(node.text)
-
             except (yaml.parser.ParserError, yaml.scanner.ScannerError):
-                print("Malformed yaml string")
-                return "YAMLERROR: Malformed string"
+                plugins.append({"plugin": name, 'error': "YAML is malformed"})
         try:
-            plugins.append({"plugin":name, "markup":values, "taskId": node['id']})
+            plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
         except KeyError:
-            return "Missing identifier"
+            plugins.append({"plugin": name, 'error': "Missing identifier"})
+    return plugins
+
+
+def getPlugins(htmlStr):
+    tree = BeautifulSoup(htmlStr)
+    pres = tree.find_all('pre')
+    plugins = []
+    for pre in pres:
+        if pre.has_attr('plugin'):
+            plugins.append(pre)
     return plugins
 
 
@@ -70,7 +40,7 @@ def getBlockYaml(block):
     tree = BeautifulSoup(block)
     for node in tree.find_all('pre'):
         values = {}
-        if(len(node.text) > 0):
+        if len(node.text) > 0:
             try:
                 values = yaml.load(node.text)
             except (yaml.parser.ParserError, yaml.scanner.ScannerError):
@@ -78,44 +48,50 @@ def getBlockYaml(block):
                 return "YAMLERROR: Malformed string"
     return values
 
+
+def getPluginErrorHtml(pluginName, message):
+    return '<div class="pluginError">Plugin {} error: {}</div>'.format(pluginName, message)
+
+
 # Take a set of blocks and search for plugin markers,
 # replace contents with plugin.
-def pluginify(blocks,user,answerDb,doc_id,user_id): 
+def pluginify(blocks, user, answerDb, doc_id, user_id):
     preparedBlocks = []
     plugins = []
     for block in blocks:
-        if("plugin=" in block and "<code>" in block):
-            pluginInfo = prepPluginCall(block)
-            if(pluginInfo == "YAMLERROR: Malformed string"):
-                preparedBlocks.append("Malformed yaml string")
-            elif(pluginInfo == "Missing identifier"):
-                preparedBlocks.append("pluginInformation lacking, identifier missing")
-            else:
-                for vals in pluginInfo:
+        checkPlugin = getPlugins(block)
+        if len(checkPlugin) > 0:
+            pluginInfo = prepPluginCall(checkPlugin)
+            pluginHtmls = []
+            for vals in pluginInfo:
+                if 'error' in vals:
+                    pluginHtmls.append(getPluginErrorHtml(vals['plugin'], vals['error']))
+                    continue
+                try:
+                    plugins.append(vals['plugin'])
+                    vals['markup']["user_id"] = user
+                    taskId = "{}.{}".format(doc_id, vals['taskId'])
+                    states = answerDb.getAnswers(user_id, taskId)
+
+                    # Don't show state for anonymous users.
+                    state = None if user_id == 0 or len(states) == 0 else states[0]['content']
                     try:
-                        plugins.append(vals['plugin'])
-                        vals['markup']["user_id"] =  user
-                        taskId = "{}.{}".format(doc_id, vals['taskId'])
-                        states = answerDb.getAnswers(user_id, taskId)
-                        
-                        # Don't show state for anonymous users.
-                        state = None if user_id == 0 or len(states) == 0 else states[0]['content']
-                        try:
-                            if state is not None:
-                                state = json.loads(state)
-                        except ValueError:
-                            pass 
-                        pluginHtml = callPlugin(vals['plugin'], vals['markup'], state, taskId)
-                        pluginUrl = getPluginTimUrl(vals['plugin'])
-                        preparedBlocks.append("<div id='{}' data-plugin='{}'>".format(taskId,pluginUrl) + pluginHtml + "</div>")
-                    except TypeError:
-                        preparedBlocks.append("Unexpected error occurred while constructing plugin html,\n please contact TIM-development team.")
-                        continue
+                        if state is not None:
+                            state = json.loads(state)
+                    except ValueError:
+                        pass
+                    pluginHtml = callPlugin(vals['plugin'], vals['markup'], state, taskId)
+                    pluginUrl = getPluginTimUrl(vals['plugin'])
+                    pluginHtmls.append("<div id='{}' data-plugin='{}'>".format(taskId, pluginUrl) + pluginHtml + "</div>")
+                except TypeError:
+                    pluginHtmls.append(getPluginErrorHtml(vals['plugin'], "Unexpected error occurred while constructing plugin html. Please contact TIM-development team."))
+                    continue
+            preparedBlocks.append(''.join(pluginHtmls))
         else:
             preparedBlocks.append(sanitize_html(block))
-            #preparedBlocks.append(block)
-                    
-    return (plugins,preparedBlocks)
+
+    return plugins, preparedBlocks
+
 
 # p is json of plugin requirements in form:
 # {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
@@ -141,6 +117,7 @@ def removeDups(xs):
         if x not in us:
             us.append(x)
     return us
+
 
 def getPluginDatas(plugins):
     jsPaths = []

@@ -8,6 +8,7 @@ run apt-get install -y python3
 run apt-get install -y python3-pip
 run apt-get install -y git-core
 run pip3 install Flask
+run pip3 install flask-compress
 run pip3 install markdown
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
