@@ -3,6 +3,25 @@
 	text-align: justify;
 }
 
+.correct {
+    background-color: limegreen;
+    padding: 0.5em;
+}
+
+.wrong { 
+    background-color: red;
+    padding: 0.5em;
+}
+
+.mcq table p {
+    margin-left: 0;
+	text-align: left;
+}
+
+.mcq table  {
+    left: 2em;
+}
+
 /*=============================================*/
 /* Koeta kasata kaikki väreihin liittyvä tähän */
 /*=============================================*/
@@ -839,7 +858,6 @@ p.stem {
         margin-left: 0.5em;
         /*width: 98%;  */
     }
-
 	.addNoteButton {
 		position: absolute;
 		line-height:0.8;
