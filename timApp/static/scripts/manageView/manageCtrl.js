@@ -96,7 +96,7 @@ PermApp.controller("PermCtrl", [
                     sc.upload = $upload.upload({
                         url : url,
                         method : 'POST',
-                        file : file,
+                        file : file
                     }).progress(function(evt) {
                         sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
                     }).success(function(data, status, headers, config) {
