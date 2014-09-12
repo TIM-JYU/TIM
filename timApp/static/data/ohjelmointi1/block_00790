@@ -1,3 +1,0 @@
--   [Equals(String)](http://msdn.microsoft.com/en-us/library/858x0yyx.aspx)
-    Palauttaa tosi jos kaksi merkkijonoa ovat sisällöltään samat
-    merkkikoko huomioon ottaen. Muutoin palauttaa epätosi.

@@ -1,7 +1,0 @@
--   Dokumentaatiokommentin alkuun laitetaan \<summary\>-tagien väliin
-    lyhyt ja selkeä kuvaus aliohjelman toiminnasta.
-
--   Jokainen parametri selitetään omien \<param\>-tagien väliin ja
-
--   paluuarvo \<returns\>-tagien väliin.
-

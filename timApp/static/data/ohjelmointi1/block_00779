@@ -1,5 +1,0 @@
-\
- Liukulukuja testattaessa täytyy parametrit antaa desimaaliosan kanssa.
-Esimerkiksi jos yllä olevassa esimerkissä ensimmäinen testi olisi muotoa
-Keskiarvo(0, 0) \~\~\~ 0.0, niin tällöin ajettaisiin aliohjelma
-Keskiarvo(int x, int y), *jos* sellainen olisi olemassa.

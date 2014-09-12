@@ -1,5 +1,0 @@
-Dokumentaatiokommentti olisi syytä kirjoittaa ennen jokaista luokkaa,
-pääohjelmaa, aliohjelmaa ja metodia (aliohjelmista ja metodeista
-puhutaan myöhemmin). Lisäksi jokainen C\#-tiedosto alkaa aina
-dokumentaatiokommentilla, josta selviää tiedoston tarkoitus, tekijä ja
-versio.

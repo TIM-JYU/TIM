@@ -1,6 +1,0 @@
-\
-\
- Jos sijoitetaan "olio" toiseen "olioon", niin tosiasiassa sijoitetaan
-viitemuuttujien arvoja, eli sijoituksen `s2 = s1`{.western} jälkeen
-molemmat merkkijono-olioviitteet "osoittavat" samaan olioon. Nyt tilanne
-muuttuisi seuraavasti:

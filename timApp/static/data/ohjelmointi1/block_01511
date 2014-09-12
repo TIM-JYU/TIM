@@ -1,3 +1,0 @@
-Yllä oleva rivi on ikään kuin rekursion lopetusehto. Jos n on pienempää
-tai yhtä suurta kuin 1, niin palautetaan luku 1. Oleellista on, että
-lopetusehto on ennen uutta rekursiivista aliohjelmakutsua.

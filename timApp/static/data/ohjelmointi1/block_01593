@@ -1,3 +1,0 @@
-Poistetaan sitten kaikki ne alkiot, joiden arvo on 3. Tässä voimme
-käyttää tehokkaasti hyväksemme while-silmukkaa ja Remove-funktiota.
-Remove-funktion totuusarvotyyppinen paluuarvo käy hyvin while-ehdoksi.

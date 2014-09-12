@@ -1,6 +1,0 @@
-Kun aliohjelmaa käytetään ohjelmassa, sanotaan, että aliohjelmaa
-*kutsutaan*. Kutsu tapahtuu kirjoittamalla aliohjelman nimi ja antamalla
-sille parametrit. Aliohjelmakutsun erottaa metodikutsusta vain se, että
-metodi liittyy aina tiettyyn olioon. Esimerkiksi pallo-olio p1
-voitaisiin poistaa pelikentällä kutsumalla metodia Destroy(), eli
-kirjoittaisimme:

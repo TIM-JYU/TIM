@@ -1,6 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-foreach (int kuukaudenPituus in kuukausienPaivienLkm) 
-{
-   Console.Write(kuukaudenPituus + " ");
-}
-```

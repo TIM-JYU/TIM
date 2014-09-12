@@ -1,5 +1,0 @@
-Varsinaisen VS-testin voi nyt luoda ja ajaa painamalla Ctrl+Shift+Q tai
-valikosta Tools → ComTest. Jos *Test Results* -välilehti (oletuksena
-näytön alareunassa, ilmestyy ajettaessa ComTest) näyttää vihreää ja
-lukee *Passed*, testit menivät oikein. Punaisen ympyrän tapauksessa
-testit menivät joko väärin, tai sitten testitiedostossa on virheitä.

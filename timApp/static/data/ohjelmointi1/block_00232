@@ -1,5 +1,0 @@
-Toisin sanoen metodeja kutsuttaessa täytyy ensin kirjoittaa sen olion
-nimi, jonka metodia kutsutaan, ja sen jälkeen pisteellä erotettuna
-kirjoittaa haluttu metodin nimi. Sulkujen sisään tulee luonnollisesti
-tarvittavat parametrit. Yllä olevan esimerkin Destroy-metodi ei ota
-vastaan yhtään parametria.

@@ -1,4 +1,0 @@
-Syntaksivirhe estää ohjelman kääntymisen vaikka merkitys eli
-*semantiikka* olisikin oikein. Siksi ne huomataankin aina viimeistään
-ohjelmaa käännettäessä. Syntaksivirhe voi olla esimerkiksi joku
-kirjoitusvirhe tai puolipisteen unohtaminen lauseen lopusta.

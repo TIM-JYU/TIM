@@ -1,8 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-protected override void Paint(Canvas canvas)
-{
-  base.Paint(canvas);
-  double korkeus = 300;
-  SierpinskinKolmio(canvas, 0, -korkeus, korkeus);
-}
-```

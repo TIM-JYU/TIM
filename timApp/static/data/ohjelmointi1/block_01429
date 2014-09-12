@@ -1,4 +1,0 @@
-*Tapahtumankäsittelijän* LiikutaPelaajaa parametreista Physicsobject
-olio ja Vector suunta saadaan tiedot, *mitä oliota* halutaan liikuttaa
-ja *mihin suuntaan*. Huomaa, että nämä tiedot annetaan kutsuvaiheessa
-”ylimääräisinä parametreina”, eli Keyboard.Listen-riveillä.

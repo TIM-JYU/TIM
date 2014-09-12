@@ -1,3 +1,0 @@
-Kuunnellaan vasenta tattia (AnalogControl.LeftStick). Luku 0.1 kuvaa
-sitä, miten herkästä liikkeestä tattia kuunteleva aliohjelma
-suoritetaan. Kuuntelua käsittelee aliohjelma LiikutaPelaajaa.

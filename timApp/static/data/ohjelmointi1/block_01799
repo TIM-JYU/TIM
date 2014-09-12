@@ -1,3 +1,0 @@
-Erona eri käyttöjärjestelmissä on se, miten rivinvaihto kuvataan.
-Windowsissa rivinvaihto on CR LF (0D 0A) ja Unix-pohjaisissa
-järjestelmissä pelkkä LF (0A).

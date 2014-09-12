@@ -1,9 +1,0 @@
-Jotta ohjelman kääntäminen ja suorittaminen onnistuu, täytyy koneelle
-olla asennettuna joku C\#-sovelluskehitin. Mikäli käytät Windowsia, niin
-aluksi riittää hyvin Microsoft .NET SDK (Software Development Kit, suom.
-kehitystyökalut). Muiden käyttöjärjestelmien tapauksessa
-sovelluskehittimeksi käy esimerkiksi *Novell Mono*. Hyvin monet tämän
-kurssin harjoituksista on tehtävissä Mono-sovelluskehittimellä, mutta
-tämän monisteen ohjeet ja esimerkit tullaan käsittelemään
-Windows-ympäristössä. Edelleen, Jypeli-kirjaston käyttäminen on
-mahdollista vain Windows-ympäristössä.

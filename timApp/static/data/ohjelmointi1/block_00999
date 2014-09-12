@@ -1,3 +1,0 @@
-Huomaa, että joukko-opista ja logiikasta tutut *De Morganin lait*
-pätevät myös loogisissa operaatioissa. Olkoon p ja q bool-tyyppisiä
-muuttujia. Tällöin:

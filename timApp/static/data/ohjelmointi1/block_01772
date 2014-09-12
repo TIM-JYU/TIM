@@ -1,8 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Ensimmäinen bitti  => 1  (jota ei merkitä)
-0.6 * 2  = 1.2     => 1
-0.2 * 2  = 0.4     => 0
-0.4 * 2  = 0.8     => 0
-0.8 * 2  = 1.6     => 1
-0.6 * 2  = 1.2     => 1
-```

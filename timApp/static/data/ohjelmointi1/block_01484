@@ -1,5 +1,0 @@
-Piirtoalustalla voidaan peliin piirtää kuvioita. Nämä kuviot ovat siis
-pelissä näkyviä elementtejä, jotka eivät ole PhysicsObject- tai
-GameObject-olioita, vaan ne piirretään ”erillään” peliolioista. Ne eivät
-noudata fysiikan lakeja. Tällä hetkellä piirtoalustalle voi piirtää
-janoja.

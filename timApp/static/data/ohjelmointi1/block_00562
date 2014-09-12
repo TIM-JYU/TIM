@@ -1,7 +1,0 @@
-Yleensä meidän ei tarvitse olla kovin huolissamme siitä käytämmekö
-alkeistietotyyppiä (kuten int, double tai char) vai oliotyyppiä (kuten
-String). Yleisesti ottaen tärkein ero on siinä, että alkeistietotyyppien
-tulee (tiettyjä poikkeuksia lukuun ottamatta) aina sisältää jokin arvo,
-mutta oliotietotyypit voivat olla null-arvoisia (eli ”ei-minkään”
-arvoisia). Jäljempänä esimerkkejä alkeistietotyyppien ja viitetyyppien
-eroista.

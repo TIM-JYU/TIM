@@ -1,6 +1,0 @@
-Määreen voi myös jättää kirjoittamatta luokan eteen, jolloin luokan
-määreeksi tulee automaattisesti internal. Puhumme aliohjelmista
-myöhemmin, mutta mainittakoon, että vastaavasti, jos aliohjelmasta
-jättää määreen kirjoittamatta, tulee siitä private. Tällä kurssilla
-kuitenkin harjoitellaan kirjoittamaan julkisia luokkia (ja aliohjelmia),
-jolloin public-sana kirjoitetaan aina luokan ja aliohjelman eteen.

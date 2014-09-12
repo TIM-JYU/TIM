@@ -1,7 +1,0 @@
--   Jokin kirjasto puuttuu (kts Kirjastojen liittäminen projektiin:
-    [wiki](https://trac.cc.jyu.fi/projects/npo/wiki/KirjastojenLiittaminenKasin),
-    [video](http://www.youtube.com/watch?v=vlqaRwu1ScY))
-
--   Jokin using-lause puuttuu. Jypeli-pelien projektimalleissa ovat
-    vakiona seuraavat using-lauseet:
-

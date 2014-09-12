@@ -1,3 +1,0 @@
--   DrawLine: Piirtää janan. Parametrina alku- ja loppupisteen
-    koordinaatit joko vektoreina tai luettelemalla molempien pisteiden
-    x- ja y-koordinaatit.

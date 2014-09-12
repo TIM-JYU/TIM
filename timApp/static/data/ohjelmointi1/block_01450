@@ -1,7 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-private void LiikutaPelaajaa(AnalogState tatinTila)
-{
-  Vector tatinAsento = tatinTila.StateVector;
-  // Tehdään jotain tatin asennolla, esim liikutetaan pelaajaa...
-}
-```

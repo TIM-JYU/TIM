@@ -1,5 +1,0 @@
-Alimpana olevaan else-osaan mennään nyt vain siinä tapauksessa, että
-mikään yllä olevista ehdoista ei ollut tosi. Tämä rakenne esitellään
-usein omana rakenteenaan, vaikka oikeastaan tässä on vain useita
-peräkkäisiä if-else -rakenteita, joiden sisennys on vain hieman
-poikkeava.

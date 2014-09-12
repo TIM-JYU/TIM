@@ -1,5 +1,0 @@
-Aliohjelmaan tultaessa saatiin parametrina korkeus, h-muuttuja. Mikäli
-h:n arvo alittaa annetun pienimmän korkeuden, poistutaan välittömästi
-return-lauseella. Tällöin h:ta pienempiä kolmioita ei enää piirretä.
-Toisaalta, mikäli kolmion korkeus h *ei alita* annettua minimiä, niin
-silloin piirrellään, kuten aiemmin käytiin läpi.

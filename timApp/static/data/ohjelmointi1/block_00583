@@ -1,5 +1,0 @@
-String-luokasta löytyy esimerkiksi Contains-metodi, joka palauttaa arvon
-True tai False. Parametrina Contains-metodille annetaan merkkijono, ja
-metodi etsii oliosta antamaamme merkkijonoa vastaavia ilmentymiä. Jos
-olio sisältää merkkijonon (yhden tai useamman kerran) palautetaan True.
-Muutoin palautetaan False. Alla esimerkki.

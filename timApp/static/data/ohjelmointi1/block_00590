@@ -1,7 +1,0 @@
-Kun olioon ei enää viittaa yhtään muuttujaa (olioviitettä), täytyy olion
-käyttämät muistipaikat vapauttaa muuhun käyttöön. Oliot poistetaan
-muistista puhdistusoperaation avulla. Tästä huolehtii C\#:n
-automaattinen roskienkeruu (garbage collection). Kun olioon ei ole enää
-viitteitä, se merkitään poistettavaksi ja aina tietyin väliajoin
-*puhdistusoperaatio* (kutsutaan usein myös nimellä roskienkerääjä,
-garbage collector) vapauttaa merkittyjen olioiden muistipaikat.

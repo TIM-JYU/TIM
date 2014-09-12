@@ -1,9 +1,0 @@
-Jos laskisimme useiden oppilaiden tenttiarvosanoja, niin aliohjelmamme
-laskisi myös arvosanaRajat-taulukon arvot jokaisella kerralla erikseen.
-Tämä on melko typerää tietokoneen resurssien tuhlausta. Meidän
-kannattaakin tehdä oma aliohjelma siitä osasta, joka laskee
-tenttiarvosanojen rajat. Tämä aliohjelma voisi palauttaa arvosanojen
-rajat suoraan taulukossa. Nyt voisimme muuttaa LaskeArvosana-aliohjelmaa
-niin, että se saa parametrikseen arvosanojen rajat taulukossa ja
-opiskelijan tenttipisteet. Molempien aliohjelmien ComTest-testit ovat
-myös näkyvillä.

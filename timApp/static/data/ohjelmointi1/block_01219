@@ -1,9 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-do 
-{
-  lause1;
-  lause2;
-  (...)
-  lauseN;
-} while (ehto);
-```
