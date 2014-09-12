@@ -65,6 +65,11 @@ table th {
 	background: yellow;
 }
 
+.pluginError {
+    border: 1px solid red;
+    background-color: pink;
+}
+
 /*=============================================*/
 
 .note p {
@@ -852,7 +857,7 @@ p.stem {
     .readline {
 		position: absolute;
 		top: 0em;
-        right 0em;
+        right: 0em;
         margin-left: -1.3em;
         border-right: 0.25em solid red;
     }
