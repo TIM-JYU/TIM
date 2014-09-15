@@ -1,4 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Esimerkki.cs(4,40): error CS0165: Use of unassigned local variable
-        'ika'
-```

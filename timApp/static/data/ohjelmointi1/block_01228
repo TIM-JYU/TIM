@@ -1,5 +1,0 @@
-Kun silmukan suoritusten lukumäärä on ennalta tiedossa, on järkevintä
-käyttää for-silmukkaa. Esimerkiksi taulukoiden käsittelyyn for-silmukka
-on yleensä paras vaihtoehto. Syntaksiltaan for-silmukka eroaa selvästi
-edellisistä. Perinteinen for-silmukka on yleisessä muodossa
-seuraavanlainen:

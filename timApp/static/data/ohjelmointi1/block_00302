@@ -1,7 +1,0 @@
-**Metodi\
-**Aliohjelma, joka tarvitsee tehtävän suorittamiseksi kohteena olevan
-olion omia tietoja. Näitä käytetään tällä kurssilla, mutta ei tehdä
-alkupään esimerkeissä itse. Lopullisessa pelissä voi tulla tehtäväksi
-myös metodeja, jotka tarvitsevat peliluokan-olion tietoja toimintansa
-toteuttamiseen. Joku voi myös mahdollisesti tehdä vaikka uuden
-aseluokan, jolle kirjoitetaan omia metodeja.

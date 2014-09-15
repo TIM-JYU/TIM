@@ -1,7 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
- 10   
-  1001
-+ 1010 
-  ----
-  0011  => +3 (positiivinen luku kahden negatiivisen yhteenlaskusta)
-```

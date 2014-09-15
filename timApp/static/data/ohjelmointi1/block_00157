@@ -1,7 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-08 /// <summary>
-09 /// Luokka, jossa harjoitellaan piirtämistä lisäämällä ympyröitä ruudulle
-10 /// </summary>
-11 public class Lumiukko : PhysicsGame
-12 {
-```

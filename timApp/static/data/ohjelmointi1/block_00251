@@ -1,8 +1,0 @@
-sanotaan aliohjelman *otsikoksi* (header) tai *esittelyriviksi*. Otsikon
-alussa määritellään aliohjelman *näkyvyys* julkiseksi (public). Kun
-näkyvyys on julkinen, niin aliohjelmaa voidaan kutsua eli käyttää myös
-muissa luokissa. Aliohjelma määritellään myös staattiseksi (static),
-sillä jos emme määrittelisi aliohjelmaa staattiseksi, olisi se
-oikeastaan metodi, eli olion toiminto (ks. luku 8.5). Statttinen
-aliohjelma pystyy tekemään kaikki toimensa parametreinä tuodun tiedon
-perusteella.

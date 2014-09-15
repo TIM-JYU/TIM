@@ -1,4 +1,0 @@
-bool OnkoVainLukuja(String, char[])\
- Tutkii sisältääkö annettu merkkijono vain lukuja (positiivisia
-kokonaislukuja) ja erotinmerkkejä. Jos annettu merkkijono on tyhjä
-(pituus on 0), palautetaan false.

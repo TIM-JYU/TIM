@@ -1,5 +1,0 @@
-Vastaavasti kuten StringBuilder-olioilla yllä oleva tulostus palauttaa
-false. Huomaa, että vaikka taulukko sisältää int-tyyppisiä
-kokonaislukuja (jotka ovat primitiivityyppisiä), niin
-*kokonaislukutaulukko* on olio. Jälleen verrataan taulukkomuuttujien
-viitteitä, eikä arvoja joihin muuttujat viittaavat.

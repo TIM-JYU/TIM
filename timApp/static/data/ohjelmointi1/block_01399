@@ -1,5 +1,0 @@
-Tekstuurikuvat kannattaa tallentaa png-muodossa, jolloin kuvaan voidaan
-tallentaa myös alpha-kanavan tieto (läpinäkyvyys). Tallenna png-kuva
-projektin Content-kansioon. Klikkaa sitten Visual Studion Solution
-Explorerissa projektin nimen päällä hiiren oikealla napilla ja Add -\>
-Existing item. Hae kansiorakenteesta juuri tallentamasi kuva.

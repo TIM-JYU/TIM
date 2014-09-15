@@ -1,8 +1,0 @@
-Muuttuja täytyy olla määritelty tietyn tyyppiseksi ennen kuin siihen voi
-asettaa arvoa. Muuttujaan voi asettaa vain määrittelyssä annetun
-tietotyypin mukaisia arvoja tai sen kanssa *sijoitusyhteensopivia*
-arvoja. Esimerkiksi liukulukutyyppeihin (float ja double) voi sijoittaa
-myös kokonaislukutyyppisiä arvoja, sillä kokonaisluvut on reaalilukujen
-osajoukko. Alla sijoitamme arvon 4 muuttujaan nimeltä luku2, ja
-kolmannella rivillä luku2-muuttujan sisältämän arvon (4) muuttujaan,
-jonka nimi on luku1.

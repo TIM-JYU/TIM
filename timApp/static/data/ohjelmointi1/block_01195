@@ -1,5 +1,0 @@
-Ensimmäisessä silmukan lauseessa tulostetaan taulukon alkio indeksissä
-i. Perään tulostetaan välilyönti erottamaan eri alkiot toisistaan.
-Console.WriteLine-metodin sijaan käytämme nyt toista Console-luokan
-metodia. Console.Write-metodi ei tulosta perään rivinvaihtoa, joten
-sillä voidaan tulostaa taulukon alkiot peräkkäin.

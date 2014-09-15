@@ -1,5 +1,0 @@
-``` {.esimerkkisisennetty-western lang="zxx" xml:lang="zxx"}
-String henkilo = "Ville Virtanen";
-String haettava = "irta";
-if (henkilo.Contains(haettava)) Console.WriteLine(haettava + " löytyi!");
-```

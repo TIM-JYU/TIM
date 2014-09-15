@@ -1,5 +1,0 @@
-Jos luvussa olevat symbolien paikat siis numeroidaan oikealta vasemmalle
-alkaen nollasta, saadaan luvun arvo selville summaamalla kussakin
-paikassa oleva arvo kerrottuna kantaluku potenssiin paikan numero. Tämä
-toimii myös desimaaliluvuille kun numeroidaan desimaalimerkin oikealla
-puolella olevat paikat -1, -2, -3 jne. Esimerkiksi

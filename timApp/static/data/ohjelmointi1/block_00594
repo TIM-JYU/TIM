@@ -1,9 +1,0 @@
-Luokan dokumentaatio sisältää tiedot luokasta, luokan konstruktoreista
-ja metodeista. Luokkien dokumentaatioissa on yleensä linkkejä
-esimerkkeihin, kuten myös String-luokan tapauksessa. Tutustutaan nyt
-tarkemmin String-luokan dokumentaatioon. String-luokan dokumentaatio
-löytyy sivulta
-<http://msdn.microsoft.com/en-us/library/system.string.aspx>, ja lista
-*jäsenistä* eli käytössä olevista konstruktoreista, attribuuteista
-(fields), ominaisuuksista (property) ja metodeista sivulta
-<http://msdn.microsoft.com/en-us/library/system.string_members.aspx>.

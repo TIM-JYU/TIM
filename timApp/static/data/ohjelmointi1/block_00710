@@ -1,4 +1,0 @@
-Peli.cs sisältää lähdekoodin, ja se on yleensä se tiedosto, joka
-pyydetään palautettavaksi demotehtävissä. Muita tiedostoja ei tarvitse
-palauttaa, ellei niitä erikseen pyydetä. Huomaa, että tiedoston nimen
-voi ja tulee muuttaa vastaamaan luokan nimeä.

@@ -1,5 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-canvas.DrawLine(p1, p2);
-canvas.DrawLine(p2, p3);
-canvas.DrawLine(p3, p1);
-```

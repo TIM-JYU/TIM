@@ -1,4 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-double laskunTulos = 5 / 2;
-System.Console.WriteLine(laskunTulos); // tulostaa 2
-```

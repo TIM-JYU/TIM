@@ -1,8 +1,0 @@
-Kirjoitetaan tekstieditorilla alla olevan mukainen C\#-ohjelma ja
-tallennetaan se vaikka nimellä HelloWorld.cs. Tiedoston tarkenteeksi
-(eli niin sanottu tiedostopääte) on sovittu juuri tuo .cs, mikä tulee
-käytetyn ohjelmointikielen nimestä, joten tälläkin kurssilla käytämme
-sitä. Kannattaa olla tarkkana tiedostoa tallennettaessa, sillä jotkut
-tekstieditorit yrittävät oletuksena tallentaa kaikki tiedostot
-tarkenteella .txt ja tällöin tiedoston nimi voi helposti tulla muotoon
-HelloWorld.cs.txt.

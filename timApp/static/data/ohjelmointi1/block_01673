@@ -1,6 +1,0 @@
-10-järjestelmän luku saadaan muutettua binääriluvuksi jakamalla sen
-kokonaisosaa toistuvasti kahdella ja merkkaamalla paperin syrjään 0, jos
-jako meni tasan ja muuten 1. Kun lukua ei voi enää jakaa, saa
-binääriluvun selville kun lukee jakojäännökset päinvastaisesta
-suunnasta, kuin mistä aloitimme laskemisen. Esimerkiksi luku 19~10~
-voidaan muuttaa binääriluvuksi seuraavasti:

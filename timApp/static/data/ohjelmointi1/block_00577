@@ -1,5 +1,0 @@
-Olion metodeita kutsutaan kirjoittamalla ensiksi olion nimi, piste ja
-kutsuttavan metodin nimi. Metodin mahdolliset parametrit laitetaan
-sulkeiden sisään ja erotetaan toisistaan pilkulla. Jos metodi ei vaadi
-parametreja, täytyy sulut silti kirjoittaa, niiden sisälle ei vaan tule
-mitään. Yleisessä muodossa metodikutsu on seuraava:

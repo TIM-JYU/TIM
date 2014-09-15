@@ -1,7 +1,0 @@
-Tähän erinomaisena apuna on VS:n virheidenjäljitystoiminto eli
-*debuggaus*. Siinä ohjelman suoritusta voi seurata rivi riviltä, samoin
-kuin muuttujien arvojen muuttumista. Tämä auttaa huomattavasti virheen
-tai epätoivotun toiminnan syyn selvittämisessä. Vanha tapa tehdä samaa
-asiaa on lisätä ohjelmaan tulostuslauseita, mutta sitten nämä ohjelman
-muutokset jäävät helposti ohjelmaan ja saattavat toisinaan myös muuttaa
-ohjelman toimintaa.

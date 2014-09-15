@@ -1,8 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-//ensimmäinen kurssilainen
-kurssinOpiskelijat[0, 0] = "Virtanen";
-kurssinOpiskelijat[0, 1] = "Ville";
-//toinen kurssilainen
-kurssinOpiskelijat[1, 0] = "Korhonen";
-kurssinOpiskelijat[1, 1] = "Kalle";
-```

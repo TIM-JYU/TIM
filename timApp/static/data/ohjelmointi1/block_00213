@@ -1,4 +1,0 @@
-Yllä olevalla rivillä esitellään kaksi liukuluku*tyyppistä* *muuttujaa*.
-Liukuluku on eräs tapa esittää *reaalilukuja* tietokoneissa. C\#:ssa
-jokaisella muuttujalla on oltava tyyppi ja eräs liukulukutyyppi C\#:ssa
-on double. Muuttujista ja niiden tyypeistä puhutaan lisää luvussa 7.

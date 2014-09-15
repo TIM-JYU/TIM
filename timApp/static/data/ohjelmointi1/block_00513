@@ -1,4 +1,0 @@
-Huomaa! Arvonmuunto-operaattorit ovat ns. sivuvaikutuksellisia
-operaattoreita. Toisin sanoen, operaatio muuttaa muuttujan arvoa toisin
-kuin esimerkiksi aritmeettiset operaatiot. Seuraava esimerkki
-havainnollistaa asiaa.

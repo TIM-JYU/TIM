@@ -1,5 +1,0 @@
-Usein meidän täytyy tallentaa muuttujiin erilaisten laskutoimitusten
-tuloksia. C\#:ssa laskutoimituksia voidaan tehdä aritmeettisilla
-operaatioilla (arithmetic operation), joista mainittiin jo kun teimme
-lumiukkoesimerkkiä. Ohjelmassa olevia aritmeettisia laskutoimituksia
-sanotaan aritmeettisiksi lausekkeiksi (arithmetic expression).

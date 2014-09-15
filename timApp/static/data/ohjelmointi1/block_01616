@@ -1,4 +1,0 @@
-finally-lohko on hyödyllinen muun muassa käsiteltäessä tiedostoja,
-jolloin tiedosto on suljettava aina käsittelyn jälkeen poikkeuksista
-riippumatta. finally-lohkon sisältävä try-catch -rakenne olisi yleisessä
-muodossa seuraava:
