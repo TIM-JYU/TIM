@@ -27,7 +27,7 @@ def prepPluginCall(nodes):
 
 
 def getPlugins(htmlStr):
-    tree = BeautifulSoup(htmlStr)
+    tree = BeautifulSoup(htmlStr, "html.parser")
     pres = tree.find_all('pre')
     plugins = []
     for pre in pres:
