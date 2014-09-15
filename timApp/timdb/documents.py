@@ -261,7 +261,11 @@ class Documents(TimDbBase):
     
     @contract
     def getDocumentMarkdown(self, document_id : 'DocIdentifier') -> 'str':
-        out, _ = gitCommand(self.files_root_path, 'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
+        try:
+            out, _ = gitCommand(self.files_root_path, 'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
+        except TimDbException as e:
+            e.message = 'The requested revision was not found.'
+            raise
         return out
         
     @contract

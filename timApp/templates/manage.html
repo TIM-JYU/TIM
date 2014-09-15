@@ -131,14 +131,12 @@ var viewers = {{viewers|tojson|safe}};
                     <td>Time</td>
                     <td>User</td>
                     <td>Message</td>
-                    <td>Hash</td>
                 </tr>
             </thead>
             <tr ng-repeat="version in doc.versions">
-                <td>{{ '{{ version.timestamp }}' }}</td>
+                <td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
                 <td>{{ '{{ version.user }}' }}</td>
                 <td>{{ '{{ version.message }}' }}</td>
-                <td>{{ '{{ version.hash }}' }}</td>
             </tr>
         </table>
         <a href="{{url_for('indexPage')}}">Return to the index page</a>

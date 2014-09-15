@@ -87,6 +87,10 @@ def gitCommand(files_root_path : 'str', command : 'str'):
     """
     cwd = os.getcwd()
     os.chdir(files_root_path)
-    output, err = gitpylib.common.safe_git_call(command)
-    os.chdir(cwd)
+    try:
+        output, err = gitpylib.common.safe_git_call(command)
+    except Exception:
+        raise TimDbException('Git call failed')
+    finally:
+        os.chdir(cwd)
     return output, err

@@ -177,14 +177,22 @@ def renameDocument(doc_id):
     timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
     return "Success"
 
-@app.route('/download/<int:doc_id>')
-def downloadDocument(doc_id):
+@app.route('/download/<int:doc_id>/<doc_hash>')
+def documentHistory(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, doc_hash)):
         abort(404)
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
-    doc_data = timdb.documents.getDocumentMarkdown(getNewest(doc_id))
+    try:
+        doc_data = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, doc_hash))
+    except TimDbException as e:
+        abort(404, str(e))
+
     return Response(doc_data, mimetype="text/plain")
+
+@app.route('/download/<int:doc_id>')
+def downloadDocument(doc_id):
+    return documentHistory(doc_id, getNewest(doc_id).hash)
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
