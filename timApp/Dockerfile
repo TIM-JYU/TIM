@@ -17,6 +17,7 @@ run pip3 install gitpylib
 run pip3 install requests
 run pip3 install bleach
 run pip3 install pyaml
+run pip3 install ansiconv
 
 # Poistetaan pip. Sitä ei tarvitse enää ja saadaan
 # hitusen pienempi image ja vähemmän ohjelmia potentiaalisen

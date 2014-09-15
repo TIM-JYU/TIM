@@ -23,6 +23,7 @@ import codecs
 import pluginControl
 import collections
 from containerLink import PluginException
+from bs4 import UnicodeDammit
 
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
@@ -177,6 +178,18 @@ def renameDocument(doc_id):
     timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
     return "Success"
 
+@app.route('/diff/<int:doc_id>/<doc_hash>')
+def documentDiff(doc_id, doc_hash):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(DocIdentifier(doc_id, doc_hash)):
+        abort(404)
+    verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
+    try:
+        doc_diff = timdb.documents.getDifferenceToPrevious(DocIdentifier(doc_id, doc_hash))
+    except TimDbException as e:
+        abort(404, str(e))
+    return Response(doc_diff, mimetype="text/html")
+
 @app.route('/download/<int:doc_id>/<doc_hash>')
 def documentHistory(doc_id, doc_hash):
     timdb = getTimDb()
@@ -205,10 +218,9 @@ def upload_file():
             return jsonResponse({'message': 'The file format is not allowed.'}, 403)
         filename = secure_filename(doc.filename)
         if(filename.endswith(tuple(DOC_EXTENSIONS))):
-            try:
-                content = doc.read().decode('utf-8')
-            except UnicodeDecodeError:
-                return jsonResponse({'message': 'The file should be in UTF-8 format.'}, 400)
+            content = UnicodeDammit(doc.read()).unicode_markup
+            if not content:
+                return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
             timdb.documents.importDocument(content, filename, getCurrentUserGroup())
             return "Successfully uploaded document"
         else:
@@ -231,7 +243,10 @@ def updateDocument(doc_id, version):
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)
     doc = request.files['file']
-    newId = timdb.documents.updateDocument(docId, doc.read())
+    content = UnicodeDammit(doc.read()).unicode_markup
+    if not content:
+        return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
+    newId = timdb.documents.updateDocument(docId, content)
     return jsonResponse({'version' : newId.hash})
 
 @app.route('/images/<int:image_id>/<image_filename>/')

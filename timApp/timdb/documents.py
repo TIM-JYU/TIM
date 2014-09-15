@@ -6,6 +6,7 @@ from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheExcep
 from shutil import copyfile
 from .gitclient import gitCommit, gitCommand
 from timdb.gitclient import NothingToCommitException
+import ansiconv
 
 class Documents(TimDbBase):
 
@@ -267,7 +268,24 @@ class Documents(TimDbBase):
             e.message = 'The requested revision was not found.'
             raise
         return out
-        
+
+    def getDifferenceToPrevious(self, document_id : 'DocIdentifier') -> 'str':
+        try:
+            out, _ = gitCommand(self.files_root_path, 'diff --color --unified=5 {}^! {}'.format(document_id.hash, self.getDocumentPathAsRelative(document_id)))
+        except TimDbException as e:
+            e.message = 'The requested revision was not found.'
+            raise
+        css = ansiconv.base_css()
+        html = ansiconv.to_html(out)
+        return """
+<html>
+  <head><style>{0}</style></head>
+  <body>
+    <pre class="ansi_fore ansi_back">{1}</pre>
+  </body>
+</html>
+""".format(css, html)
+
     @contract
     def getDocumentVersions(self, document_id : 'int', limit : 'int'=100) -> 'list(dict(str:str))':
         """Gets the versions of a document.
@@ -426,7 +444,7 @@ class Documents(TimDbBase):
         self.db.commit()
         
     @contract
-    def updateDocument(self, document_id : 'DocIdentifier', new_content : 'bytes') -> 'DocIdentifier':
+    def updateDocument(self, document_id : 'DocIdentifier', new_content : 'str') -> 'DocIdentifier':
         """Updates a document.
         
         :param document_id: The id of the document to be updated.
@@ -437,10 +455,10 @@ class Documents(TimDbBase):
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
         
         try:
-            version = self.__commitDocumentChanges(document_id, str(new_content, encoding='utf-8'), "Modified as whole")
+            version = self.__commitDocumentChanges(document_id, new_content, "Modified as whole")
         except NothingToCommitException:
             return document_id
         new_id = DocIdentifier(document_id.id, version)
-        self.ec.loadDocument(new_id, new_content)
+        self.ec.loadDocument(new_id, new_content.encode('utf-8'))
         self.__updateNoteIndexes(document_id, new_id)
         return new_id
