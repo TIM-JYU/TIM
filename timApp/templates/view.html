@@ -7,10 +7,10 @@
 <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
 <script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular/angular.min.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/angular/angular-sanitize.min.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
 
 {% for script in js %}
 <script src=" {{script}}"> </script>
@@ -31,9 +31,6 @@
 <script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/notesView/noteController.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
 <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <script src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
