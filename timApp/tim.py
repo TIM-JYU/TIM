@@ -636,9 +636,9 @@ def loginWithKorppi():
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
 
-if __name__ == "__main__":
-#    app.debug = True
-#    app.run()
+def startApp():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     app.run(host='0.0.0.0',port=5000)
 
+if __name__ == "__main__":
+    startApp()
