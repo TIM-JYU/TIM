@@ -4,7 +4,7 @@ An Ephemeral client that can communicate with Ephemeral server.
 import requests
 from contracts import contract, new_contract
 
-EPHEMERAL_URL = 'http://localhost:8001'
+EPHEMERAL_URL = 'http://127.0.0.1:8001'
 
 new_contract('bytes', bytes)
 new_contract('Response', requests.Response)
