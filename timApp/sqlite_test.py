@@ -54,10 +54,10 @@ certainty   INTEGER NOT NULL,
 constraint mapping_pk
 primary key (doc_id, par_index, doc_version)
 )""")
-#     cursor.execute("""
-# create unique index par_index
-# on par_mapping(doc_id, par_index, doc_version)
-# """)
+    cursor.execute("""
+create unique index par_index
+on par_mapping(doc_id, par_index, doc_version)
+""")
     number_of_modifications = 500
     inserts_per_modification = 2000
     for i in range(0, number_of_modifications):
