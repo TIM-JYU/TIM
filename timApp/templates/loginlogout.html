@@ -11,6 +11,8 @@
 </form>
 {% else %} 
 <form method="GET" action="/login">
+ <div class="loginButtonDiv">
     <input type="submit" value="Login using Korppi" class="loginButton"> <input type="hidden" name="came_from" value="{{request.path}}">
+ </div>    
 </form>
 {% endif %}

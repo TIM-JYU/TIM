@@ -53,12 +53,27 @@ body {
     width:auto;
 } 
  
-.viewLogin .loginButton {
-    width:auto;
+.viewLogin .loginButtonDiv {
+    background-color: red;
+    width: 100em;
+    height: 100%;
     position: fixed;
     top: 0;
     left: 0;
-	z-index: 300;
+    z-index: 299;
+} 
+ 
+.viewLogin .loginButton {
+    width: auto;
+    position: fixed;
+    height: 2em;
+    top: 1em;
+    left: 1em;
+/*    width: 100%; */
+    z-index: 300;
+/*    background-color: red; */
+    text-align: left;
+    font-size: 2em;
 }
  
 .material {
@@ -724,6 +739,13 @@ p.stem {
 	margin: 0 auto;
 }
 
+.listVideoRunDiv {
+    /* margin-left: 2em; */
+    margin-top: -1em;
+}
+
+
+
 .taunoOhje {
 	font-size: 0.7em;
 	margin-bottom: 1em;
@@ -894,7 +916,7 @@ p.stem {
 		outline: none;
 	}
 
-	.notes { 
+	.notes {  
 		position: absolute;
 		left: 115%;
 		width: 17em;
