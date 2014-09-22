@@ -61,6 +61,9 @@ class Documents(TimDbBase):
         :returns: The id of the newly created document.
         """
 
+        if '\0' in name:
+            raise TimDbException('Document name cannot contain null characters.')
+
         document_id = self.__insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         
         document_path = os.path.join(self.blocks_path, str(document_id))
