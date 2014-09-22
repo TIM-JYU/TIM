@@ -744,7 +744,15 @@ p.stem {
     margin-top: -1em;
 }
 
+.listVideoRunDiv img {
+    display: inline-block;
+    width: 0.8em;
+}
 
+.smallVideoRunDiv img {
+    display: inline-block;
+    width: 0.8em;
+}
 
 .taunoOhje {
 	font-size: 0.7em;
