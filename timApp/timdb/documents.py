@@ -356,7 +356,7 @@ class Documents(TimDbBase):
         return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), self.current_user_name)
     
     @contract
-    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool'=False):
+    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool'=True):
         """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
         but before the change is committed to Git.
         
@@ -364,34 +364,36 @@ class Documents(TimDbBase):
         :param new_document_id: The id of the new document.
         
         """
-        
+
         cursor = self.db.cursor()
         cursor.execute('select parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id from BlockRelation where parent_block_id = ?',
                        [new_document_id.id])
         notes = self.resultAsDictionary(cursor)
-        
+
         if map_all:
             mapping = self.ec.getBlockMapping(new_document_id, old_document_id)
         else:
             mapping = []
             for note in notes:
-                val = max(self.ec.getSingleBlockMapping(old_document_id, new_document_id, note['parent_block_specifier']), key=lambda x: x[0])
+                retval = self.ec.getSingleBlockMapping(old_document_id, new_document_id, note['parent_block_specifier'])
+                val = max(retval, key=lambda x: x[0])
                 mapping.append([note['parent_block_specifier'], val[1], val[0]])
+        map_dict = {}
+        for m in mapping:
+            map_dict[m[0]] = m[1]
 
         for note in notes:
             note['updated'] = False
         cursor.execute('delete from BlockRelation where parent_block_id = ?', [new_document_id.id])
-        for par_map in mapping:
-            for note in notes:
-                if not note['updated'] and note['parent_block_specifier'] == par_map[0]:
-                    note['parent_block_specifier'] = par_map[1]
-                    note['updated'] = True
-        
+
+        for note in notes:
+            note['parent_block_specifier'] = map_dict[note['parent_block_specifier']]
+
         for note in notes:
             cursor.execute('insert into BlockRelation (parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id) values (?,?,?,?)',
                            [note['parent_block_specifier'], note['parent_block_id'], note['Block_id'], note['parent_block_revision_id']])
         self.db.commit()
-    
+
     @contract
     def __handleModifyResponse(self, document_id : 'DocIdentifier', response : 'dict', message : 'str'):
         """Handles the response that comes from Ephemeral when modifying a document in some way.
@@ -463,5 +465,5 @@ class Documents(TimDbBase):
             return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.__updateNoteIndexes(document_id, new_id)
+        self.__updateNoteIndexes(document_id, new_id, map_all=True)
         return new_id
