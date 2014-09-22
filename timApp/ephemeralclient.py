@@ -20,8 +20,11 @@ def launch_ephemeral(basedir=''):
     if not os.path.exists(log_path):
         os.mkdir(log_path)
 
-    return subprocess.Popen([os.path.join(path, "Ephemeral"), "-p", "8001"], cwd=path)
-
+    old = os.getcwd()
+    os.chdir(path)
+    p = subprocess.Popen([os.path.join(".", "Ephemeral"), "-p", "8001"])
+    os.chdir(old)
+    return p
 
 class EphemeralException(Exception):
     pass
