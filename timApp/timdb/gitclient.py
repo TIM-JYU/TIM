@@ -1,4 +1,5 @@
 import os
+import shlex
 from contracts import contract
 import gitpylib.repo
 import gitpylib.file
@@ -25,7 +26,7 @@ def customCommit(files, msg, author, skip_checks=False, include_staged_files=Fal
   Returns:
     the output of the commit command.
   """
-    cmd = 'commit {0} --author="{1} <>" -m"{2}"'.format('--no-verify ' if skip_checks else '', author, msg)
+    cmd = 'commit {0} --author="{1} <>" -m{2}'.format('--no-verify ' if skip_checks else '', author, shlex.quote(msg))
     if not files and include_staged_files:
         return gitpylib.common.safe_git_call(cmd)[0]
 
