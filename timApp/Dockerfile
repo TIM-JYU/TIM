@@ -15,7 +15,7 @@ run pip3 install pycontracts
 run pip3 install hypothesis
 run pip3 install gitpylib
 run pip3 install requests
-run pip3 install bleach
+run pip3 install lxml
 run pip3 install pyaml
 run pip3 install ansiconv
 
