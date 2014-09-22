@@ -2,12 +2,26 @@
 An Ephemeral client that can communicate with Ephemeral server.
 '''
 import requests
+import os
+import subprocess
 from contracts import contract, new_contract
 
 EPHEMERAL_URL = 'http://127.0.0.1:8001'
+EPHEMERAL_PATH = os.path.join("..", "Ephemeral", "dist", "build", "Ephemeral")
+
 
 new_contract('bytes', bytes)
 new_contract('Response', requests.Response)
+
+
+def launch_ephemeral(basedir=''):
+    path = os.path.join(basedir, EPHEMERAL_PATH)
+    log_path = os.path.join(path, "log")
+    if not os.path.exists(log_path):
+        os.mkdir(log_path)
+
+    return subprocess.Popen([os.path.join(path, "Ephemeral"), "-p", "8001"], cwd=path)
+
 
 class EphemeralException(Exception):
     pass
