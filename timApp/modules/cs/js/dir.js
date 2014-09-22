@@ -46,8 +46,8 @@ csApp.directive('contenteditable', ['$sce', function($sce) {
 
 csApp.commentTrim = function(s) {
 	if ( !s ) return;
-	n = s.indexOf("//\n");
-	if ( n < 0 ) return s;
+	var n = s.indexOf("//\n");
+	if ( n != 0 ) return s;
 	return s.substr(3); 
 }
 
@@ -92,7 +92,10 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
 				  '<div class="csRunCode">'+'<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
+                  '<div>'+
 				  '<textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+				  '<div class="csRunChanged" ng-if="usercode!=byCode"></div>'+
+                  '</div>'+
 				  //'<div class="csRunArea" contentEditable ng-model="usercode" ng-trim="false" "></div>'+
 				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
 				  '</div>'+
@@ -108,7 +111,7 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
-				  '<pre ng-if="runError">{{error}}</pre>'+
+				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
 				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
 				  '<p class="footer">Here comes footer</p>'+
 				  '</div>';
@@ -171,10 +174,12 @@ csApp.directiveFunction = function(t) {
             if ( scope.indent < 0 )
                 if ( scope.file ) scope.indent = 8; else scope.indent = 0;
 
+            
 			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,'p class="footer"');
+            scope.muokattu = false; // scope.usercode != scope.byCode;
         //    scope.header = head;
 		//	scope.getHeader = function() { return head; };
 		//	csApp.updateEditSize(scope);
@@ -280,7 +285,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.copyingFromTauno = false;
 
 	$scope.$watch('[usercode]', function() {
-		if ( !$scope.copyingFromTauno) $scope.muokattu = true;
+		if ( !$scope.copyingFromTauno && $scope.usercode != $scope.byCode ) $scope.muokattu = true;
 		$scope.copyingFromTauno = false
 		if ( $scope.minRows < $scope.maxRows ) 
 			csApp.updateEditSize($scope);
@@ -295,7 +300,6 @@ csApp.Controller = function($scope,$http,$transclude) {
 		else $scope.checkIndent(); // ongelmia saada kursori paikalleen
 		*/
 	}, true);
-	
 	
 	$scope.runCode = function() {
 		var t = "console";
@@ -477,6 +481,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 			for ( ; j<s.length; j++) if ( s[j] != " " ) break;
 			// if ( s.lastIndexOf(spaces,0) == 0 ) continue;
 			if ( j >= spaces.length ) continue;
+            if ( s.trim() == "" ) continue; // do not indent empty lines
 			s = spaces + s.substring(j);
 			var dl = s.length - l;
 			if ( len - l < start ) start += dl;

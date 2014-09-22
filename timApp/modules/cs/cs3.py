@@ -70,34 +70,10 @@ def generate_filename():
 
 
 def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None):
-    class Alarm(Exception):
-        pass
-
-    def alarm_handler(signum, frame):
-        raise Alarm
-
     p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env) #, timeout=timeout)
-    #if timeout != -1:
-    #    signal.signal(signal.SIGALRM, alarm_handler)
-    #    signal.alarm(timeout)
-    # print(p.pid)
     try:
         stdout, stderr = p.communicate(timeout=timeout)
-        #if timeout != -1:
-        #    signal.alarm(0)
     except subprocess.TimeoutExpired:
-        '''
-        pids = [p.pid]
-        if kill_tree:
-            pids.extend(get_process_children(p.pid))
-        for pid in pids:
-            # process might have died before getting to this line
-            # so wrap to avoid OSError: no such process
-            try:
-                kill(pid, signal.SIGKILL)
-            except OSError:
-                pass
-        '''        
         return -9, '', ''
     return p.returncode, stdout, stderr
 
@@ -413,10 +389,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             env["LC_ALL"] = lang
         # print("Lang= ", lang)
 
+        err = ""
+        
         if ttype == "jypeli":
             code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
             print(err)
             if type(out) != type(''): out = out.decode()
+            if type(err) != type(''): err = err.decode()
+            err = ""
             run(["convert", "-flip", bmpname, pngname],timeout=20)
             # print(bmpname, pngname)
             self.remove(bmpname)
@@ -436,6 +416,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             eri = -1
             code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], timeout=10, env=env)
             if type(out) != type(''): out = out.decode()
+            if type(err) != type(''): err = err.decode()
             # print(code,out,err)
             out = remove_before("Execution Runtime:", out)
             if code == -9:
@@ -468,6 +449,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             print("Exe: ", exename)
             code, out, err = run(["mono", exename], timeout=10, env=env)
             print(code, out, err)
+            if type(err) != type(''): err = err.decode()
             # if type(out) != type(''): out = out.decode()
             if out and out[0] in [254, 255]:
                 out = out.decode('UTF16')
@@ -480,6 +462,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         
         out = out[0:2000]
         web["console"] = out
+        web["error"] = err
 
         result["web"] = web
 
@@ -492,7 +475,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         sresult = json.dumps(result)
         self.wout(sresult)
         # print("Result ========")
-        # print(sresult)
+        print(sresult)
         # print(out)
         # print(err)
 

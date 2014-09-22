@@ -68,11 +68,17 @@ def get_video_html(query):
     :return: videon html-jono
     """
     iframe = get_param(query, "iframe", False) or True
+    video_type = get_param(query, "type", "icon")
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
+    if video_type == "small":
+        s = string_to_string_replace_attribute('<small-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        return s
+    if video_type == "list":
+        s = string_to_string_replace_attribute('<list-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        return s
     if video_app:
-        s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##",
-                                               query)
+        s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
         return s
 
     url = get_clean_param(query, "file", "")
