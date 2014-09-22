@@ -7,8 +7,8 @@ maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 run apt-get install -y python3
 run apt-get install -y python3-pip
 run apt-get install -y git-core
-run apt-get install -y lib32z1-dev # lxml tarvitsee
-run apt-get install -y libxml2-dev libxslt-dev python-dev # lxml tarvitsee
+run apt-get install -y zlib1g-dev # lxml tarvitsee
+run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml tarvitsee
 
 run pip3 install Flask
 run pip3 install flask-compress
