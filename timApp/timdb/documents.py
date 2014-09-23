@@ -33,7 +33,11 @@ class Documents(TimDbBase):
         assert self.documentExists(document_id), 'document does not exist: %r' % document_id
         
         response = self.ec.addBlock(document_id, new_block_index, content)
-        version = self.__handleModifyResponse(document_id, response, 'Added a paragraph at index %d' % (new_block_index))
+        version = self.__handleModifyResponse(document_id,
+                                              response,
+                                              'Added a paragraph at index %d' % (new_block_index),
+                                              new_block_index,
+                                              len(response['paragraphs']))
         return response['paragraphs'], version
 
     @contract
@@ -130,7 +134,11 @@ class Documents(TimDbBase):
         """
         
         response = self.ec.deleteBlock(document_id, par_id)
-        version = self.__handleModifyResponse(document_id, response, 'Deleted a paragraph at index %d' % (par_id))
+        version = self.__handleModifyResponse(document_id,
+                                              response,
+                                              'Deleted a paragraph at index %d' % (par_id),
+                                              par_id,
+                                              -1)
         return version
         
     @contract
@@ -354,7 +362,16 @@ class Documents(TimDbBase):
         
         self.writeUtf8(doc_content, self.getDocumentPath(document_id))
         return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), self.current_user_name)
-    
+
+    @contract
+    def __updateNoteIndexesFast(self, block_id: 'int', mod_index: 'int', mod_count: 'int'):
+        cursor = self.db.cursor()
+        cursor.execute("""update BlockRelation
+                          set parent_block_specifier = parent_block_specifier + ?
+                          where parent_block_id = ?
+                          and   parent_block_specifier >= ?""", [mod_count, block_id, mod_index])
+        self.db.commit()
+
     @contract
     def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool'=True):
         """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
@@ -395,7 +412,11 @@ class Documents(TimDbBase):
         self.db.commit()
 
     @contract
-    def __handleModifyResponse(self, document_id : 'DocIdentifier', response : 'dict', message : 'str'):
+    def __handleModifyResponse(self, document_id : 'DocIdentifier',
+                               response : 'dict',
+                               message : 'str',
+                               mod_index : 'int',
+                               mod_count : 'int'):
         """Handles the response that comes from Ephemeral when modifying a document in some way.
         
         :param document_id: The id of the document that was modified.
@@ -406,7 +427,7 @@ class Documents(TimDbBase):
         
         new_id = DocIdentifier(document_id.id, response['new_id'])
         self.ec.renameDocumentStr(response['new_id'], str(new_id))
-        self.__updateNoteIndexes(document_id, new_id)
+        self.__updateNoteIndexesFast(document_id.id, mod_index, mod_count)
         new_content = self.ec.getDocumentFullText(new_id)
         
         try:
@@ -430,7 +451,11 @@ class Documents(TimDbBase):
         
         response = self.ec.modifyBlock(document_id, block_id, new_content)
         
-        version = self.__handleModifyResponse(document_id, response, 'Modified a paragraph at index %d' % (block_id))
+        version = self.__handleModifyResponse(document_id,
+                                              response,
+                                              'Modified a paragraph at index %d' % (block_id),
+                                              block_id,
+                                              len(response['paragraphs']) - 1)
         blocks = response['paragraphs']
         return blocks, version
     
