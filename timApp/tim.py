@@ -629,14 +629,12 @@ def loginWithKorppi():
     urlfile = request.url_root + "login"
     if request.args.get('came_from'):
         session['came_from'] = request.args.get('came_from')
-        print('came from was set to ' + session['came_from'])
     if not session.get('appcookie'):
         randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = randomHex
     url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
     r = requests.get(url, params={'request': session['appcookie']})
     userName = r.text
-    print("url_root is: "+ request.url_root)
     if not userName:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
     
