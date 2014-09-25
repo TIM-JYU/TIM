@@ -6,6 +6,7 @@ set -e
 # Stop tim and timbeta
 docker stop tim &
 docker stop timbeta &
+docker stop timdev &
 wait
 
 # Stop plugin containers
@@ -20,6 +21,7 @@ wait
 # Remove stopped containers
 docker rm tim &
 docker rm timbeta &
+docker rm timdev &
 docker rm csPlugin &
 docker rm showFile &
 docker rm ChoicePlug &
@@ -42,6 +44,9 @@ docker run --name MultiChoicePlug -p 58000:5000 -d -t -i haskellplugins /bin/bas
 docker run --name ShortNotePlug -p 59000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/ShortNotePlugin/ShortNotePlugin -p 5000 ; /bin/bash'
 
 docker run --name GraphVizPlug -p 60000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/GraphVizPlugin/GraphVizPlugin -p 5000 ; /bin/bash'
+
+# Start timdev
+docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && python3 launch.py ; /bin/bash'
 
 # Start timbeta
 docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && python3 launch.py ; /bin/bash'
