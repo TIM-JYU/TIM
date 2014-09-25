@@ -92,10 +92,18 @@ def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit
     if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
         abort(403, message)
 
+def hasEditAccess(block_id):
+    timdb = getTimDb()
+    return timdb.users.userHasEditAccess(getCurrentUserId(), block_id)
+
 def verifyViewAccess(block_id):
     timdb = getTimDb()
     if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
+
+def hasViewAccess(block_id):
+    timdb = getTimDb()
+    return timdb.users.userHasViewAccess(getCurrentUserId(), block_id)
 
 def verifyLoggedIn():
     if not loggedIn():
@@ -375,7 +383,11 @@ def editDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
-    verifyEditAccess(doc_id)
+    if not hasEditAccess(doc_id):
+        if not loggedIn():
+            return redirect(url_for('loginWithKorppi', came_from=request.path))
+        else:
+            abort(403)
     newest = getNewest(doc_id)
     doc_metadata = timdb.documents.getDocument(newest)
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
@@ -439,7 +451,11 @@ def viewDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
         abort(404)
-    verifyViewAccess(doc_id)
+    if not hasViewAccess(doc_id):
+        if not loggedIn():
+            return redirect(url_for('loginWithKorppi', came_from=request.path))
+        else:
+            abort(403)
     versions = timdb.documents.getDocumentVersions(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
     doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
