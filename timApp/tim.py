@@ -456,6 +456,8 @@ def viewDocument(doc_id):
             return redirect(url_for('loginWithKorppi', came_from=request.path))
         else:
             abort(403)
+    if not loggedIn():
+        return redirect(url_for('loginWithKorppi', came_from=request.path))
     versions = timdb.documents.getDocumentVersions(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
     doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
