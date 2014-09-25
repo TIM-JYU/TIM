@@ -2,12 +2,29 @@
 An Ephemeral client that can communicate with Ephemeral server.
 '''
 import requests
+import os
+import subprocess
 from contracts import contract, new_contract
 
 EPHEMERAL_URL = 'http://127.0.0.1:8001'
+EPHEMERAL_PATH = os.path.join("..", "Ephemeral", "dist", "build", "Ephemeral")
+
 
 new_contract('bytes', bytes)
 new_contract('Response', requests.Response)
+
+
+def launch_ephemeral(basedir=''):
+    path = os.path.join(basedir, EPHEMERAL_PATH)
+    log_path = os.path.join(path, "log")
+    if not os.path.exists(log_path):
+        os.mkdir(log_path)
+
+    old = os.getcwd()
+    os.chdir(path)
+    p = subprocess.Popen([os.path.join(".", "Ephemeral"), "-p", "8001"])
+    os.chdir(old)
+    return p
 
 class EphemeralException(Exception):
     pass
@@ -132,11 +149,12 @@ class EphemeralClient(object):
         """
         
         try:
-            r = requests.get(url=self.server_path
-                             + '/match/{}/{}/{}'.format(self.__getDocIdForEphemeral(first_document_id), block_id ,
-                                                            self.__getDocIdForEphemeral(second_document_id)))
+            rurl = self.server_path + '/match/{}/{}/{}'.format(self.__getDocIdForEphemeral(first_document_id), block_id,
+                                                            self.__getDocIdForEphemeral(second_document_id))
+            r = requests.get(url=rurl)
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfBlockNotFound(r)
         return r.json()
         
     @contract
@@ -154,6 +172,7 @@ class EphemeralClient(object):
                                                             self.__getDocIdForEphemeral(second_document_id)))
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIfBlockNotFound(r)
         return r.json()
         
     @contract
@@ -165,6 +184,16 @@ class EphemeralClient(object):
         
         if r.status_code == 404:
             raise NotInCacheException('The requested block was not found.')
+
+    @contract
+    def __raiseExceptionIf404(self, r : 'Response'):
+        """Raises EphemeralException if the status code of the response is 404.
+
+        :param response: The response string.
+        """
+
+        if r.status_code == 404:
+            raise EphemeralException('Error occurred.')
 
     @contract
     def __raiseExceptionIfDocumentNotFound(self, r : 'Response'):
@@ -269,6 +298,7 @@ class EphemeralClient(object):
             r = requests.post(url=self.server_path + '/load/{}'.format(self.__getDocIdForEphemeral(document_id)), data=content)
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
+        self.__raiseExceptionIf404(r)
         return True
     
     @contract

@@ -7,6 +7,9 @@ maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 run apt-get install -y python3
 run apt-get install -y python3-pip
 run apt-get install -y git-core
+run apt-get install -y zlib1g-dev # lxml tarvitsee
+run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml tarvitsee
+
 run pip3 install Flask
 run pip3 install flask-compress
 run pip3 install markdown
@@ -15,7 +18,7 @@ run pip3 install pycontracts
 run pip3 install hypothesis
 run pip3 install gitpylib
 run pip3 install requests
-run pip3 install bleach
+run pip3 install lxml
 run pip3 install pyaml
 run pip3 install ansiconv
 

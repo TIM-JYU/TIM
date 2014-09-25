@@ -19,7 +19,7 @@ class Notes(TimDbBase):
         self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
-    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int', tags: 'list(str)') -> 'tuple(int,str)':
+    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int', tags: 'list(str)', cache=True) -> 'tuple(int,str|None)':
         """Adds a note to the document.
         
         :param usergroup_id: The usergroup who owns the note.
@@ -42,10 +42,13 @@ class Notes(TimDbBase):
         self.db.commit()
         
         #TODO: Do notes need to be versioned?
-        
-        self.ec.loadDocument(self.getDocIdentifierForNote(note_id), content.encode('utf-8'))
-        return note_id, self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
-    
+
+        if cache:
+            self.ec.loadDocument(self.getDocIdentifierForNote(note_id), content.encode('utf-8'))
+            return note_id, self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
+        else:
+            return note_id, None
+
     @contract
     def deleteNote(self, note_id : 'int'):
         """Deletes a note.
@@ -86,7 +89,7 @@ class Notes(TimDbBase):
         self.ec.loadDocument(self.getDocIdentifierForNote(note_id), new_content.encode('utf-8'))
         return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
 
-    def processRows(self, rows):
+    def processRows(self, rows, get_html=True):
         notes = []
         for row in rows:
             note_id = row['id']
@@ -98,16 +101,17 @@ class Notes(TimDbBase):
             with open(self.getBlockPath(note_id), 'r', encoding='utf-8') as f:
                 note['content'] = f.read()
             notes.append(note)
-        for note in notes:
-            try:
-                note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
-            except NotInCacheException:
-                self.ec.loadDocument(self.getDocIdentifierForNote(note['id']), note['content'].encode('utf-8'))
-                note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
+        if get_html:
+            for note in notes:
+                try:
+                    note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
+                except NotInCacheException:
+                    self.ec.loadDocument(self.getDocIdentifierForNote(note['id']), note['content'].encode('utf-8'))
+                    note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
         return notes
 
     @contract
-    def getNotes(self, user_id : 'int', document_id : 'int') -> 'list(dict)':
+    def getNotes(self, user_id : 'int', document_id : 'int', get_html : 'bool'=True) -> 'list(dict)':
         """Gets all the notes for a document for a user.
         
         :param user_id: The id of the user whose notes will be fetched.
@@ -115,7 +119,7 @@ class Notes(TimDbBase):
         """
         rows = self.getOwnedBlockRelations(document_id, user_id, blocktypes.NOTE)
 
-        return self.processRows(rows)
+        return self.processRows(rows, get_html=get_html)
 
     @contract
     def getAllNotes(self, document_id : 'int') -> 'list(dict)':
