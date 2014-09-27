@@ -114,6 +114,23 @@ table th {
 }
 
 /*=============================================*/
+li p {
+    margin-left: 0; 
+}
+
+ul {
+    margin-left: 1.5em;  
+}
+
+ul ul {
+    margin-left: -1em; 
+}
+
+ul ul  ul { 
+    margin-left: -1em; 
+}
+
+
 
 .note p {
 	margin-left : 0;
@@ -129,10 +146,6 @@ table th {
 	position: relative;
 	margin-left: 1em;
 	margin-top: 1em;
-}
-
-ul {
-	margin-left: 2em;
 }
 
 .material img {
@@ -337,7 +350,7 @@ PRE {
 	border-width: 1px;
 	border-radius: 5px;
 	padding: 4px;
-	margin-left: 2em;
+	margin-left: 2.5em;
 	margin-right: 0.00cm;
 	line-height: 1;
 	font-size: 1em;
@@ -744,8 +757,7 @@ p.stem {
     margin-top: -1em;
 }
 
-
-.listVideoRunDiv img,  img.smallImage { 
+.listVideoRunDiv img {
     display: inline-block;
     width: 0.8em;
 }
@@ -948,3 +960,4 @@ p.stem {
         margin-right: 0.2em;
     }
 }
+ 
