@@ -1,13 +1,15 @@
 import os
 import shutil
 import unittest
+import random
+
 from hypothesis.testdecorators import *
+
 from timdb.timdb2 import TimDb
 import ephemeralclient
 from timdb.gitclient import initRepo
-from timdb.timdbbase import TimDbException
-import random
-import json
+from timdb.timdbbase import TimDbException, DocIdentifier
+
 
 def onerror(func, path, exc_info):
     import stat
@@ -85,11 +87,16 @@ class DocTest(unittest.TestCase):
         self.assertEqual(versions[0]['hash'], new_doc.hash)
         self.assertEqual(versions[1]['hash'], doc.hash)
 
-    def create_test_notes(self, test_length):
+    def create_test_document(self, test_length):
         doc = self.db.documents.createDocument('testing notes', 0)
 
         doc_paragraphs = ['Paragraph number {}'.format(num) for num in range(0, test_length)]
         doc = self.db.documents.updateDocument(doc, '\n\n'.join(doc_paragraphs))
+        doc_paragraphs = self.db.documents.getDocumentAsBlocks(doc)
+        return doc, doc_paragraphs
+
+    def create_test_notes(self, test_length):
+        doc, doc_paragraphs = self.create_test_document(test_length)
 
         blocks = self.db.documents.getDocumentAsBlocks(doc)
         self.assertTrue(len(doc_paragraphs) == len(blocks))
@@ -159,6 +166,31 @@ class DocTest(unittest.TestCase):
         delete_par_index = 100
         self.db.documents.deleteParagraph(doc, delete_par_index)
         self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
+
+    def test_readings(self):
+        print('test_readings')
+        doc, pars = self.create_test_document(500)
+        readings = self.db.readings.getReadings(0, doc.id)
+        self.assertEqual(len(readings), 0)
+        par_index = 5
+        self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+        readings = self.db.readings.getReadings(0, doc.id)
+        self.assertEqual(len(readings), 1)
+        fr = readings[0]
+        self.assertEqual(fr['specifier'], par_index)
+        self.assertEqual(fr['text'], pars[par_index])
+        ver = self.db.documents.deleteParagraph(doc, 0)
+        doc = DocIdentifier(doc.id, ver)
+        pars = self.db.documents.getDocumentAsBlocks(doc)
+        readings = self.db.readings.getReadings(0, doc.id)
+        fr = readings[0]
+        par_index -= 1
+        self.assertEqual(fr['specifier'], par_index)
+        self.assertEqual(fr['text'], pars[par_index])
+        self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+        readings = self.db.readings.getReadings(0, doc.id)
+        self.assertEqual(len(readings), 1)
+
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
