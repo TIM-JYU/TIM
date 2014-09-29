@@ -19,6 +19,28 @@ class Readings(TimDbBase):
     @contract
     def setAsRead(self, usergroup_id : 'int', document_id : 'int', paragraph_specifier : 'int', current_text : 'str'):
         cursor = self.db.cursor()
+
+        # Check if the reading already exists. If so, delete it first.
+        cursor.execute("""select id from Block
+                          join BlockRelation on id = block_id
+                          where UserGroup_id = ?
+                            and type_id = ?
+                            and parent_block_id = ?
+                            and parent_block_specifier = ?""", [usergroup_id,
+                                                                blocktypes.READING,
+                                                                document_id,
+                                                                paragraph_specifier])
+        result = self.resultAsDictionary(cursor)
+
+        #assert len(result) <= 1, "There was two or more readings"
+
+        if len(result) > 0:
+            for row in result:
+                cursor.execute("""delete from Block
+                              where id = ?""", [row['id']])
+                cursor.execute("""delete from BlockRelation
+                              where block_id = ?""", [row['id']])
+
         cursor.execute('insert into Block (description, UserGroup_id, type_id, created) values (?, ?, ?, CURRENT_TIMESTAMP)',
                        [current_text, usergroup_id, blocktypes.READING])
         reading_id = cursor.lastrowid
