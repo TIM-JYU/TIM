@@ -372,6 +372,9 @@ class Documents(TimDbBase):
                           and   parent_block_specifier >= ?""", [mod_count, block_id, mod_index])
         self.db.commit()
 
+    def ensureCached(self, document_id: 'DocIdentifier'):
+        self.getDocumentAsBlocks(document_id)
+
     @contract
     def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool'=True):
         """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
@@ -387,6 +390,8 @@ class Documents(TimDbBase):
                        [new_document_id.id])
         notes = self.resultAsDictionary(cursor)
 
+        self.ensureCached(old_document_id)
+
         if map_all:
             mapping = self.ec.getBlockMapping(new_document_id, old_document_id)
         else:
@@ -399,12 +404,11 @@ class Documents(TimDbBase):
         for m in mapping:
             map_dict[m[0]] = m[1]
 
-        for note in notes:
-            note['updated'] = False
         cursor.execute('delete from BlockRelation where parent_block_id = ?', [new_document_id.id])
 
         for note in notes:
-            note['parent_block_specifier'] = map_dict[note['parent_block_specifier']]
+            if note['parent_block_specifier'] in map_dict:
+                note['parent_block_specifier'] = map_dict[note['parent_block_specifier']]
 
         for note in notes:
             cursor.execute('insert into BlockRelation (parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id) values (?,?,?,?)',
