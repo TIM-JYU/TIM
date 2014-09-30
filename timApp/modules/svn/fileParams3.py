@@ -35,6 +35,26 @@ def get_param(query, key, default):
     if value == 'undefined': return dvalue
     return value
 
+  
+def handle_by(byc):
+    if not byc: return byc
+    bycs = byc.split("\n")
+    if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
+        del bycs[0]
+        byc = "\n".join(bycs)
+    n = len(byc)
+    if n > 0  and byc[n-1] == "\n": byc = byc[0:n-1]
+    return byc;   
+  
+def get_param_by(query, key, default):
+    byc = get_param(query, key, default)
+    print("KEY: ",key," PYC: ",byc,"|||")
+    if not byc: byc = default
+    if not byc: return byc
+    byc = handle_by(byc)
+    print("KEY: ",key," PYC: ",byc,"|||")
+    return byc
+    
 
 def get_param_del(query, key, default):
     if key not in query.query:
@@ -174,19 +194,17 @@ class FileParams:
         self.lastn = int(get_param(query, "lastn" + nr, "1000000"))
         self.include = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
-        self.by = get_param(query, "by" + nr, "")
+        self.by = get_param_by(query, "by" + nr, "")
 
         self.reps = []
 
+        repNr = ""
+        if nr: repNr = nr+"."
+        
         for i in range(1, 10):
-            rep = do_matcher(get_param(query, "replace" + str(i), ""))
+            rep = do_matcher(get_param(query, "replace" + repNr + str(i), "")) #  replace.1.1 tyyliin replace1 on siis replace.0.1
             if not rep: break
-            byc = get_param(query, "byCode" + str(i), "")
-            if byc:
-                bycs = byc.split("\n")
-                if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
-                    del bycs[0]
-                    byc = "\n".join(bycs)
+            byc = get_param_by(query, "byCode" + repNr + str(i), "")
             self.reps.append({"by": rep, "bc": byc})
 
 
@@ -311,7 +329,7 @@ def post_params(self):
     '''
 
     f = self.rfile.read(content_length)
-    # print(f)
+    print(f)
     # print(type(f))
     u = f.decode("UTF8")
     # print(u)
@@ -343,7 +361,8 @@ def post_params(self):
             # print field + ":" + jso[field]
             if field == "markup":
                 for f in list(result.jso[field].keys()):
-                    result.query[f] = [str(result.jso[field][f])]
+                    if f == "byCode": result.query[f] = [handle_by(str(result.jso[field][f]))]
+                    else: result.query[f] = [str(result.jso[field][f])]
             else:
                 if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
         # print(jso)
@@ -446,8 +465,8 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     if "##USERCODE##" in line: leave_away = "byCode"
     params = query_params_to_attribute(query.query, leave_away)
     line = line.replace(what_to_replace, params)
-    by = get_param(query, "byCode", "")
-    by = get_param(query, "usercode", by)
+    by = get_param_by(query, "byCode", "")
+    by = get_param_by(query, "usercode", by)
     # print("BY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", by.encode())
     line = line.replace("##USERCODE##", by)
     # print(line.encode())
