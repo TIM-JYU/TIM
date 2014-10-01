@@ -1,1 +1,1 @@
-curl -L -X POST -H "Content-Type: application/json" --data @markup.json http://tim-beta.it.jyu.fi/cs/html
+curl -L -X POST -H "Content-Type: application/json" --data @markup.json http://tim-beta.it.jyu.fi/cs/html >>a.b

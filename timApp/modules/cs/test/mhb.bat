@@ -1,0 +1,1 @@
+curl -L -X POST -H "Content-Type: application/json" --data @multihtml.json tim-beta.it.jyu.fi/cs/multihtml

@@ -130,6 +130,16 @@ def get_html(ttype, query):
     return s
 
 
+def do_headers(self, content_type):
+    self.send_response(200)
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
+    self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
+    self.send_header('Content-type', content_type)
+    self.end_headers()
+
+    
+    
 def log(self):
     t = datetime.datetime.now()
     agent = " :AG: "+ self.headers["User-Agent"]
@@ -161,7 +171,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         # print("do_POST =================================================")
-        self.do_all(post_params(self))
+        if self.path.find('/multihtml') < 0:
+            self.do_all(post_params(self))
+            return
+
+        print("do_POST MULTIHML ==========================================")
+        querys = multi_post_params(self)
+        do_headers(self, "application/json")
+        is_tauno = self.path.find('/tauno') >= 0
+        htmls = []
+        for query in querys:
+            usercode = get_json_param(query.jso, "state", "usercode", None)
+            if usercode: query.query["usercode"] = [usercode]
+            ttype = get_param(query, "type", "console").lower()
+            if is_tauno: ttype = 'tauno'
+            s = get_html(ttype, query)
+            # print(s)
+            htmls.append(s)
+
+        sresult = json.dumps(htmls)
+        self.wout(sresult)
 
 
     def do_PUT(self):
@@ -219,17 +248,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_tauno = self.path.find('/tauno') >= 0
         is_ptauno = self.path.find('/ptauno') >= 0
 
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
         content_type = 'text/plain'
         if is_reqs  or is_answer: content_type = "application/json"
-        if is_fullhtml or is_html: content_type = 'text/html; charset=utf-8'
+        if is_fullhtml or is_html or is_ptauno : content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
-        self.send_header('Content-type', content_type)
-        self.end_headers()
+        do_headers(self,content_type)
 
         if self.path.find("refresh") >= 0:
             self.wout(get_chache_keys())
@@ -237,6 +261,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
         if is_ptauno:
+            # print("PTAUNO: " + content_type)
             p = self.path.split("?")
             self.wout(file_to_string(p[0]))
             return
@@ -248,7 +273,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_reqs:
             result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
-                          "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"]}
+                          "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
             #result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)

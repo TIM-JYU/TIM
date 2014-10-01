@@ -308,6 +308,39 @@ def get_file_to_output(query, show_html):
     return s
 
 
+def multi_post_params(self):
+    content_length = int(self.headers['Content-Length'])
+    f = self.rfile.read(content_length)
+    print(f)
+    # print(type(f))
+    u = f.decode("UTF8")
+    jsos = json.loads(u)
+    results = []
+    for jso in jsos:
+        results.append(get_query_from_json(jso))
+    return results
+
+
+def get_query_from_json(jso):
+    # print(jso.repr())
+    # print("====================================================")
+    result = QueryClass()
+    # print("result.query ================================== ")
+    # pp.pprint(result.query)
+    # print jso
+    result.jso = jso
+    for field in list(result.jso.keys()):
+        # print field + ":" + jso[field]
+        if field == "markup":
+            for f in list(result.jso[field].keys()):
+                if f == "byCode": result.query[f] = [handle_by(str(result.jso[field][f]))]
+                else: result.query[f] = [str(result.jso[field][f])]
+        else:
+            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
+    # print(jso)
+    return result
+
+
 def post_params(self):
     # print "postParams ================================================"
     # print self
@@ -350,22 +383,7 @@ def post_params(self):
             result.query[field] = [q[field][0]]
     else:
         jso = json.loads(u)
-        # print(jso.repr())
-        # print("====================================================")
-        result = QueryClass()
-        # print("result.query ================================== ")
-        # pp.pprint(result.query)
-        # print jso
-        result.jso = jso
-        for field in list(result.jso.keys()):
-            # print field + ":" + jso[field]
-            if field == "markup":
-                for f in list(result.jso[field].keys()):
-                    if f == "byCode": result.query[f] = [handle_by(str(result.jso[field][f]))]
-                    else: result.query[f] = [str(result.jso[field][f])]
-            else:
-                if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
-        # print(jso)
+        result = get_query_from_json(jso)
 
     result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
     for f in result.get_query:
