@@ -135,7 +135,6 @@ def do_headers(self, content_type):
     self.send_header('Access-Control-Allow-Origin', '*')
     self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
     self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
-    content_type = "application/json"
     self.send_header('Content-type', content_type)
     self.end_headers()
 
@@ -251,7 +250,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         content_type = 'text/plain'
         if is_reqs  or is_answer: content_type = "application/json"
-        if is_fullhtml or is_html: content_type = 'text/html; charset=utf-8'
+        if is_fullhtml or is_html or is_ptauno : content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
         do_headers(self,content_type)
@@ -262,6 +261,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
         if is_ptauno:
+            # print("PTAUNO: " + content_type)
             p = self.path.split("?")
             self.wout(file_to_string(p[0]))
             return
