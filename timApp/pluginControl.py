@@ -127,14 +127,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
 
         if 'multihtml' in reqs and reqs['multihtml']:
             response = callPluginMultiHtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
-            error_messages = json.loads(response)
-            for idx, html in zip([key for key, _ in plugin_block_map.items()], error_messages):
-
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(task_id, plugin_url) + html + "</div>"
+            plugin_htmls = json.loads(response)
+            for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(markup['taskID'], plugin_url) + html + "</div>"
         else:
             for idx, val in plugin_block_map.items():
                 html = callPlugin(plugin_name, val['markup'], val['state'], val['taskID'])
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(task_id, plugin_url) + html + "</div>"
+                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(val['taskID'], plugin_url) + html + "</div>"
 
     return final_html_blocks, js_paths, css_paths, modules
 
