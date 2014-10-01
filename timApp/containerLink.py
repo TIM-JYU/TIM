@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import urllib.request
+#import urllib.request
 import requests
 import json
+
 
 class PluginException(Exception):
     """The exception that is thrown when an error occurs during a plugin call."""
@@ -39,11 +40,26 @@ def callPlugin(plugin, info, state, taskID=None):
                 plug = getPlugin(plugin)
                 headers = {'Content-type': 'application/json'}
                 request = requests.post(plug['host'] + "html/", data=pluginData, timeout=5, headers=headers)
+                request.encoding = 'utf-8'
                 return request.text
         return "Unregistered plugin"
-    except:
+    except ValueError:
         return "Could not connect to plugin" 
 
+
+def callPluginMultiHtml(plugin, pluginData):
+    print("Calling plugin {} MultiHTML route with data: {}".format(plugin, pluginData))
+    try:
+        for x in PLUGINS:
+            if(x['name'] == plugin):
+                plug = getPlugin(plugin)
+                headers = {'Content-type': 'application/json'}
+                request = requests.post(plug['host'] + "multihtml/", data=pluginData, timeout=5, headers=headers)
+                request.encoding = 'utf-8'
+                return request.text
+        return "Unregistered plugin"
+    except ValueError:
+        return "Could not connect to plugin"
 
 # plugin html call, plugin must match one of the specified plugins in 
 # PLUGINS
@@ -53,6 +69,7 @@ def callPluginResource(plugin, fileName):
             if(x['name'] == plugin):
                 plug = getPlugin(plugin)
                 request = requests.get(plug['host'] + fileName, timeout=5, stream=True)
+                request.encoding = 'utf-8'
                 return request
         raise PluginException("Unregistered plugin: " + plugin)
     except:
@@ -67,7 +84,11 @@ def callPluginAnswer(plugin, answerData):
         if(x['name'] == plugin):
             headers = {'Content-type': 'application/json'}
             try:
-                request = requests.put( url=x['host'] + "answer/", data=json.dumps(answerData), headers=headers,timeout=20)
+                request = requests.put(url=x['host'] + "answer/",
+                                       data=json.dumps(answerData),
+                                       headers=headers,
+                                       timeout=20)
+                request.encoding = 'utf-8'
                 return request.text
             except:
                 return "Plugin call took too long!" # should this be JSON?
@@ -78,13 +99,14 @@ def callPluginAnswer(plugin, answerData):
 
 # Get lists of js and css files required by plugin, as well as list of Angular modules they define. 
 def pluginReqs(plugin):
+    print('Calling pluginReqs for ' + plugin)
     try:
         plug = getPlugin(plugin)
-        request = urllib.request.urlopen(plug['host'] + "reqs/" , timeout=5)
-
-        return request.read().decode(encoding="UTF-8")
-    except:
-        return "Could not connect to plugin" 
+        request = requests.get(plug['host'] + "reqs/", timeout=1)
+        request.encoding = 'utf-8'
+        return request.text
+    except requests.exceptions.ConnectTimeout:
+        raise PluginException("Could not connect to plugin: " + plugin)
 
 # Get plugin name
 def getPlugin(plug):
