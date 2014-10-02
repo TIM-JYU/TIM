@@ -96,9 +96,9 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
         else:
             final_html_blocks.append(sanitize_html(block))
 
-    js_paths = set()
-    css_paths = set()
-    modules = set()
+    js_paths = []
+    css_paths = []
+    modules = []
 
     for plugin_name, plugin_block_map in plugins.items():
         try:
@@ -110,18 +110,23 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
         for src in plugin_js_files:
             # TODO: Better check for absolute URL.
             if "http" in src:
-                js_paths.add(src)
+                js_paths.append(src)
             else:
                 path = getPluginTimUrl(plugin_name) + "/" + src
-                js_paths.add(path)
+                js_paths.append(path)
         for cssSrc in plugin_css_files:
             if "http" in src:
-                css_paths.add(cssSrc)
+                css_paths.append(cssSrc)
             else:
                 path = getPluginTimUrl(plugin_name) + "/" + src
-                css_paths.add(path)
+                css_paths.append(path)
         for mod in plugin_modules:
-            modules.add(mod)
+            modules.append(mod)
+
+        # Remove duplicates, preserving order
+        js_paths = list(OrderedDict.fromkeys(js_paths))
+        css_paths = list(OrderedDict.fromkeys(css_paths))
+        modules = list(OrderedDict.fromkeys(modules))
 
         plugin_url = getPluginTimUrl(plugin_name)
 

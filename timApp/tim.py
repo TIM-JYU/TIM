@@ -390,8 +390,8 @@ def editDocument(doc_id):
     doc_metadata = timdb.documents.getDocument(newest)
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
-    modules.add("ngSanitize")
-    modules.add("angularFileUpload")
+    modules.append("ngSanitize")
+    modules.append("angularFileUpload")
     return render_template('editing.html', docId=doc_metadata['id'], docName=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, cssFiles=cssPaths, jsMods=modules)
 
 
@@ -458,8 +458,8 @@ def viewDocument(doc_id):
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
     doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
-    modules.add("ngSanitize")
-    modules.add("angularFileUpload")
+    modules.append("ngSanitize")
+    modules.append("angularFileUpload")
     return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, cssFiles=cssPaths, jsMods=modules)
 
 
