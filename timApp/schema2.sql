@@ -25,7 +25,7 @@ CREATE TABLE Answer (
 id INTEGER NOT NULL,
 task_id VARCHAR(255) NOT NULL,
 content VARCHAR(255) NOT NULL,
-points VARCHAR(255) NULL,      -- TODO: should this be of type REAL?
+points VARCHAR(255),      -- TODO: should this be of type REAL?
 answered_on TIMESTAMP NOT NULL,
 
 CONSTRAINT Answer_PK
@@ -85,11 +85,11 @@ CONSTRAINT User_PK
 
 CREATE TABLE Block (
 id INTEGER NOT NULL,
-latest_revision_id INTEGER NULL,
+latest_revision_id INTEGER,
 type_id INTEGER NOT NULL,
-description VARCHAR(100) NULL, -- better name would be: tag
-created TIMESTAMP NULL,
-modified TIMESTAMP NULL,
+description VARCHAR(100), -- better name would be: tag
+created TIMESTAMP,
+modified TIMESTAMP,
 UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT Block_PK 
@@ -105,7 +105,7 @@ CONSTRAINT Block_id
 
 CREATE TABLE BlockRelation (
 parent_block_specifier INTEGER NOT NULL,
-parent_block_revision_id INTEGER NULL,
+parent_block_revision_id INTEGER,
 parent_block_id INTEGER NOT NULL,
 Block_id INTEGER NOT NULL,
 
@@ -163,7 +163,7 @@ CONSTRAINT UserGroupMember_id
 
 CREATE TABLE BlockViewAccess (
 visible_from TIMESTAMP NOT NULL,
-visible_to TIMESTAMP NULL,
+visible_to TIMESTAMP,
 Block_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
@@ -185,7 +185,7 @@ CONSTRAINT BlockViewAccess_id
 
 CREATE TABLE BlockEditAccess (
 editable_from TIMESTAMP NOT NULL,
-editable_to TIMESTAMP NULL,
+editable_to TIMESTAMP,
 Block_id INTEGER NOT NULL,
 UserGroup_id INTEGER NOT NULL,
 
