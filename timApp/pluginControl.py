@@ -23,7 +23,10 @@ def parse_plugin_values(nodes):
             except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 plugins.append({"plugin": name, 'error': "YAML is malformed"})
         try:
-            plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
+            if type(values) is str:
+                plugins.append({"plugin": name, 'error': "YAML is malformed"})
+            else:
+                plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
         except KeyError:
             plugins.append({"plugin": name, 'error': "Missing identifier"})
     return plugins
@@ -76,26 +79,22 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
                 if 'error' in vals:
                     error_messages.append(get_error_html(plugin_name, vals['error']))
                     continue
-                try:
-                    if not plugin_name in plugins:
-                        plugins[plugin_name] = OrderedDict()
-                    vals['markup']["user_id"] = user
-                    task_id = "{}.{}".format(doc_id, vals['taskId'])
-                    states = answer_db.getAnswers(user_id, task_id)
 
-                    # Don't show state for anonymous users.
-                    state = None if user_id == 0 or len(states) == 0 else states[0]['content']
-                    try:
-                        if state is not None:
-                            state = json.loads(state)
-                    except ValueError:
-                        pass
-                    plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
-                except TypeError:
-                    error_messages.append(get_error_html(plugin_name,
-                                                         "Unexpected error occurred while constructing plugin html."
-                                                         " Please contact TIM-development team."))
-                    continue
+                if not plugin_name in plugins:
+                    plugins[plugin_name] = OrderedDict()
+                vals['markup']["user_id"] = user
+                task_id = "{}.{}".format(doc_id, vals['taskId'])
+                states = answer_db.getAnswers(user_id, task_id)
+
+                # Don't show state for anonymous users.
+                state = None if user_id == 0 or len(states) == 0 else states[0]['content']
+                try:
+                    if state is not None:
+                        state = json.loads(state)
+                except ValueError:
+                    pass
+                plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
+
             final_html_blocks.append('<div class="pluginError">Error(s) occurred while rendering plugin. </div>'
                                      + ''.join(error_messages))
         else:
