@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
-from containerLink import callPlugin, callPluginMultiHtml, PluginException
-from containerLink import pluginReqs
-from containerLink import getPluginTimUrl
+from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
+from containerLink import plugin_reqs
+from containerLink import get_plugin_tim_url
 from collections import OrderedDict
 import yaml
 from htmlSanitize import sanitize_html
@@ -102,7 +102,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
 
     for plugin_name, plugin_block_map in plugins.items():
         try:
-            resp = pluginReqs(plugin_name)
+            resp = plugin_reqs(plugin_name)
         except PluginException:
             continue
         reqs = json.loads(resp)
@@ -112,13 +112,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
             if "http" in src:
                 js_paths.append(src)
             else:
-                path = getPluginTimUrl(plugin_name) + "/" + src
+                path = get_plugin_tim_url(plugin_name) + "/" + src
                 js_paths.append(path)
         for cssSrc in plugin_css_files:
             if "http" in src:
                 css_paths.append(cssSrc)
             else:
-                path = getPluginTimUrl(plugin_name) + "/" + src
+                path = get_plugin_tim_url(plugin_name) + "/" + src
                 css_paths.append(path)
         for mod in plugin_modules:
             modules.append(mod)
@@ -128,16 +128,16 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
         css_paths = list(OrderedDict.fromkeys(css_paths))
         modules = list(OrderedDict.fromkeys(modules))
 
-        plugin_url = getPluginTimUrl(plugin_name)
+        plugin_url = get_plugin_tim_url(plugin_name)
 
         if 'multihtml' in reqs and reqs['multihtml']:
-            response = callPluginMultiHtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+            response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
             plugin_htmls = json.loads(response)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
                 final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(markup['taskID'], plugin_url) + html + "</div>"
         else:
             for idx, val in plugin_block_map.items():
-                html = callPlugin(plugin_name, val['markup'], val['state'], val['taskID'])
+                html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
                 final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(val['taskID'], plugin_url) + html + "</div>"
 
     return final_html_blocks, js_paths, css_paths, modules

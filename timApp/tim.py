@@ -437,7 +437,7 @@ def removeBlock(docId, blockId):
 @app.route("/<plugin>/<path:fileName>")
 def pluginCall(plugin, fileName):
     try:
-        req = containerLink.callPluginResource(plugin, fileName)
+        req = containerLink.call_plugin_resource(plugin, fileName)
         return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
     except PluginException:
         abort(404)
@@ -574,7 +574,7 @@ def saveAnswer(plugintype, task_id):
  
     answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata, 'taskID': task_id}
 
-    pluginResponse = containerLink.callPluginAnswer(plugintype, answerCallData)
+    pluginResponse = containerLink.call_plugin_answer(plugintype, answerCallData)
     
     try:
         jsonresp = json.loads(pluginResponse)
