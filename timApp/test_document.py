@@ -174,6 +174,7 @@ class DocTest(unittest.TestCase):
         self.assertEqual(len(readings), 0)
         par_index = 5
         self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+
         readings = self.db.readings.getReadings(0, doc.id)
         self.assertEqual(len(readings), 1)
         fr = readings[0]
@@ -182,15 +183,19 @@ class DocTest(unittest.TestCase):
         ver = self.db.documents.deleteParagraph(doc, 0)
         doc = DocIdentifier(doc.id, ver)
         pars = self.db.documents.getDocumentAsBlocks(doc)
+
         readings = self.db.readings.getReadings(0, doc.id)
         fr = readings[0]
         par_index -= 1
         self.assertEqual(fr['specifier'], par_index)
         self.assertEqual(fr['text'], pars[par_index])
         self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+
         readings = self.db.readings.getReadings(0, doc.id)
         self.assertEqual(len(readings), 1)
-
+        self.db.documents.updateDocument(doc, 'cleared')
+        fr = self.db.readings.getReadings(0, doc.id)[0]
+        self.assertEqual(fr['specifier'], 0)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
