@@ -1,9 +1,8 @@
-'''
+"""
 Another version of TimDb that stores documents as whole.
-'''
+"""
 
 import sqlite3
-#import time
 from contracts import contract
 from timdb.notes import Notes
 from timdb.users import Users
@@ -23,11 +22,12 @@ TABLE_NAMES = ['BlockEditAccess',
                'User',
                'UserGroup']
 
+
 class TimDb(object):
     """Handles saving and retrieving information from TIM database."""
 
     @contract
-    def __init__(self, db_path : 'str', files_root_path : 'str', current_user_name='Anonymous'):
+    def __init__(self, db_path: 'str', files_root_path: 'str', current_user_name='Anonymous'):
         """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.

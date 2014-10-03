@@ -7,10 +7,13 @@ import gitpylib.common
 import gitpylib.sync
 from timdb.timdbbase import TimDbException
 
+
 class NothingToCommitException(Exception):
     pass
 
-#TODO: This should possibly be a class.
+
+# TODO: This should possibly be a class.
+
 
 def customCommit(files, msg, author, skip_checks=False, include_staged_files=False):
     """Record changes in the local repository.
@@ -31,11 +34,12 @@ def customCommit(files, msg, author, skip_checks=False, include_staged_files=Fal
         return gitpylib.common.safe_git_call(cmd)[0]
 
     return gitpylib.common.safe_git_call(
-      '{0} {1}-- "{2}"'.format(
-          cmd, '-i ' if include_staged_files else '', '" "'.join(files)))[0]
+        '{0} {1}-- "{2}"'.format(
+            cmd, '-i ' if include_staged_files else '', '" "'.join(files)))[0]
+
 
 @contract
-def initRepo(files_root_path : 'str'):
+def initRepo(files_root_path: 'str'):
     """Initializes a Git repository. A .gitattributes file is created with the content '* -text'.
     
     :param files_root_path: The root path of the repository.
@@ -43,18 +47,19 @@ def initRepo(files_root_path : 'str'):
     cwd = os.getcwd()
     os.chdir(files_root_path)
     gitpylib.repo.init()
-    
+
     os.chdir(cwd)
-    
+
     # Create .gitattributes that disables EOL conversion on Windows:
     gitattrib = os.path.join(files_root_path, '.gitattributes')
     with open(gitattrib, 'w', newline='\n') as f:
         f.write('* -text')
-    
+
     gitCommit(files_root_path, '.gitattributes', 'Created .gitattributes', 'docker')
 
+
 @contract
-def gitCommit(files_root_path : 'str', file_path : 'str', commit_message: 'str', author : 'str'):
+def gitCommit(files_root_path: 'str', file_path: 'str', commit_message: 'str', author: 'str'):
     """Commits the specified file to Git repository.
     
     :param files_root_path: The root path of the repository.
@@ -69,18 +74,19 @@ def gitCommit(files_root_path : 'str', file_path : 'str', commit_message: 'str',
 
     try:
         customCommit([file_path], commit_message, author, skip_checks=False, include_staged_files=False)
-        latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD') # Gets the latest version hash
+        latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD')  # Gets the latest version hash
     except Exception as e:
-        exText = str(e)
-        if ('nothing added to commit' in exText) or ('no changes added to commit' in exText):
+        ex_text = str(e)
+        if ('nothing added to commit' in ex_text) or ('no changes added to commit' in ex_text):
             raise NothingToCommitException()
-        raise TimDbException('Commit failed. ' + exText)
+        raise TimDbException('Commit failed. ' + ex_text)
     finally:
         os.chdir(cwd)
     return latest_hash.rstrip()
 
+
 @contract
-def gitCommand(files_root_path : 'str', command : 'str'):
+def gitCommand(files_root_path: 'str', command: 'str'):
     """Executes the specified Git command.
     
     :param files_root_path: The root path of the repository.

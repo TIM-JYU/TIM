@@ -76,12 +76,12 @@ class DocTest(unittest.TestCase):
         self.assertEqual(blocks[0], 'Edit me!\n')
 
     @given(str, verifier=Verifier(timeout=9999, max_size=2))
-    def test_edit_document(self, newText):
-        debug_print('test_edit_document', newText)
+    def test_edit_document(self, new_text):
+        debug_print('test_edit_document', new_text)
         doc = self.db.documents.createDocument('test', 0)
-        new_doc = self.db.documents.updateDocument(doc, newText)
-        actualText = self.db.documents.getDocumentMarkdown(new_doc)
-        self.assertEqual(newText, actualText)
+        new_doc = self.db.documents.updateDocument(doc, new_text)
+        actual_text = self.db.documents.getDocumentMarkdown(new_doc)
+        self.assertEqual(new_text, actual_text)
         versions = self.db.documents.getDocumentVersions(doc.id)
         self.assertEqual(len(versions), 2)
         self.assertEqual(versions[0]['hash'], new_doc.hash)
@@ -134,12 +134,12 @@ class DocTest(unittest.TestCase):
 
     def check_notes(self, new_count, note_index, notes, test_length):
         for i in range(0, test_length):
-            contentInt = int(notes[i]['content'])
-            if contentInt < note_index:
-                self.assertTrue(contentInt == notes[i]['specifier'])
+            content_int = int(notes[i]['content'])
+            if content_int < note_index:
+                self.assertTrue(content_int == notes[i]['specifier'])
             else:
-                self.assertTrue(contentInt + new_count == notes[i]['specifier'],
-                                'contentInt: {}, new_count: {}, specifier: {}'.format(contentInt, new_count, notes[i]['specifier']))
+                self.assertTrue(content_int + new_count == notes[i]['specifier'],
+                                'contentInt: {}, new_count: {}, specifier: {}'.format(content_int, new_count, notes[i]['specifier']))
 
     def test_notes_with_add(self):
         print('test_notes_with_add')

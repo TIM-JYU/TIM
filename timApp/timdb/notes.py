@@ -3,13 +3,13 @@ from timdb.timdbbase import TimDbBase, blocktypes, TimDbException, DocIdentifier
 from ephemeralclient import EphemeralClient, EPHEMERAL_URL, NotInCacheException
 import os
 
+
 class Notes(TimDbBase):
-    
     def getDocIdentifierForNote(self, note_id):
         return DocIdentifier('note', note_id)
-    
+
     @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
+    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.
@@ -19,7 +19,8 @@ class Notes(TimDbBase):
         self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
-    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int', tags: 'list(str)', cache=True) -> 'tuple(int,str|None)':
+    def addNote(self, usergroup_id: 'int', content: 'str', block_id: 'int', block_specifier: 'int', tags: 'list(str)',
+                cache=True) -> 'tuple(int,str|None)':
         """Adds a note to the document.
         
         :param usergroup_id: The usergroup who owns the note.
@@ -28,19 +29,21 @@ class Notes(TimDbBase):
         :param block_specifier: A specifier that tells a more accurate position of the note.
                Should be the index of the paragraph within the document.
         """
-        #TODO: Needs revision id.
+        # TODO: Needs revision id.
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id, created) values (?, ?, ?, CURRENT_TIMESTAMP)',
-                       [",".join(tags), usergroup_id, blocktypes.NOTE])
+        cursor.execute(
+            'INSERT INTO Block (description, UserGroup_id, type_id, created) VALUES (?, ?, ?, CURRENT_TIMESTAMP)',
+            [",".join(tags), usergroup_id, blocktypes.NOTE])
         note_id = cursor.lastrowid
         assert note_id is not None, 'note_id was None'
-        cursor.execute('insert into BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?,?)',
-                       [note_id, block_specifier, block_id, 0])
-        
+        cursor.execute(
+            'INSERT INTO BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) VALUES (?,?,?,?)',
+            [note_id, block_specifier, block_id, 0])
+
         self.writeUtf8(content, self.getBlockPath(note_id))
-        
+
         self.db.commit()
-        
+
         #TODO: Do notes need to be versioned?
 
         if cache:
@@ -50,38 +53,38 @@ class Notes(TimDbBase):
             return note_id, None
 
     @contract
-    def deleteNote(self, note_id : 'int'):
+    def deleteNote(self, note_id: 'int'):
         """Deletes a note.
         
         :param note_id: The id of the note to be deleted.
         """
-        
+
         cursor = self.db.cursor()
-        cursor.execute('delete from Block where id = ? and type_id = ?', [note_id, blocktypes.NOTE])
+        cursor.execute('DELETE FROM Block WHERE id = ? AND type_id = ?', [note_id, blocktypes.NOTE])
         if cursor.rowcount == 0:
             raise TimDbException('The block %d was not found.' % note_id)
-        
-        cursor.execute('delete from BlockRelation where Block_id = ?', [note_id])
-        
+
+        cursor.execute('DELETE FROM BlockRelation WHERE Block_id = ?', [note_id])
+
         assert os.path.exists(self.getBlockPath(note_id)), "Block did not exist on file system."
-        
+
         os.remove(self.getBlockPath(note_id))
-        
+
         self.db.commit()
-        
+
     @contract
-    def modifyNote(self, note_id : 'int', new_content : 'str', tags : 'list(str)') -> 'str':
+    def modifyNote(self, note_id: 'int', new_content: 'str', tags: 'list(str)') -> 'str':
         """Modifies an existing note.
         
         :param note_id: The id of the note to be modified.
         :param new_content: The new content of the note.
         """
-        
+
         if not self.blockExists(note_id, blocktypes.NOTE):
             raise TimDbException('The requested note was not found.')
 
         cursor = self.db.cursor()
-        cursor.execute('update Block set description = ?, modified = CURRENT_TIMESTAMP where id = ? and type_id = ?',
+        cursor.execute('UPDATE Block SET description = ?, modified = CURRENT_TIMESTAMP WHERE id = ? AND type_id = ?',
                        [",".join(tags), note_id, blocktypes.NOTE])
 
         self.writeUtf8(new_content, self.getBlockPath(note_id))
@@ -111,7 +114,7 @@ class Notes(TimDbBase):
         return notes
 
     @contract
-    def getNotes(self, user_id : 'int', document_id : 'int', get_html : 'bool'=True) -> 'list(dict)':
+    def getNotes(self, user_id: 'int', document_id: 'int', get_html: 'bool'=True) -> 'list(dict)':
         """Gets all the notes for a document for a user.
         
         :param user_id: The id of the user whose notes will be fetched.
@@ -122,7 +125,7 @@ class Notes(TimDbBase):
         return self.processRows(rows, get_html=get_html)
 
     @contract
-    def getAllNotes(self, document_id : 'int') -> 'list(dict)':
+    def getAllNotes(self, document_id: 'int') -> 'list(dict)':
         """Gets all the notes for a document.
 
         :param document_id: The id of the block whose notes will be fetched.
