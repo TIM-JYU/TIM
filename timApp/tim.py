@@ -603,7 +603,7 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
     for block in doc_markdown:
         if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block):
-            markup = pluginControl.getBlockYaml(block)
+            markup = pluginControl.get_block_yaml(block)
             return markup
     return None
     

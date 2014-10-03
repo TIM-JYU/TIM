@@ -5,6 +5,8 @@ from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from collections import OrderedDict
 import yaml
+import yaml.parser
+import yaml.scanner
 from htmlSanitize import sanitize_html
 import json
 
@@ -42,10 +44,10 @@ def find_plugins(html_str):
     return plugins
 
 
-def getBlockYaml(block):
+def get_block_yaml(block):
     tree = BeautifulSoup(block)
+    values = None
     for node in tree.find_all('pre'):
-        values = {}
         if len(node.text) > 0:
             try:
                 values = yaml.load(node.text)
@@ -55,8 +57,8 @@ def getBlockYaml(block):
     return values
 
 
-def getPluginErrorHtml(pluginName, message):
-    return '<div class="pluginError">Plugin {} error: {}</div>'.format(pluginName, message)
+def get_error_html(plugin_name, message):
+    return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
 
 
 # Take a set of blocks and search for plugin markers,
@@ -72,7 +74,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
             for vals in plugin_info:
                 plugin_name = vals['plugin']
                 if 'error' in vals:
-                    error_messages.append(getPluginErrorHtml(plugin_name, vals['error']))
+                    error_messages.append(get_error_html(plugin_name, vals['error']))
                     continue
                 try:
                     if not plugin_name in plugins:
@@ -90,9 +92,12 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
                         pass
                     plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
                 except TypeError:
-                    error_messages.append(getPluginErrorHtml(plugin_name, "Unexpected error occurred while constructing plugin html. Please contact TIM-development team."))
+                    error_messages.append(get_error_html(plugin_name,
+                                                         "Unexpected error occurred while constructing plugin html."
+                                                         " Please contact TIM-development team."))
                     continue
-            final_html_blocks.append('<div>Error(s) occurred while rendering plugin. </div>' + ''.join(error_messages))  # Add empty block at this point
+            final_html_blocks.append('<div class="pluginError">Error(s) occurred while rendering plugin. </div>'
+                                     + ''.join(error_messages))
         else:
             final_html_blocks.append(sanitize_html(block))
 
@@ -106,7 +111,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
         except PluginException:
             continue
         reqs = json.loads(resp)
-        plugin_js_files, plugin_css_files, plugin_modules = pluginDeps(reqs)
+        plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
             # TODO: Better check for absolute URL.
             if "http" in src:
@@ -131,31 +136,41 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
         plugin_url = get_plugin_tim_url(plugin_name)
 
         if 'multihtml' in reqs and reqs['multihtml']:
-            response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+            try:
+                response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+            except PluginException:
+                continue
             plugin_htmls = json.loads(response)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(markup['taskID'], plugin_url) + html + "</div>"
+                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
+                                                                                         plugin_url,
+                                                                                         html)
         else:
             for idx, val in plugin_block_map.items():
-                html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(val['taskID'], plugin_url) + html + "</div>"
+                try:
+                    html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
+                except PluginException:
+                    continue
+                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                                                                                         plugin_url,
+                                                                                         html)
 
     return final_html_blocks, js_paths, css_paths, modules
 
 
-# p is json of plugin requirements in form:
+# p is json of plugin requirements of the form:
 # {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
-def pluginDeps(p):
-    js = []
-    jsMods = []
-    css = [] 
+def plugin_deps(p):
+    js_files = []
+    modules = []
+    css_files = []
     if "css" in p:
         for cssF in p['css']:
-            css.append(cssF)
+            css_files.append(cssF)
     if "js" in p:
         for jsF in p['js']:
-            js.append(jsF)
+            js_files.append(jsF)
     if "angularModule" in p:
         for ng in p['angularModule']:
-            jsMods.append(ng)
-    return js, css, jsMods
+            modules.append(ng)
+    return js_files, css_files, modules
