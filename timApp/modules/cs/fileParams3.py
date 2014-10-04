@@ -311,7 +311,7 @@ def get_file_to_output(query, show_html):
 def multi_post_params(self):
     content_length = int(self.headers['Content-Length'])
     f = self.rfile.read(content_length)
-    print(f)
+    # print(f)
     # print(type(f))
     u = f.decode("UTF8")
     jsos = json.loads(u)

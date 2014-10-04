@@ -25,7 +25,7 @@ body {
 	background-color: white;
 } 
 
-.uudenMuuttujanAlue {
+.uudenMuuttujanAlue, .uuden-muuttujan-alue{
     visibility: collapse;
     top: 5em;
     position: absolute;

@@ -130,16 +130,6 @@ def get_html(ttype, query):
     return s
 
 
-def do_headers(self, content_type):
-    self.send_response(200)
-    self.send_header('Access-Control-Allow-Origin', '*')
-    self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
-    self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
-    self.send_header('Content-type', content_type)
-    self.end_headers()
-
-    
-    
 def log(self):
     t = datetime.datetime.now()
     agent = " :AG: "+ self.headers["User-Agent"]
