@@ -35,7 +35,7 @@ def get_param(query, key, default):
     if value == 'undefined': return dvalue
     return value
 
-  
+
 def handle_by(byc):
     if not byc: return byc
     bycs = byc.split("\n")
@@ -43,18 +43,19 @@ def handle_by(byc):
         del bycs[0]
         byc = "\n".join(bycs)
     n = len(byc)
-    if n > 0  and byc[n-1] == "\n": byc = byc[0:n-1]
-    return byc;   
-  
+    if n > 0 and byc[n - 1] == "\n": byc = byc[0:n - 1]
+    return byc
+
+
 def get_param_by(query, key, default):
     byc = get_param(query, key, default)
-    print("KEY: ",key," PYC: ",byc,"|||")
+    # print("KEY: ", key, " PYC: ", byc, "|||")
     if not byc: byc = default
     if not byc: return byc
     byc = handle_by(byc)
-    print("KEY: ",key," PYC: ",byc,"|||")
+    print("KEY: ", key, " PYC: ", byc, "|||")
     return byc
-    
+
 
 def get_param_del(query, key, default):
     if key not in query.query:
@@ -148,6 +149,7 @@ def get_chache_keys():
     for key in cache.keys(): s += key + "\n"
     return s
 
+
 def get_url_lines(url):
     global cache
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
@@ -155,7 +157,7 @@ def get_url_lines(url):
 
     try:
         req = urlopen(url)
-        ftype = req.headers['content-type']
+        # ftype = req.headers['content-type']
         lines = req.readlines()
     except:
         return False
@@ -199,14 +201,14 @@ class FileParams:
         self.reps = []
 
         repNr = ""
-        if nr: repNr = nr+"."
-        
+        if nr: repNr = nr + "."
+
         for i in range(1, 10):
-            rep = do_matcher(get_param(query, "replace" + repNr + str(i), "")) #  replace.1.1 tyyliin replace1 on siis replace.0.1
+            rep = do_matcher(
+                get_param(query, "replace" + repNr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
             if not rep: break
             byc = get_param_by(query, "byCode" + repNr + str(i), "")
             self.reps.append({"by": rep, "bc": byc})
-
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
@@ -276,9 +278,8 @@ class FileParams:
 
         return result
 
-
     def get_include(self, escapeHTML=False):
-        if not self.include:  return ""
+        if not self.include: return ""
         data = self.include.replace("\\n", "\n")
         if escapeHTML: data = html.escape(data)
         return data
@@ -292,16 +293,15 @@ def get_params(self):
 
 
 def get_file_to_output(query, show_html):
-    s = ""
     p0 = FileParams(query, "", "")
     # if p0.url == "":
     s = p0.get_file(show_html)
     # if not s:
-    #    return "Must give file= -parameter"
+    # return "Must give file= -parameter"
     s += p0.get_include(show_html)
     u = p0.url
     for i in range(1, 10):
-        p = FileParams(query, "."+str(i), u)
+        p = FileParams(query, "." + str(i), u)
         s += p.get_file(show_html)
         s += p.get_include(show_html)
         if p.url: u = p.url
@@ -333,8 +333,10 @@ def get_query_from_json(jso):
         # print field + ":" + jso[field]
         if field == "markup":
             for f in list(result.jso[field].keys()):
-                if f == "byCode": result.query[f] = [handle_by(str(result.jso[field][f]))]
-                else: result.query[f] = [str(result.jso[field][f])]
+                if f == "byCode":
+                    result.query[f] = [handle_by(str(result.jso[field][f]))]
+                else:
+                    result.query[f] = [str(result.jso[field][f])]
         else:
             if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
     # print(jso)
@@ -537,7 +539,7 @@ def get_heading(query, key, def_elem):
 def get_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
     stem = allow(get_param(query, "stem", None))
-    if stem:  result += '<p class="stem" >' + stem + '</p>\n'
+    if stem: result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
     result += get_heading(query, "footer", 'p class="footer"')
     return result
@@ -546,3 +548,12 @@ def get_surrounding_headers(query, inside):
 def get_clean_param(query, key, default):
     s = get_param(query, key, default)
     return clean(s)
+
+
+def do_headers(self, content_type):
+    self.send_response(200)
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
+    self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
+    self.send_header('Content-type', content_type)
+    self.end_headers()

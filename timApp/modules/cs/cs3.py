@@ -240,7 +240,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         content_type = 'text/plain'
         if is_reqs  or is_answer: content_type = "application/json"
-        if is_fullhtml or is_html or is_ptauno : content_type = 'text/html; charset=utf-8'
+        if is_fullhtml or is_html or is_ptauno or is_tauno : content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
         do_headers(self,content_type)
@@ -256,10 +256,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(file_to_string(p[0]))
             return
 
-
             # Get the template type
         ttype = get_param(query, "type", "console").lower()
-        if is_tauno and not is_answer: ttype = 'tauno' # answe is newer tauno
+        if is_tauno and not is_answer: ttype = 'tauno' # answer is newer tauno
 
         if is_reqs:
             result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
@@ -268,6 +267,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             #               "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)
             return self.wout(result_str)
+
+        if is_tauno and not is_answer:
+            # print("PTAUNO: " + content_type)
+            p = self.path.split("?")
+            self.wout(file_to_string(p[0]))
+            return
+
 
         # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
         usercode = get_json_param(query.jso, "state", "usercode", None)
