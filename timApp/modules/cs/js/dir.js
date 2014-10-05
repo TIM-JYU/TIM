@@ -396,16 +396,16 @@ csApp.Controller = function($scope,$http,$transclude) {
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
 		$scope.taunoId = vid;
-		var w = csApp.ifIs($scope.width,"width",700);
+		var w = csApp.ifIs($scope.width,"width",800);
 		var h = csApp.ifIs($scope.height,"height",500);
 		var p = "";
 		// var tt = "http://users.jyu.fi/~ji/js/tdbg/";
 		// var tt = "http://tim-beta.it.jyu.fi/cs/ptauno/indexi.html";
-		var tt = "/cs/ptauno/indexi.html";
+		var tt = "/cs/tauno/index.html?";
 		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://users.jyu.fi/~vesal/js/ptauno/index.html";
 		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://tim-beta.it.jyu.fi/cs/ptauno/index.html";
-		if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "/cs/ptauno/index.html";
-		var taunoUrl = tt+"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
+		if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "/cs/tauno/index.html?s&";
+		var taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
 		var s = $scope.table;
 		if ( s && s.length > 0) {
 			if ( s[0] == 's' ) p = "ts="+s.substring(1) + "&"; // table it's size param "table: s10"

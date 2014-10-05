@@ -1,4 +1,3 @@
-
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
 import os
@@ -8,10 +7,10 @@ from .gitclient import gitCommit, gitCommand
 from timdb.gitclient import NothingToCommitException
 import ansiconv
 
-class Documents(TimDbBase):
 
+class Documents(TimDbBase):
     @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
+    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
         
         :param db_path: The path of the database file.
@@ -19,9 +18,10 @@ class Documents(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
         self.ec = EphemeralClient(EPHEMERAL_URL)
-    
+
     @contract
-    def addMarkdownBlock(self, document_id : 'DocIdentifier', content : 'str', new_block_index : 'int') -> 'tuple(list(str),str)':
+    def addMarkdownBlock(self, document_id: 'DocIdentifier', content: 'str',
+                         new_block_index: 'int') -> 'tuple(list(str),str)':
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
@@ -31,7 +31,7 @@ class Documents(TimDbBase):
         """
 
         assert self.documentExists(document_id), 'document does not exist: %r' % document_id
-        
+
         response = self.ec.addBlock(document_id, new_block_index, content)
         version = self.__handleModifyResponse(document_id,
                                               response,
@@ -41,7 +41,7 @@ class Documents(TimDbBase):
         return response['paragraphs'], version
 
     @contract
-    def __insertBlockToDb(self, name : 'str', owner_group_id : 'int', block_type : 'int') -> 'int':
+    def __insertBlockToDb(self, name: 'str', owner_group_id: 'int', block_type: 'int') -> 'int':
         """Inserts a block to database.
         
         :param name: The name (description) of the block.
@@ -49,15 +49,16 @@ class Documents(TimDbBase):
         :param block_type: The type of the block.
         :returns: The id of the block.
         """
-        
+
         cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?,?,?)', [name, owner_group_id, block_type])
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+                       [name, owner_group_id, block_type])
         block_id = cursor.lastrowid
         self.db.commit()
         return block_id
-    
+
     @contract
-    def createDocument(self, name : 'str', owner_group_id : 'int') -> 'DocIdentifier':
+    def createDocument(self, name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created.
@@ -69,26 +70,27 @@ class Documents(TimDbBase):
             raise TimDbException('Document name cannot contain null characters.')
 
         document_id = self.__insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
-        
+
         document_path = os.path.join(self.blocks_path, str(document_id))
-        
+
         try:
             self.writeUtf8('Edit me!', document_path)
         except OSError:
             print('Couldn\'t open file for writing:' + document_path)
             self.db.rollback()
             raise
-        
-        doc_hash = gitCommit(self.files_root_path, document_path, 'Created a new document: %s (id = %d)' % (name, document_id), 'docker')
-        
+
+        doc_hash = gitCommit(self.files_root_path, document_path,
+                             'Created a new document: %s (id = %d)' % (name, document_id), 'docker')
+
         docId = DocIdentifier(document_id, doc_hash)
-        
+
         self.ec.loadDocument(docId, b'Edit me!')
-        
+
         return docId
 
     @contract
-    def createDocumentFromBlocks(self, block_directory : 'str', document_name : 'str'):
+    def createDocumentFromBlocks(self, block_directory: 'str', document_name: 'str'):
         """
         Creates a document from existing blocks in the specified directory.
         The blocks should be ordered alphabetically.
@@ -97,8 +99,8 @@ class Documents(TimDbBase):
         :param document_name: The name of the document to be created.
         """
         assert os.path.isdir(block_directory)
-        blockfiles = [ int(f) for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f)) ]
-        
+        blockfiles = [int(f) for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f))]
+
         blockfiles.sort()
         with open("tmp.temp", "w", encoding='utf-8') as tmpfile:
             for file in blockfiles:
@@ -107,32 +109,33 @@ class Documents(TimDbBase):
                     tmpfile.write(f.read())
                     tmpfile.write('\n\n')
         self.importDocumentFromFile('tmp.temp', document_name, 0)
-    
+
     @contract
-    def deleteDocument(self, document_id : 'DocIdentifier'):
+    def deleteDocument(self, document_id: 'DocIdentifier'):
         """Deletes the specified document.
         
         :param document_id: The id of the document to be deleted.
         """
-        
+
         assert self.documentExists(document_id), 'document does not exist: %d' % document_id.id
-        
+
         cursor = self.db.cursor()
-        cursor.execute('delete from Block where type_id = ? and id = ?', [blocktypes.DOCUMENT, document_id.id])
+        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.DOCUMENT, document_id.id])
         self.db.commit()
-        
+
         os.remove(self.getDocumentPath(document_id))
-        
-        gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Deleted document %d.' % document_id.id, 'docker')
-        
+
+        gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Deleted document %d.' % document_id.id,
+                  'docker')
+
     @contract
-    def deleteParagraph(self, document_id : 'DocIdentifier', par_id : 'int'):
+    def deleteParagraph(self, document_id: 'DocIdentifier', par_id: 'int'):
         """Deletes a paragraph from a document.
         
         :param document_id: The id of the document from which to delete the paragraph.
         :param par_id: The index of the paragraph in the document that should be deleted.
         """
-        
+
         response = self.ec.deleteBlock(document_id, par_id)
         version = self.__handleModifyResponse(document_id,
                                               response,
@@ -140,92 +143,93 @@ class Documents(TimDbBase):
                                               par_id,
                                               -1)
         return version
-        
+
     @contract
-    def documentExists(self, document_id : 'DocIdentifier') -> 'bool':
+    def documentExists(self, document_id: 'DocIdentifier') -> 'bool':
         """Checks whether a document with the specified id exists.
         
         :param document_id: The id of the document.
         :returns: True if the documents exists, false otherwise.
         """
-        
+
         return self.blockExists(document_id.id, blocktypes.DOCUMENT)
-    
+
     @contract
-    def getDocument(self, document_id : 'DocIdentifier') -> 'dict':
+    def getDocument(self, document_id: 'DocIdentifier') -> 'dict':
         """Gets the metadata information of the specified document.
         
         :param document_id: The id of the document to be retrieved.
         :returns: A row representing the document.
         """
         cursor = self.db.cursor()
-        cursor.execute('select id, description as name from Block where id = ? and type_id = ?', [document_id.id, blocktypes.DOCUMENT])
-        
+        cursor.execute('SELECT id, description AS name FROM Block WHERE id = ? AND type_id = ?',
+                       [document_id.id, blocktypes.DOCUMENT])
+
         return self.resultAsDictionary(cursor)[0]
-    
+
     @contract
-    def getDocuments(self, historylimit : 'int'=100) -> 'list(dict)':
+    def getDocuments(self, historylimit: 'int'=100) -> 'list(dict)':
         """Gets all the documents in the database.
         
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
         cursor = self.db.cursor()
-        cursor.execute('select id,description as name from Block where type_id = ?', [blocktypes.DOCUMENT])
+        cursor.execute('SELECT id,description AS name FROM Block WHERE type_id = ?', [blocktypes.DOCUMENT])
         results = self.resultAsDictionary(cursor)
         for result in results:
             result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
         return results
-    
+
     @contract
-    def getDocumentsByIds(self, document_ids : 'list(int)') -> 'seq(row)':
+    def getDocumentsByIds(self, document_ids: 'list(int)') -> 'seq(row)':
         """Gets all the documents in the database."""
         cursor = self.db.cursor()
-        cursor.execute('select id,description as name from Block where id in (%s)' % 
-                           ','.join('?' * len(document_ids)), document_ids)
+        cursor.execute('select id,description as name from Block where id in (%s)' %
+                       ','.join('?' * len(document_ids)), document_ids)
         return cursor.fetchall()
-    
+
     @contract
-    def getDocumentBlockIds(self, document_id : 'DocIdentifier') -> 'list(int)':
+    def getDocumentBlockIds(self, document_id: 'DocIdentifier') -> 'list(int)':
         """Gets the block ids of the specified document.
         
         :param document_id: The id of the document.
         :returns: A list of the block ids of the document.
         """
         document_path = self.getDocumentPath(document_id)
-        
+
         assert os.path.exists(document_path), 'document does not exist: %d' % document_id
-        
+
         # TODO: Get ids of the document from Ephemeral. If the ids are indexes, maybe only count is needed?
-    
+
     @contract
-    def getBlock(self, document_id : 'DocIdentifier', block_id : 'int') -> 'str':
+    def getBlock(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
         """Gets a block of a document.
         
         :param document_id: The id of the document.
         :param block_id: The id (index) of the block in the document.
         """
-        
+
         try:
             block = self.ec.getBlock(document_id, block_id)
         except EphemeralException as e:
             raise TimDbException(str(e))
         return block
-    
-    def getBlockAsHtml(self, document_id : 'DocIdentifier', block_id : 'int') -> 'str':
+
+    def getBlockAsHtml(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
         """Gets a block of a document in HTML.
         
         :param document_id: The id of the document.
         :param block_id: The id (index) of the block in the document.
         """
-        
+
         try:
             block = self.ec.getBlockAsHtml(document_id, block_id)
         except EphemeralException as e:
             raise TimDbException(str(e))
         return block
-    
+
     @contract
-    def getDocumentAsBlocks(self, document_id : 'DocIdentifier') -> 'list(str)':
+    def getDocumentAsBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
         """Gets all the blocks of the specified document in markdown format.
         
         :param document_id: The id of the document.
@@ -242,11 +246,11 @@ class Documents(TimDbBase):
             else:
                 raise TimDbException('The requested document was not found.')
         return blocks
-        
+
     @contract
-    def getDocumentAsHtmlBlocks(self, document_id : 'DocIdentifier') -> 'list(str)':
+    def getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
         """Gets the specified document in HTML form."""
-        
+
         try:
             blocks = self.ec.getDocumentAsHtmlBlocks(document_id)
         except NotInCacheException:
@@ -257,32 +261,35 @@ class Documents(TimDbBase):
             else:
                 raise TimDbException('The requested document was not found.')
         return blocks
-    
+
     @contract
-    def getDocumentPath(self, document_id : 'DocIdentifier') -> 'str':
+    def getDocumentPath(self, document_id: 'DocIdentifier') -> 'str':
         """Gets the path of the specified document.
         
         :param document_id: The id of the document.
         :returns: The path of the document.
         """
         return self.getBlockPath(document_id.id)
-    
+
     @contract
-    def getDocumentPathAsRelative(self, document_id : 'DocIdentifier'):
+    def getDocumentPathAsRelative(self, document_id: 'DocIdentifier'):
         return os.path.relpath(self.getDocumentPath(document_id), self.files_root_path).replace('\\', '/')
-    
+
     @contract
-    def getDocumentMarkdown(self, document_id : 'DocIdentifier') -> 'str':
+    def getDocumentMarkdown(self, document_id: 'DocIdentifier') -> 'str':
         try:
-            out, _ = gitCommand(self.files_root_path, 'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
+            out, _ = gitCommand(self.files_root_path,
+                                'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
         return out
 
-    def getDifferenceToPrevious(self, document_id : 'DocIdentifier') -> 'str':
+    def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
         try:
-            out, _ = gitCommand(self.files_root_path, 'diff --color --unified=5 {}^! {}'.format(document_id.hash, self.getDocumentPathAsRelative(document_id)))
+            out, _ = gitCommand(self.files_root_path, 'diff --color --unified=5 {}^! {}'.format(document_id.hash,
+                                                                                                self.getDocumentPathAsRelative(
+                                                                                                    document_id)))
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
@@ -298,85 +305,90 @@ class Documents(TimDbBase):
 """.format(css, html)
 
     @contract
-    def getDocumentVersions(self, document_id : 'int', limit : 'int'=100) -> 'list(dict(str:str))':
+    def getDocumentVersions(self, document_id: 'int', limit: 'int'=100) -> 'list(dict(str:str))':
         """Gets the versions of a document.
         
         :param document_id: The id of the document whose versions will be fetched.
         :returns: A list of the versions of the document.
         """
-        
+
         docId = DocIdentifier(document_id, '')
-        
+
         if not self.documentExists(docId):
             raise TimDbException('The specified document does not exist.')
-        
+
         output, _ = gitCommand(self.files_root_path, 'log --format=%H|%ad|%an|%s --date=relative  -n {} '.format(limit)
-                                 + self.getDocumentPathAsRelative(docId))
+                               + self.getDocumentPathAsRelative(docId))
         lines = output.splitlines()
         versions = []
         for line in lines:
             pieces = line.split('|')
-            versions.append({'hash' : pieces[0], 'timestamp' : pieces[1], 'user' : pieces[2], 'message' : pieces[3]})
+            versions.append({'hash': pieces[0], 'timestamp': pieces[1], 'user': pieces[2], 'message': pieces[3]})
         return versions
-    
+
     @contract
-    def getNewestVersion(self, document_id : 'int') -> 'dict(str:str)':
+    def getNewestVersion(self, document_id: 'int') -> 'dict(str:str)':
         """Gets the hash of the newest version for a document.
         
         :param document_id: The id of the document.
         :returns: A dictionary describing the latest version of the document: {'timestamp': 'xxx', 'hash': 'xxx'}
         """
         return self.getDocumentVersions(document_id)[0]
-        
+
     @contract
-    def importDocumentFromFile(self, document_file : 'str', document_name : 'str', owner_group_id : 'int') -> 'DocIdentifier':
+    def importDocumentFromFile(self, document_file: 'str', document_name: 'str',
+                               owner_group_id: 'int') -> 'DocIdentifier':
         """Imports the specified document in the database."""
-        
+
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
         doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         copyfile(document_file, self.getDocumentPath(doc_id))
-        
-        doc_hash = gitCommit(self.files_root_path, self.getDocumentPath(doc_id), 'Imported document: %s (id = %d)' % (document_name, doc_id.id), 'docker')
+
+        doc_hash = gitCommit(self.files_root_path, self.getDocumentPath(doc_id),
+                             'Imported document: %s (id = %d)' % (document_name, doc_id.id), 'docker')
         docId = DocIdentifier(doc_id.id, doc_hash)
-        
+
         with open(document_file, 'rb') as f:
             self.ec.loadDocument(docId, f.read())
-        
+
         return docId
-    
+
     @contract
-    def importDocument(self, content : 'str', document_name : 'str', owner_group_id : 'int'):
+    def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int'):
         doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
-        doc_hash = self.__commitDocumentChanges(doc_id, content, 'Imported document: %s (id = %d)' % (document_name, doc_id.id))
+        doc_hash = self.__commitDocumentChanges(doc_id, content,
+                                                'Imported document: %s (id = %d)' % (document_name, doc_id.id))
         doc_id = DocIdentifier(doc_id.id, doc_hash)
         self.ec.loadDocument(doc_id, content.encode('utf-8'))
         return doc_id
-    
-    def __commitDocumentChanges(self, document_id : 'DocIdentifier', doc_content : 'str', msg : 'str') -> 'str':
+
+    def __commitDocumentChanges(self, document_id: 'DocIdentifier', doc_content: 'str', msg: 'str') -> 'str':
         """Commits the changes of the specified document to Git.
         
         :param document_id: The document identifier.
         :param msg: The commit message.
         :returns: The hash of the commit.
         """
-        
+
         self.writeUtf8(doc_content, self.getDocumentPath(document_id))
-        return gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Document %d: %s' % (document_id.id, msg), self.current_user_name)
+        return gitCommit(self.files_root_path, self.getDocumentPath(document_id),
+                         'Document %d: %s' % (document_id.id, msg), self.current_user_name)
 
     @contract
     def __updateNoteIndexesFast(self, block_id: 'int', mod_index: 'int', mod_count: 'int'):
         cursor = self.db.cursor()
-        cursor.execute("""update BlockRelation
-                          set parent_block_specifier = parent_block_specifier + ?
-                          where parent_block_id = ?
-                          and   parent_block_specifier >= ?""", [mod_count, block_id, mod_index])
+        cursor.execute("""UPDATE BlockRelation
+                          SET parent_block_specifier = parent_block_specifier + ?
+                          WHERE parent_block_id = ?
+                          AND   parent_block_specifier >= ?""", [mod_count, block_id, mod_index])
         self.db.commit()
 
     def ensureCached(self, document_id: 'DocIdentifier'):
         self.getDocumentAsBlocks(document_id)
 
     @contract
-    def __updateNoteIndexes(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', map_all : 'bool'=True):
+    def __updateNoteIndexes(self, old_document_id: 'DocIdentifier', new_document_id: 'DocIdentifier',
+                            map_all: 'bool'=True):
         """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
         but before the change is committed to Git.
         
@@ -386,8 +398,9 @@ class Documents(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('select parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id from BlockRelation where parent_block_id = ?',
-                       [new_document_id.id])
+        cursor.execute(
+            'SELECT parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id FROM BlockRelation WHERE parent_block_id = ?',
+            [new_document_id.id])
         notes = self.resultAsDictionary(cursor)
 
         self.ensureCached(old_document_id)
@@ -404,23 +417,25 @@ class Documents(TimDbBase):
         for m in mapping:
             map_dict[m[0]] = m[1]
 
-        cursor.execute('delete from BlockRelation where parent_block_id = ?', [new_document_id.id])
+        cursor.execute('DELETE FROM BlockRelation WHERE parent_block_id = ?', [new_document_id.id])
 
         for note in notes:
             if note['parent_block_specifier'] in map_dict:
                 note['parent_block_specifier'] = map_dict[note['parent_block_specifier']]
 
         for note in notes:
-            cursor.execute('insert into BlockRelation (parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id) values (?,?,?,?)',
-                           [note['parent_block_specifier'], note['parent_block_id'], note['Block_id'], note['parent_block_revision_id']])
+            cursor.execute(
+                'INSERT INTO BlockRelation (parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id) VALUES (?,?,?,?)',
+                [note['parent_block_specifier'], note['parent_block_id'], note['Block_id'],
+                 note['parent_block_revision_id']])
         self.db.commit()
 
     @contract
-    def __handleModifyResponse(self, document_id : 'DocIdentifier',
-                               response : 'dict',
-                               message : 'str',
-                               mod_index : 'int',
-                               mod_count : 'int'):
+    def __handleModifyResponse(self, document_id: 'DocIdentifier',
+                               response: 'dict',
+                               message: 'str',
+                               mod_index: 'int',
+                               mod_count: 'int'):
         """Handles the response that comes from Ephemeral when modifying a document in some way.
         
         :param document_id: The id of the document that was modified.
@@ -428,21 +443,22 @@ class Documents(TimDbBase):
         :param message: The commit message.
         :returns: The version of the new document.
         """
-        
+
         new_id = DocIdentifier(document_id.id, response['new_id'])
         self.ec.renameDocumentStr(response['new_id'], str(new_id))
         self.__updateNoteIndexesFast(document_id.id, mod_index, mod_count)
         new_content = self.ec.getDocumentFullText(new_id)
-        
+
         try:
             version = self.__commitDocumentChanges(new_id, new_content, message)
         except NothingToCommitException:
             return document_id.hash
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
         return version
-        
+
     @contract
-    def modifyMarkDownBlock(self, document_id : 'DocIdentifier', block_id : 'int', new_content : 'str') -> 'tuple(list(str), str|None)':
+    def modifyMarkDownBlock(self, document_id: 'DocIdentifier', block_id: 'int',
+                            new_content: 'str') -> 'tuple(list(str), str|None)':
         """Modifies the specified block.
         
         :param document_id: The id of the document.
@@ -450,11 +466,11 @@ class Documents(TimDbBase):
         :param new_content: The new content of the paragraph.
         :returns: The modified blocks and the version hash as a tuple.
         """
-        
+
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
-        
+
         response = self.ec.modifyBlock(document_id, block_id, new_content)
-        
+
         version = self.__handleModifyResponse(document_id,
                                               response,
                                               'Modified a paragraph at index %d' % (block_id),
@@ -462,32 +478,33 @@ class Documents(TimDbBase):
                                               len(response['paragraphs']) - 1)
         blocks = response['paragraphs']
         return blocks, version
-    
+
     @contract
-    def renameDocument(self, document_id : 'DocIdentifier', new_name : 'str'):
+    def renameDocument(self, document_id: 'DocIdentifier', new_name: 'str'):
         """Renames a document.
         
         :param document_id: The id of the document to be renamed.
         :param new_name: The new name for the document.
         """
-        
+
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
-        
+
         cursor = self.db.cursor()
-        cursor.execute('update Block set description = ? where type_id = ? and id = ?', [new_name, blocktypes.DOCUMENT, document_id.id])
+        cursor.execute('UPDATE Block SET description = ? WHERE type_id = ? AND id = ?',
+                       [new_name, blocktypes.DOCUMENT, document_id.id])
         self.db.commit()
-        
+
     @contract
-    def updateDocument(self, document_id : 'DocIdentifier', new_content : 'str') -> 'DocIdentifier':
+    def updateDocument(self, document_id: 'DocIdentifier', new_content: 'str') -> 'DocIdentifier':
         """Updates a document.
         
         :param document_id: The id of the document to be updated.
         :param new_content: The new content of the document.
         :returns: The version of the new document.
         """
-        
+
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
-        
+
         try:
             version = self.__commitDocumentChanges(document_id, new_content, "Modified as whole")
         except NothingToCommitException:

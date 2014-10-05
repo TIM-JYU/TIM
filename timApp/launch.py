@@ -1,5 +1,3 @@
-import subprocess
-import os
 import tim
 import ephemeralclient
 

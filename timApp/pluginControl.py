@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
-from containerLink import callPlugin, callPluginMultiHtml, PluginException
-from containerLink import pluginReqs
-from containerLink import getPluginTimUrl
+from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
+from containerLink import plugin_reqs
+from containerLink import get_plugin_tim_url
 from collections import OrderedDict
 import yaml
+import yaml.parser
+import yaml.scanner
 from htmlSanitize import sanitize_html
 import json
 
@@ -21,7 +23,10 @@ def parse_plugin_values(nodes):
             except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 plugins.append({"plugin": name, 'error': "YAML is malformed"})
         try:
-            plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
+            if type(values) is str:
+                plugins.append({"plugin": name, 'error': "YAML is malformed"})
+            else:
+                plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
         except KeyError:
             plugins.append({"plugin": name, 'error': "Missing identifier"})
     return plugins
@@ -42,10 +47,10 @@ def find_plugins(html_str):
     return plugins
 
 
-def getBlockYaml(block):
+def get_block_yaml(block):
     tree = BeautifulSoup(block)
+    values = None
     for node in tree.find_all('pre'):
-        values = {}
         if len(node.text) > 0:
             try:
                 values = yaml.load(node.text)
@@ -55,8 +60,8 @@ def getBlockYaml(block):
     return values
 
 
-def getPluginErrorHtml(pluginName, message):
-    return '<div class="pluginError">Plugin {} error: {}</div>'.format(pluginName, message)
+def get_error_html(plugin_name, message):
+    return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
 
 
 # Take a set of blocks and search for plugin markers,
@@ -72,27 +77,26 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
             for vals in plugin_info:
                 plugin_name = vals['plugin']
                 if 'error' in vals:
-                    error_messages.append(getPluginErrorHtml(plugin_name, vals['error']))
+                    error_messages.append(get_error_html(plugin_name, vals['error']))
                     continue
-                try:
-                    if not plugin_name in plugins:
-                        plugins[plugin_name] = OrderedDict()
-                    vals['markup']["user_id"] = user
-                    task_id = "{}.{}".format(doc_id, vals['taskId'])
-                    states = answer_db.getAnswers(user_id, task_id)
 
-                    # Don't show state for anonymous users.
-                    state = None if user_id == 0 or len(states) == 0 else states[0]['content']
-                    try:
-                        if state is not None:
-                            state = json.loads(state)
-                    except ValueError:
-                        pass
-                    plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
-                except TypeError:
-                    error_messages.append(getPluginErrorHtml(plugin_name, "Unexpected error occurred while constructing plugin html. Please contact TIM-development team."))
-                    continue
-            final_html_blocks.append('<div>Error(s) occurred while rendering plugin. </div>' + ''.join(error_messages))  # Add empty block at this point
+                if not plugin_name in plugins:
+                    plugins[plugin_name] = OrderedDict()
+                vals['markup']["user_id"] = user
+                task_id = "{}.{}".format(doc_id, vals['taskId'])
+                states = answer_db.getAnswers(user_id, task_id)
+
+                # Don't show state for anonymous users.
+                state = None if user_id == 0 or len(states) == 0 else states[0]['content']
+                try:
+                    if state is not None:
+                        state = json.loads(state)
+                except ValueError:
+                    pass
+                plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
+
+            final_html_blocks.append('<div class="pluginError">Error(s) occurred while rendering plugin. </div>'
+                                     + ''.join(error_messages))
         else:
             final_html_blocks.append(sanitize_html(block))
 
@@ -102,23 +106,23 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
 
     for plugin_name, plugin_block_map in plugins.items():
         try:
-            resp = pluginReqs(plugin_name)
+            resp = plugin_reqs(plugin_name)
         except PluginException:
             continue
         reqs = json.loads(resp)
-        plugin_js_files, plugin_css_files, plugin_modules = pluginDeps(reqs)
+        plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
             # TODO: Better check for absolute URL.
             if "http" in src:
                 js_paths.append(src)
             else:
-                path = getPluginTimUrl(plugin_name) + "/" + src
+                path = get_plugin_tim_url(plugin_name) + "/" + src
                 js_paths.append(path)
         for cssSrc in plugin_css_files:
             if "http" in src:
                 css_paths.append(cssSrc)
             else:
-                path = getPluginTimUrl(plugin_name) + "/" + src
+                path = get_plugin_tim_url(plugin_name) + "/" + src
                 css_paths.append(path)
         for mod in plugin_modules:
             modules.append(mod)
@@ -128,34 +132,44 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
         css_paths = list(OrderedDict.fromkeys(css_paths))
         modules = list(OrderedDict.fromkeys(modules))
 
-        plugin_url = getPluginTimUrl(plugin_name)
+        plugin_url = get_plugin_tim_url(plugin_name)
 
         if 'multihtml' in reqs and reqs['multihtml']:
-            response = callPluginMultiHtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+            try:
+                response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+            except PluginException:
+                continue
             plugin_htmls = json.loads(response)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(markup['taskID'], plugin_url) + html + "</div>"
+                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
+                                                                                         plugin_url,
+                                                                                         html)
         else:
             for idx, val in plugin_block_map.items():
-                html = callPlugin(plugin_name, val['markup'], val['state'], val['taskID'])
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>".format(val['taskID'], plugin_url) + html + "</div>"
+                try:
+                    html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
+                except PluginException:
+                    continue
+                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                                                                                         plugin_url,
+                                                                                         html)
 
     return final_html_blocks, js_paths, css_paths, modules
 
 
-# p is json of plugin requirements in form:
+# p is json of plugin requirements of the form:
 # {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
-def pluginDeps(p):
-    js = []
-    jsMods = []
-    css = [] 
+def plugin_deps(p):
+    js_files = []
+    modules = []
+    css_files = []
     if "css" in p:
         for cssF in p['css']:
-            css.append(cssF)
+            css_files.append(cssF)
     if "js" in p:
         for jsF in p['js']:
-            js.append(jsF)
+            js_files.append(jsF)
     if "angularModule" in p:
         for ng in p['angularModule']:
-            jsMods.append(ng)
-    return js, css, jsMods
+            modules.append(ng)
+    return js_files, css_files, modules

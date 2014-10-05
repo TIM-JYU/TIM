@@ -76,12 +76,12 @@ class DocTest(unittest.TestCase):
         self.assertEqual(blocks[0], 'Edit me!\n')
 
     @given(str, verifier=Verifier(timeout=9999, max_size=2))
-    def test_edit_document(self, newText):
-        debug_print('test_edit_document', newText)
+    def test_edit_document(self, new_text):
+        debug_print('test_edit_document', new_text)
         doc = self.db.documents.createDocument('test', 0)
-        new_doc = self.db.documents.updateDocument(doc, newText)
-        actualText = self.db.documents.getDocumentMarkdown(new_doc)
-        self.assertEqual(newText, actualText)
+        new_doc = self.db.documents.updateDocument(doc, new_text)
+        actual_text = self.db.documents.getDocumentMarkdown(new_doc)
+        self.assertEqual(new_text, actual_text)
         versions = self.db.documents.getDocumentVersions(doc.id)
         self.assertEqual(len(versions), 2)
         self.assertEqual(versions[0]['hash'], new_doc.hash)
@@ -134,12 +134,12 @@ class DocTest(unittest.TestCase):
 
     def check_notes(self, new_count, note_index, notes, test_length):
         for i in range(0, test_length):
-            contentInt = int(notes[i]['content'])
-            if contentInt < note_index:
-                self.assertTrue(contentInt == notes[i]['specifier'])
+            content_int = int(notes[i]['content'])
+            if content_int < note_index:
+                self.assertTrue(content_int == notes[i]['specifier'])
             else:
-                self.assertTrue(contentInt + new_count == notes[i]['specifier'],
-                                'contentInt: {}, new_count: {}, specifier: {}'.format(contentInt, new_count, notes[i]['specifier']))
+                self.assertTrue(content_int + new_count == notes[i]['specifier'],
+                                'contentInt: {}, new_count: {}, specifier: {}'.format(content_int, new_count, notes[i]['specifier']))
 
     def test_notes_with_add(self):
         print('test_notes_with_add')
@@ -174,6 +174,7 @@ class DocTest(unittest.TestCase):
         self.assertEqual(len(readings), 0)
         par_index = 5
         self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+
         readings = self.db.readings.getReadings(0, doc.id)
         self.assertEqual(len(readings), 1)
         fr = readings[0]
@@ -182,15 +183,19 @@ class DocTest(unittest.TestCase):
         ver = self.db.documents.deleteParagraph(doc, 0)
         doc = DocIdentifier(doc.id, ver)
         pars = self.db.documents.getDocumentAsBlocks(doc)
+
         readings = self.db.readings.getReadings(0, doc.id)
         fr = readings[0]
         par_index -= 1
         self.assertEqual(fr['specifier'], par_index)
         self.assertEqual(fr['text'], pars[par_index])
         self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+
         readings = self.db.readings.getReadings(0, doc.id)
         self.assertEqual(len(readings), 1)
-
+        self.db.documents.updateDocument(doc, 'cleared')
+        fr = self.db.readings.getReadings(0, doc.id)[0]
+        self.assertEqual(fr['specifier'], 0)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')

@@ -90,7 +90,6 @@ def get_video_html(query):
     if iframe:
         return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
 
-
         #        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
     result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
     return result
@@ -109,7 +108,24 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.do_all(get_params(self))
 
     def do_POST(self):
-        self.do_all(post_params(self))
+        if self.path.find('/multihtml') < 0:
+            self.do_all(post_params(self))
+            return
+
+        print("do_POST MULTIHML ==========================================")
+        querys = multi_post_params(self)
+        do_headers(self, "application/json")
+        htmls = []
+        for query in querys:
+            usercode = get_json_param(query.jso, "state", "usercode", None)
+            if usercode: query.query["usercode"] = [usercode]
+            ttype = get_param(query, "type", "console").lower()
+            s = get_html(self, query, True)
+            # print(s)
+            htmls.append(s)
+
+        sresult = json.dumps(htmls)
+        self.wout(sresult)
 
     def do_PUT(self):
         self.do_all(post_params(self))
@@ -118,22 +134,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.wfile.write(s.encode("UTF-8"))
 
     def do_all(self, query):
-        print(self.path)
-        print(self.headers)
+        # print(self.path)
+        # print(self.headers)
         # print query
 
         show_html = self.path.find('/html') >= 0
         is_css = self.path.find('/css') >= 0
         is_js = self.path.find('/js') >= 0
         is_reqs = self.path.find('/reqs') >= 0
-        is_image = self.path.find('/image/html') >= 0
-        is_video = self.path.find('/video/html') >= 0
         is_video_reqs = self.path.find('/video/reqs') >= 0
-
-        self.send_response(200)
-        # self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
 
         content_type = 'text/plain'
         if is_reqs: content_type = "application/json"
@@ -141,29 +150,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
 
-        # self.send_header('charset', 'UTF-8')
-        self.send_header('Content-type', content_type)
-        self.end_headers()
+        do_headers(self,content_type)
 
         if self.path.find("refresh") >= 0:
             self.wout(get_chache_keys())
             clear_cache()
             return
 
-        if is_image:
-            s = get_image_html(query)
-            self.wout(s)
-            return
-
-        if is_video:
-            s = get_video_html(query)
-            self.wout(s)
-            return
-
-        result_json = {}
+        result_json = {"multihtml": True}
 
         if is_video_reqs:
-            result_json = {"js": ["http://tim-beta.it.jyu.fi/svn/video/js/video.js"], "angularModule": ["videoApp"]}
+            result_json = {"multihtml": True, "js": ["http://tim-beta.it.jyu.fi/svn/video/js/video.js"], "angularModule": ["videoApp"]}
 
         if is_reqs:
             result_str = json.dumps(result_json)
@@ -175,28 +172,45 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
         if is_js:
-            print(content_type)
+            # print(content_type)
             self.wout(file_to_string('js/video.js'))
             return
 
-        # Was none of special, so print the file(s) in query
+        s = get_html(self, query, show_html)
+        self.wout(s)
+        return
 
-        cla = get_param(query, "class", "")
-        w = get_param(query, "width", "")
-        if w: w = ' style="width:' + w + '"'
-        if cla: cla = " " + cla
 
-        s = ""
-        ffn = get_param(query,"file","")
-        fn = ffn
-        i = ffn.rfind("/")
-        if i >= 0: fn = ffn[i+1:]
+def get_html(self, query, show_html):
+    is_image = self.path.find('/image/') >= 0
+    is_video = self.path.find('/video/') >= 0
 
-        if show_html: s += '<pre class="showCode' + cla + '"' + w + '>'
-        s += get_file_to_output(query, show_html)
-        if show_html: s += '</pre><p class="smalllink"><a href="' + ffn + '" target="_blank">'+fn+'</a>'
-        s = get_surrounding_headers(query, s)
-        return self.wout(s)
+    if is_image:
+        s = get_image_html(query)
+        return s
+
+    if is_video:
+        s = get_video_html(query)
+        return s
+
+    # Was none of special, so print the file(s) in query
+
+    cla = get_param(query, "class", "")
+    w = get_param(query, "width", "")
+    if w: w = ' style="width:' + w + '"'
+    if cla: cla = " " + cla
+
+    s = ""
+    ffn = get_param(query,"file","")
+    fn = ffn
+    i = ffn.rfind("/")
+    if i >= 0: fn = ffn[i+1:]
+
+    if show_html: s += '<pre class="showCode' + cla + '"' + w + '>'
+    s += get_file_to_output(query, show_html)
+    if show_html: s += '</pre><p class="smalllink"><a href="' + ffn + '" target="_blank">'+fn+'</a>'
+    s = get_surrounding_headers(query, s)
+    return s
 
 
 def keep_running():

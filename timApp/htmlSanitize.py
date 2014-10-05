@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import lxml
+import lxml.etree
 from lxml.html.clean import Cleaner
 
 

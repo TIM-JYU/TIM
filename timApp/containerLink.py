@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-#import urllib.request
 import requests
+from requests.exceptions import ConnectTimeout
 import json
 
 
@@ -8,116 +8,91 @@ class PluginException(Exception):
     """The exception that is thrown when an error occurs during a plugin call."""
     pass
 
+
 TIM_URL = ""
 
 # Most plugins are currently running on tim-beta.it.jyu.fi
 # Plugins with numeric IP-address are running there as well, they just don't have routes
-# defined in nginx, and as such must be accessed through tim-beta localhost. However
-# as TIM is ran from a docker container, pointing to tim-beta's localhost
-# must be made through special bridge, which for docker containers is 
+# defined in nginx, and as such must be accessed through tim-beta localhost. However,
+# as TIM is run from a docker container, pointing to tim-beta's localhost
+# must be made through a special bridge, which for docker containers is
 # by default 172.17.42.1
-PLUGINS = [
-        {"host" : "http://tim-beta.it.jyu.fi/cs/", "name" : "csPlugin"},
-        {"host" : "http://tim-beta.it.jyu.fi/cs/rikki/", "name" : "csPluginRikki"}, # demonstrates a broken plugin
-        {"host" : "http://tim-beta.it.jyu.fi/svn/", "name" : "showCode"},
-        {"host" : "http://tim-beta.it.jyu.fi/svn/image/", "name" : "showImage"},
-        {"host" : "http://tim-beta.it.jyu.fi/svn/video/", "name" : "showVideo"},
-        {"host" : "http://tim-beta.it.jyu.fi/cs/tauno/", "name" : "taunoPlugin"},
-        {"host" : "http://172.17.42.1:57000/", "name" : "mcq"},
-        {"host" : "http://172.17.42.1:58000/", "name" : "mmcq"},
-        {"host" : "http://172.17.42.1:59000/", "name" : "shortNote"},
-        {"host" : "http://172.17.42.1:60000/", "name" : "graphviz"}
-        ] 
+PLUGINS = {
+    "csPlugin":      {"host": "http://tim-beta.it.jyu.fi/cs/"},
+    "taunoPlugin":   {"host": "http://tim-beta.it.jyu.fi/cs/tauno/"},
+    "csPluginRikki": {"host": "http://tim-beta.it.jyu.fi/cs/rikki/"},  # demonstrates a broken plugin
+    "showCode":      {"host": "http://tim-beta.it.jyu.fi/svn/"},
+    "showImage":     {"host": "http://tim-beta.it.jyu.fi/svn/image/"},
+    "showVideo":     {"host": "http://tim-beta.it.jyu.fi/svn/video/"},
+    "mcq":           {"host": "http://172.17.42.1:57000/"},
+    "mmcq":          {"host": "http://172.17.42.1:58000/"},
+    "shortNote":     {"host": "http://172.17.42.1:59000/"},
+    "graphviz":      {"host": "http://172.17.42.1:60000/"}
+}
 
-# plugin html call, plugin must match one of the specified plugins in 
-# PLUGINS
-def callPlugin(plugin, info, state, taskID=None):
-    pluginData = json.dumps({"markup" : info, "state": state, "taskID": taskID})
-    print("Calling plugin {} HTML route with data: {}".format(plugin, pluginData))
+
+def call_plugin_generic(plugin, method, route, data=None, headers=None):
+    print("Calling plugin {} {} route with data: {}".format(plugin, route, data))
     try:
-        for x in PLUGINS:
-            if(x['name'] == plugin):
-                plug = getPlugin(plugin)
-                headers = {'Content-type': 'application/json'}
-                request = requests.post(plug['host'] + "html/", data=pluginData, timeout=5, headers=headers)
-                request.encoding = 'utf-8'
-                return request.text
-        return "Unregistered plugin"
-    except ValueError:
-        return "Could not connect to plugin" 
-
-
-def callPluginMultiHtml(plugin, pluginData):
-    print("Calling plugin {} MultiHTML route with data: {}".format(plugin, pluginData))
-    try:
-        for x in PLUGINS:
-            if(x['name'] == plugin):
-                plug = getPlugin(plugin)
-                headers = {'Content-type': 'application/json'}
-                request = requests.post(plug['host'] + "multihtml/", data=pluginData, timeout=5, headers=headers)
-                request.encoding = 'utf-8'
-                return request.text
-        return "Unregistered plugin"
-    except ValueError:
-        return "Could not connect to plugin"
-
-# plugin html call, plugin must match one of the specified plugins in 
-# PLUGINS
-def callPluginResource(plugin, fileName):
-    try:
-        for x in PLUGINS:
-            if(x['name'] == plugin):
-                plug = getPlugin(plugin)
-                request = requests.get(plug['host'] + fileName, timeout=5, stream=True)
-                request.encoding = 'utf-8'
-                return request
-        raise PluginException("Unregistered plugin: " + plugin)
-    except:
-        raise PluginException("Could not connect to plugin: " + plugin)
-
-# plugin answer call, plugin must match one of the specified plugins in 
-# PLUGINS
-def callPluginAnswer(plugin, answerData):
-#    try:
-    print("Calling plugin {} answer route with data: {}".format(plugin, json.dumps(answerData)))
-    for x in PLUGINS:
-        if(x['name'] == plugin):
-            headers = {'Content-type': 'application/json'}
-            try:
-                request = requests.put(url=x['host'] + "answer/",
-                                       data=json.dumps(answerData),
-                                       headers=headers,
-                                       timeout=20)
-                request.encoding = 'utf-8'
-                return request.text
-            except:
-                return "Plugin call took too long!" # should this be JSON?
-    return "Unregistered plugin or plugin not answering. Contact document administrator for details"
-#    except:
-#        return "Could not connect to plugin" 
-
-
-# Get lists of js and css files required by plugin, as well as list of Angular modules they define. 
-def pluginReqs(plugin):
-    print('Calling pluginReqs for ' + plugin)
-    try:
-        plug = getPlugin(plugin)
-        request = requests.get(plug['host'] + "reqs/", timeout=1)
+        plug = get_plugin(plugin)
+        request = requests.request(method, plug['host'] + route + "/", data=data, timeout=5, headers=headers)
         request.encoding = 'utf-8'
         return request.text
     except requests.exceptions.ConnectTimeout:
+        raise PluginException("Could not connect to plugin")
+
+
+def call_plugin_html(plugin, info, state, task_id=None):
+    plugin_data = json.dumps({"markup": info, "state": state, "taskID": task_id})
+    return call_plugin_generic(plugin,
+                               'post',
+                               'html',
+                               data=plugin_data,
+                               headers={'Content-type': 'application/json'})
+
+
+def call_plugin_multihtml(plugin, plugin_data):
+    return call_plugin_generic(plugin,
+                               'post',
+                               'multihtml',
+                               data=plugin_data,
+                               headers={'Content-type': 'application/json'})
+
+
+def call_plugin_resource(plugin, filename):
+    try:
+        plug = get_plugin(plugin)
+        request = requests.get(plug['host'] + filename, timeout=5, stream=True)
+        request.encoding = 'utf-8'
+        return request
+    except requests.exceptions.ConnectTimeout:
         raise PluginException("Could not connect to plugin: " + plugin)
 
-# Get plugin name
-def getPlugin(plug):
-    for p in PLUGINS:
-        if plug == p["name"]:
-            return p
-    return "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system"
+
+def call_plugin_answer(plugin, answer_data):
+    return call_plugin_generic(plugin,
+                               'put',
+                               'answer',
+                               json.dumps(answer_data),
+                               headers={'Content-type': 'application/json'})
+
+
+# Get lists of js and css files required by plugin, as well as list of Angular modules they define. 
+def plugin_reqs(plugin):
+    return call_plugin_generic(plugin, 'get', 'reqs')
+
+
+# Gets plugin info (host)
+def get_plugin(plugin):
+    if plugin in PLUGINS:
+        return PLUGINS[plugin]
+    raise PluginException(
+        "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system")
+
 
 # Get address towards which the plugin must send its further requests, such as answers
-def getPluginTimUrl(plug):
-    for p in PLUGINS:
-        if plug == p["name"]:
-            return TIM_URL + "/" + p['name']
-    return "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system"
+def get_plugin_tim_url(plugin):
+    if plugin in PLUGINS:
+        return TIM_URL + "/" + plugin
+    raise PluginException(
+        "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system")

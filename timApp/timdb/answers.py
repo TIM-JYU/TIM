@@ -1,11 +1,11 @@
-''''''
+""""""
 from timdb.timdbbase import TimDbBase
 from contracts import contract
 
+
 class Answers(TimDbBase):
-    
     @contract
-    def saveAnswer(self, user_ids : 'list(int)', task_id : 'str', content : 'str', points : 'str|None', tags : 'list(str)'):
+    def saveAnswer(self, user_ids: 'list(int)', task_id: 'str', content: 'str', points: 'str|None', tags: 'list(str)'):
         """Saves an answer to the database.
         
         :param user_ids: The id of the usergroup to which the answer belongs.
@@ -13,48 +13,49 @@ class Answers(TimDbBase):
         :param content: The content of the answer.
         :param points: Points for the task.
         """
-        
+
         cursor = self.db.cursor()
-        cursor.execute('insert into Answer (task_id, content, points, answered_on) values (?,?,?,CURRENT_TIMESTAMP)', [task_id, content, points])
+        cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on) VALUES (?,?,?,CURRENT_TIMESTAMP)',
+                       [task_id, content, points])
         answer_id = cursor.lastrowid
         assert answer_id is not None
-        
+
         for user_id in user_ids:
-            cursor.execute('insert into UserAnswer (user_id, answer_id) values (?,?)', [user_id, answer_id])
-        
+            cursor.execute('INSERT INTO UserAnswer (user_id, answer_id) VALUES (?,?)', [user_id, answer_id])
+
         for tag in tags:
-            cursor.execute('insert into AnswerTag (answer_id, tag) values (?,?)', [answer_id, tag])
-        
+            cursor.execute('INSERT INTO AnswerTag (answer_id, tag) VALUES (?,?)', [answer_id, tag])
+
         self.db.commit()
-        
+
     @contract
-    def getAnswers(self, user_id : 'int', task_id : 'str') -> 'list(dict)':
+    def getAnswers(self, user_id: 'int', task_id: 'str') -> 'list(dict)':
         """Gets the answers of a user in a task, ordered descending by submission time.
         
         :param user_id: The id of the user.
         :param task_id: The id of the task.
         """
-        
+
         cursor = self.db.cursor()
-        cursor.execute("""select id, task_id, content, points, answered_on from Answer where task_id = ?
-                          and id in
-                              (select answer_id from UserAnswer where user_id = ?)
-                          order by answered_on desc""", [task_id, user_id])
-        
+        cursor.execute("""SELECT id, task_id, content, points, answered_on FROM Answer WHERE task_id = ?
+                          AND id IN
+                              (SELECT answer_id FROM UserAnswer WHERE user_id = ?)
+                          ORDER BY answered_on DESC""", [task_id, user_id])
+
         return self.resultAsDictionary(cursor)
 
     @contract
-    def getAnswersForGroup(self, user_ids : 'list(int)', task_id : 'str') -> 'list(dict)':
+    def getAnswersForGroup(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
         """Gets the answers of the users in a task, ordered descending by submission time.
            All users in the list `user_ids` must be associated with the answer.
         
         """
-        
+
         cursor = self.db.cursor()
         sql = """select id, task_id, content, points, answered_on from Answer where task_id = ?
                           %s
-                          order by answered_on desc""" % (" ".join(["and id in (select answer_id from UserAnswer where user_id = %d)" % user_id for user_id in user_ids]))
+                          order by answered_on desc""" % (
+            " ".join(["and id in (select answer_id from UserAnswer where user_id = %d)" % user_id for user_id in user_ids]))
         print(sql)
         cursor.execute(sql, [task_id])
         return self.resultAsDictionary(cursor)
-
