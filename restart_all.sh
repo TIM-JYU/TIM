@@ -46,10 +46,10 @@ docker run --name ShortNotePlug -p 59000:5000 -d -t -i haskellplugins /bin/bash 
 docker run --name GraphVizPlug -p 60000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/GraphVizPlugin/GraphVizPlugin -p 5000 ; /bin/bash'
 
 # Start timdev
-docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh && python3 launch.py ; /bin/bash'
+docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
 
 # Start timbeta
-docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh && python3 launch.py ; /bin/bash'
+docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
 
 # Start tim
-docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp &&source initenv.py && python3 launch.py ; /bin/bash'
+docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && source initenv.py ; python3 launch.py ; /bin/bash'
