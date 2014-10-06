@@ -4,3 +4,6 @@
 .idea
 .cabal-sandbox/
 dist/
+
+/timApp/modules/cs/test/a.b
+/timApp/modules/cs/test/a.c

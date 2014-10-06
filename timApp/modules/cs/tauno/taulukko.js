@@ -447,9 +447,13 @@ Ohjelma.prototype.divinä = function (divid, parentdiv) {
 };
 
 Ohjelma.prototype.tekstinä = function (tila) {
-    return this.askeleet.map(function(x) {
-        return x.tekstinä();
-    }).join('\n');
+        var s = this.divi.innerText;
+        var i = s.indexOf(";");
+        
+        return s.substring(i+1).trim(); // poistetaan taulukkorivi
+//    return this.askeleet.map(function(x) {
+//        return x.tekstinä();
+//    }).join('\n');
 };
 
 Ohjelma.prototype.aja = function () {
@@ -980,7 +984,7 @@ function lisaaDragKuuntelija(div,fSallittu) {
 
     div.addEventListener('dragover', function (event) {
         if (fSallittu && fSallittu()) return true;
-        event.preventDefault();
+        if (event.preventDefault) { event.preventDefault(); }
         event.dataTransfer.effectAllowed = 'copy';
         return false;
     }, false);
@@ -989,14 +993,14 @@ function lisaaDragKuuntelija(div,fSallittu) {
         if (fSallittu && fSallittu()) return true;
         event.preventDefault();
         event.dataTransfer.effectAllowed = 'copy';
-        event.target.style.background = "gray";
+        if ( event.target.style ) event.target.style.background = "gray";
         return false;
     }, false);
     div.addEventListener('dragleave', function (event) {
         if (fSallittu && fSallittu()) return true;
         event.preventDefault();
         event.dataTransfer.effectAllowed = 'copy';
-        event.target.style.background = "";
+        if ( event.target.style ) event.target.style.background = "";
         return false;
     }, false);
 }
@@ -1004,6 +1008,8 @@ function lisaaDragKuuntelija(div,fSallittu) {
 function lisaaKuuntelijat(div, asetaLahde, kaytaKohde, salliPudotus) {
     if (asetaLahde) div.addEventListener('dragstart', function (event) {
         asetaLahde(event);
+        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData('text/plain',""); // FF ei muuten toimi
     }, false);
 
     if (kaytaKohde) div.addEventListener('drop', function (event) {
@@ -1659,6 +1665,7 @@ function Muuttuja(vm, nimi, arvo, vakio) {
 
 
         } else {
+            Operaatio.tehty();
             return;
         }
 
@@ -1879,32 +1886,6 @@ function Lauseke(divid) {
 
     lisaaKuuntelijat(this.diviVal, asetaLahde, null, false);
 
-    
-    /*    
-    this.divi.addEventListener('click', function (event) {
-        if (Operaatio.odottaaLähdettä()) {
-                asetaLahde(event);
-                return;
-        }
-    }, false);
-
-
-    this.divi.addEventListener('click', function (event) {
-        if (Operaatio.odottaaLähdettä()) {
-            Operaatio.asetaLähde(event.target);
-            if (!this.olio.validi()) {
-                alert('Vain valmiin lausekkeen voi siirtää!');
-                echo.aseta('Vain valmiin lausekkeen voi siirtää!');
-                event.preventDefault();
-                Operaatio.peruuta();
-                return;
-            }
-            Operaatio.asetaData({tyyppi: "lauseke",
-								 oid: this.id});
-        }
-    }, false);
-    /**/
-
     var asetus = function (asfn) {
 		return function (event) {
             if (!Operaatio.odottaaLähdettä()) {
@@ -2027,7 +2008,8 @@ function alustaTauno(event) {
         '        </div> '+
         '    </div> ' +
         ' ' +
-        '      <div id="toiminta" class="toiminta"> '+
+        '      <div id="toiminta" class="toiminta" ondragover="event.preventDefault();" '+
+	    '         ondragleave="event.preventDefault();" ondragenter="event.preventDefault();"> '+
         '        <div id="vasen" class="vasen">'+
 		'          <div class="vasen-top">'+
 	    '            <div id="muuttuja-button-alue" class="muuttuja-button-alue">'+
@@ -2059,7 +2041,7 @@ function alustaTauno(event) {
         '            </div> '+
         '          </div> '+
         '        </div> '+
-        '        <div id="oikea" class="oikea">ohjelma:'+ // <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+
+        '        <div id="oikea" class="oikea">ohjelma:'+  //' <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+
         '        </div> '+
         '      </div> '+
         ' '+

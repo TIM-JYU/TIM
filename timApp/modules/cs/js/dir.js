@@ -148,6 +148,7 @@ csApp.directiveFunction = function(t) {
 			csApp.set(scope,attrs,"usercode","");
 			csApp.set(scope,attrs,"codeunder",false);
 			csApp.set(scope,attrs,"codeover",false);
+			csApp.set(scope,attrs,"open",false);
 			csApp.set(scope,attrs,"rows",1);
 			csApp.set(scope,attrs,"maxrows",-1);
 			csApp.set(scope,attrs,"attrs.bycode");
@@ -183,6 +184,7 @@ csApp.directiveFunction = function(t) {
         //    scope.header = head;
 		//	scope.getHeader = function() { return head; };
 		//	csApp.updateEditSize(scope);
+            if ( scope.open ) scope.showTauno();
 		},		
 		scope: {},				
 		controller: csApp.Controller,
