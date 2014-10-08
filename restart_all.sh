@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script is supposed to be run on tim-beta machine.
+
 # Stop the script if any error occurs
 set -e
 
