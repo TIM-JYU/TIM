@@ -5,6 +5,7 @@ from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from collections import OrderedDict
 import yaml
+from yaml import CLoader
 import yaml.parser
 import yaml.scanner
 from htmlSanitize import sanitize_html
@@ -19,7 +20,7 @@ def parse_plugin_values(nodes):
 
         if len(node.text) > 0:
             try:
-                values = yaml.load(node.text)
+                values = yaml.load(node.text, Loader=CLoader)
             except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 plugins.append({"plugin": name, 'error': "YAML is malformed"})
         try:
@@ -53,7 +54,7 @@ def get_block_yaml(block):
     for node in tree.find_all('pre'):
         if len(node.text) > 0:
             try:
-                values = yaml.load(node.text)
+                values = yaml.load(node.text, Loader=CLoader)
             except (yaml.parser.ParserError, yaml.scanner.ScannerError):
                 print("Malformed yaml string")
                 return "YAMLERROR: Malformed string"

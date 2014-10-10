@@ -11,6 +11,7 @@ run apt-get install -y git-core
 
 run apt-get install -y zlib1g-dev # lxml dependency
 run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml dependency
+run apt-get install -y libyaml-dev # C-parser for PyYAML
 
 run pip3 install flask
 run pip3 install flask-compress
