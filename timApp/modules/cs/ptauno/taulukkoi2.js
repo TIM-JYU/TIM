@@ -33,6 +33,64 @@
  **********************************************************************/
 
 
+// [[file:~/Sites/taulukko/tauno.org::*Selainten%20v%C3%A4linen%20yhteensopivuus][selainten-erot]]
+var hae_data = function (dt) { alert('hae_data: jotain pahasti vialla'); };
+var aseta_data = function (dt, d) { alert('aseta_data: jotain pahasti vialla'); };
+
+// Vesa was here
+
+if ((navigator.appVersion.indexOf('MSIE') > -1) ||
+    (navigator.appVersion.indexOf('Trident/7') > -1)) {
+    /* MSIE käytössä */
+    hae_data = function (event) {
+        var dt = event.dataTransfer;
+        var d = JSON.parse(dt.getData('text'));
+        return d;
+    };
+    aseta_data = function (event, d) {
+        var dt = event.dataTransfer;
+        var data = JSON.stringify(d);
+        dt.setData('text', data);
+    };
+} else {
+    var webkit_types = function (x) {
+        if (x == null) { alert("webkit_types x==null"); debugger; };
+        return x.filter(function (x) { return x.indexOf('text/x-') != -1; });
+    };
+    var firefox_types = function (x) {
+        // XXX Firefoxissa types on stringlist, jolla items, ei map/filter
+        var ret = [];
+        for (var v = 0; v < x.length; ++v)
+            ret.push(x.item(v));
+        return webkit_types(ret);
+    };
+    var types = null;
+    if (navigator.appVersion.indexOf('MSIE') > -1 // XXX TODO pitääkö tähänkin lisätä Trident/7???
+        || navigator.appVersion.indexOf('WebKit') > -1) {
+        types = webkit_types;
+    } else {
+        types = firefox_types;
+    }
+    /* firefox & webkit */
+    hae_data = function (event) {
+        var dt = event.dataTransfer;
+        var tyypit = types(dt.types);
+        var avaimet = tyypit.map(function (x) { return x.substring(7); });
+        var ret = {};
+        tyypit.map(function (x) { ret[x.substring(7)] = dt.getData(x); });
+        return ret;
+    };
+    aseta_data = function (event, d) {
+        var dt = event.dataTransfer;
+
+        for (var k in d) {
+            dt.setData('text/x-' + k, d[k]);
+        }
+    };
+}
+// selainten-erot ends here
+
+
 /* globaali huutelutaulu */
 var echo = null;
 
@@ -980,7 +1038,8 @@ function lisaaDragKuuntelija(div,fSallittu) {
 
     div.addEventListener('dragover', function (event) {
         if (fSallittu && fSallittu()) return true;
-        event.preventDefault();
+        if (event.preventDefault) { event.preventDefault(); }
+        // event.preventDefault();
         event.dataTransfer.effectAllowed = 'copy';
         return false;
     }, false);
@@ -989,24 +1048,30 @@ function lisaaDragKuuntelija(div,fSallittu) {
         if (fSallittu && fSallittu()) return true;
         event.preventDefault();
         event.dataTransfer.effectAllowed = 'copy';
-        event.target.style.background = "gray";
+        if ( event.relatedTarget && event.relatedTarget.nodeType == 3) return;
+        if ( event.target.style ) event.target.style.background = "gray";
         return false;
     }, false);
     div.addEventListener('dragleave', function (event) {
         if (fSallittu && fSallittu()) return true;
+        if ( event.relatedTarget && event.relatedTarget.nodeType == 3) return;
         event.preventDefault();
         event.dataTransfer.effectAllowed = 'copy';
-        event.target.style.background = null;
+        if ( event.target.style ) event.target.style.background = null;
         return false;
     }, false);
+    // div.ondragover = function (event) { alert("moi");}
 }
 
 function lisaaKuuntelijat(div, asetaLahde, kaytaKohde, salliPudotus) {
     if (asetaLahde) div.addEventListener('dragstart', function (event) {
         asetaLahde(event);
+        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData('text/plain',"");
     }, false);
 
     if (kaytaKohde) div.addEventListener('drop', function (event) {
+        if (event.stopPropagating) { event.stopPropagating(); }
         kaytaKohde(event);
     }, false);
 
@@ -1033,7 +1098,8 @@ function Solu(vm, indeksi, arvo) {
                           {'className':'solu-n',
                            'innerHTML':indeksi.toString()});
     this.divSa = luoDiv('solu-a'+indeksi,
-                          {'className':'solu-a',
+                          {'className': 'solu-a',
+                            'ondragstart':"event.dataTransfer.setData('text/plain',null);",
                            'draggable':true});
 
     this.divSi = luoDiv('solu-i'+indeksi,
@@ -1659,6 +1725,7 @@ function Muuttuja(vm, nimi, arvo, vakio) {
 
 
         } else {
+            Operaatio.tehty();
             return;
         }
 
@@ -2028,8 +2095,9 @@ function alustaTauno(event) {
         '    </div> ' +
         ' ' +
         '      <div id="toiminta" class="toiminta"> '+
-        '        <div id="vasen" class="vasen">'+
-		'          <div class="vasen-top">'+
+        '        <div id="vasen" class="vasen" draggable="false" ondragover="event.preventDefault();" ' +
+        '               ondragleave="event.preventDefault();" ondragenter="event.preventDefault();">' +
+		'          <div class="vasen-top"   >' +
 	    '            <div id="muuttuja-button-alue" class="muuttuja-button-alue">'+
 	    '              muuttujat:'+
 		'                <button id="uusi-muuttuja" onclick="vk.luoMuuttujaKentistä(\'muuttujat\')">'+

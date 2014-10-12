@@ -40,15 +40,17 @@ body {
 
 /* From http://www.html5rocks.com/en/tutorials/dnd/basics/ */
 /* Prevent the text contents of draggable elements from being selectable. */
+
 [draggable] {
-    /* background-color: #fdf6e3; */
+    /* background-color: #ff0000; 
+    color: #00ff00; */
     -moz-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
-    user-select: none;
     /* Required to make elements draggable in old WebKit */
     -khtml-user-drag: element;
     -webkit-user-drag: element;
+    user-select: none;
 }
 
 .nayttod {
