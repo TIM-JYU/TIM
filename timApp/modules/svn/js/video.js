@@ -65,7 +65,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '<p>Here comes header</p>' +
 				  '<ul><li>{{stem}} '+
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">'+
-                  '<span ng-if="videoicon"><img src="{{videoicon}}" alt="Click here to show" /> </span>' +
+                  '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
                   '{{videoname}}{{startt}} {{duration}} {{span}}</a>'+
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
@@ -119,6 +119,7 @@ videoApp.directiveFunction = function(t) {
             videoApp.set(scope,attrs,"hidetext","hide video");
             videoApp.set(scope,attrs,"videoicon","/csimages/video_small.png");
             videoApp.set(scope,attrs,"docicon","/csimages/book.png");
+			videoApp.set(scope,attrs,"open",false);
             if ( scope.videoicon == "False" ) scope.videoicon = "";
             if ( scope.docicon == "False" ) scope.docicon = "";
 			scope.start = videoApp.muunna(attrs.start);
@@ -137,6 +138,7 @@ videoApp.directiveFunction = function(t) {
 			element[0].childNodes[0].outerHTML = head;
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="footer"');
+            if ( scope.open ) scope.showVideo();
 		},		
 		scope: {},				
 		controller: videoApp.Controller,

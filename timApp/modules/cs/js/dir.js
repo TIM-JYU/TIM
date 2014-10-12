@@ -100,7 +100,7 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
 				  '</div>'+
 				  //'<br />'+ 
-				  '<p class="csRunSnippets" ng-if="buttons">' +
+				  '<p class="csRunSnippets" ng-if="buttons && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
                   '</p>' +
 				  '<p class="csRunMenu" >' +
@@ -191,14 +191,14 @@ csApp.directiveFunction = function(t) {
             if (scope.open) scope.showTauno();
 
             //attrs.buttons = "$hellobuttons$\nMunOhjelma\n$typebuttons$\n$charbuttons$";
-
-            if (attrs.buttons) {
+            var b = attrs.buttons || scope.attrs.buttons;
+            if ( b ) {
                 var helloButtons = 'public \nclass \nHello \n\\n\n{\n}\n'+
                                     'static \nvoid \n Main\n(\n)\n' + 
                                     '        Console.WriteLine(\n"\nworld!\n;\n ';
-                var typeButtons =  'bool \nchar\n int \ndouble \nstring \nPhyscisObject \n[] \nreturn\n, ';
-                var charButtons = 'a\nb\nc\nd\ne\ni\nj\n0\n1\n2\n3\n4\n5';
-                var b = attrs.buttons;
+                var typeButtons =  'bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhyscisObject \n[] \nreturn\n, ';
+                var charButtons = 'a\nb\nc\nd\ne\ni\nj\n\.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=';
+                // var b = attrs.buttons;
                 b = b.replace('$hellobuttons$', helloButtons);
                 b = b.replace('$typebuttons$' , typeButtons);
                 b = b.replace('$charbuttons$' , charButtons);
@@ -416,7 +416,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 	    // $scope.usercode += s;
 	    var tbox = $scope.edit;
 	    var i = tbox.selectionStart || 0;
-	    $scope.usercode = $scope.usercode.substring(0, i) + s.replace(/\\n/g,"\n") + $scope.usercode.substring(i);
+	    var uc = $scope.usercode || "";
+	    $scope.usercode = uc.substring(0, i) + s.replace(/\\n/g,"\n") + uc.substring(i);
 	    // $scope.insertAtCursor(tbox, s);
 	    tbox.selectionStart += s.length;
 	    tbox.selectionEnd += s.length;
@@ -524,7 +525,7 @@ csApp.Controller = function($scope,$http,$transclude) {
         
     $scope.checkIndent = function() {
         if ( !$scope.indent || !$scope.usercode ) return;
-        var start = $scope.edit[0].selectionStart;
+        var start = $scope.edit.selectionStart;
         var spaces = "";
         for (var i=0; i<$scope.indent; i++) spaces += " ";
         var n = 0;
