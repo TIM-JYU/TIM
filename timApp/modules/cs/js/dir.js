@@ -205,7 +205,7 @@ csApp.directiveFunction = function(t) {
                 scope.buttons = b.split("\n");
             }
 		},		
-		scope: {},				
+		scope: {},				 
 		controller: csApp.Controller,
 		restrict: 'AE',
 		/*
