@@ -197,6 +197,7 @@ class FileParams:
         self.include = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = get_param_by(query, "by" + nr, "")
+        self.prorgam = get_param_by(query, "program" + nr, "")
 
         self.reps = []
 
@@ -223,6 +224,9 @@ class FileParams:
         if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
     def get_file(self, escape_html=False):
+        if self.prorgam:
+            print(self.prorgam)
+            return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
         if not self.url:
             # print("SELF.BY:", self.by.encode());
             if not self.by: return ""

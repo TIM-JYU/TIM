@@ -61,6 +61,11 @@ function luoDiv(id, attrs) {
     for (var attr in attrs) {
         d[attr]=attrs[attr];
     }
+    if (attrs.innerHTML) {
+        var s = attrs.innerHTML;
+        s = s.replace("<br.*", "");
+        vk._tekstina.push(s);
+    }
     return d;
 }
 
@@ -166,6 +171,7 @@ function Virtuaalikone() {
     this.alkutila = new Tila([], {});
     this._tila = this.alkutila;
     this._ohjelma = [];
+    this._tekstina = [];
 }
 
 Virtuaalikone.prototype.tila = function (uusiTila) {
@@ -241,7 +247,7 @@ Virtuaalikone.prototype.kysyMuuttuja = function(diviin, arvolla) {
 
 
 function alkaaNumerolla(nimi) {
-    var patt = /[-0-9].*/g;
+    var patt = /^[-0-9].*/g;
     var numero = patt.test(nimi);
     return numero;
 }
@@ -284,7 +290,7 @@ Virtuaalikone.prototype.piilotaMuuttujanLisäys = function(diviin, arvolla) {
     document.getElementById("uuden-muuttujan-alue").style.visibility="collapse";
     document.getElementById("muuttuja-button-alue").style.visibility="visible";
 };
-
+ 
 // event.type must be keypress
 Virtuaalikone.prototype.getChar = function(event) {
     if (event.which === null) {
@@ -431,6 +437,19 @@ function Taulukko(vk) {
 }
 
 
+function siivoaHTML(s) {
+    //s = s.replace(/<div.*?<\/div>/, "");
+    r = "";
+    while (true) {
+        s = s.replace(/<div.*?>/, "");
+        var i = s.indexOf("<br");
+        if (i < 0) break;
+        r += s.substring(0, i)+"\n";
+        s = s.replace(/.*?<\/div>/, "");
+    }
+    return r.trim();
+}
+
 function Ohjelma(vk) {
     this.askeleet = [];
     this.vk = vk;
@@ -447,13 +466,23 @@ Ohjelma.prototype.divinä = function (divid, parentdiv) {
 };
 
 Ohjelma.prototype.tekstinä = function (tila) {
-        var s = this.divi.innerText;
-        var i = s.indexOf(";");
-        
-        return s.substring(i+1).trim(); // poistetaan taulukkorivi
-//    return this.askeleet.map(function(x) {
-//        return x.tekstinä();
-//    }).join('\n');
+    var s = this.divi.textContent;
+    if (!s) s = siivoaHTML(this.divi.innerHTML);
+    if (s) {
+        var i = s.indexOf("int[] t");
+        if ( i == 0 ) {
+            var i = s.indexOf(";");
+            s = s.substring(i + 1);
+        }
+        if (s.indexOf("\n") < 0) s = s.replace(/;/g, ";\n");
+        return s.trim(); // poistetaan taulukkorivi
+    }
+
+   
+
+    return this.askeleet.map(function(x) {
+        return x.tekstinä();
+    }).join('\n');
 };
 
 Ohjelma.prototype.aja = function () {
@@ -969,8 +998,8 @@ function pudotaIndeksialueeseen(vm, event, data, mihin, mista) {
 
         return;
     } else if (tyyppi==='unop') {
-        if (nimi === 'miinus') ohj.unmiinus(mihin);
-        else if (nimi === 'plus') ohj.unplus(mihin);
+      //  if (nimi === 'miinus') ohj.unmiinus(mihin);
+      //  else if (nimi === 'plus') ohj.unplus(mihin);
 
         return;
     }
@@ -1092,6 +1121,12 @@ function Solu(vm, indeksi, arvo) {
     function kaytaKohde(event) {
         //if (this.olio.suljettu()) return;
         Operaatio.asetaKohde(event.target);
+        if (tama.divSi.children.length > 1) {
+            event.preventDefault();
+            event.stopPropagation();
+            alert('Solulla on useampia indeksejä, joten pudota indeksiin valitaksesi sopivan.');
+            return Operaatio.tehty();
+        }
         event.preventDefault();
         var data = Operaatio.haeData();
         var tyyppi = data.tyyppi;
@@ -1276,7 +1311,12 @@ function Indeksi(vm, solu) {
 
                     ohj.sijoitus(mihin, mista);
                     lausekediv.olio.katoa();
+                } else if (tyyppi === 'unop') {
+                     var nimi = data.nimi;
+                     if (nimi === 'miinus') ohj.unmiinus(mihin);
+                     else if (nimi === 'plus') ohj.unplus(mihin);
                 }
+
                 Operaatio.tehty();
     }
 
@@ -2041,7 +2081,7 @@ function alustaTauno(event) {
         '            </div> '+
         '          </div> '+
         '        </div> '+
-        '        <div id="oikea" class="oikea">ohjelma:'+  //' <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+
+        '        <div id="oikea" class="oikea">ohjelma:'+ // ' <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+
         '        </div> '+
         '      </div> '+
         ' '+

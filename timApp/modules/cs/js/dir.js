@@ -154,6 +154,7 @@ csApp.directiveFunction = function(t) {
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder","Write your code here");
             csApp.set(scope,attrs,"indent",-1);
+            // csApp.set(scope,attrs,"program");
 
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
@@ -528,7 +529,7 @@ csApp.Controller = function($scope,$http,$transclude) {
         // document.dispatchEvent(copyEvent);
 		if ( !$scope.viewCode ) return;
 		if ( angular.isDefined($scope.localcode) ) { $scope.showCodeLocal(); return; } 
-		if ( !$scope.file ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
+		if ( !$scope.file &!$scope.attrs.program ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
 		
 		// params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		params = $scope.attrs;
