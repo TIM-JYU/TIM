@@ -24,6 +24,7 @@ import pluginControl
 import collections
 from containerLink import PluginException
 from bs4 import UnicodeDammit
+from werkzeug.contrib.profiler import ProfilerMiddleware
 
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
@@ -44,11 +45,6 @@ app.logger.addHandler(handler)
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
-#app.config.from_envvar('TIM_SETTINGS', silent=True)
-
-if os.path.abspath('..') == '/service':
-    app.config['DEBUG'] = False
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
 PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
@@ -647,9 +643,8 @@ def loginWithKorppi():
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
 
+
 def startApp():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
+    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[70], sort_by=('cumtime',))
     app.run(host='0.0.0.0',port=5000)
-
-if __name__ == "__main__":
-    startApp()

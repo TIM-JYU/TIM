@@ -4,6 +4,7 @@ maintainer vesal "vesal@jyu.fi"
 
 # Asennetaan python, pip ja flask
 
+run apt-get update
 run apt-get install -y python3
 run apt-get install -y python3-pip
 run pip3 install Flask
