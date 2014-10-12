@@ -100,7 +100,10 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
 				  '</div>'+
 				  //'<br />'+ 
-				  '<p class="csRunMenu" >'+
+				  '<p class="csRunSnippets" ng-if="buttons">' +
+				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
+                  '</p>' +
+				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-click="runCode();">Aja</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
@@ -177,7 +180,7 @@ csApp.directiveFunction = function(t) {
                 if ( scope.file ) scope.indent = 8; else scope.indent = 0;
 
             
-			scope.edit = element.find("textarea"); // angular.element(e); // $("#"+scope.editid);
+			scope.edit = element.find("textarea")[0]; // angular.element(e); // $("#"+scope.editid);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,'p class="footer"');
@@ -185,7 +188,22 @@ csApp.directiveFunction = function(t) {
         //    scope.header = head;
 		//	scope.getHeader = function() { return head; };
 		//	csApp.updateEditSize(scope);
-            if ( scope.open ) scope.showTauno();
+            if (scope.open) scope.showTauno();
+
+            //attrs.buttons = "$hellobuttons$\nMunOhjelma\n$typebuttons$\n$charbuttons$";
+
+            if (attrs.buttons) {
+                var helloButtons = 'public \nclass \nHello \n\\n\n{\n}\n'+
+                                    'static \nvoid \n Main\n(\n)\n' + 
+                                    '        Console.WriteLine(\n"\nworld!\n;\n ';
+                var typeButtons =  'bool \nchar\n int \ndouble \nstring \nPhyscisObject \n[] \nreturn\n, ';
+                var charButtons = 'a\nb\nc\nd\ne\ni\nj\n0\n1\n2\n3\n4\n5';
+                var b = attrs.buttons;
+                b = b.replace('$hellobuttons$', helloButtons);
+                b = b.replace('$typebuttons$' , typeButtons);
+                b = b.replace('$charbuttons$' , charButtons);
+                scope.buttons = b.split("\n");
+            }
 		},		
 		scope: {},				
 		controller: csApp.Controller,
@@ -296,8 +314,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 
 		/* // tällä koodilla on se vika, että ei voi pyyhkiä alusta välilyönteä ja yhdistää rivejä
 		if ( $scope.carretPos && $scope.carretPos >= 0 ) {
-		    $scope.edit[0].selectionStart = $scope.carretPos;
-		    $scope.edit[0].selectionEnd = $scope.carretPos;
+		    $scope.edit.selectionStart = $scope.carretPos;
+		    $scope.edit.selectionEnd = $scope.carretPos;
 		    $scope.carretPos = -1;
 		}
 		else $scope.checkIndent(); // ongelmia saada kursori paikalleen
@@ -394,7 +412,43 @@ csApp.Controller = function($scope,$http,$transclude) {
 	}
 	
 	
-	$scope.showTauno = function() {
+	$scope.addText = function (s) {
+	    // $scope.usercode += s;
+	    var tbox = $scope.edit;
+	    var i = tbox.selectionStart || 0;
+	    $scope.usercode = $scope.usercode.substring(0, i) + s.replace(/\\n/g,"\n") + $scope.usercode.substring(i);
+	    // $scope.insertAtCursor(tbox, s);
+	    tbox.selectionStart += s.length;
+	    tbox.selectionEnd += s.length;
+	}
+
+	$scope.addTextHtml = function (s) {
+	    var ret = s.trim();
+	    if (ret.length == 0) ret = " ";
+	    return ret;
+	}
+
+
+	$scope.insertAtCursor = function(myField, myValue) {
+	    //IE support
+	    if (document.selection) {
+	        myField.focus();
+	        sel = document.selection.createRange();
+	        sel.text = myValue;
+	    }
+	        //MOZILLA and others
+	    else if (myField.selectionStart || myField.selectionStart == '0') {
+	        var startPos = myField.selectionStart;
+	        var endPos = myField.selectionEnd;
+	        myField.value = myField.value.substring(0, startPos)
+                + myValue
+                + myField.value.substring(endPos, myField.value.length);
+	    } else {
+	        myField.value += myValue;
+	    }
+	}
+
+	$scope.showTauno = function () {
 	
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
