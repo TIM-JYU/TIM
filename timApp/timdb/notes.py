@@ -1,6 +1,6 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, blocktypes, TimDbException, DocIdentifier
-from ephemeralclient import EphemeralClient, EPHEMERAL_URL, NotInCacheException
+from ephemeralclient import EphemeralClient, EPHEMERAL_URL, EphemeralException
 import os
 
 
@@ -108,7 +108,7 @@ class Notes(TimDbBase):
             for note in notes:
                 try:
                     note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
-                except NotInCacheException:
+                except EphemeralException:
                     self.ec.loadDocument(self.getDocIdentifierForNote(note['id']), note['content'].encode('utf-8'))
                     note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
         return notes

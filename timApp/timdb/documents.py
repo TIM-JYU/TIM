@@ -1,7 +1,7 @@
 from contracts import contract
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
 import os
-from ephemeralclient import EphemeralClient, EphemeralException, NotInCacheException, EPHEMERAL_URL
+from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from shutil import copyfile
 from .gitclient import gitCommit, gitCommand
 from timdb.gitclient import NothingToCommitException
@@ -238,7 +238,7 @@ class Documents(TimDbBase):
 
         try:
             blocks = self.ec.getDocumentAsBlocks(document_id)
-        except NotInCacheException:
+        except EphemeralException:
             if self.documentExists(document_id):
                 with open(self.getBlockPath(document_id.id), 'rb') as f:
                     self.ec.loadDocument(document_id, f.read())
@@ -253,7 +253,7 @@ class Documents(TimDbBase):
 
         try:
             blocks = self.ec.getDocumentAsHtmlBlocks(document_id)
-        except NotInCacheException:
+        except EphemeralException:
             if self.documentExists(document_id):
                 with open(self.getBlockPath(document_id.id), 'rb') as f:
                     self.ec.loadDocument(document_id, f.read())

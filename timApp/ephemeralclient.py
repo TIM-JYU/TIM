@@ -31,10 +31,6 @@ class EphemeralException(Exception):
     pass
 
 
-class NotInCacheException(Exception):
-    pass
-
-
 class EphemeralClient(object):
     @contract
     def __init__(self, server_path: 'str'):
@@ -61,7 +57,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
 
         return r.json()
 
@@ -85,7 +81,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
 
         return r.json()
 
@@ -105,7 +101,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfDocumentNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.text
 
     @contract
@@ -127,7 +123,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfDocumentNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.text
 
     @contract
@@ -144,7 +140,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.text
 
     @contract
@@ -163,7 +159,7 @@ class EphemeralClient(object):
             r = requests.get(url=rurl)
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.json()
 
     @contract
@@ -181,18 +177,8 @@ class EphemeralClient(object):
                                                                 self.__getDocIdForEphemeral(second_document_id)))
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.json()
-
-    @contract
-    def __raiseExceptionIfBlockNotFound(self, r: 'Response'):
-        """Raises EphemeralException if the status code of the response is 404.
-        
-        :param r: The response string.
-        """
-
-        if r.status_code == 404:
-            raise NotInCacheException('The requested block was not found.')
 
     @contract
     def __raiseExceptionIf404(self, r: 'Response'):
@@ -202,16 +188,7 @@ class EphemeralClient(object):
         """
 
         if r.status_code == 404:
-            raise EphemeralException('Error occurred.')
-
-    @contract
-    def __raiseExceptionIfDocumentNotFound(self, r: 'Response'):
-        """Raises EphemeralException if the status code of the response is 404.
-        
-        :param r: The response string.
-        """
-        if r.status_code == 404:
-            raise NotInCacheException('The requested document was not found.')
+            raise EphemeralException('Ephemeral call failed. Message: ' + r.text)
 
     @contract
     def getBlockAsHtml(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
@@ -228,7 +205,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.text
 
     @contract
@@ -244,7 +221,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfDocumentNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.json()
 
     @contract
@@ -260,7 +237,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfDocumentNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.json()
 
     @contract
@@ -276,7 +253,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.text
 
     @contract
@@ -292,7 +269,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
         return r.text
 
     @contract
@@ -328,7 +305,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
 
         return r.json()
 
@@ -345,7 +322,7 @@ class EphemeralClient(object):
         except requests.exceptions.ConnectionError:
             raise EphemeralException('Cannot connect to Ephemeral.')
         r.encoding = 'utf-8'
-        self.__raiseExceptionIfBlockNotFound(r)
+        self.__raiseExceptionIf404(r)
 
     @contract
     def renameDocument(self, document_id: 'DocIdentifier', new_id: 'DocIdentifier'):
