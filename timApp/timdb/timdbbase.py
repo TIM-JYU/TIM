@@ -33,8 +33,10 @@ class TimDbBase(object):
     def __init__(self, db: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
         
-        :param db_path: The path of the database file.
+        :param db: The database connection.
         :param files_root_path: The root path where all the files will be stored.
+        :param type_name: The type name.
+        :param current_user_name: The current user name.
         """
         self.files_root_path = os.path.abspath(files_root_path)
         self.current_user_name = current_user_name
