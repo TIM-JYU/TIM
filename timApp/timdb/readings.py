@@ -1,5 +1,5 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase, blocktypes, TimDbException
+from timdb.timdbbase import TimDbBase, blocktypes
 
 
 class Readings(TimDbBase):
