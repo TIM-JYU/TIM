@@ -190,9 +190,9 @@ def documentDiff(doc_id, doc_hash):
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
         doc_diff = timdb.documents.getDifferenceToPrevious(DocIdentifier(doc_id, doc_hash))
+        return Response(doc_diff, mimetype="text/html")
     except TimDbException as e:
         abort(404, str(e))
-    return Response(doc_diff, mimetype="text/html")
 
 @app.route('/download/<int:doc_id>/<doc_hash>')
 def documentHistory(doc_id, doc_hash):
@@ -202,10 +202,9 @@ def documentHistory(doc_id, doc_hash):
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
         doc_data = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, doc_hash))
+        return Response(doc_data, mimetype="text/plain")
     except TimDbException as e:
         abort(404, str(e))
-
-    return Response(doc_data, mimetype="text/plain")
 
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
@@ -646,5 +645,5 @@ def loginWithKorppi():
 
 def startApp():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
-    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[70], sort_by=('cumtime',))
+    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
     app.run(host='0.0.0.0',port=5000)
