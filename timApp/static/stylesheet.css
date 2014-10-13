@@ -113,6 +113,10 @@ table th {
     background-color: pink;
 }
 
+.note.private {
+    border-color: red;
+}
+
 /*=============================================*/
 li p {
     margin-left: 0; 

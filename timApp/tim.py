@@ -512,6 +512,7 @@ def getNotes(doc_id):
     notes = [note for note in timdb.notes.getAllNotes(doc_id) if timdb.users.userHasViewAccess(getCurrentUserId(), note['id'])]
     for note in notes:
         note['editable'] = timdb.users.userHasEditAccess(getCurrentUserId(), note['id'])
+        note['private'] = not timdb.users.userGroupHasViewAccess(0, note['id'])
         for tag in KNOWN_TAGS:
             note[tag] = tag in note['tags']
         note.pop('tags', None)

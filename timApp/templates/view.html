@@ -62,7 +62,7 @@
 
             <div ng-controller="NoteCtrl">
                 <div class="notes">
-                    <div ng-show="par.notes.length > 0" class="note" ng-class="{difficult: note.difficult, unclear:note.unclear}" ng-repeat="note in par.notes">
+                    <div ng-show="par.notes.length > 0" class="note" ng-class="{difficult: note.difficult, unclear: note.unclear, private: note.private}" ng-repeat="note in par.notes">
                         <button ng-show="note.editable && !m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
                         <div ng-bind-html="note.htmlContent"></div>
                     </div>

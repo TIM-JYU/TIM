@@ -276,3 +276,15 @@ class Users(TimDbBase):
         result = cursor.fetchall()
         assert len(result) <= 1, 'rowcount should be 1 at most'
         return len(result) == 1
+
+    @contract
+    def userGroupHasViewAccess(self, user_group_id: 'int', block_id: 'int') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT id from UserGroup where id == ?
+                          AND id IN
+                             (SELECT UserGroup_id
+                              FROM BlockViewAccess
+                              WHERE Block_id = ?)""", [user_group_id, block_id])
+        result = cursor.fetchall()
+        assert len(result) <= 1, 'rowcount should be 1 at most'
+        return len(result) == 1
