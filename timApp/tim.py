@@ -625,6 +625,9 @@ def loginWithKorppi():
         session['appcookie'] = randomHex
     url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
     r = requests.get(url, params={'request': session['appcookie']})
+    if r.status_code != 200:
+        return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
+                                                   'Try again later.'), 503
     userName = r.text
     if not userName:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
