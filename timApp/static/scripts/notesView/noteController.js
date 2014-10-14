@@ -43,6 +43,7 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         $http.post('/editNote', {
             "note_id" : $scope.m.editingNote,
             "text" : $scope.m.noteText,
+            "visibility" : $scope.m.visibility,
             "difficult" : $scope.m.difficult,
             "unclear" : $scope.m.unclear
         }).success(function(data, status, headers, config) {
@@ -59,6 +60,11 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         $scope.m.noteText = note.content;
         $scope.m.showEditor = true;
         $scope.m.difficult = note.difficult;
+        if (note.private) {
+            $scope.m.visibility = 'justme';
+        } else {
+            $scope.m.visibility = 'everyone';
+        }
         $scope.m.unclear = note.unclear;
         $scope.focusArea = true;
     }

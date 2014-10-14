@@ -80,7 +80,6 @@
                     </div>
                     <textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
                     <div>
-                        <div ng-show="m.editingNote === -1">
                         Show note to:
                         <label>
                             <input type="radio" ng-model="m.visibility" value="everyone"> Everyone (anonymously)
@@ -88,7 +87,6 @@
                         <label>
                             <input type="radio" ng-model="m.visibility" value="justme"> Just me
                         </label>
-                        </div>
                         <div class="tags">
                             <label>
                                 <input type="checkbox" ng-model="m.difficult"> The text is difficult to understand

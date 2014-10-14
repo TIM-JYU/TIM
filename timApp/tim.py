@@ -486,6 +486,7 @@ def editNote():
     jsondata = request.get_json()
     noteText = jsondata['text']
     noteId = jsondata['note_id']
+    visibility = jsondata['visibility']
     tags = []
     for tag in KNOWN_TAGS:
         if jsondata[tag]:
@@ -493,6 +494,10 @@ def editNote():
     timdb = getTimDb()
     verifyEditAccess(noteId)
     timdb.notes.modifyNote(noteId, noteText, tags)
+    if visibility == 'everyone':
+        timdb.users.grantViewAccess(0, noteId)
+    else:
+        timdb.users.removeViewAccess(0, noteId)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
