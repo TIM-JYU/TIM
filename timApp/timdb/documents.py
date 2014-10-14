@@ -31,7 +31,7 @@ class Documents(TimDbBase):
         """
 
         assert self.documentExists(document_id), 'document does not exist: %r' % document_id
-
+        self.ensureCached(document_id)
         response = self.ec.addBlock(document_id, new_block_index, content)
         version = self.__handleModifyResponse(document_id,
                                               response,
@@ -136,6 +136,7 @@ class Documents(TimDbBase):
         :param par_id: The index of the paragraph in the document that should be deleted.
         """
 
+        self.ensureCached(document_id)
         response = self.ec.deleteBlock(document_id, par_id)
         version = self.__handleModifyResponse(document_id,
                                               response,
@@ -468,7 +469,7 @@ class Documents(TimDbBase):
         """
 
         assert self.documentExists(document_id), 'document does not exist: ' + document_id
-
+        self.ensureCached(document_id)
         response = self.ec.modifyBlock(document_id, block_id, new_content)
 
         version = self.__handleModifyResponse(document_id,
