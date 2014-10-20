@@ -629,25 +629,33 @@ def loginWithKorppi():
         randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = randomHex
     url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
-    r = requests.get(url, params={'request': session['appcookie']})
+    r = requests.get(url, params={'request': session['appcookie']}, verify=True)
     if r.status_code != 200:
         return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
                                                    'Try again later.'), 503
-    userName = r.text
-    if not userName:
+    korppiResponse = r.text
+    if not korppiResponse:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
-    
+    pieces = (korppiResponse + "\n\n").split('\n')
+    userName = pieces[0]
+    realName = pieces[1]
+    email = pieces[2]
+
     timdb = getTimDb()
     userId = timdb.users.getUserByName(userName)
     
     if userId is None:
-        uid = timdb.users.createUser(userName)
+        uid = timdb.users.createUser(userName, realName, email)
         gid = timdb.users.createUserGroup(userName)
         timdb.users.addUserToGroup(gid, uid)
         userId = uid
-        print('New user from Korppi: ' + userName)
+    else:
+        if realName:
+            timdb.users.updateUser(userId, userName, realName, email)
     session['user_id'] = userId
     session['user_name'] = userName
+    session['real_name'] = realName
+    session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
 

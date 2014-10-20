@@ -5,7 +5,7 @@
     <li>{{ message }}</li> {% endfor %}
 </ul>
 {% endif %} {% endwith %} {% if session.user_id %}
-<p>Logged in as: {{session.user_name}}</p>
+<p>Logged in as: {{session.real_name}} ({{session.user_name}})</p>
 <form method="POST" action="/logout">
     <input type="submit" value="Logout">
 </form>

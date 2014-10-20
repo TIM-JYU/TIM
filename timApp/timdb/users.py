@@ -22,22 +22,39 @@ class Users(TimDbBase):
         return 0
 
     @contract
-    def createUser(self, name: 'str') -> 'int':
+    def createUser(self, name: 'str', real_name: 'str', email: 'str') -> 'int':
         """Creates a new user with the specified name.
         
+        :param email: The email address of the user.
+        :param real_name: The real name of the user.
         :param name: The name of the user to be created.
         :returns: The id of the newly created user.
         """
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO User (name) VALUES (?)', [name])
+        cursor.execute('INSERT INTO User (name, real_name, email) VALUES (?, ?, ?)', [name, real_name, email])
         self.db.commit()
         user_id = cursor.lastrowid
         return user_id
+
+    def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str'):
+        """Updates user information.
+
+        :param user_id: The id of the user to be updated.
+        :param name: The username of the user.
+        :param real_name: The real name of the user.
+        :param email: The email of the user.
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute('UPDATE User SET name = ?, real_name = ?, email = ? WHERE id = ?',
+                       [name, real_name, email, user_id])
+        self.db.commit()
 
     @contract
     def createUserGroup(self, name: 'str') -> 'int':
         """Creates a new user group.
         
+        :param name: The name of the user group.
         :returns: The id of the created user group.
         """
         cursor = self.db.cursor()
@@ -102,6 +119,7 @@ class Users(TimDbBase):
     def getUser(self, user_id: 'int') -> 'row':
         """Gets the user with the specified id.
         
+        :param user_id:
         :returns: An sqlite3 row object representing the user. Columns: id, name.
         """
 
@@ -216,6 +234,8 @@ class Users(TimDbBase):
     def userHasViewAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user has view access to the specified block.
         
+        :param user_id:
+        :param block_id:
         :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
         """
 
@@ -240,6 +260,8 @@ class Users(TimDbBase):
     def userHasEditAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user has edit access to the specified block.
         
+        :param user_id:
+        :param block_id:
         :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
         """
 
@@ -264,6 +286,8 @@ class Users(TimDbBase):
     def userIsOwner(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user belongs to the owners of the specified block.
         
+        :param user_id:
+        :param block_id:
         :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
         """
         cursor = self.db.cursor()
@@ -279,6 +303,12 @@ class Users(TimDbBase):
 
     @contract
     def userGroupHasViewAccess(self, user_group_id: 'int', block_id: 'int') -> 'bool':
+        """
+
+        :param user_group_id:
+        :param block_id:
+        :return:
+        """
         cursor = self.db.cursor()
         cursor.execute("""SELECT id from UserGroup where id == ?
                           AND id IN
