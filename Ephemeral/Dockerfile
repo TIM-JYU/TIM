@@ -15,11 +15,13 @@ run cp /root/.cabal/bin/happy /usr/bin
 run cp /root/.cabal/bin/alex /usr/bin
 
 add Ephemeral.cabal /Ephemeral/
+
+run cd /Ephemeral && cabal install --only-dependencies
+
 add EphemeralPrelude.hs /Ephemeral/
 add Setup.hs /Ephemeral/
 add Simplistic.hs /Ephemeral/
 
-run cd /Ephemeral && cabal install --only-dependencies
 run cd /Ephemeral && cabal configure
 run cd /Ephemeral && cabal build
 
