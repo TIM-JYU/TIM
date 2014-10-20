@@ -68,7 +68,7 @@ box x = [x]
 newtype State = State (AtomicLRU DocID Doc)
 
 initialize :: IO State 
-initialize = newAtomicLRU (Just 200) >>= return . State
+initialize = newAtomicLRU (Just 10000) >>= return . State
 
 -- Diff Handling
 
