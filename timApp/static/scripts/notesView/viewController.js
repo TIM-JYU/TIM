@@ -18,11 +18,11 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             }
 
             for (var i = 0; i < noteCount; i++) {
-                if (data[i].specifier < $scope.paragraphs.length) {
-                    var par = $scope.paragraphs[data[i].specifier];
+                if (data[i].par_index < $scope.paragraphs.length) {
+                    var par = $scope.paragraphs[data[i].par_index];
                     par.notes.push(data[i]);
                     $scope.$apply();
-                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, "par-" + data[i].specifier]);
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, "par-" + data[i].par_index]);
                 }
             }
         }).error(function(data, status, headers, config) {
@@ -42,8 +42,8 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
  // alert(readCount);
             for (var i = 0; i < readCount; i++) {
                 var readPar = data[i];
-                if (readPar.specifier < $scope.paragraphs.length) {
-                    var par = $scope.paragraphs[readPar.specifier];
+                if (readPar.par_index < $scope.paragraphs.length) {
+                    var par = $scope.paragraphs[readPar.par_index];
                     par.readStatus = readPar.status;
                 }
             }

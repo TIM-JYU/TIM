@@ -369,59 +369,67 @@ class Documents(TimDbBase):
                          'Document %d: %s' % (document_id.id, msg), self.current_user_name)
 
     @contract
-    def __updateNoteIndexesFast(self, block_id: 'int', mod_index: 'int', mod_count: 'int'):
-        cursor = self.db.cursor()
-        cursor.execute("""UPDATE BlockRelation
-                          SET parent_block_specifier = parent_block_specifier + ?
-                          WHERE parent_block_id = ?
-                          AND   parent_block_specifier >= ?""", [mod_count, block_id, mod_index])
-        self.db.commit()
-
     def ensureCached(self, document_id: 'DocIdentifier'):
         self.getDocumentAsBlocks(document_id)
 
     @contract
-    def __updateNoteIndexes(self, old_document_id: 'DocIdentifier', new_document_id: 'DocIdentifier',
-                            map_all: 'bool'=True):
-        """Updates the indexes for notes. This should be called after the document has been modified on Ephemeral
-        but before the change is committed to Git.
-        
-        :param old_document_id: The id of the old document.
-        :param new_document_id: The id of the new document.
-        
-        """
+    def __updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier'):
+        print("updateParMappings called for document id " + str(old_document_id.id))
+        print("Old version is: " + old_document_id.hash)
+        print("New version is: " + new_document_id.hash)
 
         cursor = self.db.cursor()
-        cursor.execute(
-            'SELECT parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id FROM BlockRelation WHERE parent_block_id = ?',
-            [new_document_id.id])
-        notes = self.resultAsDictionary(cursor)
+        cursor.execute("select par_index from ParMappings where doc_id = ? and doc_ver = ? order by par_index",
+                        [old_document_id.id, old_document_id.hash])
+        old_pars = self.resultAsDictionary(cursor)
 
-        self.ensureCached(old_document_id)
+        par_count = len(self.getDocumentAsBlocks(new_document_id))
+        print("par_count = " + str(par_count))
 
-        if map_all:
-            mapping = self.ec.getBlockMapping(new_document_id, old_document_id)
-        else:
-            mapping = []
-            for note in notes:
-                retval = self.ec.getSingleBlockMapping(old_document_id, new_document_id, note['parent_block_specifier'])
-                val = max(retval, key=lambda x: x[0])
-                mapping.append([note['parent_block_specifier'], val[1], val[0]])
-        map_dict = {}
-        for m in mapping:
-            map_dict[m[0]] = m[1]
+        mappings = []
+        invmap = {}
+        removemaps = []
+        for p in old_pars:
+            affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, p['par_index'])
+            [affinity, newindex] = max(affinities, key=lambda x: x[0])
 
-        cursor.execute('DELETE FROM BlockRelation WHERE parent_block_id = ?', [new_document_id.id])
+            if newindex in invmap:
+                # There is an existing mapping for the same index in the new document
+                prevmap = mappings[invmap[newindex]]
+                if affinity > prevmap[2]:
+                    # This one is a better match
+                    removemaps.append(invmap[newindex])
+                else:
+                    # This one is a bad match, do not add
+                    continue
 
-        for note in notes:
-            if note['parent_block_specifier'] in map_dict:
-                note['parent_block_specifier'] = map_dict[note['parent_block_specifier']]
+            mappings.append([p['par_index'], newindex, affinity])
+            invmap[newindex] = len(mappings) - 1
 
-        for note in notes:
+        # Remove mappings for bad matches
+        for i in range(len(removemaps) - 1, -1, -1):
+            del mappings[i]
+
+        #print(mappings)
+
+        mapindex = 0
+        for i in range(0, par_count):
             cursor.execute(
-                'INSERT INTO BlockRelation (parent_block_specifier,parent_block_id,Block_id,parent_block_revision_id) VALUES (?,?,?,?)',
-                [note['parent_block_specifier'], note['parent_block_id'], note['Block_id'],
-                 note['parent_block_revision_id']])
+                'insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified) values (?, ?, ?, NULL, NULL, NULL)',
+                [old_document_id.id, new_document_id.hash, i])
+            print("Paragraph %d, mapIndex = %d" % (i, mapindex))
+
+            if mapindex < len(mappings) and i >= mappings[mapindex][0]:
+                m = mappings[mapindex]
+                if i == m[0]:
+                    # Existing mapping
+                    print("Paragraph %s: maxAffinity = %s, to old paragraph %s" % (str(m[1]), str(m[2]), str(m[0])))
+                    cursor.execute(
+                        """update ParMappings set new_ver = ?, new_index = ?, modified = ?
+                           where doc_id = ? and doc_ver = ? and par_index = ?""",
+                    [new_document_id.hash, m[1], str(m[2] < 1), old_document_id.id, old_document_id.hash, m[0]])
+                mapindex += 1
+
         self.db.commit()
 
     @contract
@@ -440,7 +448,6 @@ class Documents(TimDbBase):
 
         new_id = DocIdentifier(document_id.id, response['new_id'])
         self.ec.renameDocumentStr(response['new_id'], str(new_id))
-        self.__updateNoteIndexesFast(document_id.id, mod_index, mod_count)
         new_content = self.ec.getDocumentFullText(new_id)
 
         try:
@@ -448,6 +455,7 @@ class Documents(TimDbBase):
         except NothingToCommitException:
             return document_id.hash
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
+        self.__updateParMappings(document_id, DocIdentifier(new_id.id, version))
         return version
 
     @contract
@@ -505,5 +513,5 @@ class Documents(TimDbBase):
             return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.__updateNoteIndexes(document_id, new_id, map_all=True)
+        self.__updateParMappings(document_id, new_id)
         return new_id

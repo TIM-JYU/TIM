@@ -21,6 +21,12 @@ DROP TABLE IF EXISTS UserAnswer;
 
 DROP TABLE IF EXISTS AnswerTag;
 
+DROP TABLE IF EXISTS ParMappings;
+
+DROP TABLE IF EXISTS UserNotes;
+
+DROP TABLE IF EXISTS ReadParagraphs;
+
 CREATE TABLE Answer (
 id INTEGER NOT NULL,
 task_id VARCHAR(255) NOT NULL,
@@ -205,3 +211,58 @@ CONSTRAINT BlockEditAccess_id
 		ON UPDATE CASCADE
 )
 ;
+
+CREATE TABLE ParMappings(
+doc_id INTEGER NOT NULL,
+doc_ver INTEGER NOT NULL,
+par_index INTEGER NOT NULL,
+new_ver INTEGER NULL,
+new_index INTEGER NULL,
+modified BOOLEAN NULL,
+
+CONSTRAINT ParMappings_PK
+	PRIMARY KEY (doc_id, doc_ver, par_index)
+)
+;
+
+
+CREATE TABLE UserNotes(
+user_id	INTEGER NOT NULL,
+group_id INTEGER NOT NULL,
+doc_id INTEGER NOT NULL,
+doc_ver INTEGER NOT NULL,
+par_index INTEGER NOT NULL,
+note_index INTEGER NOT NULL,
+content VARCHAR(255) NOT NULL,
+created TIMESTAMP NOT NULL,
+modified TIMESTAMP NULL,
+access VARCHAR(20) NOT NULL,
+tags VARCHAR(20) NOT NULL,
+
+CONSTRAINT UserNotes_PK
+	PRIMARY KEY (user_id, doc_id, doc_ver, par_index, note_index),
+
+CONSTRAINT UserNotes_id
+	FOREIGN KEY (doc_id, doc_ver, par_index)
+	REFERENCES ParMappings (doc_id, doc_ver, par_index)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT
+);
+
+
+CREATE TABLE ReadParagraphs(
+user_id	INTEGER NOT NULL,
+doc_id INTEGER NOT NULL,
+doc_ver INTEGER NOT NULL,
+par_index INTEGER NOT NULL,
+timestamp TIMESTAMP NOT NULL,
+
+CONSTRAINT ReadParagraphs_PK
+	PRIMARY KEY (user_id, doc_id, doc_ver, par_index),
+
+CONSTRAINT ReadParagraphs_id
+	FOREIGN KEY (doc_id, doc_ver, par_index)
+	REFERENCES ParMappings (doc_id, doc_ver, par_index)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT
+);

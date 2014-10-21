@@ -116,6 +116,17 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)[0]
 
     @contract
+    def userExists(self, user_id : 'int') -> 'bool':
+        """Checks if the user with the specified id. exists
+
+        :returns: Boolean.
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute('select id from User where id = ?', [user_id])
+        return cursor.fetchone() is not None
+
+    @contract
     def getUser(self, user_id: 'int') -> 'row':
         """Gets the user with the specified id.
         

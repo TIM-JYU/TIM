@@ -101,3 +101,21 @@ def gitCommand(files_root_path: 'str', command: 'str'):
     finally:
         os.chdir(cwd)
     return output, err
+
+@contract
+def getFileVersion(files_root_path : 'str', file_path : 'str') -> 'int':
+    """
+    Gets the file version as an integer, starting from 1 and
+    incrementing on every commit to that file.
+    :return: Version number
+    """
+    cwd = os.getcwd()
+    os.chdir(files_root_path)
+    try:
+        output, err = gitpylib.common.safe_git_call('log --oneline ' + file_path)
+    except Exception:
+        raise TimDbException('Git call failed')
+    finally:
+        os.chdir(cwd)
+    return output.count('\n')
+
