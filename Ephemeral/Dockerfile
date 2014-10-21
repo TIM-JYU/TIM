@@ -11,8 +11,8 @@ env LANG en_US.UTF-8
 
 run cabal update
 run cabal install happy alex
-run cp /root/.cabal/bin/happy /usr/bin
-run cp /root/.cabal/bin/alex /usr/bin
+run cp /.cabal/bin/happy /usr/bin
+run cp /.cabal/bin/alex /usr/bin
 
 add Ephemeral.cabal /Ephemeral/
 
