@@ -25,6 +25,7 @@ import collections
 from containerLink import PluginException
 from bs4 import UnicodeDammit
 from werkzeug.contrib.profiler import ProfilerMiddleware
+import re
 
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
@@ -686,6 +687,31 @@ def loginWithKorppi():
     session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
+
+#@app.route("/testuser")
+def testLogin():
+    userName = ".test"
+    if request.args.get('name'):
+        if re.match('^[\w-]+$', request.args.get('name')) is None:
+            return "User name can only contain alphanumeric characters."
+        userName = "." + request.args.get('name')
+    timdb = getTimDb()
+    userId = timdb.users.getUserByName(userName)
+    realName = userName[1:]
+    email = "none"
+
+    if userId is None:
+        uid = timdb.users.createUser(userName, realName, email)
+        gid = timdb.users.createUserGroup(userName)
+        timdb.users.addUserToGroup(gid, uid)
+        userId = uid
+        print('New test user: ' + userName)
+    session['user_id'] = userId
+    session['user_name'] = userName
+    session['real_name'] = "Test user " + realName
+    session['email'] = email
+    flash('You were successfully logged in.', 'loginmsg')
+    return redirect(url_for('indexPage'))
 
 
 def startApp():
