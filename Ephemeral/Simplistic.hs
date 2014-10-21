@@ -52,13 +52,14 @@ convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toSt
               PDC.Pandoc _ blocks -> Doc . Seq.fromList .  map convertBlock $ blocks
             where 
                 normaliseCRLF  = BS.replace "\r\n" ("\n"::BS.ByteString)
-                opts = PDC.def{PDC.writerHTMLMathMethod=PDC.MathJax 
+                htmlOpts = PDC.def{PDC.writerHTMLMathMethod=PDC.MathJax 
                             "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"}
+                markdownOpts = PDC.def{PDC.writerSetextHeaders=False}
                 -- html_opts =  PDC.def{PDC.writerExtensions = DSB.singleton PDC_Opt.Ext_markdown_in_html_blocks}
                 convertBlock t = let  pdc = PDC.Pandoc mempty . box $ t
                                  in Block
-                                     (T.pack       . PDC.writeMarkdown PDC.def $ pdc) -- Laajennos pois: html_optsin tilalle PDC.def
-                                     (renderHtml   . PDC.writeHtml    opts     $ pdc)
+                                     (T.pack       . PDC.writeMarkdown  markdownOpts  $ pdc) -- Laajennos pois: html_optsin tilalle PDC.def
+                                     (renderHtml   . PDC.writeHtml      htmlOpts      $ pdc)
                                      (Set.fromList . map T.pack . words . PDC.writeMarkdown PDC.def $ pdc)
                             
 
