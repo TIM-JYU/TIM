@@ -121,6 +121,9 @@ class Documents(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.DOCUMENT, document_id.id])
+        cursor.execute('DELETE FROM ParMappings where doc_id = ?', [document_id.id])
+        cursor.execute('DELETE FROM ReadParagraphs where doc_id = ?', [document_id.id])
+        cursor.execute('DELETE FROM UserNotes where doc_id = ?', [document_id.id])
         self.db.commit()
 
         os.remove(self.getDocumentPath(document_id))
@@ -373,18 +376,96 @@ class Documents(TimDbBase):
         self.getDocumentAsBlocks(document_id)
 
     @contract
-    def __updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier'):
-        print("updateParMappings called for document id " + str(old_document_id.id))
+    def addEmptyParMapping(self, document_id : 'DocIdentifier', paragraph_index : 'int'):
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+            select par_index from ParMappings
+            where doc_id = ? and doc_ver = ? and par_index = ?
+            """,
+            [document_id.id, document_id.hash, paragraph_index])
+
+        if cursor.fetchone() is not None:
+            print("Mapping already exists - document {0} version {1} paragraph {2}".format(
+            document_id.id, document_id.hash, paragraph_index))
+            return
+
+        print("Adding a paragraph mapping for document {0} version {1} paragraph {2}".format(
+            document_id.id, document_id.hash, paragraph_index))
+
+        cursor.execute(
+            """
+            insert into ParMappings (doc_id, doc_ver, par_index) values (?, ?, ?)
+            """,
+            [document_id.id, document_id.hash, paragraph_index])
+
+        self.db.commit()
+
+    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0):
+        end_str = str(end_index) if end_index >= 0 else 'end';
+        end2_str = str(end_index + offset) if end_index >= 0 else 'end + {0}'.format(offset);
+
+        print("copyParMappings: [{0}, {1}[ -> [{2}, {3}[".format(
+            start_index, end_str, start_index + offset, end2_str))
         print("Old version is: " + old_document_id.hash)
         print("New version is: " + new_document_id.hash)
 
         cursor = self.db.cursor()
-        cursor.execute("select par_index from ParMappings where doc_id = ? and doc_ver = ? order by par_index",
-                        [old_document_id.id, old_document_id.hash])
+
+        if end_index < 0:
+            cursor.execute(
+                """
+                select par_index from ParMappings
+                where doc_id = ? and doc_ver = ? and par_index >= ?
+                """,
+                [old_document_id.id, old_document_id.hash, start_index])
+        else:
+            cursor.execute(
+                """
+                select par_index from ParMappings
+                where doc_id = ? and doc_ver = ? and par_index >= ? and par_index < ?
+                """,
+                [old_document_id.id, old_document_id.hash, start_index, end_index])
+
         old_pars = self.resultAsDictionary(cursor)
 
-        par_count = len(self.getDocumentAsBlocks(new_document_id))
-        print("par_count = " + str(par_count))
+        for p in old_pars:
+            index = int(p['par_index'])
+            new_index = index + offset
+            print("I am moving paragraph {0} to index {1}".format(index, new_index))
+            cursor.execute(
+                """
+                update ParMappings set new_ver = ?, new_index = ?, modified = 'False'
+                where doc_id = ? and doc_ver = ? and par_index = ?
+                """,
+                [new_document_id.hash, new_index, old_document_id.id, old_document_id.hash, index])
+            cursor.execute(
+                """
+                insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+                values (?, ?, ?, NULL, NULL, NULL)
+                """,
+                [old_document_id.id, new_document_id.hash, new_index])
+
+        self.db.commit()
+
+    @contract
+    def __updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0):
+        print("updateParMappings called for document id " + str(old_document_id.id))
+        print("New version is: " + new_document_id.hash)
+
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            select par_index from ParMappings
+            where doc_id = ? and doc_ver = ? and par_index >= ?
+            order by par_index
+            """,
+            [old_document_id.id, old_document_id.hash, start_index])
+        old_pars = self.resultAsDictionary(cursor)
+
+        #par_count = len(self.getDocumentAsBlocks(new_document_id))
+        #print("par_count = " + str(par_count))
 
         mappings = []
         invmap = {}
@@ -412,25 +493,104 @@ class Documents(TimDbBase):
 
         #print(mappings)
 
-        mapindex = 0
-        for i in range(0, par_count):
+        for m in mappings:
+            print("Paragraph %s: maxAffinity = %s, to old paragraph %s" % (str(m[1]), str(m[2]), str(m[0])))
             cursor.execute(
-                'insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified) values (?, ?, ?, NULL, NULL, NULL)',
-                [old_document_id.id, new_document_id.hash, i])
-            print("Paragraph %d, mapIndex = %d" % (i, mapindex))
+                """
+                update ParMappings set new_ver = ?, new_index = ?, modified = ?
+                where doc_id = ? and doc_ver = ? and par_index = ?""",
+                [new_document_id.hash, m[1], str(m[2] < 1), old_document_id.id, old_document_id.hash, m[0]])
+            cursor.execute(
+                """
+                insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+                values (?, ?, ?, NULL, NULL, NULL)
+                """,
+                [old_document_id.id, new_document_id.hash, m[1]])
 
-            if mapindex < len(mappings) and i >= mappings[mapindex][0]:
-                m = mappings[mapindex]
-                if i == m[0]:
-                    # Existing mapping
-                    print("Paragraph %s: maxAffinity = %s, to old paragraph %s" % (str(m[1]), str(m[2]), str(m[0])))
-                    cursor.execute(
-                        """update ParMappings set new_ver = ?, new_index = ?, modified = ?
-                           where doc_id = ? and doc_ver = ? and par_index = ?""",
-                    [new_document_id.hash, m[1], str(m[2] < 1), old_document_id.id, old_document_id.hash, m[0]])
-                mapindex += 1
+
+        # mapindex = 0
+        # for i in range(0, par_count):
+        #     cursor.execute(
+        #         'insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified) values (?, ?, ?, NULL, NULL, NULL)',
+        #         [old_document_id.id, new_document_id.hash, i])
+        #     print("Paragraph %d, mapIndex = %d" % (i, mapindex))
+        #
+        #     if mapindex < len(mappings) and i >= mappings[mapindex][0]:
+        #         m = mappings[mapindex]
+        #         if i == m[0]:
+        #             # Existing mapping
+        #             print("Paragraph %s: maxAffinity = %s, to old paragraph %s" % (str(m[1]), str(m[2]), str(m[0])))
+        #             cursor.execute(
+        #                 """update ParMappings set new_ver = ?, new_index = ?, modified = ?
+        #                    where doc_id = ? and doc_ver = ? and par_index = ?""",
+        #             [new_document_id.hash, m[1], str(m[2] < 1), old_document_id.id, old_document_id.hash, m[0]])
+        #         mapindex += 1
 
         self.db.commit()
+
+    @contract
+    def __updateParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int' = -1):
+        print("updateParMapping called for document id {0} paragraph {1}".format(old_document_id.id, par_index))
+        print("New version is: " + new_document_id.hash)
+
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            select par_index from ParMappings
+            where doc_id = ? and doc_ver = ? and par_index = ?
+            """,
+            [old_document_id.id, old_document_id.hash, par_index])
+
+        if cursor.fetchone() is None:
+            # Nothing to update
+            return
+
+        if new_index == -1:
+            new_index = par_index
+
+        # TODO: this could be optimized by getting only a 1:1 affinity instead of 1:n
+        affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, par_index)
+        affinity = affinities[new_index]
+
+        print("Paragraph {0}, to old paragraph {1}".format(par_index, new_index))
+
+        cursor.execute(
+            """
+            update ParMappings set new_ver = ?, new_index = ?, modified = ?
+            where doc_id = ? and doc_ver = ? and par_index = ?
+            """,
+            [new_document_id.hash, new_index, str(affinity < 1),
+             old_document_id.id, old_document_id.hash, par_index])
+
+        cursor.execute(
+            """
+            insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+            values (?, ?, ?, NULL, NULL, NULL)
+            """,
+            [old_document_id.id, new_document_id.hash, par_index])
+
+        self.db.commit()
+
+    @contract
+    def __deleteParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int'):
+        print("deleteParMapping called for document id {0} paragraph {1}".format(old_document_id.id, par_index))
+        print("New version is: " + new_document_id.hash)
+
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            select par_index from ParMappings
+            where doc_id = ? and doc_ver = ? and par_index = ?
+            """,
+            [old_document_id.id, old_document_id.hash, par_index])
+
+        if cursor.fetchone() is not None:
+            print("Deleting mapping for paragraph {0}".format(par_index))
+            cursor.execute(
+                """delete from ParMappings
+                   where doc_id = ? and doc_ver = ? and par_index = ?""",
+                [old_document_id.id, old_document_id.hash, par_index])
+            self.db.commit()
 
     @contract
     def __handleModifyResponse(self, document_id: 'DocIdentifier',
@@ -455,7 +615,30 @@ class Documents(TimDbBase):
         except NothingToCommitException:
             return document_id.hash
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
-        self.__updateParMappings(document_id, DocIdentifier(new_id.id, version))
+        #self.__updateParMappings(document_id, DocIdentifier(new_id.id, version))
+
+        new_id = DocIdentifier(new_id.id, version)
+        self.__copyParMappings(document_id, new_id, start_index = 0, end_index = mod_index)
+
+        if message[:3] == 'Add':
+            # Added new paragraphs
+            print("Täällä ollaan")
+            self.__copyParMappings(
+                document_id, new_id,
+                start_index = mod_index + mod_count,
+                offset = mod_count
+            )
+        elif mod_count > 0:
+            # Modified existing paragraphs
+            for i in range(mod_index, mod_index + mod_count):
+                self.__updateParMapping(document_id, new_id, start_index = i)
+            self.__copyParMappings(document_id, new_id, start_index = mod_index + mod_count)
+        elif mod_count < 0:
+            # Removed paragraphs
+            for i in range(mod_index, mod_index - mod_count):
+                self.__deleteParMapping(document_id, new_id, i)
+            self.__updateParMappings(document_id, new_id, start_index = mod_index)
+
         return version
 
     @contract

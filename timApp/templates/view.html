@@ -57,7 +57,7 @@
                 <div class="notes"> 
                     <div ng-show="par.notes.length > 0" class="note" ng-class="{difficult: note.difficult, unclear: note.unclear, private: note.private}" ng-repeat="note in par.notes">
                         <button ng-show="false && note.editable && !m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
-                        <div ng-bind-html="note.htmlContent" ng-swipe-left="editButtonToggled(note)" ng-dblclick="editButtonToggled(note)"></div>
+                        <div ng-bind-html="note.content" ng-swipe-left="editButtonToggled(note)" ng-dblclick="editButtonToggled(note)"></div>
                     </div>
                 </div>
                 {% if session.user_id %}

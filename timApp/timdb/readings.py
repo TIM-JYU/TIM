@@ -23,7 +23,10 @@ class Readings(TimDbBase):
         cursor = self.db.cursor()
 
         cursor.execute(
-            'select par_index, doc_ver from ReadParagraphs where user_id = ? and doc_id = ?',
+            """
+            select par_index, doc_ver from ReadParagraphs
+            where user_id = ? and doc_id = ?
+            """,
             [user_id, doc_id])
         readings = self.resultAsDictionary(cursor)
 
@@ -83,7 +86,13 @@ class Readings(TimDbBase):
                 if modified:
                     reading['status'] = 'modified'
                 else:
+                    # No changes
                     reading['doc_ver'] = current_ver
+                    cursor.execute(
+                        """
+                        update ReadParagraphs set doc_ver = ?, par_index = ?
+                        where doc_id = ? and doc_ver = ? and par_index = ?
+                        """, [current_ver, current_par, doc_id, read_ver, read_par])
 
         if db_modified:
             self.db.commit()

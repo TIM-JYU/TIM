@@ -495,6 +495,7 @@ def postNote():
     timdb = getTimDb()
     user_id = getCurrentUserId()
     group_id = timdb.users.getUserGroups(user_id)[0]['id']
+    timdb.documents.addEmptyParMapping(DocIdentifier(doc_id, doc_ver), paragraph_id)
     timdb.notes.addNote(user_id, group_id, doc_id, doc_ver, int(paragraph_id), noteText, visibility, tags)
     #TODO: Handle error.
     return "Success"
@@ -567,6 +568,7 @@ def setReadParagraph(doc_id, specifier):
     doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
     if len(blocks) <= specifier:
         return jsonResponse({'error' : 'Invalid paragraph specifier.'}, 400)
+    timdb.documents.addEmptyParMapping(DocIdentifier(doc_id, doc_ver), specifier)
     timdb.readings.setAsRead(getCurrentUserId(), doc_id, doc_ver, specifier)
     return "Success"
 
@@ -688,7 +690,7 @@ def loginWithKorppi():
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
 
-#@app.route("/testuser")
+@app.route("/testuser")
 def testLogin():
     userName = ".test"
     if request.args.get('name'):
