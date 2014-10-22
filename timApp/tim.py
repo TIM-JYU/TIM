@@ -638,7 +638,8 @@ def loginWithKorppi():
     if r.status_code != 200:
         return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
                                                    'Try again later.'), 503
-    korppiResponse = r.text
+    korppiResponse = r.text.strip()
+    #print("korppiresponse is: '{}'".format(korppiResponse))
     if not korppiResponse:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
     pieces = (korppiResponse + "\n\n").split('\n')
