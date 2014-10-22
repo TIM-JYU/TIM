@@ -1,15 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>{{docName}} - TIM</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular-sanitize.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
+{% extends "base.html" %}
+{% block title %}{{docName}}{% endblock %}
+{% block head %}
+{{ super() }}
 <script src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
 
 {% for script in js %}
@@ -22,7 +14,7 @@
                                  {% for dep in jsMods %}
                                  "{{ dep|safe}}",
                                  {% endfor %}
-
+                                'ngTouch'
                                  ]);
 
                              var EditApp = angular.module("controller", modules );
@@ -49,8 +41,9 @@
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
 </script> 
-</head>
-<body ng-app="timApp" ng-controller="ViewCtrl">
+{% endblock %}
+{% block content %}
+<div ng-app="timApp" ng-controller="ViewCtrl">
 <div class="viewLogin">{% include 'loginlogout.html' %}</div>
     <h1>{{docName}}</h1>
     <div class="material">
@@ -61,10 +54,10 @@
             <div style="" class="content {{ '{{ par.par }}' }}" compile ng-bind-html="par.html | to_trusted"></div>
 
             <div ng-controller="NoteCtrl">
-                <div class="notes">
+                <div class="notes"> 
                     <div ng-show="par.notes.length > 0" class="note" ng-class="{difficult: note.difficult, unclear: note.unclear, private: note.private}" ng-repeat="note in par.notes">
-                        <button ng-show="note.editable && !m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
-                        <div ng-bind-html="note.content"></div>
+                        <button ng-show="false && note.editable && !m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
+                        <div ng-bind-html="note.htmlContent" ng-swipe-left="editButtonToggled(note)" ng-dblclick="editButtonToggled(note)"></div>
                     </div>
                 </div>
                 {% if session.user_id %}
@@ -76,16 +69,13 @@
                     <div class="editButtonArea">
                         <button ng-disabled="!m.noteText" ng-show="m.showEditor" class="parSaveButton" ng-click="saveButtonToggled()"></button>
                         <button ng-show="m.showEditor" class="cancelButton" ng-click="m.showEditor = false"></button>
-                        <button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}}, par)" class="deleteButton">Delete</button>
+                        <button ng-show="m.editingNote !== -1" ng-click="deleteNote({{docID|e}})" class="deleteButton">Delete</button>
                     </div>
                     <textarea class="noteeditor" ng-model="m.noteText" focus-me="focusArea"></textarea>
                     <div>
                         Show note to:
                         <label>
                             <input type="radio" ng-model="m.visibility" value="everyone"> Everyone (anonymously)
-                        </label>
-                        <label>
-                            <input type="radio" ng-model="m.visibility" value="group"> Group
                         </label>
                         <label>
                             <input type="radio" ng-model="m.visibility" value="justme"> Just me
@@ -104,5 +94,5 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
