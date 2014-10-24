@@ -30,6 +30,11 @@ body {
     left: 2em;
 }
 
+.docEditor {
+    width: 100%;
+    height: 30em
+}
+
 /*=============================================*/
 /* Koeta kasata kaikki väreihin liittyvä tähän */
 /*=============================================*/

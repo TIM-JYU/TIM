@@ -114,8 +114,16 @@ var viewers = {{viewers|tojson|safe}};
             <div>
                 <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
                 <span ng-bind="progress"></span>
+                <button id="reset" type="reset" value="Reset">Clear</button>
             </div>
-            <button id="reset" type="reset" value="Reset">Clear</button>
+        </form>
+        <form class="uploadForm">
+            Edit the full document
+            <div>
+                <textarea class="docEditor" ng-model="fulltext"></textarea>
+                <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument(doc)">Save</button>
+                <span ng-show="saving">Saving...</span>
+            </div>
         </form>
         <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
         <div class="margin">

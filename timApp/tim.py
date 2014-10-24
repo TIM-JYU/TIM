@@ -118,6 +118,7 @@ def manage(doc_id):
     doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
     doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
     doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
+    doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, ''))
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
@@ -245,12 +246,23 @@ def updateDocument(doc_id, version):
         abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)
-    doc = request.files['file']
-    content = UnicodeDammit(doc.read()).unicode_markup
-    if not content:
+    newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
+    if version != newestVersion:
+        return jsonResponse({'message': 'The document has been modified by someone else. Please refresh the page.'},
+                            400)
+    if 'file' in request.files:
+        doc = request.files['file']
+        content = UnicodeDammit(doc.read()).unicode_markup
+    else:
+        json = request.get_json()
+        if not 'fulltext' in json:
+            return jsonResponse({'message': 'Malformed request - fulltext missing.'}, 400)
+        content = json['fulltext']
+
+    if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
     newId = timdb.documents.updateDocument(docId, content)
-    return jsonResponse({'version' : newId.hash})
+    return jsonResponse(timdb.documents.getDocumentVersions(doc_id))
 
 @app.route('/images/<int:image_id>/<image_filename>/')
 def getImage(image_id, image_filename):
