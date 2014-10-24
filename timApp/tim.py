@@ -252,7 +252,14 @@ def updateDocument(doc_id, version):
                             400)
     if 'file' in request.files:
         doc = request.files['file']
-        content = UnicodeDammit(doc.read()).unicode_markup
+        raw = doc.read()
+
+        # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
+        # so try the built-in function first.
+        try:
+            content = raw.decode('utf-8')
+        except UnicodeDecodeError:
+            content = UnicodeDammit(raw).unicode_markup
     else:
         json = request.get_json()
         if not 'fulltext' in json:
