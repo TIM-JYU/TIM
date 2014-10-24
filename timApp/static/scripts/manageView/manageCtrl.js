@@ -84,10 +84,6 @@ PermApp.controller("PermCtrl", [
             }
         };
 
-        sc.uploadedFile;
-        sc.progress;
-        sc.uploadInProgress;
-        sc.selectedFile = "";
         sc.onFileSelect = function (url, $files) {
             // $files: an array of files selected, each file has name, size,
             // and type.
@@ -103,13 +99,16 @@ PermApp.controller("PermCtrl", [
                     sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
                 }).success(function (data, status, headers, config) {
                     sc.doc.versions = data;
-                    sc.progress = 'Uploading... Done!';
-                    sc.uploadInProgress = false;
+                    $http.get('/download/' + sc.doc.id).success(function(data){
+                        sc.doc.fulltext = data;
+                        sc.fulltext = data;
+                        sc.progress = 'Uploading... Done!';
+                    })
                 }).error(function (data, status, headers, config) {
                     sc.progress = 'Error occurred: ' + data.message;
+                }).then(function () {
                     sc.uploadInProgress = false;
                 });
-                //
             }
         };
 
