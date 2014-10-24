@@ -21,7 +21,6 @@ PermApp.controller("PermCtrl", [
     '$http',
     '$upload',
     function (sc, $http, $upload) {
-        window.MYSCOPE = sc;
         sc.editors = editors;
         sc.viewers = viewers;
         sc.doc = doc;
