@@ -14,7 +14,7 @@
                                  {% for dep in jsMods %}
                                  "{{ dep|safe}}",
                                  {% endfor %}
-
+                                'ngTouch'
                                  ]);
 
                              var EditApp = angular.module("controller", modules );
@@ -51,10 +51,10 @@
             <div style="" class="content {{ '{{ par.par }}' }}" compile ng-bind-html="par.html | to_trusted"></div>
 
             <div ng-controller="NoteCtrl">
-                <div class="notes">
+                <div class="notes"> 
                     <div ng-show="par.notes.length > 0" class="note" ng-class="{difficult: note.difficult, unclear: note.unclear, private: note.private}" ng-repeat="note in par.notes">
-                        <button ng-show="note.editable && !m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
-                        <div ng-bind-html="note.htmlContent"></div>
+                        <button ng-show="false && note.editable && !m.showEditor" ng-click="editButtonToggled(note)" class="noteButton">Edit</button>
+                        <div ng-bind-html="note.htmlContent" ng-swipe-left="editButtonToggled(note)" ng-dblclick="editButtonToggled(note)"></div>
                     </div>
                 </div>
                 {% if session.user_id %}
