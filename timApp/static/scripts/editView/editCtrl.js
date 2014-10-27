@@ -191,7 +191,7 @@ EditApp.controller("ParCtrl", ['$scope',
                             editor.setTheme("ace/theme/eclipse");
                             editor.renderer.setPadding(10, 10, 10,10);
                             editor.getSession().setMode("ace/mode/markdown"); 
-                            editor.getSession().setUseWrapMode(true);
+                            editor.getSession().setUseWrapMode(false);
                             editor.getSession().setWrapLimitRange(0, 79);
                             editor.setOptions({maxLines:40, minLines:3});
                             $('.'+elem.par).get()[0].focus();
