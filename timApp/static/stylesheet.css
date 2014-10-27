@@ -643,6 +643,7 @@ a.anchor:hover {
 	border-radius: 15px;
 	text-align: left;
 	float: left;
+    resize: both;
 }
 
 .editorArea,  .noteEditorArea {
