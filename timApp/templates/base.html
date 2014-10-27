@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+        <script src="{{ url_for('static', filename='scripts/jquery-1.11.1.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/angular-file-upload-shim.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/angular/angular.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/angular/angular-sanitize.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/angular-file-upload.min.js') }}"></script>
+        <!--[if lt IE 9]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+        <link rel="stylesheet" href="style.css"/>
+        <title>{% block title %}{% endblock %} - TIM</title>
+    {% endblock %}
+</head>
+<body>
+{% block content %}{% endblock %}
+</body>
+</html>

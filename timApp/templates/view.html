@@ -1,15 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>{{docName}} - TIM</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular-sanitize.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
+{% extends "base.html" %}
+{% block title %}{{docName}}{% endblock %}
+{% block head %}
+{{ super() }}
 <script src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
 
 {% for script in js %}
@@ -39,9 +31,6 @@
 <link rel="stylesheet" href="{{cssFile}}">
 {% endfor %}
 
-<!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
 <script>
         // Data from jinja2 template
         var jsonDoc = JSON.parse({{text|tojson|safe}}); 
@@ -49,8 +38,9 @@
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
 </script> 
-</head>
-<body ng-app="timApp" ng-controller="ViewCtrl">
+{% endblock %}
+{% block content %}
+<div ng-app="timApp" ng-controller="ViewCtrl">
 <div class="viewLogin">{% include 'loginlogout.html' %}</div>
     <h1>{{docName}}</h1>
     <div class="material">
@@ -101,5 +91,5 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

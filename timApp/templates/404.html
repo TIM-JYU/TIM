@@ -1,20 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>TIM</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet"
-    href="{{url_for('static', filename='stylesheet.css')}}">
-
-<!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}404 Not found{% endblock %}
+{% block content %}
     <h1>404 Not found</h1>
     <p>The requested page was not found.</p>
     <p><a href="{{url_for('indexPage')}}">Return to the index page</a></p>
-</body>
-</html>
+{% endblock %}
