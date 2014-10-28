@@ -45,9 +45,6 @@
 {% endblock %}
 {% block content %}
 <div ng-app="timApp" ng-controller="ViewCtrl">
-<div class="viewLogin">{% include 'loginlogout.html' %}</div>
-    <h1>{{docName}}</h1>
-    <div class="material">
 
         <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 
@@ -95,5 +92,4 @@
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
