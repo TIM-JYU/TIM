@@ -1,3 +1,4 @@
+import json
 from contracts import contract, new_contract
 from timdb.timdbbase import TimDbBase
 import sqlite3
@@ -318,3 +319,24 @@ class Users(TimDbBase):
         result = cursor.fetchall()
         assert len(result) <= 1, 'rowcount should be 1 at most'
         return len(result) == 1
+
+    def getPrefs(self, user_id: 'int') -> 'str':
+        """Gets the preferences of a user.
+
+        :param user_id: The id of the user.
+        :returns: The user preferences as a string.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT prefs from User WHERE id = ?""", [user_id])
+        result = self.resultAsDictionary(cursor)
+        return result[0]['prefs']
+
+    def setPrefs(self, user_id: 'int', prefs: 'str'):
+        """Sets the preferences for a user.
+
+        :param user_id: The id of the user.
+        :param prefs: The preferences to set.
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""UPDATE User SET prefs = ? WHERE id = ?""", [prefs, user_id])
+        self.db.commit()

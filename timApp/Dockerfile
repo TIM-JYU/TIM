@@ -22,6 +22,7 @@ run pip3 install gitpylib
 run pip3 install lxml
 run pip3 install pyaml
 run pip3 install ansiconv
+run pip3 install cssutils
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
