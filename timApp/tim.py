@@ -1,35 +1,41 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, session, abort, flash
+import logging
+import json
+import os
+import imghdr
+import io
+import codecs
+import collections
+
+from flask import Flask, redirect, url_for, flash
 from flask import stream_with_context
 from flask import render_template
 from flask import g
 from flask import request
 from flask import send_from_directory
 from flask.ext.compress import Compress
-import logging
 import requests
-from ReverseProxied import ReverseProxied
-import json
-import os
-import containerLink
 from werkzeug.utils import secure_filename
-from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbException, DocIdentifier
 from flask import Response
-import imghdr
 from flask.helpers import send_file
-import io
-import codecs
-import pluginControl
-import collections
-from containerLink import PluginException
 from bs4 import UnicodeDammit
 from werkzeug.contrib.profiler import ProfilerMiddleware
+
+from ReverseProxied import ReverseProxied
+import containerLink
+from timdb.timdb2 import TimDb
+from timdb.timdbbase import TimDbException, DocIdentifier
+import pluginControl
+from containerLink import PluginException
+from routes.settings import settings_page
+from routes.common import *
 
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 Compress(app)
+
+app.register_blueprint(settings_page)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
@@ -71,42 +77,11 @@ def logMessage():
 
 @app.errorhandler(403)
 def forbidden(error):
-
     return render_template('403.html', message=error.description), 403
 
 @app.errorhandler(404)
 def notFound(error):
     return render_template('404.html'), 404
-
-def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
-    response.status_code = status_code
-    return response
-
-def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):
-    timdb = getTimDb()
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
-        abort(403, message)
-
-def hasEditAccess(block_id):
-    timdb = getTimDb()
-    return timdb.users.userHasEditAccess(getCurrentUserId(), block_id)
-
-def verifyViewAccess(block_id):
-    timdb = getTimDb()
-    if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
-        abort(403, "Sorry, you don't have permission to view this resource.")
-
-def hasViewAccess(block_id):
-    timdb = getTimDb()
-    return timdb.users.userHasViewAccess(getCurrentUserId(), block_id)
-
-def verifyLoggedIn():
-    if not loggedIn():
-        abort(403, "You have to be logged in to perform this action.")
-
-def loggedIn():
-    return getCurrentUserId() != 0
 
 @app.route("/manage/<int:doc_id>")
 def manage(doc_id):
@@ -304,23 +279,6 @@ def getDocuments():
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
     return jsonResponse(allowedDocs)
 
-def getCurrentUserId():
-    uid = session.get('user_id')
-    return uid if uid is not None else 0
-
-def getCurrentUserName():
-    name = session.get('user_name')
-    return name if name is not None else 'Anonymous'
-
-def getCurrentUserGroup():
-    timdb = getTimDb()
-    return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
-
-def getTimDb():
-    if not hasattr(g, 'timdb'):
-        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'], current_user_name=getCurrentUserName())
-    return g.timdb
-
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
     timdb = getTimDb()
@@ -474,7 +432,17 @@ def viewDocument(doc_id):
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
-    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, cssFiles=cssPaths, jsMods=modules)
+    prefs = timdb.users.getPrefs(getCurrentUserId())
+    custom_css_files = json.loads(prefs)['css_files'] if prefs is not None else []
+    return render_template('view.html',
+                           docID=doc['id'],
+                           docName=doc['name'],
+                           text=json.dumps(texts),
+                           version=versions[0],
+                           js=jsPaths,
+                           cssFiles=cssPaths,
+                           jsMods=modules,
+                           custom_css_files=custom_css_files)
 
 
 @app.route("/postNote", methods=['POST'])
