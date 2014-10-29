@@ -18,7 +18,7 @@
             <br>
             {% for css_file in css_files %}
                 <label><input type="checkbox"
-                              name="{{ css_file }}"
+                              name="settings.css_files.{{ css_file.name }}"
                               ng-model="settings.css_files.{{ css_file.name }}"
                               ng-change="submit('{{ request.path + 'save' }}')"
                               ng-disabled="saving">
