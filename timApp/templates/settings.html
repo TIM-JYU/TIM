@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script>
+        var settings = {{ settings|tojson|safe }};
+    </script>
+    <script src="{{ url_for('static', filename='scripts/settingsView/settingsCtrl.js') }}"></script>
+{% endblock %}
+{% block content %}
+    <div ng-app="settingsApp" ng-controller="SettingsCtrl">
+        <form ng-submit="submit('{{ request.path + 'save' }}')">
+            {% if css_files %}
+                <span>Available custom styles:</span>
+            {% else %}
+                <span>There are no available custom styles.</span>
+            {% endif %}
+            <br>
+            {% for css_file in css_files %}
+                <label><input type="checkbox"
+                              name="{{ css_file }}"
+                              ng-model="settings.css_files.{{ css_file['name'] }}">
+                    {{ css_file['name'] }} - {{ css_file['desc'] }}
+                </label><br>
+            {% endfor %}
+            <label>Custom CSS:<br><textarea class="docEditor" ng-model="settings.custom_css"></textarea></label><br>
+            <input type="submit" value="Save settings" ng-disabled="saving">
+            <span ng-show="saving">Saving...</span>
+        </form>
+    </div>
+{% endblock %}

@@ -18,6 +18,31 @@
     {% endblock %}
 </head>
 <body>
-{% block content %}{% endblock %}
+<div id="header">
+    {% block header %}
+        {% include 'loginlogout.html' %}
+        <a href="/">Main page</a>
+        {% if session.user_id %}
+            <a href="/settings">Customize TIM</a>
+        {% endif %}
+    {% endblock %}
+</div>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+<div class="material">
+    <h1>{{ self.title() }}</h1>
+    {% block content %}{% endblock %}
+</div>
+<div id="footer">
+    {% block footer %}
+    {% endblock %}
+</div>
 </body>
 </html>

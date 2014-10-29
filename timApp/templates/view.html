@@ -31,9 +31,13 @@
 <link rel="stylesheet" href="{{cssFile}}">
 {% endfor %}
 
-<!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+{% for cssFile in custom_css_files %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css')}}">
+{% endfor %}
+
+<style type="text/css">
+{{ custom_css }}
+</style>
 <script>
         // Data from jinja2 template
         var jsonDoc = JSON.parse({{text|tojson|safe}}); 
@@ -44,9 +48,6 @@
 {% endblock %}
 {% block content %}
 <div ng-app="timApp" ng-controller="ViewCtrl">
-<div class="viewLogin">{% include 'loginlogout.html' %}</div>
-    <h1>{{docName}}</h1>
-    <div class="material">
 
         <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 
@@ -94,5 +95,4 @@
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

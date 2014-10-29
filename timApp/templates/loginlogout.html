@@ -1,18 +1,19 @@
-{% with messages = get_flashed_messages(category_filter=["loginmsg"]) %}
-{% if messages %}
-<ul class="flashes">
-    {% for message in messages %}
-    <li>{{ message }}</li> {% endfor %}
-</ul>
-{% endif %} {% endwith %} {% if session.user_id %}
-<p>Logged in as: {{session.real_name}} ({{session.user_name}})</p>
-<form method="POST" action="/logout">
-    <input type="submit" value="Logout">
-</form>
-{% else %} 
-<form method="GET" action="/login">
- <div class="loginButtonDiv">
-    <input type="submit" value="Login using Korppi" class="loginButton"> <input type="hidden" name="came_from" value="{{request.path}}">
- </div>    
-</form>
-{% endif %}
+<div class="viewLogin">
+    {% if session.user_id %}
+        <span>Logged in as: {{ session.real_name }} ({{ session.user_name }})</span>
+        <form method="POST" action="/logout">
+            <input type="submit" value="Logout">
+        </form>
+    {% else %}
+        <form method="GET" action="/login">
+            <div class="loginButtonDiv">
+                <input type="submit"
+                       value="Login using Korppi"
+                       class="loginButton">
+                <input type="hidden"
+                       name="came_from"
+                       value="{{ request.path }}">
+            </div>
+        </form>
+    {% endif %}
+</div>

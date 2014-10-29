@@ -65,9 +65,7 @@
             <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
             <span ng-bind="progress"></span>
 </div>
-<div class="viewLogin">{% include 'loginlogout.html' %}</div> 
 <p ng-show="uploadedFile">Uploaded file: <a href="{{ '{{ uploadedFile }}' }}">{{ '{{ uploadedFile }}' }}</a></p>
-    <div class="material"> 
         <div class="paragraph">
              <div class="addParButton b0" ng-click="parAdd(0)"> </div>
              <br>
@@ -90,6 +88,5 @@
         $(".ace_editor").attr("onresize", function(){activeEdit.editor.editor.resize()});
         $(".ace_editor").css("resize", "both");
     </script>
-</div>
 </div>
 {% endblock %}

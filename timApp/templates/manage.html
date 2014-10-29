@@ -52,8 +52,6 @@ var viewers = {{viewers|tojson|safe}};
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    <h1>Managing document: {{ '{{doc.name}}' }}</h1>
-    <div class="material">
         <div class="margin">
             <a href="/view/{{ '{{doc.id}}' }}">View this document</a> <br>
             <a href="/edit/{{ '{{doc.id}}' }}">Edit this document</a>
@@ -135,5 +133,4 @@ var viewers = {{viewers|tojson|safe}};
         </table>
         <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
-</div>
 {% endblock %}
