@@ -78,6 +78,7 @@ id INTEGER NOT NULL,
 name VARCHAR(100) NOT NULL,
 real_name VARCHAR(100),
 email VARCHAR(100),
+prefs TEXT,
 
 CONSTRAINT User_PK 
 	PRIMARY KEY (id)
