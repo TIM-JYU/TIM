@@ -19,12 +19,15 @@
             {% for css_file in css_files %}
                 <label><input type="checkbox"
                               name="{{ css_file }}"
-                              ng-model="settings.css_files.{{ css_file['name'] }}">
-                    {{ css_file['name'] }} - {{ css_file['desc'] }}
+                              ng-model="settings.css_files.{{ css_file.name }}"
+                              ng-change="submit('{{ request.path + 'save' }}')"
+                              ng-disabled="saving">
+                    <a href="{{ url_for('static', filename='css/' + css_file.name + '.css') }}">
+                        {{ css_file.name }}</a> - {{ css_file.desc }}
                 </label><br>
             {% endfor %}
             <label>Custom CSS:<br><textarea class="docEditor" ng-model="settings.custom_css"></textarea></label><br>
-            <input type="submit" value="Save settings" ng-disabled="saving">
+            <input type="submit" value="Save custom CSS" ng-disabled="saving">
             <span ng-show="saving">Saving...</span>
         </form>
     </div>
