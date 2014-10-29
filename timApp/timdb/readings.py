@@ -16,88 +16,97 @@ class Readings(TimDbBase):
     @contract
     def getReadings(self, user_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
         """Gets the reading info for a document for a user.
-        
+
         :param user_id: The id of the user whose readings will be fetched.
         :param block_id: The id of the block whose readings will be fetched.
         """
-        cursor = self.db.cursor()
+        return self.getMappedValues(user_id, doc_id, doc_ver, 'ReadParagraphs', status_unmodified = 'read')
 
-        cursor.execute(
-            """
-            select par_index, doc_ver from ReadParagraphs
-            where user_id = ? and doc_id = ?
-            """,
-            [user_id, doc_id])
-        readings = self.resultAsDictionary(cursor)
-
-        # Check for modifications
-        db_modified = False
-        for reading in readings:
-            read_ver = reading['doc_ver']
-            reading['status'] = 'read'
-
-            if read_ver != doc_ver:
-                # Document has been modified, see if the paragraph has changed
-                read_par = reading['par_index']
-                current_ver = read_ver
-                modified = False
-                num_links = 0
-                print('Paragraph %d refers to old version, trying to find mappings.' % read_par)
-
-                while current_ver != doc_ver:
-                    current_par = read_par
-                    cursor.execute(
-                        """
-                        select new_ver, new_index, modified
-                        from ParMappings
-                        where doc_id = ? and doc_ver = ? and par_index = ?
-                        and new_ver is not null and new_index is not null
-                        """, [doc_id, current_ver, current_par])
-                    mappings = self.resultAsDictionary(cursor)
-                    if len(mappings) > 0:
-                        print('Found a mapping: %s(%d) -> %s(%d)' %
-                              (current_ver, current_par, mappings[0]['new_ver'], mappings[0]['new_index']))
-
-                        current_ver = mappings[0]['new_ver']
-                        current_par = mappings[0]['new_index']
-                        modified |= mappings[0]['modified'] == 'True'
-                        num_links += 1
-                    else:
-                        print('Loose end: document %d, paragraph %s' % (doc_id, read_par))
-                        reading['status'] = 'modified'
-                        break
-                print('End while.')
-                print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
-                      (num_links, current_ver, doc_ver, str(modified)))
-                if num_links > 1 and current_ver == doc_ver:
-                    # Flatten mappings to speed up future queries
-                    # a -> b -> c becomes a -> c
-                    print('Updating mapping: %s(%s) -> %s(%s)' %
-                          (read_ver, read_par, current_ver, current_par))
-                    cursor.execute(
-                        """
-                        update ParMappings
-                        set new_ver = ?, new_index = ?, modified = ?
-                        where doc_id = ? and doc_ver = ? and par_index = ?
-                        """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
-                    db_modified = True
-                print("")
-                reading['par_index'] = current_par
-                if modified:
-                    reading['status'] = 'modified'
-                else:
-                    # No changes
-                    reading['doc_ver'] = current_ver
-                    cursor.execute(
-                        """
-                        update ReadParagraphs set doc_ver = ?, par_index = ?
-                        where doc_id = ? and doc_ver = ? and par_index = ?
-                        """, [current_ver, current_par, doc_id, read_ver, read_par])
-
-        if db_modified:
-            self.db.commit()
-
-        return readings
+    # @contract
+    # def getReadings(self, user_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
+    #     """Gets the reading info for a document for a user.
+    #
+    #     :param user_id: The id of the user whose readings will be fetched.
+    #     :param block_id: The id of the block whose readings will be fetched.
+    #     """
+    #     cursor = self.db.cursor()
+    #
+    #     cursor.execute(
+    #         """
+    #         select par_index, doc_ver from ReadParagraphs
+    #         where user_id = ? and doc_id = ?
+    #         """,
+    #         [user_id, doc_id])
+    #     readings = self.resultAsDictionary(cursor)
+    #
+    #     # Check for modifications
+    #     db_modified = False
+    #     for reading in readings:
+    #         read_ver = reading['doc_ver']
+    #         reading['status'] = 'read'
+    #
+    #         if read_ver != doc_ver:
+    #             # Document has been modified, see if the paragraph has changed
+    #             read_par = reading['par_index']
+    #             current_ver = read_ver
+    #             modified = False
+    #             num_links = 0
+    #             print('Paragraph %d refers to old version, trying to find mappings.' % read_par)
+    #
+    #             while current_ver != doc_ver:
+    #                 current_par = read_par
+    #                 cursor.execute(
+    #                     """
+    #                     select new_ver, new_index, modified
+    #                     from ParMappings
+    #                     where doc_id = ? and doc_ver = ? and par_index = ?
+    #                     and new_ver is not null and new_index is not null
+    #                     """, [doc_id, current_ver, current_par])
+    #                 mappings = self.resultAsDictionary(cursor)
+    #                 if len(mappings) > 0:
+    #                     print('Found a mapping: %s(%d) -> %s(%d)' %
+    #                           (current_ver, current_par, mappings[0]['new_ver'], mappings[0]['new_index']))
+    #
+    #                     current_ver = mappings[0]['new_ver']
+    #                     current_par = mappings[0]['new_index']
+    #                     modified |= mappings[0]['modified'] == 'True'
+    #                     num_links += 1
+    #                 else:
+    #                     print('Loose end: document %d, paragraph %s' % (doc_id, read_par))
+    #                     reading['status'] = 'modified'
+    #                     break
+    #             print('End while.')
+    #             print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
+    #                   (num_links, current_ver, doc_ver, str(modified)))
+    #             if num_links > 1 and current_ver == doc_ver:
+    #                 # Flatten mappings to speed up future queries
+    #                 # a -> b -> c becomes a -> c
+    #                 print('Updating mapping: %s(%s) -> %s(%s)' %
+    #                       (read_ver, read_par, current_ver, current_par))
+    #                 cursor.execute(
+    #                     """
+    #                     update ParMappings
+    #                     set new_ver = ?, new_index = ?, modified = ?
+    #                     where doc_id = ? and doc_ver = ? and par_index = ?
+    #                     """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
+    #                 db_modified = True
+    #             print("")
+    #             reading['par_index'] = current_par
+    #             if modified:
+    #                 reading['status'] = 'modified'
+    #             else:
+    #                 # No changes
+    #                 reading['doc_ver'] = current_ver
+    #                 cursor.execute(
+    #                     """
+    #                     update ReadParagraphs set doc_ver = ?, par_index = ?
+    #                     where doc_id = ? and doc_ver = ? and par_index = ?
+    #                     """, [current_ver, current_par, doc_id, read_ver, read_par])
+    #
+    #     if db_modified:
+    #         self.db.commit()
+    #
+    #     return readings
         
     @contract
     def setAsRead(self, user_id: 'int', doc_id : 'int', doc_ver : 'str', paragraph_specifier : 'int'):

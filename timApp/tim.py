@@ -544,7 +544,8 @@ def getNotes(doc_id):
     timdb = getTimDb()
     user_id = getCurrentUserId()
     group_id = getCurrentUserGroup()
-    notes = [note for note in timdb.notes.getNotes(user_id, group_id, doc_id)]
+    doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
+    notes = [note for note in timdb.notes.getNotes(user_id, group_id, doc_id, doc_ver)]
     for note in notes:
         note['editable'] = note['user_id'] == user_id
         for tag in KNOWN_TAGS:
