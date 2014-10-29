@@ -22,7 +22,9 @@
     {% block header %}
         {% include 'loginlogout.html' %}
         <a href="/">Main page</a>
-        <a href="/settings">Customize TIM</a>
+        {% if session.user_id %}
+            <a href="/settings">Customize TIM</a>
+        {% endif %}
     {% endblock %}
 </div>
 {% with messages = get_flashed_messages() %}
