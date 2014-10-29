@@ -434,6 +434,7 @@ def viewDocument(doc_id):
     modules.append("angularFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
     custom_css_files = json.loads(prefs)['css_files'] if prefs is not None else []
+    custom_css = json.loads(prefs)['custom_css'] if prefs is not None else ''
     return render_template('view.html',
                            docID=doc['id'],
                            docName=doc['name'],
@@ -442,7 +443,8 @@ def viewDocument(doc_id):
                            js=jsPaths,
                            cssFiles=cssPaths,
                            jsMods=modules,
-                           custom_css_files=custom_css_files)
+                           custom_css_files=custom_css_files,
+                           custom_css=custom_css)
 
 
 @app.route("/postNote", methods=['POST'])

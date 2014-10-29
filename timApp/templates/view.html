@@ -35,6 +35,9 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css')}}">
 {% endfor %}
 
+<style type="text/css">
+{{ custom_css }}
+</style>
 <script>
         // Data from jinja2 template
         var jsonDoc = JSON.parse({{text|tojson|safe}}); 
