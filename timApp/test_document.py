@@ -103,7 +103,9 @@ class DocTest(unittest.TestCase):
 
         print('Adding {} notes to document...'.format(test_length))
         for i in range(0, test_length):
-            self.db.notes.addNote(0, str(i), doc.id, i, [], cache=False)
+            #self.db.notes.addNote(0, str(i), doc.id, i, [], cache=False)
+            self.db.notes.addNote(0, 0, doc.id, doc.hash, i, str(i), 'justme', [], commit=False)
+        self.db.commit()
         print('Done.')
         return doc, doc_paragraphs
 
@@ -126,20 +128,23 @@ class DocTest(unittest.TestCase):
         print('Done.')
 
         print('Fetching notes of the document...')
-        notes = self.db.notes.getNotes(0, doc.id, get_html=False)
+        #notes = self.db.notes.getNotes(0, doc.id, get_html=False)
+        notes = self.db.notes.getNotes(0, 0, doc.id, doc.hash)
         print('Done.')
 
         for i in range(0, test_length):
-            self.assertTrue(indices[int(notes[i]['specifier'])] == int(notes[i]['content']))
+            self.assertTrue(indices[int(notes[i]['par_index'])] == int(notes[i]['content']))
 
     def check_notes(self, new_count, note_index, notes, test_length):
+        self.assertEquals(len(notes), test_length)
+
         for i in range(0, test_length):
-            content_int = int(notes[i]['content'])
-            if content_int < note_index:
-                self.assertTrue(content_int == notes[i]['specifier'])
-            else:
-                self.assertTrue(content_int + new_count == notes[i]['specifier'],
-                                'contentInt: {}, new_count: {}, specifier: {}'.format(content_int, new_count, notes[i]['specifier']))
+           content_int = int(notes[i]['content'])
+           if content_int < note_index:
+               self.assertEquals(content_int, notes[i]['par_index'])
+           else:
+               self.assertEquals(content_int + new_count, notes[i]['par_index'],
+                                 'contentInt: {}, new_count: {}, par_index: {}'.format(content_int, new_count, notes[i]['par_index']))
 
     def test_notes_with_add(self):
         print('test_notes_with_add')
@@ -147,8 +152,9 @@ class DocTest(unittest.TestCase):
         doc, _ = self.create_test_notes(test_length)
         new_par_index = 100
         new_count = random.randint(1, 100)
-        self.db.documents.addMarkdownBlock(doc, '\n\n'.join(['new'] * new_count), new_par_index)
-        self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
+        _, ver = self.db.documents.addMarkdownBlock(doc, '\n\n'.join(['new'] * new_count), new_par_index)
+        #self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
+        self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, 0, doc.id, ver), test_length)
 
     def test_notes_with_edit(self):
         print('test_notes_with_edit')
@@ -156,46 +162,55 @@ class DocTest(unittest.TestCase):
         doc, _ = self.create_test_notes(test_length)
         par_index = 100
         new_count = random.randint(1, 100)
-        self.db.documents.modifyMarkDownBlock(doc, par_index, '\n\n'.join(['new'] * new_count))
-        self.check_notes(new_count - 1, par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
+        _, ver = self.db.documents.modifyMarkDownBlock(doc, par_index, '\n\n'.join(['new'] * new_count))
+        #self.check_notes(new_count - 1, par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
+        self.check_notes(new_count - 1, par_index + 1, self.db.notes.getNotes(0, 0, doc.id, ver), test_length)
 
     def test_notes_with_delete(self):
         print('test_notes_with_delete')
         test_length = 500
         doc, _ = self.create_test_notes(test_length)
         delete_par_index = 100
-        self.db.documents.deleteParagraph(doc, delete_par_index)
-        self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
+        ver = self.db.documents.deleteParagraph(doc, delete_par_index)
+        #self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
+        self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, 0, doc.id, ver), test_length - 1)
 
     def test_readings(self):
         print('test_readings')
-        doc, pars = self.create_test_document(500)
-        readings = self.db.readings.getReadings(0, doc.id)
+        doc, _ = self.create_test_document(500)
+        #readings = self.db.readings.getReadings(0, doc.id)
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.assertEqual(len(readings), 0)
         par_index = 5
-        self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+        #self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+        self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
 
-        readings = self.db.readings.getReadings(0, doc.id)
+        #readings = self.db.readings.getReadings(0, doc.id)
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.assertEqual(len(readings), 1)
         fr = readings[0]
-        self.assertEqual(fr['specifier'], par_index)
-        self.assertEqual(fr['text'], pars[par_index])
+        self.assertEqual(fr['par_index'], par_index)
+        #self.assertEqual(fr['text'], pars[par_index])
         ver = self.db.documents.deleteParagraph(doc, 0)
         doc = DocIdentifier(doc.id, ver)
-        pars = self.db.documents.getDocumentAsBlocks(doc)
+        #pars = self.db.documents.getDocumentAsBlocks(doc)
 
-        readings = self.db.readings.getReadings(0, doc.id)
+        #readings = self.db.readings.getReadings(0, doc.id)
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         fr = readings[0]
         par_index -= 1
-        self.assertEqual(fr['specifier'], par_index)
-        self.assertEqual(fr['text'], pars[par_index])
-        self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+        self.assertEqual(fr['par_index'], par_index)
+        #self.assertEqual(fr['text'], pars[par_index])
+        #self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
+        self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
 
-        readings = self.db.readings.getReadings(0, doc.id)
+        #readings = self.db.readings.getReadings(0, doc.id)
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.assertEqual(len(readings), 1)
-        self.db.documents.updateDocument(doc, 'cleared')
-        fr = self.db.readings.getReadings(0, doc.id)[0]
-        self.assertEqual(fr['specifier'], 0)
+        doc = self.db.documents.updateDocument(doc, 'cleared')
+        #fr = self.db.readings.getReadings(0, doc.id)[0]
+        fr = self.db.readings.getReadings(0, doc.id, doc.hash)[0]
+        self.assertEqual(fr['par_index'], 0)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')

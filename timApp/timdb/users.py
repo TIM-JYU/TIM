@@ -23,7 +23,7 @@ class Users(TimDbBase):
         return 0
 
     @contract
-    def createUser(self, name: 'str', real_name: 'str', email: 'str') -> 'int':
+    def createUser(self, name: 'str', real_name: 'str', email: 'str', commit : 'bool' = True) -> 'int':
         """Creates a new user with the specified name.
         
         :param email: The email address of the user.
@@ -33,11 +33,12 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('INSERT INTO User (name, real_name, email) VALUES (?, ?, ?)', [name, real_name, email])
-        self.db.commit()
+        if commit:
+            self.db.commit()
         user_id = cursor.lastrowid
         return user_id
 
-    def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str'):
+    def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str', commit : 'bool' = True):
         """Updates user information.
 
         :param user_id: The id of the user to be updated.
@@ -49,10 +50,11 @@ class Users(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute('UPDATE User SET name = ?, real_name = ?, email = ? WHERE id = ?',
                        [name, real_name, email, user_id])
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
-    def createUserGroup(self, name: 'str') -> 'int':
+    def createUserGroup(self, name: 'str', commit : 'bool' = True) -> 'int':
         """Creates a new user group.
         
         :param name: The name of the user group.
@@ -62,11 +64,12 @@ class Users(TimDbBase):
         cursor.execute('INSERT INTO UserGroup (name) VALUES (?)', [name])
         group_id = cursor.lastrowid
         assert group_id is not None, 'group_id was None'
-        self.db.commit()
+        if commit:
+            self.db.commit()
         return group_id
 
     @contract
-    def addUserToGroup(self, group_id: 'int', user_id: 'int'):
+    def addUserToGroup(self, group_id: 'int', user_id: 'int', commit : 'bool' = True):
         """Adds a user to a usergroup.
         
         :param group_id: The id of the group.
@@ -74,7 +77,8 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (?, ?)', [group_id, user_id])
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def getEditors(self, block_id: 'int'):

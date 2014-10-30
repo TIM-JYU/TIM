@@ -118,6 +118,34 @@ class TimDbBase(object):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def addEmptyParMapping(self, doc_id : 'int', doc_ver : 'str', par_index : 'int', commit : 'bool' = True):
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+            select par_index from ParMappings
+            where doc_id = ? and doc_ver = ? and par_index = ?
+            """,
+            [doc_id, doc_ver, par_index])
+
+        if cursor.fetchone() is not None:
+            #print("Mapping already exists - document {0} version {1} paragraph {2}".format(
+            #doc_id, doc_ver[:6], par_index))
+            return
+
+        #print("addEmptyParMapping(doc {0}, version {1}, paragraph {2})".format(
+        # doc_id, doc_ver[:6], par_index))
+
+        cursor.execute(
+            """
+            insert into ParMappings (doc_id, doc_ver, par_index) values (?, ?, ?)
+            """,
+            [doc_id, doc_ver, par_index])
+
+        if commit:
+            self.db.commit()
+
+    @contract
     def getMappedValues(self, user_id : 'int', doc_id : 'int', doc_ver : 'str', table : 'str',
                         status_unmodified = "unmodified", status_modified = "modified",
                         extra_fields : 'list' = []) -> 'list(dict)':
@@ -127,6 +155,7 @@ class TimDbBase(object):
         query = "select {0} from {1} where user_id = ? and doc_id = ?".format(','.join(fields), table)
         cursor.execute(query, [user_id, doc_id])
         rows = self.resultAsDictionary(cursor)
+        remove_rows = []
 
         # Check for modifications
         db_modified = False
@@ -140,7 +169,7 @@ class TimDbBase(object):
                 current_ver = read_ver
                 modified = False
                 num_links = 0
-                print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
+                #print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
 
                 while current_ver != doc_ver:
                     current_par = read_par
@@ -153,24 +182,25 @@ class TimDbBase(object):
                         """, [doc_id, current_ver, current_par])
                     mappings = self.resultAsDictionary(cursor)
                     if len(mappings) > 0:
-                        print('Found a mapping: %s(%d) -> %s(%d)' %
-                              (current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index']))
+                        #print('Found a mapping: %s(%d) -> %s(%d)' %
+                        #      (current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index']))
 
                         current_ver = mappings[0]['new_ver']
                         current_par = mappings[0]['new_index']
                         modified |= mappings[0]['modified'] == 'True'
                         num_links += 1
                     else:
-                        print('Loose end: document %d, paragraph %s' % (doc_id, read_par))
-                        row['status'] = status_modified
+                        #print('Loose end: document %d, paragraph %s' % (doc_id, read_par))
+                        #row['status'] = status_modified
+                        remove_rows.append(row)
                         break
-                print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
-                      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
+                #print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
+                #      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
                 if num_links > 1 and current_ver == doc_ver:
                     # Flatten mappings to speed up future queries
                     # a -> b -> c becomes a -> c
-                    print('Updating mapping: %s(%s) -> %s(%s)' %
-                          (read_ver[:6], read_par, current_ver[:6], current_par))
+                    #print('Updating mapping: %s(%s) -> %s(%s)' %
+                    #      (read_ver[:6], read_par, current_ver[:6], current_par))
                     cursor.execute(
                         """
                         update ParMappings
@@ -178,7 +208,7 @@ class TimDbBase(object):
                         where doc_id = ? and doc_ver = ? and par_index = ?
                         """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
                     db_modified = True
-                print("")
+                #print("")
                 row['par_index'] = current_par
                 if modified:
                     row['status'] = status_modified
@@ -188,6 +218,9 @@ class TimDbBase(object):
                     query = 'update {0} set doc_ver = ?, par_index = ? where doc_id = ? and doc_ver = ? and par_index = ?'.format(table)
                     cursor.execute(query, [current_ver, current_par, doc_id, read_ver, read_par])
                     db_modified = True
+
+        for row in remove_rows:
+            rows.remove(row)
 
         if db_modified:
             self.db.commit()

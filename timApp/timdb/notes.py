@@ -49,7 +49,7 @@ class Notes(TimDbBase):
         return row is not None and int(row[0]) == user_id
     
     @contract
-    def addNote(self, user_id : 'int', group_id : 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', content : 'str', access : 'str', tags : 'list(str)'):
+    def addNote(self, user_id : 'int', group_id : 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', content : 'str', access : 'str', tags : 'list(str)', commit : 'bool' = True):
         """Adds a note to the document.
         
         :param user_id: The user who owns the note.
@@ -61,6 +61,7 @@ class Notes(TimDbBase):
         :param access: Who can read the note.
         :param tags: Tags for the note (difficult, unclear).
         """
+        self.addEmptyParMapping(doc_id, doc_ver, par_index, commit=False)
         cursor = self.db.cursor()
     
         cursor.execute(
@@ -84,8 +85,9 @@ class Notes(TimDbBase):
             values (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?)
         """, [user_id, group_id, doc_id, doc_ver, par_index, note_index,
         content, access, self.__tagstostr(tags)])
-        
-        self.db.commit()
+
+        if commit:
+            self.db.commit()
 
     @contract
     def modifyNote(self, user_id: 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', new_tags : 'list(str)'):

@@ -57,6 +57,9 @@ class TimDb(object):
         for table in TABLE_NAMES:
             self.db.execute('delete from ' + table)  # TABLE_NAMES is constant so no SQL injection possible
 
+    def commit(self):
+        self.db.commit()
+
     def close(self):
         """Closes the database connection."""
         self.db.commit()
