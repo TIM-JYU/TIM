@@ -16,18 +16,22 @@ def show():
     timdb = getTimDb()
     prefs = timdb.users.getPrefs(getCurrentUserId())
     prefs = json.loads(prefs) if prefs is not None else {}
-    css_file_names = [file for file in os.listdir('static/css') if file.endswith('.css')]
+    css_file_names = [file[:-4] for file in os.listdir('static/css') if file.endswith('.css')]
     css_file_descriptions = []
     parser = cssutils.CSSParser()
     for file_name in css_file_names:
-        sheet = parser.parseFile(os.path.join('static/css', file_name), 'utf-8')
+        sheet = parser.parseFile(os.path.join('static/css', file_name + '.css'), 'utf-8')
         comment = 'No description.'
         for rule in sheet.cssRules:
             if isinstance(rule, cssutils.css.CSSComment):
                 comment = rule.cssText[2:-2].strip()
                 break
         css_file_descriptions.append(comment)
-    available_css_files = [{'name': name[:-4], 'desc': desc} for name, desc in zip(css_file_names, css_file_descriptions)]
+
+    # Remove non-existent CSS files from preferences
+    prefs['css_files'] = {key: prefs.get('css_files', {}).get(key, False) for key in css_file_names}
+
+    available_css_files = [{'name': name, 'desc': desc} for name, desc in zip(css_file_names, css_file_descriptions)]
 
     try:
         return render_template('settings.html', css_files=available_css_files, settings=prefs)

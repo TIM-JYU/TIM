@@ -434,9 +434,10 @@ def viewDocument(doc_id):
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
-    custom_css_files = json.loads(prefs)['css_files'] if prefs is not None else {}
-    custom_css_files = {key: value for key, value in custom_css_files.items() if value}
-    custom_css = json.loads(prefs)['custom_css'] if prefs is not None else ''
+    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
+    if custom_css_files:
+        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
+    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
     return render_template('view.html',
                            docID=doc['id'],
                            docName=doc['name'],
