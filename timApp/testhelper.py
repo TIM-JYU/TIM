@@ -32,4 +32,4 @@ def print_times(times):
     t_avg = t_sum / len(times)
     t_offset = max(t_avg - min(times), max(times) - t_avg)
     print("Sum of all times was {0:.0f} milliseconds.".format(t_sum))
-    print("Single execution took {0:.0f} +/- {1:.0f} milliseconds.".format(t_avg, t_offset))
+    print("Single execution took {0:.0f} +/- {1:.0f} milliseconds.\n".format(t_avg, t_offset))

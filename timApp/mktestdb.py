@@ -9,7 +9,6 @@ from timdb.timdbbase import TimDbException, DocIdentifier
 from testhelper import print_times, random_str, random_word, random_sentence, random_paragraph
 from datetime import datetime
 
-
 class mktestdb:
     def __init__(self, new_version):
         TEST_FILES_PATH = 'test_files'
@@ -27,6 +26,7 @@ class mktestdb:
 
         random.seed(0)
         self.new_version = new_version
+        self.docs = None
 
     @classmethod
     def onerror(cls, func, path, exc_info):
@@ -49,6 +49,7 @@ class mktestdb:
         self.db.commit()
 
     def mkdocs(self, user_count, min_docs, max_docs, min_pars, max_pars):
+        self.docs = None
         for user_id in range(0, user_count):
             for doc_index in range(0, random.randint(min_docs, max_docs)):
                 doc = self.db.documents.createDocument(random_word(), user_id)
@@ -58,6 +59,7 @@ class mktestdb:
                     doc = DocIdentifier(doc.id, ver)
 
     def modify_docs(self, user_count, min_mods, max_mods):
+        self.docs = None
         for user_id in range(0, user_count):
             docs = self.db.documents.getDocumentsForGroup(user_id)
             for docd in docs:
@@ -114,17 +116,34 @@ class mktestdb:
         self.mkmeta(user_count, readcv, notecv)
         self.modify_docs(user_count, min_mods, max_mods)
 
+    def get_random_docid(self):
+        if self.docs is None:
+            self.docs = self.db.documents.getDocuments()
+        doc_index = random.randint(0, len(self.docs))
+        return self.docs[doc_index]['id']
+
+    def get_doc_html(self, doc_id):
+        timdb = self.db
+        if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+            print("! Document {0} does not exist!".format(doc_id))
+
+        versions = timdb.documents.getDocumentVersions(doc_id)
+        xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
+        doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
+        #texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
+        #modules.append("ngSanitize")
+        #modules.append("angularFileUpload")
+
 
 if __name__ == '__main__':
     testdb = mktestdb(new_version=True)
-    #user_count = 200
-    user_count = 2
+    user_count = 50
     min_docs = 1
-    #max_docs = 10
-    max_docs = 3
-    min_pars = 2
-    max_pars = 5
-    mod_rounds = 3
+    max_docs = 10
+    min_pars = 5
+    max_pars = 20
+    mod_rounds = 20
+    doc_loads = 100
 
     print("Creating {0} users...".format(user_count))
     t0 = datetime.now()
@@ -146,3 +165,14 @@ if __name__ == '__main__':
         t = datetime.now() - t0
         times.append(t.microseconds / 1000)
     print_times(times)
+
+    print("Simulating {0} document loads...".format(doc_loads))
+    times = []
+    for i in range(0, doc_loads):
+        doc_id = testdb.get_random_docid()
+        t0 = datetime.now()
+        testdb.get_doc_html(doc_id)
+        t = datetime.now() - t0
+        times.append(t.microseconds / 1000)
+    print_times(times)
+
