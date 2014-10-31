@@ -1,5 +1,6 @@
 import random
 import string
+from sys import stdout
 
 
 def random_str(min_length, max_length):
@@ -32,4 +33,11 @@ def print_times(times):
     t_avg = t_sum / len(times)
     t_offset = max(t_avg - min(times), max(times) - t_avg)
     print("Sum of all times was {0:.0f} milliseconds.".format(t_sum))
-    print("Single execution took {0:.0f} +/- {1:.0f} milliseconds.\n".format(t_avg, t_offset))
+    print("Single execution took {0:.3f} +/- {1:.3f} seconds.\n".format(t_avg, t_offset))
+
+
+def progress_print(line):
+    stdout.write("\r")
+    stdout.write(line)
+    stdout.flush()
+
