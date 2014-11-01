@@ -5,6 +5,8 @@ csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { csApp.sa
 csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno'); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
+var TESTWITHOUTPLUGINS = false;
+
 csApp.taunoNr = 0;
 
 csApp.directive('contenteditable', ['$sce', function($sce) {
@@ -78,7 +80,9 @@ csApp.getHeading = function(a,key,$scope,defElem) {
 
 csApp.directiveTemplateCS = function(t) {
 	csApp.taunoPHIndex = 3;
+    if ( TESTWITHOUTPLUGINS ) return '';
 	return  '<div class="csRunDiv">' + 
+    
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
@@ -100,9 +104,11 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
 				  '</div>'+
 				  //'<br />'+ 
+                  
 				  '<p class="csRunSnippets" ng-if="buttons && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
                   '</p>' +
+                  
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-click="runCode();">Aja</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
@@ -117,6 +123,7 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
 				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
 				  '<p class="footer">Here comes footer</p>'+
+                 
 				  '</div>';
 }
 
@@ -132,6 +139,9 @@ csApp.set = function(scope,attrs,name,def) {
 csApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
+            if ( TESTWITHOUTPLUGINS ) return;
+
+            scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
 			scope.taunoHtml = element[0].childNodes[csApp.taunoPHIndex]; // Check this carefully, where is Tauno placeholder
             scope.plugin = element.parent().attr("data-plugin");
             scope.taskId  = element.parent().attr("id");
@@ -196,7 +206,7 @@ csApp.directiveFunction = function(t) {
                 var helloButtons = 'public \nclass \nHello \n\\n\n{\n}\n'+
                                     'static \nvoid \n Main\n(\n)\n' + 
                                     '        Console.WriteLine(\n"\nworld!\n;\n ';
-                var typeButtons =  'bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhyscisObject \n[] \nreturn\n, ';
+                var typeButtons =  'bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhyscisObject \n[] \nreturn \n, ';
                 var charButtons = 'a\nb\nc\nd\ne\ni\nj\n\.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=';
                 // var b = attrs.buttons;
                 b = b.replace('$hellobuttons$', helloButtons);
@@ -279,6 +289,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.attrs = {};
 
 	$transclude(function(clone, scope) {
+        if ( TESTWITHOUTPLUGINS ) return;
 		if ( !clone[0] ) return;
 		var markJSON = "xxxJSONxxx";
 		var markHex = "xxxHEXJSONxxx";
@@ -345,6 +356,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
 
+        var ucode = "";
+        if ( $scope.usercode ) ucode = $scope.usercode.replace($scope.cursor,"");
 		var t = runType;
 		// if ( t == "tauno" ) t = "comtest";
 
@@ -352,7 +365,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		params = {
                   //   'input': 1
-				  'input': {'usercode':$scope.usercode,
+				  'input': {'usercode':ucode,
                             'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId}, 
                            }
                   };
@@ -407,7 +420,17 @@ csApp.Controller = function($scope,$http,$transclude) {
 		// var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
 		var s = f.contentWindow.getUserCodeFromTauno();
 		$scope.copyingFromTauno = true;
+        treplace = $scope.attrs.treplace || "";
+        if ( treplace ) {
+            var treps = treplace.split("&");
+            for (i = 0; i < treps.length; i++) { 
+                var reps = (treps[i]+"|").split("|");
+                s = s.replace(new RegExp(reps[0],'g'),reps[1]);
+                s = s.replace(new RegExp("\n\n",'g'),"\n");
+            }
+        }
 		$scope.usercode = s;
+        $scope.checkIndent();
 		$scope.muokattu = false;
 	}
 	
@@ -417,15 +440,16 @@ csApp.Controller = function($scope,$http,$transclude) {
 	    var tbox = $scope.edit;
 	    var i = tbox.selectionStart || 0;
 	    var uc = $scope.usercode || "";
-	    $scope.usercode = uc.substring(0, i) + s.replace(/\\n/g,"\n") + uc.substring(i);
+	    // $scope.usercode = uc.substring(0, i) + s.replace(/\\n/g,"\n") + uc.substring(i);
+	    $scope.usercode = (uc + s.replace(/\\n/g,"\n")).replace($scope.cursor,"")+$scope.cursor;
 	    // $scope.insertAtCursor(tbox, s);
-	    tbox.selectionStart += s.length;
-	    tbox.selectionEnd += s.length;
+	    //tbox.selectionStart += s.length;
+	    //tbox.selectionEnd += s.length;
 	}
 
 	$scope.addTextHtml = function (s) {
 	    var ret = s.trim();
-	    if (ret.length == 0) ret = " ";
+	    if (ret.length == 0) ret = "\u00A0";
 	    return ret;
 	}
 

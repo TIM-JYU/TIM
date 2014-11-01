@@ -389,7 +389,9 @@ Virtuaalikone.prototype.luoMuuttujat = function (parametrit) {
 
     for (var pn in parametrit) {
         if (pn[0]=='m') {
-            this.lisääMuuttuja(pn.substring(1), parseInt(parametrit[pn])||null,null, true);
+            var val = parseInt(parametrit[pn]);
+            if ( isNaN(val) ) val = null;
+            this.lisääMuuttuja(pn.substring(1), val ,null, true);
         } else if (pn[0]=='i') {
             var inro = parseInt(parametrit[pn]);
             this.luoIndeksi(pn.substring(1), inro);
