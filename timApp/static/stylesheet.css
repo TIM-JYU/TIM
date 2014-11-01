@@ -30,20 +30,39 @@ body {
     left: 2em;
 }
 
+.docEditor {
+    width: 100%;
+    height: 30em;
+}
+
+.flashes {
+    padding: 0;
+    margin: 0;
+}
+
+.flashes li {
+	list-style-type: none;
+	border: 1px solid black;
+	border-radius: 3px;
+	padding: 0.5em;
+}
+
 /*=============================================*/
 /* Koeta kasata kaikki väreihin liittyvä tähän */
 /*=============================================*/
 body {
-	background-color: #d5d5d5;
+	/* background-color: #d5d5d5; */
+    margin: 0 5%;
 }
 .noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
-    background-color: #d0d0d0;
+    background-color: #f8f8f8;
 	color: white;
 	font-size: x-small;
 	text-align:center;
     border-radius: 12px;
 	outline: none;
-	border: 2px none;
+	
+    border: 2px none;
 	line-height: 0.8;
 	width: 5em;
 	height: 3em;
@@ -54,18 +73,11 @@ body {
 } 
  
 .viewLogin .loginButtonDiv {
-    background-color: red;
-    width: 100em;
-    height: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 299;
+
 } 
  
 .viewLogin .loginButton {
     width: auto;
-    position: fixed;
     height: 2em;
     top: 1em;
     left: 1em;
@@ -74,6 +86,10 @@ body {
 /*    background-color: red; */
     text-align: left;
     font-size: 2em;
+}
+
+.viewLogin form {
+    display: inline;
 }
  
 .material {
@@ -88,11 +104,15 @@ table th {
 	background-color: #dedede;
 }
 
+td p {
+    margin-left: 0;
+}
 .readline {
 	border-color: red;
 }
 	
 .readline:hover {
+    opacity: 0.5;
 	background: red;
 }
 	
@@ -171,8 +191,9 @@ ul ul  ul {
 }
 
 .note {
-	border: 1px solid #BBB;
-	border-radius: 7px;
+	/* border: 1px solid #BBB; */
+	/* border-radius: 7px; */
+	font-size: 0.7em;
 }
 
 .noteeditor {
@@ -199,7 +220,7 @@ ul ul  ul {
     position: absolute;
     right: -1.2em;
     z-index: 3;
-    width: 1em;
+    width: 10em;
     height: 100%;
     top: 0em;
     border-right: 0.5em solid;
@@ -293,9 +314,10 @@ ul ul  ul {
 .material {
 	display: inline-block;
 	width: 90%;
-	border: 2px solid;
-	border-radius: 25px;
-	box-shadow: 10px 10px 5px #888888;
+	/* border: 2px solid; */
+	/* border-radius: 25px; */
+	/* box-shadow: 10px 10px 5px #888888; */
+	/* margin-left: 10em; */
 }
 #topBar{
     position:fixed;
@@ -350,15 +372,20 @@ ul ul  ul {
 }
  
 PRE {
-    border-style: solid;
-	border-width: 1px;
-	border-radius: 5px;
-	padding: 4px;
-	margin-left: 2.5em;
+    /* border-style: solid; */
+	
+    /* border-width: 1px; */
+	
+    /* border-radius: 5px; */
+	
+    padding: 4px;
+	
+    margin-left: 2.5em;
 	margin-right: 0.00cm;
 	line-height: 1;
 	font-size: 1em;
-	box-shadow: 10px 10px 5px #888888;
+	
+    /* box-shadow: 10px 10px 5px #888888; */
 }
 
 .leveaPre {
@@ -482,8 +509,8 @@ blockquote {
 }
 /*Georgia, - huonot numerot pystysuunnassa*/
 body {
-	margin-left: 0.7cm;
-	margin-right: 0.7cm;
+/*	margin-left: 0.7cm; */
+/*	margin-right: 0.7cm; */
 	font-family: Verdana, Arial, sans-serif;
 	font-size: 1em;
 	line-height: 1.2;
@@ -638,6 +665,7 @@ a.anchor:hover {
 	border-radius: 15px;
 	text-align: left;
 	float: left;
+    resize: both;
 }
 
 .editorArea,  .noteEditorArea {
@@ -671,7 +699,7 @@ img.console {
   background: #000000;
   border: 3px double #ccc;
   padding: 10px;
-  width: 92% !important;  
+  width: 95% !important;  
 }
 
 p.stem {
@@ -715,14 +743,17 @@ p.stem {
 .csRunCode {
     font-family:Courier;
 	margin-left: 2em;
-    border-style: solid;
-	border-width: 1px;
-	border-radius: 5px;
+    /* border-style: solid; */
+	
+    border-width: 1px;
+	
+    /* border-radius: 5px; */
 	padding: 4px;
 	margin-right: 0em;
 	line-height: 1;
 	font-size: 1em;
-	box-shadow: 10px 10px 5px #888888;
+	
+    /* box-shadow: 10px 10px 5px #888888; */
 	/* width: 98%; */
 }
 
@@ -817,7 +848,7 @@ p.stem {
 }
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
-@media only screen and (max-device-width: 1200px) {
+@media only screen and (max-width: 1200px) {
 	.editor {
 		/* height: 5em; */
 	}
@@ -860,7 +891,7 @@ p.stem {
 		top: 0em;
 		left: 0%;
 	}
-	
+	 
 	.noteEditorArea {
 		position: relative;
 		top: 0em;
@@ -884,9 +915,7 @@ p.stem {
 		background-color: white;
 		display: inline-block;
 		width: 100%;
-		border: 2px solid;
-		border-radius: 25px;
-		box-shadow: 10px 10px 5px #888888;
+        margin-left: 0em;
 	}
 	.noteeditor {
 	/*
@@ -913,9 +942,6 @@ p.stem {
 	.material {
 		display: inline-block;
 		width: 100%;
-		border: 2px solid;
-		border-radius: 25px;
-		box-shadow: 10px 10px 5px #888888;
 	}
 	body {
 		max-width: 50em;
@@ -965,3 +991,154 @@ p.stem {
     }
 }
  
+body {
+ 	line-height: 1.4;	
+}
+
+task, .csRunDiv {
+    border: solid 1px #3CC;
+    border-radius: 5px;
+    width: 100%;
+    margin-bottom: 0.3em;
+    margin-left: 2em;
+    margin-right: 2em;
+    margin-top: 0.3em;
+    padding-bottom: 0.5em;
+    width: 96.5%
+} 
+
+.csRunDiv h4  {
+    margin-top: 0.0em;
+    padding-top: 1em;
+    padding-left: 1em;
+    padding-bottom: 1em;
+    background-color: #3CC;
+    color: #FFF;
+    font-family: "Helvetica", Arial, sans-serif;
+
+}
+
+.note {
+    border-top: 4px solid;
+    width: 240px;
+    padding-bottom: 5px;
+    /*position: absolute;*/
+    overflow-y: auto;
+    border-color: #F60;
+}
+
+.note.private {
+    border-color: #3CC;
+}
+
+
+pre {
+    font-family: "Courier New", Courier, serif;
+    font-weight: 00;
+    border-left: 4px solid #3CC;
+    padding: 0.5em 0 0.5em 1em; 
+    /* margin: 0 0 1em 1em; */
+    font-size: 0.95em;
+}
+
+
+.csRunPre, .csRunPost, .csRunArea {
+    margin-left: -1.5em;
+    box-shadow: none;
+}
+
+.stem {
+    margin-left: 0.3em;	
+    margin-right:0.5em;
+}
+
+.csRunMenu {
+    margin-left: 0.3em;	
+}
+
+.csRunMenu button {
+    background: #3CC;
+    border:0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.console {
+	margin-left: 0.2em;
+	/* max-width: 60em; */
+}
+
+img.console {
+    margin-left: 0.2em;
+}
+
+.csRunMenu link,.csRunMenu :visited {
+	color:  #3CC;
+}
+
+.notes:hover {
+    background-color: white;
+    display: block;
+    z-index: 9;
+}
+
+
+/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
+@media only screen and (max-device-width: 1200px) {
+    .readline {
+        margin-left: -8.5em;
+    }
+}
+
+/* Kännyköiden erikoistyylit =============================================*/
+@media only screen and (max-device-width: 500px) {
+    .readline {
+        z-index: 30;
+        border-color: red;
+        border-right: 0.7em solid red;
+        margin-left: -10.7em;
+    }
+
+    task, .csRunDiv {
+        margin-left: 0.2em;
+        margin-right: 0em;
+    } 
+
+
+}
+
+
+@media only screen and (max-width: 1600px) {
+	.editorArea {
+		position: relative;
+		top: 0em;
+		left: 0%;
+	}
+	 
+	.noteEditorArea {
+		position: relative;
+		top: 0em;
+		left: 0%;
+	}
+	.notes:hover {
+        margin-left: -60%;
+        width: 200em;
+        background-color: white;
+
+        display: block;
+        z-index: 9;
+        // max-height: 100%;
+        padding-left: 2em;
+    }
+
+	
+}
+

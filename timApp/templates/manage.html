@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>Manage document</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular-sanitize.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
+{% extends "base.html" %}
+{% block title %}Manage document{% endblock %}
+{% block head %}
+{{ super() }}
 <script src="{{url_for('static', filename='scripts/manageView/manageCtrl.js')}}"></script>
 
-<!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
 <style type="text/css">
 table {
 	margin: 1em;
@@ -54,17 +43,15 @@ var doc = {{doc|tojson|safe}};
 var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
 </script>
-</head>
-
-<body ng-app="permApp" ng-controller="PermCtrl">
+{% endblock %}
+{% block content %}
+<div ng-app="permApp" ng-controller="PermCtrl">
     {% with messages = get_flashed_messages() %} {% if messages %}
     <ul class="flashes">
         {% for message in messages %}
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    <h1>Managing document: {{ '{{doc.name}}' }}</h1>
-    <div class="material">
         <div class="margin">
             <a href="/view/{{ '{{doc.id}}' }}">View this document</a> <br>
             <a href="/edit/{{ '{{doc.id}}' }}">Edit this document</a>
@@ -114,8 +101,16 @@ var viewers = {{viewers|tojson|safe}};
             <div>
                 <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
                 <span ng-bind="progress"></span>
+                <button id="reset" type="reset" value="Reset">Clear</button>
             </div>
-            <button id="reset" type="reset" value="Reset">Clear</button>
+        </form>
+        <form class="uploadForm">
+            Edit the full document
+            <div>
+                <textarea class="docEditor" ng-model="fulltext"></textarea>
+                <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument(doc)">Save</button>
+                <span ng-show="saving">Saving...</span>
+            </div>
         </form>
         <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
         <div class="margin">
@@ -138,5 +133,4 @@ var viewers = {{viewers|tojson|safe}};
         </table>
         <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
-</body>
-</html>
+{% endblock %}

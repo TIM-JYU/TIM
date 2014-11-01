@@ -1,21 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>TIM</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular/angular-sanitize.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
+{% extends "base.html" %}
+{% block title %}TIM{% endblock %}
+{% block head %}
+{{ super() }}
 <script src="{{url_for('static', filename='scripts/indexView/indexController.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
 
-<!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
 <style type="text/css">
 table {
 	margin: 1em;
@@ -29,13 +18,6 @@ table td {
 	padding: 0.2em;
 }
 
-.flashes li {
-	list-style-type: none;
-	border: 1px solid black;
-	border-radius: 3px;
-	padding: 0.5em;
-}
-
 .uploadForm {
 	border: 1px solid black;
 	padding: 1em;
@@ -45,11 +27,9 @@ table td {
 	padding: 1em;
 }
 </style>
-</head>
-
-<body ng-app="indexApp" ng-controller="IndexCtrl">
-    {% include 'loginlogout.html' %}
-    <div class="material">
+{% endblock %}
+{% block content %}
+<div ng-app="indexApp" ng-controller="IndexCtrl">
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
         <div ng-show="displayIndex">
@@ -102,5 +82,4 @@ table td {
             {% endif %}
         </div>
     </div>
-</body>
-</html>
+{% endblock %}

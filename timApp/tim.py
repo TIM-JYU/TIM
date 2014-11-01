@@ -1,35 +1,41 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, session, abort, flash
+import logging
+import json
+import os
+import imghdr
+import io
+import codecs
+import collections
+
+from flask import Flask, redirect, url_for, flash
 from flask import stream_with_context
 from flask import render_template
 from flask import g
 from flask import request
 from flask import send_from_directory
 from flask.ext.compress import Compress
-import logging
 import requests
-from ReverseProxied import ReverseProxied
-import json
-import os
-import containerLink
 from werkzeug.utils import secure_filename
-from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbException, DocIdentifier
 from flask import Response
-import imghdr
 from flask.helpers import send_file
-import io
-import codecs
-import pluginControl
-import collections
-from containerLink import PluginException
 from bs4 import UnicodeDammit
 from werkzeug.contrib.profiler import ProfilerMiddleware
+
+from ReverseProxied import ReverseProxied
+import containerLink
+from timdb.timdb2 import TimDb
+from timdb.timdbbase import TimDbException, DocIdentifier
+import pluginControl
+from containerLink import PluginException
+from routes.settings import settings_page
+from routes.common import *
 
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 Compress(app)
+
+app.register_blueprint(settings_page)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
@@ -71,42 +77,11 @@ def logMessage():
 
 @app.errorhandler(403)
 def forbidden(error):
-
     return render_template('403.html', message=error.description), 403
 
 @app.errorhandler(404)
 def notFound(error):
     return render_template('404.html'), 404
-
-def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
-    response.status_code = status_code
-    return response
-
-def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):
-    timdb = getTimDb()
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
-        abort(403, message)
-
-def hasEditAccess(block_id):
-    timdb = getTimDb()
-    return timdb.users.userHasEditAccess(getCurrentUserId(), block_id)
-
-def verifyViewAccess(block_id):
-    timdb = getTimDb()
-    if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
-        abort(403, "Sorry, you don't have permission to view this resource.")
-
-def hasViewAccess(block_id):
-    timdb = getTimDb()
-    return timdb.users.userHasViewAccess(getCurrentUserId(), block_id)
-
-def verifyLoggedIn():
-    if not loggedIn():
-        abort(403, "You have to be logged in to perform this action.")
-
-def loggedIn():
-    return getCurrentUserId() != 0
 
 @app.route("/manage/<int:doc_id>")
 def manage(doc_id):
@@ -118,6 +93,7 @@ def manage(doc_id):
     doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
     doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
     doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
+    doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, ''))
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
@@ -245,12 +221,30 @@ def updateDocument(doc_id, version):
         abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)
-    doc = request.files['file']
-    content = UnicodeDammit(doc.read()).unicode_markup
-    if not content:
+    newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
+    if version != newestVersion:
+        return jsonResponse({'message': 'The document has been modified by someone else. Please refresh the page.'},
+                            400)
+    if 'file' in request.files:
+        doc = request.files['file']
+        raw = doc.read()
+
+        # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
+        # so try the built-in function first.
+        try:
+            content = raw.decode('utf-8')
+        except UnicodeDecodeError:
+            content = UnicodeDammit(raw).unicode_markup
+    else:
+        json = request.get_json()
+        if not 'fulltext' in json:
+            return jsonResponse({'message': 'Malformed request - fulltext missing.'}, 400)
+        content = json['fulltext']
+
+    if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
     newId = timdb.documents.updateDocument(docId, content)
-    return jsonResponse({'version' : newId.hash})
+    return jsonResponse(timdb.documents.getDocumentVersions(doc_id))
 
 @app.route('/images/<int:image_id>/<image_filename>/')
 def getImage(image_id, image_filename):
@@ -284,23 +278,6 @@ def getDocuments():
         doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
     return jsonResponse(allowedDocs)
-
-def getCurrentUserId():
-    uid = session.get('user_id')
-    return uid if uid is not None else 0
-
-def getCurrentUserName():
-    name = session.get('user_name')
-    return name if name is not None else 'Anonymous'
-
-def getCurrentUserGroup():
-    timdb = getTimDb()
-    return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
-
-def getTimDb():
-    if not hasattr(g, 'timdb'):
-        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'], current_user_name=getCurrentUserName())
-    return g.timdb
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
@@ -455,7 +432,21 @@ def viewDocument(doc_id):
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
-    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, cssFiles=cssPaths, jsMods=modules)
+    prefs = timdb.users.getPrefs(getCurrentUserId())
+    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else []
+    if custom_css_files:
+        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
+    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
+    return render_template('view.html',
+                           docID=doc['id'],
+                           docName=doc['name'],
+                           text=json.dumps(texts),
+                           version=versions[0],
+                           js=jsPaths,
+                           cssFiles=cssPaths,
+                           jsMods=modules,
+                           custom_css_files=custom_css_files,
+                           custom_css=custom_css)
 
 
 @app.route("/postNote", methods=['POST'])
@@ -629,25 +620,39 @@ def loginWithKorppi():
         randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = randomHex
     url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
-    r = requests.get(url, params={'request': session['appcookie']})
+    try:
+        r = requests.get(url, params={'request': session['appcookie']}, verify=True)
+    except requests.exceptions.SSLError:
+        return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
+                                                   'Try again later.'), 503
+    
     if r.status_code != 200:
         return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
                                                    'Try again later.'), 503
-    userName = r.text
-    if not userName:
+    korppiResponse = r.text.strip()
+    #print("korppiresponse is: '{}'".format(korppiResponse))
+    if not korppiResponse:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
-    
+    pieces = (korppiResponse + "\n\n").split('\n')
+    userName = pieces[0]
+    realName = pieces[1]
+    email = pieces[2]
+
     timdb = getTimDb()
     userId = timdb.users.getUserByName(userName)
     
     if userId is None:
-        uid = timdb.users.createUser(userName)
+        uid = timdb.users.createUser(userName, realName, email)
         gid = timdb.users.createUserGroup(userName)
         timdb.users.addUserToGroup(gid, uid)
         userId = uid
-        print('New user from Korppi: ' + userName)
+    else:
+        if realName:
+            timdb.users.updateUser(userId, userName, realName, email)
     session['user_id'] = userId
     session['user_name'] = userName
+    session['real_name'] = realName
+    session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
 

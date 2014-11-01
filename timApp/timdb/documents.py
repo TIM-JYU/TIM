@@ -210,11 +210,7 @@ class Documents(TimDbBase):
         :param block_id: The id (index) of the block in the document.
         """
 
-        try:
-            block = self.ec.getBlock(document_id, block_id)
-        except EphemeralException as e:
-            raise TimDbException(str(e))
-        return block
+        return self.ephemeralCall(document_id, self.ec.getBlock, block_id)
 
     def getBlockAsHtml(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
         """Gets a block of a document in HTML.
@@ -223,11 +219,7 @@ class Documents(TimDbBase):
         :param block_id: The id (index) of the block in the document.
         """
 
-        try:
-            block = self.ec.getBlockAsHtml(document_id, block_id)
-        except EphemeralException as e:
-            raise TimDbException(str(e))
-        return block
+        return self.ephemeralCall(document_id, self.ec.getBlockAsHtml, block_id)
 
     @contract
     def getDocumentAsBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
@@ -237,31 +229,32 @@ class Documents(TimDbBase):
         :returns: The blocks of the document in markdown format.
         """
 
-        try:
-            blocks = self.ec.getDocumentAsBlocks(document_id)
-        except EphemeralException:
-            if self.documentExists(document_id):
-                with open(self.getBlockPath(document_id.id), 'rb') as f:
-                    self.ec.loadDocument(document_id, f.read())
-                blocks = self.ec.getDocumentAsBlocks(document_id)
-            else:
-                raise TimDbException('The requested document was not found.')
-        return blocks
+        return self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)
 
     @contract
     def getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
         """Gets the specified document in HTML form."""
 
+        return self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
+
+    def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
+        """Calls a function of EphemeralClient, ensuring that the document is in cache.
+
+        :param args: Required arguments for the function.
+        :param ephemeral_function: The function to call.
+        :param document_id: The id of the document.
+        """
+
         try:
-            blocks = self.ec.getDocumentAsHtmlBlocks(document_id)
+            result = ephemeral_function(document_id, *args)
         except EphemeralException:
             if self.documentExists(document_id):
                 with open(self.getBlockPath(document_id.id), 'rb') as f:
                     self.ec.loadDocument(document_id, f.read())
-                blocks = self.ec.getDocumentAsHtmlBlocks(document_id)
+                result = ephemeral_function(document_id, *args)
             else:
                 raise TimDbException('The requested document was not found.')
-        return blocks
+        return result
 
     @contract
     def getDocumentPath(self, document_id: 'DocIdentifier') -> 'str':

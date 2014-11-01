@@ -15,7 +15,7 @@ if __name__ == "__main__":
     initRepo(FILES_ROOT_PATH)
     timdb.initializeTables()
     timdb.users.createAnonymousUser()
-    vesa_id = timdb.users.createUser('vesal')
+    vesa_id = timdb.users.createUser('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
     vesa_group = timdb.users.createUserGroup('vesal')
     timdb.users.addUserToGroup(vesa_group, vesa_id)
     doc_id = timdb.documents.importDocumentFromFile('lecture.markdown', 'Ohjelmointi 1', vesa_group)
