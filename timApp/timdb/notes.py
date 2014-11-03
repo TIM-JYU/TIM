@@ -138,21 +138,11 @@ class Notes(TimDbBase):
         :param group_id: The group of the user.
         :param doc_id: The document to get the notes for.
         """
-        #cursor = self.db.cursor()
-
         result = self.getMappedValues(
             user_id, doc_id, doc_ver, 'UserNotes',
-            extra_fields=['user_id', 'note_index', 'content', 'created', 'modified', 'tags']
+            extra_fields=['user_id', 'note_index', 'content', 'created', 'modified', 'tags'],
+            custom_access="access = 'everyone'"
         )
-
-        # cursor.execute(
-        # """
-        #     select user_id, par_index, note_index, content, created, modified, tags
-        #     from UserNotes
-        #     where doc_id  = ? and (user_id = ? or access = 'group' and group_id = ? or access = 'everyone')
-        # """, [doc_id, user_id, group_id])
-        
-        #result = self.resultAsDictionary(cursor)
 
         for item in result:
             item["tags"] = self.__strtotags(item["tags"])

@@ -148,11 +148,16 @@ class TimDbBase(object):
     @contract
     def getMappedValues(self, user_id : 'int', doc_id : 'int', doc_ver : 'str', table : 'str',
                         status_unmodified = "unmodified", status_modified = "modified",
-                        extra_fields : 'list' = []) -> 'list(dict)':
+                        extra_fields : 'list' = [], custom_access : 'str|None' = None) -> 'list(dict)':
         cursor = self.db.cursor()
 
         fields = ['par_index', 'doc_ver'] + extra_fields
-        query = "select {0} from {1} where user_id = ? and doc_id = ?".format(','.join(fields), table)
+
+        if custom_access is None:
+            query = "select {0} from {1} where user_id = ? and doc_id = ?".format(','.join(fields), table)
+        else:
+            query = "select {0} from {1} where (user_id = ? OR ({2})) and doc_id = ?".format(','.join(fields), table, custom_access)
+
         cursor.execute(query, [user_id, doc_id])
         rows = self.resultAsDictionary(cursor)
         remove_rows = []
