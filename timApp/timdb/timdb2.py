@@ -58,6 +58,7 @@ class TimDb(object):
             self.db.execute('delete from ' + table)  # TABLE_NAMES is constant so no SQL injection possible
 
     def commit(self):
+        """Commits any changes to the database"""
         self.db.commit()
 
     def close(self):

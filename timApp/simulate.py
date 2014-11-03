@@ -95,30 +95,28 @@ class TimSimulation:
             for doc in docs:
                 doc_id = doc['id']
                 doc_ver = random.choice(doc['versions'])['hash']
-                pars = len(self.db.documents.getDocumentAsBlocks(DocIdentifier(doc_id, doc_ver)))
-
-                if not self.new_version:
-                    blocks = self.db.documents.getDocumentAsBlocks(doc_id)
+                blocks = self.db.documents.getDocumentAsBlocks(DocIdentifier(doc_id, doc_ver))
+                pars = len(blocks)
 
                 for par_index in range(0, pars):
                     if random.random() < readcv:
                         if self.new_version:
                             self.db.readings.setAsRead(user_id, doc_id, doc_ver, par_index, commit = False)
                         else:
-                            self.db.readings.setAsRead(user_id, doc_id, par_index, blocks[par_index])
+                            self.db.readings.setAsRead(user_id, doc_id, par_index, blocks[par_index], commit = False)
                     if random.random() < notecv:
                         tags = random.choice([[], ['difficult'], ['unclear'], ['difficult', 'unclear']])
                         if self.new_version:
                             access = random.choice(['everyone', 'justme'])
                             self.db.notes.addNote(user_id, user_id, doc_id, doc_ver, par_index, random_sentence(), access, tags, commit=False)
                         else:
-                            self.db.notes.addNote(user_id, random_sentence(), doc_id, par_index, tags)
+                            self.db.notes.addNote(user_id, random_sentence(), doc_id, par_index, tags, commit = False)
         self.db.commit()
 
     def modify_loop(self):
-        readcv = 0.3
-        notecv = 0.1
-        min_mods = 0
+        readcv = 0.6
+        notecv = 0.5
+        min_mods = 1
         max_mods = 4
         self.mkmeta(user_count, readcv, notecv)
         self.modify_docs(user_count, min_mods, max_mods)
@@ -148,18 +146,18 @@ class TimSimulation:
             timdb.notes.getNotes(user_id, user_id, doc_id.id, doc_id.hash)
         else:
             timdb.readings.getReadings(user_id, doc_id.id)
-            timdb.readings.getNotes(user_id, doc_id.id)
+            timdb.notes.getNotes(user_id, doc_id.id)
 
 
 if __name__ == '__main__':
     sim = TimSimulation(new_version=True)
-    user_count = 20
+    user_count = 5
     min_docs = 1
-    max_docs = 5
-    min_pars = 5
-    max_pars = 10
-    mod_rounds = 5
-    doc_loads = 500
+    max_docs = 3
+    min_pars = 50
+    max_pars = 80
+    mod_rounds = 1
+    doc_loads = 2000
 
     print("Creating {0} users...".format(user_count))
     t0 = datetime.now()
