@@ -23,6 +23,8 @@ from werkzeug.contrib.profiler import ProfilerMiddleware
 
 from ReverseProxied import ReverseProxied
 import containerLink
+from routes.edit import edit_page
+from routes.manage import manage_page
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException, DocIdentifier
 import pluginControl
@@ -36,6 +38,8 @@ app.config.from_envvar('TIM_SETTINGS', silent=True)
 Compress(app)
 
 app.register_blueprint(settings_page)
+app.register_blueprint(manage_page)
+app.register_blueprint(edit_page)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
@@ -82,81 +86,6 @@ def forbidden(error):
 @app.errorhandler(404)
 def notFound(error):
     return render_template('404.html'), 404
-
-@app.route("/manage/<int:doc_id>")
-def manage(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
-    doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
-    doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
-    doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, ''))
-    editors = timdb.users.getEditors(doc_id)
-    viewers = timdb.users.getViewers(doc_id)
-    return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
-
-@app.route("/getPermissions/<int:doc_id>")
-def getPermissions(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
-    editors = timdb.users.getEditors(doc_id)
-    viewers = timdb.users.getViewers(doc_id)
-    return jsonResponse({'doc' : doc_data, 'editors' : editors, 'viewers' : viewers})
-
-@app.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
-def addPermission(doc_id, group_name, perm_type):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    
-    groups = timdb.users.getUserGroupsByName(group_name)
-    if len(groups) == 0:
-        return jsonResponse({'message' : 'No user group with this name was found.'}, 404)
-    
-    group_id = groups[0]['id']
-    
-    if perm_type == 'edit':
-        timdb.users.grantEditAccess(group_id, doc_id)
-    elif perm_type == 'view':
-        timdb.users.grantViewAccess(group_id, doc_id)
-    else:
-        abort(400)
-    return "Success"
-
-@app.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
-def removePermission(doc_id, group_id, perm_type):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    if perm_type == 'edit':
-        timdb.users.removeEditAccess(group_id, doc_id)
-    elif perm_type == 'view':
-        timdb.users.removeViewAccess(group_id, doc_id)
-    else:
-        abort(400)
-    return "Success"
-
-@app.route("/rename/<int:doc_id>", methods=["PUT"])
-def renameDocument(doc_id):
-    timdb = getTimDb()
-    new_name = request.get_json()['new_name']
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
-    return "Success"
 
 @app.route('/diff/<int:doc_id>/<doc_hash>')
 def documentDiff(doc_id, doc_hash):
@@ -213,38 +142,7 @@ def upload_file():
                 doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 return redirect(url_for('uploaded_file', filename=filename))
     
-@app.route('/update/<int:doc_id>/<version>', methods=['POST'])
-def updateDocument(doc_id, version):
-    timdb = getTimDb()
-    docId = DocIdentifier(doc_id, version)
-    if not timdb.documents.documentExists(docId):
-        abort(404)
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
-        abort(403)
-    newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
-    if version != newestVersion:
-        return jsonResponse({'message': 'The document has been modified by someone else. Please refresh the page.'},
-                            400)
-    if 'file' in request.files:
-        doc = request.files['file']
-        raw = doc.read()
 
-        # UnicodeDammit gives incorrect results if the encoding is UTF-8 without BOM,
-        # so try the built-in function first.
-        try:
-            content = raw.decode('utf-8')
-        except UnicodeDecodeError:
-            content = UnicodeDammit(raw).unicode_markup
-    else:
-        json = request.get_json()
-        if not 'fulltext' in json:
-            return jsonResponse({'message': 'Malformed request - fulltext missing.'}, 400)
-        content = json['fulltext']
-
-    if content is None:
-        return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-    newId = timdb.documents.updateDocument(docId, content)
-    return jsonResponse(timdb.documents.getDocumentVersions(doc_id))
 
 @app.route('/images/<int:image_id>/<image_filename>/')
 def getImage(image_id, image_filename):
@@ -307,26 +205,6 @@ def getJSON_HTML(doc_id):
         print(err)
         return "[]"
 
-@app.route("/postParagraph/", methods=['POST'])
-def postParagraph():
-    timdb = getTimDb()
-    docId = request.get_json()['docId']
-    verifyEditAccess(docId)
-    paragraphText = request.get_json()['text']
-    parIndex = request.get_json()['par']
-    app.logger.info("Editing file: {}, paragraph {}".format(docId, parIndex ))
-    version = request.headers.get('Version')
-    identifier = getNewest(docId)#DocIdentifier(docId, version)
-    
-    try:
-        blocks, version = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
-    except IOError as err:
-        print(err)
-        return "Failed to modify block."
-    # Replace appropriate elements with plugin content, load plugin requirements to template
-    preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
-    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
-
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
     if not loggedIn():
@@ -336,36 +214,6 @@ def createDocument():
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonResponse({'id' : docId.id})
-
-@app.route("/documents/<int:doc_id>", methods=["DELETE"])
-def deleteDocument(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        return jsonResponse({'message': 'Document does not exist.'}, 404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
-    timdb.documents.deleteDocument(getNewest(doc_id))
-    return "Success"
-
-@app.route('/edit/<int:doc_id>')
-@app.route("/documents/<int:doc_id>")
-def editDocument(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not hasEditAccess(doc_id):
-        if not loggedIn():
-            return redirect(url_for('loginWithKorppi', came_from=request.path))
-        else:
-            abort(403)
-    newest = getNewest(doc_id)
-    doc_metadata = timdb.documents.getDocument(newest)
-    xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
-    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
-    modules.append("ngSanitize")
-    modules.append("angularFileUpload")
-    return render_template('editing.html', docId=doc_metadata['id'], docName=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, cssFiles=cssPaths, jsMods=modules)
-
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
@@ -380,31 +228,6 @@ def getBlockHtml(docId, blockId):
     verifyViewAccess(docId)
     block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)    
     return block
-
-def getNewest(docId):
-    docId = int(docId)
-    timdb = getTimDb()
-    version = timdb.documents.getNewestVersion(docId)['hash']
-    return DocIdentifier(docId, version)
-    
-@app.route("/newParagraph/", methods=["POST"])
-def addBlock():
-    timdb = getTimDb()
-    jsondata = request.get_json()
-    blockText = jsondata['text']
-    docId = jsondata['docId']
-    verifyEditAccess(docId)
-    paragraph_id = jsondata['par']
-    blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
-    preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
-    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
-
-@app.route("/deleteParagraph/<int:docId>/<int:blockId>")
-def removeBlock(docId, blockId):
-    timdb = getTimDb()
-    verifyEditAccess(docId)
-    timdb.documents.deleteParagraph(getNewest(docId), blockId)
-    return "Successfully removed paragraph"
 
 @app.route("/<plugin>/<path:fileName>")
 def pluginCall(plugin, fileName):

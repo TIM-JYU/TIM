@@ -3,6 +3,8 @@
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response
 import json
+from timdb.timdbbase import DocIdentifier
+
 
 def getCurrentUserId():
     uid = session.get('user_id')
@@ -55,3 +57,9 @@ def jsonResponse(jsondata, status_code=200):
     response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
     response.status_code = status_code
     return response
+
+def getNewest(docId):
+    docId = int(docId)
+    timdb = getTimDb()
+    version = timdb.documents.getNewestVersion(docId)['hash']
+    return DocIdentifier(docId, version)
