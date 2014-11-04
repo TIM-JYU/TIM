@@ -108,7 +108,7 @@ class TimSimulation:
                         tags = random.choice([[], ['difficult'], ['unclear'], ['difficult', 'unclear']])
                         if self.new_version:
                             access = random.choice(['everyone', 'justme'])
-                            self.db.notes.addNote(user_id, user_id, doc_id, doc_ver, par_index, random_sentence(), access, tags, commit=False)
+                            self.db.notes.addNote(user_id, doc_id, doc_ver, par_index, random_sentence(), access, tags, commit=False)
                         else:
                             self.db.notes.addNote(user_id, random_sentence(), doc_id, par_index, tags, commit = False)
         self.db.commit()
@@ -143,7 +143,7 @@ class TimSimulation:
         #modules.append("angularFileUpload")
         if self.new_version:
             timdb.readings.getReadings(user_id, doc_id.id, doc_id.hash)
-            timdb.notes.getNotes(user_id, user_id, doc_id.id, doc_id.hash)
+            timdb.notes.getNotes(user_id, doc_id.id, doc_id.hash)
         else:
             timdb.readings.getReadings(user_id, doc_id.id)
             timdb.notes.getNotes(user_id, doc_id.id)

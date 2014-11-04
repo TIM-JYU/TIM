@@ -228,8 +228,7 @@ CONSTRAINT ParMappings_PK
 
 
 CREATE TABLE UserNotes(
-user_id	INTEGER NOT NULL,
-group_id INTEGER NOT NULL,
+UserGroup_id	INTEGER NOT NULL,
 doc_id INTEGER NOT NULL,
 doc_ver INTEGER NOT NULL,
 par_index INTEGER NOT NULL,
@@ -241,7 +240,7 @@ access VARCHAR(20) NOT NULL,
 tags VARCHAR(20) NOT NULL,
 
 CONSTRAINT UserNotes_PK
-	PRIMARY KEY (user_id, doc_id, doc_ver, par_index, note_index),
+	PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index, note_index),
 
 CONSTRAINT UserNotes_id
 	FOREIGN KEY (doc_id, doc_ver, par_index)
@@ -252,14 +251,14 @@ CONSTRAINT UserNotes_id
 
 
 CREATE TABLE ReadParagraphs(
-user_id	INTEGER NOT NULL,
+UserGroup_id	INTEGER NOT NULL,
 doc_id INTEGER NOT NULL,
 doc_ver INTEGER NOT NULL,
 par_index INTEGER NOT NULL,
 timestamp TIMESTAMP NOT NULL,
 
 CONSTRAINT ReadParagraphs_PK
-	PRIMARY KEY (user_id, doc_id, doc_ver, par_index),
+	PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index),
 
 CONSTRAINT ReadParagraphs_id
 	FOREIGN KEY (doc_id, doc_ver, par_index)

@@ -32,8 +32,7 @@ def createusernotes(cursor):
     cursor.execute(
         """
         CREATE TABLE UserNotes(
-        user_id	INTEGER NOT NULL,
-        group_id INTEGER NOT NULL,
+        UserGroup_id	INTEGER NOT NULL,
         doc_id INTEGER NOT NULL,
         doc_ver INTEGER NOT NULL,
         par_index INTEGER NOT NULL,
@@ -45,7 +44,7 @@ def createusernotes(cursor):
         tags VARCHAR(20) NOT NULL,
 
         CONSTRAINT UserNotes_PK
-            PRIMARY KEY (user_id, doc_id, doc_ver, par_index, note_index),
+            PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index, note_index),
 
         CONSTRAINT UserNotes_id
             FOREIGN KEY (doc_id, doc_ver, par_index)
@@ -60,14 +59,14 @@ def createreadparagraphs(cursor):
     cursor.execute(
         """
         CREATE TABLE ReadParagraphs(
-        user_id	INTEGER NOT NULL,
+        UserGroup_id	INTEGER NOT NULL,
         doc_id INTEGER NOT NULL,
         doc_ver INTEGER NOT NULL,
         par_index INTEGER NOT NULL,
         timestamp TIMESTAMP NOT NULL,
 
         CONSTRAINT ReadParagraphs_PK
-            PRIMARY KEY (user_id, doc_id, doc_ver, par_index),
+            PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index),
 
         CONSTRAINT ReadParagraphs_id
             FOREIGN KEY (doc_id, doc_ver, par_index)
@@ -103,12 +102,12 @@ def upgrade_readings(timdb):
     ok = 0
     data = cursor.fetchall()
     log = open('upgrade_readings.log', 'w')
-    for b_id, b_user, b_created, b_modified in data:
+    for b_id, b_grp, b_created, b_modified in data:
         i += 1
         write_progress(i / len(data))
         
-        if not timdb.users.userExists(b_user):
-            log.write("User {0} does not exist, skipping.\n".format(b_user))
+        if not timdb.users.groupExists(b_grp):
+            log.write("User group {0} does not exist, skipping.\n".format(b_grp))
             inv += 1
             continue
             
@@ -135,12 +134,12 @@ def upgrade_readings(timdb):
         try:
             cursor.execute(
                 """
-                insert into ReadParagraphs (user_id, doc_id, doc_ver, par_index, timestamp)
+                insert into ReadParagraphs (UserGroup_id, doc_id, doc_ver, par_index, timestamp)
                 values (?, ?, ?, ?, ?)
-                """, [b_user, r_parid, version, r_parspec, b_created]
+                """, [b_grp, r_parid, version, r_parspec, b_created]
             )
         except sqlite3.IntegrityError:
-            log.write('Reading for user {0} doc {1} paragraph {2} already marked.\n'.format(b_user, r_parid, r_parspec))
+            log.write('Reading for user group {0} doc {1} paragraph {2} already marked.\n'.format(b_grp, r_parid, r_parspec))
             inv += 1
             continue
         
@@ -179,9 +178,9 @@ def downgrade_readings(timdb):
     i = 0
     ok = 0
 
-    cursor.execute("select user_id, doc_id, par_index, timestamp from ReadParagraphs")
+    cursor.execute("select UserGroup_id, doc_id, par_index, timestamp from ReadParagraphs")
     data = cursor.fetchall()
-    for user_id, doc_id, par_index, timestamp in data:
+    for grp_id, doc_id, par_index, timestamp in data:
         i += 1
         write_progress(i / len(data))
 
@@ -189,7 +188,7 @@ def downgrade_readings(timdb):
             """
             insert into Block (latest_revision_id, type_id, description, created, UserGroup_id)
             values (0, 5, ?, ?, ?)
-            """, ['', timestamp, user_id]
+            """, ['', timestamp, grp_id]
         )
         block_id = cursor.lastrowid
         if not try_insert_block_relation(cursor, block_id, doc_id, par_index):
@@ -217,13 +216,13 @@ def tagstostr(tags):
 
 def downgrade_notes(timdb):
     cursor = timdb.db.cursor()
-    cursor.execute("select user_id, doc_id, par_index, content, created, modified, access, tags from UserNotes")
+    cursor.execute("select UserGroup_id, doc_id, par_index, content, created, modified, access, tags from UserNotes")
     assert_notesdir()
     blockpath = os.path.join(FILES_ROOT_PATH, 'blocks', 'notes')
     i = 0
     ok = 0
     data = cursor.fetchall()
-    for user_id, doc_id, par_index, content, created, modified, access, tags in data:
+    for grp_id, doc_id, par_index, content, created, modified, access, tags in data:
         i += 1
         write_progress(i / len(data))
         
@@ -231,7 +230,7 @@ def downgrade_notes(timdb):
             """
             insert into Block (latest_revision_id, type_id, description, created, modified, UserGroup_id)
             values (0, 2, ?, ?, ?, ?)
-            """, [",".join(strtotags(tags)), created, modified, user_id]
+            """, [",".join(strtotags(tags)), created, modified, grp_id]
         )
         block_id = cursor.lastrowid
 
@@ -257,12 +256,12 @@ def upgrade_notes(timdb):
     inv = 0
     data = cursor.fetchall()
     log = open('update_notes.log', 'w')
-    for b_id, b_user, b_desc, b_created, b_modified in data:
+    for b_id, b_grp, b_desc, b_created, b_modified in data:
         i += 1
         write_progress(i / len(data))
         
-        if not timdb.users.userExists(b_user):
-            log.write("User {0} does not exist, skipping.\n".format(b_user))
+        if not timdb.users.groupExists(b_grp):
+            log.write("User group {0} does not exist, skipping.\n".format(b_grp))
             inv += 1
             continue
             
@@ -290,36 +289,36 @@ def upgrade_notes(timdb):
         with open(timdb.notes.getBlockPath(b_id), 'r', encoding='utf-8') as f:
             content = f.read()
 
-        if timdb.users.userHasViewAccess(0, b_id):
+        if timdb.users.userGroupHasViewAccess(0, b_id):
             access = 'everyone'
         else:
             access = 'justme'
 
         cursor.execute(
            """
-           select note_index from UserNotes where user_id = ? and doc_id = ? and par_index = ?
+           select note_index from UserNotes where UserGroup_id = ? and doc_id = ? and par_index = ?
            order by note_index desc
-           """, [b_user, r_parid, r_parspec]
+           """, [b_grp, r_parid, r_parspec]
         )
         indexrows = cursor.fetchone()
         note_index = indexrows[0] + 1 if indexrows is not None else 0
-        group_id = timdb.users.getUserGroups(b_user)[0]['id']
+        group_id = timdb.users.getUserGroups(b_grp)[0]['id']
 
         if b_created is None or b_created == '':
             cursor.execute(
                 """
                 insert into UserNotes
-                (user_id, group_id, doc_id, doc_ver, par_index, note_index, content, created, access, tags)
-                values (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
-                """, [b_user, group_id, r_parid, version, r_parspec, note_index, content, access, tagstr]
+                (UserGroup_id, doc_id, doc_ver, par_index, note_index, content, created, access, tags)
+                values (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+                """, [b_grp, r_parid, version, r_parspec, note_index, content, access, tagstr]
             )
         else:
             cursor.execute(
                 """
                 insert into UserNotes
-                (user_id, group_id, doc_id, doc_ver, par_index, note_index, content, created, modified, access, tags)
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, [b_user, group_id, r_parid, version, r_parspec, note_index, content, b_created, b_modified, access, tagstr]
+                (UserGroup_id, doc_id, doc_ver, par_index, note_index, content, created, modified, access, tags)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, [b_grp, r_parid, version, r_parspec, note_index, content, b_created, b_modified, access, tagstr]
             )
 
 
@@ -364,9 +363,9 @@ def assert_notesdir():
     os.chdir(FILES_ROOT_PATH)
     
     if getFileVersion('blocks', 'notes') == 0:
-        gitCommand(FILES_ROOT_PATH, 'add blocks/notes')
-        commit_files('Added notes directory.')
-    
+        gitCommand('.', 'add blocks/notes')
+        #customCommit('', 'Added notes directory.', 'update_notes.py', include_staged_files=True)
+
     os.chdir(cwd)
 
 def commit_files(msg):
@@ -396,6 +395,8 @@ def cprint(text, condition):
         print(text)
 
 if __name__ == "__main__":
+    global FILES_ROOT_PATH
+
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
@@ -413,6 +414,7 @@ if __name__ == "__main__":
         oldnotecount = getcount(cursor, 'Block', 'type_id = 2')
 
         inform("users", getcount(cursor, 'User') - 1)
+        inform("user groups", getcount(cursor, 'UserGroup') - 1)
         inform("old format read paragraphs", oldrpcount)
         inform("old format notes", oldnotecount)
         inform("paragraph mappings", pmcount)
@@ -424,8 +426,6 @@ if __name__ == "__main__":
         cprint("'c' to create the new tables", pmcount < 0 or rpcount < 0 or notecount < 0)
         cprint("'dn' to delete the new tables", pmcount >= 0 or rpcount >= 0 or notecount >= 0)
         cprint("'do' to delete the old format notes & read markings", oldrpcount > 0 or oldnotecount > 0)
-        #cprint("'so' to add old-format simulated notes and read markings", pmcount >= 0 and oldnotecount >= 0 and oldrpcount >= 0)
-        #cprint("'sn' to add new-format simulated notes and read markings", notecount >= 0 and rpcount >= 0)
         print("'q' to quit.")
 
         c = input(">")
@@ -462,12 +462,6 @@ if __name__ == "__main__":
             print("Deleting the old format data.")
             delete_old(timdb)
             
-        elif c == 'sn' and (pmcount >= 0 or rpcount >= 0 or notecount >= 0):
-            print("Simulation with new tables.")
-
-        elif c == 'so' and (oldrpcount >= 0 or oldnotecount >= 0):
-            print("Simulation with old tables.")
-
         elif c == 'q':
             print("Exiting.")
 

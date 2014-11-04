@@ -157,6 +157,17 @@ class Users(TimDbBase):
         return result[0] if result is not None else None
 
     @contract
+    def groupExists(self, user_id : 'int') -> 'bool':
+        """Checks if the group with the specified id. exists
+
+        :returns: Boolean.
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute('select id from UserGroup where id = ?', [user_id])
+        return cursor.fetchone() is not None
+
+    @contract
     def getUserGroupsByName(self, name: 'str'):
         """Gets the usergroup that has the specified name.
         

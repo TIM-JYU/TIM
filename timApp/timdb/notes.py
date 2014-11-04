@@ -31,7 +31,7 @@ class Notes(TimDbBase):
         return tags
                 
     @contract
-    def hasEditAccess(self, user_id : 'int', doc_id : 'int', par_index : 'int', note_index : 'int') -> 'bool':
+    def hasEditAccess(self, UserGroup_id : 'int', doc_id : 'int', par_index : 'int', note_index : 'int') -> 'bool':
         """
         :param user_id: The owner of the note.
         :param doc_id: The document in which the note resides.
@@ -42,18 +42,17 @@ class Notes(TimDbBase):
     
         cursor.execute(
         """
-            select user_id from UserNotes
+            select UserGroup_id from UserNotes
             where doc_id = ? and par_index = ? and note_index = ?
         """, [doc_id, par_index, note_index])
         row = cursor.fetchone()
-        return row is not None and int(row[0]) == user_id
+        return row is not None and int(row[0]) == UserGroup_id
     
     @contract
-    def addNote(self, user_id : 'int', group_id : 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', content : 'str', access : 'str', tags : 'list(str)', commit : 'bool' = True):
+    def addNote(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', content : 'str', access : 'str', tags : 'list(str)', commit : 'bool' = True):
         """Adds a note to the document.
         
-        :param user_id: The user who owns the note.
-        :param group_id: The user group who owns the note.
+        :param UserGroup_id: The user group who owns the note.
         :param doc_id: The document in which the note exists.
         :param doc_ver: The version of the document.
         :param par_index: Index of the paragraph which the note is for.
@@ -67,9 +66,9 @@ class Notes(TimDbBase):
         cursor.execute(
         """
             select note_index from UserNotes
-            where user_id = ? and doc_id = ? and par_index = ?
+            where UserGroup_id = ? and doc_id = ? and par_index = ?
             order by note_index desc
-        """, [user_id, doc_id, par_index])
+        """, [UserGroup_id, doc_id, par_index])
         
         lastindex = cursor.fetchone()
         if lastindex is None:
@@ -80,20 +79,20 @@ class Notes(TimDbBase):
         cursor.execute(
         """
             insert into UserNotes
-            (user_id, group_id, doc_id, doc_ver, par_index, note_index,
+            (UserGroup_id, doc_id, doc_ver, par_index, note_index,
             content, created, modified, access, tags)
-            values (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?)
-        """, [user_id, group_id, doc_id, doc_ver, par_index, note_index,
+            values (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?)
+        """, [UserGroup_id, doc_id, doc_ver, par_index, note_index,
         content, access, self.__tagstostr(tags)])
 
         if commit:
             self.db.commit()
 
     @contract
-    def modifyNote(self, user_id: 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', new_tags : 'list(str)'):
+    def modifyNote(self, UserGroup_id: 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', new_tags : 'list(str)'):
         """Modifies an existing note.
         
-        :param user_id: The owner of the note.
+        :param UserGroup_id: The owner group of the note.
         :param doc_id: The document in which the note resides.
         :param par_index: The paragraph index.
         :param note_index: The note index, starting from 0 for each paragraph.
@@ -106,17 +105,17 @@ class Notes(TimDbBase):
         """
             update UserNotes
             set doc_ver = ?, content = ?, tags = ?
-            where user_id = ? and doc_id = ? and par_index = ? and note_index = ?
+            where UserGroup_id = ? and doc_id = ? and par_index = ? and note_index = ?
         """, [doc_ver, new_content, self.__tagstostr(new_tags),
-              user_id, doc_id, par_index, note_index])
+              UserGroup_id, doc_id, par_index, note_index])
         
         self.db.commit()
 
     @contract
-    def deleteNote(self, user_id: 'int', doc_id : 'int', par_index : 'int', note_index : 'int'):
+    def deleteNote(self, UserGroup_id: 'int', doc_id : 'int', par_index : 'int', note_index : 'int'):
         """Deletes a note.
         
-        :param user_id: The owner of the note.
+        :param UserGroup_id: The owner group of the note.
         :param doc_id: The document in which the note resides.
         :param par_index: The paragraph index.
         :param note_index: The note index, starting from 0 for each paragraph.
@@ -126,21 +125,21 @@ class Notes(TimDbBase):
         cursor.execute(
         """
             delete from UserNotes
-            where user_id = ? and doc_id = ? and par_index = ? and note_index = ?
-        """, [user_id, doc_id, par_index, note_index])
+            where UserGroup_id = ? and doc_id = ? and par_index = ? and note_index = ?
+        """, [UserGroup_id, doc_id, par_index, note_index])
         
         self.db.commit()
         
     @contract
-    def getNotes(self, user_id : 'int', group_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
+    def getNotes(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
         """Gets all notes for a document a particular user has access to.
         :param user_id: The user requesting the notes.
         :param group_id: The group of the user.
         :param doc_id: The document to get the notes for.
         """
         result = self.getMappedValues(
-            user_id, doc_id, doc_ver, 'UserNotes',
-            extra_fields=['user_id', 'note_index', 'content', 'created', 'modified', 'tags'],
+            UserGroup_id, doc_id, doc_ver, 'UserNotes',
+            extra_fields=['UserGroup_id', 'note_index', 'content', 'created', 'modified', 'tags'],
             custom_access="access = 'everyone'"
         )
 

@@ -288,9 +288,8 @@ def postNote():
     paragraph_id = jsondata['par_id']
 
     timdb = getTimDb()
-    user_id = getCurrentUserId()
-    group_id = timdb.users.getUserGroups(user_id)[0]['id']
-    timdb.notes.addNote(user_id, group_id, doc_id, doc_ver, int(paragraph_id), noteText, visibility, tags)
+    group_id = getCurrentUserGroup()
+    timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, visibility, tags)
     #TODO: Handle error.
     return "Success"
 
@@ -298,7 +297,7 @@ def postNote():
 def editNote():
     verifyLoggedIn()
     jsondata = request.get_json()
-    user_id = getCurrentUserId()
+    group_id = getCurrentUserGroup()
     doc_id = int(jsondata['doc_id'])
     doc_ver = request.headers.get('Version')
     paragraph_id = int(jsondata['par_id'])
@@ -310,38 +309,37 @@ def editNote():
             tags.append(tag)
     timdb = getTimDb()
 
-    if not timdb.notes.hasEditAccess(user_id, doc_id, paragraph_id, note_index):
+    if not timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index):
     	abort(403, "Sorry, you don't have permission to edit this note.")
 
-    timdb.notes.modifyNote(user_id, doc_id, doc_ver, paragraph_id, note_index, noteText, tags)
+    timdb.notes.modifyNote(group_id, doc_id, doc_ver, paragraph_id, note_index, noteText, tags)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
     verifyLoggedIn()
     jsondata = request.get_json()
-    user_id = getCurrentUserId()
+    group_id = getCurrentUserGroup()
     doc_id = int(jsondata['doc_id'])
     paragraph_id = int(jsondata['par_id'])
     note_index = int(jsondata['note_index'])
     timdb = getTimDb()
 
-    if not timdb.notes.hasEditAccess(user_id, doc_id, paragraph_id, note_index):
+    if not timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index):
     	abort(403, "Sorry, you don't have permission to remove this note.")
 
-    timdb.notes.deleteNote(user_id, doc_id, paragraph_id, note_index)
+    timdb.notes.deleteNote(group_id, doc_id, paragraph_id, note_index)
     return "Success"
 
 @app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
-    user_id = getCurrentUserId()
     group_id = getCurrentUserGroup()
     doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
-    notes = [note for note in timdb.notes.getNotes(user_id, group_id, doc_id, doc_ver)]
+    notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
     for note in notes:
-        note['editable'] = note['user_id'] == user_id
+        note['editable'] = note['UserGroup_id'] == group_id
         for tag in KNOWN_TAGS:
             note[tag] = tag in note['tags']
         note.pop('tags', None)
@@ -352,7 +350,7 @@ def getReadParagraphs(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
     doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
-    readings = timdb.readings.getReadings(getCurrentUserId(), doc_id, doc_ver)
+    readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
     return jsonResponse(readings)
 
 @app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
@@ -363,7 +361,7 @@ def setReadParagraph(doc_id, specifier):
     doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
     if len(blocks) <= specifier:
         return jsonResponse({'error' : 'Invalid paragraph specifier.'}, 400)
-    timdb.readings.setAsRead(getCurrentUserId(), doc_id, doc_ver, specifier)
+    timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
     return "Success"
 
 @app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])

@@ -14,28 +14,28 @@ class Readings(TimDbBase):
         #self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
-    def getReadings(self, user_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
+    def getReadings(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
         """Gets the reading info for a document for a user.
 
-        :param user_id: The id of the user whose readings will be fetched.
+        :param UserGroup_id: The id of the user group whose readings will be fetched.
         :param block_id: The id of the block whose readings will be fetched.
         """
-        return self.getMappedValues(user_id, doc_id, doc_ver, 'ReadParagraphs', status_unmodified = 'read')
+        return self.getMappedValues(UserGroup_id, doc_id, doc_ver, 'ReadParagraphs', status_unmodified = 'read')
         
     @contract
-    def setAsRead(self, user_id: 'int', doc_id : 'int', doc_ver : 'str', par_index: 'int', commit : 'bool' = True):
+    def setAsRead(self, UserGroup_id: 'int', doc_id : 'int', doc_ver : 'str', par_index: 'int', commit : 'bool' = True):
         self.addEmptyParMapping(doc_id, doc_ver, par_index, commit=False)
         cursor = self.db.cursor()
 
         # Remove previous markings for this paragraph to reduce clutter
         cursor.execute(
-            'delete from ReadParagraphs where user_id = ? and doc_id = ? and par_index = ?',
-            [user_id, doc_id, par_index])
+            'delete from ReadParagraphs where UserGroup_id = ? and doc_id = ? and par_index = ?',
+            [UserGroup_id, doc_id, par_index])
 
         # Set current version as read
         cursor.execute(
-            'insert into ReadParagraphs (user_id, doc_id, doc_ver, par_index, timestamp) values (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-            [user_id, doc_id, doc_ver, par_index])
+            'insert into ReadParagraphs (UserGroup_id, doc_id, doc_ver, par_index, timestamp) values (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+            [UserGroup_id, doc_id, doc_ver, par_index])
 
         if commit:
             self.db.commit()
