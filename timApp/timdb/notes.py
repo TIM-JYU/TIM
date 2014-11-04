@@ -139,7 +139,7 @@ class Notes(TimDbBase):
         """
         result = self.getMappedValues(
             UserGroup_id, doc_id, doc_ver, 'UserNotes',
-            extra_fields=['UserGroup_id', 'note_index', 'content', 'created', 'modified', 'tags'],
+            extra_fields=['UserGroup_id', 'note_index', 'content', 'created', 'modified', 'tags', 'access'],
             custom_access="access = 'everyone'"
         )
 

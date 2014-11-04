@@ -340,6 +340,7 @@ def getNotes(doc_id):
     notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
     for note in notes:
         note['editable'] = note['UserGroup_id'] == group_id
+        note['private'] = note['access'] == 'justme'
         for tag in KNOWN_TAGS:
             note[tag] = tag in note['tags']
         note.pop('tags', None)
