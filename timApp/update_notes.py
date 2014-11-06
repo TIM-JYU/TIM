@@ -96,13 +96,13 @@ def print_stats(ok, inv):
 
 def upgrade_readings(timdb):
     cursor = timdb.db.cursor()
-    cursor.execute("select id, UserGroup_id, created, modified from Block where type_id = 5")
+    cursor.execute("select id, UserGroup_id, description, created, modified from Block where type_id = 5")
     i = 0
     inv = 0
     ok = 0
     data = cursor.fetchall()
     log = open('upgrade_readings.log', 'w')
-    for b_id, b_grp, b_created, b_modified in data:
+    for b_id, b_grp, b_desc, b_created, b_modified in data:
         i += 1
         write_progress(i / len(data))
         
@@ -128,8 +128,22 @@ def upgrade_readings(timdb):
             log.write("Document {0} does not exist, skipping.\n".format(r_parid))
             inv += 1
             continue
-        
-        version = timdb.documents.getNewestVersion(r_parid)['hash']
+
+        versions = timdb.documents.getDocumentVersions(r_parid)
+        version = versions[0]['hash']
+        if len(versions) > 1:
+            blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(r_parid, version))
+            if blocks[r_parspec] != b_desc:
+                # Set reading to the oldest version... marks it as modified
+                latest = version
+                version = versions[len(versions) - 1]['hash']
+                # Add a paragraph mapping
+                cursor.execute(
+                    """
+                    insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+                    values (?, ?, ?, ?, ?, 'True')
+                    """, [r_parid, version, r_parspec, latest, r_parspec]
+                )
 
         try:
             cursor.execute(
