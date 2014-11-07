@@ -79,13 +79,23 @@ def logMessage():
         app.logger.error("Failed logging call: " + str(request.get_data()))
     
 
+def error_generic(error, code):
+    if 'text/html' in request.headers.get("Accept", ""):
+        return render_template(str(code) + '.html', message=error.description), code
+    else:
+        return jsonResponse({'error': error.description}, code)
+
+@app.errorhandler(400)
+def bad_request(error):
+    return error_generic(error, 400)
+
 @app.errorhandler(403)
 def forbidden(error):
-    return render_template('403.html', message=error.description), 403
+    return error_generic(error, 403)
 
 @app.errorhandler(404)
 def notFound(error):
-    return render_template('404.html'), 404
+    return error_generic(error, 404)
 
 @app.route('/diff/<int:doc_id>/<doc_hash>')
 def documentDiff(doc_id, doc_hash):
