@@ -96,72 +96,146 @@ def print_stats(ok, inv):
 
 def upgrade_readings(timdb):
     cursor = timdb.db.cursor()
-    cursor.execute("select id, UserGroup_id, description, created, modified from Block where type_id = 5")
-    i = 0
-    inv = 0
-    ok = 0
-    data = cursor.fetchall()
+    cursor.execute("select id, UserGroup_id, description from Block where type_id = 0")
+    docs = cursor.fetchall()
     log = open('upgrade_readings.log', 'w')
-    for b_id, b_grp, b_desc, b_created, b_modified in data:
-        i += 1
-        write_progress(i / len(data))
-        
-        if not timdb.users.groupExists(b_grp):
-            log.write("User group {0} does not exist, skipping.\n".format(b_grp))
-            inv += 1
-            continue
-            
+    i = 0
+    ok = 0
+
+    for doc_id, doc_owner, doc_name in docs:
+        versions = timdb.documents.getDocumentVersions(doc_id)
+        latest = versions[0]['hash']
+        version_count = len(versions)
+        mapping_added = False
+        if version_count > 1:
+            blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(doc_id, latest))
+
         cursor.execute(
             """
-            select parent_block_specifier, parent_block_id
-            from BlockRelation where block_id = ?
-            """, [b_id])
-        rel = cursor.fetchone()
-        if rel is None:
-            log.write('Encountered a reading with no relation (block id %d), ignored.\n' % b_id)
-            inv += 1
-            continue
-
-        r_parspec, r_parid = rel
-        
-        if not timdb.documents.documentExists(DocIdentifier(r_parid, '')):
-            log.write("Document {0} does not exist, skipping.\n".format(r_parid))
-            inv += 1
-            continue
-
-        versions = timdb.documents.getDocumentVersions(r_parid)
-        version = versions[0]['hash']
-        if len(versions) > 1:
-            blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(r_parid, version))
-            if blocks[r_parspec] != b_desc:
-                # Set reading to the oldest version... marks it as modified
-                latest = version
-                version = versions[len(versions) - 1]['hash']
-                # Add a paragraph mapping
-                cursor.execute(
-                    """
-                    insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
-                    values (?, ?, ?, ?, ?, 'True')
-                    """, [r_parid, version, r_parspec, latest, r_parspec]
-                )
-
-        try:
+            select block_id, parent_block_specifier
+            from BlockRelation
+            where parent_block_id = ?
+            """, [doc_id])
+        rels = cursor.fetchall()
+        for reading_id, par_index in rels:
             cursor.execute(
                 """
-                insert into ReadParagraphs (UserGroup_id, doc_id, doc_ver, par_index, timestamp)
-                values (?, ?, ?, ?, ?)
-                """, [b_grp, r_parid, version, r_parspec, b_created]
-            )
-        except sqlite3.IntegrityError:
-            log.write('Reading for user group {0} doc {1} paragraph {2} already marked.\n'.format(b_grp, r_parid, r_parspec))
-            inv += 1
-            continue
-        
-        ok += 1
+                select UserGroup_id, type_id, description
+                from Block where id = ?
+                """, [reading_id])
+            reading = cursor.fetchone()
+            if reading is None:
+                log.write("Could not find block {0}\n".format(reading_id))
+                continue
+            r_owner, b_type, r_content = reading
+            if b_type != 5:
+                # Not a reading
+                continue
+
+            if version_count > 1 and blocks[par_index] != r_content:
+                # Set reading to the oldest version... marks it as modified
+                version = versions[version_count - 1]['hash']
+
+                if not mapping_added:
+                    try:
+                        # Add a paragraph mapping
+                        cursor.execute(
+                            """
+                            insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+                            values (?, ?, ?, ?, ?, 'True')
+                            """, [doc_id, version, par_index, latest, par_index]
+                        )
+                        mapping_added = True
+                    except sqlite3.IntegrityError:
+                        log.write('Mapping for documennt {0} paragraph {1} already exists.\n'.format(doc_id, par_index))
+                        mapping_added = True
+            else:
+                version = latest
+
+            # Convert this reading
+            try:
+                cursor.execute(
+                    """
+                    insert into ReadParagraphs (UserGroup_id, doc_id, doc_ver, par_index, timestamp)
+                    values (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    """, [r_owner, doc_id, version, par_index]
+                )
+                ok += 1
+            except sqlite3.IntegrityError as e:
+                #log.write('Reading for user group {0} doc {1} paragraph {2} already marked.\n'.format(r_owner, doc_id, par_index))
+                log.write('Integrity error: {}\n'.format(e))
+                continue
+
+        i += 1
+        write_progress(i / len(docs))
+        timdb.db.commit()
+
+    # cursor = timdb.db.cursor()
+    # cursor.execute("select id, UserGroup_id, description, created, modified from Block where type_id = 5")
+    # i = 0
+    # inv = 0
+    # ok = 0
+    # data = cursor.fetchall()
+    # log = open('upgrade_readings.log', 'w')
+    # for b_id, b_grp, b_desc, b_created, b_modified in data:
+    #     i += 1
+    #     write_progress(i / len(data))
+    #
+    #     if not timdb.users.groupExists(b_grp):
+    #         log.write("User group {0} does not exist, skipping.\n".format(b_grp))
+    #         inv += 1
+    #         continue
+    #
+    #     cursor.execute(
+    #         """
+    #         select parent_block_specifier, parent_block_id
+    #         from BlockRelation where block_id = ?
+    #         """, [b_id])
+    #     rel = cursor.fetchone()
+    #     if rel is None:
+    #         log.write('Encountered a reading with no relation (block id %d), ignored.\n' % b_id)
+    #         inv += 1
+    #         continue
+    #
+    #     r_parspec, r_parid = rel
+    #
+    #     if not timdb.documents.documentExists(DocIdentifier(r_parid, '')):
+    #         log.write("Document {0} does not exist, skipping.\n".format(r_parid))
+    #         inv += 1
+    #         continue
+    #
+    #     versions = timdb.documents.getDocumentVersions(r_parid)
+    #     version = versions[0]['hash']
+    #     if len(versions) > 1:
+    #         blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(r_parid, version))
+    #         if blocks[r_parspec] != b_desc:
+    #             # Set reading to the oldest version... marks it as modified
+    #             latest = version
+    #             version = versions[len(versions) - 1]['hash']
+    #             # Add a paragraph mapping
+    #             cursor.execute(
+    #                 """
+    #                 insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+    #                 values (?, ?, ?, ?, ?, 'True')
+    #                 """, [r_parid, version, r_parspec, latest, r_parspec]
+    #             )
+    #
+    #     try:
+    #         cursor.execute(
+    #             """
+    #             insert into ReadParagraphs (UserGroup_id, doc_id, doc_ver, par_index, timestamp)
+    #             values (?, ?, ?, ?, ?)
+    #             """, [b_grp, r_parid, version, r_parspec, b_created]
+    #         )
+    #     except sqlite3.IntegrityError:
+    #         log.write('Reading for user group {0} doc {1} paragraph {2} already marked.\n'.format(b_grp, r_parid, r_parspec))
+    #         inv += 1
+    #         continue
+    #
+    #     ok += 1
 
     log.close()
-    print_stats(ok, inv)
-    timdb.db.commit()
+    print_stats(ok, 0)
 
 def try_insert_block_relation(cursor, block_id, doc_id, par_index):
     while True:
@@ -264,83 +338,149 @@ def downgrade_notes(timdb):
 
 def upgrade_notes(timdb):
     cursor = timdb.db.cursor()
-    cursor.execute("select id, UserGroup_id, description, created, modified from Block where type_id = 2")
+    cursor.execute("select id, UserGroup_id, description from Block where type_id = 0")
+    docs = cursor.fetchall()
+    log = open('upgrade_notes.log', 'w')
     i = 0
     ok = 0
-    inv = 0
-    data = cursor.fetchall()
-    log = open('update_notes.log', 'w')
-    for b_id, b_grp, b_desc, b_created, b_modified in data:
-        i += 1
-        write_progress(i / len(data))
-        
-        if not timdb.users.groupExists(b_grp):
-            log.write("User group {0} does not exist, skipping.\n".format(b_grp))
-            inv += 1
-            continue
-            
+
+    for doc_id, doc_owner, doc_name in docs:
+        versions = timdb.documents.getDocumentVersions(doc_id)
+        version = versions[0]['hash']
+
         cursor.execute(
             """
-            select parent_block_specifier, parent_block_id
-            from BlockRelation where block_id = ?
-            """, [b_id])
-        rel = cursor.fetchone()
-        if rel is None:
-            log.write('Encountered a note with no relation (block id %d), ignored.\n' % b_id)
-            inv += 1
-            continue
+            select block_id, parent_block_specifier
+            from BlockRelation
+            where parent_block_id = ?
+            """, [doc_id])
+        rels = cursor.fetchall()
+        for note_id, par_index in rels:
+            cursor.execute(
+                """
+                select UserGroup_id, type_id, description
+                from Block where id = ?
+                """, [note_id])
+            note = cursor.fetchone()
+            if note is None:
+                log.write("Could not find block {0}\n".format(note_id))
+                continue
+            note_owner, b_type, note_content = note
+            if b_type != 2:
+                # Not a note
+                continue
 
-        r_parspec, r_parid = rel
-        
-        if not timdb.documents.documentExists(DocIdentifier(r_parid, '')):
-            log.write("Document {0} does not exist, skipping.\n".format(r_parid))
-            inv += 1
-            continue
-        
-        version = timdb.documents.getNewestVersion(r_parid)['hash']
-        tagstr = tagstostr(b_desc.split(',')) if b_desc is not None else ''
+            # Convert this note
+            with open(timdb.notes.getBlockPath(note_id), 'r', encoding='utf-8') as f:
+                content = f.read()
 
-        with open(timdb.notes.getBlockPath(b_id), 'r', encoding='utf-8') as f:
-            content = f.read()
+            if timdb.users.userGroupHasViewAccess(0, note_id):
+                access = 'everyone'
+            else:
+                access = 'justme'
 
-        if timdb.users.userGroupHasViewAccess(0, b_id):
-            access = 'everyone'
-        else:
-            access = 'justme'
+            cursor.execute(
+                """
+                select note_index from UserNotes
+                where UserGroup_id = ? and doc_id = ? and par_index = ?
+                order by note_index desc
+                """, [note_owner, doc_id, par_index]
+            )
+            indexrows = cursor.fetchone()
+            note_index = indexrows[0] + 1 if indexrows is not None else 0
+            tagstr = tagstostr(note_content.split(',')) if note_content is not None else ''
 
-        cursor.execute(
-           """
-           select note_index from UserNotes where UserGroup_id = ? and doc_id = ? and par_index = ?
-           order by note_index desc
-           """, [b_grp, r_parid, r_parspec]
-        )
-        indexrows = cursor.fetchone()
-        note_index = indexrows[0] + 1 if indexrows is not None else 0
-        group_id = timdb.users.getUserGroups(b_grp)[0]['id']
-
-        if b_created is None or b_created == '':
             cursor.execute(
                 """
                 insert into UserNotes
                 (UserGroup_id, doc_id, doc_ver, par_index, note_index, content, created, access, tags)
                 values (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
-                """, [b_grp, r_parid, version, r_parspec, note_index, content, access, tagstr]
+                """, [note_owner, doc_id, version, par_index, note_index, content, access, tagstr]
             )
-        else:
-            cursor.execute(
-                """
-                insert into UserNotes
-                (UserGroup_id, doc_id, doc_ver, par_index, note_index, content, created, modified, access, tags)
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, [b_grp, r_parid, version, r_parspec, note_index, content, b_created, b_modified, access, tagstr]
-            )
+            ok += 1
 
+        i += 1
+        write_progress(i / len(docs))
+        timdb.db.commit()
 
-        ok += 1
-
-    log.close()
-    print_stats(ok, inv)
-    timdb.db.commit()
+    # cursor = timdb.db.cursor()
+    # cursor.execute("select id, UserGroup_id, description, created, modified from Block where type_id = 2")
+    # i = 0
+    # ok = 0
+    # inv = 0
+    # data = cursor.fetchall()
+    # log = open('update_notes.log', 'w')
+    # for b_id, b_grp, b_desc, b_created, b_modified in data:
+    #     i += 1
+    #     write_progress(i / len(data))
+    #
+    #     if not timdb.users.groupExists(b_grp):
+    #         log.write("User group {0} does not exist, skipping.\n".format(b_grp))
+    #         inv += 1
+    #         continue
+    #
+    #     cursor.execute(
+    #         """
+    #         select parent_block_specifier, parent_block_id
+    #         from BlockRelation where block_id = ?
+    #         """, [b_id])
+    #     rel = cursor.fetchone()
+    #     if rel is None:
+    #         log.write('Encountered a note with no relation (block id %d), ignored.\n' % b_id)
+    #         inv += 1
+    #         continue
+    #
+    #     r_parspec, r_parid = rel
+    #
+    #     if not timdb.documents.documentExists(DocIdentifier(r_parid, '')):
+    #         log.write("Document {0} does not exist, skipping.\n".format(r_parid))
+    #         inv += 1
+    #         continue
+    #
+    #     version = timdb.documents.getNewestVersion(r_parid)['hash']
+    #     tagstr = tagstostr(b_desc.split(',')) if b_desc is not None else ''
+    #
+    #     with open(timdb.notes.getBlockPath(b_id), 'r', encoding='utf-8') as f:
+    #         content = f.read()
+    #
+    #     if timdb.users.userGroupHasViewAccess(0, b_id):
+    #         access = 'everyone'
+    #     else:
+    #         access = 'justme'
+    #
+    #     cursor.execute(
+    #        """
+    #        select note_index from UserNotes where UserGroup_id = ? and doc_id = ? and par_index = ?
+    #        order by note_index desc
+    #        """, [b_grp, r_parid, r_parspec]
+    #     )
+    #     indexrows = cursor.fetchone()
+    #     note_index = indexrows[0] + 1 if indexrows is not None else 0
+    #     group_id = timdb.users.getUserGroups(b_grp)[0]['id']
+    #
+    #     if b_created is None or b_created == '':
+    #         cursor.execute(
+    #             """
+    #             insert into UserNotes
+    #             (UserGroup_id, doc_id, doc_ver, par_index, note_index, content, created, access, tags)
+    #             values (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+    #             """, [b_grp, r_parid, version, r_parspec, note_index, content, access, tagstr]
+    #         )
+    #     else:
+    #         cursor.execute(
+    #             """
+    #             insert into UserNotes
+    #             (UserGroup_id, doc_id, doc_ver, par_index, note_index, content, created, modified, access, tags)
+    #             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    #             """, [b_grp, r_parid, version, r_parspec, note_index, content, b_created, b_modified, access, tagstr]
+    #         )
+    #
+    #
+    #     ok += 1
+    #
+    # log.close()
+    # print_stats(ok, inv)
+    # timdb.db.commit()
 
 def delete_old(timdb):
     cursor = timdb.db.cursor()

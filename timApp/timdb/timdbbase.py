@@ -146,46 +146,6 @@ class TimDbBase(object):
             self.db.commit()
 
     @contract
-    def getMappingsForDoc(self, doc_id : 'int') -> 'list(dict)':
-        cursor = self.db.cursor()
-        cursor.execute(
-            """
-            select doc_ver, par_index, new_ver, new_index, modified
-            from ParMappings
-            where doc_id = ?
-            and new_ver is not null and new_index is not null
-            order by doc_ver
-            """, [doc_id])
-        return self.resultAsDictionary(cursor)
-
-    def findMapping(self, mappings : 'list(dict)', doc_ver : 'str', par_index : 'int', start_index : 'int' = 0, length : 'int' = -1) -> 'tuple(str, int, bool)|None':
-        n = length if length >= 0 else len(mappings)
-        if n == 0:
-            return None
-        if n == 1:
-            m = mappings[start_index]
-            if m["doc_ver"] == doc_ver and m["par_index"] == par_index:
-                return (m["new_ver"], m["new_index"], bool(m["modified"]))
-            else:
-                return None
-
-        m = mappings[start_index + n / 2]
-
-        if m["doc_ver"] == doc_ver:
-            if m["par_index"] == par_index:
-                return (m["new_ver"], m["new_index"], bool(m["modified"]))
-            if m["par_index"] > par_index:
-                return self.findMapping(mappings, doc_ver, par_index, start_index + length / 2, length / 2)
-            # if m["par_index"] < par_index:
-            return self.findMapping(mappings, doc_ver, par_index, start_index, length / 2)
-
-        if m["doc_ver"] > doc_ver:
-            return self.findMapping(mappings, doc_ver, par_index, start_index + length / 2, length / 2)
-        #if m["doc_ver"] < doc_ver:
-        return self.findMapping(mappings, doc_ver, par_index, start_index, length / 2)
-
-
-    @contract
     def getMappedValues(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str', table : 'str',
                         status_unmodified = "unmodified", status_modified = "modified",
                         extra_fields : 'list' = [], custom_access : 'str|None' = None) -> 'list(dict)':
@@ -201,11 +161,9 @@ class TimDbBase(object):
         cursor.execute(query, [UserGroup_id, doc_id])
         rows = self.resultAsDictionary(cursor)
         remove_rows = []
-        maps = None
 
         # Check for modifications
         db_modified = False
-
         for row in rows:
             read_ver = row['doc_ver']
             row['status'] = status_unmodified
@@ -218,22 +176,29 @@ class TimDbBase(object):
                 num_links = 0
                 #print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
 
-                if maps is None:
-                    maps = self.getMappingsForDoc(doc_id)
-
                 while current_ver != doc_ver:
                     current_par = read_par
-                    map = self.findMapping(maps, current_ver, current_par)
-                    if map is None:
-                        #print('Loose end: document %d, paragraph %s' % (doc_id, read_par))
-                        #row['status'] = status_modified
-                        remove_rows.append(row)
-                        break
-                    else:
-                        (current_ver, current_par, mod) = map
-                        modified |= mod
-                        num_links += 1
+                    cursor.execute(
+                        """
+                        select new_ver, new_index, modified
+                        from ParMappings
+                        where doc_id = ? and doc_ver = ? and par_index = ?
+                        and new_ver is not null and new_index is not null
+                        """, [doc_id, current_ver, current_par])
+                    mappings = self.resultAsDictionary(cursor)
+                    if len(mappings) > 0:
+                        #print('Found a mapping: %s(%d) -> %s(%d)' %
+                        #      (current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index']))
 
+                        current_ver = mappings[0]['new_ver']
+                        current_par = mappings[0]['new_index']
+                        modified |= mappings[0]['modified'] == 'True'
+                        num_links += 1
+                    else:
+                        #print('Loose end: document %d, paragraph %s' % (doc_id, read_par))
+                        row['status'] = status_modified
+                        #remove_rows.append(row)
+                        break
                 #print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
                 #      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
                 if num_links > 1 and current_ver == doc_ver:
