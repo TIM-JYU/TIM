@@ -25,6 +25,7 @@ from ReverseProxied import ReverseProxied
 import containerLink
 from routes.edit import edit_page
 from routes.manage import manage_page
+from routes.view import view_page
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException, DocIdentifier
 import pluginControl
@@ -40,6 +41,7 @@ Compress(app)
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
+app.register_blueprint(view_page)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
@@ -246,41 +248,6 @@ def pluginCall(plugin, fileName):
         return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
     except PluginException:
         abort(404)
-
-@app.route("/view/<int:doc_id>")
-def viewDocument(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not hasViewAccess(doc_id):
-        if not loggedIn():
-            return redirect(url_for('loginWithKorppi', came_from=request.path))
-        else:
-            abort(403)
-    if not loggedIn():
-        return redirect(url_for('loginWithKorppi', came_from=request.path))
-    versions = timdb.documents.getDocumentVersions(doc_id)
-    xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
-    doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
-    modules.append("ngSanitize")
-    modules.append("angularFileUpload")
-    prefs = timdb.users.getPrefs(getCurrentUserId())
-    custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else []
-    if custom_css_files:
-        custom_css_files = {key: value for key, value in custom_css_files.items() if value}
-    custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
-    return render_template('view.html',
-                           docID=doc['id'],
-                           docName=doc['name'],
-                           text=json.dumps(texts),
-                           version=versions[0],
-                           js=jsPaths,
-                           cssFiles=cssPaths,
-                           jsMods=modules,
-                           custom_css_files=custom_css_files,
-                           custom_css=custom_css)
-
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
