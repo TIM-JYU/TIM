@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{docName}}{% endblock %}
+{% block head %}
+{{ super() }}
+<script src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
+
+{% for script in js %}
+<script src=" {{script}}"> </script>
+{% endfor %}
+
+<script>
+    
+    var modules = checkModules( [
+                                 {% for dep in jsMods %}
+                                 "{{ dep|safe}}",
+                                 {% endfor %}
+                                'ngTouch'
+                                 ]);
+
+                             var EditApp = angular.module("controller", modules );
+</script>
+
+<script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/notesView/viewController.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/notesView/noteController.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
+<script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
+
+{% for cssFile in cssFiles %}
+<link rel="stylesheet" href="{{cssFile}}">
+{% endfor %}
+
+{% for cssFile in custom_css_files %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css')}}">
+{% endfor %}
+
+<style type="text/css">
+{{ custom_css }}
+</style>
+<script>
+        var docId = JSON.parse({{docID|tojson|safe}});
+        var docName = {{docName|tojson|safe}};
+        var version = {{version|tojson|safe}};
+</script> 
+{% endblock %}
+{% block content %}
+    {% for t in text %}
+    <div id="par-{{ loop.index0 }}" class="paragraph">
+        {{ t|safe }}
+    </div>
+    {% endfor %}
+{% endblock %}
