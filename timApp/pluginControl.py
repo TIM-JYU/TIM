@@ -108,7 +108,9 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
     for plugin_name, plugin_block_map in plugins.items():
         try:
             resp = plugin_reqs(plugin_name)
-        except PluginException:
+        except PluginException as e:
+            for idx in plugin_block_map.keys():
+                final_html_blocks[idx] = get_error_html(plugin_name, str(e))
             continue
         reqs = json.loads(resp)
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
