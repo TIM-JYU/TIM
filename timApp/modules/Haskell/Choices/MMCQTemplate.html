@@ -11,7 +11,7 @@
      <tr ng-repeat="choice in content.question.choices">
       <td style="width:35%"><span style="" class="MCQItem" ng-bind-html="choice.text"></span></td>
       <td style="width:2%;">
-        <input  type="checkbox" ng-model="$parent.answer[$index]" ng-value="true" />
+        <input  type="checkbox" ng-model="$parent.answer[$index]" ng-true-value="true" ng-false-value"false"/>
       </td>
       <td style="width:2%;">
         <input  type="checkbox" ng-model="$parent.answer[$index]" ng-false-value="true" ng-true-value="false" />
