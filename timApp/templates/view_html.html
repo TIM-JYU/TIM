@@ -39,15 +39,18 @@
 {{ custom_css }}
 </style>
 <script>
+        var jsonDoc = [];
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
-</script> 
+</script>
 {% endblock %}
 {% block content %}
+    <div ng-app="timApp" ng-controller="ViewCtrl">
     {% for t in text %}
     <div id="par-{{ loop.index0 }}" class="paragraph">
         {{ t|safe }}
     </div>
     {% endfor %}
+    </div>
 {% endblock %}
