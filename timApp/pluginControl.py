@@ -138,7 +138,9 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
-            except PluginException:
+            except PluginException as e:
+                for idx in plugin_block_map.keys():
+                    final_html_blocks[idx] = get_error_html(plugin_name, str(e))
                 continue
             plugin_htmls = json.loads(response)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
@@ -149,7 +151,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
             for idx, val in plugin_block_map.items():
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
-                except PluginException:
+                except PluginException as e:
+                    final_html_blocks[idx] = get_error_html(plugin_name, str(e))
                     continue
                 final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                                          plugin_url,
