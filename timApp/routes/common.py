@@ -1,10 +1,11 @@
 """Common functions for use with routes."""
 
 from timdb.timdb2 import TimDb
-from flask import current_app, session, abort, g, Response
+from flask import current_app, session, abort, g, Response, request
 import json
 from timdb.timdbbase import DocIdentifier
-
+from werkzeug.exceptions import default_exceptions, HTTPException
+from flask import make_response, abort as flask_abort, request
 
 def getCurrentUserId():
     uid = session.get('user_id')
@@ -63,3 +64,20 @@ def getNewest(docId):
     timdb = getTimDb()
     version = timdb.documents.getNewestVersion(docId)['hash']
     return DocIdentifier(docId, version)
+
+def verify_document_version(doc_id, version):
+    timdb = getTimDb()
+    newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
+    if newestVersion != version:
+        abort(400, 'The document version you edited is no longer the latest version. '
+                   'Please refresh the page and try again.')
+
+
+def verify_json_params(*args):
+    result = ()
+    json_params = request.get_json()
+    for arg in args:
+        if not arg in json_params:
+            abort('Missing required parameter in request: {}'.format(arg), 400)
+        result = result + (json_params[arg],)
+    return result

@@ -1,5 +1,4 @@
-
-{-#LANGUAGE OverloadedStrings, ScopedTypeVariables#-}
+{-#LANGUAGE OverloadedStrings, ScopedTypeVariables, TupleSections#-}
 module Main where
 import qualified Text.Pandoc as PDC
 import qualified Text.Pandoc.Options as PDC_Opt
@@ -8,6 +7,7 @@ import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 import Data.List
+import Data.Char
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
@@ -29,7 +29,10 @@ import qualified Data.ByteString.Search as BS
 import EphemeralPrelude
 import Text.Blaze.Html.Renderer.Text
 import qualified Data.HashSet as Set
+import qualified Data.HashMap.Strict as HashMap
+import Data.HashMap.Strict (HashMap)
 import Data.HashSet (HashSet)
+import Data.Hashable
 import Data.UUID
 import Data.UUID.V4
 
@@ -44,23 +47,37 @@ instance ToJSON DocID where
 instance ToJSON a => ToJSON (Seq a) where
     toJSON = toJSON . F.toList
 
-data Block = Block {markdown::T.Text, html::LT.Text, bagOfWords :: HashSet T.Text} deriving (Show,Eq)
-newtype Doc = Doc {fromDoc::Seq Block} deriving (Eq,Show)
+data Block = Block {markdown::T.Text
+                   ,html::LT.Text
+                   ,bagOfWords :: HashSet T.Text
+                   ,bHash :: BlockHash} deriving (Show,Eq)
+
+data Doc = Doc {fromDoc::Seq Block
+               ,fbii :: HashMap BlockHash (HashSet Int)} deriving (Eq,Show)
+
+type BlockHash = Int
 
 convert :: BS.ByteString -> Doc
-convert bs = case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toStrict . normaliseCRLF $ bs) of
-              PDC.Pandoc _ blocks -> Doc . Seq.fromList .  map convertBlock $ blocks
+convert bs =  Doc (Seq.fromList convBlocks) fbii
             where 
+                blocks = 
+                  case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toStrict .
+                        normaliseCRLF $ bs) of 
+                    PDC.Pandoc _ blocks -> blocks
+                convBlocks = map convertBlock blocks
+                fbii = HashMap.fromListWith mappend [(bHash b,Set.singleton i) | (b,i) <- zip convBlocks [0..]]
                 normaliseCRLF  = BS.replace "\r\n" ("\n"::BS.ByteString)
                 htmlOpts = PDC.def{PDC.writerHTMLMathMethod=PDC.MathJax 
                             "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"}
                 markdownOpts = PDC.def{PDC.writerSetextHeaders=False}
-                -- html_opts =  PDC.def{PDC.writerExtensions = DSB.singleton PDC_Opt.Ext_markdown_in_html_blocks}
-                convertBlock t = let  pdc = PDC.Pandoc mempty . box $ t
+                convertBlock t = let pdc  = PDC.Pandoc mempty . box $ t
+                                     pckd = (T.pack . PDC.writeMarkdown markdownOpts $ pdc) 
                                  in Block
-                                     (T.pack       . PDC.writeMarkdown  markdownOpts  $ pdc) -- Laajennos pois: html_optsin tilalle PDC.def
-                                     (renderHtml   . PDC.writeHtml      htmlOpts      $ pdc)
+                                     pckd 
+                                     (renderHtml   . PDC.writeHtml      htmlOpts     $ pdc)
                                      (Set.fromList . map T.pack . words . PDC.writeMarkdown PDC.def $ pdc)
+                                     (hash $ renorm pckd)
+                renorm = T.filter isAlphaNum
                             
 
 box :: t -> [t]
@@ -88,25 +105,25 @@ labelList lbl lst = [Labeled (lbl,i) x | (i,x) <- zip [0..] lst]
 -- all blocks of another document
 performMatch :: MonadIO m => (DocID,Int) -> DocID -> State -> EitherT Value m [(Double,Int)]
 performMatch (d1ID,i1) d2ID state = do
-   Doc d2 <- fetchDoc d2ID state
+   Doc d2 _ <- fetchDoc d2ID state
    block  <- fetchBlock d1ID i1 state
    return $ zip (map (textAffinity block) (F.toList d2)) [0..]
 
 performAffinityMap :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(Int,Int,Double)] 
 performAffinityMap d1ID d2ID state = do
    d1 <- fetchDoc d1ID state
-   Doc d2 <- fetchDoc d2ID state
+   d2Whole@(Doc d2 _) <- fetchDoc d2ID state
 -- blockMatch :: Doc -> Block -> Maybe (Int, Double, Double)
    return [(idx1,idx2,cfd)
           | (matchee,idx1) <- zip (F.toList d2) [0..]
-          , let a@(~(Just (idx2,aff,cfd))) = blockMatch d1 matchee
+          , let a@(~(Just (idx2,aff,cfd))) = blockMatch d1 (d2Whole,idx1)
           , isJust a]
 
 -- TODO: PerformDiff is really, really slow!
 performDiff :: MonadIO m => DocID -> DocID -> State -> EitherT Value m [(DocID,Int)]
 performDiff parentID childID state@(State st) = do
-   Doc parent <- fetchDoc parentID state 
-   Doc child  <- fetchDoc childID  state 
+   Doc parent _ <- fetchDoc parentID state 
+   Doc child  _ <- fetchDoc childID  state 
    return $ execDiff (labelList parentID (F.toList parent)) 
                      (labelList childID  (F.toList child))
 
@@ -118,7 +135,7 @@ performDiff3 parentID childID1 childID2 (State st) = liftIO $ do
    child1 <- LRU.lookup childID1 st 
    child2 <- LRU.lookup childID2 st 
    case (parent,child1,child2) of
-     (Just (Doc a),Just (Doc b),Just (Doc c)) 
+     (Just (Doc a _),Just (Doc b _),Just (Doc c _)) 
        -> return . Just . fmap (fmap getLabel) $ 
                 diff3  (labelList parentID (F.toList a)) 
                        (labelList childID1 (F.toList b))
@@ -154,10 +171,13 @@ fetchDoc docID (State st) =  hoistMaybe (jsErr $ "No such document: "<> (T.pack 
 -- Fetch a Block from a document according to ID.
 fetchBlock :: MonadIO m => DocID -> Int -> State -> EitherT Value m Block
 fetchBlock docID index state = do
-    Doc d <- fetchDoc docID state
+    Doc d fbii <- fetchDoc docID state
     abortIf (index < 0 && index >= Seq.length d)
             (jsErr "Index out of bounds")
     return (Seq.index d index)
+
+getBlock :: Int -> Doc -> Block
+getBlock i d = Seq.index (fromDoc d) i
 
 -- Rename a block
 -- NOTE: This is NOT Atomic
@@ -172,8 +192,8 @@ rename from to state@(State st) = do
 -- Replace a block
 replace :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> EitherT Value m DocID
 replace docID index bs state@(State st) = do
-    (Doc d) <- fetchDoc docID state
-    insertNew (Doc . insertRange d index . fromDoc . convert $ bs) state
+    (Doc d fbii) <- fetchDoc docID state
+    insertNew (Doc (insertRange d index . fromDoc . convert $ bs) fbii ) state --TODO: update FBII
 
 -- Insert a document into LRU with a generated docID
 insertNew :: MonadIO m => Doc -> State -> m DocID
@@ -200,17 +220,17 @@ hoistMaybe str op = EitherT $ op >>= return . maybe (Left str) Right
 -- Add a new paragraph
 addParagraph :: MonadIO m => DocID -> Int -> BS.ByteString -> State -> EitherT Value m DocID
 addParagraph docID idx bs state@(State st) = do
-    Doc d <- fetchDoc docID state 
+    Doc d fbii <- fetchDoc docID state 
     let (s,e) = Seq.splitAt idx d
-    insertNew (Doc $ s <> fromDoc (convert bs) <> e) state
+    insertNew (Doc (s <> fromDoc (convert bs) <> e) fbii) state -- TODO: update fbii
 
 
 -- Delete a paragraph
 removePar :: MonadIO m => DocID -> Int -> State -> EitherT Value m DocID
 removePar docID idx state = do
-    Doc d <- fetchDoc docID state
+    Doc d fbii <- fetchDoc docID state
     let (s,e) = Seq.splitAt idx d
-    insertNew (Doc $ s <> Seq.drop 1 e) state
+    insertNew (Doc (s <> Seq.drop 1 e) fbii) state
 
 -- Currently acts as part of replace, removes original block.
 insertRange :: Seq a -> Int -> Seq a -> Seq a
@@ -227,12 +247,44 @@ textAffinity d1 d2
  where fdiv a b = fromIntegral a / fromIntegral b
 
 -- Determine the closest matching block in given document.
-blockMatch :: Doc -> Block -> Maybe (Int, Double, Double)
-blockMatch (Doc d) block = case sortBy (compare`on`negate.fst3) . map (\(i,x) -> (textAffinity block x,i,x)) . zip [0..] . F.toList $ d of
-                            ((a1,i1,blk1):(a2,_,blk2):_) -> Just (i1, a1,  if blk1==blk2 then 1 else a1-a2)
-                            [(a1,i1,_)]                  -> Just (i1, a1, -1)
-                            []                           -> Nothing
-                        where fst3 (a,_,_) = a 
+blockMatch :: Doc -> (Doc,Int) -> Maybe (Int, Double, Double)
+blockMatch d (d2,i)
+  | isJust directMatch = directMatch
+  | otherwise =
+     case sortBy (compare `on` negate . fst3) .
+         map (\(i,x) -> 
+                (textAffinity block x,i,x)) .
+         zip [0 ..] .
+         F.toList $
+         fromDoc d of 
+      ((a1,i1,blk1):(a2,_,blk2):_) -> 
+        Just (i1
+             ,a1
+             ,if blk1 == blk2
+                 then 1
+                 else a1 - a2)
+      [(a1,i1,_)] -> Just (i1,a1,-1)
+      [] -> Nothing 
+  where 
+    block = getBlock i d2 
+    validate n = getBlock n d == block
+    matchFromSet :: HashSet Int -> Maybe (Int,Double,Double)
+    matchFromSet set = case filter validate . F.toList $ set of
+                        []     -> Nothing
+                        [x]    -> Just (x,1,1)
+                        (x:xs) -> Just (x,1,1) --listToMaybe $ mapMaybe (\i -> blockMatch d (d2,tr i)) xs
+    tr i 
+     | i <= 0 = 1
+     | i >= Seq.length (fromDoc d)
+     , Seq.length (fromDoc d) > 0 = i-1
+        
+    directMatch :: Maybe (Int, Double, Double)
+    directMatch = 
+          case HashMap.lookup (bHash block)
+                              (fbii d) of 
+            Nothing -> Nothing
+            Just set -> matchFromSet set -- Just (m,1,1)
+    fst3 (a,_,_) = a
 
 
 main :: IO ()
@@ -255,19 +307,19 @@ main = do
     quickHttpServe $ route 
         [
          -- Send the whole doc as markdown. Required: [?]
-         (":docID", method GET . withDoc $ \(Doc d) ->
-                traverse (\x -> writeText (markdown x) >> writeText "\n\n") d >> return ()),
+         (":docID", method GET . withDoc $ \d ->
+                traverse (\x -> writeText (markdown x) >> writeText "\n\n") (fromDoc d) >> return ())
          
          -- Send the whole doc as json containing html for the blocks. Required: [X]
-         ("/json-html/:docID", method GET . withDoc $ \(Doc d) -> 
-                writeLBS . encode . fmap html $ d),
+         ,("/json-html/:docID", method GET . withDoc $ \d -> 
+                writeLBS . encode . fmap html $ fromDoc d),
          
-         ("/json/:docID", method GET . withDoc $ \(Doc d) -> 
-                writeLBS . encode . fmap markdown $ d),
+         ("/json/:docID", method GET . withDoc $ \d -> 
+                writeLBS . encode . fmap markdown $ fromDoc d),
          
          -- Send the whole doc as html. Required: [?]
-         ("/html/:docID", method GET . withDoc $ \(Doc d) ->
-                traverse (\x -> writeLazyText (html x) >> writeText "\n\n") d >> return ()),
+         ("/html/:docID", method GET . withDoc $ \d ->
+                traverse (\x -> writeLazyText (html x) >> writeText "\n\n") (fromDoc d) >> return ()),
          
          -- Send a single block as markdown. Required [?]
          (":docID/:idx", method GET . withBlock $ \block -> writeText (markdown block)),

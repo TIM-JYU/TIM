@@ -264,8 +264,8 @@ EditApp.controller("ParCtrl", ['$scope',
                                             "text": text
                                     })}).success(function(data){
                                             promise.resolve(data);
-                                    }).error(function(){
-                                            promise.reject("Failed to post data");
+                                    }).error(function(data){
+                                            promise.reject(data);
                                     });
                             };
                             savedPars();
@@ -275,6 +275,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                     var js = datas['js'];
                                     var css = datas['css'];
                                     var modules = datas['angularModule'];
+                                    http.defaults.headers.common.Version = datas['version'];
                                     jsCssPromise = sc.loadjscssFiles(js, css); 
                                     jsCssPromise.then(function(){
                                          
@@ -314,7 +315,7 @@ EditApp.controller("ParCtrl", ['$scope',
                                     sc.$apply();
                                     },
                                     function(reason){
-                                        alert(reason);
+                                        alert('Failed to save document: ' + reason['error']);
                                         sc.paragraphs[elemId].loading = "";
                                     },
                                     function(){
@@ -330,7 +331,7 @@ EditApp.controller("ParCtrl", ['$scope',
                             deferred.resolve(data);
                         }).
                         error(function(data, status, headers, config) {
-                            deferred.reject("Failed to fetch html")
+                            deferred.reject(data)
                         });
                 }
                 removePar(blockId);
@@ -347,14 +348,14 @@ EditApp.controller("ParCtrl", ['$scope',
                     }else{
                         var promise = sc.callDelete(indx);
                         promise.then(function(data){
+                            http.defaults.headers.common.Version = data['version'];
                             sc.paragraphs.splice(indx, 1);
                             sc.oldParagraph = "";
                             sc.$apply();
                         }, function(reason) {
-                                alert('Failed: ' + reason);
+                                alert('Failed: ' + reason['error']);
                         }, function(data) {
                                 alert('Request progressing');
-
                         });
                     }
                     sc.sendingNew = false;

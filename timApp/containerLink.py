@@ -33,8 +33,8 @@ PLUGINS = {
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None):
     print("Calling plugin {} {} route with data: {}".format(plugin, route, data))
+    plug = get_plugin(plugin)
     try:
-        plug = get_plugin(plugin)
         request = requests.request(method, plug['host'] + route + "/", data=data, timeout=5, headers=headers)
         request.encoding = 'utf-8'
         return request.text
@@ -86,13 +86,11 @@ def plugin_reqs(plugin):
 def get_plugin(plugin):
     if plugin in PLUGINS:
         return PLUGINS[plugin]
-    raise PluginException(
-        "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system")
+    raise PluginException("Plugin does not exist.")
 
 
 # Get address towards which the plugin must send its further requests, such as answers
 def get_plugin_tim_url(plugin):
     if plugin in PLUGINS:
         return TIM_URL + "/" + plugin
-    raise PluginException(
-        "ERROR: Requested plugin not specified, please check PLUGINS and verify the plugin is registered to the system")
+    raise PluginException("Plugin does not exist.")

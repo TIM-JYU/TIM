@@ -40,7 +40,7 @@
 </style>
 <script>
         // Data from jinja2 template
-        var jsonDoc = JSON.parse({{text|tojson|safe}}); 
+        var jsonDoc = {{text|tojson|safe}};
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};

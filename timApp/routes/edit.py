@@ -19,10 +19,7 @@ def updateDocument(doc_id, version):
         abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)
-    newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
-    if version != newestVersion:
-        return jsonResponse({'message': 'The document has been modified by someone else. Please refresh the page.'},
-                            400)
+    verify_document_version(doc_id, version)
     if 'file' in request.files:
         doc = request.files['file']
         raw = doc.read()
@@ -47,22 +44,25 @@ def updateDocument(doc_id, version):
 @edit_page.route("/postParagraph/", methods=['POST'])
 def postParagraph():
     timdb = getTimDb()
-    docId = request.get_json()['docId']
-    verifyEditAccess(docId)
-    paragraphText = request.get_json()['text']
-    parIndex = request.get_json()['par']
-    current_app.logger.info("Editing file: {}, paragraph {}".format(docId, parIndex ))
-    version = request.headers.get('Version')
-    identifier = getNewest(docId)#DocIdentifier(docId, version)
+    doc_id, paragraphText, parIndex = verify_json_params('docId', 'text', 'par')
+    verifyEditAccess(doc_id)
+    current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, parIndex ))
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
+    identifier = DocIdentifier(doc_id, version)
 
     try:
         blocks, version = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
     except IOError as err:
         print(err)
-        return "Failed to modify block."
+        abort('Failed to modify block', 400)
     # Replace appropriate elements with plugin content, load plugin requirements to template
-    preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
-    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
+    preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
+    return jsonResponse({'texts': preparedBlocks,
+                         'js': jsPaths,
+                         'css': cssPaths,
+                         'angularModule': modules,
+                         'version': version})
 
 @edit_page.route('/edit/<int:doc_id>')
 @edit_page.route("/documents/<int:doc_id>")
@@ -86,19 +86,23 @@ def editDocument(doc_id):
 @edit_page.route("/newParagraph/", methods=["POST"])
 def addBlock():
     timdb = getTimDb()
-    jsondata = request.get_json()
-    blockText = jsondata['text']
-    docId = jsondata['docId']
-    verifyEditAccess(docId)
-    paragraph_id = jsondata['par']
-    blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
-    preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
-    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
+    blockText, doc_id, paragraph_id = verify_json_params('text', 'docId', 'par')
+    verifyEditAccess(doc_id)
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
+    blocks, version = timdb.documents.addMarkdownBlock(getNewest(doc_id), blockText, int(paragraph_id))
+    preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
+    return jsonResponse({'texts': preparedBlocks,
+                         'js': jsPaths,
+                         'css': cssPaths,
+                         'angularModule': modules,
+                         'version': version})
 
-@edit_page.route("/deleteParagraph/<int:docId>/<int:blockId>")
-def removeBlock(docId, blockId):
+@edit_page.route("/deleteParagraph/<int:doc_id>/<int:blockId>")
+def removeBlock(doc_id, blockId):
     timdb = getTimDb()
-    verifyEditAccess(docId)
-    timdb.documents.deleteParagraph(getNewest(docId), blockId)
-    return "Successfully removed paragraph"
-
+    verifyEditAccess(doc_id)
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
+    version = timdb.documents.deleteParagraph(getNewest(doc_id), blockId)
+    return jsonResponse({'version': version})
