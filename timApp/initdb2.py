@@ -3,7 +3,7 @@
 
 from timdb.timdb2 import TimDb
 import os
-from timdb.gitclient import initRepo
+from timdb.gitclient import GitClient
 
 
 if __name__ == "__main__":
@@ -11,8 +11,8 @@ if __name__ == "__main__":
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     FILES_ROOT_PATH = 'tim_files'
+    git = GitClient.initRepo(FILES_ROOT_PATH)
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
-    initRepo(FILES_ROOT_PATH)
     timdb.initializeTables()
     timdb.users.createAnonymousUser()
     vesa_id = timdb.users.createUser('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')

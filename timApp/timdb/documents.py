@@ -3,8 +3,7 @@ from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
 import os
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from shutil import copyfile
-from .gitclient import gitCommit, gitCommand
-from timdb.gitclient import NothingToCommitException
+from timdb.gitclient import NothingToCommitException, GitClient
 import ansiconv
 
 
@@ -18,6 +17,7 @@ class Documents(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
         self.ec = EphemeralClient(EPHEMERAL_URL)
+        self.git = GitClient.connect(files_root_path)
 
     @contract
     def addMarkdownBlock(self, document_id: 'DocIdentifier', content: 'str',
@@ -70,7 +70,6 @@ class Documents(TimDbBase):
             raise TimDbException('Document name cannot contain null characters.')
 
         document_id = self.__insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
-
         document_path = os.path.join(self.blocks_path, str(document_id))
 
         try:
@@ -80,8 +79,10 @@ class Documents(TimDbBase):
             self.db.rollback()
             raise
 
-        doc_hash = gitCommit(self.files_root_path, document_path,
-                             'Created a new document: %s (id = %d)' % (name, document_id), 'docker')
+        rel_block_path = os.path.relpath(self.blocks_path, self.files_root_path)
+        rel_document_path = os.path.join(rel_block_path, str(document_id))
+        self.git.add(rel_document_path)
+        doc_hash = self.git.commit('Created a new document: {} (id = {})'.format(name, document_id))
 
         docId = DocIdentifier(document_id, doc_hash)
 
@@ -128,8 +129,8 @@ class Documents(TimDbBase):
 
         os.remove(self.getDocumentPath(document_id))
 
-        gitCommit(self.files_root_path, self.getDocumentPath(document_id), 'Deleted document %d.' % document_id.id,
-                  'docker')
+        self.git.remove(self.getDocumentPathAsRelative(document_id))
+        self.git.commit('Deleted document {}.'.format(document_id))
 
     @contract
     def deleteParagraph(self, document_id: 'DocIdentifier', par_id: 'int'):
@@ -180,8 +181,17 @@ class Documents(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute('SELECT id,description AS name FROM Block WHERE type_id = ?', [blocktypes.DOCUMENT])
         results = self.resultAsDictionary(cursor)
+        zombies = []
         for result in results:
-            result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
+            if not self.blockExists(result['id'], blocktypes.DOCUMENT):
+                print('getDocuments: document {} does not exist on the disk!'.format(result['id']))
+                zombies.append(result)
+            else:
+                result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
+
+        for zombie in zombies:
+            results.remove(zombie)
+
         return results
 
     @contract
@@ -287,19 +297,13 @@ class Documents(TimDbBase):
 
     @contract
     def getDocumentMarkdown(self, document_id: 'DocIdentifier') -> 'str':
-        try:
-            out, _ = gitCommand(self.files_root_path,
-                                'show %s:%s' % (document_id.hash, self.getDocumentPathAsRelative(document_id)))
-        except TimDbException as e:
-            e.message = 'The requested revision was not found.'
-            raise
-        return out
+        return self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id))
 
     def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
         try:
-            out, _ = gitCommand(self.files_root_path, 'diff --color --unified=5 {}^! {}'.format(document_id.hash,
-                                                                                                self.getDocumentPathAsRelative(
-                                                                                                    document_id)))
+            out, _ = self.git.command('diff --color --unified=5 {}^! {}'.format(document_id.hash,
+                                                                                self.getDocumentPathAsRelative(
+                                                                                    document_id)))
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
@@ -327,8 +331,8 @@ class Documents(TimDbBase):
         if not self.documentExists(docId):
             raise TimDbException('The specified document does not exist.')
 
-        output, _ = gitCommand(self.files_root_path, 'log --format=%H|%ad|%an|%s --date=relative  -n {} '.format(limit)
-                               + self.getDocumentPathAsRelative(docId))
+        file_path = self.getDocumentPathAsRelative(docId)
+        output, _ = self.git.command('log --format=%H|%ad|%an|%s --date=relative -n {} {}'.format(limit, file_path))
         lines = output.splitlines()
         versions = []
         for line in lines:
@@ -354,8 +358,8 @@ class Documents(TimDbBase):
         doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         copyfile(document_file, self.getDocumentPath(doc_id))
 
-        doc_hash = gitCommit(self.files_root_path, self.getDocumentPath(doc_id),
-                             'Imported document: %s (id = %d)' % (document_name, doc_id.id), 'docker')
+        self.git.add(self.getDocumentPathAsRelative(doc_id))
+        doc_hash = self.git.commit('Imported document: {} (id = {})'.format(document_name, doc_id.id))
         docId = DocIdentifier(doc_id.id, doc_hash)
 
         with open(document_file, 'rb') as f:
@@ -381,8 +385,8 @@ class Documents(TimDbBase):
         """
 
         self.writeUtf8(doc_content, self.getDocumentPath(document_id))
-        return gitCommit(self.files_root_path, self.getDocumentPath(document_id),
-                         'Document %d: %s' % (document_id.id, msg), self.current_user_name)
+        self.git.add(self.getDocumentPathAsRelative(document_id))
+        return self.git.commit('Document {}: {}'.format(document_id.id, msg), author=self.current_user_name)
 
     @contract
     def ensureCached(self, document_id: 'DocIdentifier'):

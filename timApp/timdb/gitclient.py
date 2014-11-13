@@ -1,10 +1,8 @@
 import os
 import shlex
 from contracts import contract
-import gitpylib.repo
-import gitpylib.file
 import gitpylib.common
-import gitpylib.sync
+import pygit2
 from timdb.timdbbase import TimDbException
 
 
@@ -12,110 +10,84 @@ class NothingToCommitException(Exception):
     pass
 
 
-# TODO: This should possibly be a class.
+class GitClient:
+    def __init__(self, repository):
+        self.author = pygit2.Signature('docker', 'docker')
+        self.repo = repository
 
+    @classmethod
+    def initRepo(cls, path):
+        repo = pygit2.init_repository(path)
+        client = GitClient(repo)
+        client.add_custom('.gitattributes', '* -text')
+        client.commit('Created .gitattributes', first_commit = True)
+        return client
 
-def customCommit(files, msg, author, skip_checks=False, include_staged_files=False):
-    """Record changes in the local repository.
+    @classmethod
+    def connect(cls, path):
+        repo_path = os.path.join(path, '.git')
+        return GitClient(pygit2.Repository(repo_path))
 
-  Args:
-    files: the files to commit.
-    msg: the commit message.
-    skip_checks: if the pre-commit hook should be skipped or not. (Defaults to
-      False.)
-    include_staged_files: whether to include the contents of the staging area in
-      the commit or not. (Defaults to False.)
+    @contract
+    def get_contents(self, commit_hash : 'str', file_path : 'str'):
+        c = self.repo.get(commit_hash)
+        if c is not pygit2.Commit:
+            raise TimDbException('The requested revision was not found.')
+        if not c.contains(file_path):
+            raise TimDbException('The requested file was not found in the commit.')
+        entry = c.tree[file_path]
+        blob = self.repo[entry.oid]
+        return blob.data
 
-  Returns:
-    the output of the commit command.
-  """
-    cmd = 'commit {0} --author="{1} <>" -m{2}'.format('--no-verify ' if skip_checks else '', author, shlex.quote(msg))
-    if not files and include_staged_files:
-        return gitpylib.common.safe_git_call(cmd)[0]
+    @contract
+    def add(self, path : 'str'):
+        index = self.repo.index
+        index.read()
+        index.add(path)
+        index.write()
 
-    return gitpylib.common.safe_git_call(
-        '{0} {1}-- "{2}"'.format(
-            cmd, '-i ' if include_staged_files else '', '" "'.join(files)))[0]
+    @contract
+    def add_custom(self, path : 'str', content : 'str'):
+        with open(os.path.join(self.repo.workdir, path), 'w', newline='\n') as f:
+            f.write(content)
+        self.add(path)
 
+    @contract
+    def rm(self, path : 'str'):
+        index = self.repo.index
+        index.read()
+        index.remove(path)
+        index.write()
 
-@contract
-def initRepo(files_root_path: 'str'):
-    """Initializes a Git repository. A .gitattributes file is created with the content '* -text'.
-    
-    :param files_root_path: The root path of the repository.
-    """
-    cwd = os.getcwd()
-    os.chdir(files_root_path)
-    gitpylib.repo.init()
+    @contract
+    def commit(self, message : 'str', author = 'docker', first_commit : 'bool' = False) -> 'str':
+        signature = self.author if author == 'docker' else pygit2.Signature(author, author)
+        index = self.repo.index
+        tree = index.write_tree()
+        parent = [] if first_commit else [self.repo.head.target]
+        oid = self.repo.create_commit(
+            'refs/heads/master',
+            signature, signature,
+            message,
+            tree, parent
+        )
+        index.write()
+        return oid.hex
 
-    os.chdir(cwd)
+    @contract
+    def command(self, command: 'str') -> 'tuple(str, str)':
+        """Executes the specified Git command.
 
-    # Create .gitattributes that disables EOL conversion on Windows:
-    gitattrib = os.path.join(files_root_path, '.gitattributes')
-    with open(gitattrib, 'w', newline='\n') as f:
-        f.write('* -text')
-
-    gitCommit(files_root_path, '.gitattributes', 'Created .gitattributes', 'docker')
-
-
-@contract
-def gitCommit(files_root_path: 'str', file_path: 'str', commit_message: 'str', author: 'str'):
-    """Commits the specified file to Git repository.
-    
-    :param files_root_path: The root path of the repository.
-    :param file_path: The path of the file to commit.
-    :param commit_message: The commit message.
-    :param author: The author of the commit.
-    :returns: The hash of the change.
-    """
-    cwd = os.getcwd()
-    os.chdir(files_root_path)
-    gitpylib.file.stage(file_path)
-
-    try:
-        customCommit([file_path], commit_message, author, skip_checks=False, include_staged_files=False)
-        latest_hash, err = gitpylib.common.safe_git_call('rev-parse HEAD')  # Gets the latest version hash
-    except Exception as e:
-        ex_text = str(e)
-        if ('nothing added to commit' in ex_text) or ('no changes added to commit' in ex_text):
-            raise NothingToCommitException()
-        raise TimDbException('Commit failed. ' + ex_text)
-    finally:
-        os.chdir(cwd)
-    return latest_hash.rstrip()
-
-
-@contract
-def gitCommand(files_root_path: 'str', command: 'str'):
-    """Executes the specified Git command.
-    
-    :param files_root_path: The root path of the repository.
-    :param command: The command to execute.
-    """
-    cwd = os.getcwd()
-    os.chdir(files_root_path)
-    try:
-        output, err = gitpylib.common.safe_git_call(command)
-    except Exception:
-        raise TimDbException('Git call failed')
-    finally:
-        os.chdir(cwd)
-    return output, err
-
-@contract
-def getFileVersion(files_root_path : 'str', file_path : 'str') -> 'int':
-    """
-    Gets the file version as an integer, starting from 1 and
-    incrementing on every commit to that file.
-    :return: Version number
-    """
-    cwd = os.getcwd()
-    os.chdir(files_root_path)
-    try:
-        output, err = gitpylib.common.safe_git_call('log --oneline ' + file_path)
-    except Exception:
-        raise TimDbException('Git call failed')
-    finally:
-        os.chdir(cwd)
-    return output.count('\n')
+        :param files_root_path: The root path of the repository.
+        :param command: The command to execute.
+        """
+        cwd = os.getcwd()
+        os.chdir(self.repo.workdir)
+        try:
+            output, err = gitpylib.common.safe_git_call(command)
+        except Exception:
+            raise TimDbException('Git call failed')
+        finally:
+            os.chdir(cwd)
+        return output, err
 
