@@ -104,11 +104,14 @@ def upgrade_readings(timdb):
 
     for doc_id, doc_owner, doc_name in docs:
         versions = timdb.documents.getDocumentVersions(doc_id)
+        if len(versions) == 0:
+            log.write("Document {} has no versions!\n".format(doc_id))
+            continue
+
         latest = versions[0]['hash']
         version_count = len(versions)
         mapping_added = False
-        if version_count > 1:
-            blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(doc_id, latest))
+        blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(doc_id, latest))
 
         cursor.execute(
             """
@@ -118,6 +121,10 @@ def upgrade_readings(timdb):
             """, [doc_id])
         rels = cursor.fetchall()
         for reading_id, par_index in rels:
+            if par_index >= len(blocks):
+                log.write('Document {}: block index {} outside the document\n'.format(doc_id, par_index))
+                continue
+
             cursor.execute(
                 """
                 select UserGroup_id, type_id, description
@@ -346,7 +353,12 @@ def upgrade_notes(timdb):
 
     for doc_id, doc_owner, doc_name in docs:
         versions = timdb.documents.getDocumentVersions(doc_id)
+        if len(versions) == 0:
+            log.write("Document {} has no versions!\n".format(doc_id))
+            continue
+
         version = versions[0]['hash']
+        blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(doc_id, version))
 
         cursor.execute(
             """
@@ -356,6 +368,10 @@ def upgrade_notes(timdb):
             """, [doc_id])
         rels = cursor.fetchall()
         for note_id, par_index in rels:
+            if par_index >= len(blocks):
+                log.write('Document {}: block index {} outside the document\n'.format(doc_id, par_index))
+                continue
+
             cursor.execute(
                 """
                 select UserGroup_id, type_id, description
