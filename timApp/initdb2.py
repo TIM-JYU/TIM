@@ -4,7 +4,7 @@
 from timdb.timdb2 import TimDb
 import os
 from timdb.gitclient import GitClient
-
+import ephemeralclient
 
 if __name__ == "__main__":
     abspath = os.path.abspath(__file__)
@@ -12,17 +12,16 @@ if __name__ == "__main__":
     os.chdir(dname)
     FILES_ROOT_PATH = 'tim_files'
     git = GitClient.initRepo(FILES_ROOT_PATH)
+    p = ephemeralclient.launch_ephemeral()
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
     timdb.initializeTables()
     timdb.users.createAnonymousUser()
     vesa_id = timdb.users.createUser('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
     vesa_group = timdb.users.createUserGroup('vesal')
     timdb.users.addUserToGroup(vesa_group, vesa_id)
-    doc_id = timdb.documents.importDocumentFromFile('lecture.markdown', 'Ohjelmointi 1', vesa_group)
-    doc_id2 = timdb.documents.importDocumentFromFile('lecture.markdown',
-                                                     'Ohjelmointi 1 (saa testailla vapaasti)',
-                                                     vesa_group)
-    
+    doc_id = timdb.documents.createDocument('Testaus 1', vesa_group)
+    doc_id2 = timdb.documents.createDocument('Testaus 2', vesa_group)
+
     # Grant access to anonymous users
     timdb.users.grantViewAccess(0, doc_id.id)
     timdb.users.grantViewAccess(0, doc_id2.id)
@@ -38,3 +37,5 @@ if __name__ == "__main__":
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.""", 'everyone', [])
+
+    p.kill()
