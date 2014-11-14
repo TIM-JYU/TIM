@@ -24,6 +24,23 @@ run pip3 install pyaml
 run pip3 install ansiconv
 run pip3 install cssutils
 
+run apt-get install -y wget
+run apt-get install -y cmake
+
+# Create symbolic link for python3; otherwise CMake won't find it.
+run ln -s /usr/bin/python3 /usr/bin/python
+
+# Need to disable tests; otherwise build will fail with UnicodeDecodeError.
+run wget https://github.com/libgit2/libgit2/archive/v0.21.2.tar.gz \
+ && tar xzf v0.21.2.tar.gz \
+ && cd libgit2-0.21.2/ \
+ && cmake -DBUILD_CLAR=OFF . \
+ && make \
+ && make install
+run apt-get install libffi-dev
+env LD_LIBRARY_PATH /usr/local/lib
+run pip3 install pygit2
+
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
 # on older version of requests package.
