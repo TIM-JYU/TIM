@@ -7,7 +7,7 @@ from hypothesis.testdecorators import *
 
 from timdb.timdb2 import TimDb
 import ephemeralclient
-from timdb.gitclient import initRepo
+from timdb.gitclient import GitClient
 from timdb.timdbbase import TimDbException, DocIdentifier
 
 
@@ -36,11 +36,11 @@ class DocTest(unittest.TestCase):
             shutil.rmtree(TEST_FILES_PATH, onerror=onerror)
         TEST_DB_NAME = ':memory:'
 
+        GitClient.initRepo(TEST_FILES_PATH)
         db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
         e = ephemeralclient.launch_ephemeral()
         db.initializeTables("schema2.sql")
         db.users.createAnonymousUser()
-        initRepo(TEST_FILES_PATH)
 
     @classmethod
     def tearDownClass(cls):
@@ -104,7 +104,7 @@ class DocTest(unittest.TestCase):
         print('Adding {} notes to document...'.format(test_length))
         for i in range(0, test_length):
             #self.db.notes.addNote(0, str(i), doc.id, i, [], cache=False)
-            self.db.notes.addNote(0, 0, doc.id, doc.hash, i, str(i), 'justme', [], commit=False)
+            self.db.notes.addNote(0, doc.id, doc.hash, i, str(i), 'justme', [], commit=False)
         self.db.commit()
         print('Done.')
         return doc, doc_paragraphs
@@ -129,7 +129,7 @@ class DocTest(unittest.TestCase):
 
         print('Fetching notes of the document...')
         #notes = self.db.notes.getNotes(0, doc.id, get_html=False)
-        notes = self.db.notes.getNotes(0, 0, doc.id, doc.hash)
+        notes = self.db.notes.getNotes(0, doc.id, doc.hash)
         print('Done.')
 
         for i in range(0, test_length):
@@ -154,7 +154,7 @@ class DocTest(unittest.TestCase):
         new_count = random.randint(1, 100)
         _, ver = self.db.documents.addMarkdownBlock(doc, '\n\n'.join(['new'] * new_count), new_par_index)
         #self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
-        self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, 0, doc.id, ver), test_length)
+        self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, doc.id, ver), test_length)
 
     def test_notes_with_edit(self):
         print('test_notes_with_edit')
@@ -164,7 +164,7 @@ class DocTest(unittest.TestCase):
         new_count = random.randint(1, 100)
         _, ver = self.db.documents.modifyMarkDownBlock(doc, par_index, '\n\n'.join(['new'] * new_count))
         #self.check_notes(new_count - 1, par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
-        self.check_notes(new_count - 1, par_index + 1, self.db.notes.getNotes(0, 0, doc.id, ver), test_length)
+        self.check_notes(new_count - 1, par_index + 1, self.db.notes.getNotes(0, doc.id, ver), test_length)
 
     def test_notes_with_delete(self):
         print('test_notes_with_delete')
@@ -173,7 +173,7 @@ class DocTest(unittest.TestCase):
         delete_par_index = 100
         ver = self.db.documents.deleteParagraph(doc, delete_par_index)
         #self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
-        self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, 0, doc.id, ver), test_length - 1)
+        self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, ver), test_length - 1)
 
     def test_readings(self):
         print('test_readings')
