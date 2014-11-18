@@ -133,7 +133,7 @@ class TimSimulation:
 
     def get_doc_html(self, doc_id, user_id):
         timdb = self.db
-        if not timdb.documents.documentExists(doc_id):
+        if not timdb.documents.documentExists(doc_id.id):
             print("! Document {0} does not exist!".format(doc_id.id))
 
         xs = timdb.documents.getDocumentAsHtmlBlocks(doc_id)

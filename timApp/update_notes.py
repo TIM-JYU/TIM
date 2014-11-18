@@ -206,7 +206,7 @@ def upgrade_readings(timdb):
     #
     #     r_parspec, r_parid = rel
     #
-    #     if not timdb.documents.documentExists(DocIdentifier(r_parid, '')):
+    #     if not timdb.documents.documentExists(r_parid):
     #         log.write("Document {0} does not exist, skipping.\n".format(r_parid))
     #         inv += 1
     #         continue

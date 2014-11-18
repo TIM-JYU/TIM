@@ -12,7 +12,7 @@ manage_page = Blueprint('manage_page',
 @manage_page.route("/manage/<int:doc_id>")
 def manage(doc_id):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -27,7 +27,7 @@ def manage(doc_id):
 @manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
 def addPermission(doc_id, group_name, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -49,7 +49,7 @@ def addPermission(doc_id, group_name, perm_type):
 @manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def removePermission(doc_id, group_id, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -65,7 +65,7 @@ def removePermission(doc_id, group_id, perm_type):
 def renameDocument(doc_id):
     timdb = getTimDb()
     new_name = request.get_json()['new_name']
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -75,7 +75,7 @@ def renameDocument(doc_id):
 @manage_page.route("/getPermissions/<int:doc_id>")
 def getPermissions(doc_id):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -87,9 +87,9 @@ def getPermissions(doc_id):
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
 def deleteDocument(doc_id):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         return jsonResponse({'message': 'Document does not exist.'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
-    timdb.documents.deleteDocument(getNewest(doc_id))
+    timdb.documents.deleteDocument(doc_id)
     return "Success"

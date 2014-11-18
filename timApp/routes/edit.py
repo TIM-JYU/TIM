@@ -15,7 +15,7 @@ edit_page = Blueprint('edit_page',
 def updateDocument(doc_id, version):
     timdb = getTimDb()
     docId = DocIdentifier(doc_id, version)
-    if not timdb.documents.documentExists(docId):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)
@@ -68,7 +68,7 @@ def postParagraph():
 @edit_page.route("/documents/<int:doc_id>")
 def editDocument(doc_id):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not hasEditAccess(doc_id):
         if not loggedIn():

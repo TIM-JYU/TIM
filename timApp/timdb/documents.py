@@ -6,7 +6,6 @@ from shutil import copyfile
 from timdb.gitclient import NothingToCommitException, GitClient
 import ansiconv
 
-
 class Documents(TimDbBase):
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
@@ -30,7 +29,7 @@ class Documents(TimDbBase):
         :returns: A list of the added blocks.
         """
 
-        assert self.documentExists(document_id), 'document does not exist: %r' % document_id
+        assert self.documentExists(document_id.id), 'document does not exist: %r' % document_id
         self.ensureCached(document_id)
         response = self.ec.addBlock(document_id, new_block_index, content)
         version = self.__handleModifyResponse(document_id,
@@ -112,19 +111,19 @@ class Documents(TimDbBase):
         self.importDocumentFromFile('tmp.temp', document_name, 0)
 
     @contract
-    def deleteDocument(self, document_id: 'DocIdentifier'):
+    def deleteDocument(self, document_id: 'int'):
         """Deletes the specified document.
         
         :param document_id: The id of the document to be deleted.
         """
 
-        assert self.documentExists(document_id), 'document does not exist: %d' % document_id.id
+        assert self.documentExists(document_id), 'document does not exist: %d' % document_id
 
         cursor = self.db.cursor()
-        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.DOCUMENT, document_id.id])
-        cursor.execute('DELETE FROM ParMappings where doc_id = ?', [document_id.id])
-        cursor.execute('DELETE FROM ReadParagraphs where doc_id = ?', [document_id.id])
-        cursor.execute('DELETE FROM UserNotes where doc_id = ?', [document_id.id])
+        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.DOCUMENT, document_id])
+        cursor.execute('DELETE FROM ParMappings where doc_id = ?', [document_id])
+        cursor.execute('DELETE FROM ReadParagraphs where doc_id = ?', [document_id])
+        cursor.execute('DELETE FROM UserNotes where doc_id = ?', [document_id])
         self.db.commit()
 
         os.remove(self.getDocumentPath(document_id))
@@ -150,14 +149,14 @@ class Documents(TimDbBase):
         return version
 
     @contract
-    def documentExists(self, document_id: 'DocIdentifier') -> 'bool':
+    def documentExists(self, document_id: 'int') -> 'bool':
         """Checks whether a document with the specified id exists.
         
         :param document_id: The id of the document.
         :returns: True if the documents exists, false otherwise.
         """
 
-        return self.blockExists(document_id.id, blocktypes.DOCUMENT)
+        return self.blockExists(document_id, blocktypes.DOCUMENT)
 
     @contract
     def getDocument(self, document_id: 'DocIdentifier') -> 'dict':
@@ -222,7 +221,7 @@ class Documents(TimDbBase):
         :param document_id: The id of the document.
         :returns: A list of the block ids of the document.
         """
-        document_path = self.getDocumentPath(document_id)
+        document_path = self.getDocumentPath(document_id.id)
 
         assert os.path.exists(document_path), 'document does not exist: %d' % document_id
 
@@ -274,7 +273,7 @@ class Documents(TimDbBase):
         try:
             result = ephemeral_function(document_id, *args)
         except EphemeralException:
-            if self.documentExists(document_id):
+            if self.documentExists(document_id.id):
                 with open(self.getBlockPath(document_id.id), 'rb') as f:
                     self.ec.loadDocument(document_id, f.read())
                 result = ephemeral_function(document_id, *args)
@@ -283,27 +282,27 @@ class Documents(TimDbBase):
         return result
 
     @contract
-    def getDocumentPath(self, document_id: 'DocIdentifier') -> 'str':
+    def getDocumentPath(self, document_id: 'int') -> 'str':
         """Gets the path of the specified document.
         
         :param document_id: The id of the document.
         :returns: The path of the document.
         """
-        return self.getBlockPath(document_id.id)
+        return self.getBlockPath(document_id)
 
     @contract
-    def getDocumentPathAsRelative(self, document_id: 'DocIdentifier'):
+    def getDocumentPathAsRelative(self, document_id: 'int'):
         return os.path.relpath(self.getDocumentPath(document_id), self.files_root_path).replace('\\', '/')
 
     @contract
     def getDocumentMarkdown(self, document_id: 'DocIdentifier') -> 'str':
-        return self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id))
+        return self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id.id))
 
     def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
         try:
             out, _ = self.git.command('diff --color --unified=5 {}^! {}'.format(document_id.hash,
                                                                                 self.getDocumentPathAsRelative(
-                                                                                    document_id)))
+                                                                                    document_id.id)))
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
@@ -326,12 +325,10 @@ class Documents(TimDbBase):
         :returns: A list of the versions of the document.
         """
 
-        docId = DocIdentifier(document_id, '')
-
-        if not self.documentExists(docId):
+        if not self.documentExists(document_id):
             raise TimDbException('The specified document does not exist.')
 
-        file_path = self.getDocumentPathAsRelative(docId)
+        file_path = self.getDocumentPathAsRelative(document_id)
         output, _ = self.git.command('log --format=%H|%ad|%an|%s --date=relative -n {} {}'.format(limit, file_path))
         lines = output.splitlines()
         versions = []
@@ -341,18 +338,22 @@ class Documents(TimDbBase):
         return versions
 
     @contract
+    def getNewestVersion(self, document_id: 'int') -> 'dict(str:str)|None':
+        """Gets the hash of the newest version for a document.
+
+        :param document_id: The id of the document.
+        :returns: A version dictionary, or none if not found.
+        """
+        return self.git.getLatestVersionDetails(self.getDocumentPathAsRelative(document_id))
+
+    @contract
     def getNewestVersionHash(self, document_id: 'int') -> 'str|None':
         """Gets the hash of the newest version for a document.
         
         :param document_id: The id of the document.
         :returns: The hash string, or None if not found.
         """
-        docId = DocIdentifier(document_id, '')
-        path = self.getDocumentPathAsRelative(docId)
-        print("getLatestVersion returned '{}'".format(self.git.getLatestVersion(path)))
-        print("getDocumentVersions[0] returned '{}'".format(self.getDocumentVersions(document_id)[0]['hash']))
-        return self.git.getLatestVersion(path)
-        #return self.getDocumentVersions(document_id)[0]
+        return self.git.getLatestVersion(self.getDocumentPathAsRelative(document_id))
 
     @contract
     def importDocumentFromFile(self, document_file: 'str', document_name: 'str',
@@ -361,9 +362,9 @@ class Documents(TimDbBase):
 
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
         doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
-        copyfile(document_file, self.getDocumentPath(doc_id))
+        copyfile(document_file, self.getDocumentPath(doc_id.id))
 
-        self.git.add(self.getDocumentPathAsRelative(doc_id))
+        self.git.add(self.getDocumentPathAsRelative(doc_id.id))
         doc_hash = self.git.commit('Imported document: {} (id = {})'.format(document_name, doc_id.id))
         docId = DocIdentifier(doc_id.id, doc_hash)
 
@@ -389,8 +390,8 @@ class Documents(TimDbBase):
         :returns: The hash of the commit.
         """
 
-        self.writeUtf8(doc_content, self.getDocumentPath(document_id))
-        self.git.add(self.getDocumentPathAsRelative(document_id))
+        self.writeUtf8(doc_content, self.getDocumentPath(document_id.id))
+        self.git.add(self.getDocumentPathAsRelative(document_id.id))
         return self.git.commit('Document {}: {}'.format(document_id.id, msg), author=self.current_user_name)
 
     @contract
@@ -628,7 +629,7 @@ class Documents(TimDbBase):
         :returns: The modified blocks and the version hash as a tuple.
         """
 
-        assert self.documentExists(document_id), 'document does not exist: ' + document_id
+        assert self.documentExists(document_id.id), 'document does not exist: ' + document_id
         self.ensureCached(document_id)
         response = self.ec.modifyBlock(document_id, block_id, new_content)
 
@@ -648,7 +649,7 @@ class Documents(TimDbBase):
         :param new_name: The new name for the document.
         """
 
-        assert self.documentExists(document_id), 'document does not exist: ' + document_id
+        assert self.documentExists(document_id.id), 'document does not exist: ' + document_id
 
         cursor = self.db.cursor()
         cursor.execute('UPDATE Block SET description = ? WHERE type_id = ? AND id = ?',
@@ -664,7 +665,7 @@ class Documents(TimDbBase):
         :returns: The version of the new document.
         """
 
-        assert self.documentExists(document_id), 'document does not exist: ' + document_id
+        assert self.documentExists(document_id.id), 'document does not exist: ' + document_id
 
         try:
             version = self.__commitDocumentChanges(document_id, new_content, "Modified as whole")

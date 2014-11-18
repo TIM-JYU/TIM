@@ -124,7 +124,7 @@ class mktestdb:
 
     def get_doc_html(self, doc_id):
         timdb = self.db
-        if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+        if not timdb.documents.documentExists(doc_id):
             print("! Document {0} does not exist!".format(doc_id))
 
         versions = timdb.documents.getDocumentVersions(doc_id)

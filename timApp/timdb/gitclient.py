@@ -1,13 +1,15 @@
 import os
 import shlex
-from contracts import contract
+from contracts import contract, new_contract
 import gitpylib.common
 import pygit2
 from timdb.timdbbase import TimDbException
+from datetime import datetime
 
 class NothingToCommitException(Exception):
     pass
 
+new_contract('Commit', pygit2.Commit)
 
 class GitClient:
     def __init__(self, repository):
@@ -15,7 +17,7 @@ class GitClient:
         self.repo = repository
 
     @classmethod
-    def initRepo(cls, path):
+    def initRepo(cls, path : 'str'):
         repo = pygit2.init_repository(path)
         client = GitClient(repo)
         client.add_custom('.gitattributes', '* -text')
@@ -23,7 +25,7 @@ class GitClient:
         return client
 
     @classmethod
-    def connect(cls, path):
+    def connect(cls, path : 'str'):
         repo_path = os.path.join(path, '.git')
         return GitClient(pygit2.Repository(repo_path))
 
@@ -34,7 +36,11 @@ class GitClient:
             raise TimDbException('The requested revision {} was not found. HEAD is {}, c is {}'.format(commit_hash, self.repo.head.target.hex, str(c)))
         if not self.__itemExists(c, file_path):
             raise TimDbException('The requested file {} was not found in the commit {}.'.format(file_path, commit_hash))
-        entry = c.tree[file_path]
+        try:
+            entry = c.tree[file_path]
+        except KeyError:
+            raise TimDbException('The requested file {} was not found in the commit {}.'.format(file_path, commit_hash))
+
         blob = self.repo[entry.oid]
         return blob.data.decode()
 
@@ -73,7 +79,8 @@ class GitClient:
         index.write()
         return oid.hex
 
-    def __itemExists(self, commit, path):
+    @contract
+    def __itemExists(self, commit : 'Commit', path : 'str') -> 'bool':
         path_components = path.split('/')
         tree = commit.tree
         for i in range(0, len(path_components)):
@@ -84,21 +91,60 @@ class GitClient:
         return True
 
     @contract
-    def getLatestVersion(self, path : 'str') -> 'str|None':
+    def __getLatestCommit(self, path : 'str') -> 'Commit|None':
         cur_commit = self.repo[self.repo.head.target]
         last_commit = cur_commit
         file_id = cur_commit.tree[path].oid
         while len(cur_commit.parents) > 0:
             cur_commit = cur_commit.parents[0]
             if not self.__itemExists(cur_commit, path):
-                return last_commit.hex
+                return last_commit
 
             new_file_id = cur_commit.tree[path].oid
             if new_file_id.raw != file_id.raw:
-                return last_commit.hex
+                return last_commit
 
             last_commit = cur_commit
-        return cur_commit.hex
+        return cur_commit if self.__itemExists(path) else None
+
+    @contract
+    def getLatestVersion(self, path : 'str') -> 'str|None':
+        commit = self.__getLatestCommit(path)
+        return commit.hex if commit is not None else None
+
+    @contract
+    def getRelativeTimeStr(self, timestamp : 'int') -> 'str':
+        delta = datetime.fromtimestamp(timestamp) - datetime.now()
+        if delta.days < 0 or delta.seconds < 0:
+            return 'in the future'
+
+        if delta.days > 0:
+            if delta.days >= 365:
+                return '{:.0f} years ago'.format(delta.days / 365)
+            if delta.days >= 70:
+                return '{:.0f} months ago'.format(delta.days / 30)
+            if delta.days >= 7:
+                return '{:.0f} weeks ago'.format(delta.days / 7)
+
+        if delta.seconds >= 3600:
+            return '{:.0f} hours ago'.format(delta.seconds / 3600)
+        if delta.seconds >= 60:
+            return '{:.0f} minutes ago'.format(delta.seconds / 60)
+
+        return '{:.0f} seconds ago'.format(delta.seconds)
+
+    @contract
+    def __getCommitDetails(self, commit : 'Commit') -> 'dict(str:str)':
+        return {
+            'hash': commit.hex,
+            'timestamp': self.getRelativeTimeStr(commit.commit_time),
+            'user': commit.committer.name,
+            'message': commit.message }
+
+    @contract
+    def getLatestVersionDetails(self, path : 'str') -> 'dict(str:str)|None':
+        commit = self.__getLatestCommit(path)
+        return self.__getCommitDetails(commit) if commit is not None else None
 
     @contract
     def command(self, command: 'str') -> 'tuple(str, str)':

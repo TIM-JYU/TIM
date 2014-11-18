@@ -103,7 +103,7 @@ def notFound(error):
 @app.route('/diff/<int:doc_id>/<doc_hash>')
 def documentDiff(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, doc_hash)):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
@@ -115,7 +115,7 @@ def documentDiff(doc_id, doc_hash):
 @app.route('/download/<int:doc_id>/<doc_hash>')
 def documentHistory(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, doc_hash)):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:

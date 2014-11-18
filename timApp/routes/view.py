@@ -21,7 +21,7 @@ def view_document_html(doc_id):
 
 def view(doc_id, template_name):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not hasViewAccess(doc_id):
         if not loggedIn():
@@ -30,9 +30,9 @@ def view(doc_id, template_name):
             abort(403)
     if not loggedIn():
         return redirect(url_for('loginWithKorppi', came_from=request.path))
-    versions = timdb.documents.getDocumentVersions(doc_id)
-    xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
-    doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
+    version = timdb.documents.getNewestVersion(doc_id)
+    xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
+    doc = timdb.documents.getDocument(DocIdentifier(doc_id, version['hash']))
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
@@ -45,7 +45,7 @@ def view(doc_id, template_name):
                            docID=doc['id'],
                            docName=doc['name'],
                            text=texts,
-                           version=versions[0],
+                           version=version,
                            js=jsPaths,
                            cssFiles=cssPaths,
                            jsMods=modules,
