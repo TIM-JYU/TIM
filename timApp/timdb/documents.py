@@ -341,13 +341,18 @@ class Documents(TimDbBase):
         return versions
 
     @contract
-    def getNewestVersion(self, document_id: 'int') -> 'dict(str:str)':
+    def getNewestVersionHash(self, document_id: 'int') -> 'str|None':
         """Gets the hash of the newest version for a document.
         
         :param document_id: The id of the document.
-        :returns: A dictionary describing the latest version of the document: {'timestamp': 'xxx', 'hash': 'xxx'}
+        :returns: The hash string, or None if not found.
         """
-        return self.getDocumentVersions(document_id)[0]
+        docId = DocIdentifier(document_id, '')
+        path = self.getDocumentPathAsRelative(docId)
+        print("getLatestVersion returned '{}'".format(self.git.getLatestVersion(path)))
+        print("getDocumentVersions[0] returned '{}'".format(self.getDocumentVersions(document_id)[0]['hash']))
+        return self.git.getLatestVersion(path)
+        #return self.getDocumentVersions(document_id)[0]
 
     @contract
     def importDocumentFromFile(self, document_file: 'str', document_name: 'str',

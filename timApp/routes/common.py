@@ -62,12 +62,13 @@ def jsonResponse(jsondata, status_code=200):
 def getNewest(docId):
     docId = int(docId)
     timdb = getTimDb()
-    version = timdb.documents.getNewestVersion(docId)['hash']
+    version = timdb.documents.getNewestVersionHash(docId)
     return DocIdentifier(docId, version)
 
 def verify_document_version(doc_id, version):
     timdb = getTimDb()
-    newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
+    #newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
+    newestVersion = timdb.documents.getNewestVersionHash(doc_id)
     if newestVersion != version:
         abort(400, 'The document version you edited is no longer the latest version. '
                    'Please refresh the page and try again.')

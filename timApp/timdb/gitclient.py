@@ -5,7 +5,6 @@ import gitpylib.common
 import pygit2
 from timdb.timdbbase import TimDbException
 
-
 class NothingToCommitException(Exception):
     pass
 
@@ -31,13 +30,13 @@ class GitClient:
     @contract
     def get_contents(self, commit_hash : 'str', file_path : 'str'):
         c = self.repo.get(commit_hash)
-        if c is not pygit2.Commit:
-            raise TimDbException('The requested revision was not found.')
-        if not c.contains(file_path):
-            raise TimDbException('The requested file was not found in the commit.')
+        if type(c) is not pygit2.Commit:
+            raise TimDbException('The requested revision {} was not found. HEAD is {}, c is {}'.format(commit_hash, self.repo.head.target.hex, str(c)))
+        if not self.__itemExists(c, file_path):
+            raise TimDbException('The requested file {} was not found in the commit {}.'.format(file_path, commit_hash))
         entry = c.tree[file_path]
         blob = self.repo[entry.oid]
-        return blob.data
+        return blob.data.decode()
 
     @contract
     def add(self, path : 'str'):
@@ -60,7 +59,7 @@ class GitClient:
         index.write()
 
     @contract
-    def commit(self, message : 'str', author = 'docker', first_commit : 'bool' = False) -> 'str':
+    def commit(self, message : 'str', author : 'str' = 'docker', first_commit : 'bool' = False) -> 'str':
         signature = self.author if author == 'docker' else pygit2.Signature(author, author)
         index = self.repo.index
         tree = index.write_tree()
@@ -73,6 +72,33 @@ class GitClient:
         )
         index.write()
         return oid.hex
+
+    def __itemExists(self, commit, path):
+        path_components = path.split('/')
+        tree = commit.tree
+        for i in range(0, len(path_components)):
+            if not path_components[i] in tree:
+                return False
+            tree_id = tree[path_components[i]].oid
+            tree = self.repo[tree_id]
+        return True
+
+    @contract
+    def getLatestVersion(self, path : 'str') -> 'str|None':
+        cur_commit = self.repo[self.repo.head.target]
+        last_commit = cur_commit
+        file_id = cur_commit.tree[path].oid
+        while len(cur_commit.parents) > 0:
+            cur_commit = cur_commit.parents[0]
+            if not self.__itemExists(cur_commit, path):
+                return last_commit.hex
+
+            new_file_id = cur_commit.tree[path].oid
+            if new_file_id.raw != file_id.raw:
+                return last_commit.hex
+
+            last_commit = cur_commit
+        return cur_commit.hex
 
     @contract
     def command(self, command: 'str') -> 'tuple(str, str)':

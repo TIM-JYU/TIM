@@ -313,7 +313,7 @@ def getNotes(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
     for note in notes:
         note['editable'] = note['UserGroup_id'] == group_id
@@ -327,7 +327,7 @@ def getNotes(doc_id):
 def getReadParagraphs(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
-    doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
     return jsonResponse(readings)
 
@@ -336,7 +336,7 @@ def setReadParagraph(doc_id, specifier):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
-    doc_ver = timdb.documents.getNewestVersion(doc_id)['hash']
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     if len(blocks) <= specifier:
         return jsonResponse({'error' : 'Invalid paragraph specifier.'}, 400)
     timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
