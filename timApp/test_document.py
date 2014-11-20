@@ -206,6 +206,10 @@ class DocTest(unittest.TestCase):
 
         #readings = self.db.readings.getReadings(0, doc.id)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
+
+        for r in readings:
+            print(r)
+
         self.assertEqual(len(readings), 1)
         doc = self.db.documents.updateDocument(doc, 'cleared')
         #fr = self.db.readings.getReadings(0, doc.id)[0]

@@ -149,11 +149,64 @@ class TimDbBase(object):
             self.db.commit()
 
     @contract
+    def getParMapping(self, doc_id : 'int', doc_ver : 'str', target_ver : 'str', par_index : 'int', commit = True) -> 'tuple(int, bool)|None':
+        """
+        Returns a paragraph to which a previous version paragraph maps to.
+        :param doc_id: Document id.
+        :param doc_ver: Document version to map from.
+        :param target_ver: Document version to map to.
+        :param par_index: Paragraph index in the original document version.
+        :returns: A tuple of the new paragraph index and whether the paragraph has been modified (boolean),
+                    or None if no mapping was found.
+        """
+        cursor = self.db.cursor()
+        current_ver = doc_ver
+        current_par = par_index
+        modified = False
+        num_links = 0
+        while current_ver != target_ver:
+            cursor.execute(
+                """
+                select new_ver, new_index, modified
+                from ParMappings
+                where doc_id = ? and doc_ver = ? and par_index = ?
+                and new_ver is not null and new_index is not null
+                """, [doc_id, current_ver, current_par])
+            mappings = self.resultAsDictionary(cursor)
+            if len(mappings) == 0:
+                #print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
+                return None
+
+            #print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
+            #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index'], mappings[0]['modified']))
+            current_ver = mappings[0]['new_ver']
+            current_par = mappings[0]['new_index']
+            modified |= mappings[0]['modified'] == 'True'
+            num_links += 1
+
+        #print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
+        #      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
+        if num_links > 1 and current_ver == doc_ver:
+            # Flatten mappings to speed up future queries
+            # a -> b -> c becomes a -> c
+            #print('Updating mapping: %s(%s) -> %s(%s)' %
+            #      (read_ver[:6], read_par, current_ver[:6], current_par))
+            cursor.execute(
+                """
+                update ParMappings
+                set new_ver = ?, new_index = ?, modified = ?
+                where doc_id = ? and doc_ver = ? and par_index = ?
+                """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
+            if commit:
+                self.db.commit()
+
+        return (current_par, modified)
+
+    @contract
     def getMappedValues(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str', table : 'str',
                         status_unmodified = "unmodified", status_modified = "modified",
                         extra_fields : 'list' = [], custom_access : 'str|None' = None) -> 'list(dict)':
         cursor = self.db.cursor()
-
         fields = ['par_index', 'doc_ver'] + extra_fields
 
         if custom_access is None:
@@ -163,70 +216,34 @@ class TimDbBase(object):
 
         cursor.execute(query, [UserGroup_id, doc_id])
         rows = self.resultAsDictionary(cursor)
-        remove_rows = []
+        results = []
+
+        # To remove duplicates.
+        # Is a dictionary because hashing is fast.
+        mapped_pars = {}
 
         # Check for modifications
-        db_modified = False
         for row in rows:
             read_ver = row['doc_ver']
-            row['status'] = status_unmodified
+            par_index = int(row['par_index'])
 
-            if read_ver != doc_ver:
+            if read_ver == doc_ver:
+                row['status'] = status_unmodified
+                results.append(row)
+                mapped_pars[par_index] = True
+            else:
                 # Document has been modified, see if the paragraph has changed
-                read_par = row['par_index']
-                current_ver = read_ver
-                modified = False
-                num_links = 0
                 #print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
-                current_par = read_par
+                mapping = self.getParMapping(doc_id, read_ver, doc_ver, row['par_index'], commit = False)
+                if mapping is not None and mapping[0] not in mapped_pars:
+                    par_index = mapping[0]
+                    modified = mapping[1]
+                    row['par_index'] = par_index
+                    row['status'] = status_modified if modified else status_unmodified
+                    row['doc_ver'] = read_ver if modified else doc_ver
+                    results.append(row)
+                    mapped_pars[par_index] = True
 
-                while current_ver != doc_ver:
-                    cursor.execute(
-                        """
-                        select new_ver, new_index, modified
-                        from ParMappings
-                        where doc_id = ? and doc_ver = ? and par_index = ?
-                        and new_ver is not null and new_index is not null
-                        """, [doc_id, current_ver, current_par])
-                    mappings = self.resultAsDictionary(cursor)
-                    if len(mappings) > 0:
-                        #print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
-                        #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index'], mappings[0]['modified']))
-
-                        current_ver = mappings[0]['new_ver']
-                        current_par = mappings[0]['new_index']
-                        modified |= mappings[0]['modified'] == 'True'
-                        num_links += 1
-                    else:
-                        #print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
-                        remove_rows.append(row)
-                        break
-                #print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
-                #      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
-                if num_links > 1 and current_ver == doc_ver:
-                    # Flatten mappings to speed up future queries
-                    # a -> b -> c becomes a -> c
-                    #print('Updating mapping: %s(%s) -> %s(%s)' %
-                    #      (read_ver[:6], read_par, current_ver[:6], current_par))
-                    cursor.execute(
-                        """
-                        update ParMappings
-                        set new_ver = ?, new_index = ?, modified = ?
-                        where doc_id = ? and doc_ver = ? and par_index = ?
-                        """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
-                    db_modified = True
-                #print("")
-                row['par_index'] = current_par
-                if modified:
-                    row['status'] = status_modified
-                else:
-                    # No changes
-                    row['doc_ver'] = current_ver
-
-        for row in remove_rows:
-            rows.remove(row)
-
-        if db_modified:
-            self.db.commit()
-
-        return rows
+        # Commit in case of getParMapping optimizing the mappings
+        self.db.commit()
+        return results

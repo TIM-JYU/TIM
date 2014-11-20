@@ -610,7 +610,7 @@ class Documents(TimDbBase):
         else:
             # Remove
             #print("__handleModifyResponse({0}): removing {1} paragraph(s) from index {2}".format(document_id.id, -mod_count, mod_index))
-            print("copyParMappings({}, {}, start_index = {}, offset = {})".format(document_id.hash[:6], new_id.hash[:6], mod_index - mod_count, mod_count))
+            #print("copyParMappings({}, {}, start_index = {}, offset = {})".format(document_id.hash[:6], new_id.hash[:6], mod_index - mod_count, mod_count))
             self.__copyParMappings(
                 document_id, new_id,
                 start_index = mod_index - mod_count,
