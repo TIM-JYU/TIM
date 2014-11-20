@@ -325,6 +325,9 @@ class Documents(TimDbBase):
         :returns: A list of the versions of the document.
         """
 
+        if limit <= 0:
+            return []
+
         if not self.documentExists(document_id):
             raise TimDbException('The specified document does not exist.')
 

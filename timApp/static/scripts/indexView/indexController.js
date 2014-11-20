@@ -17,12 +17,25 @@ function(sc, controller, http, q, $upload) {
     sc.getDocs = function() {
         http({
             method : 'GET',
-            url : '/getDocuments/'
+            url : '/getDocuments?versions=0'
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex = true;
+            sc.getDocsWithTimes()
         }).error(function(data, status, headers, config) {
             sc.documentList = [];
+            // TODO: Show some error message.
+        });
+    };
+
+    sc.getDocsWithTimes = function() {
+        http({
+            method : 'GET',
+            url : '/getDocuments/'
+        }).success(function(data, status, headers, config) {
+            sc.documentList = data;
+            sc.displayTimes = true;
+        }).error(function(data, status, headers, config) {
             // TODO: Show some error message.
         });
     };
@@ -30,6 +43,7 @@ function(sc, controller, http, q, $upload) {
     sc.documentList = [];
     sc.getDocs();
     sc.displayIndex = false;
+    sc.displayTimes = false;
     sc.m = {};
 
     sc.uploadedFile;

@@ -181,8 +181,22 @@ def uploaded_file(filename):
 
 @app.route("/getDocuments/")
 def getDocuments():
+    versions = 1
+    if request.args.get('versions'):
+        ver_str = request.args.get('versions')
+        if re.match('^\d+$', ver_str) is None:
+            return "Invalid version argument."
+        else:
+            ver_int = int(ver_str)
+            if ver_int > 10:
+                # DoS prevention
+                return "Version limit is currently capped at 10."
+            else:
+                versions = ver_int
+
+    print("getDocuments()")
     timdb = getTimDb()
-    docs = timdb.documents.getDocuments(historylimit=1)
+    docs = timdb.documents.getDocuments(historylimit=versions)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
     for doc in allowedDocs:
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
