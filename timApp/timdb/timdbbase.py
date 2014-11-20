@@ -190,25 +190,24 @@ class TimDbBase(object):
                         """, [doc_id, current_ver, current_par])
                     mappings = self.resultAsDictionary(cursor)
                     if len(mappings) > 0:
-                        #print('Found a mapping: %s(%d) -> %s(%d)' %
-                        #      (current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index']))
+                        #print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
+                        #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index'], mappings[0]['modified']))
 
                         current_ver = mappings[0]['new_ver']
                         current_par = mappings[0]['new_index']
                         modified |= mappings[0]['modified'] == 'True'
                         num_links += 1
                     else:
-                        #print('Loose end: document %d, paragraph %s' % (doc_id, read_par))
-                        row['status'] = status_modified
-                        #remove_rows.append(row)
+                        #print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
+                        remove_rows.append(row)
                         break
                 #print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
                 #      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
                 if num_links > 1 and current_ver == doc_ver:
                     # Flatten mappings to speed up future queries
                     # a -> b -> c becomes a -> c
-                    print('Updating mapping: %s(%s) -> %s(%s)' %
-                          (read_ver[:6], read_par, current_ver[:6], current_par))
+                    #print('Updating mapping: %s(%s) -> %s(%s)' %
+                    #      (read_ver[:6], read_par, current_ver[:6], current_par))
                     cursor.execute(
                         """
                         update ParMappings
