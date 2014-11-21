@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests
-from requests.exceptions import ConnectTimeout
+from requests.exceptions import Timeout
 import json
 
 
@@ -38,7 +38,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None):
         request = requests.request(method, plug['host'] + route + "/", data=data, timeout=5, headers=headers)
         request.encoding = 'utf-8'
         return request.text
-    except requests.exceptions.ConnectTimeout:
+    except requests.exceptions.Timeout:
         raise PluginException("Could not connect to plugin")
 
 
@@ -65,7 +65,7 @@ def call_plugin_resource(plugin, filename):
         request = requests.get(plug['host'] + filename, timeout=5, stream=True)
         request.encoding = 'utf-8'
         return request
-    except requests.exceptions.ConnectTimeout:
+    except requests.exceptions.Timeout:
         raise PluginException("Could not connect to plugin: " + plugin)
 
 
