@@ -7,6 +7,10 @@
 	max-width: 52em;
 }
 
+.par {
+    position: relative;
+}
+
 body {
 	max-width: 60.2em;
 }
@@ -440,13 +444,11 @@ table td {
 	border-color: #666666;
 }
 
-P {
-	margin-top: 0em;
-	margin-bottom: 0.0cm;
+p {
 	margin-left: 2em;
 }
 
-P.sananselitys-western {
+p.sananselitys-western {
 	padding: 0.4cm;
 	margin-left: 0;
 	margin-right: 0;
