@@ -1,4 +1,4 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload']);
+var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules));
 
 timApp.controller("ViewCtrl", ['$scope',
     '$http',
