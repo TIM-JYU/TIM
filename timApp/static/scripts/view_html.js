@@ -57,7 +57,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     if (this.id in sc.pars) {
                         var $notediv = $("<div>", {class: 'notes'}).html(sc.getNoteHtml(this.id));
                         $(this).append($notediv);
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "" + data[this.id].par_index]);
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.id]);
                     }
                 });
                 $(".note").click(function () {
