@@ -16,10 +16,11 @@ def manage(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
-    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
+    doc_data = timdb.documents.getDocument(doc_id)
     doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
+    hash = doc_data['versions'][0]['hash']
     doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
-    doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, ''))
+    doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, hash))
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
@@ -79,7 +80,7 @@ def getPermissions(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
-    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
+    doc_data = timdb.documents.getDocument(doc_id)
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return jsonResponse({'doc' : doc_data, 'editors' : editors, 'viewers' : viewers})

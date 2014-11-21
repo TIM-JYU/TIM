@@ -159,7 +159,7 @@ class Documents(TimDbBase):
         return self.blockExists(document_id, blocktypes.DOCUMENT)
 
     @contract
-    def getDocument(self, document_id: 'DocIdentifier') -> 'dict':
+    def getDocument(self, document_id: 'int') -> 'dict':
         """Gets the metadata information of the specified document.
         
         :param document_id: The id of the document to be retrieved.
@@ -167,7 +167,7 @@ class Documents(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT id, description AS name FROM Block WHERE id = ? AND type_id = ?',
-                       [document_id.id, blocktypes.DOCUMENT])
+                       [document_id, blocktypes.DOCUMENT])
 
         return self.resultAsDictionary(cursor)[0]
 

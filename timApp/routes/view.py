@@ -32,7 +32,7 @@ def view(doc_id, template_name):
         return redirect(url_for('loginWithKorppi', came_from=request.path))
     version = timdb.documents.getNewestVersion(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
-    doc = timdb.documents.getDocument(DocIdentifier(doc_id, version['hash']))
+    doc = timdb.documents.getDocument(doc_id)
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     modules.append("ngSanitize")
     modules.append("angularFileUpload")

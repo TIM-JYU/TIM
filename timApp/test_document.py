@@ -63,7 +63,7 @@ class DocTest(unittest.TestCase):
         markdown = self.db.documents.getDocumentMarkdown(doc)
         self.assertEqual(markdown, 'Edit me!')
 
-        meta = self.db.documents.getDocument(doc)
+        meta = self.db.documents.getDocument(doc.id)
         self.assertTrue('id' in meta)
         self.assertTrue('name' in meta)
         self.assertEqual(len(meta), 2)

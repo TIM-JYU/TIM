@@ -194,7 +194,6 @@ def getDocuments():
             else:
                 versions = ver_int
 
-    print("getDocuments()")
     timdb = getTimDb()
     docs = timdb.documents.getDocuments(historylimit=versions)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
@@ -210,7 +209,7 @@ def getJSON(doc_id):
     verifyViewAccess(doc_id)
     try:
         texts = timdb.documents.getDocumentBlocks(getNewest(doc_id))
-        doc = timdb.documents.getDocument(doc_id)
+        doc = timdb.documents.getDocument(doc_id.id)
         return jsonResponse({"name" : doc['name'], "text" : texts})
     except IOError as err:
         print(err)
@@ -223,7 +222,7 @@ def getJSON_HTML(doc_id):
     try:
         newest = getNewest(doc_id)
         blocks = timdb.documents.getDocumentAsHtmlBlocks(newest)
-        doc = timdb.documents.getDocument(newest)
+        doc = timdb.documents.getDocument(doc_id)
         return jsonResponse({"name" : doc['name'], "text" : blocks})
     except ValueError as err:
         print(err)

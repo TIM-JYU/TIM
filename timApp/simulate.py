@@ -137,7 +137,7 @@ class TimSimulation:
             print("! Document {0} does not exist!".format(doc_id.id))
 
         xs = timdb.documents.getDocumentAsHtmlBlocks(doc_id)
-        doc = timdb.documents.getDocument(doc_id)
+        doc = timdb.documents.getDocument(doc_id.id)
         #texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
         #modules.append("ngSanitize")
         #modules.append("angularFileUpload")

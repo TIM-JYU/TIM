@@ -76,7 +76,7 @@ def editDocument(doc_id):
         else:
             abort(403)
     newest = getNewest(doc_id)
-    doc_metadata = timdb.documents.getDocument(newest)
+    doc_metadata = timdb.documents.getDocument(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     modules.append("ngSanitize")

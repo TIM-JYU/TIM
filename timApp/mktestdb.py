@@ -129,7 +129,7 @@ class mktestdb:
 
         versions = timdb.documents.getDocumentVersions(doc_id)
         xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
-        doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
+        doc = timdb.documents.getDocument(doc_id)
         #texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
         #modules.append("ngSanitize")
         #modules.append("angularFileUpload")
