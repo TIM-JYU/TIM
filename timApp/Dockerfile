@@ -2,6 +2,11 @@
 from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
+# Set locale
+env LANG en_US.utf8
+env LANGUAGE en_US.utf8
+run env-update en_US.utf8
+
 # Install Python, pip and other necessary packages
 
 run apt-get update
@@ -30,16 +35,11 @@ run apt-get install -y cmake
 # Create symbolic link for python3; otherwise CMake won't find it.
 run ln -s /usr/bin/python3 /usr/bin/python
 
-# Need to disable tests; otherwise build will fail with UnicodeDecodeError.
-run wget https://github.com/libgit2/libgit2/archive/v0.21.2.tar.gz \
- && tar xzf v0.21.2.tar.gz \
- && cd libgit2-0.21.2/ \
- && cmake -DBUILD_CLAR=OFF . \
- && make \
- && make install
+# Install pygit2 and dependencies
 run apt-get install libffi-dev
-env LD_LIBRARY_PATH /usr/local/lib
-run pip3 install pygit2
+run apt-get install libgit2-dev=0.19.0-2
+#env LD_LIBRARY_PATH /usr/local/lib
+run pip3 install pygit2==0.19
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
