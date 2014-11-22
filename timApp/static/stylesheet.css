@@ -3,16 +3,13 @@
 	text-align: justify;
 }
 
-.paragraph {
+.paragraph, .par  {
 	max-width: 52em;
-}
-
-.par {
-    position: relative;
 }
 
 body {
 	max-width: 60.2em;
+	text-align: justify;
 }
 
 .correct {
@@ -170,7 +167,7 @@ ul ul  ul {
 	margin-bottom : 0;
 }
 
-.paragraph {
+.paragraph, .par {
 	position: relative;
 	margin-left: 1em;
 	margin-top: 1em;
@@ -444,11 +441,13 @@ table td {
 	border-color: #666666;
 }
 
-p {
+P {
+	margin-top: 0em;
+	margin-bottom: 0.0cm;
 	margin-left: 2em;
 }
 
-p.sananselitys-western {
+P.sananselitys-western {
 	padding: 0.4cm;
 	margin-left: 0;
 	margin-right: 0;
@@ -858,7 +857,7 @@ p.stem {
 		max-width: 45em;
 		text-align: justify;
 	}
-	.paragraph {
+	.paragraph,  .par {
 		position: relative;
 		max-width: 43em;
 		margin-left: 0em;
@@ -873,8 +872,9 @@ p.stem {
 	.readline {
 		position: absolute;
 		top: 0em;
-		left: 100%;
-		
+		/*left: 100%; */
+        margin-left: 0.7em;
+		right: -2em;
 	}
 	.notes {
 		position: absolute;
@@ -902,12 +902,12 @@ p.stem {
 	
 	.addParButton{
 		left: 106%;
-    }
+    } 
 	
 	
 	body {
 		max-width: 45em;
-		margin-left: 5px;
+		margin-left: 5px !important;
 		margin-right: 10px;
 		font-family: Verdana, Arial, sans-serif;
 		font-size: 1em;
@@ -926,9 +926,6 @@ p.stem {
 		left: 0em;
 	*/	
 	}
-    .readline {
-        margin-left: 0.7em;
-    }
 
 	
 }
@@ -947,7 +944,7 @@ p.stem {
 	}
 	body {
 		max-width: 50em;
-		margin-left: 0.0cm;
+		margin-left: 0.0cm !important;
 		margin-right: 0.0cm;
 		font-family: Verdana, Arial, sans-serif;
 		font-size: 1em;
