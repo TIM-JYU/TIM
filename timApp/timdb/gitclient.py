@@ -65,6 +65,12 @@ class GitClient:
         index.write()
 
     @contract
+    def exists(self, path : 'str') -> 'bool':
+        index = self.repo.index
+        index.read()
+        return path in index
+
+    @contract
     def commit(self, message : 'str', author : 'str' = 'docker', first_commit : 'bool' = False) -> 'str':
         signature = self.author if author == 'docker' else pygit2.Signature(author, author)
         index = self.repo.index

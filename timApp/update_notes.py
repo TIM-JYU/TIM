@@ -3,9 +3,9 @@
     Updates the notes and readings to the new database format.
 """
 
-from timdb.gitclient import customCommit, gitCommand, getFileVersion
+from timdb.gitclient import GitClient
 from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbBase, DocIdentifier
+from timdb.timdbbase import DocIdentifier, TimDbException
 import sqlite3
 import os
 import sys
@@ -101,9 +101,15 @@ def upgrade_readings(timdb):
     log = open('upgrade_readings.log', 'w')
     i = 0
     ok = 0
+    inv = 0
 
     for doc_id, doc_owner, doc_name in docs:
-        versions = timdb.documents.getDocumentVersions(doc_id)
+        try:
+            versions = timdb.documents.getDocumentVersions(doc_id)
+        except TimDbException as e:
+            log.write(str(e))
+            continue
+
         if len(versions) == 0:
             log.write("Document {} has no versions!\n".format(doc_id))
             continue
@@ -123,6 +129,7 @@ def upgrade_readings(timdb):
         for reading_id, par_index in rels:
             if par_index >= len(blocks):
                 log.write('Document {}: block index {} outside the document\n'.format(doc_id, par_index))
+                inv += 1
                 continue
 
             cursor.execute(
@@ -133,6 +140,7 @@ def upgrade_readings(timdb):
             reading = cursor.fetchone()
             if reading is None:
                 log.write("Could not find block {0}\n".format(reading_id))
+                inv += 1
                 continue
             r_owner, b_type, r_content = reading
             if b_type != 5:
@@ -171,78 +179,18 @@ def upgrade_readings(timdb):
             except sqlite3.IntegrityError as e:
                 #log.write('Reading for user group {0} doc {1} paragraph {2} already marked.\n'.format(r_owner, doc_id, par_index))
                 log.write('Integrity error: {}\n'.format(e))
+                inv += 1
                 continue
 
         i += 1
         write_progress(i / len(docs))
-        timdb.db.commit()
-
-    # cursor = timdb.db.cursor()
-    # cursor.execute("select id, UserGroup_id, description, created, modified from Block where type_id = 5")
-    # i = 0
-    # inv = 0
-    # ok = 0
-    # data = cursor.fetchall()
-    # log = open('upgrade_readings.log', 'w')
-    # for b_id, b_grp, b_desc, b_created, b_modified in data:
-    #     i += 1
-    #     write_progress(i / len(data))
-    #
-    #     if not timdb.users.groupExists(b_grp):
-    #         log.write("User group {0} does not exist, skipping.\n".format(b_grp))
-    #         inv += 1
-    #         continue
-    #
-    #     cursor.execute(
-    #         """
-    #         select parent_block_specifier, parent_block_id
-    #         from BlockRelation where block_id = ?
-    #         """, [b_id])
-    #     rel = cursor.fetchone()
-    #     if rel is None:
-    #         log.write('Encountered a reading with no relation (block id %d), ignored.\n' % b_id)
-    #         inv += 1
-    #         continue
-    #
-    #     r_parspec, r_parid = rel
-    #
-    #     if not timdb.documents.documentExists(r_parid):
-    #         log.write("Document {0} does not exist, skipping.\n".format(r_parid))
-    #         inv += 1
-    #         continue
-    #
-    #     versions = timdb.documents.getDocumentVersions(r_parid)
-    #     version = versions[0]['hash']
-    #     if len(versions) > 1:
-    #         blocks = timdb.documents.getDocumentAsBlocks(DocIdentifier(r_parid, version))
-    #         if blocks[r_parspec] != b_desc:
-    #             # Set reading to the oldest version... marks it as modified
-    #             latest = version
-    #             version = versions[len(versions) - 1]['hash']
-    #             # Add a paragraph mapping
-    #             cursor.execute(
-    #                 """
-    #                 insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
-    #                 values (?, ?, ?, ?, ?, 'True')
-    #                 """, [r_parid, version, r_parspec, latest, r_parspec]
-    #             )
-    #
-    #     try:
-    #         cursor.execute(
-    #             """
-    #             insert into ReadParagraphs (UserGroup_id, doc_id, doc_ver, par_index, timestamp)
-    #             values (?, ?, ?, ?, ?)
-    #             """, [b_grp, r_parid, version, r_parspec, b_created]
-    #         )
-    #     except sqlite3.IntegrityError:
-    #         log.write('Reading for user group {0} doc {1} paragraph {2} already marked.\n'.format(b_grp, r_parid, r_parspec))
-    #         inv += 1
-    #         continue
-    #
-    #     ok += 1
+        if i % 64 == 0:
+            # To avoid massive final commit
+            timdb.db.commit()
 
     log.close()
-    print_stats(ok, 0)
+    timdb.db.commit()
+    print_stats(ok, inv)
 
 def try_insert_block_relation(cursor, block_id, doc_id, par_index):
     while True:
@@ -312,7 +260,6 @@ def tagstostr(tags):
 def downgrade_notes(timdb):
     cursor = timdb.db.cursor()
     cursor.execute("select UserGroup_id, doc_id, par_index, content, created, modified, access, tags from UserNotes")
-    assert_notesdir()
     blockpath = os.path.join(FILES_ROOT_PATH, 'blocks', 'notes')
     i = 0
     ok = 0
@@ -333,12 +280,13 @@ def downgrade_notes(timdb):
             return
 
         blockfile = timdb.notes.getBlockPath(int(block_id))
+        relfile = os.path.relpath(blockfile, FILES_ROOT_PATH).replace('\\', '/')
         timdb.notes.writeUtf8(content, blockfile)
-        gitCommand(blockpath, 'add ' + str(block_id))
+        git.add(relfile)
         if access == 'everyone':
             timdb.users.grantViewAccess(0, block_id)
         ok += 1
-    
+
     print_stats(ok, 0)
     timdb.db.commit()
     commit_files('Added notes and paragraphs.')
@@ -350,9 +298,15 @@ def upgrade_notes(timdb):
     log = open('upgrade_notes.log', 'w')
     i = 0
     ok = 0
+    inv = 0
 
     for doc_id, doc_owner, doc_name in docs:
-        versions = timdb.documents.getDocumentVersions(doc_id)
+        try:
+            versions = timdb.documents.getDocumentVersions(doc_id)
+        except TimDbException as e:
+            log.write(str(e))
+            continue
+
         if len(versions) == 0:
             log.write("Document {} has no versions!\n".format(doc_id))
             continue
@@ -370,6 +324,7 @@ def upgrade_notes(timdb):
         for note_id, par_index in rels:
             if par_index >= len(blocks):
                 log.write('Document {}: block index {} outside the document\n'.format(doc_id, par_index))
+                inv += 1
                 continue
 
             cursor.execute(
@@ -380,6 +335,7 @@ def upgrade_notes(timdb):
             note = cursor.fetchone()
             if note is None:
                 log.write("Could not find block {0}\n".format(note_id))
+                inv += 1
                 continue
             note_owner, b_type, note_content = note
             if b_type != 2:
@@ -417,7 +373,12 @@ def upgrade_notes(timdb):
 
         i += 1
         write_progress(i / len(docs))
-        timdb.db.commit()
+        if i % 64 == 0:
+            # To avoid massive final commit
+            timdb.db.commit()
+
+    print_stats(ok, inv)
+    timdb.db.commit()
 
 def delete_old(timdb):
     cursor = timdb.db.cursor()
@@ -430,40 +391,19 @@ def delete_old(timdb):
     cursor.execute("delete from Block where type_id = 5")
     
     cursor.execute("select id from Block where type_id = 2")
-    assert_notesdir()
-    gitCommand(FILES_ROOT_PATH, 'add blocks/notes')
     for row in cursor.fetchall():
         cursor.execute("delete from BlockRelation where Block_id = ?", [row[0]])
         cursor.execute("delete from BlockViewAccess where Block_id = ?", [row[0]])
         cursor.execute("delete from BlockEditAccess where Block_id = ?", [row[0]])
         
-        blockpath = os.path.join(FILES_ROOT_PATH, 'blocks', 'notes')
-        gitCommand(blockpath, 'rm ' + str(row[0]))
-        #os.remove(timdb.notes.getBlockPath(b_id))        
+        git.remove('blocks/notes/' + str(row[0]))
     cursor.execute("delete from Block where type_id = 2")
     
     timdb.db.commit()
     commit_files('Deleted old notes and paragraphs.')
 
-def assert_notesdir():
-    blockpath = os.path.join(FILES_ROOT_PATH, 'blocks', 'notes')
-    if not os.path.exists(blockpath):
-        os.mkdir(blockpath)
-        
-    cwd = os.getcwd()
-    os.chdir(FILES_ROOT_PATH)
-    
-    if getFileVersion('blocks', 'notes') == 0:
-        gitCommand('.', 'add blocks/notes')
-        #customCommit('', 'Added notes directory.', 'update_notes.py', include_staged_files=True)
-
-    os.chdir(cwd)
-
 def commit_files(msg):
-    cwd = os.getcwd()
-    os.chdir(FILES_ROOT_PATH)
-    customCommit('', msg, 'update_notes.py', include_staged_files=True)
-    os.chdir(cwd)
+    git.commit(msg, 'update_notes.py')
 
 def getcount(cursor, table_name, condition = None):
     try:
@@ -486,12 +426,14 @@ def cprint(text, condition):
         print(text)
 
 if __name__ == "__main__":
+    global git
     global FILES_ROOT_PATH
 
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     FILES_ROOT_PATH = 'tim_files'
+    git = GitClient.connect(FILES_ROOT_PATH)
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
 
     cursor = timdb.db.cursor()
