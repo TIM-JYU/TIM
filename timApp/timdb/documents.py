@@ -451,8 +451,6 @@ class Documents(TimDbBase):
 
     @contract
     def __updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0):
-        #print("updateParMappings(doc {0}) : ver {1} -> ver {2}".format(old_document_id.id, old_document_id.hash[:6], new_document_id.hash[:6]))
-
         cursor = self.db.cursor()
         cursor.execute(
             """
@@ -463,46 +461,57 @@ class Documents(TimDbBase):
             [old_document_id.id, old_document_id.hash, start_index])
         old_pars = self.resultAsDictionary(cursor)
 
+        self.ensureCached(old_document_id)
+        self.ensureCached(new_document_id)
+
         mappings = []
         invmap = {}
         removemaps = []
         for p in old_pars:
-            affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, p['par_index'])
-            [affinity, newindex] = max(affinities, key=lambda x: x[0])
+            old_index = int(p['par_index'])
+            affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, old_index)
+            [affinity, new_index] = max(affinities, key=lambda x: x[0])
 
-            if newindex in invmap:
+            for aff in affinities:
+                print('{} -> {} aff. {}'.format(old_index, affinities[1], affinities[0]))
+
+            if affinity < 0.5:
+                # This is most likely a deleted paragraph
+                continue
+
+            if new_index in invmap:
                 # There is an existing mapping for the same index in the new document
-                prevmap = mappings[invmap[newindex]]
+                prevmap = mappings[invmap[new_index]]
                 if affinity > prevmap[2]:
                     # This one is a better match
-                    removemaps.append(invmap[newindex])
+                    print('Taking back {} to {}'.format(invmap[new_index], new_index))
+                    removemaps.append(invmap[new_index])
                 else:
                     # This one is a bad match, do not add
                     continue
 
-            mappings.append([p['par_index'], newindex, affinity])
-            invmap[newindex] = len(mappings) - 1
+            mappings.append([old_index, new_index, affinity])
+            invmap[new_index] = old_index
 
         # Remove mappings for bad matches
         for i in range(len(removemaps) - 1, -1, -1):
             del mappings[i]
 
-        #print(mappings)
-
         for m in mappings:
-            #print("{0} par {1} -> {2} par {3} (affinity {4})".format(old_document_id.hash[:6], m[0], new_document_id.hash[:6], m[1], m[2]))
+            [old_index, new_index, affinity] = m
+            #print("{0} par {1} -> {2} par {3} (affinity {4})".format(old_document_id.hash[:6], old_index, new_document_id.hash[:6], new_index, affinity))
 
             cursor.execute(
                 """
                 update ParMappings set new_ver = ?, new_index = ?, modified = ?
                 where doc_id = ? and doc_ver = ? and par_index = ?""",
-                [new_document_id.hash, m[1], str(m[2] < 1), old_document_id.id, old_document_id.hash, m[0]])
+                [new_document_id.hash, new_index, str(affinity < 1), old_document_id.id, old_document_id.hash, old_index])
             cursor.execute(
                 """
                 insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
                 values (?, ?, ?, NULL, NULL, NULL)
                 """,
-                [old_document_id.id, new_document_id.hash, m[0]])
+                [old_document_id.id, new_document_id.hash, new_index])
 
         self.db.commit()
 
