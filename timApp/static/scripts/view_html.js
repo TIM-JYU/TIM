@@ -7,13 +7,57 @@ timApp.controller("ViewCtrl", ['$scope',
     '$injector',
     '$compile',
     function (sc, http, q, $upload, $injector, $compile) {
-        sc.selectedPar = -1;
+        sc.selectedPar = "";
         sc.pars = {};
         sc.docId = docId;
 
-        $('.paragraphs .par').click(function () {
-            console.log(this.id);
+        sc.toggleNoteEditor = function ($par, options) {
+            if ($par.children('.noteEditorArea').length) {
+                $par.children().remove(".noteEditorArea");
+            } else {
+                var $div = $("<div>", {class: 'noteEditorArea'});
+                $div.loadTemplate("/static/templates/noteEditor.html", {}, {
+                    success: function () {
+                        if (!options.showDelete) {
+                            $div.find(".deleteButton").hide();
+                        }
+                        $par.append($div);
+                    }
+                });
+
+            }
+        };
+
+        $(document).on("click", ".addNoteButton", function (e) {
+            var $par = $(document.getElementById(sc.selectedPar));
+            sc.toggleNoteEditor($par, {showDelete: false});
         });
+
+        $(document).on('click', '.paragraphs .parContent', function () {
+            var id = $(this).parent().attr('id');
+            if (sc.selectedPar !== "") {
+                sc.toggleActionbuttons(sc.selectedPar, false);
+            }
+            if (sc.selectedPar !== id) {
+                sc.selectedPar = id;
+                sc.toggleActionbuttons(sc.selectedPar, true);
+            } else {
+                sc.selectedPar = "";
+            }
+        });
+
+        $(document).on('click', ".noteContent", function () {
+            sc.toggleNoteEditor($(this).parent(), {showDelete: true});
+        });
+
+        sc.toggleActionbuttons = function (par, toggle) {
+            var $par = $(document.getElementById(par));
+            if (toggle) {
+                $par.append('<div class="actionButtons"><button class="addNoteButton">Comment/note</button></div>');
+            } else {
+                $par.children().remove(".actionButtons");
+            }
+        };
 
         sc.getNoteHtml = function (par) {
             var html = "";
@@ -30,8 +74,8 @@ timApp.controller("ViewCtrl", ['$scope',
                     classes.push("private")
                 }
                 html += $("<div>", {class: classes.join(" ")})
-                    .attr('data-noteid', notes[i].id)
-                    .html(notes[i].content)[0].outerHTML;
+                    .attr('data-note_index', notes[i].note_index)
+                    .html('<div class="noteContent">' + notes[i].content + '</div>')[0].outerHTML;
             }
             return html;
         };
@@ -51,6 +95,9 @@ timApp.controller("ViewCtrl", ['$scope',
                         sc.pars[pi] = {notes: []};
 
                     }
+                    if (!('notes' in sc.pars[pi])) {
+                        sc.pars[pi].notes = [];
+                    }
                     sc.pars[pi].notes.push(data[i]);
                 }
                 sc.forEachParagraph(function () {
@@ -60,9 +107,7 @@ timApp.controller("ViewCtrl", ['$scope',
                         MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.id]);
                     }
                 });
-                $(".note").click(function () {
-                    alert("clicked: " + $(this).attr('data-noteid'));
-                });
+
             }).error(function (data, status, headers, config) {
                 alert("Could not fetch notes.");
             });
