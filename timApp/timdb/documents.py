@@ -262,6 +262,11 @@ class Documents(TimDbBase):
 
         return self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
 
+    @contract
+    def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
+        return [block for block in self.getDocumentMarkdown(document_id).split('\n') if len(block) > 0 and block[0] == '#']
+
+    @contract
     def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
         """Calls a function of EphemeralClient, ensuring that the document is in cache.
 

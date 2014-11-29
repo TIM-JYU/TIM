@@ -48,12 +48,21 @@
 </script>
 {% endblock %}
 {% block content %}
-<div class="menu">
-        <img class="menu-icon" src="{{url_for('static', filename='images/contents.png')}}" width="50" height="50" />
-</div>
-<div class="sidebar">
-</div>
+
 <div id="main" ng-app="timApp" ng-controller="ViewCtrl">
+        <div id="contents">
+            <div class="menu">
+                <img class="menu-icon" src="{{url_for('static', filename='images/contents.png')}}" width="50" height="50" />
+            </div>
+            <div class="sidebar">
+                {% raw %}
+                <p ng-repeat="entry in indexTable">
+                    <a href="{{entry.target}}">{{entry.text}}</a>
+                </p>
+                {% endraw %}
+            </div>
+        </div>
+
         <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 
         <div id="par-{{ '{{par.par}}' }}" class="paragraph" ng-repeat="par in paragraphs" ng-init="parIndex = par.par">

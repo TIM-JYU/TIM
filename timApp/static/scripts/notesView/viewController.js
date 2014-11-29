@@ -52,6 +52,24 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
         });
     };
 
+    $scope.getIndex = function() {
+        $http.get('/index/' + $scope.docId).success(function(data, status, headers, config) {
+            var entryCount = data.length;
+            $scope.indexTable = []
+
+            for (var i = 0; i < entryCount; i++) {
+                $scope.indexTable.push({text: data[i], target: "#"})
+            }
+
+            $scope.$apply();
+        }).error(function(data, status, headers, config) {
+            alert("Could not fetch index entries.");
+        });
+    };
+
+    $scope.indexTable = []
+
+    $scope.getIndex();
     $scope.getNotes();
     $scope.getReadPars();
 });

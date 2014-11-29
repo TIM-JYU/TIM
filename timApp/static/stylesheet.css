@@ -1150,7 +1150,7 @@ img.console {
 }
 
 .sidebar{
-	position: absolute;
+	position: fixed;
 	top: -1px;
 	left: -220px;
 	width: 240px;
@@ -1169,6 +1169,13 @@ img.console {
 	z-index: 502;
 	position:fixed;
 	border-bottom: solid 4px #CCC;
+}
+
+.sidebar.a {
+    padding-top: 50px;
+    margin-left: 20px;
+	text-align: left;
+	color: pink;
 }
 
 .menu{
