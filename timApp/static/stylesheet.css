@@ -1149,10 +1149,10 @@ img.console {
 	left: -220px;
 	width: 240px;
 	word-wrap:break-word;
-	word-break:break-all;
+	/* word-break:break-all; */
 	height: 100%;
 	background-color: #e6e6e6;
-	transition: 300ms all ease-in-out;
+	transition: 200ms all ease-in-out;
 	z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
@@ -1169,13 +1169,14 @@ img.console {
 }
 
 .sidebar p{
+	text-align: left;
 	margin: 0 20px 0 20px;
 	font-family:"Helvetica", Arial, sans-serif;
 	font-size: 0.85em;
 }
 
 .sidebar a {
-	margin: 0 20px 0 20px;
+	margin: 0 0px 0 -15px;
 	text-align: left;
 	color: #2bb;
 }
@@ -1190,7 +1191,7 @@ img.console {
 }
 
 .sidebar a.a2 {
-	margin-left: 30px;
+	margin-left: 0px;
 }
 
 .sidebar h1 {
@@ -1209,20 +1210,23 @@ img.console {
 	color: #2bb;
 }
 
-.menu{
-	left: 0;
-	top:50px;
+.menu{ 
+	left: 0; 
+	top:10px;
 	width: 70px;
 	position:fixed;
 	background:#e6e6e6;
+    z-index: 501;
 }
 .menu-icon{
+    z-index: 501;
 	cursor:pointer;
 	filter: brightness(1);
 	-webkit-filter: brightness(1);
 	-moz-filter: brightness(1);
 }
 .menu-icon:hover{
+    z-index: 501;
 	filter: brightness(10);
 	-webkit-filter: brightness(10);
 	-moz-filter: brightness(10);
