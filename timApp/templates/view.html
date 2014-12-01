@@ -58,7 +58,7 @@
                 {% raw %}
                 <h1>{{docName}}</h1>
                 <p ng-repeat="entry in indexTable">
-                    <a href="{{entry.target}}">{{entry.text}}</a>
+                    <a class="{{entry.style}}" href="{{entry.target}}">{{entry.text}}</a>
                 </p>
                 {% endraw %}
             </div>

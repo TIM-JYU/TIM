@@ -51,14 +51,37 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             alert("Could not fetch reading info.");
         });
     };
+	
+	$scope.tolink = function(str) {
+		return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[\?\#\\]/g, "").replace(/ /g, '-').toLowerCase()
+	}
 
     $scope.getIndex = function() {
         $http.get('/index/' + $scope.docId).success(function(data, status, headers, config) {
             var entryCount = data.length;
-            $scope.indexTable = []
+            $scope.indexTable = [];
 
             for (var i = 0; i < entryCount; i++) {
-                $scope.indexTable.push({text: data[i], target: "#"})
+            	if (data[i].charAt(0) != '#') {
+            		// Not a heading
+            		continue;
+            	}
+            	if (data[i].charAt(1) != '#') {
+            		// Level 1 heading
+            		astyle = "a1";
+            		txt = data[i].substr(1).trim();
+            	}
+            	else if (data[i].length > 2 && data[i].charAt(2) != '#') {
+            		// Level 2 heading
+            		astyle = "a2";
+            		txt = data[i].substr(2).trim();
+            	}
+            	else {
+            		// Ignore after this level
+            		continue;
+            	}
+            	
+                $scope.indexTable.push({text: txt, target: $scope.tolink(txt), style: astyle});
             }
 
             $scope.$apply();
@@ -67,7 +90,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
         });
     };
 
-    $scope.indexTable = []
+    $scope.indexTable = [];
 
     $scope.getIndex();
     $scope.getNotes();

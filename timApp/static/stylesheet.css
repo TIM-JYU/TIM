@@ -1153,6 +1153,8 @@ img.console {
 	background-color: #e6e6e6;
 	transition: 300ms all ease-in-out;
 	z-index: 501;
+	overflow: auto;
+	overflow-x: hidden;
 }
 
 .sidebar-buttons{
@@ -1182,11 +1184,11 @@ img.console {
 	text-decoration: none;
 }
 
-.sidebar a1 {
+.sidebar a.a1 {
 	font-size: 110%;
 }
 
-.sidebar a2 {
+.sidebar a.a2 {
 	margin-left: 30px;
 }
 
