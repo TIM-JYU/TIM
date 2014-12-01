@@ -1149,6 +1149,7 @@ img.console {
 	left: -220px;
 	width: 240px;
 	word-wrap:break-word;
+	word-break:break-all;
 	height: 100%;
 	background-color: #e6e6e6;
 	transition: 300ms all ease-in-out;

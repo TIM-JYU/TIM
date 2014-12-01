@@ -69,17 +69,19 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             	if (data[i].charAt(1) != '#') {
             		// Level 1 heading
             		astyle = "a1";
-            		txt = data[i].substr(1).trim();
+            		txt = data[i].substr(1);
             	}
             	else if (data[i].length > 2 && data[i].charAt(2) != '#') {
             		// Level 2 heading
             		astyle = "a2";
-            		txt = data[i].substr(2).trim();
+            		txt = data[i].substr(2);
             	}
             	else {
             		// Ignore after this level
             		continue;
             	}
+            	
+            	txt = txt.trim().replace(/\\#/g, "#")
             	
                 $scope.indexTable.push({text: txt, target: $scope.tolink(txt), style: astyle});
             }
