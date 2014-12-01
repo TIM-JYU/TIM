@@ -51,9 +51,21 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             alert("Could not fetch reading info.");
         });
     };
+
+	$scope.totext = function(str) {
+		if (str.indexOf('{') > 0) {
+			return str.substring(0, str.indexOf('{')).trim();
+		}
+		return str;
+	}
 	
 	$scope.tolink = function(str) {
-		return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[\?\#\\]/g, "").replace(/ /g, '-').toLowerCase()
+		if (str.indexOf('{') >= 0 && str.indexOf('}') > 0) {
+			ob = str.indexOf('{') 
+			cb = str.indexOf('}')
+			return str.substring(ob + 1, cb);
+		}
+		return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[\?\#\\:]/g, "").replace(/ /g, '-').toLowerCase()
 	}
 
     $scope.getIndex = function() {
@@ -83,7 +95,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             	
             	txt = txt.trim().replace(/\\#/g, "#")
             	
-                $scope.indexTable.push({text: txt, target: $scope.tolink(txt), style: astyle});
+                $scope.indexTable.push({text: $scope.totext(txt), target: $scope.tolink(txt), style: astyle});
             }
 
             $scope.$apply();
