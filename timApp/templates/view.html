@@ -50,7 +50,7 @@
 {% block content %}
 
 <div id="main" ng-app="timApp" ng-controller="ViewCtrl">
-        <div id="contents">
+        <div id="contents" ng-show="indexTable.length > 1">
             <div class="menu">
                 <img class="menu-icon" src="{{url_for('static', filename='images/contents.png')}}" width="50" height="50" />
             </div>
