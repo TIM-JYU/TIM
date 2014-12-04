@@ -1168,11 +1168,26 @@ img.console {
 	border-bottom: solid 4px #CCC;
 }
 
-.sidebar p{
+.sidebar ul {
+    padding-left: 0px;
 	text-align: left;
-	margin: 0 20px 0 20px;
 	font-family:"Helvetica", Arial, sans-serif;
 	font-size: 0.85em;
+}
+
+.sidebar li {
+    padding-left: 15px;
+    list-style:none;
+}
+
+.sidebar li.exp {
+    list-style-image:url("/static/images/minus.png");
+    list-style-type:square;
+}
+
+.sidebar li.col {
+    list-style-image:url("/static/images/plus.png");
+    list-style-type:square;
 }
 
 .sidebar a {

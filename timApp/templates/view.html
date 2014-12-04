@@ -57,9 +57,18 @@
             <div class="sidebar">
                 {% raw %}
                 <h1>{{docName}}</h1>
-                <p ng-repeat="entry in indexTable">
-                    <a class="{{entry.style}}" href="{{entry.target}}">{{entry.text}}</a>
-                </p>
+                <ul>
+                    <span ng-repeat="entry in indexTable">
+                        <li ng-class="entry.state" ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+                            <a class="{{entry.style}}" href="{{entry.target}}">{{entry.text}}</a>
+                            <ul ng-show="entry.state == 'exp'">
+                                <li ng-repeat="subentry in entry.items">
+                                    <a class="{{subentry.style}}" href="{{subentry.target}}">{{subentry.text}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </span>
+                </ul>
                 {% endraw %}
             </div>
         </div>

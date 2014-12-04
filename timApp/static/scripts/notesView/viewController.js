@@ -72,6 +72,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
         $http.get('/index/' + $scope.docId).success(function(data, status, headers, config) {
             var entryCount = data.length;
             $scope.indexTable = [];
+            parent = null;
 
             for (var i = 0; i < entryCount; i++) {
             	if (data[i].charAt(0) != '#') {
@@ -82,11 +83,13 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             		// Level 1 heading
             		astyle = "a1";
             		txt = data[i].substr(1);
+            		lvl = 1;
             	}
             	else if (data[i].length > 2 && data[i].charAt(2) != '#') {
             		// Level 2 heading
             		astyle = "a2";
             		txt = data[i].substr(2);
+            		lvl = 2;
             	}
             	else {
             		// Ignore after this level
@@ -94,8 +97,27 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             	}
             	
             	txt = txt.trim().replace(/\\#/g, "#")
-            	
-                $scope.indexTable.push({text: $scope.totext(txt), target: $scope.tolink(txt), style: astyle});
+
+            	item = {text: $scope.totext(txt), target: $scope.tolink(txt), style: astyle, level: lvl, items: [], state: ''};
+
+                if (lvl == 1) {
+                    if (parent != null) {
+                        if (parent.items.length > 0)
+                            parent.state = 'col';
+                        $scope.indexTable.push(parent);
+                    }
+
+                    parent = item;
+                }
+                else if (parent != null) {
+                    parent['items'].push(item)
+                }
+            }
+
+            if (parent != null) {
+                if (parent.items.length > 0)
+                    parent.state = 'col';
+                $scope.indexTable.push(parent);
             }
 
             $scope.$apply();
@@ -103,6 +125,33 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             alert("Could not fetch index entries.");
         });
     };
+
+    $scope.invertState = function(state) {
+        if (state == 'exp')
+            return 'col';
+        if (state == 'col')
+            return 'exp';
+        return state;
+    };
+
+    $scope.clearSelection = function() {
+        if (document.selection)
+            document.selection.empty();
+        else if (window.getSelection)
+            window.getSelection().removeAllRanges();
+    };
+
+    $scope.invertStateClearSelection = function(event, state) {
+        if (event.target.className == 'a2') {
+            // Do not collapse/expand if a subentry is clicked
+            return state;
+        }
+
+        newState = $scope.invertState(state);
+        if (newState != state)
+            $scope.clearSelection();
+        return newState;
+    }
 
     $scope.indexTable = [];
 
