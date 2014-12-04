@@ -65,7 +65,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
 			cb = str.indexOf('}')
 			return str.substring(ob + 1, cb);
 		}
-		return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[\?\#\\:]/g, "").replace(/ /g, '-').toLowerCase()
+		return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
 	}
 
     $scope.getIndex = function() {
