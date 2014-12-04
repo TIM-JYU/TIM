@@ -1206,7 +1206,10 @@ img.console {
 }
 
 .sidebar a.a2 {
-	margin-left: 0px;
+}
+
+.sidebar a.a3 {
+    padding-left: 5pt;
 }
 
 .sidebar h1 {

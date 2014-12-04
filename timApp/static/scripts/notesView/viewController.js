@@ -91,6 +91,12 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             		txt = data[i].substr(2);
             		lvl = 2;
             	}
+            	else if (data[i].length > 3 && data[i].charAt(3) != '#') {
+            		// Level 3 heading
+            		astyle = "a3";
+            		txt = data[i].substr(3);
+            		lvl = 2;
+            	}
             	else {
             		// Ignore after this level
             		continue;
@@ -142,7 +148,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
     };
 
     $scope.invertStateClearSelection = function(event, state) {
-        if (event.target.className == 'a2') {
+        if (event.target.className == 'a2' || event.target.className == 'a3') {
             // Do not collapse/expand if a subentry is clicked
             return state;
         }
