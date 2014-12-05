@@ -148,6 +148,10 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
     };
 
     $scope.invertStateClearSelection = function(event, state) {
+        if (event.which != 1) {
+            // Listen only to the left mouse button
+            return state;
+        }
         if (event.target.className == 'a2' || event.target.className == 'a3') {
             // Do not collapse/expand if a subentry is clicked
             return state;
