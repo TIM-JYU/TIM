@@ -68,6 +68,16 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
 		return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
 	}
 
+    $scope.findIndexLevel(str) {
+        for (int i = 0; i < str.length; i++) {
+            if (str.charAt(i) != '#') {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
     $scope.getIndex = function() {
         $http.get('/index/' + $scope.docId).success(function(data, status, headers, config) {
             var entryCount = data.length;
@@ -75,35 +85,13 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             parent = null;
 
             for (var i = 0; i < entryCount; i++) {
-            	if (data[i].charAt(0) != '#') {
-            		// Not a heading
-            		continue;
-            	}
-            	if (data[i].charAt(1) != '#') {
-            		// Level 1 heading
-            		astyle = "a1";
-            		txt = data[i].substr(1);
-            		lvl = 1;
-            	}
-            	else if (data[i].length > 2 && data[i].charAt(2) != '#') {
-            		// Level 2 heading
-            		astyle = "a2";
-            		txt = data[i].substr(2);
-            		lvl = 2;
-            	}
-            	else if (data[i].length > 3 && data[i].charAt(3) != '#') {
-            		// Level 3 heading
-            		astyle = "a3";
-            		txt = data[i].substr(3);
-            		lvl = 2;
-            	}
-            	else {
-            		// Ignore after this level
-            		continue;
-            	}
-            	
-            	txt = txt.trim().replace(/\\#/g, "#")
+            	lvl = $scope.findIndexLevel(str);
+            	if (lvl < 1 || lvl > 3)
+            	    continue;
 
+            	astyle = "a" + lvl;
+                txt = data[i].substr(lvl);
+            	txt = txt.trim().replace(/\\#/g, "#")
             	item = {text: $scope.totext(txt), target: $scope.tolink(txt), style: astyle, level: lvl, items: [], state: ''};
 
                 if (lvl == 1) {
