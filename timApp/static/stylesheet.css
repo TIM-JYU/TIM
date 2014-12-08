@@ -1,6 +1,7 @@
 .content { 
 	max-width: 52em;
 	text-align: justify;
+    margin-right: 1em;
 }
 
 .paragraph, .par  {
@@ -53,7 +54,7 @@ body {
 /*=============================================*/
 body {
 	/* background-color: #d5d5d5; */
-    margin: 0 5%;
+    margin: 0 260px;
 }
 .noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
     background-color: #f8f8f8;
@@ -856,6 +857,7 @@ p.stem {
 	.content { 
 		max-width: 45em;
 		text-align: justify;
+        margin-right: 0.5em;
 	}
 	.paragraph,  .par {
 		position: relative;
@@ -1044,6 +1046,7 @@ pre {
 .csRunPre, .csRunPost, .csRunArea {
     margin-left: -1.5em;
     box-shadow: none;
+    word-wrap: initial;
 }
 
 .stem {
@@ -1146,7 +1149,7 @@ img.console {
 .sidebar{
 	position: fixed;
 	top: -1px;
-	left: -220px;
+	left: -240px;
 	width: 240px;
 	word-wrap:break-word;
 	/* word-break:break-all; */
@@ -1169,7 +1172,7 @@ img.console {
 }
 
 .sidebar ul {
-    padding-left: 0px;
+    padding-left: 20px;
 	text-align: left;
 	font-family:"Helvetica", Arial, sans-serif;
 	font-size: 0.85em;
@@ -1192,7 +1195,7 @@ img.console {
 
 .sidebar a {
 	margin: 0 0px 0 -15px;
-	text-align: left;
+	text-align: left;  
 	color: #2bb;
 }
 
@@ -1206,9 +1209,11 @@ img.console {
 }
 
 .sidebar a.a2 {
+	font-size: 100%;
 }
 
 .sidebar a.a3 {
+	font-size: 100%;
     padding-left: 5pt;
 }
 
@@ -1229,9 +1234,9 @@ img.console {
 }
 
 .menu{ 
-	left: 0; 
-	top:10px;
-	width: 70px;
+	left: -20px; 
+	top:0px;
+	width: 60px;
 	position:fixed;
 	background:#e6e6e6;
     z-index: 501;
