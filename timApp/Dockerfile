@@ -5,7 +5,7 @@ maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 # Set locale
 env LANG en_US.utf8
 env LANGUAGE en_US.utf8
-run env-update en_US.utf8
+run locale-gen en_US.utf8
 
 # Install Python, pip and other necessary packages
 
