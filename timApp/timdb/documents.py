@@ -472,8 +472,8 @@ class Documents(TimDbBase):
             affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, old_index)
             [affinity, new_index] = max(affinities, key=lambda x: x[0])
 
-            for aff in affinities:
-                print('{} -> {} aff. {}'.format(old_index, affinities[1], affinities[0]))
+            #for aff in affinities:
+            #    print('{} -> {} aff. {}'.format(old_index, aff[1], aff[0]))
 
             if affinity < 0.5:
                 # This is most likely a deleted paragraph
