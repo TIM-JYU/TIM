@@ -128,7 +128,7 @@ class Documents(TimDbBase):
 
         os.remove(self.getDocumentPath(document_id))
 
-        self.git.remove(self.getDocumentPathAsRelative(document_id))
+        self.git.rm(self.getDocumentPathAsRelative(document_id))
         self.git.commit('Deleted document {}.'.format(document_id))
 
     @contract
