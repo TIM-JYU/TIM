@@ -299,8 +299,9 @@ def editNote():
             tags.append(tag)
     timdb = getTimDb()
 
-    if not timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index):
-    	abort(403, "Sorry, you don't have permission to edit this note.")
+    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+            or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+        abort(403, "Sorry, you don't have permission to edit this note.")
 
     timdb.notes.modifyNote(group_id, doc_id, doc_ver, paragraph_id, note_index, noteText, tags)
     return "Success"
@@ -315,8 +316,9 @@ def deleteNote():
     note_index = int(jsondata['note_index'])
     timdb = getTimDb()
 
-    if not timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index):
-    	abort(403, "Sorry, you don't have permission to remove this note.")
+    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+            or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+        abort(403, "Sorry, you don't have permission to remove this note.")
 
     timdb.notes.deleteNote(group_id, doc_id, paragraph_id, note_index)
     return "Success"
@@ -329,7 +331,7 @@ def getNotes(doc_id):
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
     for note in notes:
-        note['editable'] = note['UserGroup_id'] == group_id
+        note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
         note['private'] = note['access'] == 'justme'
         for tag in KNOWN_TAGS:
             note[tag] = tag in note['tags']
