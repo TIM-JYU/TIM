@@ -308,7 +308,7 @@ class Documents(TimDbBase):
             e.message = 'The requested revision was not found.'
             raise
         html = ansiconv.to_html(out)
-        return """<pre class="ansi_fore ansi_back">{}</pre>""".format(html)
+        return html
 
     @contract
     def getDocumentVersions(self, document_id: 'int', limit: 'int'=100) -> 'list(dict(str:str))':
