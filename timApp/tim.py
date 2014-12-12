@@ -303,7 +303,7 @@ def editNote():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
 
-    timdb.notes.modifyNote(group_id, doc_id, doc_ver, paragraph_id, note_index, noteText, tags)
+    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, tags)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
@@ -320,7 +320,7 @@ def deleteNote():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
 
-    timdb.notes.deleteNote(group_id, doc_id, paragraph_id, note_index)
+    timdb.notes.deleteNote(doc_id, paragraph_id, note_index)
     return "Success"
 
 @app.route("/notes/<int:doc_id>")

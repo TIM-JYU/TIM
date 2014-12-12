@@ -89,10 +89,9 @@ class Notes(TimDbBase):
             self.db.commit()
 
     @contract
-    def modifyNote(self, UserGroup_id: 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', new_tags : 'list(str)'):
+    def modifyNote(self, doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', new_tags : 'list(str)'):
         """Modifies an existing note.
-        
-        :param UserGroup_id: The owner group of the note.
+
         :param doc_id: The document in which the note resides.
         :param par_index: The paragraph index.
         :param note_index: The note index, starting from 0 for each paragraph.
@@ -105,17 +104,16 @@ class Notes(TimDbBase):
         """
             update UserNotes
             set doc_ver = ?, content = ?, tags = ?
-            where UserGroup_id = ? and doc_id = ? and par_index = ? and note_index = ?
+            where doc_id = ? and par_index = ? and note_index = ?
         """, [doc_ver, new_content, self.__tagstostr(new_tags),
-              UserGroup_id, doc_id, par_index, note_index])
+              doc_id, par_index, note_index])
         
         self.db.commit()
 
     @contract
-    def deleteNote(self, UserGroup_id: 'int', doc_id : 'int', par_index : 'int', note_index : 'int'):
+    def deleteNote(self, doc_id : 'int', par_index : 'int', note_index : 'int'):
         """Deletes a note.
-        
-        :param UserGroup_id: The owner group of the note.
+
         :param doc_id: The document in which the note resides.
         :param par_index: The paragraph index.
         :param note_index: The note index, starting from 0 for each paragraph.
@@ -125,8 +123,8 @@ class Notes(TimDbBase):
         cursor.execute(
         """
             delete from UserNotes
-            where UserGroup_id = ? and doc_id = ? and par_index = ? and note_index = ?
-        """, [UserGroup_id, doc_id, par_index, note_index])
+            where doc_id = ? and par_index = ? and note_index = ?
+        """, [doc_id, par_index, note_index])
         
         self.db.commit()
         
