@@ -475,17 +475,23 @@ def loginWithKorppi():
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
 
-@app.route("/testuser")
-def testLogin():
-    userName = ".test"
-    if request.args.get('name'):
-        if re.match('^[\w-]+$', request.args.get('name')) is None:
-            return "User name can only contain alphanumeric characters."
-        userName = "." + request.args.get('name')
+def __getRealName(email):
+    atindex = email.index('@')
+    if atindex <= 0:
+        return email
+    parts = email[0:atindex].split('.')
+    parts2 = [part.capitalize() if len(part) > 1 else part.capitalize() + '.' for part in parts]
+    return ' '.join(parts2)
+
+@app.route("/testuser/<email>")
+def testLogin(email):
+    if re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is None:
+        return "User name must be a valid email address."
+
     timdb = getTimDb()
+    userName = email
     userId = timdb.users.getUserByName(userName)
-    realName = userName[1:]
-    email = "none"
+    realName = __getRealName(email)
 
     if userId is None:
         uid = timdb.users.createUser(userName, realName, email)
@@ -495,7 +501,7 @@ def testLogin():
         print('New test user: ' + userName)
     session['user_id'] = userId
     session['user_name'] = userName
-    session['real_name'] = "Test user " + realName
+    session['real_name'] = realName
     session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(url_for('indexPage'))
