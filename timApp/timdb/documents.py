@@ -298,6 +298,7 @@ class Documents(TimDbBase):
     def getDocumentMarkdown(self, document_id: 'DocIdentifier') -> 'str':
         return self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id.id))
 
+    @contract
     def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
         try:
             out, _ = self.git.command('diff --color --unified=5 {}^! {}'.format(document_id.hash,
@@ -306,16 +307,8 @@ class Documents(TimDbBase):
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
-        css = ansiconv.base_css()
         html = ansiconv.to_html(out)
-        return """
-<html>
-  <head><style>{0}</style></head>
-  <body>
-    <pre class="ansi_fore ansi_back">{1}</pre>
-  </body>
-</html>
-""".format(css, html)
+        return """<pre class="ansi_fore ansi_back">{}</pre>""".format(html)
 
     @contract
     def getDocumentVersions(self, document_id: 'int', limit: 'int'=100) -> 'list(dict(str:str))':

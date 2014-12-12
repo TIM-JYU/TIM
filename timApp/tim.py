@@ -108,7 +108,7 @@ def documentDiff(doc_id, doc_hash):
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
         doc_diff = timdb.documents.getDifferenceToPrevious(DocIdentifier(doc_id, doc_hash))
-        return Response(doc_diff, mimetype="text/html")
+        return render_template('diff.html', diff_html=doc_diff)
     except TimDbException as e:
         abort(404, str(e))
 
