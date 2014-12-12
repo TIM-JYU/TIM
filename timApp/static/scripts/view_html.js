@@ -36,6 +36,7 @@ timApp.controller("ViewCtrl", ['$scope',
 
         $(document).on("click", ".readline", function (e) {
             var par_id = $(this).parents('.par').attr('id');
+            $(this).hide();
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + (new Date).getTime())
                 .success(function (data, status, headers, config) {
                     // TODO: Maybe fetch notes only for this paragraph and not the
