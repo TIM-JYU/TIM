@@ -104,12 +104,12 @@ class GitClient:
         while len(cur_commit.parents) > 0:
             cur_commit = cur_commit.parents[0]
             if not self.__itemExists(cur_commit, path):
-                print('__getLastCommit: no exist in {}, choosing {}'.format(cur_commit.oid.hex, last_commit.oid.hex))
+                #print('__getLastCommit: no exist in {}, choosing {}'.format(cur_commit.oid.hex, last_commit.oid.hex))
                 return last_commit
 
             new_file_obj = cur_commit.tree[path]
             if new_file_obj.oid != file_obj.oid or new_file_obj.filemode != file_obj.filemode:
-                print('__getLastCommit: file id {} differs, choosing {}'.format(cur_commit.oid.hex, last_commit.oid.hex))
+                #print('__getLastCommit: file id {} differs, choosing {}'.format(cur_commit.oid.hex, last_commit.oid.hex))
                 return last_commit
 
             last_commit = cur_commit
