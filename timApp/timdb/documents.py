@@ -470,14 +470,11 @@ class Documents(TimDbBase):
             affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, old_index)
             [affinity, new_index] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
 
-            #for aff in affinities:
-            #    print('{} -> {} aff. {}'.format(old_index, aff[1], aff[0]))
-
             if affinity < 0.5:
                 # This is most likely a deleted paragraph
                 continue
 
-            if new_index in invmap:
+            if new_index in invmap and invmap[new_index] in mappings:
                 # There is an existing mapping for the same index in the new document
                 prevmap = mappings[invmap[new_index]]
                 if affinity > prevmap[2]:
