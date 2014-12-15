@@ -263,6 +263,13 @@ def pluginCall(plugin, fileName):
     except PluginException:
         abort(404)
 
+@app.route("/index/<int:docId>")
+def getIndex(docId):
+    timdb = getTimDb()
+    verifyViewAccess(docId)
+    index = timdb.documents.getIndex(getNewest(docId))
+    return jsonResponse(index)
+
 @app.route("/postNote", methods=['POST'])
 def postNote():
     verifyLoggedIn()
