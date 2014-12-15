@@ -52,40 +52,41 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
         });
     };
 
-	$scope.totext = function(str) {
-		if (str.indexOf('{') > 0) {
-			return str.substring(0, str.indexOf('{')).trim();
-		}
-		return str;
-	}
+    $scope.totext = function(str) {
+        if (str.indexOf('{') > 0) {
+            return str.substring(0, str.indexOf('{')).trim();
+        }
+        return str;
+    };
 	
-	$scope.tolink = function(str) {
-		if (str.indexOf('{') >= 0 && str.indexOf('}') > 0) {
-			ob = str.indexOf('{') 
-			cb = str.indexOf('}')
-			return str.substring(ob + 1, cb);
-		}
-		return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
-	}
+    $scope.tolink = function(str) {
+        if (str.indexOf('{') >= 0 && str.indexOf('}') > 0) {
+            ob = str.indexOf('{') 
+            cb = str.indexOf('}')
+            return str.substring(ob + 1, cb);
+        }
+        return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
+    };
 
-    $scope.findIndexLevel(str) {
-        for (int i = 0; i < str.length; i++) {
+    $scope.findIndexLevel = function(str) {
+        for (var i = 0; i < str.length; i++) {
             if (str.charAt(i) != '#') {
                 return i;
             }
         }
 
         return 0;
-    }
+    };
 
     $scope.getIndex = function() {
         $http.get('/index/' + $scope.docId).success(function(data, status, headers, config) {
             var entryCount = data.length;
+            var parentEntry = null;
             $scope.indexTable = [];
-            parent = null;
 
             for (var i = 0; i < entryCount; i++) {
-            	lvl = $scope.findIndexLevel(str);
+            	lvl = $scope.findIndexLevel(data[i]);
+                console.log("Found entry with level " + lvl);
             	if (lvl < 1 || lvl > 3)
             	    continue;
 
@@ -95,23 +96,23 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
             	item = {text: $scope.totext(txt), target: $scope.tolink(txt), style: astyle, level: lvl, items: [], state: ''};
 
                 if (lvl == 1) {
-                    if (parent != null) {
-                        if (parent.items.length > 0)
-                            parent.state = 'col';
-                        $scope.indexTable.push(parent);
+                    if (parentEntry != null) {
+                        if (parentEntry.items.length > 0)
+                            parentEntry.state = 'col';
+                        $scope.indexTable.push(parentEntry);
                     }
 
-                    parent = item;
+                    parentEntry = item;
                 }
-                else if (parent != null) {
-                    parent['items'].push(item)
+                else if (parentEntry != null) {
+                    parentEntry['items'].push(item)
                 }
             }
 
-            if (parent != null) {
-                if (parent.items.length > 0)
-                    parent.state = 'col';
-                $scope.indexTable.push(parent);
+            if (parentEntry != null) {
+                if (parentEntry.items.length > 0)
+                    parentEntry.state = 'col';
+                $scope.indexTable.push(parentEntry);
             }
 
             $scope.$apply();
@@ -149,7 +150,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
         if (newState != state)
             $scope.clearSelection();
         return newState;
-    }
+    };
 
     $scope.indexTable = [];
 
