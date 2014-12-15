@@ -21,7 +21,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
                 if (data[i].par_index < $scope.paragraphs.length) {
                     var par = $scope.paragraphs[data[i].par_index];
                     par.notes.push(data[i]);
-                    $scope.$apply();
+                    //$scope.$apply();
                     MathJax.Hub.Queue(["Typeset", MathJax.Hub, "par-" + data[i].par_index]);
                 }
             }
@@ -80,32 +80,34 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
 
     $scope.getIndex = function() {
         $http.get('/index/' + $scope.docId).success(function(data, status, headers, config) {
-            var entryCount = data.length;
             var parentEntry = null;
             $scope.indexTable = [];
 
-            for (var i = 0; i < entryCount; i++) {
+            for (var i = 0; i < data.length; i++) {
             	lvl = $scope.findIndexLevel(data[i]);
-                console.log("Found entry with level " + lvl);
             	if (lvl < 1 || lvl > 3)
             	    continue;
 
             	astyle = "a" + lvl;
                 txt = data[i].substr(lvl);
             	txt = txt.trim().replace(/\\#/g, "#")
-            	item = {text: $scope.totext(txt), target: $scope.tolink(txt), style: astyle, level: lvl, items: [], state: ''};
+            	entry = {text: $scope.totext(txt), target: $scope.tolink(txt), style: astyle, level: lvl, items: [], state: ""};
 
                 if (lvl == 1) {
                     if (parentEntry != null) {
-                        if (parentEntry.items.length > 0)
+                        if ("items" in parentEntry && parentEntry.items.length > 0)
                             parentEntry.state = 'col';
                         $scope.indexTable.push(parentEntry);
                     }
 
-                    parentEntry = item;
+                    parentEntry = entry;
                 }
                 else if (parentEntry != null) {
-                    parentEntry['items'].push(item)
+                    if (!("items" in parentEntry)) {
+                        // For IE
+                        parentEntry.items = []
+                    }
+                    parentEntry.items.push(entry)
                 }
             }
 
@@ -115,7 +117,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
                 $scope.indexTable.push(parentEntry);
             }
 
-            $scope.$apply();
+            //$scope.$apply();
         }).error(function(data, status, headers, config) {
             alert("Could not fetch index entries.");
         });
