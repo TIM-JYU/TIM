@@ -34,7 +34,10 @@ timApp.controller("ViewCtrl", ['$scope',
             }
         };
 
-        $(document).on("click", ".readline", function (e) {
+        var ua = navigator.userAgent,
+            eventName = (ua.match(/iPad/i)) ? "touchstart" : "click";
+
+        $(document).on(eventName, ".readline", function (e) {
             var par_id = $(this).parents('.par').attr('id');
             $(this).hide();
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + (new Date).getTime())
@@ -47,16 +50,16 @@ timApp.controller("ViewCtrl", ['$scope',
                 });
         });
 
-        $(document).on("click", ".addNoteButton", function (e) {
+        $(document).on(eventName, ".addNoteButton", function (e) {
             var $par = $(document.getElementById(sc.selectedPar));
             sc.toggleNoteEditor($par, {showDelete: false});
         });
 
-        $(document).on("click", ".editButtonArea .cancelButton", function (e) {
+        $(document).on(eventName, ".editButtonArea .cancelButton", function (e) {
             $(this).parent().parent().remove();
         });
 
-        $(document).on("click", ".editButtonArea .deleteButton", function (e) {
+        $(document).on(eventName, ".editButtonArea .deleteButton", function (e) {
             var noteElement = $(this).parents('.note');
 
             var fields = sc.getEditorFields(noteElement.parents('.par'),
@@ -84,7 +87,7 @@ timApp.controller("ViewCtrl", ['$scope',
             };
         };
 
-        $(document).on("click", ".editButtonArea .parSaveButton", function (e) {
+        $(document).on(eventName, ".editButtonArea .parSaveButton", function (e) {
             if ($(this).parents('.note').length) {
                 //alert('edited');
                 //return;
@@ -129,7 +132,7 @@ timApp.controller("ViewCtrl", ['$scope',
             }
         });
 
-        $(document).on('click', '.paragraphs .parContent', function () {
+        $(document).on(eventName, '.paragraphs .parContent', function () {
             var id = $(this).parent().attr('id');
             if (sc.selectedPar !== "") {
                 sc.toggleActionbuttons(sc.selectedPar, false);
@@ -142,7 +145,7 @@ timApp.controller("ViewCtrl", ['$scope',
             }
         });
 
-        $(document).on('click', ".noteContent", function () {
+        $(document).on(eventName, ".noteContent", function () {
             sc.toggleNoteEditor($(this).parent(), {showDelete: true});
         });
 
