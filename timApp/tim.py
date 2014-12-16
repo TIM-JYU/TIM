@@ -299,6 +299,7 @@ def editNote():
     doc_ver = request.headers.get('Version')
     paragraph_id = int(jsondata['par_id'])
     noteText = jsondata['text']
+    visibility = jsondata['access']
     note_index = int(jsondata['note_index'])
     tags = []
     for tag in KNOWN_TAGS:
@@ -310,7 +311,7 @@ def editNote():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
 
-    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, tags)
+    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, visibility, tags)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])

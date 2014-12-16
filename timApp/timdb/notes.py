@@ -89,7 +89,7 @@ class Notes(TimDbBase):
             self.db.commit()
 
     @contract
-    def modifyNote(self, doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', new_tags : 'list(str)'):
+    def modifyNote(self, doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', access: 'str', new_tags : 'list(str)'):
         """Modifies an existing note.
 
         :param doc_id: The document in which the note resides.
@@ -103,9 +103,9 @@ class Notes(TimDbBase):
         cursor.execute(
         """
             update UserNotes
-            set doc_ver = ?, content = ?, tags = ?
+            set doc_ver = ?, content = ?, tags = ?, access = ?
             where doc_id = ? and par_index = ? and note_index = ?
-        """, [doc_ver, new_content, self.__tagstostr(new_tags),
+        """, [doc_ver, new_content, self.__tagstostr(new_tags), access,
               doc_id, par_index, note_index])
         
         self.db.commit()
