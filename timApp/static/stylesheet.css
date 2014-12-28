@@ -143,15 +143,15 @@ li p {
     margin-left: 0; 
 }
 
-ul {
+ul ,ol{
     margin-left: 1.5em;  
 }
 
-ul ul {
+ul ul, ol ol {
     margin-left: -1em; 
 }
 
-ul ul  ul { 
+ul ul  ul, ol ol ol { 
     margin-left: -1em; 
 }
 
