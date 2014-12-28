@@ -10,12 +10,15 @@ timApp.controller("ViewCtrl", ['$scope',
         http.defaults.headers.common.Version = version.hash;
         sc.selectedPar = "";
         sc.docId = docId;
+        sc.canEdit = canEdit;
+        var EDITOR_CLASS = "noteEditorArea";
+        var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
         sc.toggleNoteEditor = function ($par, options) {
-            if ($par.children('.noteEditorArea').length) {
-                $par.children().remove(".noteEditorArea");
+            if ($par.children(EDITOR_CLASS_DOT).length) {
+                $par.children().remove(EDITOR_CLASS_DOT);
             } else {
-                var $div = $("<div>", {class: 'noteEditorArea'});
+                var $div = $("<div>", {class: EDITOR_CLASS});
                 $div.loadTemplate("/static/templates/noteEditor.html?_=" + (new Date).getTime(), {}, {
                     success: function () {
                         if (!options.showDelete) {
@@ -23,19 +26,37 @@ timApp.controller("ViewCtrl", ['$scope',
                         }
                         else {
                             var data = $par.data();
+                            if (!data.editable) {
+                                alert('You cannot edit this note.');
+                                return;
+                            }
                             $div.find('.noteeditor').text(data.content);
                             $div.find('input[name=access][value=' + data.access + ']').prop('checked', true);
                             $div.find('input[name=difficult]').prop('checked', data.difficult);
                             $div.find('input[name=unclear]').prop('checked', data.unclear);
                         }
+
+                        var editor = new ace.edit($div.find('.noteeditor')[0]);
+                        editor.setTheme("ace/theme/eclipse");
+                        editor.renderer.setPadding(10, 10, 10, 10);
+                        editor.getSession().setMode("ace/mode/markdown");
+                        editor.getSession().setUseWrapMode(false);
+                        editor.getSession().setWrapLimitRange(0, 79);
+                        editor.setOptions({maxLines: 40, minLines: 3});
+                        //$('.' + elem.par).get()[0].focus();
+                        editor.focus();
                         $par.append($div);
                     }
                 });
             }
         };
 
-        $(document).on("click", ".readline", function (e) {
+        var ua = navigator.userAgent,
+            eventName = (ua.match(/iPad/i)) ? "touchstart" : "click";
+
+        $(document).on(eventName, ".readline", function (e) {
             var par_id = $(this).parents('.par').attr('id');
+            $(this).hide();
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + (new Date).getTime())
                 .success(function (data, status, headers, config) {
                     // TODO: Maybe fetch notes only for this paragraph and not the
@@ -46,20 +67,20 @@ timApp.controller("ViewCtrl", ['$scope',
                 });
         });
 
-        $(document).on("click", ".addNoteButton", function (e) {
+        $(document).on(eventName, ".addNoteButton", function (e) {
             var $par = $(document.getElementById(sc.selectedPar));
             sc.toggleNoteEditor($par, {showDelete: false});
         });
 
-        $(document).on("click", ".editButtonArea .cancelButton", function (e) {
+        $(document).on(eventName, ".editButtonArea .cancelButton", function (e) {
             $(this).parent().parent().remove();
         });
 
-        $(document).on("click", ".editButtonArea .deleteButton", function (e) {
+        $(document).on(eventName, ".editButtonArea .deleteButton", function (e) {
             var noteElement = $(this).parents('.note');
 
             var fields = sc.getEditorFields(noteElement.parents('.par'),
-                noteElement.children('.noteEditorArea'));
+                noteElement.children(EDITOR_CLASS));
             http.post('/deleteNote', {
                 par_id: fields.par_id,
                 doc_id: sc.docId,
@@ -76,21 +97,19 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.getEditorFields = function (parElement, noteEditorArea) {
             return {
                 par_id: parElement.attr('id'),
-                content: noteEditorArea.find('.noteeditor').val(),
+                content: ace.edit(noteEditorArea.find('.noteeditor')[0]).getSession().getValue(),
                 access: noteEditorArea.find('input[name=access]:checked').val(),
                 difficult: noteEditorArea.find('input[name=difficult]').is(':checked'),
                 unclear: noteEditorArea.find('input[name=unclear]').is(':checked')
             };
         };
 
-        $(document).on("click", ".editButtonArea .parSaveButton", function (e) {
+        $(document).on(eventName, ".editButtonArea .parSaveButton", function (e) {
             if ($(this).parents('.note').length) {
-                //alert('edited');
-                //return;
                 var noteElement = $(this).parents('.note');
 
                 var fields = sc.getEditorFields(noteElement.parents('.par'),
-                    noteElement.children('.noteEditorArea'));
+                    noteElement.children(EDITOR_CLASS_DOT));
                 // save edits to existing note
                 http.post('/editNote', {
                     par_id: fields.par_id,
@@ -109,7 +128,7 @@ timApp.controller("ViewCtrl", ['$scope',
                 });
             } else {
                 var fields = sc.getEditorFields($(this).parents('.par'),
-                    $(this).parents('.par').children('.noteEditorArea'));
+                    $(this).parents('.par').children(EDITOR_CLASS_DOT));
                 http.post('/postNote', {
                     par_id: fields.par_id,
                     doc_id: sc.docId,
@@ -120,7 +139,7 @@ timApp.controller("ViewCtrl", ['$scope',
                 }).success(function (data, status, headers, config) {
                     // TODO: Maybe fetch notes only for this paragraph and not the
                     // whole document.
-                    $('.noteEditorArea').remove();
+                    $(EDITOR_CLASS_DOT).remove();
                     sc.getNotes();
                 }).error(function (data, status, headers, config) {
                     alert('Could not save the note.');
@@ -128,7 +147,7 @@ timApp.controller("ViewCtrl", ['$scope',
             }
         });
 
-        $(document).on('click', '.paragraphs .parContent', function () {
+        $(document).on(eventName, '.paragraphs .parContent', function () {
             var id = $(this).parent().attr('id');
             if (sc.selectedPar !== "") {
                 sc.toggleActionbuttons(sc.selectedPar, false);
@@ -141,14 +160,16 @@ timApp.controller("ViewCtrl", ['$scope',
             }
         });
 
-        $(document).on('click', ".noteContent", function () {
+        $(document).on(eventName, ".noteContent", function () {
             sc.toggleNoteEditor($(this).parent(), {showDelete: true});
         });
 
         sc.toggleActionbuttons = function (par, toggle) {
             var $par = $(document.getElementById(par));
             if (toggle) {
-                $par.append('<div class="actionButtons"><button class="addNoteButton">Comment/note</button></div>');
+                var $actionDiv = $("<div>", {class: 'actionButtons'});
+                $actionDiv.append($("<button>", {class: 'addNoteButton', text: 'Comment/note'}));
+                $par.append($actionDiv);
             } else {
                 $par.children().remove(".actionButtons");
             }
@@ -169,7 +190,7 @@ timApp.controller("ViewCtrl", ['$scope',
                 }
                 $noteDiv.append($("<div>", {class: classes.join(" ")})
                     .data(notes[i])
-                    .append($("<div>", {class: 'noteContent'}).html(notes[i].content)));
+                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
             }
             return $noteDiv;
         };
@@ -183,11 +204,6 @@ timApp.controller("ViewCtrl", ['$scope',
 
             http.get('/notes/' + sc.docId + rn).success(function (data, status, headers, config) {
                 $('.notes').remove();
-                //for (var key in sc.pars) {
-                //    if (sc.pars.hasOwnProperty(key)) {
-                //        delete sc.pars[key];
-                //    }
-                //}
                 var pars = {};
 
                 var noteCount = data.length;

@@ -178,43 +178,31 @@ class DocTest(unittest.TestCase):
     def test_readings(self):
         print('test_readings')
         doc, _ = self.create_test_document(500)
-        #readings = self.db.readings.getReadings(0, doc.id)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.assertEqual(len(readings), 0)
         par_index = 5
-        #self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
         self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
 
-        #readings = self.db.readings.getReadings(0, doc.id)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.assertEqual(len(readings), 1)
         fr = readings[0]
         self.assertEqual(fr['par_index'], par_index)
-        #self.assertEqual(fr['text'], pars[par_index])
         ver = self.db.documents.deleteParagraph(doc, 0)
         doc = DocIdentifier(doc.id, ver)
-        #pars = self.db.documents.getDocumentAsBlocks(doc)
 
-        #readings = self.db.readings.getReadings(0, doc.id)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         fr = readings[0]
         par_index -= 1
         self.assertEqual(fr['par_index'], par_index)
-        #self.assertEqual(fr['text'], pars[par_index])
-        #self.db.readings.setAsRead(0, doc.id, par_index, pars[par_index])
         self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
 
-        #readings = self.db.readings.getReadings(0, doc.id)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
-
-        for r in readings:
-            print(r)
 
         self.assertEqual(len(readings), 1)
         doc = self.db.documents.updateDocument(doc, 'cleared')
-        #fr = self.db.readings.getReadings(0, doc.id)[0]
-        fr = self.db.readings.getReadings(0, doc.id, doc.hash)[0]
-        self.assertEqual(fr['par_index'], 0)
+        fr = self.db.readings.getReadings(0, doc.id, doc.hash)
+        # Luvun sisältö muuttuu niin radikaalisti, että lukumerkinnän kuuluukin hävitä
+        self.assertEqual(len(fr), 0)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')

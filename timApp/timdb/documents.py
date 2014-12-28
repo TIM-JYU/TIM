@@ -128,7 +128,7 @@ class Documents(TimDbBase):
 
         os.remove(self.getDocumentPath(document_id))
 
-        self.git.remove(self.getDocumentPathAsRelative(document_id))
+        self.git.rm(self.getDocumentPathAsRelative(document_id))
         self.git.commit('Deleted document {}.'.format(document_id))
 
     @contract
@@ -262,6 +262,11 @@ class Documents(TimDbBase):
 
         return self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
 
+    @contract
+    def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
+        return [block for block in self.getDocumentMarkdown(document_id).split('\n') if len(block) > 0 and block[0] == '#']
+
+    @contract
     def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
         """Calls a function of EphemeralClient, ensuring that the document is in cache.
 
@@ -298,6 +303,7 @@ class Documents(TimDbBase):
     def getDocumentMarkdown(self, document_id: 'DocIdentifier') -> 'str':
         return self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id.id))
 
+    @contract
     def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
         try:
             out, _ = self.git.command('diff --color --unified=5 {}^! {}'.format(document_id.hash,
@@ -306,16 +312,8 @@ class Documents(TimDbBase):
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
-        css = ansiconv.base_css()
         html = ansiconv.to_html(out)
-        return """
-<html>
-  <head><style>{0}</style></head>
-  <body>
-    <pre class="ansi_fore ansi_back">{1}</pre>
-  </body>
-</html>
-""".format(css, html)
+        return html
 
     @contract
     def getDocumentVersions(self, document_id: 'int', limit: 'int'=100) -> 'list(dict(str:str))':
@@ -472,8 +470,8 @@ class Documents(TimDbBase):
             affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, old_index)
             [affinity, new_index] = max(affinities, key=lambda x: x[0])
 
-            for aff in affinities:
-                print('{} -> {} aff. {}'.format(old_index, affinities[1], affinities[0]))
+            #for aff in affinities:
+            #    print('{} -> {} aff. {}'.format(old_index, aff[1], aff[0]))
 
             if affinity < 0.5:
                 # This is most likely a deleted paragraph

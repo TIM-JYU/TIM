@@ -26,6 +26,7 @@
 <script src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
 <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <script src="{{url_for('static', filename='scripts/notesView/timApp.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/notesView/contents.js')}}"></script>
 
 {% for cssFile in cssFiles %}
 <link rel="stylesheet" href="{{cssFile}}">
@@ -44,10 +45,33 @@
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
-</script> 
+</script>
 {% endblock %}
 {% block content %}
-<div ng-app="timApp" ng-controller="ViewCtrl">
+
+<div id="main" ng-app="timApp" ng-controller="ViewCtrl">
+        <div id="contents" ng-show="indexTable.length > 1">
+            <div class="menu">
+                <img class="menu-icon" src="{{url_for('static', filename='images/contents.png')}}" width="50" height="50" />
+            </div>
+            <div class="sidebar">
+                {% raw %}
+                <h1>{{docName}}</h1>
+                <ul>
+                    <span ng-repeat="entry in indexTable">
+                        <li ng-class="entry.state" ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+                            <a ng-class="entry.style" href="{{entry.target}}">{{entry.text}}</a>
+                            <ul ng-show="entry.state == 'exp'">
+                                <li ng-repeat="subentry in entry.items">
+                                    <a class="{{subentry.style}}" href="{{subentry.target}}">{{subentry.text}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </span>
+                </ul>
+                {% endraw %}
+            </div>
+        </div>
 
         <img src="{{url_for('static', filename='images/loading.gif')}}" ng-show="displayIndex">
 

@@ -5,7 +5,7 @@ maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 # Set locale
 env LANG en_US.utf8
 env LANGUAGE en_US.utf8
-run env-update en_US.utf8
+run locale-gen en_US.utf8
 
 # Install Python, pip and other necessary packages
 
@@ -36,8 +36,8 @@ run apt-get install -y cmake
 run ln -s /usr/bin/python3 /usr/bin/python
 
 # Install pygit2 and dependencies
-run apt-get install libffi-dev
-run apt-get install libgit2-dev=0.19.0-2
+run apt-get install -y libffi-dev
+run apt-get install -y libgit2-dev=0.19.0-2
 #env LD_LIBRARY_PATH /usr/local/lib
 run pip3 install pygit2==0.19
 

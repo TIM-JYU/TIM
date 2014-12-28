@@ -108,7 +108,7 @@ def documentDiff(doc_id, doc_hash):
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
         doc_diff = timdb.documents.getDifferenceToPrevious(DocIdentifier(doc_id, doc_hash))
-        return Response(doc_diff, mimetype="text/html")
+        return render_template('diff.html', diff_html=doc_diff)
     except TimDbException as e:
         abort(404, str(e))
 
@@ -263,6 +263,13 @@ def pluginCall(plugin, fileName):
     except PluginException:
         abort(404)
 
+@app.route("/index/<int:docId>")
+def getIndex(docId):
+    timdb = getTimDb()
+    verifyViewAccess(docId)
+    index = timdb.documents.getIndex(getNewest(docId))
+    return jsonResponse(index)
+
 @app.route("/postNote", methods=['POST'])
 def postNote():
     verifyLoggedIn()
@@ -292,6 +299,7 @@ def editNote():
     doc_ver = request.headers.get('Version')
     paragraph_id = int(jsondata['par_id'])
     noteText = jsondata['text']
+    visibility = jsondata['access']
     note_index = int(jsondata['note_index'])
     tags = []
     for tag in KNOWN_TAGS:
@@ -299,10 +307,11 @@ def editNote():
             tags.append(tag)
     timdb = getTimDb()
 
-    if not timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index):
-    	abort(403, "Sorry, you don't have permission to edit this note.")
+    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+            or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+        abort(403, "Sorry, you don't have permission to edit this note.")
 
-    timdb.notes.modifyNote(group_id, doc_id, doc_ver, paragraph_id, note_index, noteText, tags)
+    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, visibility, tags)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
@@ -315,10 +324,11 @@ def deleteNote():
     note_index = int(jsondata['note_index'])
     timdb = getTimDb()
 
-    if not timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index):
-    	abort(403, "Sorry, you don't have permission to remove this note.")
+    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+            or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+        abort(403, "Sorry, you don't have permission to remove this note.")
 
-    timdb.notes.deleteNote(group_id, doc_id, paragraph_id, note_index)
+    timdb.notes.deleteNote(doc_id, paragraph_id, note_index)
     return "Success"
 
 @app.route("/notes/<int:doc_id>")
@@ -329,7 +339,7 @@ def getNotes(doc_id):
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
     for note in notes:
-        note['editable'] = note['UserGroup_id'] == group_id
+        note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
         note['private'] = note['access'] == 'justme'
         for tag in KNOWN_TAGS:
             note[tag] = tag in note['tags']
@@ -473,17 +483,23 @@ def loginWithKorppi():
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(session.get('came_from', '/'))
 
-@app.route("/testuser")
-def testLogin():
-    userName = ".test"
-    if request.args.get('name'):
-        if re.match('^[\w-]+$', request.args.get('name')) is None:
-            return "User name can only contain alphanumeric characters."
-        userName = "." + request.args.get('name')
+def __getRealName(email):
+    atindex = email.index('@')
+    if atindex <= 0:
+        return email
+    parts = email[0:atindex].split('.')
+    parts2 = [part.capitalize() if len(part) > 1 else part.capitalize() + '.' for part in parts]
+    return ' '.join(parts2)
+
+@app.route("/testuser/<email>")
+def testLogin(email):
+    if re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is None:
+        return "User name must be a valid email address."
+
     timdb = getTimDb()
+    userName = email
     userId = timdb.users.getUserByName(userName)
-    realName = userName[1:]
-    email = "none"
+    realName = __getRealName(email)
 
     if userId is None:
         uid = timdb.users.createUser(userName, realName, email)
@@ -493,7 +509,7 @@ def testLogin():
         print('New test user: ' + userName)
     session['user_id'] = userId
     session['user_name'] = userName
-    session['real_name'] = "Test user " + realName
+    session['real_name'] = realName
     session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
     return redirect(url_for('indexPage'))

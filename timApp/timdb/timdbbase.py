@@ -229,8 +229,9 @@ class TimDbBase(object):
 
             if read_ver == doc_ver:
                 row['status'] = status_unmodified
-                results.append(row)
-                mapped_pars[par_index] = True
+                if par_index not in mapped_pars:
+                    results.append(row)
+                    mapped_pars[par_index] = True
             else:
                 # Document has been modified, see if the paragraph has changed
                 #print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
