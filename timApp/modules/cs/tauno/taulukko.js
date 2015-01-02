@@ -32,6 +32,21 @@
  - samanakaltaisten lauseiden tunnistus (versiossa 98)
  **********************************************************************/
 
+// Globaalit sanoat, jotka käännetään 
+var wordMuuttujat = "muuttujat:";
+var wordUusiMuuttuja = "uusi muuttuja";
+var wordMuuttujatTitle = "muuttujalista, lisää muuttuja yllä olevasta painikkeesta";
+var wordOhjelma = "ohjelma";
+var wordApua = 'Parametrit:\n' +
+              '  help=help in english\n'+
+              '  apua=apua suomeksi\n'+
+              '  lang=en - käyttöliittymä englanniksi\n'+
+              '  s    - simple, ei indeksejä\n'+
+              '  mx=v - Luo muuttuja x arvolla v.\n'+
+              '  ix=v - Luo indeksimuuttuja x arvolla v.\n'+
+              '  ts=n - Aseta taulukon kooksi n.\n'+
+              '  t=[x,y,...] - Luo taulukko alkioilla x,y,...\n';
+ 
 
 /* globaali huutelutaulu */
 var echo = null;
@@ -460,7 +475,7 @@ function Ohjelma(vk) {
 
 Ohjelma.prototype.divinä = function (divid, parentdiv) {
     this.divid = divid;
-    this.divi = luoDiv(divid, {className: 'ohjelma', title: 'Ohjelma'});
+    this.divi = luoDiv(divid, {className: 'ohjelma', title: wordOhjelma});
     this.divi.olio = this;
     if (typeof parentdiv === 'undefined') this.liitä('oikea');
 
@@ -2042,6 +2057,23 @@ function alustaTauno(event) {
     var tnimi = '<p class="muuttujan-nimi">t:</p>';
     var prt = parametrit();
     if (prt.ts && prt.ts == "0") tnimi = "";
+    
+    
+    if (prt.lang && prt.lang == "en" || prt.help ) {
+       wordMuuttujat = "variables:";
+       wordUusiMuuttuja = "new variable";
+       wordMuuttujatTitle = "list of variables, add varibale from button above";
+       wordOhjelma = "program";
+       wordApua = 'Parameters:\n' +
+              '  help=help in english\n'+
+              '  apua=apua suomeksi\n'+
+              '  lang=en - user interface as english\n'+
+              '  s    - simple, no indeces\n'+
+              '  mx=v - variable x by value v.\n'+
+              '  ix=v - index variable x by value v.\n'+
+              '  ts=n - set array size as n.\n'+
+              '  t=[x,y,...] - Create array by values x,y,...\n'
+    }
 
     naytto.innerHTML = '' +
         '    <div id="tiedot" class="tiedotd">' + tnimi +
@@ -2055,9 +2087,9 @@ function alustaTauno(event) {
         '        <div id="vasen" class="vasen">'+
 		'          <div class="vasen-top">'+
 	    '            <div id="muuttuja-button-alue" class="muuttuja-button-alue">'+
-	    '              muuttujat:'+
+	    '              ' + wordMuuttujat + 
 		'                <button id="uusi-muuttuja" onclick="vk.luoMuuttujaKentistä(\'muuttujat\')">'+
-		'                  uusi muuttuja</button>'+
+		'                  ' + wordUusiMuuttuja + '</button>'+
 	    '            </div>'+
 		'            <div id="uuden-muuttujan-alue" class="uuden-muuttujan-alue">'+
 		'                <label>nimi:</label>'+
@@ -2070,7 +2102,7 @@ function alustaTauno(event) {
 		'                </button>'+
 		'            </div>'+
         '            <div id="muuttujat" class="muuttujatd" '+
-        '                 title="muuttujalista, lisää muuttuja yllä olevasta painikkeesta"'+
+        '                 title="' + wordMuuttujatTitle + '"'+
 		'                 onclick="vk.piilotaMuuttujanLisäys()">'+
 		'              <!-- hyi, globaali vk... TODO XXX -->'+
 		'            </div>'+
@@ -2083,21 +2115,16 @@ function alustaTauno(event) {
         '            </div> '+
         '          </div> '+
         '        </div> '+
-        '        <div id="oikea" class="oikea">ohjelma:'+ // ' <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+
+        '        <div id="oikea" class="oikea">' + wordOhjelma + ':' + // ' <button onclick="alert(getUserCodeFromTauno());">lähdekoodi</button>'+
         '        </div> '+
         '      </div> '+
         ' '+
         '      <div id="echo" class="echo" title="Viestialue, johon ohjelma tulostaa viestejä toiminnastaan. Puhdista klikkaamalla."></div> '+
         '';
 
-    var prt = parametrit();
+    // var prt = parametrit();
     if (('help' in prt)||('apua' in prt)) {
-        alert('Parametrit:\n' +
-              '  s    - simple, ei indeksejä\n'+
-              '  mx=v - Luo muuttuja x arvolla v.\n'+
-              '  ix=v - Luo indeksimuuttuja x arvolla v.\n'+
-              '  ts=n - Aseta taulukon kooksi n.\n'+
-              '  t=[x,y,...] - Luo taulukko alkioilla x,y,...\n');
+        alert(wordApua);
     }
 
     // vk on globaali... hyi...

@@ -230,7 +230,7 @@ class FileParams:
         if not self.url:
             # print("SELF.BY:", self.by.encode());
             if not self.by: return ""
-            return self.by.replace("\\n", "\n")
+            return self.by; # self.by.replace("\\n", "\n")
 
         lines = get_url_lines(self.url)
         if not lines: return "File not found " + self.url
@@ -561,3 +561,22 @@ def do_headers(self, content_type):
     self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
     self.send_header('Content-type', content_type)
     self.end_headers()
+
+# Etsii paketin ja luokan nimen tiedostosta    
+def find_java_package(s):
+    print(s)
+    trim = " \n\t\r"
+    pac = "package"
+    i = s.find(pac)
+    p = ""
+    if i >= 0:
+        i2 = s.find(";", i);
+        p = re.sub(r"\s*", "", s[i + len(pac):i2], flags=re.M)
+    c = ""
+    r = re.search(r"public\s*class", s, flags=re.M)
+    if r:
+        i = r.end()
+        i2 = s.find("{", i);
+        c = s[i:i2].strip(trim)
+    return p, c
+    

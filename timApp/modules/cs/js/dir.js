@@ -99,6 +99,7 @@ csApp.directiveTemplateCS = function(t) {
                   '<div>'+
 				  '<textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
 				  '<div class="csRunChanged" ng-if="usercode!=byCode"></div>'+
+				  //'<div class="csRunChanged" ng-if="muokattu"></div>'+
                   '</div>'+
 				  //'<div class="csRunArea" contentEditable ng-model="usercode" ng-trim="false" "></div>'+
 				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
@@ -112,8 +113,8 @@ csApp.directiveTemplateCS = function(t) {
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-click="runCode();">Aja</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
-				  '<a href="" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
-				  '<a href="" ng-click="initCode();">Alusta</a></p>'+
+				  '<a href="" ng-if="false || file || attrs.program" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
+				  '<a href="" ng-if="muokattu" ng-click="initCode();">Alusta</a></p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t == "comtest" || t == "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
 				  (t == "comtest" || t == "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
@@ -182,7 +183,8 @@ csApp.directiveFunction = function(t) {
                 if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
             } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
             
-			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0);
+			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0) || (scope.type.indexOf("java") >= 0) ||
+                          (scope.type.indexOf("cc") >= 0) || (scope.type.indexOf("c++") >= 0) || (scope.type.indexOf("py") >= 0);
 			scope.isTest = scope.type.indexOf("comtest") >= 0;
             
 			scope.indent = csApp.getInt(scope.indent);
@@ -336,6 +338,10 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.runCode = function() {
 		var t = "console";
 		if ( $scope.type.indexOf("jypeli") >= 0 ) t = "jypeli";
+		if ( $scope.type.indexOf("java") >= 0 ) t = "java";
+		if ( $scope.type.indexOf("cc") >= 0 ) t = "cc";
+		if ( $scope.type.indexOf("c++") >= 0 ) t = "c++";
+		if ( $scope.type.indexOf("py") >= 0 ) t = "py";
 		$scope.doRunCode(t);
 	}
 	
@@ -371,6 +377,7 @@ csApp.Controller = function($scope,$http,$transclude) {
                   };
 		//		  alert($scope.usercode);
         url = "http://tim-beta.it.jyu.fi/cs/answer";
+        // url = "http://tim-beta.it.jyu.fi/cs/answer";
         if ( $scope.plugin ) {
             // url = "/csPlugin" + /*$scope.plugin + */ "/" + $scope.taskId + "/answer/"; // Häck to get same origin
             url = $scope.plugin;

@@ -167,7 +167,7 @@ li p {
     margin-left: 0; 
 }
 
-ul ,ol{
+ul, ol {
     margin-left: 1.5em;  
 }
 
@@ -1280,4 +1280,16 @@ img.console {
 .close{
 	float: right;
 	position:relative;
+}
+
+.runo {
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 2em;
+    font-size: 0.9em;
+}
+
+.tehtava {
+    margin-left: 4em;
+    font-size: 0.9em;
 }

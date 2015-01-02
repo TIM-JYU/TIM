@@ -5,10 +5,12 @@ import subprocess
 # import nltk
 import re
 import os.path
+import os
 import uuid
 import io
 import codecs
 import binascii
+import shutil
 from os import kill
 import signal
 import socketserver
@@ -22,32 +24,6 @@ import datetime
 print("Kaynnistyy")
 
 PORT = 5000
-
-'''
-def check_korppi_user(self,appname):
-    # C = cookies.SimpleCookie()
-    #data = C["korppiusername"]
-    # if data: return data
-    urlfile = "http://tim.it.jyu.fi/cs/login"
-    appcookie = "kissa1"
-    url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
-    param = "request=" + appcookie
-    s = Session()
-    req = Request('GET', url+"?"+param)
-    prepped = req.prepare()
-    resp = s.send(prepped)
-    data = resp.text
-    
-    if not data:
-        self.send_response(303)
-        self.send_header('Location', url+"?authorize="+appcookie+"&returnTo="+urlfile)
-        self.end_headers()
-        # self.redirect(url+"?authorize="+appcookie+"&returnTo="+urlfile)
-        return ""
-
-    # C["korppiusername"] = data;
-    return data;
-'''
 
 class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     pass
@@ -196,6 +172,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         except:
             return
 
+    def removedir(self, dirname):
+        try:
+            shutil.rmtree(dirname)
+        except:
+            return
 
     def do_all(self, query):
         result = {}  # query.jso
@@ -311,19 +292,35 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Generate random cs and exe filenames
         basename = generate_filename()
-        csfname = "/tmp/%s.cs" % basename
-        exename = "/tmp/%s.exe" % basename
+        # csfname = "/tmp/%s.cs" % basename
+        # exename = "/tmp/%s.exe" % basename
+        csfname = "/tmp/%s/prg.cs" % basename
+        exename = "/tmp/%s/prg.exe" % basename
+        prgpath = "/tmp/%s" % basename
+        filepath = prgpath
 
         # if ttype == "console":
         # Console program
+        if ttype == "cc" :
+            csfname = "/tmp/%s/prg.c" % basename
+            
+        if ttype == "c++" :
+            csfname = "/tmp/%s/prg.cpp" % basename
+            
+        if ttype == "py" :
+            csfname = "/tmp/%s/prg.py" % basename
+            exename = csfname
+            
         if "jypeli" in ttype:
             # Jypeli game
+            csfname = "/tmp/%s.cs" % basename
+            exename = "/tmp/%s.exe" % basename
             bmpname = "/tmp/%s.bmp" % basename
             pngname = "/cs/images/%s.png" % basename
         if "comtest" in ttype:
             # ComTest test cases
-            testcs = "/tmp/%sTest.cs" % basename
-            testdll = "/tmp/%sTest.dll" % basename
+            testcs = "/tmp/%s/prgTest.cs" % basename
+            testdll = "/tmp/%s/prgTest.dll" % basename
 
             # Unknown template
             # self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
@@ -345,13 +342,30 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Open the file and write it
         if print_file: return self.wout(s)
+        
+        os.mkdir(prgpath) 
 
         # /answer-path comes here
         usercode = get_json_param(query.jso, "input", "usercode", None)
         save["usercode"] = usercode
         result["save"] = save
 
-        if not s.startswith("File not found"): codecs.open(csfname, "w", "utf-8").write(s)
+        if "java" in ttype:
+            #java
+            package,classname = find_java_package(s);
+            javaclassname = classname
+            if package:
+                filepath = prgpath + "/" + package.replace(".","/")
+                os.makedirs(filepath) 
+                javaclassname = package + "." + classname
+            javaname = filepath + "/" + classname + ".java"
+            csfname = javaname
+            # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
+        
+        
+        if not s.startswith("File not found"): 
+            print("Write file: " + csfname)
+            codecs.open(csfname, "w", "utf-8").write(s)
 
         if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
             return write_json_error(self.wfile, "Could not get the source file", result)
@@ -368,10 +382,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "comtest":
                 cmdline = "java -jar /tmp/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
                     csfname, testdll, csfname, testcs)
+            elif ttype == "java":
+                cmdline = "javac %s" % (javaname);
+            elif ttype == "cc":
+                cmdline = "gcc %s -o %s" % (csfname, exename);
+            elif ttype == "c++":
+                cmdline = "g++ %s -o %s" % (csfname, exename);
+            elif ttype == "py":
+                cmdline = "";
             else:
                 cmdline = "mcs /out:%s %s" % (exename, csfname)
 
-            check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
+            if cmdline:
+                check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
             # self.wfile.write("*** Success!\n")
             print("*** Compile Success")
         except subprocess.CalledProcessError as e:
@@ -383,10 +406,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # self.wfile.write(file.read())
             printLines(self.wfile,lines,0,10000)
             '''
+            print("directory = " + os.curdir)
             error_str = "!!! Error code " + str(e.returncode) + "\n"
             error_str += e.output.decode("utf-8") + "\n"
             # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
-            error_str = error_str.replace(csfname, "tmp.cs")
+            error_str = error_str.replace(prgpath, "")
             output = io.StringIO()
             file = codecs.open(csfname, 'r', "utf-8")
             lines = file.read().splitlines()
@@ -395,7 +419,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             error_str += output.getvalue()
             output.close()
 
-            self.remove(csfname)
+            self.removedir(prgpath)
             return write_json_error(self.wfile, error_str, result)
 
         lang = ""
@@ -431,8 +455,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 out = "Runtime exceeded, maybe loop forever\n" + out
             else:
                 web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
-            self.remove(exename)
+            self.removedir(prgpath)
             self.remove(csfname)
+            self.remove(exename)
         elif ttype == "comtest":
             eri = -1
             code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], timeout=10, env=env)
@@ -464,11 +489,27 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # print("Line nr: "+str(lnro))
                     # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                     web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
-            self.remove(testcs)
-            self.remove(testdll)
+            self.removedir(prgpath)
+
         else:
-            print("Exe: ", exename)
-            code, out, err = run(["mono", exename], timeout=10, env=env)
+            if ttype == "java":
+                print("java: ", javaclassname)
+                code, out, err = run(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env)
+            elif ttype == "cc":
+                print("c: ", exename)
+                code, out, err = run([exename], timeout=10, env=env)
+            elif ttype == "c++":
+                print("c++: ", exename)
+                code, out, err = run([exename], timeout=10, env=env)
+            elif ttype == "py":
+                print("py: ", exename)
+                code, out, err = run(["python3",exename], timeout=10, env=env)
+            elif ttype == "py2":
+                print("py2: ", exename)
+                code, out, err = run(["python2",exename], timeout=10, env=env)
+            else:    
+                print("Exe: ", exename)
+                code, out, err = run(["mono", exename], timeout=10, env=env)
             print(code, out, err)
             if type(err) != type(''): err = err.decode()
             # if type(out) != type(''): out = out.decode()
@@ -477,9 +518,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif type(out) != type(''):
                 out = out.decode('utf-8-sig')
             if code == -9: out = "Runtime exceeded, maybe loop forever\n" + out
-            self.remove(exename)
+            self.removedir(prgpath)
+            
 
-        self.remove(csfname)
+        self.removedir(prgpath)
         
         out = out[0:2000]
         web["console"] = out
