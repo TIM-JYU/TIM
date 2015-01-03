@@ -9,7 +9,7 @@ run apt-get install -y python3
 run apt-get install -y python3-pip
 run pip3 install Flask
 run pip3 install bleach
-run apt-get install -y mono-complete
+run apt-get install -y mono-complete fsharp
 run apt-get install -y libsdl1.2debian
 run apt-get install -y libsdl-mixer1.2
 run apt-get install -y xvfb
@@ -47,12 +47,19 @@ RUN \
   rm -rf /var/lib/apt/lists/* && \
   rm -rf /var/cache/oracle-jdk8-installer
 
-
 # Define working directory.
-WORKDIR /data
+#WORKDIR /data
 
 # Define commonly used JAVA_HOME variable
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+# RUN apt-get install -y autoconf libtool pkg-config make git && \
+#     git clone https://github.com/fsharp/fsharp && \
+#     cd fsharp && ./autogen.sh --prefix /usr && make && make install && \
+#     cd / && rm -rf fsharp
+
+# RUN apt-get update && apt-get -y -q install mono-complete fsharp
+
 
 # Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.

@@ -118,10 +118,10 @@ csApp.directiveTemplateCS = function(t) {
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t == "comtest" || t == "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
 				  (t == "comtest" || t == "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
-				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
+				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
 				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
 				  '<p class="footer">Here comes footer</p>'+
                  
@@ -184,7 +184,7 @@ csApp.directiveFunction = function(t) {
             } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
             
 			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0) || (scope.type.indexOf("java") >= 0) ||
-                          (scope.type.indexOf("cc") >= 0) || (scope.type.indexOf("c++") >= 0) || (scope.type.indexOf("py") >= 0);
+                          (scope.type.indexOf("cc") >= 0) || (scope.type.indexOf("c++") >= 0) || (scope.type.indexOf("py") >= 0) || (scope.type.indexOf("fs") >= 0);
 			scope.isTest = scope.type.indexOf("comtest") >= 0;
             
 			scope.indent = csApp.getInt(scope.indent);
@@ -341,6 +341,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( $scope.type.indexOf("java") >= 0 ) t = "java";
 		if ( $scope.type.indexOf("cc") >= 0 ) t = "cc";
 		if ( $scope.type.indexOf("c++") >= 0 ) t = "c++";
+		if ( $scope.type.indexOf("fs") >= 0 ) t = "fs";
 		if ( $scope.type.indexOf("py") >= 0 ) t = "py";
 		$scope.doRunCode(t);
 	}
@@ -376,7 +377,7 @@ csApp.Controller = function($scope,$http,$transclude) {
                            }
                   };
 		//		  alert($scope.usercode);
-        url = "http://tim-beta.it.jyu.fi/cs/answer";
+        url = "/cs/answer";
         // url = "http://tim-beta.it.jyu.fi/cs/answer";
         if ( $scope.plugin ) {
             // url = "/csPlugin" + /*$scope.plugin + */ "/" + $scope.taskId + "/answer/"; // Häck to get same origin
@@ -387,13 +388,14 @@ csApp.Controller = function($scope,$http,$transclude) {
         }
 		$http({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}}
 		).success(function(data, status, headers, config) {
-			if ( data.web.error ) {
+			if ( data.web.error && false ) {
 				$scope.error = data.web.error;
-				return;
+				//return;
 			}
+			$scope.error = data.web.error;
 			var imgURL = "";
 			$scope.runSuccess = true;
-			$scope.runError = !$scope.runSuccess;
+			$scope.runError = $scope.error; // !$scope.runSuccess;
 
 			imgURL = data.web.image;
 			if ( data.web.testGreen ) $scope.runTestGreen = true;

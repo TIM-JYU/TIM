@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-  
+import threading
+
 
 import http.server
 import subprocess
@@ -21,24 +23,10 @@ from requests import Request, Session
 from http import cookies
 import datetime
 
-print("Kaynnistyy")
 
 PORT = 5000
 
-class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-    pass
 
-def run_while_true(server_class=http.server.HTTPServer,
-                   handler_class=http.server.BaseHTTPRequestHandler):
-    """
-    This assumes that keep_running() is a function of no arguments which
-    is tested initially and after each request.  If its return value
-    is true, the server continues.
-    """
-    server_address = ('', PORT)
-    httpd = server_class(server_address, handler_class)
-    while keep_running():
-        httpd.handle_request()
 
 
 def generate_filename():
@@ -174,11 +162,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def removedir(self, dirname):
         try:
+            os.chdir('/tmp')
             shutil.rmtree(dirname)
         except:
             return
 
     def do_all(self, query):
+        print(threading.currentThread().getName())
         result = {}  # query.jso
         if not result: result = {}
         save = {}
@@ -307,6 +297,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if ttype == "c++" :
             csfname = "/tmp/%s/prg.cpp" % basename
             
+        if ttype == "fs" :
+            csfname = "/tmp/%s/prg.fs" % basename
+            
         if ttype == "py" :
             csfname = "/tmp/%s/prg.py" % basename
             exename = csfname
@@ -344,6 +337,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if print_file: return self.wout(s)
         
         os.mkdir(prgpath) 
+        os.chdir(prgpath)
 
         # /answer-path comes here
         usercode = get_json_param(query.jso, "input", "usercode", None)
@@ -383,18 +377,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 cmdline = "java -jar /tmp/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
                     csfname, testdll, csfname, testcs)
             elif ttype == "java":
-                cmdline = "javac %s" % (javaname);
+                cmdline = "javac -Xlint:all %s" % (javaname);
             elif ttype == "cc":
-                cmdline = "gcc %s -o %s" % (csfname, exename);
+                cmdline = "gcc -Wall %s -o %s" % (csfname, exename);
             elif ttype == "c++":
-                cmdline = "g++ %s -o %s" % (csfname, exename);
+                cmdline = "g++ -Wall %s -o %s" % (csfname, exename);
             elif ttype == "py":
                 cmdline = "";
+            elif ttype == "fs":
+                cmdline = "fsharpc --out:%s %s" % (exename, csfname);
             else:
                 cmdline = "mcs /out:%s %s" % (exename, csfname)
 
+            compiler_output = ""
             if cmdline:
-                check_output([cmdline], stderr=subprocess.STDOUT, shell=True)
+                compiler_output = check_output([cmdline], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+                compiler_output = compiler_output.replace(prgpath, "")
             # self.wfile.write("*** Success!\n")
             print("*** Compile Success")
         except subprocess.CalledProcessError as e:
@@ -454,7 +452,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if code == -9:
                 out = "Runtime exceeded, maybe loop forever\n" + out
             else:
-                web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
+                # web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
+                web["image"] = "/csimages/" + basename + ".png"
             self.removedir(prgpath)
             self.remove(csfname)
             self.remove(exename)
@@ -510,15 +509,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             else:    
                 print("Exe: ", exename)
                 code, out, err = run(["mono", exename], timeout=10, env=env)
-            print(code, out, err)
-            if type(err) != type(''): err = err.decode()
-            # if type(out) != type(''): out = out.decode()
-            if out and out[0] in [254, 255]:
-                out = out.decode('UTF16')
-            elif type(out) != type(''):
-                out = out.decode('utf-8-sig')
+                
+            print(code, out, err, compiler_output)
             if code == -9: out = "Runtime exceeded, maybe loop forever\n" + out
-            self.removedir(prgpath)
+
+            else:
+                err = err.decode("utf-8") + compiler_output
+                if ttype == "fs":
+                   err = err.replace("F# Compiler for F# 3.0 (Open Source Edition)\nFreely distributed under the Apache 2.0 Open Source License\n","")
+     
+                if type(err) != type(''): err = err.decode()
+                # if type(out) != type(''): out = out.decode()
+                if out and out[0] in [254, 255]:
+                    out = out.decode('UTF16')
+                elif type(out) != type(''):
+                    out = out.decode('utf-8-sig')
+                # self.removedir(prgpath)
             
 
         self.removedir(prgpath)
@@ -543,10 +549,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print(err)
 
 
-def keep_running():
-    return True
+# class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
+    """Handle requests in a separate thread."""
 
-
-# run_while_true(handler_class=TIMServer)
-
-ThreadingServer(('', PORT), TIMServer).serve_forever()
+if __name__ == '__main__':
+    server = ThreadedHTTPServer(('', PORT), TIMServer)
+    print('Starting server, use <Ctrl-C> to stop')
+    server.serve_forever()
