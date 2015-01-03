@@ -853,15 +853,16 @@ p.stem {
 
 
 .unitTestGreen {
-  background: #00FF00;
-  width: 30%;
-  height: 1em;
+    background: #00FF00;
+    width: 30%;
+    margin-top: 5pt;
+    height: 1.5em;
 }
 
 .unitTestRed {
   background: #FF7777;
   /* width: 30%; */
-  height: 1em;
+  /* height: 1em; */
 }
 
 .smalllink {
@@ -1290,6 +1291,6 @@ img.console {
 }
 
 .tehtava {
-    margin-left: 4em;
+    margin-left: 2em;
     font-size: 0.9em;
 }

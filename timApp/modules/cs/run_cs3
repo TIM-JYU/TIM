@@ -14,7 +14,12 @@ cp /cs/jypeli/* /tmp/
 cd /tmp
 rm ComTest.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar
+cd /cs/java
+rm comtest*.jar*
+wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
+wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
 cd /cs
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar
 
 # Run the server
 python3 /cs/cs3.py

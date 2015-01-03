@@ -314,6 +314,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # ComTest test cases
             testcs = "/tmp/%s/prgTest.cs" % basename
             testdll = "/tmp/%s/prgTest.dll" % basename
+        if "ccomtest" in ttype:
+            # ComTest test cases
+            csfname = "prg.cpp"
+            testcs = "prg.cpp"
+
 
             # Unknown template
             # self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
@@ -344,7 +349,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         save["usercode"] = usercode
         result["save"] = save
 
-        if "java" in ttype:
+        if "java" in ttype or "jcomtest" in ttype:
             #java
             package,classname = find_java_package(s);
             javaclassname = classname
@@ -356,6 +361,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             csfname = javaname
             # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
         
+        if "jcomtest" in ttype:
+            # ComTest test cases
+            testcs = filepath + "/" + classname + "Test.java"
+            testdll = javaclassname + "Test"
+
         
         if not s.startswith("File not found"): 
             print("Write file: " + csfname)
@@ -376,6 +386,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "comtest":
                 cmdline = "java -jar /tmp/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
                     csfname, testdll, csfname, testcs)
+            elif ttype == "jcomtest":
+                cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)
             elif ttype == "java":
                 cmdline = "javac -Xlint:all %s" % (javaname);
             elif ttype == "cc":
@@ -383,6 +395,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "c++":
                 cmdline = "g++ -Wall %s -o %s" % (csfname, exename);
             elif ttype == "py":
+                cmdline = "";
+            elif ttype == "ccomtest":
                 cmdline = "";
             elif ttype == "fs":
                 cmdline = "fsharpc --out:%s %s" % (exename, csfname);
@@ -488,6 +502,52 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # print("Line nr: "+str(lnro))
                     # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                     web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
+            self.removedir(prgpath)
+        elif ttype == "jcomtest" or ttype == "ccomtest":
+            eri = -1
+            linenr_end = " "
+            if ttype == "jcomtest":
+                code, out, err = run(["java", "org.junit.runner.JUnitCore", testdll], timeout=10, env=env)
+            if ttype == "ccomtest":
+                code, out, err = run(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], timeout=10, env=env)
+                linenr_end = ":"
+            if type(out) != type(''): out = out.decode()
+            if type(err) != type(''): err = err.decode()
+            print(code,out,err)
+            out = remove_before("Execution Runtime:", out)
+            if code == -9:
+                out = "Runtime exceeded, maybe loop forever\n" + out
+                eri = 0
+            out = re.sub("\s*at .*\n", "\n", out, flags=re.M)
+            out = re.sub("\n+", "\n", out, flags=re.M)
+            out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
+            out = re.sub(prgpath+"/", "", out, flags=re.M)
+            out = out.strip(' \t\n\r')
+            if eri < 0: eri = out.find("FAILURES")    # jcomtest
+            if eri < 0: eri = out.find("Test error")  # ccomtest
+            if eri < 0: eri = out.find("ERROR:")  # ccomtest compile error
+            web["testGreen"] = True
+            if eri >= 0:
+                web["testGreen"] = False
+                web["testRed"] = True
+                lni = out.find(" line: ") 
+                cterr = "";
+                sep = "";
+                while lni >= 0:
+                    lns = out[lni + 7:]
+                    lnro = getint(lns)
+                    lines = codecs.open(csfname, "r", "utf-8").readlines()
+                    # print("Line nr: "+str(lnro))
+                    # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
+                    cterr += sep + str(lnro) + " " + lines[lnro - 1]
+                    sep = "";
+                    lni = out.find(" line: ",lni+8)
+                web["comtestError"] = cterr
+            else:
+                out = re.sub("^JUnit version.*\n", "", out, flags=re.M)
+                out = re.sub("^Time: .*\n", "", out, flags=re.M)
+                out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
+                out = re.sub("^ok$", "", out, flags=re.M)
             self.removedir(prgpath)
 
         else:

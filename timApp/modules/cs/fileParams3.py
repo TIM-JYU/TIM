@@ -562,6 +562,7 @@ def do_headers(self, content_type):
     self.send_header('Content-type', content_type)
     self.end_headers()
 
+    
 # Etsii paketin ja luokan nimen tiedostosta    
 def find_java_package(s):
     print(s)
@@ -580,3 +581,15 @@ def find_java_package(s):
         c = s[i:i2].strip(trim)
     return p, c
     
+    
+#Palauttaa intin joka löytyy jonon alusta    
+def getint(s):
+    i = 0
+    s = s.strip(" ")
+    while i < len(s):
+        if "0123456789".find(s[i:i+1]) < 0:
+            if i == 0:
+                return 0
+            return int(s[0:i])
+        i += 1
+    return int(s)

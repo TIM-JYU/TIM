@@ -347,7 +347,10 @@ csApp.Controller = function($scope,$http,$transclude) {
 	}
 	
 	$scope.runTest = function() {
-		$scope.doRunCode("comtest");
+		var t = "comtest";
+		if ( $scope.type.indexOf("jcomtest") >= 0 ) t = "jcomtest";
+		if ( $scope.type.indexOf("ccomtest") >= 0 ) t = "ccomtest";
+		$scope.doRunCode(t);
 	}
 	
 	$scope.doRunCode = function(runType) {
