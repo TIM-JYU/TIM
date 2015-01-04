@@ -18,8 +18,14 @@ cd /cs/java
 rm comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
+
+rm Graphics.jar*
+wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
+rm Ali*.jar
+wget http://users.jyu.fi/~vesal/kurssit/ohj2/ali/Ali.jar
+
 cd /cs
-export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar
 
 # Run the server
 python3 /cs/cs3.py

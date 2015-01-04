@@ -234,6 +234,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_reqs:
             result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
                           "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
+            #result_json = {"js": ["cs/js/dir.js"], "angularModule": ["csApp"],
+            #              "css": ["cs/css/cs.css"], "multihtml": True}
             #result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)
@@ -349,7 +351,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         save["usercode"] = usercode
         result["save"] = save
 
-        if "java" in ttype or "jcomtest" in ttype:
+        if "java" in ttype or "jcomtest" in ttype or "graphics" in ttype:
             #java
             package,classname = find_java_package(s);
             javaclassname = classname
@@ -359,6 +361,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 javaclassname = package + "." + classname
             javaname = filepath + "/" + classname + ".java"
             csfname = javaname
+            bmpname = "/tmp/%s.bmp" % basename
+            pngname = "/cs/images/%s.png" % basename
             # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
         
         if "jcomtest" in ttype:
@@ -388,7 +392,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     csfname, testdll, csfname, testcs)
             elif ttype == "jcomtest":
                 cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)
-            elif ttype == "java":
+            elif ttype == "java" or ttype == "graphics":
                 cmdline = "javac -Xlint:all %s" % (javaname);
             elif ttype == "cc":
                 cmdline = "gcc -Wall %s -o %s" % (csfname, exename);
@@ -471,6 +475,28 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.removedir(prgpath)
             self.remove(csfname)
             self.remove(exename)
+        elif ttype == "graphics":
+            # code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
+            code, out, err = run(["java" , javaclassname, bmpname], timeout=10, env=env)
+            print(err)
+            if type(out) != type(''): out = out.decode()
+            if type(err) != type(''): err = err.decode()
+            # err = ""
+            run(["convert", "-flip", bmpname, pngname],timeout=20)
+            # print(bmpname, pngname)
+            self.remove(bmpname)
+            # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
+            print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % basename)
+            # TODO: clean up screenshot directory
+            p = re.compile('Number of joysticks:.*\n.*')
+            # out = out.replace("Number of joysticks:.*","")
+            out = p.sub("", out)
+            if code == -9:
+                out = "Runtime exceeded, maybe loop forever\n" + out
+            else:
+                # web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
+                web["image"] = "/csimages/" + basename + ".png"
+            # self.removedir(prgpath)
         elif ttype == "comtest":
             eri = -1
             code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], timeout=10, env=env)
@@ -553,7 +579,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         else:
             if ttype == "java":
                 print("java: ", javaclassname)
-                code, out, err = run(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env)
+                # code, out, err = run(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env)
+                code, out, err = run(["java", javaclassname], timeout=10, env=env)
             elif ttype == "cc":
                 print("c: ", exename)
                 code, out, err = run([exename], timeout=10, env=env)

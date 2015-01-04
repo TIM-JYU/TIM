@@ -183,7 +183,8 @@ csApp.directiveFunction = function(t) {
                 if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
             } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
             
-			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0) || (scope.type.indexOf("java") >= 0) ||
+			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0) || 
+                          (scope.type.indexOf("java") >= 0) || (scope.type.indexOf("graphics") >= 0) ||
                           (scope.type.indexOf("cc") >= 0) || (scope.type.indexOf("c++") >= 0) || (scope.type.indexOf("py") >= 0) || (scope.type.indexOf("fs") >= 0);
 			scope.isTest = scope.type.indexOf("comtest") >= 0;
             
@@ -338,6 +339,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.runCode = function() {
 		var t = "console";
 		if ( $scope.type.indexOf("jypeli") >= 0 ) t = "jypeli";
+		if ( $scope.type.indexOf("graphics") >= 0 ) t = "graphics";
 		if ( $scope.type.indexOf("java") >= 0 ) t = "java";
 		if ( $scope.type.indexOf("cc") >= 0 ) t = "cc";
 		if ( $scope.type.indexOf("c++") >= 0 ) t = "c++";
