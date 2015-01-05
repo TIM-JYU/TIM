@@ -44,7 +44,7 @@
 {% endblock %}
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
-        <div id="contents" ng-show="indexTable.length > 1">
+        <div id="contents" ng-show="indexTable.length > 0">
             <div class="menu">
                 <img class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                      height="50"/>
