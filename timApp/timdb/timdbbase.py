@@ -229,14 +229,13 @@ class TimDbBase(object):
 
             if read_ver == doc_ver:
                 row['status'] = status_unmodified
-                if par_index not in mapped_pars:
-                    results.append(row)
-                    mapped_pars[par_index] = True
+                results.append(row)
+                mapped_pars[par_index] = True
             else:
                 # Document has been modified, see if the paragraph has changed
                 #print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
                 mapping = self.getParMapping(doc_id, read_ver, doc_ver, row['par_index'], commit = False)
-                if mapping is not None and mapping[0] not in mapped_pars:
+                if mapping is not None:
                     par_index = mapping[0]
                     modified = mapping[1]
                     row['par_index'] = par_index
