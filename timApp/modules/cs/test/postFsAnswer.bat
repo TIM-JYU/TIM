@@ -1,0 +1,1 @@
+curl -L -X POST -H "Content-Type: application/json" --data @postFsAnswer.json localhost:5000/answer

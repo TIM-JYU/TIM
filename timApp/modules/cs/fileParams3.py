@@ -180,6 +180,44 @@ def get_url_lines(url):
     return lines
 
 
+def get_url_lines_as_string(url):
+    global cache
+    # print("========= CACHE KEYS ==========\n", get_chache_keys())
+    cachename = "lines_" + url
+    # print(cachename + "\n")
+    #print(cache) # chache does not work in forkingMix
+    if cachename in cache:
+        print("from cache\n")
+        return cache[cachename]
+
+    try:
+        req = urlopen(url)
+        # ftype = req.headers['content-type']
+        lines = req.readlines()
+    except:
+        return False
+    # filecontent = nltk.clean_html(html)
+
+    n = len(lines)
+    result = ""
+
+    for i in range(0, n):
+        line = lines[i]
+        try:
+            line = line.decode('utf-8-sig')
+        except:
+            try:
+                line = line.decode(encoding='iso8859_15')
+            except:
+                line = str(line)
+        result += line.replace("\r", "")
+
+    result = result.strip("\n")
+    cache[cachename] = result
+    # print(cache)
+    return result
+
+
 class FileParams:
     def __init__(self, query, nr, url):
         self.url = get_param(query, "file" + nr, "")
@@ -565,23 +603,19 @@ def do_headers(self, content_type):
     
 # Etsii paketin ja luokan nimen tiedostosta    
 def find_java_package(s):
-    print(s)
-    trim = " \n\t\r"
-    pac = "package"
-    i = s.find(pac)
     p = ""
-    if i >= 0:
-        i2 = s.find(";", i);
-        p = re.sub(r"\s*", "", s[i + len(pac):i2], flags=re.M)
     c = ""
-    r = re.search(r"public\s*class", s, flags=re.M)
-    if r:
-        i = r.end()
-        i2 = s.find("{", i);
-        c = s[i:i2].strip(trim)
+    r = re.search("package\s*([\s\.a-zA-Z0-9_]+)", s, flags=re.M)
+    if r: p = re.sub(r"\s*", "", r.group(1))
+    r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    if r: c = r.group(1)
+    else:
+        r = re.search("public\s*interface\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+        if r: c = r.group(1)
+
     return p, c
-    
-    
+
+
 #Palauttaa intin joka löytyy jonon alusta    
 def getint(s):
     i = 0
@@ -593,3 +627,13 @@ def getint(s):
             return int(s[0:i])
         i += 1
     return int(s)
+
+
+import hashlib
+import binascii
+
+
+# see: https://docs.python.org/3/library/hashlib.html
+def hash_user_dir(user_id):
+    dk = hashlib.pbkdf2_hmac('sha256', str.encode(user_id), b"tim", 100)
+    return bytes.decode(binascii.hexlify(dk))

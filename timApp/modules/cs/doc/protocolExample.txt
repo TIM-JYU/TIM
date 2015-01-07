@@ -1,0 +1,75 @@
+HTML-pyynnön JSON TIM => cs3.py
+
+{'taskID': '6241.hellofs', 
+ 'state': None, 
+ 'markup': {'type': 'fs', 'header': 'F#', 'byCode': 'printfn "Hello World"', 'user_id': 'vesal'}
+}
+
+Vastaus HTML jossa attr haudattu HEXJSON:
+
+{"type": "fs", 
+ "header": "F#", 
+ "taskID": "6241.hellofs", 
+ "byCode": "printfn \"Hello World\"", 
+ "user_id": "vesal"
+}
+
+
+Kun ajetaan 1. kertaa  Selain => cs3.py
+
+{"input": {"markup": {"taskId": "6241.hellofs", "type": "fs"}, "usercode": "printfn \\"Hello World\\""}, 
+ "taskID": "6241.hellofs", 
+ "markup": {"header": "F#", "type": "fs", "byCode": "printfn \\"Hello World\\""}, 
+ "state": null
+}
+
+Vastaus cs3.py  => selain
+
+{"save": {"usercode": "printfn \"Hello World\""}, 
+ "web": {"error": "", "console": "Hello World\n"}
+}
+
+==========================================================================================================================
+
+Kun ajetaan muutettu kertaa Selain => /csPlugin/6241.hellofs/answer/ 
+{
+ 'input': {'usercode':\"printfn "Moi\"",
+           'markup': {'type':"fs", 'file': undefined, 'replace': undefined, 'lang': undefined, 'taskId': "6241.hellofs"}, 
+}
+
+
+TIM => cs3.py
+
+{"input": {"markup": {"taskId": "6241.hellofs", "type": "fs"}, "usercode": "printfn \\"Moi\\""}, 
+ "taskID": "6241.hellofs", 
+ "markup": {"header": "F#", "type": "fs", "byCode": "printfn \\"Hello World\\""}, 
+ "state": "{\\"usercode\\": \\"printfn \\\\\\"Hello World\\\\\\"\\"}"
+}
+
+Vastaus cs3.py  => TIM => selain (saa vain web-osan)
+
+{"save": {"usercode": "printfn \"Moi\""}, 
+ "web": {"error": "", "console": "Moi\n"}
+}
+
+==========================================================================================================================
+
+HTML-pyynnön JSON (käyttäjä muuttanut) JSON TIM => cs3.py
+
+{'taskID': '6241.hellofs', 
+ 'state': {'usercode': 'printfn "Moi"'}, 
+ 'markup': {'type': 'fs', 'header': 'F#', 'byCode': 'printfn "Hello World"', 'user_id': 'vesal'}
+}
+
+Vastaus HTML jossa attr haudattu HEXJSON:
+
+{"type": "fs", 
+ "header": "F#", 
+ "user_id": "vesal", 
+ "byCode": "printfn \"Hello World\"", 
+ "taskID": "6241.hellofs", 
+ "usercode": "printfn \"Moi\""
+}
+
+
+
