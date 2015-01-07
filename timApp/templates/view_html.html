@@ -70,7 +70,7 @@
         </div>
 
         {% for t in text %}
-            <div id="{{ loop.index0 }}" class="par">
+            <div id="{{ loop.index0 + start_index }}" class="par">
                 <div class="parContent">
                     {{ t|safe }}
                 </div>

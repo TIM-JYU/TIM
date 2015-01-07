@@ -19,7 +19,12 @@ def view_document_html(doc_id):
     return view(doc_id, 'view_html.html')
 
 
-def view(doc_id, template_name):
+@view_page.route("/view_html/<int:doc_id>/<int:start_index>/<int:end_index>")
+def view_document_part(doc_id, start_index, end_index):
+    return view(doc_id, 'view_html.html', (start_index, end_index))
+
+
+def view(doc_id, template_name, view_range=None):
     timdb = getTimDb()
     if not timdb.documents.documentExists(doc_id):
         abort(404)
@@ -33,6 +38,11 @@ def view(doc_id, template_name):
     version = timdb.documents.getNewestVersion(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
     doc = timdb.documents.getDocument(doc_id)
+    start_index = 0
+    if view_range is not None:
+        start_index = max(view_range[0], 0)
+        end_index = min(view_range[1], len(xs))
+        xs = xs[start_index:end_index + 1]
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
@@ -50,4 +60,5 @@ def view(doc_id, template_name):
                            cssFiles=cssPaths,
                            jsMods=modules,
                            custom_css_files=custom_css_files,
-                           custom_css=custom_css)
+                           custom_css=custom_css,
+                           start_index=start_index)
