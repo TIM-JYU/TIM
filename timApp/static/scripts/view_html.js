@@ -10,6 +10,7 @@ timApp.controller("ViewCtrl", ['$scope',
         http.defaults.headers.common.Version = version.hash;
         sc.selectedPar = "";
         sc.docId = docId;
+        sc.docName = docName;
         sc.canEdit = canEdit;
         var EDITOR_CLASS = "noteEditorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
@@ -260,6 +261,118 @@ timApp.controller("ViewCtrl", ['$scope',
             });
         };
 
+        sc.totext = function (str) {
+            if (str.indexOf('{') > 0) {
+                return str.substring(0, str.indexOf('{')).trim();
+            }
+            return str;
+        };
+
+        sc.tolink = function (str) {
+            if (str.indexOf('{') >= 0 && str.indexOf('}') > 0) {
+                ob = str.indexOf('{')
+                cb = str.indexOf('}')
+                return str.substring(ob + 1, cb);
+            }
+            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
+        };
+
+        sc.findIndexLevel = function (str) {
+            for (var i = 0; i < str.length; i++) {
+                if (str.charAt(i) != '#') {
+                    return i;
+                }
+            }
+
+            return 0;
+        };
+
+        sc.getIndex = function () {
+            http.get('/index/' + sc.docId).success(function (data, status, headers, config) {
+                var parentEntry = null;
+                sc.indexTable = [];
+
+                for (var i = 0; i < data.length; i++) {
+                    lvl = sc.findIndexLevel(data[i]);
+                    if (lvl < 1 || lvl > 3)
+                        continue;
+
+                    astyle = "a" + lvl;
+                    txt = data[i].substr(lvl);
+                    txt = txt.trim().replace(/\\#/g, "#")
+                    entry = {
+                        text: sc.totext(txt),
+                        target: sc.tolink(txt),
+                        style: astyle,
+                        level: lvl,
+                        items: [],
+                        state: ""
+                    };
+
+                    if (lvl == 1) {
+                        if (parentEntry != null) {
+                            if ("items" in parentEntry && parentEntry.items.length > 0)
+                                parentEntry.state = 'col';
+                            sc.indexTable.push(parentEntry);
+                        }
+
+                        parentEntry = entry;
+                    }
+                    else if (parentEntry != null) {
+                        if (!("items" in parentEntry)) {
+                            // For IE
+                            parentEntry.items = []
+                        }
+                        parentEntry.items.push(entry)
+                    }
+                }
+
+                if (parentEntry != null) {
+                    if (parentEntry.items.length > 0)
+                        parentEntry.state = 'col';
+                    sc.indexTable.push(parentEntry);
+                }
+
+                //sc.$apply();
+            }).error(function (data, status, headers, config) {
+                alert("Could not fetch index entries.");
+            });
+        };
+
+        sc.invertState = function (state) {
+            if (state == 'exp')
+                return 'col';
+            if (state == 'col')
+                return 'exp';
+            return state;
+        };
+
+        sc.clearSelection = function () {
+            if (document.selection)
+                document.selection.empty();
+            else if (window.getSelection)
+                window.getSelection().removeAllRanges();
+        };
+
+        sc.invertStateClearSelection = function (event, state) {
+            if (event.which != 1) {
+                // Listen only to the left mouse button
+                return state;
+            }
+            if (event.target.className == 'a2' || event.target.className == 'a3') {
+                // Do not collapse/expand if a subentry is clicked
+                return state;
+            }
+
+            newState = sc.invertState(state);
+            if (newState != state)
+                sc.clearSelection();
+            return newState;
+        };
+
+        sc.indexTable = [];
+
+        sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
     }]);
