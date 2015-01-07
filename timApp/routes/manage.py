@@ -29,13 +29,13 @@ def manage(doc_id):
 def addPermission(doc_id, group_name, perm_type):
     timdb = getTimDb()
     if not timdb.documents.documentExists(doc_id):
-        abort(404)
+        abort(404, 'This document does not exist.')
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
+        abort(403, "You don't have permission to add permissions to this document.")
 
     groups = timdb.users.getUserGroupsByName(group_name)
     if len(groups) == 0:
-        return jsonResponse({'message' : 'No user group with this name was found.'}, 404)
+        abort(404, 'No user group with this name was found.')
 
     group_id = groups[0]['id']
 
@@ -44,7 +44,7 @@ def addPermission(doc_id, group_name, perm_type):
     elif perm_type == 'view':
         timdb.users.grantViewAccess(group_id, doc_id)
     else:
-        abort(400)
+        abort(400, 'Invalid permission type.')
     return "Success"
 
 @manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
@@ -89,8 +89,8 @@ def getPermissions(doc_id):
 def deleteDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(doc_id):
-        return jsonResponse({'message': 'Document does not exist.'}, 404)
+        return jsonResponse({'error': 'Document does not exist.'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
+        return jsonResponse({'error': "You don't have permission to delete this document."}, 403)
     timdb.documents.deleteDocument(doc_id)
     return "Success"

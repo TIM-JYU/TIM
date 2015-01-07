@@ -1,4 +1,4 @@
-var PermApp = angular.module('permApp', [ 'ngSanitize', 'angularFileUpload']);
+var PermApp = angular.module('permApp', ['ngSanitize', 'angularFileUpload']);
 
 PermApp.directive('focusMe', function ($timeout) {
     return {
@@ -48,7 +48,7 @@ PermApp.controller("PermCtrl", [
                 function (data, status, headers, config) {
                     sc.getPermissions();
                 }).error(function (data, status, headers, config) {
-                    alert(data.message);
+                    alert(data.error);
                 });
         };
 
@@ -57,7 +57,7 @@ PermApp.controller("PermCtrl", [
                 function (data, status, headers, config) {
                     sc.getPermissions();
                 }).error(function (data, status, headers, config) {
-                    alert(data.message);
+                    alert(data.error);
                 });
             sc.showAddEditor = false;
             sc.showAddViewer = false;
@@ -69,7 +69,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.doc.name = newName;
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert(data.error);
             });
         };
 
@@ -79,7 +79,7 @@ PermApp.controller("PermCtrl", [
                     .success(function (data, status, headers, config) {
                         location.replace('/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.message);
+                        alert(data.error);
                     });
             }
         };
@@ -99,13 +99,13 @@ PermApp.controller("PermCtrl", [
                     sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
                 }).success(function (data, status, headers, config) {
                     sc.doc.versions = data;
-                    $http.get('/download/' + sc.doc.id).success(function(data){
+                    $http.get('/download/' + sc.doc.id).success(function (data) {
                         sc.doc.fulltext = data;
                         sc.fulltext = data;
                         sc.progress = 'Uploading... Done!';
                     })
                 }).error(function (data, status, headers, config) {
-                    sc.progress = 'Error occurred: ' + data.message;
+                    sc.progress = 'Error occurred: ' + data.error;
                 }).then(function () {
                     sc.uploadInProgress = false;
                 });
@@ -123,10 +123,10 @@ PermApp.controller("PermCtrl", [
                     sc.doc.fulltext = sc.fulltext;
                     sc.doc.versions = data;
                 }).error(function (data, status, headers, config) {
-                    alert(data.message);
+                    alert(data.error);
                 }).then(function () {
                     sc.saving = false;
                 });
         };
 
-    } ]);
+    }]);
