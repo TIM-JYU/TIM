@@ -81,7 +81,7 @@ timApp.controller("ViewCtrl", ['$scope',
             var noteElement = $(this).parents('.note');
 
             var fields = sc.getEditorFields(noteElement.parents('.par'),
-                noteElement.children(EDITOR_CLASS));
+                noteElement.children(EDITOR_CLASS_DOT));
             http.post('/deleteNote', {
                 par_id: fields.par_id,
                 doc_id: sc.docId,
@@ -96,9 +96,10 @@ timApp.controller("ViewCtrl", ['$scope',
         });
 
         sc.getEditorFields = function (parElement, noteEditorArea) {
+            var editorElem = noteEditorArea.find('.noteeditor')[0];
             return {
                 par_id: parElement.attr('id'),
-                content: ace.edit(noteEditorArea.find('.noteeditor')[0]).getSession().getValue(),
+                content: ace.edit(editorElem).getSession().getValue(),
                 access: noteEditorArea.find('input[name=access]:checked').val(),
                 difficult: noteEditorArea.find('input[name=difficult]').is(':checked'),
                 unclear: noteEditorArea.find('input[name=unclear]').is(':checked')
