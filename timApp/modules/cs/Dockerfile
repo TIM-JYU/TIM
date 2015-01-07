@@ -53,13 +53,10 @@ RUN \
 # Define commonly used JAVA_HOME variable
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
-# RUN apt-get install -y autoconf libtool pkg-config make git && \
-#     git clone https://github.com/fsharp/fsharp && \
-#     cd fsharp && ./autogen.sh --prefix /usr && make && make install && \
-#     cd / && rm -rf fsharp
-
-# RUN apt-get update && apt-get -y -q install mono-complete fsharp
-
+# Commonlisp
+RUN apt-get update
+# RUN apt-get install -y clisp
+RUN apt-get install -y sbcl 
 
 # Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.

@@ -168,6 +168,7 @@ csApp.directiveFunction = function(t) {
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder","Write your code here");
             csApp.set(scope,attrs,"indent",-1);
+            csApp.set(scope,attrs,"user_id");
             // csApp.set(scope,attrs,"program");
 
 			scope.minRows = csApp.getInt(scope.rows);
@@ -185,8 +186,9 @@ csApp.directiveFunction = function(t) {
             
 			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0) || 
                           (scope.type.indexOf("java") >= 0) || (scope.type.indexOf("graphics") >= 0) ||
-                          (scope.type.indexOf("cc") >= 0) || (scope.type.indexOf("c++") >= 0) || (scope.type.indexOf("py") >= 0) || (scope.type.indexOf("fs") >= 0);
-			scope.isTest = scope.type.indexOf("comtest") >= 0;
+                          (scope.type.indexOf("cc") >= 0) || (scope.type.indexOf("c++") >= 0) || 
+                          (scope.type.indexOf("py") >= 0) || (scope.type.indexOf("fs") >= 0) || (scope.type.indexOf("clisp") >= 0);
+			scope.isTest = scope.type.indexOf("comtest") >= 0 || scope.type.indexOf("junit") >= 0;
             
 			scope.indent = csApp.getInt(scope.indent);
             if ( scope.indent < 0 )
@@ -345,12 +347,14 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( $scope.type.indexOf("c++") >= 0 ) t = "c++";
 		if ( $scope.type.indexOf("fs") >= 0 ) t = "fs";
 		if ( $scope.type.indexOf("py") >= 0 ) t = "py";
+		if ( $scope.type.indexOf("clisp") >= 0 ) t = "clisp";
 		$scope.doRunCode(t);
 	}
 	
 	$scope.runTest = function() {
 		var t = "comtest";
 		if ( $scope.type.indexOf("jcomtest") >= 0 ) t = "jcomtest";
+		if ( $scope.type.indexOf("junit") >= 0 ) t = "junit";
 		if ( $scope.type.indexOf("ccomtest") >= 0 ) t = "ccomtest";
 		$scope.doRunCode(t);
 	}
@@ -378,7 +382,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		params = {
                   //   'input': 1
 				  'input': {'usercode':ucode,
-                            'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId}, 
+                            'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id}, 
                            }
                   };
 		//		  alert($scope.usercode);

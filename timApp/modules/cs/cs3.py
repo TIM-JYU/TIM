@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-  
+# -*- coding: utf-8 -*-
 import threading
-
 
 import http.server
 import subprocess
@@ -27,14 +27,12 @@ import datetime
 PORT = 5000
 
 
-
-
 def generate_filename():
     return str(uuid.uuid4())
 
 
 def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None):
-    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env) #, timeout=timeout)
+    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
         stdout, stderr = p.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -82,13 +80,15 @@ def remove_before(what, s):
 
 def get_html(ttype, query):
     js = query_params_to_map(query.query)
+    if "byFile" in js and not "byCode" in js:
+        js["byCode"] = get_url_lines_as_string(js["byFile"])
     jso = json.dumps(js)
     runner = 'cs-runner'
-    if "comtest" in ttype: runner = 'cs-comtest-runner'
+    if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
     if "jypeli" in ttype: runner = 'cs-jypeli-runner'
     s = '<' + runner + '>xxxJSONxxx' + jso + '</' + runner + '>'
-    if ttype == "c1" or True: # c1 oli testejä varten ettei sinä aikana rikota muita.
+    if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
         s = '<' + runner + '>xxxHEXJSONxxx' + hx.decode() + '</' + runner + '>'
     return s
@@ -96,11 +96,11 @@ def get_html(ttype, query):
 
 def log(self):
     t = datetime.datetime.now()
-    agent = " :AG: "+ self.headers["User-Agent"]
+    agent = " :AG: " + self.headers["User-Agent"]
     if agent.find("ython") >= 0: agent = ""
     logfile = "/cs/images/log.txt"
     try:
-        open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path +  agent + "\n")
+        open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path + agent + "\n")
     except:
         return
 
@@ -135,6 +135,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_tauno = self.path.find('/tauno') >= 0
         htmls = []
         for query in querys:
+            print(query.jso);
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if usercode: query.query["usercode"] = [usercode]
             ttype = get_param(query, "type", "console").lower()
@@ -160,12 +161,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         except:
             return
 
+    def mkdirs(self, path):
+        if os.path.exists(path): return
+        os.makedirs(path)
+
+
     def removedir(self, dirname):
         try:
-            os.chdir('/tmp')
+            # os.chdir('/tmp')
             shutil.rmtree(dirname)
         except:
             return
+
 
     def do_all(self, query):
         print(threading.currentThread().getName())
@@ -197,7 +204,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout("Username = " + username)
             return
         '''
-            
+
         is_fullhtml = self.path.find('/fullhtml') >= 0
         is_html = self.path.find('/html') >= 0 or self.path.find('.html') >= 0
         is_css = self.path.find('.css') >= 0
@@ -210,11 +217,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_ptauno = self.path.find('/ptauno') >= 0
 
         content_type = 'text/plain'
-        if is_reqs  or is_answer: content_type = "application/json"
-        if is_fullhtml or is_html or is_ptauno or is_tauno : content_type = 'text/html; charset=utf-8'
+        if is_reqs or is_answer: content_type = "application/json"
+        if is_fullhtml or is_html or is_ptauno or is_tauno: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
-        do_headers(self,content_type)
+        do_headers(self, content_type)
 
         if self.path.find("refresh") >= 0:
             self.wout(get_chache_keys())
@@ -229,12 +236,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Get the template type
         ttype = get_param(query, "type", "console").lower()
-        if is_tauno and not is_answer: ttype = 'tauno' # answer is newer tauno
+        if is_tauno and not is_answer: ttype = 'tauno'  # answer is newer tauno
 
         if is_reqs:
             result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
-                          "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
-            #result_json = {"js": ["cs/js/dir.js"], "angularModule": ["csApp"],
+                           "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
+            # result_json = {"js": ["cs/js/dir.js"], "angularModule": ["csApp"],
             #              "css": ["cs/css/cs.css"], "multihtml": True}
             #result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
@@ -282,8 +289,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 "##QUERYPARAMS##", query)
             return self.wout(s)
 
-        # Generate random cs and exe filenames
-        basename = generate_filename()
+        # Check if user name or temp name
+        rndname = generate_filename()
+        delete_tmp = True
+        user_id = get_param(query, "user_id", None)
+        if get_param(query, "path", "") == "user" and user_id:
+            basename = "user/" + hash_user_dir(user_id)
+            delete_tmp = False
+            self.mkdirs("/tmp/user")
+        else:
+            # Generate random cs and exe filenames
+            basename = rndname
         # csfname = "/tmp/%s.cs" % basename
         # exename = "/tmp/%s.exe" % basename
         csfname = "/tmp/%s/prg.cs" % basename
@@ -293,25 +309,29 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # if ttype == "console":
         # Console program
-        if ttype == "cc" :
+        if ttype == "cc":
             csfname = "/tmp/%s/prg.c" % basename
-            
-        if ttype == "c++" :
+
+        if ttype == "c++":
             csfname = "/tmp/%s/prg.cpp" % basename
-            
-        if ttype == "fs" :
+
+        if ttype == "fs":
             csfname = "/tmp/%s/prg.fs" % basename
-            
-        if ttype == "py" :
+
+        if ttype == "py":
             csfname = "/tmp/%s/prg.py" % basename
             exename = csfname
-            
+
+        if ttype == "clisp":
+            csfname = "/tmp/%s/prg.lisp" % basename
+            exename = csfname
+
         if "jypeli" in ttype:
             # Jypeli game
             csfname = "/tmp/%s.cs" % basename
             exename = "/tmp/%s.exe" % basename
-            bmpname = "/tmp/%s.bmp" % basename
-            pngname = "/cs/images/%s.png" % basename
+            bmpname = "/tmp/%s.bmp" % rndname
+            pngname = "/cs/images/%s.png" % rndname
         if "comtest" in ttype:
             # ComTest test cases
             testcs = "/tmp/%s/prgTest.cs" % basename
@@ -342,36 +362,35 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Open the file and write it
         if print_file: return self.wout(s)
-        
-        os.mkdir(prgpath) 
-        os.chdir(prgpath)
+
+        self.mkdirs(prgpath)
+        # os.chdir(prgpath)
 
         # /answer-path comes here
         usercode = get_json_param(query.jso, "input", "usercode", None)
         save["usercode"] = usercode
         result["save"] = save
 
-        if "java" in ttype or "jcomtest" in ttype or "graphics" in ttype:
-            #java
-            package,classname = find_java_package(s);
+        if "java" in ttype or "jcomtest" in ttype or "junit" in ttype or "graphics" in ttype:
+            # java
+            package, classname = find_java_package(s);
             javaclassname = classname
             if package:
-                filepath = prgpath + "/" + package.replace(".","/")
-                os.makedirs(filepath) 
+                filepath = prgpath + "/" + package.replace(".", "/")
+                self.mkdirs(filepath)
                 javaclassname = package + "." + classname
             javaname = filepath + "/" + classname + ".java"
             csfname = javaname
             bmpname = "/tmp/%s.bmp" % basename
             pngname = "/cs/images/%s.png" % basename
             # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
-        
+
         if "jcomtest" in ttype:
             # ComTest test cases
             testcs = filepath + "/" + classname + "Test.java"
             testdll = javaclassname + "Test"
 
-        
-        if not s.startswith("File not found"): 
+        if not s.startswith("File not found"):
             print("Write file: " + csfname)
             codecs.open(csfname, "w", "utf-8").write(s)
 
@@ -392,27 +411,32 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     csfname, testdll, csfname, testcs)
             elif ttype == "jcomtest":
                 cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)
+            elif ttype == "junit":
+                cmdline = "javac %s" % javaname
             elif ttype == "java" or ttype == "graphics":
-                cmdline = "javac -Xlint:all %s" % (javaname);
+                cmdline = "javac -Xlint:all %s" % javaname
             elif ttype == "cc":
-                cmdline = "gcc -Wall %s -o %s" % (csfname, exename);
+                cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
             elif ttype == "c++":
-                cmdline = "g++ -Wall %s -o %s" % (csfname, exename);
+                cmdline = "g++ -Wall %s -o %s" % (csfname, exename)
             elif ttype == "py":
-                cmdline = "";
+                cmdline = ""
+            elif ttype == "clisp":
+                cmdline = ""
             elif ttype == "ccomtest":
-                cmdline = "";
+                cmdline = ""
             elif ttype == "fs":
-                cmdline = "fsharpc --out:%s %s" % (exename, csfname);
+                cmdline = "fsharpc --out:%s %s" % (exename, csfname)
             else:
                 cmdline = "mcs /out:%s %s" % (exename, csfname)
 
             compiler_output = ""
             if cmdline:
-                compiler_output = check_output([cmdline], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+                compiler_output = check_output(["cd " + prgpath + " && " + cmdline], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
                 compiler_output = compiler_output.replace(prgpath, "")
             # self.wfile.write("*** Success!\n")
             print("*** Compile Success")
+            print(compiler_output)
         except subprocess.CalledProcessError as e:
             '''
             self.wout("!!! Error code " + str(e.returncode) + "\n")
@@ -435,7 +459,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             error_str += output.getvalue()
             output.close()
 
-            self.removedir(prgpath)
+            if delete_tmp: self.removedir(prgpath)
             return write_json_error(self.wfile, error_str, result)
 
         lang = ""
@@ -451,14 +475,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print("Lang= ", lang)
 
         err = ""
-        
+
         if ttype == "jypeli":
-            code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
+            code, out, err = run(["mono", exename, bmpname], cwd=prgpath, timeout=10, env=env)
             print(err)
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
             err = ""
-            run(["convert", "-flip", bmpname, pngname],timeout=20)
+            run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
             # print(bmpname, pngname)
             self.remove(bmpname)
             # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
@@ -472,17 +496,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             else:
                 # web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
                 web["image"] = "/csimages/" + basename + ".png"
-            self.removedir(prgpath)
-            self.remove(csfname)
-            self.remove(exename)
+            if delete_tmp:
+                self.remove(csfname)
+                self.remove(exename)
         elif ttype == "graphics":
             # code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
-            code, out, err = run(["java" , javaclassname, bmpname], timeout=10, env=env)
+            code, out, err = run(["java", javaclassname, bmpname], cwd=prgpath, timeout=10, env=env)
             print(err)
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
             # err = ""
-            run(["convert", "-flip", bmpname, pngname],timeout=20)
+            run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
             # print(bmpname, pngname)
             self.remove(bmpname)
             # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
@@ -496,10 +520,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             else:
                 # web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
                 web["image"] = "/csimages/" + basename + ".png"
-            # self.removedir(prgpath)
         elif ttype == "comtest":
             eri = -1
-            code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], timeout=10, env=env)
+            code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], cwd=prgpath, timeout=10, env=env)
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
             # print(code,out,err)
@@ -528,35 +551,41 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # print("Line nr: "+str(lnro))
                     # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                     web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
-            self.removedir(prgpath)
-        elif ttype == "jcomtest" or ttype == "ccomtest":
+        elif ttype == "jcomtest" or ttype == "ccomtest" or ttype == "junit":
             eri = -1
             linenr_end = " "
             if ttype == "jcomtest":
-                code, out, err = run(["java", "org.junit.runner.JUnitCore", testdll], timeout=10, env=env)
+                code, out, err = run(["java", "org.junit.runner.JUnitCore", testdll], cwd=prgpath, timeout=10, env=env)
+            if ttype == "junit":
+                code, out, err = run(["java", "org.junit.runner.JUnitCore", javaclassname], cwd=prgpath, timeout=10, env=env)
             if ttype == "ccomtest":
-                code, out, err = run(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], timeout=10, env=env)
+                code, out, err = run(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], cwd=prgpath, timeout=10, env=env)
                 linenr_end = ":"
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
-            print(code,out,err)
+            print(code, out, err)
             out = remove_before("Execution Runtime:", out)
             if code == -9:
                 out = "Runtime exceeded, maybe loop forever\n" + out
                 eri = 0
-            out = re.sub("\s*at .*\n", "\n", out, flags=re.M)
+            # print(javaclassname+"\n")    
+            if ttype == "junit": out = re.sub("[\t ]*at " + javaclassname, "ERROR: " + javaclassname, out,
+                                              flags=re.M)  # prevent remove by next "at"-word
+            out = re.sub("\s+at .*\n", "\n", out, flags=re.M)
             out = re.sub("\n+", "\n", out, flags=re.M)
             out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
-            out = re.sub(prgpath+"/", "", out, flags=re.M)
+            out = re.sub(prgpath + "/", "", out, flags=re.M)
             out = out.strip(' \t\n\r')
-            if eri < 0: eri = out.find("FAILURES")    # jcomtest
+            if ttype == "junit": out = re.sub("java:", "java line: ", out,
+                                              flags=re.M)  # To get line: also in JUnit case where error is in format java:39
+            if eri < 0: eri = out.find("FAILURES")  # jcomtest
             if eri < 0: eri = out.find("Test error")  # ccomtest
             if eri < 0: eri = out.find("ERROR:")  # ccomtest compile error
             web["testGreen"] = True
             if eri >= 0:
                 web["testGreen"] = False
                 web["testRed"] = True
-                lni = out.find(" line: ") 
+                lni = out.find(" line: ")
                 cterr = "";
                 sep = "";
                 while lni >= 0:
@@ -567,55 +596,60 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                     cterr += sep + str(lnro) + " " + lines[lnro - 1]
                     sep = "";
-                    lni = out.find(" line: ",lni+8)
+                    lni = out.find(" line: ", lni + 8)
                 web["comtestError"] = cterr
             else:
                 out = re.sub("^JUnit version.*\n", "", out, flags=re.M)
                 out = re.sub("^Time: .*\n", "", out, flags=re.M)
                 out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
                 out = re.sub("^ok$", "", out, flags=re.M)
-            self.removedir(prgpath)
 
         else:
             if ttype == "java":
                 print("java: ", javaclassname)
                 # code, out, err = run(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env)
-                code, out, err = run(["java", javaclassname], timeout=10, env=env)
+                code, out, err = run(["java", javaclassname], cwd=prgpath, timeout=10, env=env)
             elif ttype == "cc":
                 print("c: ", exename)
-                code, out, err = run([exename], timeout=10, env=env)
+                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env)
             elif ttype == "c++":
                 print("c++: ", exename)
-                code, out, err = run([exename], timeout=10, env=env)
+                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env)
             elif ttype == "py":
                 print("py: ", exename)
-                code, out, err = run(["python3",exename], timeout=10, env=env)
+                code, out, err = run(["python3", exename], cwd=prgpath, timeout=10, env=env)
+            elif ttype == "clisp":
+                print("clips: ", exename)
+                code, out, err = run(["sbcl", "--script", exename], cwd=prgpath, timeout=10, env=env)
+                # code, out, err = run(["sbcl", "--noinform --load " + exename + " --eval '(SB-EXT:EXIT)'"], timeout=10, env=env)
+                # code, out, err = run(["clisp",exename], timeout=10, env=env)
             elif ttype == "py2":
                 print("py2: ", exename)
-                code, out, err = run(["python2",exename], timeout=10, env=env)
-            else:    
+                code, out, err = run(["python2", exename], cwd=prgpath, timeout=10, env=env)
+            else:
                 print("Exe: ", exename)
-                code, out, err = run(["mono", exename], timeout=10, env=env)
-                
+                code, out, err = run(["mono", exename], cwd=prgpath, timeout=10, env=env)
+
             print(code, out, err, compiler_output)
-            if code == -9: out = "Runtime exceeded, maybe loop forever\n" + out
+            if code == -9:
+                out = "Runtime exceeded, maybe loop forever\n" + out
 
             else:
                 err = err.decode("utf-8") + compiler_output
                 if ttype == "fs":
-                   err = err.replace("F# Compiler for F# 3.0 (Open Source Edition)\nFreely distributed under the Apache 2.0 Open Source License\n","")
-     
+                    err = err.replace(
+                        "F# Compiler for F# 3.0 (Open Source Edition)\nFreely distributed under the Apache 2.0 Open Source License\n",
+                        "")
+
                 if type(err) != type(''): err = err.decode()
                 # if type(out) != type(''): out = out.decode()
                 if out and out[0] in [254, 255]:
                     out = out.decode('UTF16')
                 elif type(out) != type(''):
                     out = out.decode('utf-8-sig')
-                # self.removedir(prgpath)
-            
 
-        self.removedir(prgpath)
-        
+        if delete_tmp: self.removedir(prgpath)
+
         out = out[0:2000]
         web["console"] = out
         web["error"] = err
@@ -636,9 +670,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print(err)
 
 
-# class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
-    """Handle requests in a separate thread."""
+# Kun debuggaa Windowsissa, pitää vaihtaa ThreadingMixIn
+# Jos ajaa Linuxissa ThreadingMixIn, niin chdir vaihtaa kaikkien hakemistoa?
+# Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
+
+#if __debug__:
+if True:
+    class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+        """Handle requests in a separate thread."""
+    print("Debug mode/ThreadingMixIn")
+#else:
+#    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
+#        """Handle requests in a separate thread."""
+#    print("Normal mode/ForkingMixIn")
+
 
 if __name__ == '__main__':
     server = ThreadedHTTPServer(('', PORT), TIMServer)
