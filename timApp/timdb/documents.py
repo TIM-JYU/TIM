@@ -468,7 +468,7 @@ class Documents(TimDbBase):
         for p in old_pars:
             old_index = int(p['par_index'])
             affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, old_index)
-            [affinity, new_index] = max(affinities, key=lambda x: x[0])
+            [affinity, new_index] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
 
             #for aff in affinities:
             #    print('{} -> {} aff. {}'.format(old_index, aff[1], aff[0]))
