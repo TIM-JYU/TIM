@@ -13,13 +13,12 @@ from timdb.timdbbase import TimDbException, DocIdentifier
 
 def onerror(func, path, exc_info):
     import stat
-    if not os.access(path, os.W_OK):
-        # Is the error an access error ?
-        os.chmod(path, stat.S_IWUSR)
-        func(path)
-    else:
-        assert False
 
+    # Is the error an access error ?
+    os.chmod(path, stat.S_IWUSR)
+    #os.chmod(path, stat.S_IWRITE)
+    #os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO)
+    func(path)
 
 def debug_print(name, msg):
     print("{}: '{}', hex: {}".format(name, msg, ':'.join(hex(ord(x))[2:] for x in msg)))
@@ -187,22 +186,49 @@ class DocTest(unittest.TestCase):
         self.assertEqual(len(readings), 1)
         fr = readings[0]
         self.assertEqual(fr['par_index'], par_index)
+
         ver = self.db.documents.deleteParagraph(doc, 0)
         doc = DocIdentifier(doc.id, ver)
-
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         fr = readings[0]
         par_index -= 1
         self.assertEqual(fr['par_index'], par_index)
+
         self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
-
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
-
         self.assertEqual(len(readings), 1)
+
         doc = self.db.documents.updateDocument(doc, 'cleared')
-        fr = self.db.readings.getReadings(0, doc.id, doc.hash)
-        # Luvun sisältö muuttuu niin radikaalisti, että lukumerkinnän kuuluukin hävitä
-        self.assertEqual(len(fr), 0)
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
+        # Document changes so radically that the readings should be gone
+        self.assertEqual(len(readings), 0)
+
+    def test_special_chars(self):
+        print("test_special_chars")
+        with open("special_chars.md", "r") as f:
+            special_char_text = f.read()
+        doc = self.db.documents.createDocument('special_chars', 0)
+        doc = self.db.documents.updateDocument(doc, special_char_text)
+        doc_paragraphs = self.db.documents.getDocumentAsBlocks(doc)
+        num_read = 0
+        for i in range(0, len(doc_paragraphs)):
+            self.db.readings.setAsRead(0, doc.id, doc.hash, i)
+            num_read += 1
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
+        self.assertEqual(len(readings), num_read)
+
+        random.seed(0)
+        indices = list(range(0, len(doc_paragraphs)))
+        random.shuffle(indices)
+        random.seed(0)
+        random.shuffle(doc_paragraphs)
+
+        # Refresh cache for the first document, otherwise it might not be found
+        self.db.documents.getDocumentAsHtmlBlocks(doc)
+
+        doc = self.db.documents.updateDocument(doc, '\n\n'.join(doc_paragraphs))
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
+        self.assertEqual(len(readings), num_read)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
