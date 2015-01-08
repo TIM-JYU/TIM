@@ -60,11 +60,9 @@ timApp.controller("ViewCtrl", ['$scope',
             $(this).hide();
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + (new Date).getTime())
                 .success(function (data, status, headers, config) {
-                    // TODO: Maybe fetch notes only for this paragraph and not the
-                    // whole document.
-                    sc.getReadPars();
+                    // No need to do anything here
                 }).error(function (data, status, headers, config) {
-                    alert('Could not save the note.');
+                    alert('Could not save the read marking.');
                 });
         });
 
