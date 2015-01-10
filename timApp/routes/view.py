@@ -9,17 +9,17 @@ view_page = Blueprint('view_page',
                       url_prefix='')
 
 
-@view_page.route("/view_old/<int:doc_id>")
-def view_document_old(doc_id):
-    return view(doc_id, 'view.html')
+@view_page.route("/view_old/<doc_name>")
+def view_document_old(doc_name):
+    return view(doc_name, 'view.html')
 
-@view_page.route("/view/<int:doc_id>")
-def view_document(doc_id):
-    return view(doc_id, 'view_html.html')
+@view_page.route("/view/<doc_name>")
+def view_document(doc_name):
+    return view(doc_name, 'view_html.html')
 
-@view_page.route("/view_html/<int:doc_id>")
-def view_document_html(doc_id):
-    return view(doc_id, 'view_html.html')
+@view_page.route("/view_html/<doc_name>")
+def view_document_html(doc_name):
+    return view(doc_name, 'view_html.html')
 
 
 @view_page.route("/view_html/<int:doc_id>/<int:start_index>/<int:end_index>")
@@ -27,9 +27,11 @@ def view_document_part(doc_id, start_index, end_index):
     return view(doc_id, 'view_html.html', (start_index, end_index))
 
 
-def view(doc_id, template_name, view_range=None):
+def view(doc_name, template_name, view_range=None):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    doc_id = timdb.documents.getDocumentId(doc_name)
+    
+    if doc_id is None or not timdb.documents.documentExists(doc_id):
         abort(404)
     if not hasViewAccess(doc_id):
         if not loggedIn():

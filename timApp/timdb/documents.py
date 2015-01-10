@@ -159,6 +159,20 @@ class Documents(TimDbBase):
         return self.blockExists(document_id, blocktypes.DOCUMENT)
 
     @contract
+    def getDocumentId(self, document_name: 'str') -> 'int|None':
+        """Gets the document's identifier by its name or None if not found.
+        
+        :param document_name: The name of the document.
+        :returns: A row representing the document.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('SELECT id FROM Block WHERE description = ? AND type_id = ?',
+                       [document_name, blocktypes.DOCUMENT])
+
+        row = cursor.fetchone()
+        return row[0] if row is not None else None
+
+    @contract
     def getDocument(self, document_id: 'int') -> 'dict':
         """Gets the metadata information of the specified document.
         
