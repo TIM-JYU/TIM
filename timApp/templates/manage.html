@@ -53,8 +53,8 @@ var viewers = {{viewers|tojson|safe}};
     </ul>
     {% endif %} {% endwith %}
         <div class="margin">
-            <a href="/view/{{ '{{doc.id}}' }}">View this document</a> <br>
-            <a href="/edit/{{ '{{doc.id}}' }}">Edit this document</a>
+            <a href="/view/{{ '{{doc.name}}' }}">View this document</a> <br>
+            <a href="/edit/{{ '{{doc.name}}' }}">Edit this document</a>
         </div>
         Document owner: {{ '{{ doc.owner.name }}' }}
         <div class="margin">

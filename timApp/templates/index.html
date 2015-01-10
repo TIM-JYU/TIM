@@ -45,7 +45,7 @@ table td {
                 </thead>
                 <tr ng-repeat="doc in documentList">
                     <td><a href="/view/{{ '{{ doc.name }}' }}">{{ '{{ doc.name }}' }}</a></td>
-                    <td><a ng-show="doc.canEdit" href="/edit/{{ '{{ doc.id }}' }}">Edit</a></td>
+                    <td><a ng-show="doc.canEdit" href="/edit/{{ '{{ doc.name }}' }}">Edit</a></td>
                     <!--<td>{{ '{{ doc.versions[0].timestamp }}' }}</td>-->
                     <!--<td><p ng-show="displayTimes">{{ '{{ doc.versions[0].timestamp }}' }}</p></td>-->
                     <td ng-show="displayIndex && !displayTimes">Updating...</td>
