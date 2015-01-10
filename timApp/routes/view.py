@@ -9,10 +9,13 @@ view_page = Blueprint('view_page',
                       url_prefix='')
 
 
-@view_page.route("/view/<int:doc_id>")
-def view_document(doc_id):
+@view_page.route("/view_old/<int:doc_id>")
+def view_document_old(doc_id):
     return view(doc_id, 'view.html')
 
+@view_page.route("/view/<int:doc_id>")
+def view_document(doc_id):
+    return view(doc_id, 'view_html.html')
 
 @view_page.route("/view_html/<int:doc_id>")
 def view_document_html(doc_id):
