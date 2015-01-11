@@ -47,6 +47,16 @@ table td {
                         <td></td>
                     </tr>
                 </thead>
+                <tr ng-show="parentfolder != null">
+                    <td>
+                	    <img src="{{url_for('static', filename='images/folder.png')}}"/>
+                	</td>
+                	<td><a href="?folder={{ '{{ parentfolder }}' }}">..</a></td>
+                	<td></td>
+                	<td></td>
+                	<td></td>
+                	<td></td>
+                </tr>
                 <tr ng-repeat="doc in documentList">
                 	<td ng-show="doc.isFolder">
                 	    <img src="{{url_for('static', filename='images/folder.png')}}"/>

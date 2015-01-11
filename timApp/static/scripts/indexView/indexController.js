@@ -22,6 +22,12 @@ function(sc, controller, http, q, $upload) {
 
     sc.getDocs = function() {
        sc.folder = sc.getParameterByName('folder');
+       if (sc.folder === '' || sc.folder === undefined || sc.folder === null)
+           sc.parentfolder = null;
+       else
+           sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
+       
+       console.log(sc.parentfolder);
        
        http({
             method : 'GET',
@@ -50,6 +56,7 @@ function(sc, controller, http, q, $upload) {
         });
     };
 
+	sc.parentfolder = "";
     sc.folder = "";
     sc.documentList = [];
     sc.getDocs();
