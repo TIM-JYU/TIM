@@ -3,6 +3,12 @@ var TimCtrl = angular.module('controller', []);
 TimCtrl.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', '$upload',
 
 function(sc, controller, http, q, $upload) {
+    sc.getParameterByName = function(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
 
     sc.createDocument = function(name) {
         http.post('/createDocument', {
@@ -15,9 +21,11 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.getDocs = function() {
-        http({
+       sc.folder = sc.getParameterByName('folder');
+       
+       http({
             method : 'GET',
-            url : '/getDocuments?versions=0'
+            url : '/getDocuments?versions=0&folder=' + sc.folder
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex = true;
@@ -29,9 +37,11 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.getDocsWithTimes = function() {
+        //folder = sc.getParameterByName('folder');
+        
         http({
             method : 'GET',
-            url : '/getDocuments/'
+            url : '/getDocuments?folder=' + sc.folder
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayTimes = true;
@@ -40,6 +50,7 @@ function(sc, controller, http, q, $upload) {
         });
     };
 
+    sc.folder = "";
     sc.documentList = [];
     sc.getDocs();
     sc.displayIndex = false;

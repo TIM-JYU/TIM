@@ -64,8 +64,8 @@ def postParagraph():
                          'angularModule': modules,
                          'version': version})
 
-@edit_page.route('/edit/<doc_name>')
-@edit_page.route("/documents/<doc_name>")
+@edit_page.route('/edit/<path:doc_name>')
+@edit_page.route("/documents/<path:doc_name>")
 def editDocument(doc_name):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)

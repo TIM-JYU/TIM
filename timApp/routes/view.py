@@ -9,15 +9,15 @@ view_page = Blueprint('view_page',
                       url_prefix='')
 
 
-@view_page.route("/view_old/<doc_name>")
+@view_page.route("/view_old/<path:doc_name>")
 def view_document_old(doc_name):
     return view(doc_name, 'view.html')
 
-@view_page.route("/view/<doc_name>")
+@view_page.route("/view/<path:doc_name>")
 def view_document(doc_name):
     return view(doc_name, 'view_html.html')
 
-@view_page.route("/view_html/<doc_name>")
+@view_page.route("/view_html/<path:doc_name>")
 def view_document_html(doc_name):
     return view(doc_name, 'view_html.html')
 
