@@ -13,15 +13,16 @@ view_page = Blueprint('view_page',
 def view_document_old(doc_id):
     return view(doc_id, 'view.html')
 
-@view_page.route("/view/<int:doc_id>")
-def view_document(doc_id):
-    return view(doc_id, 'view_html.html')
 
+@view_page.route("/doc/<int:doc_id>")
+@view_page.route("/view/<int:doc_id>")
 @view_page.route("/view_html/<int:doc_id>")
 def view_document_html(doc_id):
     return view(doc_id, 'view_html.html')
 
 
+@view_page.route("/doc/<int:doc_id>/<int:start_index>/<int:end_index>")
+@view_page.route("/view/<int:doc_id>/<int:start_index>/<int:end_index>")
 @view_page.route("/view_html/<int:doc_id>/<int:start_index>/<int:end_index>")
 def view_document_part(doc_id, start_index, end_index):
     return view(doc_id, 'view_html.html', (start_index, end_index))
@@ -54,6 +55,7 @@ def view(doc_id, template_name, view_range=None):
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
+    editable = hasEditAccess(doc_id)
     return render_template(template_name,
                            docID=doc['id'],
                            docName=doc['name'],
@@ -64,4 +66,5 @@ def view(doc_id, template_name, view_range=None):
                            jsMods=modules,
                            custom_css_files=custom_css_files,
                            custom_css=custom_css,
-                           start_index=start_index)
+                           start_index=start_index,
+                           editable=editable)

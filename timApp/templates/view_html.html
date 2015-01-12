@@ -39,7 +39,8 @@
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
-        var canEdit = false;
+        var canEdit = {{editable|tojson}};
+        var startIndex = {{start_index|tojson}};
     </script>
 {% endblock %}
 {% block content %}
@@ -69,12 +70,14 @@
             </div>
         </div>
 
-        {% for t in text %}
-            <div id="{{ loop.index0 + start_index }}" class="par">
-                <div class="parContent">
-                    {{ t|safe }}
+        <div id="pars">
+            {% for t in text %}
+                <div class="par">
+                    <div class="parContent">
+                        {{ t|safe }}
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}

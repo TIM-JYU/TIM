@@ -194,7 +194,17 @@ ul ul  ul, ol ol ol {
 .paragraph, .par {
 	position: relative;
 	margin-left: 1em;
-	margin-top: 1em;
+	padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    border-bottom: 1px solid transparent;
+    border-top: 1px solid transparent;
+    border-right: 1px solid transparent;
+}
+
+.par.selected {
+    background-color: lightgray;
 }
 
 .material img {
@@ -239,6 +249,20 @@ ul ul  ul, ol ol ol {
 	right:-8.2em;
 	z-index: 3;
     top: 0em;
+}
+
+.actionButtons {
+    position: absolute;
+    padding: 1em;
+    top: -1px;
+    left: -11.8em;
+    min-height: 100%;
+    background-color: lightgray;
+}
+
+.timButton {
+    display: block;
+    margin: auto;
 }
 
 .readline {
@@ -371,7 +395,7 @@ ul ul  ul, ol ol ol {
     content:"Add";
 }
 
-.addParButton:hover:before { 
+.addParButton:hover:before {
     content:"Add new paragraph here";
 }
 
@@ -383,7 +407,7 @@ ul ul  ul, ol ol ol {
     padding-top:0.5em;
     position: absolute;
 }
-	 
+ 
 .addParButton:hover{
 	content:"Add new paragraph here";
     display:block;
