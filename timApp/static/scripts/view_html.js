@@ -13,7 +13,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.canEdit = canEdit;
         sc.startIndex = startIndex;
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
-        var NOTE_EDITOR_CLASS = "noteEditorArea";
+        var NOTE_EDITOR_CLASS = "editorArea";
         var NOTE_EDITOR_CLASS_DOT = "." + NOTE_EDITOR_CLASS;
         var NOTE_CANCEL_BUTTON = ".timButton.cancelNote";
         var NOTE_DELETE_BUTTON = ".timButton.deleteNote";
@@ -21,8 +21,8 @@ timApp.controller("ViewCtrl", ['$scope',
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
 
-        var PAR_EDITOR_CLASS = "editorArea";
-        var PAR_EDITOR_CLASS_DOT = "." + PAR_EDITOR_CLASS;
+        var EDITOR_CLASS = "editorArea";
+        var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
         var PAR_CANCEL_BUTTON = ".timButton.cancelPar";
         var PAR_DELETE_BUTTON = ".timButton.deletePar";
         var PAR_SAVE_BUTTON = ".timButton.savePar";
@@ -39,15 +39,28 @@ timApp.controller("ViewCtrl", ['$scope',
             return $("#pars").children().eq(index - sc.startIndex);
         };
 
+        sc.getNoteEditorFields = function (parElement, editorArea) {
+            var editorElem = editorArea.find('.editor')[0];
+            return {
+                par_id: sc.getParIndex(parElement),
+                content: ace.edit(editorElem).getSession().getValue(),
+                access: editorArea.find('input[name=access]:checked').val(),
+                difficult: editorArea.find('input[name=difficult]').is(':checked'),
+                unclear: editorArea.find('input[name=unclear]').is(':checked')
+            };
+        };
+
         sc.toggleParEditor = function ($par, options) {
-            if ($par.children(PAR_EDITOR_CLASS_DOT).length) {
-                $par.children().remove(PAR_EDITOR_CLASS_DOT);
+            if ($par.children(EDITOR_CLASS_DOT).length) {
+                $par.children().remove(EDITOR_CLASS_DOT);
             } else {
-                var $div = $("<div>", {class: PAR_EDITOR_CLASS});
+                $(EDITOR_CLASS_DOT).remove();
+                $(".par.new").remove();
+                var $div = $("<div>", {class: EDITOR_CLASS});
                 $div.loadTemplate("/static/templates/parEditor.html?_=" + (new Date).getTime(), {}, {
                     success: function () {
                         var editorScope = sc.$new();
-                        var aceEdit = sc.applyAceEditor($div.find('.pareditor')[0]);
+                        var aceEdit = sc.applyAceEditor($div.find('.editor')[0]);
                         editorScope.onFileSelect = function (url, $files) {
                             //$files: an array of files selected, each file has name, size, and type.
                             for (var i = 0; i < $files.length; i++) {
@@ -88,40 +101,32 @@ timApp.controller("ViewCtrl", ['$scope',
             }
         };
 
-        sc.getNoteEditorFields = function (parElement, noteEditorArea) {
-            var editorElem = noteEditorArea.find('.noteeditor')[0];
-            return {
-                par_id: sc.getParIndex(parElement),
-                content: ace.edit(editorElem).getSession().getValue(),
-                access: noteEditorArea.find('input[name=access]:checked').val(),
-                difficult: noteEditorArea.find('input[name=difficult]').is(':checked'),
-                unclear: noteEditorArea.find('input[name=unclear]').is(':checked')
-            };
-        };
-
         sc.toggleNoteEditor = function ($par, options) {
             if ($par.children(NOTE_EDITOR_CLASS_DOT).length) {
                 $par.children().remove(NOTE_EDITOR_CLASS_DOT);
             } else {
                 $(".par.new").remove();
+                $(EDITOR_CLASS_DOT).remove();
                 var $div = $("<div>", {class: NOTE_EDITOR_CLASS});
                 $div.loadTemplate("/static/templates/noteEditor.html?_=" + (new Date).getTime(), {}, {
                     success: function () {
-                        if (!options.showDelete) {
+                        if (options.isNew) {
                             $div.find(NOTE_DELETE_BUTTON).hide();
+                            $div.data({});
                         }
                         else {
-                            var data = $par.data();
+                            var data = options.noteData;
                             if (!data.editable) {
                                 alert('You cannot edit this note.');
                                 return;
                             }
-                            $div.find('.noteeditor').text(data.content);
+                            $div.find('.editor').text(data.content);
                             $div.find('input[name=access][value=' + data.access + ']').prop('checked', true);
                             $div.find('input[name=difficult]').prop('checked', data.difficult);
                             $div.find('input[name=unclear]').prop('checked', data.unclear);
                         }
-                        sc.applyAceEditor($div.find('.noteeditor')[0]);
+                        sc.applyAceEditor($div.find('.editor')[0]);
+                        $div.data(data);
                         $par.append($div);
                     }
                 });
@@ -202,7 +207,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.addEvent(PAR_SAVE_BUTTON, function (e) {
             var $par = $(this).parents('.par');
             var par_id = sc.getParIndex($par);
-            var editorElem = $par.find('.pareditor')[0];
+            var editorElem = $par.find('.editor')[0];
             var text = ace.edit(editorElem).getSession().getValue();
             if ($par.hasClass("new")) {
                 var url = '/newParagraph/';
@@ -239,7 +244,7 @@ timApp.controller("ViewCtrl", ['$scope',
 
         sc.addEvent(NOTE_ADD_BUTTON, function (e) {
             var $par = $(e.target).parent().parent();
-            sc.toggleNoteEditor($par, {showDelete: false});
+            sc.toggleNoteEditor($par, {isNew: true});
         });
 
         sc.addEvent(NOTE_CANCEL_BUTTON, function (e) {
@@ -248,24 +253,26 @@ timApp.controller("ViewCtrl", ['$scope',
 
         sc.addEvent(NOTE_DELETE_BUTTON, function (e) {
             var noteElement = $(this).parents('.note');
-
-            var fields = sc.getNoteEditorFields(noteElement.parents('.par'),
-                noteElement.children(NOTE_EDITOR_CLASS_DOT));
+            var $par = $(this).parents('.par');
+            var par_id = sc.getParIndex($par);
+            var $editor = $par.find(NOTE_EDITOR_CLASS_DOT);
+            var data = $editor.data();
             http.post('/deleteNote', {
-                par_id: fields.par_id,
+                par_id: par_id,
                 doc_id: sc.docId,
-                note_index: noteElement.data().note_index
+                note_index: data.note_index
             }).success(function (data, status, headers, config) {
                 // TODO: Maybe fetch notes only for this paragraph and not the
                 // whole document.
                 sc.getNotes();
+                $editor.remove();
             }).error(function (data, status, headers, config) {
                 alert('Could not save the note.');
             });
         });
 
         sc.addEvent(NOTE_SAVE_BUTTON, function (e) {
-            sc.saveNote($(this));
+            sc.saveNote($(this).parent().parent().parent(), $(this).parent().parent().data());
         });
 
         sc.addEvent('.paragraphs .parContent', function () {
@@ -277,7 +284,7 @@ timApp.controller("ViewCtrl", ['$scope',
         });
 
         sc.addEvent(".noteContent", function () {
-            sc.toggleNoteEditor($(this).parent(), {showDelete: true});
+            sc.toggleNoteEditor($(this).parent().parent().parent(), {isNew: false, noteData: $(this).parent().data()});
         });
 
 
@@ -322,11 +329,9 @@ timApp.controller("ViewCtrl", ['$scope',
             return $noteDiv;
         };
 
-        sc.saveNote = function ($par) {
-            if ($par.parents('.note').length) {
-                var noteElement = $par.parents('.note');
-                var fields = sc.getNoteEditorFields(noteElement.parents('.par'),
-                    noteElement.children(NOTE_EDITOR_CLASS_DOT));
+        sc.saveNote = function ($par, data) {
+            var fields = sc.getNoteEditorFields($par, $par.find(NOTE_EDITOR_CLASS_DOT));
+            if (!$.isEmptyObject(data)) {
                 // save edits to existing note
                 http.post('/editNote', {
                     par_id: fields.par_id,
@@ -335,7 +340,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     access: fields.access,
                     difficult: fields.difficult,
                     unclear: fields.unclear,
-                    note_index: noteElement.data().note_index
+                    note_index: data.note_index
                 }).success(function (data, status, headers, config) {
                     // TODO: Maybe fetch notes only for this paragraph and not the
                     // whole document.
@@ -344,8 +349,6 @@ timApp.controller("ViewCtrl", ['$scope',
                     alert('Could not save the note.');
                 });
             } else {
-                var fields = sc.getNoteEditorFields($par.parents('.par'),
-                    $par.parents('.par').children(NOTE_EDITOR_CLASS_DOT));
                 http.post('/postNote', {
                     par_id: fields.par_id,
                     doc_id: sc.docId,
@@ -362,6 +365,8 @@ timApp.controller("ViewCtrl", ['$scope',
                     alert('Could not save the note.');
                 });
             }
+            var $editor = $par.find(NOTE_EDITOR_CLASS_DOT);
+            $editor.remove();
         };
 
         sc.getNotes = function () {

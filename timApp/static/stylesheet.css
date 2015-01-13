@@ -121,7 +121,7 @@ body {
 	background-color: white;
 }
 
-.editorArea,  .noteEditorArea {
+.editorArea {
     background-color: #B0B0B0;
 }
 
@@ -231,12 +231,6 @@ ul ul  ul, ol ol ol {
 	font-size: 0.7em;
 }
 
-.noteeditor {
-	left: 5em;
-	width: 30em;
-	height: 6.5em;
-}
-
 .noteButton {
 	z-index: 3;
     height: 1.8em;
@@ -255,7 +249,7 @@ ul ul  ul, ol ol ol {
     position: absolute;
     padding: 1em;
     top: -1px;
-    left: -11.8em;
+    right: -14em;
     min-height: 100%;
     background-color: lightgray;
 }
@@ -264,6 +258,11 @@ ul ul  ul, ol ol ol {
     position: absolute;
     right: 0;
     top: 0;
+    display: none;
+}
+
+.par:hover .headerlink {
+    display: inherit;
 }
 
 .parContent {
@@ -529,6 +528,10 @@ p.kannentiedotoikea-western {
     margin-right: 5em;
 }
 
+#footer {
+    height: 10em;
+}
+
 h1 {
 	text-align: center;
 	margin-top: 3cm;
@@ -714,20 +717,15 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	/* position: absolute; */
-	height: 100%;
-	width: 45em; 
-	top: 0em;
-	left: 3px;
+	width: 45em;
 	border: 2px solid;
 	padding: 15px 5px 5px 5px;
 	border-radius: 15px;
 	text-align: left;
-	float: left;
     resize: both;
 }
 
-.editorArea,  .noteEditorArea {
+.editorArea {
 	z-index: 10;
 	position: absolute;
 	width: 100%;
@@ -738,7 +736,6 @@ a.anchor:hover {
 }
 
 .editButtonArea {
-	width: 3.5em;
 	float: left;
 }
 	
@@ -949,12 +946,6 @@ p.stem {
 		outline: none;
 	}
 	.editorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
-	 
-	.noteEditorArea {
 		position: relative;
 		top: 0em;
 		left: 0%;
@@ -1182,12 +1173,7 @@ img.console {
 		top: 0em;
 		left: 0%;
 	}
-	 
-	.noteEditorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
+
 	.notes:hover {
         margin-left: -60%;
         width: 200em;
