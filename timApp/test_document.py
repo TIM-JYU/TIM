@@ -203,6 +203,67 @@ class DocTest(unittest.TestCase):
         # Document changes so radically that the readings should be gone
         self.assertEqual(len(readings), 0)
 
+    def test_multiple_notes_same_par(self):
+        print("test_multiple_notes_same_par")
+        doc, _ = self.create_test_document(500)
+        notes = self.db.notes.getNotes(0, doc.id, doc.hash)
+        self.assertEqual(len(notes), 0)
+        par_index = 67
+        content = 'test note'
+        self.db.notes.addNote(0, doc.id, doc.hash, par_index, content, 'everyone', [])
+        notes = self.db.notes.getNotes(0, doc.id, doc.hash)
+        self.assertEqual(len(notes), 1)
+        note = notes[0]
+        self.assertEqual(note['note_index'], 0)
+        self.assertEqual(note['par_index'], par_index)
+        self.assertEqual(note['doc_ver'], doc.hash)
+        self.assertEqual(note['UserGroup_id'], 0)
+        self.assertEqual(note['content'], content)
+
+        content2 = 'test note2'
+        #Add another note in the same paragraph
+        self.db.notes.addNote(0, doc.id, doc.hash, par_index, content2, 'everyone', [])
+        notes = self.db.notes.getNotes(0, doc.id, doc.hash)
+        self.assertEqual(len(notes), 2)
+        note = notes[1]
+        self.assertEqual(note['note_index'], 1)
+        self.assertEqual(note['par_index'], par_index)
+        self.assertEqual(note['doc_ver'], doc.hash)
+        self.assertEqual(note['UserGroup_id'], 0)
+        self.assertEqual(note['content'], content2)
+
+        #Edit the first one
+        content3 = 'edited'
+        self.db.notes.modifyNote(doc.id, doc.hash, par_index, 0, content3, 'everyone', [])
+        notes = self.db.notes.getNotes(0, doc.id, doc.hash)
+        self.assertEqual(len(notes), 2)
+        note = notes[0]
+        self.assertEqual(note['note_index'], 0)
+        self.assertEqual(note['par_index'], par_index)
+        self.assertEqual(note['doc_ver'], doc.hash)
+        self.assertEqual(note['UserGroup_id'], 0)
+        self.assertEqual(note['content'], content3)
+
+        blocks, ver = self.db.documents.addMarkdownBlock(doc, 'edited', 0)
+        notes = self.db.notes.getNotes(0, doc.id, ver)
+        self.assertEqual(len(notes), 2)
+        self.assertEqual(notes[0]['note_index'], 0)
+        self.assertEqual(notes[1]['note_index'], 1)
+        self.assertEqual(notes[0]['par_index'], par_index + 1)
+        self.assertEqual(notes[1]['par_index'], par_index + 1)
+        self.assertEqual(notes[0]['content'], content3)
+        self.assertEqual(notes[1]['content'], content2)
+
+        content4 = 'new'
+        self.db.notes.modifyNote(doc.id, ver, par_index + 1, 0, content4, 'everyone', [])
+        #self.db.notes.addNote(0, doc.id, ver, par_index, content4, 'everyone', [])
+        notes = self.db.notes.getNotes(0, doc.id, ver)
+        self.assertEqual(len(notes), 2)
+        note = notes[0]
+        self.assertEqual(note['note_index'], 0)
+        self.assertEqual(note['par_index'], par_index + 1)
+        self.assertEqual(note['content'], content4)
+
     def test_special_chars(self):
         print("test_special_chars")
         with open("special_chars.md", "r") as f:
