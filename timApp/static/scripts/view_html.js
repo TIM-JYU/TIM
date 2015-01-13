@@ -55,7 +55,7 @@ timApp.controller("ViewCtrl", ['$scope',
                 $par.children().remove(EDITOR_CLASS_DOT);
             } else {
                 $(EDITOR_CLASS_DOT).remove();
-                $(".par.new").remove();
+
                 var $div = $("<div>", {class: EDITOR_CLASS});
                 $div.loadTemplate("/static/templates/parEditor.html?_=" + (new Date).getTime(), {}, {
                     success: function () {
@@ -85,6 +85,7 @@ timApp.controller("ViewCtrl", ['$scope',
                             $div.find(PAR_DELETE_BUTTON).hide();
                         }
                         else {
+                            $(".par.new").remove();
                             aceEdit.getSession().setValue("Loading paragraph text...");
                             http.get('/getBlock/' + sc.docId + "/" + sc.getParIndex($par)).
                                 success(function (data, status, headers, config) {
