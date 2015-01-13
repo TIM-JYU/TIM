@@ -260,6 +260,16 @@ ul ul  ul, ol ol ol {
     background-color: lightgray;
 }
 
+.headerlink {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.parContent {
+    position: relative;
+}
+
 .timButton {
     display: block;
     margin: auto;

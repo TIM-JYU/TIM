@@ -427,6 +427,16 @@ timApp.controller("ViewCtrl", ['$scope',
             });
         };
 
+        sc.setHeaderLinks = function () {
+            $(".par h1, .par h2, .par h3, .par h4, .par h5, .par h6").each(function () {
+                var $par = $(this).parent();
+                $par.append($("<a>", {
+                    text: '#',
+                    href: '#' + $(this).attr('id'),
+                    class: 'headerlink'
+                }));
+            });
+        };
 
         // Index-related functions
 
@@ -540,6 +550,7 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         // Load index, notes and read markings
+        sc.setHeaderLinks();
         sc.indexTable = [];
         sc.getIndex();
         sc.getNotes();
