@@ -9,8 +9,16 @@ $( document ).ready(function() {
             $( ".sidebar" ).animate({left: "+=220"}, 50);
             $( ".menu" ).animate({left: "+=220"}, 50);
   		}
-  		sidebarOpen = !sidebarOpen
+  		sidebarOpen = !sidebarOpen;
+	});
+
+	$( ".par" ).click(function() {
+	    if (sidebarOpen) {
+    	    $( ".sidebar" ).animate({left: "-=220"}, 50);
+            $( ".menu" ).animate({left: "-=220"}, 50);
+            sidebarOpen = false;
+	    }
 	});
 });
 
-sidebarOpen = false
+sidebarOpen = false;
