@@ -126,7 +126,6 @@ timApp.controller("ViewCtrl", ['$scope',
                                 return;
                             }
                             $div.find('.editor').text(data.content);
-                            //$div.find('input[name=access, value=' + data.access + ']').prop('checked', 'checked');
                             $div.find('input:radio[name=access]').val([data.access]);
                             $div.find('input[name=difficult]').prop('checked', data.difficult);
                             $div.find('input[name=unclear]').prop('checked', data.unclear);
@@ -307,8 +306,6 @@ timApp.controller("ViewCtrl", ['$scope',
             var coords = { left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top };
             var toggle1 = $par.find(".actionButtons").length === 0;
             var toggle2 = $par.hasClass("lightselect");
-
-            console.log(coords);
 
             $(".par.selected").removeClass("selected");
             $(".par.lightselect").removeClass("lightselect");

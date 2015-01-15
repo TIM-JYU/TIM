@@ -57,10 +57,10 @@
                     <span ng-repeat="entry in indexTable">
                         <li ng-class="entry.state"
                             ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                            <a ng-class="entry.style" href="{{entry.target}}">{{entry.text}}</a>
+                            <a class="indexentry" ng-class="entry.style" onclick="autoHide()" href="{{entry.target}}">{{entry.text}}</a>
                             <ul ng-show="entry.state == 'exp'">
                                 <li ng-repeat="subentry in entry.items">
-                                    <a class="{{subentry.style}}" href="{{subentry.target}}">{{subentry.text}}</a>
+                                    <a ng-class="subentry.style" onclick="autoHide()" href="{{subentry.target}}">{{subentry.text}}</a>
                                 </li>
                             </ul>
                         </li>

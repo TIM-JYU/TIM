@@ -151,6 +151,7 @@ controls.controller('ViewCtrl', function($scope, $controller, $http) {
         newState = $scope.invertState(state);
         if (newState != state)
             $scope.clearSelection();
+
         return newState;
     };
 
