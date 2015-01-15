@@ -13,6 +13,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.canEdit = canEdit;
         sc.startIndex = startIndex;
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
+        sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
         var NOTE_EDITOR_CLASS_DOT = "." + NOTE_EDITOR_CLASS;
         var NOTE_CANCEL_BUTTON = ".timButton.cancelNote";
@@ -53,6 +54,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.toggleParEditor = function ($par, options) {
             if ($par.children(EDITOR_CLASS_DOT).length) {
                 $par.children().remove(EDITOR_CLASS_DOT);
+                sc.editing = false;
             } else {
                 $(EDITOR_CLASS_DOT).remove();
 
@@ -97,6 +99,7 @@ timApp.controller("ViewCtrl", ['$scope',
                         }
                         $compile($div[0])(editorScope);
                         $par.append($div);
+                        sc.editing = true;
                     }
                 });
             }
@@ -105,6 +108,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.toggleNoteEditor = function ($par, options) {
             if ($par.children(NOTE_EDITOR_CLASS_DOT).length) {
                 $par.children().remove(NOTE_EDITOR_CLASS_DOT);
+                sc.editing = false;
             } else {
                 $(".par.new").remove();
                 $(EDITOR_CLASS_DOT).remove();
@@ -129,6 +133,7 @@ timApp.controller("ViewCtrl", ['$scope',
                         sc.applyAceEditor($div.find('.editor')[0]);
                         $div.data(data);
                         $par.append($div);
+                        sc.editing = true;
                     }
                 });
             }
@@ -161,13 +166,16 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.addEvent(PAR_EDIT_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent();
             $(".par.new").remove();
-            sc.toggleParEditor($(e.target).parent().parent(), {showDelete: true});
+            sc.toggleActionButtons($par, false, false, null);
+            sc.toggleParEditor($par, {showDelete: true});
         });
 
         sc.addEvent(PAR_ADD_BUTTON, function (e) {
             var $par = $(e.target).parent().parent();
             $(".par.new").remove();
+            sc.toggleActionButtons($par, false, false, null);
             var $newpar = $("<div>", {class: "par new"})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
 
@@ -189,6 +197,7 @@ timApp.controller("ViewCtrl", ['$scope',
             else {
                 $(this).parent().parent().remove(); // remove editor only
             }
+            sc.editing = false;
         });
 
         sc.addEvent(PAR_DELETE_BUTTON, function (e) {
@@ -203,6 +212,8 @@ timApp.controller("ViewCtrl", ['$scope',
                 error(function (data, status, headers, config) {
                     alert("Failed to remove paragraph: " + data.error);
                 });
+
+            sc.editing = false;
         });
 
         sc.addEvent(PAR_SAVE_BUTTON, function (e) {
@@ -230,6 +241,8 @@ timApp.controller("ViewCtrl", ['$scope',
             }).error(function (data, status, headers, config) {
                 alert("Failed to save paragraph: " + data.error);
             });
+
+            sc.editing = false;
         });
 
         sc.addEvent(".readline", function (e) {
@@ -245,11 +258,13 @@ timApp.controller("ViewCtrl", ['$scope',
 
         sc.addEvent(NOTE_ADD_BUTTON, function (e) {
             var $par = $(e.target).parent().parent();
+            sc.toggleActionButtons($par, false, false, null);
             sc.toggleNoteEditor($par, {isNew: true});
         });
 
         sc.addEvent(NOTE_CANCEL_BUTTON, function (e) {
             $(this).parent().parent().remove();
+            sc.editing = false;
         });
 
         sc.addEvent(NOTE_DELETE_BUTTON, function (e) {
@@ -267,6 +282,7 @@ timApp.controller("ViewCtrl", ['$scope',
                 // whole document.
                 sc.getNotes();
                 $editor.remove();
+                sc.editing = false;
             }).error(function (data, status, headers, config) {
                 alert('Could not save the note.');
             });
@@ -277,17 +293,26 @@ timApp.controller("ViewCtrl", ['$scope',
         });
 
         sc.addEvent('.paragraphs .parContent', function (e) {
-            var tag = $(e.target).prop('tagName');
-
-            // Don't show paragraph menu if a button, input or textarea was clicked
-            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA') {
+            if (sc.editing)
                 return;
-            }
+            
+            var tag = $(e.target).prop("tagName");
+
+            // Don't show paragraph menu on these specific tags
+            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'A')
+                return;
+
             var $par = $(this).parent();
-            var toggle = $par.find(".actionButtons").length === 0;
+            var coords = { left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top };
+            var toggle1 = $par.find(".actionButtons").length === 0;
+            var toggle2 = $par.hasClass("lightselect");
+
+            console.log(coords);
+
             $(".par.selected").removeClass("selected");
+            $(".par.lightselect").removeClass("lightselect");
             $(".actionButtons").remove();
-            sc.toggleActionbuttons($par, toggle);
+            sc.toggleActionButtons($par, toggle1, toggle2, coords);
         });
 
         sc.addEvent(".noteContent", function () {
@@ -297,26 +322,36 @@ timApp.controller("ViewCtrl", ['$scope',
 
         // Note-related functions
 
-        sc.toggleActionbuttons = function ($par, toggle) {
-            if (toggle) {
+        sc.toggleActionButtons = function ($par, toggle1, toggle2, coords) {
+            if (toggle2) {
+                // Clicked twice successively
                 $par.addClass("selected");
                 var $actionDiv = $("<div>", {class: 'actionButtons'});
-                $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note'}));
+                var button_width = $par.outerWidth() / 4;
+                $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
                 if (sc.canEdit) {
-                    $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit'}));
+                    $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
                     $actionDiv.append($("<button>", {
                         class: PAR_ADD_BUTTON_CLASS + ' above',
-                        text: 'Add paragraph above'
+                        text: 'Add paragraph above',
+                        width: button_width
                     }));
                     $actionDiv.append($("<button>", {
                         class: PAR_ADD_BUTTON_CLASS + ' below',
-                        text: 'Add paragraph below'
+                        text: 'Add paragraph below',
+                        width: button_width
                     }));
                 }
+                $actionDiv.offset(coords);
+                $actionDiv.css('position', 'absolute'); // IE needs this
                 $par.prepend($actionDiv);
+            } else if (toggle1) {
+                // Clicked once
+                $par.addClass("lightselect");
             } else {
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
+                $par.removeClass("lightselect");
             }
         };
 
@@ -367,6 +402,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     // TODO: Maybe fetch notes only for this paragraph and not the
                     // whole document.
                     $(NOTE_EDITOR_CLASS_DOT).remove();
+                    sc.editing = false;
                     sc.getNotes();
                 }).error(function (data, status, headers, config) {
                     alert('Could not save the note.');

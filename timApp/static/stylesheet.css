@@ -203,6 +203,10 @@ ul ul  ul, ol ol ol {
     border-right: 1px solid transparent;
 }
 
+.par.lightselect {
+    background-color: #f7f7f7;
+}
+
 .par.selected {
     background-color: lightgray;
 }
@@ -240,18 +244,17 @@ ul ul  ul, ol ol ol {
 
 .addNoteButton {
     position: absolute;
-	right:-8.2em;
-	z-index: 3;
+    right:-8.2em;
+    z-index: 3;
     top: 0em;
 }
 
 .actionButtons {
     position: absolute;
     padding: 1em;
-    top: -1px;
-    right: -14em;
-    min-height: 100%;
-    background-color: lightgray;
+    margin: none;
+    background-color: #f8f8ff;
+    z-index: 100;
 }
 
 .headerlink {
