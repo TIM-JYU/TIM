@@ -126,7 +126,8 @@ timApp.controller("ViewCtrl", ['$scope',
                                 return;
                             }
                             $div.find('.editor').text(data.content);
-                            $div.find('input[name=access][value=' + data.access + ']').prop('checked', true);
+                            //$div.find('input[name=access, value=' + data.access + ']').prop('checked', 'checked');
+                            $div.find('input:radio[name=access]').val([data.access]);
                             $div.find('input[name=difficult]').prop('checked', data.difficult);
                             $div.find('input[name=unclear]').prop('checked', data.unclear);
                         }
