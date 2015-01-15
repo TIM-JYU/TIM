@@ -100,5 +100,5 @@ fi
 
 if param tim ; then
 # Start tim
-docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && source initenv.py ; python3 launch.py ; /bin/bash'
+docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim-new /bin/bash -c 'cd /service/timApp && source initenv.py ; python3 launch.py ; /bin/bash'
 fi
