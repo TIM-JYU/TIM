@@ -276,7 +276,13 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.saveNote($(this).parent().parent().parent(), $(this).parent().parent().data());
         });
 
-        sc.addEvent('.paragraphs .parContent', function () {
+        sc.addEvent('.paragraphs .parContent', function (e) {
+            var tag = $(e.target).prop('tagName');
+
+            // Don't show paragraph menu if a button, input or textarea was clicked
+            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA') {
+                return;
+            }
             var $par = $(this).parent();
             var toggle = $par.find(".actionButtons").length === 0;
             $(".par.selected").removeClass("selected");
