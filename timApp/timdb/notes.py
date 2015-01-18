@@ -66,9 +66,9 @@ class Notes(TimDbBase):
         cursor.execute(
         """
             select note_index from UserNotes
-            where UserGroup_id = ? and doc_id = ? and par_index = ?
+            where doc_id = ? and par_index = ?
             order by note_index desc
-        """, [UserGroup_id, doc_id, par_index])
+        """, [doc_id, par_index])
         
         lastindex = cursor.fetchone()
         if lastindex is None:
