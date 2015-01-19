@@ -252,14 +252,18 @@ class TimDbBase(object):
                     # Update UserNotes table; otherwise the notes won't be modifiable/deletable from UI
                     if table == 'UserNotes':
                         cursor = self.db.cursor()
-                        cursor.execute("""update UserNotes set par_index = ?, doc_ver = ?
-                                          where par_index = ? and doc_ver = ? and doc_id = ?""", [
-                                       par_index_new,
-                                       row['doc_ver'],
-                                       par_index,
-                                       read_ver,
-                                       doc_id
-                                       ])
+                        try:
+                            cursor.execute("""update UserNotes set par_index = ?, doc_ver = ?
+                                              where par_index = ? and doc_ver = ? and doc_id = ?""", [
+                                           par_index_new,
+                                           row['doc_ver'],
+                                           par_index,
+                                           read_ver,
+                                           doc_id
+                                           ])
+                        except sqlite3.IntegrityError:
+                            # Already exists
+                            pass
 
 
         # Commit in case of getParMapping optimizing the mappings
