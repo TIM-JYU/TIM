@@ -229,20 +229,38 @@ class TimDbBase(object):
 
             if read_ver == doc_ver:
                 row['status'] = status_unmodified
-                results.append(row)
-                mapped_pars[par_index] = True
+
+                # We don't want to return read markings multiple times per paragraph (but notes yes)
+                if table == 'UserNotes' or par_index not in mapped_pars:
+                    results.append(row)
+                    mapped_pars[par_index] = True
             else:
                 # Document has been modified, see if the paragraph has changed
                 #print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
                 mapping = self.getParMapping(doc_id, read_ver, doc_ver, row['par_index'], commit = False)
-                if mapping is not None:
-                    par_index = mapping[0]
+
+                # We don't want to return read markings multiple times per paragraph (but notes yes)
+                if mapping is not None and (table == 'UserNotes' or mapping[0] not in mapped_pars):
+                    par_index_new = mapping[0]
                     modified = mapping[1]
-                    row['par_index'] = par_index
+                    row['par_index'] = par_index_new
                     row['status'] = status_modified if modified else status_unmodified
                     row['doc_ver'] = read_ver if modified else doc_ver
                     results.append(row)
-                    mapped_pars[par_index] = True
+                    mapped_pars[par_index_new] = True
+
+                    # Update UserNotes table; otherwise the notes won't be modifiable/deletable from UI
+                    if table == 'UserNotes':
+                        cursor = self.db.cursor()
+                        cursor.execute("""update UserNotes set par_index = ?, doc_ver = ?
+                                          where par_index = ? and doc_ver = ? and doc_id = ?""", [
+                                       par_index_new,
+                                       row['doc_ver'],
+                                       par_index,
+                                       read_ver,
+                                       doc_id
+                                       ])
+
 
         # Commit in case of getParMapping optimizing the mappings
         self.db.commit()
