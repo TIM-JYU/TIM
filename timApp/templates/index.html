@@ -8,14 +8,17 @@
 <style type="text/css">
 table {
 	margin: 1em;
+	border: none;
 }
 
 thead {
 	font-weight: bold;
+	border: none;
 }
 
 table td {
 	padding: 0.2em;
+	border: none;
 }
 
 .uploadForm {
@@ -36,6 +39,7 @@ table td {
             <table ng-show="documentList.length > 0">
                 <thead>
                     <tr>
+                    	<td></td>
                         <td>Document name</td>
                         <td></td>
                         <td>Last modified</td>
@@ -43,9 +47,26 @@ table td {
                         <td></td>
                     </tr>
                 </thead>
+                <tr ng-show="parentfolder != null">
+                    <td>
+                	    <img src="{{url_for('static', filename='images/folder.png')}}"/>
+                	</td>
+                	<td><a href="?folder={{ '{{ parentfolder }}' }}">..</a></td>
+                	<td></td>
+                	<td></td>
+                	<td></td>
+                	<td></td>
+                </tr>
                 <tr ng-repeat="doc in documentList">
-                    <td><a href="/view/{{ '{{ doc.id }}' }}">{{ '{{ doc.name }}' }}</a></td>
-                    <td><a ng-show="doc.canEdit" href="/edit/{{ '{{ doc.id }}' }}">Edit</a></td>
+                	<td ng-show="doc.isFolder">
+                	    <img src="{{url_for('static', filename='images/folder.png')}}"/>
+                	</td>
+                	<td ng-show="!doc.isFolder"></td>
+                    <td>
+                    	<a ng-show="!doc.isFolder" href="/view/{{ '{{ doc.fullname }}' }}">{{ '{{ doc.name }}' }}</a>
+                    	<a ng-show="doc.isFolder" href="?folder={{ '{{ doc.fullname }}' }}">{{ '{{ doc.name }}' }}</a>
+                    </td>
+                    <td><a ng-show="doc.canEdit" href="/edit/{{ '{{ doc.fullname }}' }}">Edit</a></td>
                     <!--<td>{{ '{{ doc.versions[0].timestamp }}' }}</td>-->
                     <!--<td><p ng-show="displayTimes">{{ '{{ doc.versions[0].timestamp }}' }}</p></td>-->
                     <td ng-show="displayIndex && !displayTimes">Updating...</td>

@@ -2,35 +2,43 @@
 
 from flask import Blueprint, render_template, redirect, url_for
 from .common import *
+
 import pluginControl
+
 
 view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
 
 
-@view_page.route("/view_old/<int:doc_id>")
-def view_document_old(doc_id):
-    return view(doc_id, 'view.html')
+@view_page.route("/view_old/<path:doc_name>")
+def view_document_old(doc_name):
+    view_range = parse_range(request.args.get('b'), request.args.get('e'))
+    return view(doc_name, 'view.html', view_range)
+
+@view_page.route("/view/<path:doc_name>")
+@view_page.route("/view_html/<path:doc_name>")
+@view_page.route("/doc/<path:doc_name>")
+def view_document(doc_name):
+    try:
+        view_range = parse_range(request.args.get('b'), request.args.get('e'))
+    except (ValueError, TypeError):
+        abort(400, "Invalid start or end index specified.")
+
+    return view(doc_name, 'view_html.html', view_range)
+
+def parse_range(start_index, end_index):
+    if start_index is None and end_index is None:
+        return None
+
+    return( int(start_index), int(end_index) )
 
 
-@view_page.route("/doc/<int:doc_id>")
-@view_page.route("/view/<int:doc_id>")
-@view_page.route("/view_html/<int:doc_id>")
-def view_document_html(doc_id):
-    return view(doc_id, 'view_html.html')
-
-
-@view_page.route("/doc/<int:doc_id>/<int:start_index>/<int:end_index>")
-@view_page.route("/view/<int:doc_id>/<int:start_index>/<int:end_index>")
-@view_page.route("/view_html/<int:doc_id>/<int:start_index>/<int:end_index>")
-def view_document_part(doc_id, start_index, end_index):
-    return view(doc_id, 'view_html.html', (start_index, end_index))
-
-
-def view(doc_id, template_name, view_range=None):
+def view(doc_name, template_name, view_range=None):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    doc_id = timdb.documents.getDocumentId(doc_name)
+    
+    if doc_id is None or not timdb.documents.documentExists(doc_id):
         abort(404)
     if not hasViewAccess(doc_id):
         if not loggedIn():
