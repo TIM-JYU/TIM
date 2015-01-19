@@ -285,6 +285,13 @@ def createDocument():
         return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
     jsondata = request.get_json()
     docName = jsondata['doc_name']
+    
+    if docName.startswith('/') or docName.endswith('/'):
+        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
+    
+    if re.match('^(\d)*$', docName) is not None:
+        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
+    
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonResponse({'id' : docId.id, 'name' : docName})
