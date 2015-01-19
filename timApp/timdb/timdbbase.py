@@ -189,16 +189,16 @@ class TimDbBase(object):
         if num_links > 1 and current_ver == doc_ver:
             # Flatten mappings to speed up future queries
             # a -> b -> c becomes a -> c
-            #print('Updating mapping: %s(%s) -> %s(%s)' %
-            #      (read_ver[:6], read_par, current_ver[:6], current_par))
-            cursor.execute(
-                """
-                update ParMappings
-                set new_ver = ?, new_index = ?, modified = ?
-                where doc_id = ? and doc_ver = ? and par_index = ?
-                """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
-            if commit:
-                self.db.commit()
+            print('Mapping can be optimized: %s(%s) -> %s(%s)' %
+                  (read_ver[:6], read_par, current_ver[:6], current_par))
+            #cursor.execute(
+            #    """
+            #    update ParMappings
+            #    set new_ver = ?, new_index = ?, modified = ?
+            #    where doc_id = ? and doc_ver = ? and par_index = ?
+            #    """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
+            #if commit:
+            #    self.db.commit()
 
         return (current_par, modified)
 
