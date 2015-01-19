@@ -256,13 +256,24 @@ class DocTest(unittest.TestCase):
 
         content4 = 'new'
         self.db.notes.modifyNote(doc.id, ver, par_index + 1, 0, content4, 'everyone', [])
-        #self.db.notes.addNote(0, doc.id, ver, par_index, content4, 'everyone', [])
         notes = self.db.notes.getNotes(0, doc.id, ver)
         self.assertEqual(len(notes), 2)
         note = notes[0]
         self.assertEqual(note['note_index'], 0)
         self.assertEqual(note['par_index'], par_index + 1)
         self.assertEqual(note['content'], content4)
+
+        doc = DocIdentifier(doc.id, ver)
+        blocks, ver = self.db.documents.addMarkdownBlock(doc, 'edited', 0)
+        content5 = 'new2'
+        # self.db.notes.getNotes(0, doc.id, ver)  # The test would pass if this was here
+        self.db.notes.modifyNote(doc.id, ver, par_index + 2, 0, content5, 'everyone', [])
+        notes = self.db.notes.getNotes(0, doc.id, ver)
+        self.assertEqual(len(notes), 2)
+        note = notes[0]
+        self.assertEqual(note['note_index'], 0)
+        self.assertEqual(note['par_index'], par_index + 2)
+        self.assertEqual(note['content'], content5)
 
     def test_special_chars(self):
         print("test_special_chars")
