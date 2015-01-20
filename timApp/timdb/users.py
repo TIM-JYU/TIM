@@ -140,7 +140,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, name FROM User WHERE id = ?', [user_id])
+        cursor.execute('SELECT id, name, real_name, email FROM User WHERE id = ?', [user_id])
         return cursor.fetchone()
 
     @contract
