@@ -29,8 +29,8 @@ class Readings(TimDbBase):
 
         # Remove previous markings for this paragraph to reduce clutter
         cursor.execute(
-            'delete from ReadParagraphs where UserGroup_id = ? and doc_id = ? and par_index = ?',
-            [UserGroup_id, doc_id, par_index])
+            'delete from ReadParagraphs where UserGroup_id = ? and doc_id = ? and par_index = ? and doc_ver = ?',
+            [UserGroup_id, doc_id, par_index, doc_ver])
 
         # Set current version as read
         cursor.execute(

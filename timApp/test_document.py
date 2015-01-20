@@ -203,6 +203,26 @@ class DocTest(unittest.TestCase):
         # Document changes so radically that the readings should be gone
         self.assertEqual(len(readings), 0)
 
+    def check_list_dict_contents(self, list_to_check, key_name, *args):
+        self.assertEqual(len(list_to_check), len(args))
+        values = [x[key_name] for x in list_to_check]
+        for a in args:
+            self.assertIn(a, values)
+
+    def test_readings_with_add(self):
+        print('test_readings_with_add')
+        doc, _ = self.create_test_document(5)
+        self.db.readings.setAsRead(0, doc.id, doc.hash, 2)
+        self.db.readings.setAsRead(0, doc.id, doc.hash, 3)
+        readings = self.db.readings.getReadings(0, doc.id, doc.hash)
+        self.check_list_dict_contents(readings, 'par_index', 2, 3)
+        blocks, ver = self.db.documents.addMarkdownBlock(doc, 'edited', 3)
+        readings = self.db.readings.getReadings(0, doc.id, ver)
+        self.check_list_dict_contents(readings, 'par_index', 2, 4)
+        self.db.readings.setAsRead(0, doc.id, ver, 3)
+        readings = self.db.readings.getReadings(0, doc.id, ver)
+        self.check_list_dict_contents(readings, 'par_index', 2, 3, 4)
+
     def test_multiple_notes_same_par(self):
         print("test_multiple_notes_same_par")
         doc, _ = self.create_test_document(500)
