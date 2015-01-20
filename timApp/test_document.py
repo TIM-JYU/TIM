@@ -223,6 +223,20 @@ class DocTest(unittest.TestCase):
         readings = self.db.readings.getReadings(0, doc.id, ver)
         self.check_list_dict_contents(readings, 'par_index', 2, 3, 4)
 
+    def test_readings_with_edit(self):
+        print('test_readings_with_edit')
+        doc, _ = self.create_test_document(5)
+        par_index = 3
+        self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
+        _, ver = self.db.documents.modifyMarkDownBlock(doc, par_index, 'edited')
+        readings = self.db.readings.getReadings(0, doc.id, ver)
+        self.check_list_dict_contents(readings, 'par_index', par_index)
+        self.check_list_dict_contents(readings, 'status', 'modified')
+        self.db.readings.setAsRead(0, doc.id, ver, par_index)
+        readings = self.db.readings.getReadings(0, doc.id, ver)
+        self.check_list_dict_contents(readings, 'par_index', par_index)
+        self.check_list_dict_contents(readings, 'status', 'read')
+
     def test_multiple_notes_same_par(self):
         print("test_multiple_notes_same_par")
         doc, _ = self.create_test_document(500)
