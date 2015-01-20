@@ -1191,6 +1191,27 @@ img.console {
 	
 }
 
+/* Opettajanäkymän käyttäjälistaa varten ================================*/
+
+.userlist {
+	position: fixed;
+	top: 13px;
+	right: 240px;
+	padding: 5px;
+	/*width: 240px;*/
+	word-wrap:break-word;
+	background-color: #e6e6e6;
+	z-index: 501;
+	overflow: auto;
+	overflow-x: hidden;
+}
+
+.userentry {
+     font-family: Verdana;
+     font-size: 12px;
+     color: #a6b6f6;
+}
+
 /* Sisällysluetteloa varten =============================================*/
 
 .sidebar{

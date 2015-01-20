@@ -64,6 +64,27 @@ def get_block_yaml(block):
 def get_error_html(plugin_name, message):
     return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
 
+def find_task_ids(blocks, doc_id):
+    task_ids = []
+    final_html_blocks = []
+    plugins = {}
+    for idx, block in enumerate(blocks):
+        found_plugins = find_plugins(block)
+        if len(found_plugins) > 0:
+            plugin_info = parse_plugin_values(found_plugins)
+            error_messages = []
+            for vals in plugin_info:
+                plugin_name = vals['plugin']
+                if 'error' in vals:
+                    error_messages.append(get_error_html(plugin_name, vals['error']))
+                    continue
+
+                if not plugin_name in plugins:
+                    plugins[plugin_name] = OrderedDict()
+                task_ids.append("{}.{}".format(doc_id, vals['taskId']))
+    
+    return task_ids
+
 
 # Take a set of blocks and search for plugin markers,
 # replace contents with plugin.

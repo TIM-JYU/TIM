@@ -27,6 +27,18 @@ def view_document(doc_name):
 
     return view(doc_name, 'view_html.html', view_range)
 
+@view_page.route("/teacher/<path:doc_name>")
+def teacher_view(doc_name):
+    try:
+        view_range = parse_range(request.args.get('b'), request.args.get('e'))
+        userstr = request.args.get('user')
+        user = int(userstr) if userstr is not None and userstr != '' else 0
+    except (ValueError, TypeError):
+        abort(400, "Invalid start or end index specified.")
+
+    return view(doc_name, 'view_html.html', view_range, user, teacher=True)
+
+
 def parse_range(start_index, end_index):
     if start_index is None and end_index is None:
         return None
@@ -34,9 +46,12 @@ def parse_range(start_index, end_index):
     return( int(start_index), int(end_index) )
 
 
-def view(doc_name, template_name, view_range=None):
+def view(doc_name, template_name, view_range=None, user=0, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
+    
+    if teacher:
+        verifyOwnership(doc_id)
     
     if doc_id is None or not timdb.documents.documentExists(doc_id):
         # Backwards compatibility: try to use as document id
@@ -61,7 +76,15 @@ def view(doc_name, template_name, view_range=None):
         start_index = max(view_range[0], 0)
         end_index = min(view_range[1], len(xs))
         xs = xs[start_index:end_index + 1]
-    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
+        
+    if teacher:
+        texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, timdb.users.getUser(user)[1], timdb.answers, doc_id, user)
+        task_ids = pluginControl.find_task_ids(xs, doc_id)
+        users = timdb.answers.getUsersForTasks(task_ids)
+    else:
+        texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
+        users = []
+               
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
@@ -74,6 +97,7 @@ def view(doc_name, template_name, view_range=None):
                            docID=doc['id'],
                            docName=doc['name'],
                            text=texts,
+                           plugin_users=users,
                            version=version,
                            js=jsPaths,
                            cssFiles=cssPaths,

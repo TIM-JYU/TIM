@@ -51,6 +51,15 @@ def verifyLoggedIn():
     if not loggedIn():
         abort(403, "You have to be logged in to perform this action.")
 
+def hasOwnership(block_id):
+    timdb = getTimDb()
+    return timdb.users.userIsOwner(getCurrentUserId(), block_id)
+
+def verifyOwnership(block_id):
+    timdb = getTimDb()
+    if not timdb.users.userIsOwner(getCurrentUserId(), block_id):
+        abort(403, "Sorry, you don't have permission to view this resource.")
+
 def loggedIn():
     return getCurrentUserId() != 0
 
