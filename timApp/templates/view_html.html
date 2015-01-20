@@ -69,6 +69,16 @@
                 {% endraw %}
             </div>
         </div>
+        
+        {% if plugin_users|length > 0 %}
+            <div id="users" class="userlist">
+                {% for user in plugin_users %}
+                    <div class="userentry">
+                        {{ user.name|safe }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
         <div id="pars">
             {% for t in text %}

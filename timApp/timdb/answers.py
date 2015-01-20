@@ -45,6 +45,30 @@ class Answers(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def getUsersForTask(self, task_id: 'str') -> 'list(dict)':
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+                SELECT id, name FROM User
+                WHERE id IN (
+                    SELECT user_id FROM UserAnswer
+                    WHERE answer_id IN (
+                        SELECT id FROM Answer WHERE task_id = ?
+                    )
+                )
+            """)
+            
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
+        users = []
+        for task_id in task_ids:
+            for user in getUsersForTask(task_id):
+               if not user in users:
+                   users.append(user)
+
+    @contract
     def getAnswersForGroup(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
         """Gets the answers of the users in a task, ordered descending by submission time.
            All users in the list `user_ids` must be associated with the answer.
