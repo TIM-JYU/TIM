@@ -73,8 +73,8 @@
         {% if plugin_users|length > 0 %}
             <div id="users" class="userlist">
                 {% for user in plugin_users %}
-                    <div class="userentry">
-                        {{ user.name|safe }}
+                    <div>
+                       <a class="userentry" href="?user={{user.id}}">{{ user.name|safe }}</a>
                     </div>
                 {% endfor %}
             </div>

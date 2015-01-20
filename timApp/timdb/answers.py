@@ -67,6 +67,7 @@ class Answers(TimDbBase):
             for user in getUsersForTask(task_id):
                if not user in users:
                    users.append(user)
+        return users
 
     @contract
     def getAnswersForGroup(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
