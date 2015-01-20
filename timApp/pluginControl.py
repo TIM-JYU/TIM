@@ -88,7 +88,7 @@ def find_task_ids(blocks, doc_id):
 
 # Take a set of blocks and search for plugin markers,
 # replace contents with plugin.
-def pluginify(blocks, user, answer_db, doc_id, user_id):
+def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
     final_html_blocks = []
     plugins = {}
     for idx, block in enumerate(blocks):
@@ -105,6 +105,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
                 if not plugin_name in plugins:
                     plugins[plugin_name] = OrderedDict()
                 vals['markup']["user_id"] = user
+                vals['markup']["browse_answers"] = browseAnswers
                 task_id = "{}.{}".format(doc_id, vals['taskId'])
                 states = answer_db.getAnswers(user_id, task_id)
 
@@ -167,6 +168,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
                 continue
             plugin_htmls = json.loads(response)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+                if browseAnswers:
+                    html += make_browse_buttons(user_id, markup['taskID'], answer_db)
                 final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                          plugin_url,
                                                                                          html)
@@ -174,6 +177,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
             for idx, val in plugin_block_map.items():
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
+                    if browseAnswers:
+                        html += make_browse_buttons(user_id, val['taskID'], answer_db)
                 except PluginException as e:
                     final_html_blocks[idx] = get_error_html(plugin_name, str(e))
                     continue
@@ -183,6 +188,18 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
 
     return final_html_blocks, js_paths, css_paths, modules
 
+
+def make_browse_buttons(user_id, task_id, answer_db):
+    states = answer_db.getAnswers(user_id, task_id)
+    first = "First answer: {}".format(states[len(states)-1]["content"]) if len(states) > 1 else ""
+    return """
+       <div class="answerbuttons">
+           <input type="button" value="<-">
+           {} / {}
+           <input type="button" value="->">
+           {}
+       </div>
+    """.format(len(states), len(states), first)
 
 # p is json of plugin requirements of the form:
 # {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
