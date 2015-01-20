@@ -78,7 +78,7 @@ def view(doc_name, template_name, view_range=None, user=0, teacher=False):
         xs = xs[start_index:end_index + 1]
         
     if teacher:
-        texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, timdb.users.getUser(user)[1], timdb.answers, doc_id, user)
+        texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, timdb.users.getUser(user)[1], timdb.answers, doc_id, user, browseAnswers=True)
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         users = timdb.answers.getUsersForTasks(task_ids)
     else:
