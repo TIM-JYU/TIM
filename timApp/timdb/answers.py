@@ -56,7 +56,7 @@ class Answers(TimDbBase):
                         SELECT id FROM Answer WHERE task_id = ?
                     )
                 )
-            """)
+            """, [task_id])
             
         return self.resultAsDictionary(cursor)
 
@@ -64,7 +64,7 @@ class Answers(TimDbBase):
     def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
         users = []
         for task_id in task_ids:
-            for user in getUsersForTask(task_id):
+            for user in self.getUsersForTask(task_id):
                if not user in users:
                    users.append(user)
         return users

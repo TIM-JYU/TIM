@@ -81,7 +81,6 @@ def find_task_ids(blocks, doc_id):
 
                 if not plugin_name in plugins:
                     plugins[plugin_name] = OrderedDict()
-                vals['markup']["user_id"] = user
                 task_ids.append("{}.{}".format(doc_id, vals['taskId']))
     
     return task_ids

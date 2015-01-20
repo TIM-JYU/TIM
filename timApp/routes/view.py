@@ -31,7 +31,8 @@ def view_document(doc_name):
 def teacher_view(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        user = request.args.get('user')
+        userstr = request.args.get('user')
+        user = int(userstr) if userstr is not None and userstr != '' else 0
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
 
@@ -45,7 +46,7 @@ def parse_range(start_index, end_index):
     return( int(start_index), int(end_index) )
 
 
-def view(doc_name, template_name, view_range=None, user=None, teacher=False):
+def view(doc_name, template_name, view_range=None, user=0, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
     
@@ -77,8 +78,6 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         xs = xs[start_index:end_index + 1]
         
     if teacher:
-        if user is None or user == '':
-            user = 0
         texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, timdb.users.getUser(user)[1], timdb.answers, doc_id, user)
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         users = timdb.answers.getUsersForTasks(task_ids)
