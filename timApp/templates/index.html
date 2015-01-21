@@ -73,7 +73,7 @@ table td {
                     <td ng-show="displayTimes">{{ '{{ doc.versions[0].timestamp }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td><a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a></td>
-                    <td><a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.name }}' }}">Teacher</a></td>
+                    <td><a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname }}' }}">Teacher</a></td>
                 </tr>
             </table>
             <p ng-show="documentList.length == 0">There are no documents to show.</p>
