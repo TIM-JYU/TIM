@@ -191,7 +191,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
 
 def make_browse_buttons(user_id, task_id, answer_db):
     states = answer_db.getAnswers(user_id, task_id)
-    first = "First answer: {}".format(states[len(states)-1]["content"]) if len(states) > 1 else ""
+    if len(states) > 1:
+        formatted = ""
+        for key, val in json.loads(states[len(states)-1]["content"]).items():
+            formatted += key + "\n---------------\n" + val + "\n\n"
+        first = "<br/>First answer:<br/><pre>{}</pre>".format(formatted)
+    else:
+        first = ""
     return """
        <div class="answerbuttons">
            <input type="button" value="<-">
