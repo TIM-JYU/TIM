@@ -1,4 +1,6 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules));
+var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules), function($locationProvider){
+    $locationProvider.html5Mode(true);
+});
 
 timApp.controller("ViewCtrl", ['$scope',
     '$http',
@@ -6,8 +8,10 @@ timApp.controller("ViewCtrl", ['$scope',
     '$upload',
     '$injector',
     '$compile',
-    function (sc, http, q, $upload, $injector, $compile) {
+    '$location',
+    function (sc, http, q, $upload, $injector, $compile, $location) {
         http.defaults.headers.common.Version = version.hash;
+        http.defaults.headers.common.RefererPath = $location.path();
         sc.docId = docId;
         sc.docName = docName;
         sc.canEdit = canEdit;

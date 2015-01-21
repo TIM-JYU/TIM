@@ -423,7 +423,7 @@ def setReadParagraph(doc_id, specifier):
 @app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
-    
+
     # Assuming task_id is of the form "22.palindrome"
     pieces = task_id.split('.')
     if len(pieces) != 2:
@@ -458,7 +458,7 @@ def saveAnswer(plugintype, task_id):
     if not 'web' in jsonresp:
         return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
     
-    if 'save' in jsonresp:
+    if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
         saveObject = jsonresp['save']
         
         #Save the new state
@@ -469,7 +469,7 @@ def saveAnswer(plugintype, task_id):
             points = None
             tags = []
         timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
-    
+
     return jsonResponse({'web':jsonresp['web']})
 
 def getPluginMarkup(doc_id, plugintype, task_id):
