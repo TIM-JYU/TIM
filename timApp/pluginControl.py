@@ -194,8 +194,15 @@ def make_browse_buttons(user_id, task_id, answer_db):
     states = answer_db.getAnswers(user_id, task_id)
     if len(states) > 1:
         formatted = ""
-        for key, val in json.loads(states[len(states)-1]["content"]).items():
-            formatted += key + "\n---------------\n" + val + "\n\n"
+        content_obj = json.loads(states[len(states)-1]["content"])
+        if isinstance(content_obj, dict):
+            for key, val in content_obj.items():
+                formatted += key + "\n---------------\n" + val + "\n\n"
+        elif isinstance(content_obj, list):
+            for v in content_obj:
+                formatted += "List element:" + "\n---------------\n" + str(v) + "\n\n"
+        else:
+            formatted = str(content_obj)
         first = "<br/>First answer:<br/><pre>{}</pre>".format(html.escape(formatted))
     else:
         first = ""
