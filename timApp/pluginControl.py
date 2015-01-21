@@ -197,7 +197,7 @@ def make_browse_buttons(user_id, task_id, answer_db):
         content_obj = json.loads(states[len(states)-1]["content"])
         if isinstance(content_obj, dict):
             for key, val in content_obj.items():
-                formatted += key + "\n---------------\n" + val + "\n\n"
+                formatted += key + "\n---------------\n" + str(val) + "\n\n"
         elif isinstance(content_obj, list):
             for v in content_obj:
                 formatted += "List element:" + "\n---------------\n" + str(v) + "\n\n"
