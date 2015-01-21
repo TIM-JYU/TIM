@@ -49,12 +49,6 @@ def parse_range(start_index, end_index):
 def view(doc_name, template_name, view_range=None, user=0, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
-
-    if doc_id is None:
-        abort(404)
-    
-    if teacher:
-        verifyOwnership(doc_id)
     
     if doc_id is None or not timdb.documents.documentExists(doc_id):
         # Backwards compatibility: try to use as document id
@@ -64,6 +58,10 @@ def view(doc_name, template_name, view_range=None, user=0, teacher=False):
                 abort(404)
         except ValueError:
             abort(404)
+
+    if teacher:
+        verifyOwnership(doc_id)
+
     if not hasViewAccess(doc_id):
         if not loggedIn():
             return redirect(url_for('loginWithKorppi', came_from=request.path))
