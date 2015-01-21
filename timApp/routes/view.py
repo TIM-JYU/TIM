@@ -49,6 +49,9 @@ def parse_range(start_index, end_index):
 def view(doc_name, template_name, view_range=None, user=0, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
+
+    if doc_id is None:
+        abort(404)
     
     if teacher:
         verifyOwnership(doc_id)
