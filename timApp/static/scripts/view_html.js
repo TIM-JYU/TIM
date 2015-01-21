@@ -11,7 +11,7 @@ timApp.controller("ViewCtrl", ['$scope',
     '$location',
     function (sc, http, q, $upload, $injector, $compile, $location) {
         http.defaults.headers.common.Version = version.hash;
-        http.defaults.headers.common.RefererPath = $location.path();
+        http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
         sc.canEdit = canEdit;
