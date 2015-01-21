@@ -10,6 +10,7 @@ import yaml.parser
 import yaml.scanner
 from htmlSanitize import sanitize_html
 import json
+import html
 
 
 def parse_plugin_values(nodes):
@@ -195,7 +196,7 @@ def make_browse_buttons(user_id, task_id, answer_db):
         formatted = ""
         for key, val in json.loads(states[len(states)-1]["content"]).items():
             formatted += key + "\n---------------\n" + val + "\n\n"
-        first = "<br/>First answer:<br/><pre>{}</pre>".format(formatted)
+        first = "<br/>First answer:<br/><pre>{}</pre>".format(html.escape(formatted))
     else:
         first = ""
     return """
