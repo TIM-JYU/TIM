@@ -15,6 +15,13 @@ class Answers(TimDbBase):
         """
 
         cursor = self.db.cursor()
+
+        if len(user_ids) == 1:
+            pass
+            existing_answers = self.getAnswers(user_ids[0], task_id)
+            if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
+                return
+
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on) VALUES (?,?,?,CURRENT_TIMESTAMP)',
                        [task_id, content, points])
         answer_id = cursor.lastrowid
