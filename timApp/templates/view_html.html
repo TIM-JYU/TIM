@@ -74,7 +74,7 @@
             <div id="users" class="userlist">
                 {% for user in plugin_users %}
                     <div>
-                       <a class="userentry" href="?user={{user.id}}">{{ user.name|safe }}</a>
+                       <a class="userentry" href="?user={{user.id}}" target="_self">{{ user.name|safe }}</a>
                     </div>
                 {% endfor %}
             </div>
