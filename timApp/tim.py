@@ -7,6 +7,7 @@ import io
 import codecs
 import collections
 import re
+import sys
 
 from flask import Flask, redirect, url_for, flash
 from flask import stream_with_context
@@ -573,4 +574,4 @@ def testLogin(email):
 def startApp():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
-    app.run(host='0.0.0.0',port=5000)
+    app.run(host='0.0.0.0', port=5000, use_reloader='pudb' not in sys.modules)

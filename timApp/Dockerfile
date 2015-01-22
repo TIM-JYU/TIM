@@ -28,6 +28,7 @@ run pip3 install lxml
 run pip3 install pyaml
 run pip3 install ansiconv
 run pip3 install cssutils
+run pip3 install pudb
 
 run apt-get install -y wget
 run apt-get install -y cmake
