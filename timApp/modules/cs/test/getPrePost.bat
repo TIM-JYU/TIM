@@ -1,0 +1,1 @@
+curl -H "Content-Type: application/json" --data-binary @getPrePost.json localhost:5000/?print=2
