@@ -51,6 +51,8 @@ KNOWN_TAGS = ['difficult', 'unclear']
 
 # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
 formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
+if not os.path.exists(app.config['LOG_DIR']):
+    os.mkdir(app.config['LOG_DIR'])
 handler = logging.FileHandler(app.config['LOG_PATH'])
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
