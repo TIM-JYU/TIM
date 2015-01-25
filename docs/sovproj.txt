@@ -1,0 +1,14 @@
+Vuorovaikutteinen TIM
+======================
+
+TIMiin lis‰t‰‰n seuraavat ominaisuudet:
+
+- luennolle liittyminen
+- siirtyminen omassa monisteessa samaan paikaan kuin opettaja
+- monipuolisemmat monivalinnat, mm j‰rjestelyteht‰v‰t
+- tekstivastaus
+- n‰iden avulla toteutetaan InSitu toiminnallisuus TIMiin
+- opettaja voi kysy‰ monisteeseen tehtyj‰ kysymyksi‰
+- voidaan tehd‰ lennosta uusia kysymyksi‰ yksinkertaisella ja nopealla k‰yttˆliittym‰ll‰
+- oppilaalla vastausmahdollisuus osana TIMi‰ tai erillisess‰ ikkunassa jos
+  ei halua k‰ytt‰‰ muuta monisteeseen liittyv‰‰.

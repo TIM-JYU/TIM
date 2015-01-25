@@ -18,6 +18,7 @@ run apt-get install -y imagemagick
 run apt-get install -y openjdk-7-jre-headless
 run apt-get install -y nunit-console
 run apt-get install -y wget
+run apt-get install -y libxtst6
 run locale-gen en_US.UTF-8 
 run locale-gen fi_FI.UTF-8 
 

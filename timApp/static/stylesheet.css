@@ -255,6 +255,10 @@ ul ul  ul, ol ol ol {
     margin: none;
     background-color: #f8f8ff;
     z-index: 100;
+    top: -1px;
+    right: -14em;
+    min-height: 100%;
+    background-color: lightgray;
 }
 
 .headerlink {
@@ -1302,11 +1306,12 @@ img.console {
 }
 
 .menu{ 
-	left: -20px; 
+	left: 0px; 
 	top:0px;
 	width: 60px;
 	position:fixed;
 	background:#e6e6e6;
+    width: 45px;
     z-index: 501;
 }
 .menu-icon{
@@ -1318,9 +1323,9 @@ img.console {
 }
 .menu-icon:hover{
     z-index: 501;
-	filter: brightness(10);
-	-webkit-filter: brightness(10);
-	-moz-filter: brightness(10);
+	filter: brightness(1);
+	-webkit-filter: brightness(1);
+	-moz-filter: brightness(1);
 }
 .close{
 	float: right;
@@ -1338,3 +1343,96 @@ img.console {
     margin-left: 2em;
     font-size: 0.9em;
 }
+
+/* =============================== Vesan lisäyksiä ==================================*/
+
+.editorArea {
+    z-index: 110;
+    position: absolute;
+    width: 102%;
+    top: 0em;
+    left: 0;
+    min-height: 6.5em;
+    border-radius: 9px;
+}
+
+.ace_editor {
+    position: relative;
+    overflow: hidden;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-size: 12px;
+    line-height: normal;
+    direction: ltr;
+    width: 98%;
+    margin-left: 2px;
+}
+
+.timButton {
+    display: block;
+    margin: auto;
+    background: #3CC;
+    border: 0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin-bottom: 5px;
+}
+.actionButtons {
+    position: absolute;
+    border-radius: 3px;
+    padding: 1em;
+    margin: none;
+    background-color: #f8f8ff;
+    z-index: 100;
+    width: 220px;
+    min-height: 50px;
+    left: 103%;
+}  
+
+.par.selected {
+    background-color: #f8f8f8;
+}
+
+.addNote, .editPar, .addPar {
+    width: 220px;
+}
+
+.listVideoRunDiv {
+  /* margin-left: 2em; */
+  margin-top: -1.5em;
+  margin-bottom: -1.2em; 
+}
+
+.csArgsArea {
+  width: 90%;
+  margin-top: 0em;
+  margin-bottom: 0em;
+  border-style: none;
+  border-width: 0px;
+  border-left: thin solid #0066FF;
+}
+
+.csArgsDiv {
+  width: 100%;
+}
+
+.csArgsDiv span {
+  display: block;
+  overflow: hidden;
+  padding: 0 5px;
+}
+
+.csArgsDiv label {
+  margin-left: 0px;
+  float: left;
+  font-size: 0.96em;
+  
+}
+
