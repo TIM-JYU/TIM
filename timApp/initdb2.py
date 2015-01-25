@@ -5,12 +5,17 @@ from timdb.timdb2 import TimDb
 import os
 from timdb.gitclient import GitClient
 import ephemeralclient
+import sys
 
 if __name__ == "__main__":
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     FILES_ROOT_PATH = 'tim_files'
+    if os.path.exists(FILES_ROOT_PATH):
+        print('tim_files already exists, no need to initialize')
+        sys.exit()
+    print('initializing tim_files')
     git = GitClient.initRepo(FILES_ROOT_PATH)
     p = ephemeralclient.launch_ephemeral()
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)

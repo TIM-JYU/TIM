@@ -44,4 +44,11 @@ docker run --name ShortNotePlug -p 59000:5000 -d -t -i haskellplugins /bin/bash 
 docker run --name GraphVizPlug -p 60000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/GraphVizPlugin/GraphVizPlugin -p 5000 ; /bin/bash'
 
 # Start tim
-docker run --name tim -p 50000:5000 -v $PWD:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+if [ "$1" = "sshd" ] ; then
+    docker run --name tim -p 50000:5000 -p 49999:22 -v $PWD:/service -d -t -i tim /bin/bash -c '/usr/sbin/sshd -D ; /bin/bash'
+else
+    docker run --name tim -p 50000:5000 -v $PWD:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+fi
+
+# Initialize the database in case it doesn't exist yet
+docker exec tim /bin/bash -c 'cd /service/timApp && python3 initdb2.py'

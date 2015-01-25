@@ -62,6 +62,12 @@ run useradd -M agent
 run chown -R agent /service
 
 expose 5000
+expose 22
 
-# Kun container käynnistyy, suoritetaan:
+run apt-get install -y openssh-server
+run mkdir /var/run/sshd
+run echo 'root:test' | chpasswd
+run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Default startup command
 cmd cd /service/timApp && source initenv.sh && python3 launch.py
