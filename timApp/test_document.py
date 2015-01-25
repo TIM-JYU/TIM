@@ -10,6 +10,10 @@ import ephemeralclient
 from timdb.gitclient import GitClient
 from timdb.timdbbase import TimDbException, DocIdentifier
 
+import hypothesis.settings as hs
+
+hs.default.max_examples = 10
+
 
 def onerror(func, path, exc_info):
     import stat
@@ -19,6 +23,7 @@ def onerror(func, path, exc_info):
     #os.chmod(path, stat.S_IWRITE)
     #os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO)
     func(path)
+
 
 def debug_print(name, msg):
     print("{}: '{}', hex: {}".format(name, msg, ':'.join(hex(ord(x))[2:] for x in msg)))
@@ -49,7 +54,7 @@ class DocTest(unittest.TestCase):
         global db
         self.db = db
 
-    @given(str, verifier=Verifier(timeout=9999, max_size=2))
+    @given(str)
     def test_create_document(self, name):
         debug_print('test_create_document', name)
         if '\0' in name:
@@ -74,7 +79,7 @@ class DocTest(unittest.TestCase):
         blocks = self.db.documents.getDocumentAsBlocks(doc)
         self.assertEqual(blocks[0], 'Edit me!\n')
 
-    @given(str, verifier=Verifier(timeout=9999, max_size=2))
+    @given(str)
     def test_edit_document(self, new_text):
         debug_print('test_edit_document', new_text)
         doc = self.db.documents.createDocument('test', 0)
