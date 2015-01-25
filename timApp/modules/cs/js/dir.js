@@ -1,13 +1,52 @@
 ﻿var csApp = angular.module('csApp', ['ngSanitize']);
-csApp.directive('csRunner',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }]);
-csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli'); }]);
-csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest'); }]);
-csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno'); }]);
+csApp.directive('csRunner',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',false); }]);
+csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',false); }]);
+csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',false); }]);
+csApp.directive('csRunnerInput',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',true); }]);
+csApp.directive('csJypeliRunnerInput', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',true); }]);
+csApp.directive('csComtestRunnerInput', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',true); }]);
+csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',false); }]);
+csApp.directive('csTaunoRunnerInput', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',true); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 var TESTWITHOUTPLUGINS = false;
-
 csApp.taunoNr = 0;
+
+// =================================================================================================================
+// Things for konwn langueges
+
+var languageTypes = {}
+// What are known language types:
+languageTypes.runTypes     = ["console","jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs"];
+
+// What are known test types (be carefull not to include partial word):
+languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit"];
+
+// If test type is comtest, how to change it for specific languages
+languageTypes.impTestTypes = {console:"comtest", cc:"ccomtest", java:"jcomtest"};
+languageTypes.impTestTypes["c++"] = "ccomtest";
+
+languageTypes.whatIsIn = function(types,type,def) {
+    for (i=0; i< types.length; i++)
+        if ( type.indexOf(types[i]) >= 0 ) return types[i];
+    return def;
+}
+
+languageTypes.getRunType = function(type,def) {
+    return this.whatIsIn(this.runTypes,type,def);
+}
+
+languageTypes.getTestType = function(type,def) {
+    var t = this.whatIsIn(this.testTypes,type,def);
+    if ( t != "comtest" ) return t;
+    var lt = this.whatIsIn(this.runTypes,type,"console");
+    var impt = this.impTestTypes[lt];
+    if ( impt ) return impt;
+    return t;     
+}
+// =================================================================================================================
+
+
 
 csApp.directive('contenteditable', ['$sce', function($sce) {
     return {
@@ -47,7 +86,7 @@ csApp.directive('contenteditable', ['$sce', function($sce) {
 
 
 csApp.commentTrim = function(s) {
-	if ( !s ) return;
+	if ( !s ) return "";
 	var n = s.indexOf("//\n");
 	if ( n != 0 ) return s;
 	return s.substr(3); 
@@ -78,7 +117,7 @@ csApp.getHeading = function(a,key,$scope,defElem) {
 }
 
 
-csApp.directiveTemplateCS = function(t) {
+csApp.directiveTemplateCS = function(t,isInput) {
 	csApp.taunoPHIndex = 3;
     if ( TESTWITHOUTPLUGINS ) return '';
 	return  '<div class="csRunDiv">' + 
@@ -97,7 +136,8 @@ csApp.directiveTemplateCS = function(t) {
 				  '<div class="csRunCode">'+'<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
                   '<div>'+
-				  '<textarea class="csRunArea" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+				  // '<textarea class="csRunArea" ng-if="!noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+				  '<textarea class="csRunArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
 				  '<div class="csRunChanged" ng-if="usercode!=byCode"></div>'+
 				  //'<div class="csRunChanged" ng-if="muokattu"></div>'+
                   '</div>'+
@@ -106,14 +146,25 @@ csApp.directiveTemplateCS = function(t) {
 				  '</div>'+
 				  //'<br />'+ 
                   
+                  (isInput  ?
+                  '<div class="csInputDiv" ng-hide="!showInput">' +
+                  '<p ng-if="inputstem" class="stem" >{{inputstem}}</p>' +
+                  '<div class="csRunCode" >' +
+				  '<textarea class="csRunArea csInputArea"  rows={{inputrows}} ng-model="userinput" ng-trim="false" placeholder="{{inputplaceholder}}"></textarea>'+
+                  '</div>' + 
+                  '</div>' + 
+                  '<div class="csArgsDiv" ng-hide="!showArgs">' +
+				  '<label>{{argsstem}}</label><span><input type ="text" class="csArgsArea" ng-model="userargs" ng-trim="false" placeholder="{{argsplaceholder}}"></span>'+
+                  '</div>' : "") + // end of isInput
+                  
 				  '<p class="csRunSnippets" ng-if="buttons && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
                   '</p>' +
                   
 				  '<p class="csRunMenu" >' +
-				  '<button ng-if="isRun"  ng-click="runCode();">Aja</button>&nbsp&nbsp'+
+				  '<button ng-if="isRun"  ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
-				  '<a href="" ng-if="false || file || attrs.program" ng-click="showCode();">Näytä koko koodi</a>&nbsp&nbsp'+
+				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">Alusta</a></p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t == "comtest" || t == "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
@@ -137,7 +188,7 @@ csApp.set = function(scope,attrs,name,def) {
 }
 
 
-csApp.directiveFunction = function(t) {
+csApp.directiveFunction = function(t,isInput) {
 	return {
 		link: function (scope, element, attrs) {
             if ( TESTWITHOUTPLUGINS ) return;
@@ -167,13 +218,25 @@ csApp.directiveFunction = function(t) {
 			csApp.set(scope,attrs,"maxrows",-1);
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder","Write your code here");
+			csApp.set(scope,attrs,"inputplaceholder","Write your input here");
+			csApp.set(scope,attrs,"argsplaceholder","Write your program args here");
+			csApp.set(scope,attrs,"argsstem","Args:");
+			csApp.set(scope,attrs,"userinput","");
+			csApp.set(scope,attrs,"userargs","");
+			csApp.set(scope,attrs,"inputstem","");
+			csApp.set(scope,attrs,"inputrows",1);
             csApp.set(scope,attrs,"indent",-1);
             csApp.set(scope,attrs,"user_id");
+            csApp.set(scope,attrs,"button","");
+            csApp.set(scope,attrs,"noeditor",false);
+            csApp.set(scope,attrs,"showCodeOn","Näytä koko koodi");
+            csApp.set(scope,attrs,"showCodeOff","Piilota muu koodi");
             // csApp.set(scope,attrs,"program");
 
+            scope.showCodeLink = scope.showCodeOn;
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
-			if ( scope.usercode == "" )  scope.usercode = scope.byCode;
+			if ( scope.usercode == "" && scope.byCode )  scope.usercode = scope.byCode;
 			scope.usercode = csApp.commentTrim(scope.usercode);
 			scope.byCode = csApp.commentTrim(scope.byCode);
 			// scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
@@ -184,11 +247,17 @@ csApp.directiveFunction = function(t) {
                 if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
             } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
             
-			scope.isRun = (scope.type.indexOf("console") >= 0) || (scope.type.indexOf("jypeli") >= 0) || 
-                          (scope.type.indexOf("java") >= 0) || (scope.type.indexOf("graphics") >= 0) ||
-                          (scope.type.indexOf("cc") >= 0) || (scope.type.indexOf("c++") >= 0) || 
-                          (scope.type.indexOf("py") >= 0) || (scope.type.indexOf("fs") >= 0) || (scope.type.indexOf("clisp") >= 0);
-			scope.isTest = scope.type.indexOf("comtest") >= 0 || scope.type.indexOf("junit") >= 0;
+            scope.isRun = languageTypes.getRunType(scope.type,false) != false;
+            scope.isTest = languageTypes.getTestType(scope.type,false) != false;
+            
+            scope.showInput = (scope.type.indexOf("input") >= 0);
+            scope.showArgs = (scope.type.indexOf("args") >= 0);
+            scope.buttonText = "Aja";
+            if ( scope.type.indexOf("text") >= 0 ) {
+                scope.isRun = true;
+                scope.buttonText = "Lähetä";
+            }            
+            if ( scope.button ) scope.buttonText = scope.button;
             
 			scope.indent = csApp.getInt(scope.indent);
             if ( scope.indent < 0 )
@@ -230,7 +299,7 @@ csApp.directiveFunction = function(t) {
 		*/
 		transclude: true,
 		replace: 'true',
-		template: csApp.directiveTemplateCS(t),
+		template: csApp.directiveTemplateCS(t,isInput),
 		// templateUrl: 'csTempl.html'
 	}; 
 }
@@ -339,23 +408,12 @@ csApp.Controller = function($scope,$http,$transclude) {
 	}, true);
 	
 	$scope.runCode = function() {
-		var t = "console";
-		if ( $scope.type.indexOf("jypeli") >= 0 ) t = "jypeli";
-		if ( $scope.type.indexOf("graphics") >= 0 ) t = "graphics";
-		if ( $scope.type.indexOf("java") >= 0 ) t = "java";
-		if ( $scope.type.indexOf("cc") >= 0 ) t = "cc";
-		if ( $scope.type.indexOf("c++") >= 0 ) t = "c++";
-		if ( $scope.type.indexOf("fs") >= 0 ) t = "fs";
-		if ( $scope.type.indexOf("py") >= 0 ) t = "py";
-		if ( $scope.type.indexOf("clisp") >= 0 ) t = "clisp";
+		var t = languageTypes.getRunType($scope.type,"console"); 
 		$scope.doRunCode(t);
 	}
 	
 	$scope.runTest = function() {
-		var t = "comtest";
-		if ( $scope.type.indexOf("jcomtest") >= 0 ) t = "jcomtest";
-		if ( $scope.type.indexOf("junit") >= 0 ) t = "junit";
-		if ( $scope.type.indexOf("ccomtest") >= 0 ) t = "ccomtest";
+		var t = languageTypes.getTestType($scope.type,"comtest"); 
 		$scope.doRunCode(t);
 	}
 	
@@ -371,9 +429,15 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
+        var isInput = false;
+        if ( $scope.type.indexOf("input") >= 0 ) isInput = true;
 
         var ucode = "";
+        var uinput = "";
+        var uargs = "";
         if ( $scope.usercode ) ucode = $scope.usercode.replace($scope.cursor,"");
+        if ( $scope.userinput ) uinput = $scope.userinput;
+        if ( $scope.userargs ) uargs = $scope.userargs;
 		var t = runType;
 		// if ( t == "tauno" ) t = "comtest";
 
@@ -381,7 +445,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		params = {
                   //   'input': 1
-				  'input': {'usercode':ucode,
+				  'input': {'usercode':ucode, 'userinput':uinput, 'isInput' : isInput, 'userargs': uargs,
                             'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id}, 
                            }
                   };
@@ -560,6 +624,12 @@ csApp.Controller = function($scope,$http,$transclude) {
 	
 	$scope.showCode = function() {
 		$scope.viewCode = !$scope.viewCode;
+        
+        if ( $scope.viewCode ) 
+            $scope.showCodeLink = $scope.showCodeOff;
+        else
+            $scope.showCodeLink = $scope.showCodeOn;
+
 		$scope.localcode = undefined;
 		$scope.showCodeNow();
 	}

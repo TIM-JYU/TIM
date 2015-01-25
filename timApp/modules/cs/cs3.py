@@ -13,6 +13,7 @@ import io
 import codecs
 import binascii
 import shutil
+import shlex
 from os import kill
 import signal
 import socketserver
@@ -22,7 +23,8 @@ from fileParams3 import *
 from requests import Request, Session
 from http import cookies
 import datetime
-
+import stat  
+import sys  
 
 PORT = 5000
 
@@ -31,12 +33,29 @@ def generate_filename():
     return str(uuid.uuid4())
 
 
-def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None):
-    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
+def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs =None):
+    s_in = None
+    if uargs: args.extend(shlex.split(uargs))
+    if stdin: s_in = PIPE
+    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env, stdin=s_in)  # , timeout=timeout)
     try:
-        stdout, stderr = p.communicate(timeout=timeout)
+        if stdin:
+            print(stdin)
+            file = codecs.open(stdin, 'r', "utf-8")
+            lines = file.read()
+            print("Input ======")
+            print(lines)
+            print("===========")
+            file.close()       
+            # p.stdin.write(str.encode(lines))
+            # p.stdin.close()
+            stdout, stderr = p.communicate(str.encode(lines),timeout=timeout)
+        else:     
+            stdout, stderr = p.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         return -9, '', ''
+    except IOError as e:    
+        return -2, '', 'IO Error'.encode()
     return p.returncode, stdout, stderr
 
 
@@ -84,13 +103,18 @@ def get_html(ttype, query):
         js["byCode"] = get_url_lines_as_string(js["byFile"])
     jso = json.dumps(js)
     runner = 'cs-runner'
+    #print(ttype)
+    is_input = '';
+    if "input" in ttype or "args" in ttype: is_input = '-input'
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
     if "jypeli" in ttype: runner = 'cs-jypeli-runner'
-    s = '<' + runner + '>xxxJSONxxx' + jso + '</' + runner + '>'
+    r = runner + is_input
+    s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
+    # print(s)
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
-        s = '<' + runner + '>xxxHEXJSONxxx' + hx.decode() + '</' + runner + '>'
+        s = '<' + r + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>'
     return s
 
 
@@ -100,7 +124,7 @@ def log(self):
     if agent.find("ython") >= 0: agent = ""
     logfile = "/cs/images/log.txt"
     try:
-        open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path + agent + "\n")
+        open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path + agent + " u:" + self.user_id + "\n")
     except:
         return
 
@@ -138,12 +162,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             print(query.jso);
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if usercode: query.query["usercode"] = [usercode]
+            userinput = get_json_param(query.jso, "state", "userinput", None)
+            if userinput: query.query["userinput"] = [userinput]
+            userargs = get_json_param(query.jso, "state", "userargs", None)
+            if userargs: query.query["userargs"] = [userargs]
             ttype = get_param(query, "type", "console").lower()
             if is_tauno: ttype = 'tauno'
             s = get_html(ttype, query)
             # print(s)
             htmls.append(s)
 
+        # print(htmls)
         sresult = json.dumps(htmls)
         self.wout(sresult)
 
@@ -191,6 +220,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.send_response(404)
             return
 
+        user_id = get_param(query, "user_id", None)
         log(self)
         '''
         if self.path.find('/login') >= 0:
@@ -258,6 +288,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
         usercode = get_json_param(query.jso, "state", "usercode", None)
         if usercode: query.query["usercode"] = [usercode]
+        userinput = get_json_param(query.jso, "state", "userinput", None)
+        if userinput: query.query["userinput"] = [userinput]
+
         # print("USERCODE: XXXXX = ", usercode)
 
         # print("Muutos ========")
@@ -292,7 +325,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # Check if user name or temp name
         rndname = generate_filename()
         delete_tmp = True
-        user_id = get_param(query, "user_id", None)
         if get_param(query, "path", "") == "user" and user_id:
             basename = "user/" + hash_user_dir(user_id)
             delete_tmp = False
@@ -300,30 +332,41 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         else:
             # Generate random cs and exe filenames
             basename = rndname
+        filename = get_param(query, "filename", "prg")
+        ifilename = get_param(query, "inputfilename", "input.txt")
         # csfname = "/tmp/%s.cs" % basename
         # exename = "/tmp/%s.exe" % basename
-        csfname = "/tmp/%s/prg.cs" % basename
-        exename = "/tmp/%s/prg.exe" % basename
+        csfname = "/tmp/%s/%s.cs" % (basename, filename)
+        exename = "/tmp/%s/%s.exe" % (basename, filename)
+        inputfilename = "/tmp/%s/%s" % (basename, ifilename)
         prgpath = "/tmp/%s" % basename
         filepath = prgpath
 
         # if ttype == "console":
         # Console program
         if ttype == "cc":
-            csfname = "/tmp/%s/prg.c" % basename
+            csfname = "/tmp/%s/%s.c" % (basename, filename)
 
         if ttype == "c++":
-            csfname = "/tmp/%s/prg.cpp" % basename
+            csfname = "/tmp/%s/%s.cpp" % (basename, filename)
 
         if ttype == "fs":
-            csfname = "/tmp/%s/prg.fs" % basename
+            csfname = "/tmp/%s/%s.fs" % (basename, filename)
 
         if ttype == "py":
-            csfname = "/tmp/%s/prg.py" % basename
+            csfname = "/tmp/%s/%s.py" % (basename, filename)
+            exename = csfname
+
+        if ttype == "shell":
+            csfname = "/tmp/%s/%s" % (basename, filename)
+            exename = csfname
+
+        if ttype == "jjs":
+            csfname = "/tmp/%s/%s.js" % (basename, filename)
             exename = csfname
 
         if ttype == "clisp":
-            csfname = "/tmp/%s/prg.lisp" % basename
+            csfname = "/tmp/%s/%s.lisp" % (basename, filename)
             exename = csfname
 
         if "jypeli" in ttype:
@@ -334,13 +377,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             pngname = "/cs/images/%s.png" % rndname
         if "comtest" in ttype:
             # ComTest test cases
-            testcs = "/tmp/%s/prgTest.cs" % basename
-            testdll = "/tmp/%s/prgTest.dll" % basename
+            testcs = "/tmp/%s/%sTest.cs" % (basename, filename)
+            testdll = "/tmp/%s/%sTest.dll" % (basename, filename)
         if "ccomtest" in ttype:
             # ComTest test cases
-            csfname = "prg.cpp"
-            testcs = "prg.cpp"
-
+            csfname = "/tmp/%s/%s.cpp" % (basename, filename)
+            testcs = "/tmp/%s/%s.cpp" % (basename, filename)
+        if "text" in ttype:
+            #text file
+            csfname = "/tmp/%s/%s.txt" % (basename, filename)
 
             # Unknown template
             # self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
@@ -368,7 +413,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # /answer-path comes here
         usercode = get_json_param(query.jso, "input", "usercode", None)
-        save["usercode"] = usercode
+        if usercode: save["usercode"] = usercode
+        userinput = get_json_param(query.jso, "input", "userinput", None)
+        if userinput: save["userinput"] = userinput
+        userargs = get_json_param(query.jso, "input", "userargs", None)
+        if userargs: save["userargs"] = userargs
+        
         result["save"] = save
 
         if "java" in ttype or "jcomtest" in ttype or "junit" in ttype or "graphics" in ttype:
@@ -394,11 +444,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             print("Write file: " + csfname)
             codecs.open(csfname, "w", "utf-8").write(s)
 
+        isInput = get_json_param(query.jso, "input", "isInput", None)
+        print(isInput)
+        if isInput:
+            print("Write input file: " + inputfilename)
+            codecs.open(inputfilename, "w", "utf-8").write(userinput)
+
         if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
             return write_json_error(self.wfile, "Could not get the source file", result)
             # self.wfile.write("Could not get the source file\n")
             # print "=== Could not get the source file"
 
+        # print(ttype)
         # Compile
         try:
             log(self)
@@ -418,12 +475,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "cc":
                 cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
             elif ttype == "c++":
-                cmdline = "g++ -Wall %s -o %s" % (csfname, exename)
+                cmdline = "g++ -std=c++11 -Wall %s -o %s" % (csfname, exename)
             elif ttype == "py":
                 cmdline = ""
             elif ttype == "clisp":
                 cmdline = ""
             elif ttype == "ccomtest":
+                cmdline = ""
+            elif ttype == "text":
+                cmdline = ""
+            elif ttype == "shell":
+                cmdline = ""
+            elif ttype == "jjs":
                 cmdline = ""
             elif ttype == "fs":
                 cmdline = "fsharpc --out:%s %s" % (exename, csfname)
@@ -455,7 +518,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             file = codecs.open(csfname, 'r', "utf-8")
             lines = file.read().splitlines()
             file.close()
-            print_lines(output, lines, 0, 10000)
+            if not get_param(query, "nocode", False):
+                print_lines(output, lines, 0, 10000)
             error_str += output.getvalue()
             output.close()
 
@@ -475,7 +539,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print("Lang= ", lang)
 
         err = ""
+        code = 0
+        out = ""
 
+        stdin = get_param(query, "stdin", None)
+        if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
+        
         if ttype == "jypeli":
             code, out, err = run(["mono", exename, bmpname], cwd=prgpath, timeout=10, env=env)
             print(err)
@@ -501,7 +570,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 self.remove(exename)
         elif ttype == "graphics":
             # code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
-            code, out, err = run(["java", javaclassname, bmpname], cwd=prgpath, timeout=10, env=env)
+            code, out, err = run(["java", javaclassname, bmpname], cwd=prgpath, timeout=30, env=env)
             print(err)
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
@@ -607,34 +676,50 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         else:
             if ttype == "java":
                 print("java: ", javaclassname)
-                # code, out, err = run(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env)
-                code, out, err = run(["java", javaclassname], cwd=prgpath, timeout=10, env=env)
+                # code, out, err = run(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
+                code, out, err = run(["java", javaclassname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+            elif ttype == "shell":
+                print("shell: ", exename)
+                #os.chmod(exename, stat.S_IEXEC)
+                os.system("chmod +x "+exename)
+                try:
+                    code, out, err = run([exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                except OSError as e:
+                    print(e)
+                    code, out, err = (-1, "",str(e).encode())
+            elif ttype == "jjs":
+                print("jjs: ", exename)
+                code, out, err = run(["jjs",exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "cc":
                 print("c: ", exename)
-                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "c++":
                 print("c++: ", exename)
-                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "py":
                 print("py: ", exename)
-                code, out, err = run(["python3", exename], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run(["python3", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "clisp":
                 print("clips: ", exename)
-                code, out, err = run(["sbcl", "--script", exename], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run(["sbcl", "--script", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                 # code, out, err = run(["sbcl", "--noinform --load " + exename + " --eval '(SB-EXT:EXIT)'"], timeout=10, env=env)
                 # code, out, err = run(["clisp",exename], timeout=10, env=env)
             elif ttype == "py2":
                 print("py2: ", exename)
-                code, out, err = run(["python2", exename], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run(["python2", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+            elif ttype == "text":
+                print("text: ", csfname)
+                code, out, err = (0, "".encode("utf-8"),"tallennettu".encode("utf-8")) 
             else:
                 print("Exe: ", exename)
-                code, out, err = run(["mono", exename], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run(["mono", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
 
             print(code, out, err, compiler_output)
             if code == -9:
                 out = "Runtime exceeded, maybe loop forever\n" + out
 
             else:
+                print(err)
                 err = err.decode("utf-8") + compiler_output
                 if ttype == "fs":
                     err = err.replace(
@@ -650,7 +735,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if delete_tmp: self.removedir(prgpath)
 
-        out = out[0:2000]
+        out = out[0:8000]
         web["console"] = out
         web["error"] = err
 

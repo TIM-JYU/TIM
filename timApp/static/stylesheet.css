@@ -121,7 +121,7 @@ body {
 	background-color: white;
 }
 
-.editorArea,  .noteEditorArea {
+.editorArea {
     background-color: #B0B0B0;
 }
 
@@ -194,7 +194,17 @@ ul ul  ul, ol ol ol {
 .paragraph, .par {
 	position: relative;
 	margin-left: 1em;
-	margin-top: 1em;
+	padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    border-bottom: 1px solid transparent;
+    border-top: 1px solid transparent;
+    border-right: 1px solid transparent;
+}
+
+.par.selected {
+    background-color: lightgray;
 }
 
 .material img {
@@ -221,12 +231,6 @@ ul ul  ul, ol ol ol {
 	font-size: 0.7em;
 }
 
-.noteeditor {
-	left: 5em;
-	width: 30em;
-	height: 6.5em;
-}
-
 .noteButton {
 	z-index: 3;
     height: 1.8em;
@@ -239,6 +243,35 @@ ul ul  ul, ol ol ol {
 	right:-8.2em;
 	z-index: 3;
     top: 0em;
+}
+
+.actionButtons {
+    position: absolute;
+    padding: 1em;
+    top: -1px;
+    right: -14em;
+    min-height: 100%;
+    background-color: lightgray;
+}
+
+.headerlink {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: none;
+}
+
+.par:hover .headerlink {
+    display: inherit;
+}
+
+.parContent {
+    position: relative;
+}
+
+.timButton {
+    display: block;
+    margin: auto;
 }
 
 .readline {
@@ -371,7 +404,7 @@ ul ul  ul, ol ol ol {
     content:"Add";
 }
 
-.addParButton:hover:before { 
+.addParButton:hover:before {
     content:"Add new paragraph here";
 }
 
@@ -383,7 +416,7 @@ ul ul  ul, ol ol ol {
     padding-top:0.5em;
     position: absolute;
 }
-	 
+ 
 .addParButton:hover{
 	content:"Add new paragraph here";
     display:block;
@@ -493,6 +526,10 @@ p.kannentiedotoikea-western {
 	margin-top: 1em;
     margin-left: 5em;
     margin-right: 5em;
+}
+
+#footer {
+    height: 10em;
 }
 
 h1 {
@@ -680,20 +717,15 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	/* position: absolute; */
-	height: 100%;
-	width: 45em; 
-	top: 0em;
-	left: 3px;
+	width: 45em;
 	border: 2px solid;
 	padding: 15px 5px 5px 5px;
 	border-radius: 15px;
 	text-align: left;
-	float: left;
     resize: both;
 }
 
-.editorArea,  .noteEditorArea {
+.editorArea {
 	z-index: 10;
 	position: absolute;
 	width: 100%;
@@ -704,7 +736,6 @@ a.anchor:hover {
 }
 
 .editButtonArea {
-	width: 3.5em;
 	float: left;
 }
 	
@@ -915,12 +946,6 @@ p.stem {
 		outline: none;
 	}
 	.editorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
-	 
-	.noteEditorArea {
 		position: relative;
 		top: 0em;
 		left: 0%;
@@ -1148,12 +1173,7 @@ img.console {
 		top: 0em;
 		left: 0%;
 	}
-	 
-	.noteEditorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
+
 	.notes:hover {
         margin-left: -60%;
         width: 200em;
@@ -1258,11 +1278,12 @@ img.console {
 }
 
 .menu{ 
-	left: -20px; 
+	left: 0px; 
 	top:0px;
 	width: 60px;
 	position:fixed;
 	background:#e6e6e6;
+    width: 45px;
     z-index: 501;
 }
 .menu-icon{
@@ -1274,9 +1295,9 @@ img.console {
 }
 .menu-icon:hover{
     z-index: 501;
-	filter: brightness(10);
-	-webkit-filter: brightness(10);
-	-moz-filter: brightness(10);
+	filter: brightness(1);
+	-webkit-filter: brightness(1);
+	-moz-filter: brightness(1);
 }
 .close{
 	float: right;
@@ -1293,4 +1314,64 @@ img.console {
 .tehtava {
     margin-left: 2em;
     font-size: 0.9em;
+}
+
+/* =============================== Vesan lisäyksiä ==================================*/
+
+.editorArea {
+    z-index: 110;
+    position: absolute;
+    width: 102%;
+    top: 0em;
+    left: 0;
+    min-height: 6.5em;
+    border-radius: 9px;
+}
+
+.ace_editor {
+    position: relative;
+    overflow: hidden;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-size: 12px;
+    line-height: normal;
+    direction: ltr;
+    width: 98%;
+    margin-left: 2px;
+}
+
+.timButton {
+    display: block;
+    margin: auto;
+    background: #3CC;
+    border: 0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin-bottom: 5px;
+}
+.actionButtons {
+    position: absolute;
+    border-radius: 3px;
+    padding: 1em;
+    margin: none;
+    background-color: #f8f8ff;
+    z-index: 100;
+    width: 220px;
+    min-height: 50px;
+    left: 103%;
+}  
+
+.par.selected {
+    background-color: #f8f8f8;
+}
+
+.addNote, .editPar, .addPar {
+    width: 220px;
 }

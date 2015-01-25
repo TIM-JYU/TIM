@@ -53,7 +53,7 @@ def get_param_by(query, key, default):
     if not byc: byc = default
     if not byc: return byc
     byc = handle_by(byc)
-    print("KEY: ", key, " PYC: ", byc, "|||")
+    # print("KEY: ", key, " PYC: ", byc, "|||")
     return byc
 
 
@@ -263,7 +263,7 @@ class FileParams:
 
     def get_file(self, escape_html=False):
         if self.prorgam:
-            print(self.prorgam)
+            # print(self.prorgam)
             return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
         if not self.url:
             # print("SELF.BY:", self.by.encode());
