@@ -64,11 +64,13 @@ def postParagraph():
                          'angularModule': modules,
                          'version': version})
 
-@edit_page.route('/edit/<int:doc_id>')
-@edit_page.route("/documents/<int:doc_id>")
-def editDocument(doc_id):
+@edit_page.route('/edit/<path:doc_name>')
+@edit_page.route("/documents/<path:doc_name>")
+def editDocument(doc_name):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    doc_id = timdb.documents.getDocumentId(doc_name)
+    
+    if doc_id is None or not timdb.documents.documentExists(doc_id):
         abort(404)
     if not hasEditAccess(doc_id):
         if not loggedIn():

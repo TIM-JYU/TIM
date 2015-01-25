@@ -203,6 +203,10 @@ ul ul  ul, ol ol ol {
     border-right: 1px solid transparent;
 }
 
+.par.lightselect {
+    background-color: #f7f7f7;
+}
+
 .par.selected {
     background-color: lightgray;
 }
@@ -240,18 +244,17 @@ ul ul  ul, ol ol ol {
 
 .addNoteButton {
     position: absolute;
-	right:-8.2em;
-	z-index: 3;
+    right:-8.2em;
+    z-index: 3;
     top: 0em;
 }
 
 .actionButtons {
     position: absolute;
     padding: 1em;
-    top: -1px;
-    right: -14em;
-    min-height: 100%;
-    background-color: lightgray;
+    margin: none;
+    background-color: #f8f8ff;
+    z-index: 100;
 }
 
 .headerlink {
@@ -1188,6 +1191,27 @@ img.console {
 	
 }
 
+/* Opettajanäkymän käyttäjälistaa varten ================================*/
+
+.userlist {
+	position: fixed;
+	top: 13px;
+	right: 240px;
+	padding: 5px;
+	/*width: 240px;*/
+	word-wrap:break-word;
+	background-color: #e6e6e6;
+	z-index: 501;
+	overflow: auto;
+	overflow-x: hidden;
+}
+
+.userentry {
+     font-family: Verdana;
+     font-size: 12px;
+     color: #a6b6f6;
+}
+
 /* Sisällysluetteloa varten =============================================*/
 
 .sidebar{
@@ -1278,12 +1302,11 @@ img.console {
 }
 
 .menu{ 
-	left: 0px; 
+	left: -20px; 
 	top:0px;
 	width: 60px;
 	position:fixed;
 	background:#e6e6e6;
-    width: 45px;
     z-index: 501;
 }
 .menu-icon{
@@ -1295,9 +1318,9 @@ img.console {
 }
 .menu-icon:hover{
     z-index: 501;
-	filter: brightness(1);
-	-webkit-filter: brightness(1);
-	-moz-filter: brightness(1);
+	filter: brightness(10);
+	-webkit-filter: brightness(10);
+	-moz-filter: brightness(10);
 }
 .close{
 	float: right;
@@ -1375,3 +1398,36 @@ img.console {
 .addNote, .editPar, .addPar {
     width: 220px;
 }
+
+.listVideoRunDiv {
+  /* margin-left: 2em; */
+  margin-top: -1.5em;
+  margin-bottom: -1.2em; 
+}
+
+.csArgsArea {
+  width: 90%;
+  margin-top: 0em;
+  margin-bottom: 0em;
+  border-style: none;
+  border-width: 0px;
+  border-left: thin solid #0066FF;
+}
+
+.csArgsDiv {
+  width: 100%;
+}
+
+.csArgsDiv span {
+  display: block;
+  overflow: hidden;
+  padding: 0 5px;
+}
+
+.csArgsDiv label {
+  margin-left: 0px;
+  float: left;
+  font-size: 0.96em;
+  
+}
+

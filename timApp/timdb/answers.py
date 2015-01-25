@@ -15,6 +15,12 @@ class Answers(TimDbBase):
         """
 
         cursor = self.db.cursor()
+
+        if len(user_ids) == 1:
+            existing_answers = self.getAnswers(user_ids[0], task_id)
+            if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
+                return
+
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on) VALUES (?,?,?,CURRENT_TIMESTAMP)',
                        [task_id, content, points])
         answer_id = cursor.lastrowid
@@ -43,6 +49,31 @@ class Answers(TimDbBase):
                           ORDER BY answered_on DESC""", [task_id, user_id])
 
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUsersForTask(self, task_id: 'str') -> 'list(dict)':
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+                SELECT id, name FROM User
+                WHERE id IN (
+                    SELECT user_id FROM UserAnswer
+                    WHERE answer_id IN (
+                        SELECT id FROM Answer WHERE task_id = ?
+                    )
+                )
+            """, [task_id])
+            
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
+        users = []
+        for task_id in task_ids:
+            for user in self.getUsersForTask(task_id):
+               if not user in users:
+                   users.append(user)
+        return users
 
     @contract
     def getAnswersForGroup(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':

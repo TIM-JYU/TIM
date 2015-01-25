@@ -7,6 +7,7 @@ import io
 import codecs
 import collections
 import re
+import sys
 
 from flask import Flask, redirect, url_for, flash
 from flask import stream_with_context
@@ -197,11 +198,59 @@ def getDocuments():
     timdb = getTimDb()
     docs = timdb.documents.getDocuments(historylimit=versions)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    
+    req_folder = request.args.get('folder')
+    if req_folder is not None and len(req_folder) == 0:
+        req_folder = None
+        
+    #print('req_folder is "{}"'.format(req_folder))
+    
+    folders = []
+    finalDocs = []
+    
     for doc in allowedDocs:
+        fullname = doc['name']
+        
+        if req_folder:
+            if not fullname.startswith(req_folder + '/'):
+                continue
+            docname = fullname[len(req_folder) + 1:]
+        else:
+            docname = fullname
+        
+        if '/' in docname:
+            slash = docname.find('/')
+            foldername = docname[:slash]
+            
+            duplicate = False
+            for f in folders:
+                if f['name'] == foldername:
+                    duplicate = True
+                    break
+            if duplicate:
+                continue
+            
+            fullfolder = foldername if req_folder is None else req_folder + '/' + foldername            
+            folders.append({
+                'isFolder': True,
+                'name': foldername,
+                'fullname' : fullfolder,
+                'items': [],
+                'canEdit': False,
+                'isOwner': False,
+                'owner': timdb.users.getOwnerGroup(doc['id'])
+            })
+            continue
+
+        doc['name'] = docname
+        doc['fullname'] = fullname
+        doc['isFolder'] = False
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
         doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
-    return jsonResponse(allowedDocs)
+        finalDocs.append(doc)
+        
+    return jsonResponse(folders + finalDocs)
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
@@ -237,9 +286,16 @@ def createDocument():
         return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
     jsondata = request.get_json()
     docName = jsondata['doc_name']
+    
+    if docName.startswith('/') or docName.endswith('/'):
+        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
+    
+    if re.match('^(\d)*$', docName) is not None:
+        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
+    
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonResponse({'id' : docId.id})
+    return jsonResponse({'id' : docId.id, 'name' : docName})
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
@@ -368,7 +424,7 @@ def setReadParagraph(doc_id, specifier):
 @app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
-    
+
     # Assuming task_id is of the form "22.palindrome"
     pieces = task_id.split('.')
     if len(pieces) != 2:
@@ -403,7 +459,7 @@ def saveAnswer(plugintype, task_id):
     if not 'web' in jsonresp:
         return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
     
-    if 'save' in jsonresp:
+    if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
         saveObject = jsonresp['save']
         
         #Save the new state
@@ -414,7 +470,7 @@ def saveAnswer(plugintype, task_id):
             points = None
             tags = []
         timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
-    
+
     return jsonResponse({'web':jsonresp['web']})
 
 def getPluginMarkup(doc_id, plugintype, task_id):
@@ -518,4 +574,4 @@ def testLogin(email):
 def startApp():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
-    app.run(host='0.0.0.0',port=5000)
+    app.run(host='0.0.0.0', port=5000, use_reloader='pudb' not in sys.modules)

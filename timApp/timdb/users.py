@@ -140,7 +140,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, name FROM User WHERE id = ?', [user_id])
+        cursor.execute('SELECT id, name, real_name, email FROM User WHERE id = ?', [user_id])
         return cursor.fetchone()
 
     @contract
@@ -280,8 +280,7 @@ class Users(TimDbBase):
                               (SELECT UserGroup_id FROM Block WHERE Block.id = ?))
                               ))""", [user_id, block_id, block_id])
         result = cursor.fetchall()
-        assert len(result) <= 1, 'rowcount should be 1 at most'
-        return len(result) == 1
+        return len(result) > 0
 
     @contract
     def userHasEditAccess(self, user_id: 'int', block_id: 'int') -> 'bool':

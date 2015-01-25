@@ -100,17 +100,20 @@ class GitClient:
     def __getLatestCommit(self, path : 'str') -> 'Commit|None':
         cur_commit = self.repo[self.repo.head.target]
         last_commit = cur_commit
-        file_id = cur_commit.tree[path].oid
+        file_obj = cur_commit.tree[path]
         while len(cur_commit.parents) > 0:
             cur_commit = cur_commit.parents[0]
             if not self.__itemExists(cur_commit, path):
+                #print('__getLastCommit: no exist in {}, choosing {}'.format(cur_commit.oid.hex, last_commit.oid.hex))
                 return last_commit
 
-            new_file_id = cur_commit.tree[path].oid
-            if new_file_id.raw != file_id.raw:
+            new_file_obj = cur_commit.tree[path]
+            if new_file_obj.oid != file_obj.oid or new_file_obj.filemode != file_obj.filemode:
+                #print('__getLastCommit: file id {} differs, choosing {}'.format(cur_commit.oid.hex, last_commit.oid.hex))
                 return last_commit
 
             last_commit = cur_commit
+        print('__getLastCommit: oid {}, exists={}'.format(cur_commit.oid.hex), self.__itemExists(path))
         return cur_commit if self.__itemExists(path) else None
 
     @contract

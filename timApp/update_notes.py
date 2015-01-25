@@ -396,7 +396,7 @@ def delete_old(timdb):
         cursor.execute("delete from BlockViewAccess where Block_id = ?", [row[0]])
         cursor.execute("delete from BlockEditAccess where Block_id = ?", [row[0]])
         
-        git.remove('blocks/notes/' + str(row[0]))
+        git.rm('blocks/notes/' + str(row[0]))
     cursor.execute("delete from Block where type_id = 2")
     
     timdb.db.commit()

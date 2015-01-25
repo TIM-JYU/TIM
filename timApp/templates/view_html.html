@@ -39,7 +39,9 @@
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
-        var canEdit = false;
+        var canEdit = {{editable|tojson}};
+        var startIndex = {{start_index|tojson}};
+        var refererPath = {{request.path|tojson|safe}};
     </script>
 {% endblock %}
 {% block content %}
@@ -56,10 +58,10 @@
                     <span ng-repeat="entry in indexTable">
                         <li ng-class="entry.state"
                             ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                            <a ng-class="entry.style" href="{{entry.target}}">{{entry.text}}</a>
+                            <a class="indexentry" ng-class="entry.style" onclick="autoHide()" href="{{entry.target}}">{{entry.text}}</a>
                             <ul ng-show="entry.state == 'exp'">
                                 <li ng-repeat="subentry in entry.items">
-                                    <a class="{{subentry.style}}" href="{{subentry.target}}">{{subentry.text}}</a>
+                                    <a ng-class="subentry.style" onclick="autoHide()" href="{{subentry.target}}">{{subentry.text}}</a>
                                 </li>
                             </ul>
                         </li>
@@ -68,13 +70,25 @@
                 {% endraw %}
             </div>
         </div>
-
-        {% for t in text %}
-            <div id="{{ loop.index0 }}" class="par">
-                <div class="parContent">
-                    {{ t|safe }}
-                </div>
+        
+        {% if plugin_users|length > 0 %}
+            <div id="users" class="userlist">
+                {% for user in plugin_users %}
+                    <div>
+                       <a class="userentry" href="?user={{user.id}}" target="_self">{{ user.name|safe }}</a>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        {% endif %}
+
+        <div id="pars">
+            {% for t in text %}
+                <div class="par">
+                    <div class="parContent">
+                        {{ t|safe }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}

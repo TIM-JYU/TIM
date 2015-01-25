@@ -5,6 +5,7 @@ import requests
 import requests.exceptions
 import os
 import subprocess
+import signal
 from contracts import contract, new_contract
 
 EPHEMERAL_URL = 'http://127.0.0.1:8001'
@@ -13,8 +14,10 @@ EPHEMERAL_PATH = os.path.join("..", "Ephemeral", "dist", "build", "Ephemeral")
 new_contract('bytes', bytes)
 new_contract('Response', requests.Response)
 
+def preexec_function():
+    os.setpgrp()
 
-def launch_ephemeral(basedir=''):
+def launch_ephemeral(basedir='', ignore_signals=False):
     path = os.path.join(basedir, EPHEMERAL_PATH)
     log_path = os.path.join(path, "log")
     if not os.path.exists(log_path):
@@ -22,7 +25,8 @@ def launch_ephemeral(basedir=''):
 
     old = os.getcwd()
     os.chdir(path)
-    p = subprocess.Popen([os.path.join(".", "Ephemeral"), "-p", "8001"])
+    p = subprocess.Popen([os.path.join(".", "Ephemeral"), "-p", "8001"],
+                         preexec_fn=preexec_function if ignore_signals else None)
     os.chdir(old)
     return p
 

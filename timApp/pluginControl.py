@@ -10,6 +10,7 @@ import yaml.parser
 import yaml.scanner
 from htmlSanitize import sanitize_html
 import json
+import html
 
 
 def parse_plugin_values(nodes):
@@ -64,10 +65,31 @@ def get_block_yaml(block):
 def get_error_html(plugin_name, message):
     return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
 
+def find_task_ids(blocks, doc_id):
+    task_ids = []
+    final_html_blocks = []
+    plugins = {}
+    for idx, block in enumerate(blocks):
+        found_plugins = find_plugins(block)
+        if len(found_plugins) > 0:
+            plugin_info = parse_plugin_values(found_plugins)
+            error_messages = []
+            for vals in plugin_info:
+                plugin_name = vals['plugin']
+                if 'error' in vals:
+                    error_messages.append(get_error_html(plugin_name, vals['error']))
+                    continue
+
+                if not plugin_name in plugins:
+                    plugins[plugin_name] = OrderedDict()
+                task_ids.append("{}.{}".format(doc_id, vals['taskId']))
+    
+    return task_ids
+
 
 # Take a set of blocks and search for plugin markers,
 # replace contents with plugin.
-def pluginify(blocks, user, answer_db, doc_id, user_id):
+def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
     final_html_blocks = []
     plugins = {}
     for idx, block in enumerate(blocks):
@@ -84,6 +106,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
                 if not plugin_name in plugins:
                     plugins[plugin_name] = OrderedDict()
                 vals['markup']["user_id"] = user
+                vals['markup']["browse_answers"] = browseAnswers
                 task_id = "{}.{}".format(doc_id, vals['taskId'])
                 states = answer_db.getAnswers(user_id, task_id)
 
@@ -146,6 +169,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
                 continue
             plugin_htmls = json.loads(response)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+                if browseAnswers:
+                    html += make_browse_buttons(user_id, markup['taskID'], answer_db)
                 final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                          plugin_url,
                                                                                          html)
@@ -153,6 +178,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
             for idx, val in plugin_block_map.items():
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
+                    if browseAnswers:
+                        html += make_browse_buttons(user_id, val['taskID'], answer_db)
                 except PluginException as e:
                     final_html_blocks[idx] = get_error_html(plugin_name, str(e))
                     continue
@@ -162,6 +189,31 @@ def pluginify(blocks, user, answer_db, doc_id, user_id):
 
     return final_html_blocks, js_paths, css_paths, modules
 
+
+def make_browse_buttons(user_id, task_id, answer_db):
+    states = answer_db.getAnswers(user_id, task_id)
+    if len(states) > 1:
+        formatted = ""
+        content_obj = json.loads(states[len(states)-1]["content"])
+        if isinstance(content_obj, dict):
+            for key, val in content_obj.items():
+                formatted += key + "\n---------------\n" + str(val) + "\n\n"
+        elif isinstance(content_obj, list):
+            for v in content_obj:
+                formatted += "List element:" + "\n---------------\n" + str(v) + "\n\n"
+        else:
+            formatted = str(content_obj)
+        first = "<br/>First answer:<br/><pre>{}</pre>".format(html.escape(formatted))
+    else:
+        first = ""
+    return """
+       <div class="answerbuttons">
+           <input type="button" value="<-">
+           {} / {}
+           <input type="button" value="->">
+           {}
+       </div>
+    """.format(len(states), len(states), first)
 
 # p is json of plugin requirements of the form:
 # {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}

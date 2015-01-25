@@ -1,4 +1,6 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules));
+var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules), function($locationProvider){
+    $locationProvider.html5Mode(true);
+});
 
 timApp.controller("ViewCtrl", ['$scope',
     '$http',
@@ -6,111 +8,374 @@ timApp.controller("ViewCtrl", ['$scope',
     '$upload',
     '$injector',
     '$compile',
-    function (sc, http, q, $upload, $injector, $compile) {
+    '$location',
+    function (sc, http, q, $upload, $injector, $compile, $location) {
         http.defaults.headers.common.Version = version.hash;
-        sc.selectedPar = "";
+        http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
         sc.canEdit = canEdit;
-        var EDITOR_CLASS = "noteEditorArea";
-        var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
+        sc.startIndex = startIndex;
+        sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
+        sc.editing = false;
+        var NOTE_EDITOR_CLASS = "editorArea";
+        var NOTE_EDITOR_CLASS_DOT = "." + NOTE_EDITOR_CLASS;
+        var NOTE_CANCEL_BUTTON = ".timButton.cancelNote";
+        var NOTE_DELETE_BUTTON = ".timButton.deleteNote";
+        var NOTE_SAVE_BUTTON = ".timButton.saveNote";
+        var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
+        var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
 
-        sc.toggleNoteEditor = function ($par, options) {
+        var EDITOR_CLASS = "editorArea";
+        var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
+        var PAR_CANCEL_BUTTON = ".timButton.cancelPar";
+        var PAR_DELETE_BUTTON = ".timButton.deletePar";
+        var PAR_SAVE_BUTTON = ".timButton.savePar";
+        var PAR_ADD_BUTTON_CLASS = "timButton addPar";
+        var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
+        var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
+        var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+
+        sc.getParIndex = function ($par) {
+            return $par.index() + sc.startIndex;
+        };
+
+        sc.getElementByParIndex = function (index) {
+            return $("#pars").children().eq(index - sc.startIndex);
+        };
+
+        sc.getNoteEditorFields = function (parElement, editorArea) {
+            var editorElem = editorArea.find('.editor')[0];
+            return {
+                par_id: sc.getParIndex(parElement),
+                content: ace.edit(editorElem).getSession().getValue(),
+                access: editorArea.find('input[name=access]:checked').val(),
+                difficult: editorArea.find('input[name=difficult]').is(':checked'),
+                unclear: editorArea.find('input[name=unclear]').is(':checked')
+            };
+        };
+
+        sc.toggleParEditor = function ($par, options) {
             if ($par.children(EDITOR_CLASS_DOT).length) {
                 $par.children().remove(EDITOR_CLASS_DOT);
+                sc.editing = false;
             } else {
+                $(EDITOR_CLASS_DOT).remove();
+
                 var $div = $("<div>", {class: EDITOR_CLASS});
-                $div.loadTemplate("/static/templates/noteEditor.html?_=" + (new Date).getTime(), {}, {
+                $div.loadTemplate("/static/templates/parEditor.html?_=" + (new Date).getTime(), {}, {
                     success: function () {
+                        var editorScope = sc.$new();
+                        var aceEdit = sc.applyAceEditor($div.find('.editor')[0]);
+                        editorScope.onFileSelect = function (url, $files) {
+                            //$files: an array of files selected, each file has name, size, and type.
+                            for (var i = 0; i < $files.length; i++) {
+                                var file = $files[i];
+                                editorScope.upload = $upload.upload({
+                                    url: url,
+                                    method: 'POST',
+                                    file: file
+                                }).progress(function (evt) {
+                                    editorScope.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
+                                }).success(function (data, status, headers, config) {
+                                    editorScope.uploadedFile = '/images/' + data.file;
+                                    editorScope.progress = 'Uploading... Done!';
+                                    aceEdit.insert("![Image](" + editorScope.uploadedFile + ")");
+                                }).error(function (data, status, headers, config) {
+                                    editorScope.progress = 'Error while uploading: ' + data.error;
+                                });
+                            }
+                        };
+
                         if (!options.showDelete) {
-                            $div.find(".deleteButton").hide();
+                            $div.find(PAR_DELETE_BUTTON).hide();
                         }
                         else {
-                            var data = $par.data();
-                            if (!data.editable) {
-                                alert('You cannot edit this note.');
-                                return;
-                            }
-                            $div.find('.noteeditor').text(data.content);
-                            $div.find('input[name=access][value=' + data.access + ']').prop('checked', true);
-                            $div.find('input[name=difficult]').prop('checked', data.difficult);
-                            $div.find('input[name=unclear]').prop('checked', data.unclear);
+                            $(".par.new").remove();
+                            aceEdit.getSession().setValue("Loading paragraph text...");
+                            http.get('/getBlock/' + sc.docId + "/" + sc.getParIndex($par)).
+                                success(function (data, status, headers, config) {
+                                    aceEdit.getSession().setValue(data.md);
+                                }).
+                                error(function (data, status, headers, config) {
+                                    alert(data.error);
+                                });
                         }
-
-                        var editor = new ace.edit($div.find('.noteeditor')[0]);
-                        editor.setTheme("ace/theme/eclipse");
-                        editor.renderer.setPadding(10, 10, 10, 10);
-                        editor.getSession().setMode("ace/mode/markdown");
-                        editor.getSession().setUseWrapMode(false);
-                        editor.getSession().setWrapLimitRange(0, 79);
-                        editor.setOptions({maxLines: 40, minLines: 3});
-                        //$('.' + elem.par).get()[0].focus();
-                        editor.focus();
+                        $compile($div[0])(editorScope);
                         $par.append($div);
+                        sc.editing = true;
                     }
                 });
             }
         };
 
+        sc.toggleNoteEditor = function ($par, options) {
+            if ($par.children(NOTE_EDITOR_CLASS_DOT).length) {
+                $par.children().remove(NOTE_EDITOR_CLASS_DOT);
+                sc.editing = false;
+            } else {
+                $(".par.new").remove();
+                $(EDITOR_CLASS_DOT).remove();
+                var $div = $("<div>", {class: NOTE_EDITOR_CLASS});
+                $div.loadTemplate("/static/templates/noteEditor.html?_=" + (new Date).getTime(), {}, {
+                    success: function () {
+                        if (options.isNew) {
+                            $div.find(NOTE_DELETE_BUTTON).hide();
+                            $div.data({});
+                        }
+                        else {
+                            var data = options.noteData;
+                            if (!data.editable) {
+                                alert('You cannot edit this note.');
+                                return;
+                            }
+                            $div.find('.editor').text(data.content);
+                            $div.find('input:radio[name=access]').val([data.access]);
+                            $div.find('input[name=difficult]').prop('checked', data.difficult);
+                            $div.find('input[name=unclear]').prop('checked', data.unclear);
+                        }
+                        sc.applyAceEditor($div.find('.editor')[0]);
+                        $div.data(data);
+                        $par.append($div);
+                        sc.editing = true;
+                    }
+                });
+            }
+        };
+
+        sc.forEachParagraph = function (func) {
+            $('.paragraphs .par').each(func);
+        };
+
+        sc.applyAceEditor = function (element) {
+            var editor = new ace.edit(element);
+            editor.setTheme("ace/theme/eclipse");
+            editor.renderer.setPadding(10, 10, 10, 10);
+            editor.getSession().setMode("ace/mode/markdown");
+            editor.getSession().setUseWrapMode(false);
+            editor.getSession().setWrapLimitRange(0, 79);
+            editor.setOptions({maxLines: 40, minLines: 3});
+            //$('.' + elem.par).get()[0].focus();
+            editor.focus();
+            return editor;
+        };
+
+        // Event handlers
+
         var ua = navigator.userAgent,
             eventName = (ua.match(/iPad/i)) ? "touchstart" : "click";
 
-        $(document).on(eventName, ".readline", function (e) {
-            var par_id = $(this).parents('.par').attr('id');
+        sc.addEvent = function (className, func) {
+            $(document).on(eventName, className, func);
+        };
+
+        sc.addEvent(PAR_EDIT_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent();
+            $(".par.new").remove();
+            sc.toggleActionButtons($par, false, false, null);
+            sc.toggleParEditor($par, {showDelete: true});
+        });
+
+        sc.addEvent(PAR_ADD_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent();
+            $(".par.new").remove();
+            sc.toggleActionButtons($par, false, false, null);
+            var $newpar = $("<div>", {class: "par new"})
+                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+
+            if ($(e.target).hasClass("above")) {
+                $par.before($newpar);
+            }
+            else if ($(e.target).hasClass("below")) {
+                $par.after($newpar);
+            }
+
+            sc.toggleParEditor($newpar, {showDelete: false});
+        });
+
+        sc.addEvent(PAR_CANCEL_BUTTON, function (e) {
+            var $par = $(this).parent().parent().parent();
+            if ($par.hasClass("new")) {
+                $par.remove();
+            }
+            else {
+                $(this).parent().parent().remove(); // remove editor only
+            }
+            sc.editing = false;
+        });
+
+        sc.addEvent(PAR_DELETE_BUTTON, function (e) {
+            var $par = $(this).parents('.par');
+            var par_id = sc.getParIndex($par);
+
+            http.get('/deleteParagraph/' + sc.docId + "/" + par_id).
+                success(function (data, status, headers, config) {
+                    http.defaults.headers.common.Version = data.version;
+                    $par.remove();
+                }).
+                error(function (data, status, headers, config) {
+                    alert("Failed to remove paragraph: " + data.error);
+                });
+
+            sc.editing = false;
+        });
+
+        sc.addEvent(PAR_SAVE_BUTTON, function (e) {
+            var $par = $(this).parents('.par');
+            var par_id = sc.getParIndex($par);
+            var editorElem = $par.find('.editor')[0];
+            var text = ace.edit(editorElem).getSession().getValue();
+            if ($par.hasClass("new")) {
+                var url = '/newParagraph/';
+            } else {
+                var url = '/postParagraph/';
+            }
+            http.post(url, {
+                "docId": sc.docId,
+                "par": par_id,
+                "text": text
+            }).success(function (data, status, headers, config) {
+                http.defaults.headers.common.Version = data.version;
+                var len = data.texts.length;
+                for (var i = len - 1; i >= 0; i--) {
+                    $par.after($("<div>", {class: "par"})
+                        .append($("<div>", {class: "parContent"}).html($compile(data.texts[i])(sc))));
+                }
+                $par.remove();
+            }).error(function (data, status, headers, config) {
+                alert("Failed to save paragraph: " + data.error);
+            });
+
+            sc.editing = false;
+        });
+
+        sc.addEvent(".readline", function (e) {
+            var par_id = sc.getParIndex($(this).parents('.par'));
             $(this).hide();
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + (new Date).getTime())
                 .success(function (data, status, headers, config) {
-                    // TODO: Maybe fetch notes only for this paragraph and not the
-                    // whole document.
-                    sc.getReadPars();
+                    // No need to do anything here
                 }).error(function (data, status, headers, config) {
-                    alert('Could not save the note.');
+                    alert('Could not save the read marking.');
                 });
         });
 
-        $(document).on(eventName, ".addNoteButton", function (e) {
-            var $par = $(document.getElementById(sc.selectedPar));
-            sc.toggleNoteEditor($par, {showDelete: false});
+        sc.addEvent(NOTE_ADD_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent();
+            sc.toggleActionButtons($par, false, false, null);
+            sc.toggleNoteEditor($par, {isNew: true});
         });
 
-        $(document).on(eventName, ".editButtonArea .cancelButton", function (e) {
+        sc.addEvent(NOTE_CANCEL_BUTTON, function (e) {
             $(this).parent().parent().remove();
+            sc.editing = false;
         });
 
-        $(document).on(eventName, ".editButtonArea .deleteButton", function (e) {
+        sc.addEvent(NOTE_DELETE_BUTTON, function (e) {
             var noteElement = $(this).parents('.note');
-
-            var fields = sc.getEditorFields(noteElement.parents('.par'),
-                noteElement.children(EDITOR_CLASS));
+            var $par = $(this).parents('.par');
+            var par_id = sc.getParIndex($par);
+            var $editor = $par.find(NOTE_EDITOR_CLASS_DOT);
+            var data = $editor.data();
             http.post('/deleteNote', {
-                par_id: fields.par_id,
+                par_id: par_id,
                 doc_id: sc.docId,
-                note_index: noteElement.data().note_index
+                note_index: data.note_index
             }).success(function (data, status, headers, config) {
                 // TODO: Maybe fetch notes only for this paragraph and not the
                 // whole document.
                 sc.getNotes();
+                $editor.remove();
+                sc.editing = false;
             }).error(function (data, status, headers, config) {
                 alert('Could not save the note.');
             });
         });
 
-        sc.getEditorFields = function (parElement, noteEditorArea) {
-            return {
-                par_id: parElement.attr('id'),
-                content: ace.edit(noteEditorArea.find('.noteeditor')[0]).getSession().getValue(),
-                access: noteEditorArea.find('input[name=access]:checked').val(),
-                difficult: noteEditorArea.find('input[name=difficult]').is(':checked'),
-                unclear: noteEditorArea.find('input[name=unclear]').is(':checked')
-            };
+        sc.addEvent(NOTE_SAVE_BUTTON, function (e) {
+            sc.saveNote($(this).parent().parent().parent(), $(this).parent().parent().data());
+        });
+
+        sc.addEvent('.paragraphs .parContent', function (e) {
+            if (sc.editing)
+                return;
+            
+            var tag = $(e.target).prop("tagName");
+
+            // Don't show paragraph menu on these specific tags
+            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'A')
+                return;
+
+            var $par = $(this).parent();
+            var coords = { left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top };
+            var toggle1 = $par.find(".actionButtons").length === 0;
+            var toggle2 = $par.hasClass("lightselect");
+
+            $(".par.selected").removeClass("selected");
+            $(".par.lightselect").removeClass("lightselect");
+            $(".actionButtons").remove();
+            sc.toggleActionButtons($par, toggle1, toggle2, coords);
+        });
+
+        sc.addEvent(".noteContent", function () {
+            sc.toggleNoteEditor($(this).parent().parent().parent(), {isNew: false, noteData: $(this).parent().data()});
+        });
+
+
+        // Note-related functions
+
+        sc.toggleActionButtons = function ($par, toggle1, toggle2, coords) {
+            if (toggle2) {
+                // Clicked twice successively
+                $par.addClass("selected");
+                var $actionDiv = $("<div>", {class: 'actionButtons'});
+                var button_width = $par.outerWidth() / 4;
+                $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
+                if (sc.canEdit) {
+                    $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
+                    $actionDiv.append($("<button>", {
+                        class: PAR_ADD_BUTTON_CLASS + ' above',
+                        text: 'Add paragraph above',
+                        width: button_width
+                    }));
+                    $actionDiv.append($("<button>", {
+                        class: PAR_ADD_BUTTON_CLASS + ' below',
+                        text: 'Add paragraph below',
+                        width: button_width
+                    }));
+                }
+                $actionDiv.offset(coords);
+                $actionDiv.css('position', 'absolute'); // IE needs this
+                $par.prepend($actionDiv);
+            } else if (toggle1) {
+                // Clicked once
+                $par.addClass("lightselect");
+            } else {
+                $par.children().remove(".actionButtons");
+                $par.removeClass("selected");
+                $par.removeClass("lightselect");
+            }
         };
 
-        $(document).on(eventName, ".editButtonArea .parSaveButton", function (e) {
-            if ($(this).parents('.note').length) {
-                var noteElement = $(this).parents('.note');
+        sc.getNoteHtml = function (notes) {
+            var $noteDiv = $("<div>", {class: 'notes'});
+            for (var i = 0; i < notes.length; i++) {
+                var classes = ["note"];
+                for (var j = 0; j < sc.noteClassAttributes.length; j++) {
+                    if (notes[i][sc.noteClassAttributes[j]]) {
+                        classes.push(sc.noteClassAttributes[j]);
+                    }
+                }
+                $noteDiv.append($("<div>", {class: classes.join(" ")})
+                    .data(notes[i])
+                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
+            }
+            return $noteDiv;
+        };
 
-                var fields = sc.getEditorFields(noteElement.parents('.par'),
-                    noteElement.children(EDITOR_CLASS_DOT));
+        sc.saveNote = function ($par, data) {
+            var fields = sc.getNoteEditorFields($par, $par.find(NOTE_EDITOR_CLASS_DOT));
+            if (!$.isEmptyObject(data)) {
                 // save edits to existing note
                 http.post('/editNote', {
                     par_id: fields.par_id,
@@ -119,7 +384,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     access: fields.access,
                     difficult: fields.difficult,
                     unclear: fields.unclear,
-                    note_index: noteElement.data().note_index
+                    note_index: data.note_index
                 }).success(function (data, status, headers, config) {
                     // TODO: Maybe fetch notes only for this paragraph and not the
                     // whole document.
@@ -128,8 +393,6 @@ timApp.controller("ViewCtrl", ['$scope',
                     alert('Could not save the note.');
                 });
             } else {
-                var fields = sc.getEditorFields($(this).parents('.par'),
-                    $(this).parents('.par').children(EDITOR_CLASS_DOT));
                 http.post('/postNote', {
                     par_id: fields.par_id,
                     doc_id: sc.docId,
@@ -140,64 +403,15 @@ timApp.controller("ViewCtrl", ['$scope',
                 }).success(function (data, status, headers, config) {
                     // TODO: Maybe fetch notes only for this paragraph and not the
                     // whole document.
-                    $(EDITOR_CLASS_DOT).remove();
+                    $(NOTE_EDITOR_CLASS_DOT).remove();
+                    sc.editing = false;
                     sc.getNotes();
                 }).error(function (data, status, headers, config) {
                     alert('Could not save the note.');
                 });
             }
-        });
-
-        $(document).on(eventName, '.paragraphs .parContent', function () {
-            var id = $(this).parent().attr('id');
-            if (sc.selectedPar !== "") {
-                sc.toggleActionbuttons(sc.selectedPar, false);
-            }
-            if (sc.selectedPar !== id) {
-                sc.selectedPar = id;
-                sc.toggleActionbuttons(sc.selectedPar, true);
-            } else {
-                sc.selectedPar = "";
-            }
-        });
-
-        $(document).on(eventName, ".noteContent", function () {
-            sc.toggleNoteEditor($(this).parent(), {showDelete: true});
-        });
-
-        sc.toggleActionbuttons = function (par, toggle) {
-            var $par = $(document.getElementById(par));
-            if (toggle) {
-                var $actionDiv = $("<div>", {class: 'actionButtons'});
-                $actionDiv.append($("<button>", {class: 'addNoteButton', text: 'Comment/note'}));
-                $par.append($actionDiv);
-            } else {
-                $par.children().remove(".actionButtons");
-            }
-        };
-
-        sc.getNoteHtml = function (notes) {
-            var $noteDiv = $("<div>", {class: 'notes'});
-            for (var i = 0; i < notes.length; i++) {
-                var classes = ["note"];
-                if (notes[i].difficult) {
-                    classes.push("difficult")
-                }
-                if (notes[i].unclear) {
-                    classes.push("unclear")
-                }
-                if (notes[i].private) {
-                    classes.push("private")
-                }
-                $noteDiv.append($("<div>", {class: classes.join(" ")})
-                    .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
-            }
-            return $noteDiv;
-        };
-
-        sc.forEachParagraph = function (func) {
-            $('.paragraphs .par').each(func);
+            var $editor = $par.find(NOTE_EDITOR_CLASS_DOT);
+            $editor.remove();
         };
 
         sc.getNotes = function () {
@@ -219,11 +433,12 @@ timApp.controller("ViewCtrl", ['$scope',
                     }
                     pars[pi].notes.push(data[i]);
                 }
-                sc.forEachParagraph(function () {
-                    if (this.id in pars) {
-                        var $notediv = sc.getNoteHtml(pars[this.id].notes);
+                sc.forEachParagraph(function (index, elem) {
+                    var parIndex = index + sc.startIndex;
+                    if (parIndex in pars) {
+                        var $notediv = sc.getNoteHtml(pars[parIndex].notes);
                         $(this).append($notediv);
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.id]);
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
                     }
                 });
 
@@ -246,10 +461,11 @@ timApp.controller("ViewCtrl", ['$scope',
                     }
                     pars[pi].readStatus = readPar.status;
                 }
-                sc.forEachParagraph(function () {
+                sc.forEachParagraph(function (index, elem) {
+                    var parIndex = index + sc.startIndex;
                     var classes = ["readline"];
-                    if (this.id in pars && 'readStatus' in pars[this.id]) {
-                        classes.push(pars[this.id].readStatus);
+                    if (parIndex in pars && 'readStatus' in pars[parIndex]) {
+                        classes.push(pars[parIndex].readStatus);
                     } else {
                         classes.push("unread");
                     }
@@ -260,6 +476,19 @@ timApp.controller("ViewCtrl", ['$scope',
                 alert("Could not fetch reading info.");
             });
         };
+
+        sc.setHeaderLinks = function () {
+            $(".par h1, .par h2, .par h3, .par h4, .par h5, .par h6").each(function () {
+                var $par = $(this).parent();
+                $par.append($("<a>", {
+                    text: '#',
+                    href: '#' + $(this).attr('id'),
+                    class: 'headerlink'
+                }));
+            });
+        };
+
+        // Index-related functions
 
         sc.totext = function (str) {
             if (str.indexOf('{') > 0) {
@@ -370,8 +599,9 @@ timApp.controller("ViewCtrl", ['$scope',
             return newState;
         };
 
+        // Load index, notes and read markings
+        sc.setHeaderLinks();
         sc.indexTable = [];
-
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
