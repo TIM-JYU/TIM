@@ -3,7 +3,7 @@
      "header": "Java", 
      "path": "user",
      "type": "java", 
-     "byCode": "KUKKUU", 
+     "rbyCode": "KUKKUU", 
      "break2": "String vaihdaSukuEtu", 
      "break3": "}", 
      "break0": "String vaihdaEtuSuku", 
@@ -12,7 +12,8 @@
      "break1": "}"
  }, 
  "input": {
-     "usercode": "    MOI!    TEE", 
+     "rusercode": "    MOI!    TEE", 
+     "usercode": "", 
      "isInput": false, 
      "userargs": "", 
      "userinput": "", 
@@ -24,6 +25,7 @@
            "121.funktio"
       }
  }, 
- "state": {"usercode": "        TEE"}
+ "rstate": {"usercode": "        TEE"},
+ "state": {}
 }
  

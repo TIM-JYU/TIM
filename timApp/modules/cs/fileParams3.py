@@ -443,7 +443,7 @@ def get_file_parts_to_output(query, show_html):
         n1, n2 = p0.scan_line_parts_range(i,n2+1,lines)
         part = p0.join_lines(lines,n1,n2,show_html)
         if i % 2 != 0:
-            if j < len(p0.reps) and p0.reps[j]:
+            if j < len(p0.reps) and p0.reps[j] and p0.reps[j]["bc"]:
                 part = p0.reps[j]["bc"]
             #else:
             #    p0.reps[j]["bc"] = part
