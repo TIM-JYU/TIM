@@ -46,9 +46,8 @@ docker run --name GraphVizPlug -p 60000:5000 -d -t -i haskellplugins /bin/bash -
 # Start tim
 if [ "$1" = "sshd" ] ; then
     docker run --name tim -p 50000:5000 -p 49999:22 -v $PWD:/service -d -t -i tim /bin/bash -c '/usr/sbin/sshd -D ; /bin/bash'
+    # Initialize the database in case it doesn't exist yet
+    docker exec tim /bin/bash -c 'cd /service/timApp && python3 initdb2.py'
 else
-    docker run --name tim -p 50000:5000 -v $PWD:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+    docker run --name tim -p 50000:5000 -v $PWD:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && python3 initdb2.py && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
 fi
-
-# Initialize the database in case it doesn't exist yet
-docker exec tim /bin/bash -c 'cd /service/timApp && python3 initdb2.py'
