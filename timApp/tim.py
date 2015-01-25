@@ -579,6 +579,30 @@ def signupWithEmail():
 
     return redirect(session.get('came_from', '/'))
 
+def __isValidEmail(email):
+    return re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is not None
+
+@app.route("/altsignup", methods=['POST'])
+def altSignup():
+    email = request.form['email']
+    if not email or not __isValidEmail(email):
+        flash("You must supply a valid email address!")
+        return redirect(session.get('came_from', '/'))
+        
+    password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    print("Signup: email {}, password {}".format(email, password))
+    # todo
+    
+    session.pop('altlogin')
+    flash("A password has been sent to you. Please check your email.")
+    return redirect(session.get('came_from', '/'))
+
+@app.route("/altsignup", methods=['POST'])
+def altLogin():
+    email = request.form['email']
+    password = request.form['pass']
+    # todo
+
 @app.route("/testuser/<email>")
 def testLogin(email):
     if re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is None:
