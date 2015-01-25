@@ -7,13 +7,42 @@
     {% else %}
         <form method="GET" action="/login">
             <div class="loginButtonDiv">
-                <input type="submit"
+                <input name="korppiLogin"
+                       type="submit"
                        value="Login using Korppi"
+                       class="loginButton">
+                <input name="emailLogin"
+                       type="submit"
+                       value="Login using email"
+                       class="loginButton">
+                <input name="emailSignup"
+                       type="submit"
+                       value="Sign up using email"
                        class="loginButton">
                 <input type="hidden"
                        name="came_from"
                        value="{{ request.path }}">
             </div>
         </form>
+        {% if session.altlogin == "signup" %}
+        <form method="POST" action="/altsignup">
+            <div class="loginButtonDiv">
+                Email:
+                <input name="email" type="text" value="">
+                <input type="submit" value="Sign up">
+            </div>
+        </form>
+        {% endif %}
+        {% if session.altlogin == "login" %}
+        <form method="POST" action="/altlogin">
+            <div class="loginButtonDiv">
+                Email:
+                <input name="email" type="text" value="">
+                Password:
+                <input name="pass" type="text" value="">
+                <input type="submit" value="Login">
+            </div>
+        </form>
+        {% endif %}
     {% endif %}
 </div>

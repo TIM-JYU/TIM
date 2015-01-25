@@ -501,6 +501,16 @@ def logout():
     return redirect(url_for('indexPage'))
 
 @app.route("/login")
+def login():
+    if request.args.get('korppiLogin'):
+        return loginWithKorppi()
+    elif request.args.get('emailLogin'):
+        return loginWithEmail()
+    elif request.args.get('emailSignup'):
+        return signupWithEmail()
+    else:
+        return "Invalid login request!"
+
 def loginWithKorppi():
     urlfile = request.url_root + "login"
     if request.args.get('came_from'):
@@ -552,6 +562,22 @@ def __getRealName(email):
     parts = email[0:atindex].split('.')
     parts2 = [part.capitalize() if len(part) > 1 else part.capitalize() + '.' for part in parts]
     return ' '.join(parts2)
+
+def loginWithEmail():
+    if ('altlogin' in session and session['altlogin'] == 'login'):
+        session.pop('altlogin')
+    else:
+        session['altlogin'] = "login"
+
+    return redirect(session.get('came_from', '/'))
+
+def signupWithEmail():
+    if ('altlogin' in session and session['altlogin'] == 'signup'):
+        session.pop('altlogin')
+    else:
+        session['altlogin'] = "signup"
+
+    return redirect(session.get('came_from', '/'))
 
 @app.route("/testuser/<email>")
 def testLogin(email):
