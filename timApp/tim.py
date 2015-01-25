@@ -8,7 +8,11 @@ import codecs
 import collections
 import re
 import sys
+import string
+import random
+import smtplib
 
+from email.mime.text import MIMEText
 from flask import Flask, redirect, url_for, flash
 from flask import stream_with_context
 from flask import render_template
@@ -559,12 +563,33 @@ def testLogin(email):
     userId = timdb.users.getUserByName(userName)
     realName = __getRealName(email)
 
-    if userId is None:
-        uid = timdb.users.createUser(userName, realName, email)
-        gid = timdb.users.createUserGroup(userName)
-        timdb.users.addUserToGroup(gid, uid)
-        userId = uid
-        print('New test user: ' + userName)
+    if userId is None or email not in passwords:
+        password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+
+        msg = MIMEText('Your password is {}'.format(password))
+        msg['Subject'] = 'Your new TIM password'
+        msg['From'] = 'tim@it.jyu.fi'
+        msg['To'] = email
+
+        try:
+            s = smtplib.SMTP('smtp.jyu.fi')
+            s.sendmail('tomi.j.karppinen@jyu.fi', [email], msg.as_string())
+            s.quit()
+        except smtplib.SMTPException as e:
+            return 'Could not send the email. The error was: {}'.format(str(e))
+
+        global passwords
+        passwords[email] = password
+
+        return 'A password was sent to your email address. Please use it to log in.'
+
+    #if request.args.get('pass') != passwords[email]:        
+
+#        uid = timdb.users.createUser(userName, realName, email)
+#        gid = timdb.users.createUserGroup(userName)
+#        timdb.users.addUserToGroup(gid, uid)
+#        userId = uid
+#        print('New test user: ' + userName)
     session['user_id'] = userId
     session['user_name'] = userName
     session['real_name'] = realName
