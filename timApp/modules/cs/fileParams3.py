@@ -236,7 +236,7 @@ class FileParams:
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = get_param_by(query, "by" + nr, "")
         self.prorgam = get_param_by(query, "program" + nr, "")
-        self.breakCount = int(get_param_by(query, "breakCount" + nr, "0"))
+        self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
 
         self.reps = []
 
