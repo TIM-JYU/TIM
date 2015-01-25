@@ -255,6 +255,10 @@ ul ul  ul, ol ol ol {
     margin: none;
     background-color: #f8f8ff;
     z-index: 100;
+    top: -1px;
+    right: -14em;
+    min-height: 100%;
+    background-color: lightgray;
 }
 
 .headerlink {
@@ -1302,11 +1306,12 @@ img.console {
 }
 
 .menu{ 
-	left: -20px; 
+	left: 0px; 
 	top:0px;
 	width: 60px;
 	position:fixed;
 	background:#e6e6e6;
+    width: 45px;
     z-index: 501;
 }
 .menu-icon{
@@ -1318,9 +1323,9 @@ img.console {
 }
 .menu-icon:hover{
     z-index: 501;
-	filter: brightness(10);
-	-webkit-filter: brightness(10);
-	-moz-filter: brightness(10);
+	filter: brightness(1);
+	-webkit-filter: brightness(1);
+	-moz-filter: brightness(1);
 }
 .close{
 	float: right;
