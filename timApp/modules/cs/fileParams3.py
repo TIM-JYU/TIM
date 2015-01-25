@@ -367,8 +367,8 @@ class FileParams:
         if n2 >= n: n2 = n -1
         for i in range(n1, n2 + 1):
             line = lines[i]
-            for r in self.reps:
-                if check(r["by"], line): line = r["bc"]  # + "\n"
+            #for r in self.reps:
+            #    if check(r["by"], line): line = r["bc"]  # + "\n"
 
             if escape_html: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
@@ -433,14 +433,20 @@ def get_file_parts_to_output(query, show_html):
     n2 = -1
     lines = p0.get_raw_lines(show_html)
     j = 0
+    part0 = "";
+    s = get_param(query,"byCode","")
+    if s: part0 = s
+    s = usercode = get_json_param(query.jso, "input", "usercode", None)
+    if s: part0 = s
+    p0.reps.insert(0,{"by": "", "bc": part0});
     for i in range(0,p0.breakCount+1):
         n1, n2 = p0.scan_line_parts_range(i,n2+1,lines)
         part = p0.join_lines(lines,n1,n2,show_html)
-        if j % 2 != 0:
-            if p0.reps[j]:
+        if i % 2 != 0:
+            if j < len(p0.reps) and p0.reps[j]:
                 part = p0.reps[j]["bc"]
-            else:
-                p0.reps[j]["bc"] = part
+            #else:
+            #    p0.reps[j]["bc"] = part
             j += 1
         parts.append(part)
     return parts

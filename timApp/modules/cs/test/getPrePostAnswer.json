@@ -1,0 +1,29 @@
+{"taskID": "121.funktio", 
+ "markup": {
+     "header": "Java", 
+     "path": "user",
+     "type": "java", 
+     "byCode": "KUKKUU", 
+     "break2": "String vaihdaSukuEtu", 
+     "break3": "}", 
+     "break0": "String vaihdaEtuSuku", 
+     "file": "https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2015/demot/tehtavat/src/demo/d2/Etusuku.java", 
+     "breakCount": 4, 
+     "break1": "}"
+ }, 
+ "input": {
+     "usercode": "    MOI!    TEE", 
+     "isInput": false, 
+     "userargs": "", 
+     "userinput": "", 
+     "markup": {
+           "user_id": "vesal", 
+           "file": "https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2015/demot/tehtavat/src/demo/d2/Etusuku.java", 
+           "type": "java", 
+           "taskId": 
+           "121.funktio"
+      }
+ }, 
+ "state": {"usercode": "        TEE"}
+}
+ 
