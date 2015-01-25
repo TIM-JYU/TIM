@@ -1,10 +1,14 @@
+import os
+
 COMPRESS_DEBUG     = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
 COMPRESS_MIN_SIZE  = 50
 DATABASE           = './tim_files/tim.db'
 DEBUG              = False
 FILES_PATH         = 'tim_files'
-LOG_PATH           = "../tim_logs/timLog.log"
+LOG_DIR            = "../tim_logs/"
+LOG_FILE           = "timLog.log"
+LOG_PATH           = os.path.join(LOG_DIR, LOG_FILE)
 MAX_CONTENT_LENGTH = 16 * 1024 * 1025
 PASSWORD           = '4t95MHJj9h89y'
 PROFILE            = False
