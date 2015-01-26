@@ -492,6 +492,8 @@ def indexPage():
 def logout():
     session.pop('user_id', None)
     session.pop('appcookie', None)
+    session.pop('anchor', None)
+    session.pop('came_from', None)
     session['user_name'] = 'Anonymous'
     flash('You were successfully logged out.', 'loginmsg')
     return redirect(url_for('indexPage'))
@@ -499,8 +501,10 @@ def logout():
 @app.route("/login")
 def loginWithKorppi():
     urlfile = request.url_root + "login"
-    if request.args.get('came_from'):
-        session['came_from'] = request.args.get('came_from')
+    params = ['came_from', 'anchor']
+    for p in params:
+        if request.args.get(p):
+            session[p] = request.args.get(p)
     if not session.get('appcookie'):
         randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = randomHex
@@ -515,7 +519,6 @@ def loginWithKorppi():
         return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
                                                    'Try again later.'), 503
     korppiResponse = r.text.strip()
-    #print("korppiresponse is: '{}'".format(korppiResponse))
     if not korppiResponse:
         return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
     pieces = (korppiResponse + "\n\n").split('\n')
@@ -539,7 +542,11 @@ def loginWithKorppi():
     session['real_name'] = realName
     session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session.get('came_from', '/'))
+
+    anchor = session.get('anchor', '')
+    if anchor != '':
+        anchor = '#' + anchor
+    return redirect(session.get('came_from', '/') + anchor)
 
 def __getRealName(email):
     atindex = email.index('@')
