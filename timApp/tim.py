@@ -8,11 +8,7 @@ import codecs
 import collections
 import re
 import sys
-import string
-import random
-import smtplib
 
-from email.mime.text import MIMEText
 from flask import Flask, redirect, url_for, flash
 from flask import stream_with_context
 from flask import render_template
@@ -32,6 +28,7 @@ import containerLink
 from routes.edit import edit_page
 from routes.manage import manage_page
 from routes.view import view_page
+from routes.login import login_page
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import TimDbException, DocIdentifier
 import pluginControl
@@ -48,6 +45,7 @@ app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
+app.register_blueprint(login_page)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
@@ -491,191 +489,6 @@ def getPluginMarkup(doc_id, plugintype, task_id):
 @app.route("/")
 def indexPage():
     return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
-
-@app.route("/logout", methods=['POST'])
-def logout():
-    session.pop('user_id', None)
-    session.pop('appcookie', None)
-    session['user_name'] = 'Anonymous'
-    flash('You were successfully logged out.', 'loginmsg')
-    return redirect(url_for('indexPage'))
-
-@app.route("/login")
-def login():
-    if request.args.get('korppiLogin'):
-        return loginWithKorppi()
-    elif request.args.get('emailLogin'):
-        return loginWithEmail()
-    elif request.args.get('emailSignup'):
-        return signupWithEmail()
-    else:
-        return "Invalid login request!"
-
-def loginWithKorppi():
-    urlfile = request.url_root + "login"
-    if request.args.get('came_from'):
-        session['came_from'] = request.args.get('came_from')
-    if not session.get('appcookie'):
-        randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
-        session['appcookie'] = randomHex
-    url = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
-    try:
-        r = requests.get(url, params={'request': session['appcookie']}, verify=True)
-    except requests.exceptions.SSLError:
-        return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
-                                                   'Try again later.'), 503
-    
-    if r.status_code != 200:
-        return render_template('503.html', message='Korppi seems to be down, so login is currently not possible. '
-                                                   'Try again later.'), 503
-    korppiResponse = r.text.strip()
-    #print("korppiresponse is: '{}'".format(korppiResponse))
-    if not korppiResponse:
-        return redirect(url+"?authorize=" + session['appcookie'] + "&returnTo=" + urlfile, code=303)
-    pieces = (korppiResponse + "\n\n").split('\n')
-    userName = pieces[0]
-    realName = pieces[1]
-    email = pieces[2]
-
-    timdb = getTimDb()
-    userId = timdb.users.getUserByName(userName)
-    
-    if userId is None:
-        uid = timdb.users.createUser(userName, realName, email)
-        gid = timdb.users.createUserGroup(userName)
-        timdb.users.addUserToGroup(gid, uid)
-        userId = uid
-    else:
-        if realName:
-            timdb.users.updateUser(userId, userName, realName, email)
-    session['user_id'] = userId
-    session['user_name'] = userName
-    session['real_name'] = realName
-    session['email'] = email
-    flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session.get('came_from', '/'))
-
-def __getRealName(email):
-    atindex = email.index('@')
-    if atindex <= 0:
-        return email
-    parts = email[0:atindex].split('.')
-    parts2 = [part.capitalize() if len(part) > 1 else part.capitalize() + '.' for part in parts]
-    return ' '.join(parts2)
-
-def loginWithEmail():
-    if ('altlogin' in session and session['altlogin'] == 'login'):
-        session.pop('altlogin')
-    else:
-        session['altlogin'] = "login"
-
-    return redirect(session.get('came_from', '/'))
-
-def signupWithEmail():
-    if ('altlogin' in session and session['altlogin'] == 'signup'):
-        session.pop('altlogin')
-    else:
-        session['altlogin'] = "signup"
-
-    return redirect(session.get('came_from', '/'))
-
-def __isValidEmail(email):
-    return re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is not None
-
-def sendMail(email, subject, text, sender='no-reply@tim.it.jyu.fi'):
-    msg = MIMEText(text)
-    msg['Subject'] = subject
-    msg['From'] = sender
-    msg['To'] = email
-
-    s = smtplib.SMTP('smtp.jyu.fi')
-    s.sendmail(sender, [email], msg.as_string())
-    s.quit()
-
-@app.route("/altsignup", methods=['POST'])
-def altSignup():
-    # Before password verification
-    email = request.form['email']
-    if not email or not __isValidEmail(email):
-        flash("You must supply a valid email address!")
-        return redirect(session.get('came_from', '/'))
-        
-    password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    
-    try:
-        sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
-    except Exception as e:
-        flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
-        return redirect(session.get('came_from', '/'))
-    
-    timdb = getTimDb()
-    timdb.users.createPotentialUser(email, password)
-    
-    #print("Signup: email {}, password {}".format(email, password))
-    session.pop('altlogin')
-    flash("A password has been sent to you. Please check your email.")
-    return redirect(session.get('came_from', '/'))
-
-@app.route("/altsignup2", methods=['POST'])
-def altSignupAfter():
-    # After password verification
-    userName = request.form['name']
-    realName = request.form['realname']
-    email = session['email']
-    password = request.form['password']
-    confirm = request.form['passconfirm']
-    timdb = getTimDb()
-    
-    if timdb.users.getUserByName(userName) is not None:
-        flash('User name already exists. Please try another one.', 'loginmsg')
-        return redirect(session.get('came_from', '/'))
-    
-    if password != confirm:
-        flash('Passwords do not match.', 'loginmsg')
-        return redirect(session.get('came_from', '/'))
-        
-    if len(password) < 6:
-        flash('A password should contain at least six characters.', 'loginmsg')
-        return redirect(session.get('came_from', '/'))
-    
-    userId = timdb.users.createUser(userName, realName, email, password=password)
-    timdb.users.deletePotentialUser(email)
-    
-    session.pop('altlogin')
-    session['user_id'] = userId
-    session['user_name'] = userName
-    session['real_name'] = realName
-    flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session.get('came_from', '/'))
-    
-@app.route("/altlogin", methods=['POST'])
-def altLogin():
-    email = request.form['email']
-    password = request.form['password']
-    timdb = getTimDb()
-
-    if timdb.users.testUser(email, password):
-        # Registered user
-        user = timdb.users.getUserByEmail(email)
-        session.pop('altlogin')
-        session['user_id'] = user['id']
-        session['user_name'] = user['name']
-        session['real_name'] = user['real_name']
-        session['email'] = user['email']
-        flash('You were successfully logged in.', 'loginmsg')
-        
-    elif timdb.users.testPotentialUser(email, password):
-        # New user
-        session['user_id'] = 0
-        session['user_name'] = email
-        session['real_name'] = __getRealName(email)
-        session['email'] = email
-        session['altlogin'] = 'signup2'
-        
-    else:
-        flash("Email address or password did not match. Please try again.", 'loginmsg')
-    
-    return redirect(session.get('came_from', '/'))
 
 
 def startApp():
