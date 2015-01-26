@@ -205,14 +205,18 @@ class TimDbBase(object):
     @contract
     def getMappedValues(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str', table : 'str',
                         status_unmodified = "unmodified", status_modified = "modified",
-                        extra_fields : 'list' = [], custom_access : 'str|None' = None) -> 'list(dict)':
+                        extra_fields : 'list' = [], custom_access : 'str|None' = None, order_by_sql='') -> 'list(dict)':
         cursor = self.db.cursor()
         fields = ['par_index', 'doc_ver'] + extra_fields
 
         if custom_access is None:
-            query = "select {0} from {1} where UserGroup_id = ? and doc_id = ?".format(','.join(fields), table)
+            query = "select {0} from {1} where UserGroup_id = ? and doc_id = ? {2}".format(','.join(fields), table, order_by_sql)
         else:
-            query = "select {0} from {1} where (UserGroup_id = ? OR ({2})) and doc_id = ?".format(','.join(fields), table, custom_access)
+            query = "select {0} from {1} where (UserGroup_id = ? OR ({2})) and doc_id = ? {3}"\
+                .format(','.join(fields),
+                        table,
+                        custom_access,
+                        order_by_sql)
 
         cursor.execute(query, [UserGroup_id, doc_id])
         rows = self.resultAsDictionary(cursor)
@@ -223,6 +227,7 @@ class TimDbBase(object):
         mapped_pars = {}
 
         # Check for modifications
+        # We first go through the rows trying to find exact match
         for row in rows:
             read_ver = row['doc_ver']
             par_index = int(row['par_index'])
@@ -234,7 +239,13 @@ class TimDbBase(object):
                 if table == 'UserNotes' or par_index not in mapped_pars:
                     results.append(row)
                     mapped_pars[par_index] = True
-            else:
+
+        # In case we didn't find exact match for some row, try to map it
+        for row in rows:
+            read_ver = row['doc_ver']
+            par_index = int(row['par_index'])
+
+            if read_ver != doc_ver:
                 # Document has been modified, see if the paragraph has changed
                 #print('Paragraph {0} refers to old version, trying to find mappings.'.format(read_par))
                 mapping = self.getParMapping(doc_id, read_ver, doc_ver, row['par_index'], commit = False)
@@ -264,7 +275,6 @@ class TimDbBase(object):
                         except sqlite3.IntegrityError:
                             # Already exists
                             pass
-
 
         # Commit in case of getParMapping optimizing the mappings
         self.db.commit()
