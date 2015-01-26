@@ -12,7 +12,7 @@ from timdb.timdbbase import TimDbException, DocIdentifier
 
 import hypothesis.settings as hs
 
-hs.default.max_examples = 10
+hs.default.max_examples = 5
 
 
 def onerror(func, path, exc_info):
@@ -28,6 +28,7 @@ def onerror(func, path, exc_info):
 def debug_print(name, msg):
     print("{}: '{}', hex: {}".format(name, msg, ':'.join(hex(ord(x))[2:] for x in msg)))
 
+test_length = 50
 
 class DocTest(unittest.TestCase):
 
@@ -115,7 +116,6 @@ class DocTest(unittest.TestCase):
 
     def test_notes_with_update(self):
         print('test_notes_with_update')
-        test_length = 500
         doc, doc_paragraphs = self.create_test_notes(test_length)
 
         random.seed(0)
@@ -152,9 +152,8 @@ class DocTest(unittest.TestCase):
 
     def test_notes_with_add(self):
         print('test_notes_with_add')
-        test_length = 500
         doc, _ = self.create_test_notes(test_length)
-        new_par_index = 100
+        new_par_index = test_length // 2
         new_count = random.randint(1, 100)
         _, ver = self.db.documents.addMarkdownBlock(doc, '\n\n'.join(['new'] * new_count), new_par_index)
         #self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
@@ -162,9 +161,8 @@ class DocTest(unittest.TestCase):
 
     def test_notes_with_edit(self):
         print('test_notes_with_edit')
-        test_length = 500
         doc, _ = self.create_test_notes(test_length)
-        par_index = 100
+        par_index = test_length // 2
         new_count = random.randint(1, 100)
         _, ver = self.db.documents.modifyMarkDownBlock(doc, par_index, '\n\n'.join(['new'] * new_count))
         #self.check_notes(new_count - 1, par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
@@ -172,19 +170,18 @@ class DocTest(unittest.TestCase):
 
     def test_notes_with_delete(self):
         print('test_notes_with_delete')
-        test_length = 500
         doc, _ = self.create_test_notes(test_length)
-        delete_par_index = 100
+        delete_par_index = test_length // 2
         ver = self.db.documents.deleteParagraph(doc, delete_par_index)
         #self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, get_html=False), test_length)
         self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, ver), test_length - 1)
 
     def test_readings(self):
         print('test_readings')
-        doc, _ = self.create_test_document(500)
+        doc, _ = self.create_test_document(test_length)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.assertEqual(len(readings), 0)
-        par_index = 5
+        par_index = test_length // 10
         self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
 
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
@@ -244,10 +241,10 @@ class DocTest(unittest.TestCase):
 
     def test_multiple_notes_same_par(self):
         print("test_multiple_notes_same_par")
-        doc, _ = self.create_test_document(500)
+        doc, _ = self.create_test_document(test_length)
         notes = self.db.notes.getNotes(0, doc.id, doc.hash)
         self.assertEqual(len(notes), 0)
-        par_index = 67
+        par_index = test_length // 2
         content = 'test note'
         self.db.notes.addNote(0, doc.id, doc.hash, par_index, content, 'everyone', [])
         notes = self.db.notes.getNotes(0, doc.id, doc.hash)
