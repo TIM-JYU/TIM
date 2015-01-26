@@ -20,7 +20,12 @@ class Readings(TimDbBase):
         :param UserGroup_id: The id of the user group whose readings will be fetched.
         :param block_id: The id of the block whose readings will be fetched.
         """
-        return self.getMappedValues(UserGroup_id, doc_id, doc_ver, 'ReadParagraphs', status_unmodified = 'read')
+        return self.getMappedValues(UserGroup_id,
+                                    doc_id,
+                                    doc_ver,
+                                    'ReadParagraphs',
+                                    status_unmodified='read',
+                                    order_by_sql='order by timestamp desc')
         
     @contract
     def setAsRead(self, UserGroup_id: 'int', doc_id : 'int', doc_ver : 'str', par_index: 'int', commit : 'bool' = True):

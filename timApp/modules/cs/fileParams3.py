@@ -236,6 +236,7 @@ class FileParams:
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = get_param_by(query, "by" + nr, "")
         self.prorgam = get_param_by(query, "program" + nr, "")
+        self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
 
         self.reps = []
 
@@ -248,6 +249,27 @@ class FileParams:
             if not rep: break
             byc = get_param_by(query, "byCode" + repNr + str(i), "")
             self.reps.append({"by": rep, "bc": byc})
+
+        if self.breakCount:
+            self.breaks = []
+            self.breaksBegin = []
+            self.breaksBeforeBegin = []
+            self.breaksBefore = []
+            self.breaksAfter = []
+            defAfter = -1
+            for i in range(0, self.breakCount+1):
+                brkdef = ""
+                if i >= self.breakCount:
+                    brkdef = "!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    defAfter = 0
+                self.breaksBegin.append(do_matcher(get_param(query, "breakBegin" + repNr + str(i), "").replace("\\\\", "\\")))
+                self.breaks.append(do_matcher(get_param(query, "break" + repNr + str(i), brkdef).replace("\\\\", "\\")))
+                self.breaksBeforeBegin.append(int(get_param(query, "breakBeforeBegin" + repNr + str(i), 0)))
+                self.breaksBefore.append(int(get_param(query, "breakBefore" + repNr + str(i), 0)))
+                self.breaksAfter.append(int(get_param(query, "breakAfter" + repNr + str(i), defAfter)))
+                if defAfter < 0: defAfter = 0
+                else: defAfter = -1
+
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
@@ -268,14 +290,28 @@ class FileParams:
         if not self.url:
             # print("SELF.BY:", self.by.encode());
             if not self.by: return ""
-            return self.by; # self.by.replace("\\n", "\n")
+            return self.by # self.by.replace("\\n", "\n")
 
         lines = get_url_lines(self.url)
         if not lines: return "File not found " + self.url
 
         return self.scan_needed_lines(lines, escape_html)
 
-    def scan_needed_lines(self, lines, escape_html=False):
+    def get_raw_lines(self, escape_html=False):
+        if self.prorgam:
+            # print(self.prorgam)
+            return self.prorgam.split("\n")
+        if not self.url:
+            # print("SELF.BY:", self.by.encode());
+            if not self.by: return [];
+            return [] # self.by.replace("\\n", "\n")
+
+        lines = get_url_lines(self.url)
+        if not lines: return ["File not found " + self.url];
+
+        return lines
+
+    def scan_needed_range(self, lines):
         n = len(lines)
         n1 = scan_lines(lines, n, 0, self.start, 1)
         n2 = n1
@@ -291,7 +327,10 @@ class FileParams:
             n2 = n - 1
         n2 += self.endn
         if n2 >= n: n2 = n - 1
+        return n1, n2
 
+    def scan_needed_lines(self, lines, escape_html=False):
+        (n1,n2) = self.scan_needed_range(lines)
         ni = 0
 
         result = ""
@@ -320,12 +359,50 @@ class FileParams:
 
         return result
 
+
+    def join_lines(self, lines, n1, n2, escape_html):
+        result = ""
+        n = len(lines)
+        if n1 < 0: n1 = 0
+        if n2 >= n: n2 = n -1
+        for i in range(n1, n2 + 1):
+            line = lines[i]
+            #for r in self.reps:
+            #    if check(r["by"], line): line = r["bc"]  # + "\n"
+
+            if escape_html: line = html.escape(line)
+            ln = self.linefmt.format(i + 1)
+            result += ln + line + "\n"
+            if i + 1 >= self.lastn: break
+
+        return result
+
+
+
     def get_include(self, escapeHTML=False):
         if not self.include: return ""
         data = self.include.replace("\\n", "\n")
         if escapeHTML: data = html.escape(data)
         return data
 
+
+    def scan_line_parts_range(self, part, n0, lines):
+        n = len(lines)
+        n1 = scan_lines(lines, n, n0+self.breaksBeforeBegin[part], self.breaksBegin[part], 1)
+        n2 = n1
+        # n1 = scan_lines(lines, n, n1, self.start_scan, self.start_scan_dir)
+        n1 += self.breaksBefore[part]
+        if n1 < 0: n1 = 0
+        if n2 < n1: n2 = n1  # if n1 went forward
+
+        if self.breaks[part]:
+            n2 = scan_lines(lines, n, n2, self.breaks[part], 1)
+        # n2 = scan_lines(lines, n, n2, self.end_scan, self.end_scan_dir)
+        else:
+            n2 = n - 1
+        n2 += self.breaksAfter[part]
+        if n2 >= n: n2 = n - 1
+        return n1, n2
 
 def get_params(self):
     result = QueryClass()
@@ -347,6 +424,39 @@ def get_file_to_output(query, show_html):
         s += p.get_file(show_html)
         s += p.get_include(show_html)
         if p.url: u = p.url
+    return s
+
+
+def get_file_parts_to_output(query, show_html):
+    p0 = FileParams(query, "", "")
+    parts = [];
+    n2 = -1
+    lines = p0.get_raw_lines(show_html)
+    j = 0
+    part0 = "";
+    s = get_param(query,"byCode","")
+    if s: part0 = s
+    s = usercode = get_json_param(query.jso, "input", "usercode", None)
+    if s: part0 = s
+    p0.reps.insert(0,{"by": "", "bc": part0});
+    for i in range(0,p0.breakCount+1):
+        n1, n2 = p0.scan_line_parts_range(i,n2+1,lines)
+        part = p0.join_lines(lines,n1,n2,show_html)
+        if i % 2 != 0:
+            if j < len(p0.reps) and p0.reps[j] and p0.reps[j]["bc"]:
+                part = p0.reps[j]["bc"]
+            #else:
+            #    p0.reps[j]["bc"] = part
+            j += 1
+        parts.append(part)
+    return parts
+
+
+def join_file_parts(p0,parts):
+    s = ""
+    for i in range(0,len(parts)):
+        s = s + parts[i];
+
     return s
 
 
@@ -468,6 +578,23 @@ def query_params_to_map(query):
     result = {}
     for field in query.keys():
         result[field] = query[field][0]
+
+    return result
+
+
+def query_params_to_map_check_parts(query):
+    result = query_params_to_map(query.query)
+
+    # Replace all byCode by fileparts if exists
+    if int(get_param(query,"breakCount",0)) > 0:
+        parts = get_file_parts_to_output(query,False)
+        if not "byCode" in result and parts[1]:  result["byCode"] = parts[1]
+        j = 1
+        for i in range(3,len(parts)):
+            if i % 2 != 0:
+                byn = "byCode" + str(j)
+                if not byn in result and parts[i]:  result[byn] = parts[i]
+                j += 1
     return result
 
 

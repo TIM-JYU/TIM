@@ -20,7 +20,7 @@ import socketserver
 # from signal import alarm, signal, SIGALRM, SIGKILL
 from subprocess import PIPE, Popen, check_output
 from fileParams3 import *
-from requests import Request, Session
+#from requests import Request, Session
 from http import cookies
 import datetime
 import stat  
@@ -98,10 +98,11 @@ def remove_before(what, s):
 
 
 def get_html(ttype, query):
-    js = query_params_to_map(query.query)
+    js = query_params_to_map_check_parts(query)
     if "byFile" in js and not "byCode" in js:
         js["byCode"] = get_url_lines_as_string(js["byFile"])
     jso = json.dumps(js)
+    print(jso)
     runner = 'cs-runner'
     #print(ttype)
     is_input = '';
@@ -403,7 +404,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         s = ""
         # if p0.url != "":
-        s = get_file_to_output(query, False and print_file)
+        #
+        if p0.breakCount > 0:
+            parts = get_file_parts_to_output(query,False)
+            print(parts)
+            if print_file == "2": return self.wout(json.dumps(parts))
+            s = join_file_parts(p0, parts)
+        else:
+            s = get_file_to_output(query, False and print_file)
 
         # Open the file and write it
         if print_file: return self.wout(s)

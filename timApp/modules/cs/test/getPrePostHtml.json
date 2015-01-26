@@ -1,0 +1,19 @@
+{"taskID": "6241.hellofs", 
+ "state": { "usercode": "ENKÄ TEE" }, 
+ "markup": {
+   "type": "java", 
+   "header": "Java", 
+   "user_id": "vesal",
+   "file": "https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2015/demot/tehtavat/src/demo/d2/Etusuku.java",
+   "browse_answers":"False",
+   "breakCount":"4",
+   "break0":"String vaihdaEtuSuku",
+   "break1":"}",
+   "break2":"String vaihdaSukuEtu",
+   "break3":"}",
+   "type":"java",
+   "taskID":"121.funktio",
+   "user_id":"vesal",
+   "byCode":"TEE"
+ }
+}
