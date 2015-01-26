@@ -203,22 +203,21 @@ class TimDbBase(object):
         return (current_par, modified)
 
     @contract
-    def getMappedValues(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str', table : 'str',
-                        status_unmodified = "unmodified", status_modified = "modified",
-                        extra_fields : 'list' = [], custom_access : 'str|None' = None, order_by_sql='') -> 'list(dict)':
+    def getMappedValues(self, UserGroup_id: 'int|None', doc_id: 'int', doc_ver: 'str', table: 'str',
+                        status_unmodified="unmodified", status_modified="modified", extra_fields=None,
+                        custom_access: 'str'='0', order_by_sql: 'str'='') -> 'list(dict)':
+        if not extra_fields:
+            extra_fields = []
         cursor = self.db.cursor()
         fields = ['par_index', 'doc_ver'] + extra_fields
 
-        if custom_access is None:
-            query = "select {0} from {1} where UserGroup_id = ? and doc_id = ? {2}".format(','.join(fields), table, order_by_sql)
-        else:
-            query = "select {0} from {1} where (UserGroup_id = ? OR ({2})) and doc_id = ? {3}"\
-                .format(','.join(fields),
-                        table,
-                        custom_access,
-                        order_by_sql)
+        query = "select {} from {} where ({}) and doc_id = ? {}"\
+            .format(','.join(fields),
+                    table,
+                    'UserGroup_id = ? OR ({})'.format(custom_access) if UserGroup_id is not None else custom_access,
+                    order_by_sql)
 
-        cursor.execute(query, [UserGroup_id, doc_id])
+        cursor.execute(query, [UserGroup_id, doc_id] if UserGroup_id is not None else [doc_id])
         rows = self.resultAsDictionary(cursor)
         results = []
 

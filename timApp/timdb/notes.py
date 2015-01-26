@@ -99,7 +99,14 @@ class Notes(TimDbBase):
         :param new_tags: New tags to set.
         """
         cursor = self.db.cursor()
-        
+
+        # We need to refresh the UserNotes table at this point so that the comment will certainly be found
+        self.getMappedValues(UserGroup_id=None,
+                             doc_id=doc_id,
+                             doc_ver=doc_ver,
+                             table='UserNotes',
+                             custom_access='1')
+
         cursor.execute(
         """
             update UserNotes
