@@ -582,70 +582,100 @@ def signupWithEmail():
 def __isValidEmail(email):
     return re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is not None
 
+def sendMail(email, subject, text, sender='no-reply@tim.it.jyu.fi'):
+    msg = MIMEText(text)
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = email
+
+    s = smtplib.SMTP('smtp.jyu.fi')
+    s.sendmail(sender, [email], msg.as_string())
+    s.quit()
+
 @app.route("/altsignup", methods=['POST'])
 def altSignup():
+    # Before password verification
     email = request.form['email']
     if not email or not __isValidEmail(email):
         flash("You must supply a valid email address!")
         return redirect(session.get('came_from', '/'))
         
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    print("Signup: email {}, password {}".format(email, password))
-    # todo
     
+    try:
+        sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
+    except Exception as e:
+        flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
+        return redirect(session.get('came_from', '/'))
+    
+    timdb = getTimDb()
+    timdb.users.createPotentialUser(email, password)
+    
+    #print("Signup: email {}, password {}".format(email, password))
     session.pop('altlogin')
     flash("A password has been sent to you. Please check your email.")
     return redirect(session.get('came_from', '/'))
 
-@app.route("/altsignup", methods=['POST'])
-def altLogin():
-    email = request.form['email']
-    password = request.form['pass']
-    # todo
-
-@app.route("/testuser/<email>")
-def testLogin(email):
-    if re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is None:
-        return "User name must be a valid email address."
-
+@app.route("/altsignup2", methods=['POST'])
+def altSignupAfter():
+    # After password verification
+    userName = request.form['name']
+    realName = request.form['realname']
+    email = session['email']
+    password = request.form['password']
+    confirm = request.form['passconfirm']
     timdb = getTimDb()
-    userName = email
-    userId = timdb.users.getUserByName(userName)
-    realName = __getRealName(email)
-
-    if userId is None or email not in passwords:
-        password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-
-        msg = MIMEText('Your password is {}'.format(password))
-        msg['Subject'] = 'Your new TIM password'
-        msg['From'] = 'tim@it.jyu.fi'
-        msg['To'] = email
-
-        try:
-            s = smtplib.SMTP('smtp.jyu.fi')
-            s.sendmail('tomi.j.karppinen@jyu.fi', [email], msg.as_string())
-            s.quit()
-        except smtplib.SMTPException as e:
-            return 'Could not send the email. The error was: {}'.format(str(e))
-
-        global passwords
-        passwords[email] = password
-
-        return 'A password was sent to your email address. Please use it to log in.'
-
-    #if request.args.get('pass') != passwords[email]:        
-
-#        uid = timdb.users.createUser(userName, realName, email)
-#        gid = timdb.users.createUserGroup(userName)
-#        timdb.users.addUserToGroup(gid, uid)
-#        userId = uid
-#        print('New test user: ' + userName)
+    
+    if timdb.users.getUserByName(userName) is not None:
+        flash('User name already exists. Please try another one.', 'loginmsg')
+        return redirect(session.get('came_from', '/'))
+    
+    if password != confirm:
+        flash('Passwords do not match.', 'loginmsg')
+        return redirect(session.get('came_from', '/'))
+        
+    if len(password) < 6:
+        flash('A password should contain at least six characters.', 'loginmsg')
+        return redirect(session.get('came_from', '/'))
+    
+    userId = timdb.users.createUser(userName, realName, email, password=password)
+    timdb.users.deletePotentialUser(email)
+    
+    session.pop('altlogin')
     session['user_id'] = userId
     session['user_name'] = userName
     session['real_name'] = realName
-    session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
-    return redirect(url_for('indexPage'))
+    return redirect(session.get('came_from', '/'))
+    
+@app.route("/altlogin", methods=['POST'])
+def altLogin():
+    email = request.form['email']
+    password = request.form['password']
+    timdb = getTimDb()
+
+    if timdb.users.testUser(email, password):
+        # Registered user
+        user = timdb.users.getUserByEmail(email)
+        session.pop('altlogin')
+        session['user_id'] = user['id']
+        session['user_name'] = user['name']
+        session['real_name'] = user['real_name']
+        session['email'] = user['email']
+        flash('You were successfully logged in.', 'loginmsg')
+        
+    elif timdb.users.testPotentialUser(email, password):
+        # New user
+        session['user_id'] = 0
+        session['user_name'] = email
+        session['real_name'] = __getRealName(email)
+        session['email'] = email
+        session['altlogin'] = 'signup2'
+        
+    else:
+        flash("Email address or password did not match. Please try again.", 'loginmsg')
+    
+    return redirect(session.get('came_from', '/'))
 
 
 def startApp():

@@ -85,12 +85,21 @@ name VARCHAR(100) NOT NULL,
 real_name VARCHAR(100),
 email VARCHAR(100),
 prefs TEXT,
+pass VARCHAR(128),
 
 CONSTRAINT User_PK 
 	PRIMARY KEY (id)
 )
 ;
 
+CREATE TABLE NewUser (
+email VARCHAR(100),
+pass VARCHAR(128),
+
+CONSTRAINT NewUser_PK
+	PRIMARY KEY (email)
+)
+;
 
 CREATE TABLE Block (
 id INTEGER NOT NULL,

@@ -1,6 +1,8 @@
 import json
 from contracts import contract, new_contract
 from timdb.timdbbase import TimDbBase
+
+import hashlib
 import sqlite3
 
 new_contract('row', sqlite3.Row)
@@ -23,16 +25,18 @@ class Users(TimDbBase):
         return 0
 
     @contract
-    def createUser(self, name: 'str', real_name: 'str', email: 'str', commit : 'bool' = True) -> 'int':
+    def createUser(self, name: 'str', real_name: 'str', email: 'str', password: 'str' = '', commit : 'bool' = True) -> 'int':
         """Creates a new user with the specified name.
         
         :param email: The email address of the user.
-        :param real_name: The real name of the user.
         :param name: The name of the user to be created.
+        :param real_name: The real name of the user.
+        :param password: The password for the user (not used on Korppi login).
         :returns: The id of the newly created user.
         """
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO User (name, real_name, email) VALUES (?, ?, ?)', [name, real_name, email])
+        hash = self.hashPassword(password) if password != '' else ''
+        cursor.execute('INSERT INTO User (name, real_name, email, pass) VALUES (?, ?, ?, ?)', [name, real_name, email, hash])
         if commit:
             self.db.commit()
         user_id = cursor.lastrowid
@@ -79,6 +83,66 @@ class Users(TimDbBase):
         cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (?, ?)', [group_id, user_id])
         if commit:
             self.db.commit()
+
+    @contract
+    def createPotentialUser(self, email: 'str', password: 'str', commit : 'bool' = True):
+        """Creates a potential user with the specified email and password.
+        
+        :param email: The email address of the user.
+        :param password: The password of the user.
+        """
+        cursor = self.db.cursor()
+        hash = self.hashPassword(password)
+        cursor.execute('REPLACE INTO NewUser (email, pass) VALUES (?, ?)', [email, hash])
+        if commit:
+            self.db.commit()
+
+    @contract
+    def deletePotentialUser(self, email: 'str', commit : 'bool' = True):
+        """Deletes a potential user.
+        
+        :param email: The email address of the user.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('DELETE FROM NewUser WHERE email=?', [email])
+        if commit:
+            self.db.commit()
+
+    @contract
+    def testPotentialUser(self, email: 'str', password: 'str') -> 'bool':
+        """Tests if a potential user matches to email and password.
+        
+        :param email: Email address.
+        :param password: Password.
+        :returns: Boolean.
+        """
+
+        cursor = self.db.cursor()
+        hash = self.hashPassword(password)
+        cursor.execute('SELECT email FROM NewUser WHERE email=? and pass=?', [email, hash])
+        return cursor.fetchone() is not None
+        
+    @contract
+    def testUser(self, email: 'str', password: 'str') -> 'bool':
+        """Tests if a potential user matches to email and password.
+        
+        :param email: Email address.
+        :param password: Password.
+        :returns: Boolean.
+        """
+
+        cursor = self.db.cursor()
+        hash = self.hashPassword(password)
+        cursor.execute('SELECT email FROM User WHERE email=? and pass=?', [email, hash])
+        return cursor.fetchone() is not None
+
+    @contract
+    def hashPassword(self, password: 'str') -> 'str':
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    @contract
+    def testPassword(self, hash: 'str', password: 'str'):
+        return self.hashPassword(password) == hash
 
     @contract
     def getEditors(self, block_id: 'int'):
@@ -155,6 +219,20 @@ class Users(TimDbBase):
         cursor.execute('SELECT id FROM User WHERE name = ?', [name])
         result = cursor.fetchone()
         return result[0] if result is not None else None
+
+    @contract
+    def getUserByEmail(self, name: 'str') -> 'dict':
+        """Gets the data of the specified user email address.
+        
+        :param name: Email address.
+        :returns: The user data.
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute('SELECT * FROM User WHERE email = ?', [name])
+        result = self.resultAsDictionary(cursor)
+        return result[0] if len(result) > 0 else None
+
 
     @contract
     def groupExists(self, user_id : 'int') -> 'bool':
