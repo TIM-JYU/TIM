@@ -42,18 +42,20 @@ class Users(TimDbBase):
         user_id = cursor.lastrowid
         return user_id
 
-    def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str', commit : 'bool' = True):
+    def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str', password: 'str' = '', commit : 'bool' = True):
         """Updates user information.
 
         :param user_id: The id of the user to be updated.
         :param name: The username of the user.
         :param real_name: The real name of the user.
         :param email: The email of the user.
+        :param password: The password of the user.
         """
 
         cursor = self.db.cursor()
-        cursor.execute('UPDATE User SET name = ?, real_name = ?, email = ? WHERE id = ?',
-                       [name, real_name, email, user_id])
+        hash = self.hashPassword(password) if password != '' else ''
+        cursor.execute('UPDATE User SET name = ?, real_name = ?, email = ?, pass = ? WHERE id = ?',
+                       [name, real_name, email, user_id, hash])
         if commit:
             self.db.commit()
 
@@ -221,7 +223,7 @@ class Users(TimDbBase):
         return result[0] if result is not None else None
 
     @contract
-    def getUserByEmail(self, name: 'str') -> 'dict':
+    def getUserByEmail(self, email: 'str') -> 'dict':
         """Gets the data of the specified user email address.
         
         :param name: Email address.
@@ -229,7 +231,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT * FROM User WHERE email = ?', [name])
+        cursor.execute('SELECT * FROM User WHERE email = ?', [email])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
 

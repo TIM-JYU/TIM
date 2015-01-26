@@ -144,16 +144,25 @@ def altSignup():
 @login_page.route("/altsignup2", methods=['POST'])
 def altSignupAfter():
     # After password verification
+    userId = 0
     userName = request.form['name']
     realName = request.form['realname']
     email = session['email']
     password = request.form['password']
     confirm = request.form['passconfirm']
     timdb = getTimDb()
-    
-    if timdb.users.getUserByName(userName) is not None:
-        flash('User name already exists. Please try another one.', 'loginmsg')
-        return redirect(session.get('came_from', '/'))
+
+    if timdb.users.getUserByEmail(email) is not None:
+        # User with this email already exists
+        userId = timdb.users.getUserByEmail(email)['id']
+        nameId = timdb.users.getUserByName(userName)
+        if nameId is not None and nameId != userId:
+            flash('User name already exists. Please try another one.', 'loginmsg')
+            return redirect(session.get('came_from', '/'))
+    else:
+        if timdb.users.getUserByName(userName) is not None:
+            flash('User name already exists. Please try another one.', 'loginmsg')
+            return redirect(session.get('came_from', '/'))
     
     if password != confirm:
         flash('Passwords do not match.', 'loginmsg')
@@ -163,7 +172,11 @@ def altSignupAfter():
         flash('A password should contain at least six characters.', 'loginmsg')
         return redirect(session.get('came_from', '/'))
     
-    userId = timdb.users.createUser(userName, realName, email, password=password)
+    if userId == 0:
+        userId = timdb.users.createUser(userName, realName, email, password=password)
+    else:
+        timdb.users.updateUser(userId, userName, realName, email, password=password)
+    
     timdb.users.deletePotentialUser(email)
     
     session.pop('altlogin')
