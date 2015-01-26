@@ -314,10 +314,14 @@ class DocTest(unittest.TestCase):
         self.assertEqual(note['par_index'], par_index + 2)
         self.assertEqual(note['content'], content5)
 
+    def read_utf8(self, file_name):
+        with open(file_name, "r", encoding='utf-8') as f:
+            text = f.read()
+        return text
+
     def test_special_chars(self):
         print("test_special_chars")
-        with open("special_chars.md", "r") as f:
-            special_char_text = f.read()
+        special_char_text = self.read_utf8("special_chars.md")
         doc = self.db.documents.createDocument('special_chars', 0)
         doc = self.db.documents.updateDocument(doc, special_char_text)
         doc_paragraphs = self.db.documents.getDocumentAsBlocks(doc)
