@@ -148,9 +148,13 @@ def altSignupAfter():
     userName = request.form['name']
     realName = request.form['realname']
     email = session['email']
+    oldpass = request.form['token']
     password = request.form['password']
     confirm = request.form['passconfirm']
     timdb = getTimDb()
+
+    if not timdb.users.testPotentialUser(email, oldpass):
+        return jsonResponse({'message': 'Authentication failure'}, 403)
 
     if timdb.users.getUserByEmail(email) is not None:
         # User with this email already exists
@@ -209,6 +213,7 @@ def altLogin():
         session['real_name'] = __getRealName(email)
         session['email'] = email
         session['altlogin'] = 'signup2'
+        session['token'] = password
         
     else:
         flash("Email address or password did not match. Please try again.", 'loginmsg')

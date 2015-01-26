@@ -46,6 +46,7 @@
         	<p class="loginwelcome">
         	    Welcome to TIM! We need just a few more details to get you started.
         	</p>
+                <input type="hidden" name="token" value="{{ session.token }}"></input>
         	<div class="loginFieldDiv">
         	    <label for="name" class="loginFieldLabel">User name</label> 
                 <input name="name" type="text" class="loginFieldInput" value="{{ session.user_name }}">
