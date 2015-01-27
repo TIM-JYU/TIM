@@ -6,11 +6,14 @@ from shutil import copyfile
 from timdb.gitclient import NothingToCommitException, GitClient
 import ansiconv
 
+
 class Documents(TimDbBase):
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
         
+        :param type_name: The type name.
+        :param current_user_name: The name of the current user.
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
@@ -31,6 +34,7 @@ class Documents(TimDbBase):
 
         assert self.documentExists(document_id.id), 'document does not exist: %r' % document_id
         self.ensureCached(document_id)
+        content = self.trimDoc(content)
         response = self.ec.addBlock(document_id, new_block_index, content)
         new_doc = self.__handleModifyResponse(document_id,
                                               response,
@@ -249,7 +253,8 @@ class Documents(TimDbBase):
         :param block_id: The id (index) of the block in the document.
         """
 
-        return self.ephemeralCall(document_id, self.ec.getBlock, block_id)
+        content = self.ephemeralCall(document_id, self.ec.getBlock, block_id)
+        return self.trimDoc(content)
 
     def getBlockAsHtml(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
         """Gets a block of a document in HTML.
@@ -268,11 +273,15 @@ class Documents(TimDbBase):
         :returns: The blocks of the document in markdown format.
         """
 
-        return self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)
+        return [self.trimDoc(block) for block in self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)]
 
     @contract
     def getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
-        """Gets the specified document in HTML form."""
+        """Gets the specified document in HTML form.
+
+        :param document_id: The id of the document.
+        :returns: The document contents as a list of HTML blocks.
+        """
 
         return self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
 
@@ -315,7 +324,8 @@ class Documents(TimDbBase):
 
     @contract
     def getDocumentMarkdown(self, document_id: 'DocIdentifier') -> 'str':
-        return self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id.id))
+        content = self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id.id))
+        return self.trimDoc(content)
 
     @contract
     def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
@@ -333,6 +343,7 @@ class Documents(TimDbBase):
     def getDocumentVersions(self, document_id: 'int', limit: 'int'=100) -> 'list(dict(str:str))':
         """Gets the versions of a document.
         
+        :param limit: Maximum number of versions to get.
         :param document_id: The id of the document whose versions will be fetched.
         :returns: A list of the versions of the document.
         """
@@ -373,7 +384,13 @@ class Documents(TimDbBase):
     @contract
     def importDocumentFromFile(self, document_file: 'str', document_name: 'str',
                                owner_group_id: 'int') -> 'DocIdentifier':
-        """Imports the specified document in the database."""
+        """Imports the specified document in the database.
+
+        :param document_file: The file path of the document to import.
+        :param document_name: The name for the document.
+        :param owner_group_id: The owner group of the document.
+        :returns: The id of the imported document.
+        """
 
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
         doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
@@ -593,11 +610,13 @@ class Documents(TimDbBase):
                                mod_index: 'int',
                                mod_count: 'int') -> 'DocIdentifier':
         """Handles the response that comes from Ephemeral when modifying a document in some way.
-        
+
+        :param mod_index: The index at which the document was modified.
+        :param mod_count: The number of paragraphs that was added (positive) or removed (negative).
         :param document_id: The id of the document that was modified.
         :param response: The response object from Ephemeral.
-        :param message: The commit message.
-        :returns: The version of the new document.
+        :param message: The commit message describing the change.
+        :returns: The id of the new document.
         """
 
         new_id = DocIdentifier(document_id.id, response['new_id'])
@@ -648,11 +667,12 @@ class Documents(TimDbBase):
         :param document_id: The id of the document.
         :param block_id: The id (relative to document) of the paragraph to be modified.
         :param new_content: The new content of the paragraph.
-        :returns: The modified blocks and the version hash as a tuple.
+        :returns: The modified blocks and the new document id as a tuple.
         """
 
         assert self.documentExists(document_id.id), 'document does not exist: ' + str(document_id)
         self.ensureCached(document_id)
+        new_content = self.trimDoc(new_content)
         response = self.ec.modifyBlock(document_id, block_id, new_content)
 
         new_doc = self.__handleModifyResponse(document_id,
@@ -684,11 +704,12 @@ class Documents(TimDbBase):
         
         :param document_id: The id of the document to be updated.
         :param new_content: The new content of the document.
-        :returns: The version of the new document.
+        :returns: The id of the new document.
         """
 
         assert self.documentExists(document_id.id), 'document does not exist: ' + document_id
 
+        new_content = self.trimDoc(new_content)
         try:
             version = self.__commitDocumentChanges(document_id, new_content, "Modified as whole")
         except NothingToCommitException:
@@ -697,3 +718,11 @@ class Documents(TimDbBase):
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
         self.__updateParMappings(document_id, new_id)
         return new_id
+
+    def trimDoc(self, text: 'str'):
+        """Trims the specified text. Don't trim spaces from left side because they may indicate a code block
+
+        :param text: The text to be trimmed.
+        :return: The trimmed text.
+        """
+        return text.rstrip().strip('\r\n')

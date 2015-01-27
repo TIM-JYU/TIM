@@ -77,7 +77,7 @@ class DocTest(unittest.TestCase):
         self.assertEqual(html_blocks[0], '<p>Edit me!</p>')
 
         blocks = self.db.documents.getDocumentAsBlocks(doc)
-        self.assertEqual(blocks[0], 'Edit me!\n')
+        self.assertEqual(blocks[0], 'Edit me!')
 
     @given(str)
     def test_edit_document(self, new_text):
@@ -336,6 +336,18 @@ class DocTest(unittest.TestCase):
 
         # This fails because the special character cannot be mapped properly
         # self.assertEqual(len(readings), num_read)
+
+    def test_trim(self):
+        doc = self.db.documents.createDocument('test document', 0)
+        doc = self.db.documents.updateDocument(doc, '  test  ')
+        text = self.db.documents.getDocumentMarkdown(doc)
+        self.assertEqual(text, '  test')
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, '  test  ')
+        text = self.db.documents.getDocumentMarkdown(doc)
+        self.assertEqual(text, 'test')
+        text = self.db.documents.getBlock(doc, 0)
+        self.assertEqual(text, 'test')
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
