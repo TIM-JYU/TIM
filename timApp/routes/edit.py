@@ -52,7 +52,7 @@ def postParagraph():
     identifier = DocIdentifier(doc_id, version)
 
     try:
-        blocks, version = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
+        blocks, doc = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
     except IOError as err:
         print(err)
         abort('Failed to modify block', 400)
@@ -62,7 +62,7 @@ def postParagraph():
                          'js': jsPaths,
                          'css': cssPaths,
                          'angularModule': modules,
-                         'version': version})
+                         'version': doc.hash})
 
 @edit_page.route('/edit/<path:doc_name>')
 @edit_page.route("/documents/<path:doc_name>")
@@ -92,13 +92,13 @@ def addBlock():
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
     verify_document_version(doc_id, version)
-    blocks, version = timdb.documents.addMarkdownBlock(getNewest(doc_id), blockText, int(paragraph_id))
+    blocks, new_doc = timdb.documents.addMarkdownBlock(getNewest(doc_id), blockText, int(paragraph_id))
     preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
     return jsonResponse({'texts': preparedBlocks,
                          'js': jsPaths,
                          'css': cssPaths,
                          'angularModule': modules,
-                         'version': version})
+                         'version': new_doc.hash})
 
 @edit_page.route("/deleteParagraph/<int:doc_id>/<int:blockId>")
 def removeBlock(doc_id, blockId):
@@ -106,5 +106,5 @@ def removeBlock(doc_id, blockId):
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
     verify_document_version(doc_id, version)
-    version = timdb.documents.deleteParagraph(getNewest(doc_id), blockId)
-    return jsonResponse({'version': version})
+    new_doc = timdb.documents.deleteParagraph(getNewest(doc_id), blockId)
+    return jsonResponse({'version': new_doc.hash})

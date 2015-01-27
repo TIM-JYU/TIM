@@ -20,7 +20,7 @@ class Documents(TimDbBase):
 
     @contract
     def addMarkdownBlock(self, document_id: 'DocIdentifier', content: 'str',
-                         new_block_index: 'int') -> 'tuple(list(str),str)':
+                         new_block_index: 'int') -> 'tuple(list(str),DocIdentifier)':
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
@@ -32,12 +32,12 @@ class Documents(TimDbBase):
         assert self.documentExists(document_id.id), 'document does not exist: %r' % document_id
         self.ensureCached(document_id)
         response = self.ec.addBlock(document_id, new_block_index, content)
-        version = self.__handleModifyResponse(document_id,
+        new_doc = self.__handleModifyResponse(document_id,
                                               response,
                                               'Added a paragraph at index %d' % (new_block_index),
                                               new_block_index,
                                               len(response['paragraphs']))
-        return response['paragraphs'], version
+        return response['paragraphs'], new_doc
 
     @contract
     def __insertBlockToDb(self, name: 'str', owner_group_id: 'int', block_type: 'int') -> 'int':
@@ -132,7 +132,7 @@ class Documents(TimDbBase):
         self.git.commit('Deleted document {}.'.format(document_id))
 
     @contract
-    def deleteParagraph(self, document_id: 'DocIdentifier', par_id: 'int'):
+    def deleteParagraph(self, document_id: 'DocIdentifier', par_id: 'int') -> 'DocIdentifier':
         """Deletes a paragraph from a document.
         
         :param document_id: The id of the document from which to delete the paragraph.
@@ -141,12 +141,12 @@ class Documents(TimDbBase):
 
         self.ensureCached(document_id)
         response = self.ec.deleteBlock(document_id, par_id)
-        version = self.__handleModifyResponse(document_id,
+        new_doc = self.__handleModifyResponse(document_id,
                                               response,
                                               'Deleted a paragraph at index %d' % (par_id),
                                               par_id,
                                               -1)
-        return version
+        return new_doc
 
     @contract
     def documentExists(self, document_id: 'int') -> 'bool':
@@ -389,7 +389,7 @@ class Documents(TimDbBase):
         return docId
 
     @contract
-    def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int'):
+    def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
         doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         doc_hash = self.__commitDocumentChanges(doc_id, content,
                                                 'Imported document: %s (id = %d)' % (document_name, doc_id.id))
@@ -591,7 +591,7 @@ class Documents(TimDbBase):
                                response: 'dict',
                                message: 'str',
                                mod_index: 'int',
-                               mod_count: 'int'):
+                               mod_count: 'int') -> 'DocIdentifier':
         """Handles the response that comes from Ephemeral when modifying a document in some way.
         
         :param document_id: The id of the document that was modified.
@@ -607,7 +607,7 @@ class Documents(TimDbBase):
         try:
             version = self.__commitDocumentChanges(new_id, new_content, message)
         except NothingToCommitException:
-            return document_id.hash
+            return document_id
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
 
         new_id = DocIdentifier(new_id.id, version)
@@ -638,11 +638,11 @@ class Documents(TimDbBase):
                 offset = mod_count
             )
 
-        return version
+        return new_id
 
     @contract
     def modifyMarkDownBlock(self, document_id: 'DocIdentifier', block_id: 'int',
-                            new_content: 'str') -> 'tuple(list(str), str|None)':
+                            new_content: 'str') -> 'tuple(list(str), DocIdentifier)':
         """Modifies the specified block.
         
         :param document_id: The id of the document.
@@ -651,27 +651,27 @@ class Documents(TimDbBase):
         :returns: The modified blocks and the version hash as a tuple.
         """
 
-        assert self.documentExists(document_id.id), 'document does not exist: ' + document_id
+        assert self.documentExists(document_id.id), 'document does not exist: ' + str(document_id)
         self.ensureCached(document_id)
         response = self.ec.modifyBlock(document_id, block_id, new_content)
 
-        version = self.__handleModifyResponse(document_id,
+        new_doc = self.__handleModifyResponse(document_id,
                                               response,
                                               'Modified a paragraph at index %d' % (block_id),
                                               block_id,
                                               len(response['paragraphs']) - 1)
         blocks = response['paragraphs']
-        return blocks, version
+        return blocks, new_doc
 
     @contract
-    def renameDocument(self, document_id: 'DocIdentifier', new_name: 'str'):
+    def renameDocument(self, document_id: 'DocIdentifier', new_name: 'str') -> 'None':
         """Renames a document.
         
         :param document_id: The id of the document to be renamed.
         :param new_name: The new name for the document.
         """
 
-        assert self.documentExists(document_id.id), 'document does not exist: ' + document_id
+        assert self.documentExists(document_id.id), 'document does not exist: ' + str(document_id)
 
         cursor = self.db.cursor()
         cursor.execute('UPDATE Block SET description = ? WHERE type_id = ? AND id = ?',
