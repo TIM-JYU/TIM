@@ -341,8 +341,17 @@ class DocTest(unittest.TestCase):
         doc = self.db.documents.createDocument('test document', 0)
         doc = self.db.documents.updateDocument(doc, '  test  ')
         text = self.db.documents.getDocumentMarkdown(doc)
+        # Leading space shouldn't get stripped here because it may denote a code block
         self.assertEqual(text, '  test')
 
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, '  test  ')
+        text = self.db.documents.getDocumentMarkdown(doc)
+        # Leading space gets stripped now because the paragraph was processed by Ephemeral
+        self.assertEqual(text, 'test')
+        text = self.db.documents.getBlock(doc, 0)
+        self.assertEqual(text, 'test')
+
+        # Test to strip non-breaking spaces
         _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, '  test  ')
         text = self.db.documents.getDocumentMarkdown(doc)
         self.assertEqual(text, 'test')
