@@ -484,7 +484,8 @@ timApp.controller("ViewCtrl", ['$scope',
                 $par.append($("<a>", {
                     text: '#',
                     href: '#' + $(this).attr('id'),
-                    class: 'headerlink'
+                    class: 'headerlink',
+                    title: 'Permanent link'
                 }));
             });
         };
