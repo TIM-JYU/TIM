@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from timdb.timdb2 import TimDb
 
+import codecs
 import os
 import smtplib
 import string
