@@ -158,6 +158,8 @@ timApp.controller("ViewCtrl", ['$scope',
             editor.setOptions({maxLines: 40, minLines: 3});
             //$('.' + elem.par).get()[0].focus();
             var iOS = /(iPad|iPhone|iPod)/g.test(navigator.platform);
+            
+            // iPad does not open the keyboard if not manually focused to editable area
             if (!iOS)
             {
                 editor.focus();
