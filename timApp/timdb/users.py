@@ -223,7 +223,7 @@ class Users(TimDbBase):
         return result[0] if result is not None else None
 
     @contract
-    def getUserByEmail(self, email: 'str') -> 'dict':
+    def getUserByEmail(self, email: 'str') -> 'dict|None':
         """Gets the data of the specified user email address.
         
         :param name: Email address.
