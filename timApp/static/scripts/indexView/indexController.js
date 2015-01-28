@@ -44,20 +44,24 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.getDocsWithTimes = function() {
-        //folder = sc.getParameterByName('folder');
-        
+        sc.request = $q.defer();
+
         http({
             method : 'GET',
             url : '/getDocuments',
-            params: {folder: sc.folder}
+            params: {folder: sc.folder},
+            timeout: sc.request.promise
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayTimes = true;
+            sc.request = null;
         }).error(function(data, status, headers, config) {
             // TODO: Show some error message.
+            sc.request = null;
         });
     };
 
+    sc.request = null;
 	sc.parentfolder = "";
     sc.folder = "";
     sc.documentList = [];
@@ -105,4 +109,11 @@ function(sc, controller, http, q, $upload) {
         sc.progress = '';
     };
 
+    sc.cancelRequests = function() {
+        // Call this if you're making a new request
+        if (sc.request != null) {
+            sc.request.resolve();
+            sc.request = null;
+        }
+    };
 } ]);

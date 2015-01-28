@@ -62,7 +62,7 @@ table td {
                 	    <img src="{{url_for('static', filename='images/folder.png')}}"/>
                 	</td>
                 	<td ng-show="!doc.isFolder"></td>
-                    <td>
+                    <td ng-click="cancelRequests()">
                     	<a ng-show="!doc.isFolder" href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
                         <span ng-show="doc.canEdit">(editable)</span>
                     	<a ng-show="doc.isFolder" href="?folder={{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
