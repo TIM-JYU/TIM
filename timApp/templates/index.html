@@ -51,7 +51,7 @@ table td {
                     <td>
                 	    <img src="{{url_for('static', filename='images/folder.png')}}"/>
                 	</td>
-                	<td><a href="?folder={{ '{{ parentfolder }}' }}">..</a></td>
+                	<td><a href="?folder={{ '{{ parentfolder | escape }}' }}">..</a></td>
                 	<td></td>
                 	<td></td>
                 	<td></td>
@@ -63,15 +63,15 @@ table td {
                 	</td>
                 	<td ng-show="!doc.isFolder"></td>
                     <td>
-                    	<a ng-show="!doc.isFolder" href="/view/{{ '{{ doc.fullname }}' }}">{{ '{{ doc.name }}' }}</a>
+                    	<a ng-show="!doc.isFolder" href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
                         <span ng-show="doc.canEdit">(editable)</span>
-                    	<a ng-show="doc.isFolder" href="?folder={{ '{{ doc.fullname }}' }}">{{ '{{ doc.name }}' }}</a>
+                    	<a ng-show="doc.isFolder" href="?folder={{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
                     </td>
                     <td ng-show="!displayTimes">Updating...</td>
                     <td ng-show="displayTimes">{{ '{{ doc.versions[0].timestamp }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
                     <td><a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a></td>
-                    <td><a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname }}' }}">Teacher</a></td>
+                    <td><a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}">Teacher</a></td>
                 </tr>
             </table>
             <p ng-show="documentList.length == 0">There are no documents to show.</p>

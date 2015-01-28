@@ -31,7 +31,8 @@ function(sc, controller, http, q, $upload) {
        
        http({
             method : 'GET',
-            url : '/getDocuments?versions=0&folder=' + sc.folder
+            url : '/getDocuments',
+            params: {versions: 0, folder: sc.folder}
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex = true;
@@ -47,7 +48,8 @@ function(sc, controller, http, q, $upload) {
         
         http({
             method : 'GET',
-            url : '/getDocuments?folder=' + sc.folder
+            url : '/getDocuments',
+            params: {folder: sc.folder}
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayTimes = true;

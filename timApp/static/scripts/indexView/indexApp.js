@@ -9,3 +9,6 @@ indexApp.directive('bindOnce', function() {
         }
     }
 });
+indexApp.filter('escape', function() {
+  return window.encodeURIComponent;
+});
