@@ -114,6 +114,8 @@ function(sc, controller, http, q, $upload) {
         if (sc.request != null) {
             sc.request.resolve();
             sc.request = null;
+            console.log("Request canceled")
         }
+        console.log("Request is now null");
     };
 } ]);
