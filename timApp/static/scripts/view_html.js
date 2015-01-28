@@ -157,7 +157,11 @@ timApp.controller("ViewCtrl", ['$scope',
             editor.getSession().setWrapLimitRange(0, 79);
             editor.setOptions({maxLines: 40, minLines: 3});
             //$('.' + elem.par).get()[0].focus();
-            editor.focus();
+            var iOS = /(iPad|iPhone|iPod)/g.test(navigator.platform);
+            if (!iOS)
+            {
+                editor.focus();
+            }
             return editor;
         };
 
