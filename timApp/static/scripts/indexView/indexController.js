@@ -27,13 +27,16 @@ function(sc, controller, http, q, $upload) {
        else
            sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
        
-       return http({
+       console.log(sc.parentfolder);
+       
+       http({
             method : 'GET',
             url : '/getDocuments',
             params: {versions: 0, folder: sc.folder}
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex = true;
+            sc.getDocsWithTimes()
         }).error(function(data, status, headers, config) {
             sc.documentList = [];
             // TODO: Show some error message.
@@ -41,32 +44,27 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.getDocsWithTimes = function() {
-        sc.canceller = q.defer();
-
-        return http({
+        //folder = sc.getParameterByName('folder');
+        
+        http({
             method : 'GET',
             url : '/getDocuments',
-            params: {folder: sc.folder},
-            timeout: sc.canceller.promise
+            params: {folder: sc.folder}
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayTimes = true;
-            sc.request = null;
         }).error(function(data, status, headers, config) {
             // TODO: Show some error message.
-            sc.request = null;
         });
     };
 
-    sc.parentfolder = "";
+	sc.parentfolder = "";
     sc.folder = "";
     sc.documentList = [];
+    sc.getDocs();
     sc.displayIndex = false;
     sc.displayTimes = false;
     sc.m = {};
- 
-    sc.canceller = q.defer();   
-    sc.getDocs().then(sc.getDocsWithTimes());
 
     sc.uploadedFile;
     sc.progress;
@@ -107,8 +105,4 @@ function(sc, controller, http, q, $upload) {
         sc.progress = '';
     };
 
-    sc.cancelRequests = function() {
-        setTimeout( function() { sc.canceller.resolve("Cancelled"); }, 5 );
-    }
 } ]);
-
