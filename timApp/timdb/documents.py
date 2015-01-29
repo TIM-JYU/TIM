@@ -1,10 +1,14 @@
-from contracts import contract
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
 import os
-from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from shutil import copyfile
-from timdb.gitclient import NothingToCommitException, GitClient
+from datetime import datetime
+
+from contracts import contract
 import ansiconv
+
+from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
+from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
+from timdb.gitclient import NothingToCommitException, GitClient
+from utils import date_to_relative
 
 
 class Documents(TimDbBase):
@@ -91,6 +95,11 @@ class Documents(TimDbBase):
 
         self.ec.loadDocument(docId, b'Edit me!')
 
+        cursor = self.db.cursor()
+        cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP
+                          WHERE type_id = ? and id = ?""",
+                       [blocktypes.DOCUMENT, docId.id])
+        self.db.commit()
         return docId
 
     @contract
@@ -196,7 +205,7 @@ class Documents(TimDbBase):
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT id,description AS name FROM Block WHERE type_id = ?', [blocktypes.DOCUMENT])
+        cursor.execute('SELECT id,description AS name,modified FROM Block WHERE type_id = ?', [blocktypes.DOCUMENT])
         results = self.resultAsDictionary(cursor)
         zombies = []
         for result in results:
@@ -205,7 +214,14 @@ class Documents(TimDbBase):
                 zombies.append(result)
             else:
                 result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
-
+            if result['modified'] is None:
+                latest_version = self.getDocumentVersions(result['id'], limit=1, date_format='iso')
+                time_str = latest_version[0]['timestamp'].rsplit(' ', 1)[0]
+                cursor.execute("""UPDATE Block SET modified = strftime("%Y-%m-%d %H:%M:%S", ?)
+                                  WHERE type_id = ? and id = ?""", [time_str, blocktypes.DOCUMENT, result['id']])
+                result['modified'] = time_str
+            result['modified'] = date_to_relative(datetime.strptime(result['modified'], "%Y-%m-%d %H:%M:%S"))
+        self.db.commit()
         for zombie in zombies:
             results.remove(zombie)
 
@@ -340,9 +356,10 @@ class Documents(TimDbBase):
         return html
 
     @contract
-    def getDocumentVersions(self, document_id: 'int', limit: 'int'=100) -> 'list(dict(str:str))':
+    def getDocumentVersions(self, document_id: 'int', limit: 'int'=100, date_format: 'str'='relative') -> 'list(dict(str:str))':
         """Gets the versions of a document.
         
+        :param date_format: The date format.
         :param limit: Maximum number of versions to get.
         :param document_id: The id of the document whose versions will be fetched.
         :returns: A list of the versions of the document.
@@ -355,7 +372,7 @@ class Documents(TimDbBase):
             raise TimDbException('The specified document does not exist.')
 
         file_path = self.getDocumentPathAsRelative(document_id)
-        output, _ = self.git.command('log --format=%H|%ad|%an|%s --date=relative -n {} {}'.format(limit, file_path))
+        output, _ = self.git.command('log --format=%H|%ad|%an|%s --date={} -n {} {}'.format(date_format, limit, file_path))
         lines = output.splitlines()
         versions = []
         for line in lines:
@@ -657,6 +674,7 @@ class Documents(TimDbBase):
                 offset = mod_count
             )
 
+        self.updateDocModified(new_id)
         return new_id
 
     @contract
@@ -717,6 +735,7 @@ class Documents(TimDbBase):
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
         self.__updateParMappings(document_id, new_id)
+        self.updateDocModified(new_id)
         return new_id
 
     def trimDoc(self, text: 'str'):
@@ -726,3 +745,10 @@ class Documents(TimDbBase):
         :return: The trimmed text.
         """
         return text.rstrip().strip('\r\n')
+
+    @contract
+    def updateDocModified(self, doc_id: 'DocIdentifier'):
+        cursor = self.db.cursor()
+        cursor.execute('UPDATE Block SET modified = CURRENT_TIMESTAMP WHERE type_id = ? and id = ?',
+                       [blocktypes.DOCUMENT, doc_id.id])
+        self.db.commit()

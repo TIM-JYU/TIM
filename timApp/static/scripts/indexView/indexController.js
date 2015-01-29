@@ -36,24 +36,8 @@ function(sc, controller, http, q, $upload) {
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex = true;
-            sc.getDocsWithTimes()
         }).error(function(data, status, headers, config) {
             sc.documentList = [];
-            // TODO: Show some error message.
-        });
-    };
-
-    sc.getDocsWithTimes = function() {
-        //folder = sc.getParameterByName('folder');
-        
-        http({
-            method : 'GET',
-            url : '/getDocuments',
-            params: {folder: sc.folder}
-        }).success(function(data, status, headers, config) {
-            sc.documentList = data;
-            sc.displayTimes = true;
-        }).error(function(data, status, headers, config) {
             // TODO: Show some error message.
         });
     };
