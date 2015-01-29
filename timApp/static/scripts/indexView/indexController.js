@@ -27,16 +27,13 @@ function(sc, controller, http, q, $upload) {
        else
            sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
        
-       console.log(sc.parentfolder);
-       
-       http({
+       return http({
             method : 'GET',
             url : '/getDocuments',
             params: {versions: 0, folder: sc.folder}
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex = true;
-            sc.getDocsWithTimes()
         }).error(function(data, status, headers, config) {
             sc.documentList = [];
             // TODO: Show some error message.
@@ -44,13 +41,13 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.getDocsWithTimes = function() {
-        sc.request = $q.defer();
+        sc.canceller = q.defer();
 
-        http({
+        return http({
             method : 'GET',
             url : '/getDocuments',
             params: {folder: sc.folder},
-            timeout: sc.request.promise
+            timeout: sc.canceller.promise
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayTimes = true;
@@ -61,14 +58,15 @@ function(sc, controller, http, q, $upload) {
         });
     };
 
-    sc.request = null;
-	sc.parentfolder = "";
+    sc.parentfolder = "";
     sc.folder = "";
     sc.documentList = [];
-    sc.getDocs();
     sc.displayIndex = false;
     sc.displayTimes = false;
     sc.m = {};
+ 
+    sc.canceller = q.defer();   
+    sc.getDocs().then(sc.getDocsWithTimes());
 
     sc.uploadedFile;
     sc.progress;
@@ -110,12 +108,7 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.cancelRequests = function() {
-        // Call this if you're making a new request
-        if (sc.request != null) {
-            sc.request.resolve();
-            sc.request = null;
-            console.log("Request canceled")
-        }
-        console.log("Request is now null");
-    };
+        setTimeout( function() { sc.canceller.resolve("Cancelled"); }, 5 );
+    }
 } ]);
+
