@@ -58,8 +58,9 @@ def login():
     else:
         return "Invalid login request!"
 
+@login_page.route("/korppiLogin")
 def loginWithKorppi():
-    urlfile = request.url_root + "login"
+    urlfile = request.url_root + "korppiLogin"
     if request.args.get('came_from'):
         session['came_from'] = request.args.get('came_from')
     if not session.get('appcookie'):
