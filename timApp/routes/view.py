@@ -64,11 +64,11 @@ def view(doc_name, template_name, view_range=None, user=0, teacher=False):
 
     if not hasViewAccess(doc_id):
         if not loggedIn():
-            return redirect(url_for('loginWithKorppi', came_from=request.path))
+            return redirect('/korppiLogin?came_from=' + request.path)
         else:
             abort(403)
     if not loggedIn():
-        return redirect(url_for('loginWithKorppi', came_from=request.path))
+        return redirect('/korppiLogin?came_from=' + request.path)
     version = timdb.documents.getNewestVersion(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
     doc = timdb.documents.getDocument(doc_id)
