@@ -55,11 +55,9 @@ var groups = {{user_groups|tojson|safe}};
     {% endif %} {% endwith %}
         <div class="margin">
             <a href="/view/{{ '{{doc.name}}' }}">View this document</a> <br>
-            <a href="/edit/{{ '{{doc.name}}' }}">Edit this document</a>
         </div>
-        Document owner: {{ '{{ doc.owner.name }}' }}
         <div class="margin">
-            Change owner: <select ng-model="doc.owner"
+            Document owner: <select ng-model="doc.owner"
                                   ng-options="group.name for group in userGroups track by group.id"
                 ng-change="changeOwner()">
 
