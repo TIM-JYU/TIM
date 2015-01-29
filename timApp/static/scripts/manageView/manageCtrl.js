@@ -23,10 +23,23 @@ PermApp.controller("PermCtrl", [
     function (sc, $http, $upload) {
         sc.editors = editors;
         sc.viewers = viewers;
+        sc.userGroups = groups;
         sc.doc = doc;
         sc.newName = doc.name;
         doc.fulltext = doc.fulltext.trim();
         sc.fulltext = doc.fulltext;
+
+        sc.changeOwner = function() {
+            sc.ownerUpdating = true;
+            $http.put('/changeOwner/' + sc.doc.id + '/' + sc.doc.owner.id).success(
+                function (data, status, headers, config) {
+
+                }).error(function (data, status, headers, config) {
+                    alert(data.error);
+                }).then(function () {
+                    sc.ownerUpdating = false;
+                });
+        };
 
         sc.removeConfirm = function (group, type) {
             if (confirm("Are you sure you want to remove this usergroup?")) {

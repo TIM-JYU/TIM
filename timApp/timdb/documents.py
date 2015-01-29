@@ -752,3 +752,15 @@ class Documents(TimDbBase):
         cursor.execute('UPDATE Block SET modified = CURRENT_TIMESTAMP WHERE type_id = ? and id = ?',
                        [blocktypes.DOCUMENT, doc_id.id])
         self.db.commit()
+
+    @contract
+    def setOwner(self, doc_id: 'int', usergroup_id: 'int'):
+        """Changes the owner group for a document.
+
+        :param doc_id: The id of the document.
+        :param usergroup_id: The id of the new usergroup.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('UPDATE Block SET UserGroup_id = ? WHERE type_id = ? and id = ?',
+                       [usergroup_id, blocktypes.DOCUMENT, doc_id])
+        self.db.commit()
