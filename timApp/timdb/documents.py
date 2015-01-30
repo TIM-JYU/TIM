@@ -549,9 +549,11 @@ class Documents(TimDbBase):
                 update ParMappings set new_ver = ?, new_index = ?, modified = ?
                 where doc_id = ? and doc_ver = ? and par_index = ?""",
                 [new_document_id.hash, new_index, str(affinity < 1), old_document_id.id, old_document_id.hash, old_index])
+
+            # We use "or ignore" in case two old paragraphs have been mapped to the same new one
             cursor.execute(
                 """
-                insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+                insert or ignore into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
                 values (?, ?, ?, NULL, NULL, NULL)
                 """,
                 [old_document_id.id, new_document_id.hash, new_index])
