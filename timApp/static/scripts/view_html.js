@@ -540,7 +540,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     txt = txt.trim().replace(/\\#/g, "#");
                     var entry = {
                         text: sc.totext(txt),
-                        target: sc.tolink(txt),
+                        target: encodeURIComponent($location.path().substring(1)) + sc.tolink(txt),
                         style: astyle,
                         level: lvl,
                         items: [],

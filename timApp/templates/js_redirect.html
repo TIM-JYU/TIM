@@ -4,7 +4,8 @@
     <script>
         var target_url = {{ target_url|tojson }};
         var separator = target_url.indexOf('?') >= 0 ? '&' : '?';
-        var came_from = encodeURIComponent({{ came_from|tojson }});
+        var came_from_raw = {{ came_from|tojson }};
+        var came_from = encodeURIComponent(came_from_raw.replace("#", "%23"));
         window.location.replace(target_url
         + separator
         + 'came_from='
