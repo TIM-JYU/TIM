@@ -21,7 +21,7 @@
                        class="loginButton">
                 <input type="hidden"
                        name="came_from"
-                       value="{{ request.path }}">
+                       value="{{ request.path|urlencode }}">
             </div>
         </form>
         {% if session.altlogin == "signup" %}

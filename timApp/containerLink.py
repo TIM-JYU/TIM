@@ -38,8 +38,8 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None):
         request = requests.request(method, plug['host'] + route + "/", data=data, timeout=5, headers=headers)
         request.encoding = 'utf-8'
         return request.text
-    except requests.exceptions.Timeout:
-        raise PluginException("Could not connect to plugin")
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+        raise PluginException("Could not connect to plugin.")
 
 
 def call_plugin_html(plugin, info, state, task_id=None):

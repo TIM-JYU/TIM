@@ -138,15 +138,14 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
         reqs = json.loads(resp)
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
-            # TODO: Better check for absolute URL.
-            if "http" in src:
+            if src.startswith("http") or src.startswith("/"):
                 js_paths.append(src)
             else:
                 path = get_plugin_tim_url(plugin_name) + "/" + src
                 js_paths.append(path)
-        for cssSrc in plugin_css_files:
-            if "http" in src:
-                css_paths.append(cssSrc)
+        for src in plugin_css_files:
+            if src.startswith("http") or src.startswith("/"):
+                css_paths.append(src)
             else:
                 path = get_plugin_tim_url(plugin_name) + "/" + src
                 css_paths.append(path)

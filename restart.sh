@@ -8,8 +8,8 @@ set -e
 params="$*"
 
 if [ "$params" = "" ] ; then
-    echo "Usage: restart_all [tim|timbeta|timdev|plugins]..."
-    echo "Example: restart_all tim timdev"
+    echo "Usage: restart [tim|timbeta|timdev|plugins]..."
+    echo "Example: restart tim timdev"
     exit
 fi
 

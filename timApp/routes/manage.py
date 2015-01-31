@@ -20,10 +20,27 @@ def manage(doc_id):
     doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
     hash = doc_data['versions'][0]['hash']
     doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
+    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
     doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, hash))
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
-    return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
+    return render_template('manage.html',
+                           doc=doc_data,
+                           editors=editors,
+                           viewers=viewers,
+                           user_groups=possible_groups)
+
+@manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
+def changeOwner(doc_id, new_owner):
+    timdb = getTimDb()
+    if not timdb.documents.documentExists(doc_id):
+        abort(404)
+    verifyOwnership(doc_id)
+    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    if new_owner not in [group['id'] for group in possible_groups]:
+        abort(403, "You must belong to the new usergroup.")
+    timdb.documents.setOwner(doc_id, new_owner)
+    return "Success"
 
 @manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
 def addPermission(doc_id, group_name, perm_type):

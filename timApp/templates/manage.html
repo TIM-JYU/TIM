@@ -42,6 +42,7 @@ table td {
 var doc = {{doc|tojson|safe}};
 var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
+var groups = {{user_groups|tojson|safe}};
 </script>
 {% endblock %}
 {% block content %}
@@ -54,9 +55,15 @@ var viewers = {{viewers|tojson|safe}};
     {% endif %} {% endwith %}
         <div class="margin">
             <a href="/view/{{ '{{doc.name}}' }}">View this document</a> <br>
-            <a href="/edit/{{ '{{doc.name}}' }}">Edit this document</a>
         </div>
-        Document owner: {{ '{{ doc.owner.name }}' }}
+        <div class="margin">
+            Document owner: <select ng-model="doc.owner"
+                                  ng-options="group.name for group in userGroups track by group.id"
+                ng-change="changeOwner()">
+
+        </select>
+            <span ng-show="ownerUpdating">Updating...</span>
+        </div>
         <div class="margin">
             Editors:
             <p ng-show="editors.length == 0">This document doesn't have editors.</p>

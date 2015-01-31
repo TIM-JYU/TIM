@@ -1,5 +1,6 @@
 var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules), function($locationProvider){
     $locationProvider.html5Mode(true);
+    $locationProvider.hashPrefix('!');
 });
 
 timApp.controller("ViewCtrl", ['$scope',
@@ -156,7 +157,13 @@ timApp.controller("ViewCtrl", ['$scope',
             editor.getSession().setWrapLimitRange(0, 79);
             editor.setOptions({maxLines: 40, minLines: 3});
             //$('.' + elem.par).get()[0].focus();
-            editor.focus();
+            var iOS = /(iPad|iPhone|iPod)/g.test(navigator.platform);
+            
+            // iPad does not open the keyboard if not manually focused to editable area
+            if (!iOS)
+            {
+                editor.focus();
+            }
             return editor;
         };
 
@@ -225,10 +232,11 @@ timApp.controller("ViewCtrl", ['$scope',
             var par_id = sc.getParIndex($par);
             var editorElem = $par.find('.editor')[0];
             var text = ace.edit(editorElem).getSession().getValue();
+            var url;
             if ($par.hasClass("new")) {
-                var url = '/newParagraph/';
+                url = '/newParagraph/';
             } else {
-                var url = '/postParagraph/';
+                url = '/postParagraph/';
             }
             http.post(url, {
                 "docId": sc.docId,
@@ -483,7 +491,8 @@ timApp.controller("ViewCtrl", ['$scope',
                 $par.append($("<a>", {
                     text: '#',
                     href: '#' + $(this).attr('id'),
-                    class: 'headerlink'
+                    class: 'headerlink',
+                    title: 'Permanent link'
                 }));
             });
         };
@@ -499,8 +508,8 @@ timApp.controller("ViewCtrl", ['$scope',
 
         sc.tolink = function (str) {
             if (str.indexOf('{') >= 0 && str.indexOf('}') > 0) {
-                ob = str.indexOf('{')
-                cb = str.indexOf('}')
+                var ob = str.indexOf('{');
+                var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
             return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
@@ -522,16 +531,16 @@ timApp.controller("ViewCtrl", ['$scope',
                 sc.indexTable = [];
 
                 for (var i = 0; i < data.length; i++) {
-                    lvl = sc.findIndexLevel(data[i]);
+                    var lvl = sc.findIndexLevel(data[i]);
                     if (lvl < 1 || lvl > 3)
                         continue;
 
-                    astyle = "a" + lvl;
-                    txt = data[i].substr(lvl);
-                    txt = txt.trim().replace(/\\#/g, "#")
-                    entry = {
+                    var astyle = "a" + lvl;
+                    var txt = data[i].substr(lvl);
+                    txt = txt.trim().replace(/\\#/g, "#");
+                    var entry = {
                         text: sc.totext(txt),
-                        target: sc.tolink(txt),
+                        target: encodeURIComponent($location.path().substring(1)) + sc.tolink(txt),
                         style: astyle,
                         level: lvl,
                         items: [],
@@ -593,7 +602,7 @@ timApp.controller("ViewCtrl", ['$scope',
                 return state;
             }
 
-            newState = sc.invertState(state);
+            var newState = sc.invertState(state);
             if (newState != state)
                 sc.clearSelection();
             return newState;

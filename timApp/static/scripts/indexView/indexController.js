@@ -14,7 +14,7 @@ function(sc, controller, http, q, $upload) {
         http.post('/createDocument', {
             "doc_name" : name
         }).success(function(data, status, headers, config) {
-            window.location.href = "/edit/" + data.name;
+            window.location.href = "/view/" + data.name;
         }).error(function(data, status, headers, config) {
             alert(data.message);
         });
@@ -31,27 +31,13 @@ function(sc, controller, http, q, $upload) {
        
        http({
             method : 'GET',
-            url : '/getDocuments?versions=0&folder=' + sc.folder
+            url : '/getDocuments',
+            params: {versions: 0, folder: sc.folder}
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex = true;
-            sc.getDocsWithTimes()
         }).error(function(data, status, headers, config) {
             sc.documentList = [];
-            // TODO: Show some error message.
-        });
-    };
-
-    sc.getDocsWithTimes = function() {
-        //folder = sc.getParameterByName('folder');
-        
-        http({
-            method : 'GET',
-            url : '/getDocuments?folder=' + sc.folder
-        }).success(function(data, status, headers, config) {
-            sc.documentList = data;
-            sc.displayTimes = true;
-        }).error(function(data, status, headers, config) {
             // TODO: Show some error message.
         });
     };
