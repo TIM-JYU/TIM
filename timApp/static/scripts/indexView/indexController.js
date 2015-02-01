@@ -8,7 +8,7 @@ function(sc, controller, http, q, $upload) {
         var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
             results = regex.exec(location.search);
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-    }
+    };
 
     sc.createDocument = function(name) {
         http.post('/createDocument', {
@@ -26,8 +26,6 @@ function(sc, controller, http, q, $upload) {
            sc.parentfolder = null;
        else
            sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
-       
-       console.log(sc.parentfolder);
        
        http({
             method : 'GET',
@@ -49,10 +47,7 @@ function(sc, controller, http, q, $upload) {
     sc.displayIndex = false;
     sc.displayTimes = false;
     sc.m = {};
-
-    sc.uploadedFile;
-    sc.progress;
-    sc.uploadInProgress;
+    
     sc.selectedFile = "";
     sc.onFileSelect = function(url, $files) {
         // $files: an array of files selected, each file has name, size,
@@ -64,7 +59,7 @@ function(sc, controller, http, q, $upload) {
             sc.upload = $upload.upload({
                 url : url,
                 method : 'POST',
-                file : file,
+                file : file
             }).progress(function(evt) {
                 sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
             }).success(function(data, status, headers, config) {
