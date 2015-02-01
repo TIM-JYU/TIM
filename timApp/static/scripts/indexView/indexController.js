@@ -27,8 +27,6 @@ function(sc, controller, http, q, $upload) {
        else
            sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
        
-       console.log(sc.parentfolder);
-       
        http({
             method : 'GET',
             url : '/getDocuments',
