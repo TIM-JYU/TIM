@@ -766,3 +766,14 @@ class Documents(TimDbBase):
         cursor.execute('UPDATE Block SET UserGroup_id = ? WHERE type_id = ? and id = ?',
                        [usergroup_id, blocktypes.DOCUMENT, doc_id])
         self.db.commit()
+
+    @contract
+    def previewBlock(self, content: 'str') -> 'list(str)':
+        """Previews the specified markdown in HTML
+
+        :param content: The markdown to preview.
+        :returns: A list of HTML blocks.
+        """
+        doc_id = DocIdentifier('temp', '')
+        self.ec.loadDocument(doc_id, content.encode('utf-8'))
+        return self.getDocumentAsHtmlBlocks(doc_id)

@@ -4,5 +4,16 @@
     <button class="timButton deletePar">Delete</button>
 </div>
 <div class="editor"></div>
-<input type="file" ng-file-select="onFileSelect('/upload/', $files)">
+Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
 <span ng-bind="progress"></span>
+<div class="preview">
+    <span>Preview
+        (<ng-pluralize count="parCount"
+                      when="{'0': 'empty',
+                     '1': '1 paragraph',
+                     'other': '{} paragraphs'}">
+        </ng-pluralize>)</span>
+    <span ng-show="outofdate">(updating...)</span>
+
+    <div class="previewcontent"></div>
+</div>

@@ -68,6 +68,36 @@ timApp.controller("ViewCtrl", ['$scope',
                     success: function () {
                         var editorScope = sc.$new();
                         var aceEdit = sc.applyAceEditor($div.find('.editor')[0]);
+                        editorScope.timer = null;
+                        editorScope.outofdate = false;
+                        aceEdit.on("change", function(){
+                            editorScope.outofdate = true;
+                            editorScope.$apply();
+                            if (editorScope.timer) {
+                                clearTimeout(editorScope.timer);
+                            }
+                            editorScope.timer = setTimeout(function() {
+                                var text = aceEdit.getSession().getValue();
+                                http.post('/preview/' + sc.docId, {
+                                    "text": text
+                                }).success(function (data, status, headers, config) {
+                                    var len = data.texts.length;
+                                    var $previewDiv = $(".previewcontent");
+                                    $previewDiv.html("");
+                                    for (var i = 0; i < len; i++) {
+                                        $previewDiv
+                                            .append($("<div>", {class: "par"})
+                                                .append($("<div>", {class: "parContent"})
+                                                    .html($compile(data.texts[i])(editorScope))));
+                                    }
+                                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
+                                    editorScope.outofdate = false;
+                                    editorScope.parCount = len;
+                                }).error(function (data, status, headers, config) {
+                                    alert("Failed to show preview: " + data.error);
+                                });
+                            }, 500);
+                        });
                         editorScope.onFileSelect = function (url, $files) {
                             //$files: an array of files selected, each file has name, size, and type.
                             for (var i = 0; i < $files.length; i++) {
@@ -246,8 +276,10 @@ timApp.controller("ViewCtrl", ['$scope',
                 http.defaults.headers.common.Version = data.version;
                 var len = data.texts.length;
                 for (var i = len - 1; i >= 0; i--) {
-                    $par.after($("<div>", {class: "par"})
+                    var $newpar = $("<div>", {class: "par"});
+                    $par.after($newpar
                         .append($("<div>", {class: "parContent"}).html($compile(data.texts[i])(sc))));
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
                 }
                 $par.remove();
             }).error(function (data, status, headers, config) {

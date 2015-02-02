@@ -276,6 +276,13 @@ ul ul  ul, ol ol ol {
     position: relative;
 }
 
+.previewcontent {
+    border: 2px solid black;
+    border-radius: 15px;
+    padding: 1em;
+    margin: 2px;
+}
+
 .timButton {
     display: block;
     margin: auto;
