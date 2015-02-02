@@ -44,8 +44,7 @@ table td {
                         <td></td>
                         <td>Last modified</td>
                         <td>Owner</td>
-                        <td></td>
-                        <td></td>
+                        <td>Rights</td>
                     </tr>
                 </thead>
                 <tr ng-show="parentfolder != null">
@@ -57,7 +56,6 @@ table td {
                 	<td></td>
                 	<td></td>
                     <td></td>
-                    <td></td>
                 </tr>
                 <tr ng-repeat="doc in documentList">
                 	<td>
@@ -65,14 +63,16 @@ table td {
                 	</td>
                     <td>
                     	<a ng-show="!doc.isFolder" href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
-                        <span ng-show="doc.canEdit">(editable)</span>
                     	<a ng-show="doc.isFolder" href="?folder={{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
                     </td>
                     <td></td>
                     <td>{{ '{{ doc.modified }}' }}</td>
                     <td>{{ '{{ doc.owner.name }}' }}</td>
-                    <td><a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a></td>
-                    <td><a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}">Teacher</a></td>
+                    <td>
+                        <a ng-show="doc.canEdit" href="/view/{{ '{{ doc.id }}' }}">Edit</a>
+                        <a ng-show="doc.isOwner" href="/manage/{{ '{{ doc.id }}' }}">Manage</a>
+                        <a ng-show="doc.isOwner" href="/teacher/{{ '{{ doc.fullname | escape }}' }}">Teacher</a>
+                    </td>
                 </tr>
             </table>
             <p ng-show="documentList.length == 0">There are no documents to show.</p>
