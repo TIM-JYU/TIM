@@ -1,5 +1,5 @@
 <div class="viewLogin">
-    {% if session.user_id %}
+{% if session.user_id %}
         <span>Logged in as: {{ session.real_name }} ({{ session.user_name }})</span>
         <form method="POST" action="/logout">
             <input type="submit" value="Logout">
@@ -33,9 +33,9 @@
                 your user name.
             </p>
             <div class="loginFieldDiv">
-        	    <label for="email" class="loginFieldLabel">Email</label> 
+                <label for="email" class="loginFieldLabel">Email</label> 
                 <input name="email" type="text" class="loginFieldInput">
-        	</div>
+            </div>
             <div class="loginButtonDiv">
                 <input type="submit" value="Sign up">
             </div>
@@ -43,30 +43,30 @@
         {% endif %}
         {% if session.altlogin == "signup2" %}
         <form method="POST" action="/altsignup2">
-        	<p class="loginwelcome">
-        	    Welcome to TIM! We need just a few more details to get you started.
-        	</p>
+            <p class="loginwelcome">
+                Welcome to TIM! We need just a few more details to get you started.
+            </p>
                 <input type="hidden" name="token" value="{{ session.token }}"></input>
-        	<div class="loginFieldDiv">
-        	    <label for="name" class="loginFieldLabel">User name</label> 
+            <div class="loginFieldDiv">
+                <label for="name" class="loginFieldLabel">User name</label> 
                 <input name="name" type="text" class="loginFieldInput" value="{{ session.user_name }}">
-        	</div>
-        	<div class="loginFieldDiv">
-        	    <label for="realname" class="loginFieldLabel">Real name</label> 
+            </div>
+            <div class="loginFieldDiv">
+                <label for="realname" class="loginFieldLabel">Real name</label> 
                 <input name="realname" class="loginFieldInput" type="text" value="{{ session.real_name }}">
-        	</div>
-        	<div class="loginFieldDiv">
-        	    <label for="email" class="loginFieldLabel">Email</label> 
+            </div>
+            <div class="loginFieldDiv">
+                <label for="email" class="loginFieldLabel">Email</label> 
                 <span name="email" class="loginFieldStatic"> {{ session.email }}</span>
-        	</div>
-        	<div class="loginFieldDiv">
-        	    <label for="password" class="loginFieldLabel">New password</label> 
+            </div>
+            <div class="loginFieldDiv">
+                <label for="password" class="loginFieldLabel">New password</label> 
                 <input name="password" class="loginFieldInput" type="password"">
-        	</div>
-        	<div class="loginFieldDiv">
-        	    <label for="passconfirm" class="loginFieldLabel">Repeat new password</label> 
+            </div>
+            <div class="loginFieldDiv">
+                <label for="passconfirm" class="loginFieldLabel">Repeat new password</label> 
                 <input name="passconfirm" class="loginFieldInput" type="password"">
-        	</div>
+            </div>
             <div class="loginButtonDiv">
                 <input type="submit" value="Create account">
             </div>
@@ -75,16 +75,21 @@
         {% if session.altlogin == "login" %}
         <form method="POST" action="/altlogin">
             <p class="loginwelcome">
-        	    Welcome to TIM! Please enter your email address and password to log in.
-        	</p>
-        	<div class="loginFieldDiv">
-        	    <label for="email" class="loginFieldLabel">Email</label> 
+            Welcome to TIM! Please enter your email address and password to log in.
+            </p>
+            <div class="loginFieldDiv">
+                {% if came_from %}
+                <input type="hidden" name="came_from" value="{{came_from}}">
+                {% else %}
+                <input type="hidden" name="came_from" value="/">
+                {% endif %}
+                <label for="email" class="loginFieldLabel">Email</label> 
                 <input name="email" class="loginFieldInput" type="email" value="{{session.email}}">
-        	</div>
-        	<div class="loginFieldDiv">
-        	    <label for="password" class="loginFieldLabel">Password</label> 
+            </div>
+            <div class="loginFieldDiv">
+                <label for="password" class="loginFieldLabel">Password</label> 
                 <input name="password" class="loginFieldInput" type="password">
-        	</div>
+            </div>
             <div class="loginButtonDiv">
                 <input type="submit" value="Login">
             </div>

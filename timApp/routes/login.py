@@ -46,7 +46,7 @@ def logout():
     session.pop('email', None)
     session.pop('real_name', None)
     session.pop('appcookie', None)
-    session.pop('altlogin')
+    session.pop('altlogin', None)
     session['user_name'] = 'Anonymous'
     flash('You were successfully logged out.', 'loginmsg')
     return redirect(url_for('indexPage'))
@@ -67,6 +67,7 @@ def loginWithKorppi():
     urlfile = request.url_root + "korppiLogin"
     if request.args.get('came_from'):
         session['came_from'] = request.args.get('came_from')
+        
     if not session.get('appcookie'):
         randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = randomHex
@@ -114,23 +115,26 @@ def loginWithKorppi():
     session['real_name'] = realName
     session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session.get('came_from', '/'))
+
+    came_from = session['came_from']
+    session.pop('came_from', None)
+    return redirect(came_from)
 
 def loginWithEmail():
     if ('altlogin' in session and session['altlogin'] == 'login'):
-        session.pop('altlogin')
+        session.pop('altlogin', None)
     else:
         session['altlogin'] = "login"
 
-    return redirect(session.get('came_from', '/'))
+    return redirect(request.form['came_from'])
 
 def signupWithEmail():
     if ('altlogin' in session and session['altlogin'] == 'signup'):
-        session.pop('altlogin')
+        session.pop('altlogin', None)
     else:
         session['altlogin'] = "signup"
 
-    return redirect(session.get('came_from', '/'))
+    return redirect(request.form['came_from'])
 
 @login_page.route("/altsignup", methods=['POST'])
 def altSignup():
@@ -138,7 +142,7 @@ def altSignup():
     email = request.form['email']
     if not email or not __isValidEmail(email):
         flash("You must supply a valid email address!")
-        return redirect(session.get('came_from', '/'))
+        return redirect(request.form['came_from'])
         
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     
@@ -146,19 +150,19 @@ def altSignup():
         __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
     except Exception as e:
         flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
-        return redirect(session.get('came_from', '/'))
+        return redirect(request.form['came_from'])
     
     timdb = getTimDb()
     timdb.users.createPotentialUser(email, password)
     
     #print("Signup: email {}, password {}".format(email, password))
-    session.pop('altlogin')
+    session.pop('altlogin', None)
     session.pop('user_id', None)
     session.pop('appcookie', None)
     session['user_name'] = 'Anonymous'
     session["email"] = email
     flash("A password has been sent to you. Please check your email.")
-    return redirect(session.get('came_from', '/'))
+    return redirect(request.form['came_from'])
 
 @login_page.route("/altsignup2", methods=['POST'])
 def altSignupAfter():
@@ -170,6 +174,7 @@ def altSignupAfter():
     oldpass = request.form['token']
     password = request.form['password']
     confirm = request.form['passconfirm']
+    came_from = request.form['came_from']
     timdb = getTimDb()
 
     if not timdb.users.testPotentialUser(email, oldpass):
@@ -181,34 +186,35 @@ def altSignupAfter():
         nameId = timdb.users.getUserByName(userName)
         if nameId is not None and nameId != userId:
             flash('User name already exists. Please try another one.', 'loginmsg')
-            return redirect(session.get('came_from', '/'))
+            return redirect(came_from)
     else:
         if timdb.users.getUserByName(userName) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
-            return redirect(session.get('came_from', '/'))
+            return redirect(came_from)
     
     if password != confirm:
         flash('Passwords do not match.', 'loginmsg')
-        return redirect(session.get('came_from', '/'))
+        return redirect(came_from)
         
     if len(password) < 6:
         flash('A password should contain at least six characters.', 'loginmsg')
-        return redirect(session.get('came_from', '/'))
+        return redirect(came_from)
     
     if userId == 0:
         userId = timdb.users.createUser(userName, realName, email, password=password)
         gid = timdb.users.createUserGroup(userName)
+        timdb.users.addUserToGroup(gid, userId)
     else:
         timdb.users.updateUser(userId, userName, realName, email, password=password)
     
     timdb.users.deletePotentialUser(email)
     
-    session.pop('altlogin')
+    session.pop('altlogin', None)
     session['user_id'] = userId
     session['user_name'] = userName
     session['real_name'] = realName
     flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session.get('came_from', '/'))
+    return redirect(came_from)
     
 @login_page.route("/altlogin", methods=['POST'])
 def altLogin():
@@ -219,7 +225,7 @@ def altLogin():
     if timdb.users.testUser(email, password):
         # Registered user
         user = timdb.users.getUserByEmail(email)
-        session.pop('altlogin')
+        session.pop('altlogin', None)
         session['user_id'] = user['id']
         session['user_name'] = user['name']
         session['real_name'] = user['real_name']
@@ -227,8 +233,9 @@ def altLogin():
         flash('You were successfully logged in.', 'loginmsg')
 
         # Check if the users' group exists
-        if (len(timdb.users.getUserGroupsByName(user_name)) == 0):
-            createUserGroup(user_name)
+        if (len(timdb.users.getUserGroupsByName(user['name'])) == 0):
+            gid = createUserGroup(user['name'])
+            timdb.users.addUserToGroup(gid, user['id'])
         
     elif timdb.users.testPotentialUser(email, password):
         # New user
@@ -242,5 +249,5 @@ def altLogin():
     else:
         flash("Email address or password did not match. Please try again.", 'loginmsg')
     
-    return redirect(session.get('came_from', '/'))
+    return redirect(request.form['came_from'])
     
