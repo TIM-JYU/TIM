@@ -42,7 +42,11 @@ def __sendMail(email, subject, text, sender='no-reply@tim.it.jyu.fi'):
 @login_page.route("/logout", methods=['POST'])
 def logout():
     session.pop('user_id', None)
+    session.pop('user_name', None)
+    session.pop('email', None)
+    session.pop('real_name', None)
     session.pop('appcookie', None)
+    session.pop('altlogin')
     session['user_name'] = 'Anonymous'
     flash('You were successfully logged out.', 'loginmsg')
     return redirect(url_for('indexPage'))
@@ -89,13 +93,22 @@ def loginWithKorppi():
     userId = timdb.users.getUserByName(userName)
     
     if userId is None:
-        uid = timdb.users.createUser(userName, realName, email)
-        gid = timdb.users.createUserGroup(userName)
-        timdb.users.addUserToGroup(gid, uid)
-        userId = uid
+        # Try email
+        user = timdb.users.getUserByEmail(email)
+        if user is not None:
+            userId = user['id']
+            timdb.users.updateUser(userId, userName, realName, email)
+            gid = timdb.users.createUserGroup(userName)
+            timdb.users.addUserToGroup(gid, userId)
+        else:
+            uid = timdb.users.createUser(userName, realName, email)
+            gid = timdb.users.createUserGroup(userName)
+            timdb.users.addUserToGroup(gid, uid)
+            userId = uid
     else:
         if realName:
             timdb.users.updateUser(userId, userName, realName, email)
+
     session['user_id'] = userId
     session['user_name'] = userName
     session['real_name'] = realName
@@ -184,6 +197,7 @@ def altSignupAfter():
     
     if userId == 0:
         userId = timdb.users.createUser(userName, realName, email, password=password)
+        gid = timdb.users.createUserGroup(userName)
     else:
         timdb.users.updateUser(userId, userName, realName, email, password=password)
     
@@ -211,6 +225,10 @@ def altLogin():
         session['real_name'] = user['real_name']
         session['email'] = user['email']
         flash('You were successfully logged in.', 'loginmsg')
+
+        # Check if the users' group exists
+        if (len(timdb.users.getUserGroupsByName(user_name)) == 0):
+            createUserGroup(user_name)
         
     elif timdb.users.testPotentialUser(email, password):
         # New user
