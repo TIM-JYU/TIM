@@ -140,6 +140,10 @@ def altSignup():
     
     #print("Signup: email {}, password {}".format(email, password))
     session.pop('altlogin')
+    session.pop('user_id', None)
+    session.pop('appcookie', None)
+    session['user_name'] = 'Anonymous'
+    session["email"] = email
     flash("A password has been sent to you. Please check your email.")
     return redirect(session.get('came_from', '/'))
 
