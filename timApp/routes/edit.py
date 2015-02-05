@@ -64,6 +64,19 @@ def postParagraph():
                          'angularModule': modules,
                          'version': doc.hash})
 
+@edit_page.route("/preview/<int:doc_id>", methods=['POST'])
+def preview(doc_id):
+    timdb = getTimDb()
+    paragraphText, = verify_json_params('text')
+
+    blocks = timdb.documents.previewBlock(paragraphText)
+
+    preparedBlocks, jsPaths, cssPaths, modules = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
+    return jsonResponse({'texts': preparedBlocks,
+                         'js': jsPaths,
+                         'css': cssPaths,
+                         'angularModule': modules})
+
 @edit_page.route('/edit/<path:doc_name>')
 @edit_page.route("/documents/<path:doc_name>")
 def editDocument(doc_name):
