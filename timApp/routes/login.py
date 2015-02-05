@@ -179,11 +179,16 @@ def altSignupAfter():
 
     if timdb.users.getUserByEmail(email) is not None:
         # User with this email already exists
-        userId = timdb.users.getUserByEmail(email)['id']
+        user_data = timdb.users.getUserByEmail(email)
+        userId = user_data['id']
         nameId = timdb.users.getUserByName(userName)
+
         if nameId is not None and nameId != userId:
             flash('User name already exists. Please try another one.', 'loginmsg')
             return redirect(came_from)
+
+        # Use the existing user name; don't replace it with email
+        userName = user_data['name']
     else:
         if timdb.users.getUserByName(userName) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
@@ -231,7 +236,7 @@ def altLogin():
 
         # Check if the users' group exists
         if (len(timdb.users.getUserGroupsByName(user['name'])) == 0):
-            gid = createUserGroup(user['name'])
+            gid = timdb.users.createUserGroup(user['name'])
             timdb.users.addUserToGroup(gid, user['id'])
         
     elif timdb.users.testPotentialUser(email, password):
