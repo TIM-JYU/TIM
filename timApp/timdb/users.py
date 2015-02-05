@@ -53,9 +53,9 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        hash = self.hashPassword(password) if password != '' else ''
+        pass_hash = self.hashPassword(password) if password != '' else ''
         cursor.execute('UPDATE User SET name = ?, real_name = ?, email = ?, pass = ? WHERE id = ?',
-                       [name, real_name, email, user_id, hash])
+                       [name, real_name, email, pass_hash, user_id])
         if commit:
             self.db.commit()
 
