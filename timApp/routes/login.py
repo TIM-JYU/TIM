@@ -115,10 +115,7 @@ def loginWithKorppi():
     session['real_name'] = realName
     session['email'] = email
     flash('You were successfully logged in.', 'loginmsg')
-
-    came_from = session['came_from']
-    session.pop('came_from', None)
-    return redirect(came_from)
+    return redirect(session.get('came_from', '/'))
 
 def loginWithEmail():
     if ('altlogin' in session and session['altlogin'] == 'login'):
@@ -126,7 +123,7 @@ def loginWithEmail():
     else:
         session['altlogin'] = "login"
 
-    return redirect(request.form['came_from'])
+    return redirect(session.get('came_from', '/'))
 
 def signupWithEmail():
     if ('altlogin' in session and session['altlogin'] == 'signup'):
@@ -134,7 +131,7 @@ def signupWithEmail():
     else:
         session['altlogin'] = "signup"
 
-    return redirect(request.form['came_from'])
+    return redirect(session.get('came_from', '/'))
 
 @login_page.route("/altsignup", methods=['POST'])
 def altSignup():
@@ -142,7 +139,7 @@ def altSignup():
     email = request.form['email']
     if not email or not __isValidEmail(email):
         flash("You must supply a valid email address!")
-        return redirect(request.form['came_from'])
+        return redirect(session.get('came_from', '/'))
         
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     
@@ -150,7 +147,7 @@ def altSignup():
         __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
     except Exception as e:
         flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
-        return redirect(request.form['came_from'])
+        return redirect(session.get('came_from', '/'))
     
     timdb = getTimDb()
     timdb.users.createPotentialUser(email, password)
@@ -162,7 +159,7 @@ def altSignup():
     session['user_name'] = 'Anonymous'
     session["email"] = email
     flash("A password has been sent to you. Please check your email.")
-    return redirect(request.form['came_from'])
+    return redirect(session.get('came_from', '/'))
 
 @login_page.route("/altsignup2", methods=['POST'])
 def altSignupAfter():
@@ -174,7 +171,7 @@ def altSignupAfter():
     oldpass = request.form['token']
     password = request.form['password']
     confirm = request.form['passconfirm']
-    came_from = request.form['came_from']
+    came_from = session.get('came_from', '/') 
     timdb = getTimDb()
 
     if not timdb.users.testPotentialUser(email, oldpass):
@@ -249,5 +246,5 @@ def altLogin():
     else:
         flash("Email address or password did not match. Please try again.", 'loginmsg')
     
-    return redirect(request.form['came_from'])
+    return redirect(session.get('came_from', '/'))
     

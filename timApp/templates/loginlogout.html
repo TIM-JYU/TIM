@@ -78,11 +78,6 @@
             Welcome to TIM! Please enter your email address and password to log in.
             </p>
             <div class="loginFieldDiv">
-                {% if came_from %}
-                <input type="hidden" name="came_from" value="{{came_from}}">
-                {% else %}
-                <input type="hidden" name="came_from" value="/">
-                {% endif %}
                 <label for="email" class="loginFieldLabel">Email</label> 
                 <input name="email" class="loginFieldInput" type="email" value="{{session.email}}">
             </div>
