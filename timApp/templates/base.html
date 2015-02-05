@@ -20,15 +20,6 @@
     {% endblock %}
 </head>
 <body>
-<div id="header">
-    {% block header %}
-        {% include 'loginlogout.html' %}
-        <a href="/">Main page</a>
-        {% if session.user_id %}
-            <a href="/settings">Customize TIM</a>
-        {% endif %}
-    {% endblock %}
-</div>
 {% with messages = get_flashed_messages() %}
     {% if messages %}
         <ul class="flashes">
@@ -38,6 +29,15 @@
         </ul>
     {% endif %}
 {% endwith %}
+<div id="header">
+    {% block header %}
+        {% include 'loginlogout.html' %}
+        <a href="/">Main page</a>
+        {% if session.user_id %}
+            <a href="/settings">Customize TIM</a>
+        {% endif %}
+    {% endblock %}
+</div>
 <div class="material">
     <h1>{{ self.title() }}</h1>
     {% block content %}{% endblock %}
