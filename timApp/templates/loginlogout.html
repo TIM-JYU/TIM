@@ -49,7 +49,7 @@
                 <input type="hidden" name="token" value="{{ session.token }}"></input>
             <div class="loginFieldDiv">
                 <label for="name" class="loginFieldLabel">User name</label> 
-                <input name="name" type="text" class="loginFieldInput" value="{{ session.user_name }}">
+                <span name="name" class="loginFieldInput">{{ session.user_name }}</span>
             </div>
             <div class="loginFieldDiv">
                 <label for="realname" class="loginFieldLabel">Real name</label> 

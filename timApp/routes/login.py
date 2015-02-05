@@ -165,9 +165,9 @@ def altSignup():
 def altSignupAfter():
     # After password verification
     userId = 0
-    userName = request.form['name']
     realName = request.form['realname']
     email = session['email']
+    userName = email
     oldpass = request.form['token']
     password = request.form['password']
     confirm = request.form['passconfirm']
