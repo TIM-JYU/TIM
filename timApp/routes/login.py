@@ -252,4 +252,9 @@ def altLogin():
         flash("Email address or password did not match. Please try again.", 'loginmsg')
     
     return redirect(session.get('came_from', '/'))
-    
+
+@login_page.route("/testuser")
+@login_page.route("/testuser/<path:anything>")
+def testuser(anything=None):
+    flash("Testuser route has been removed; please sign up using email.")
+    return redirect(url_for('indexPage'))
