@@ -317,6 +317,7 @@ ul ul  ul, ol ol ol {
     border-radius: 15px;
     padding: 1em;
     margin: 2px;
+    background-color: #f0f0f8;
 }
 
 .timButton {
@@ -776,17 +777,19 @@ a.anchor:hover {
 }
 
 .editorArea {
-	z-index: 10;
-	position: absolute;
-	width: 100%;
-	top: 0em;
-	left: 112%;
+    z-index: 10;
+    position: absolute;
+    width: 100%;
+    top: 0em;
+    left: 112%;
     min-height:6.5em;
-	border-radius: 15px;
+    border-radius: 15px;
+    padding: 0.5em; 
 }
 
 .editButtonArea {
 	float: left;
+    padding: 0.5em;
 }
 	
 video {
