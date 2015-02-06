@@ -264,6 +264,9 @@ def saveCameFrom():
     if request.args.get('came_from'):
         session['came_from'] = request.args.get('came_from')
         session['anchor'] = request.args.get('anchor', '')
+    elif request.form.get('came_from'):
+        session['came_from'] = request.form.get('came_from')
+        session['anchor'] = request.form.get('anchor', '')
 
 
 def finishLogin(ready=True):
