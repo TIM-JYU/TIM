@@ -65,7 +65,6 @@ def view(doc_name, template_name, view_range=None, user=0, teacher=False):
     if not loggedIn():
         session['came_from'] = request.url
         return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
-        #return render_template('js_redirect.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
 
     if not hasViewAccess(doc_id):
         abort(403)
