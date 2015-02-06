@@ -65,9 +65,8 @@ def login():
 @login_page.route("/korppiLogin")
 def loginWithKorppi():
     urlfile = request.url_root + "korppiLogin"
-    if request.args.get('came_from'):
-        session['came_from'] = request.args.get('came_from')
-        
+    saveCameFrom()
+
     if not session.get('appcookie'):
         randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
         session['appcookie'] = randomHex
@@ -114,8 +113,8 @@ def loginWithKorppi():
     session['user_name'] = userName
     session['real_name'] = realName
     session['email'] = email
-    flash('You were successfully logged in.', 'loginmsg')
-    return redirect(session.get('came_from', '/'))
+
+    return finishLogin()
 
 def loginWithEmail():
     if ('altlogin' in session and session['altlogin'] == 'login'):
@@ -139,7 +138,7 @@ def altSignup():
     email = request.form['email']
     if not email or not __isValidEmail(email):
         flash("You must supply a valid email address!")
-        return redirect(session.get('came_from', '/'))
+        return finishLogin(ready=False)
         
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     
@@ -147,7 +146,7 @@ def altSignup():
         __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
     except Exception as e:
         flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
-        return redirect(session.get('came_from', '/'))
+        return finishLogin(ready=False)
     
     timdb = getTimDb()
     timdb.users.createPotentialUser(email, password)
@@ -159,7 +158,7 @@ def altSignup():
     session['user_name'] = 'Anonymous'
     session["email"] = email
     flash("A password has been sent to you. Please check your email.")
-    return redirect(session.get('came_from', '/'))
+    return finishLogin(ready=False)
 
 @login_page.route("/altsignup2", methods=['POST'])
 def altSignupAfter():
@@ -171,7 +170,7 @@ def altSignupAfter():
     oldpass = request.form['token']
     password = request.form['password']
     confirm = request.form['passconfirm']
-    came_from = session.get('came_from', '/') 
+    saveCameFrom()
     timdb = getTimDb()
 
     if not timdb.users.testPotentialUser(email, oldpass):
@@ -185,22 +184,22 @@ def altSignupAfter():
 
         if nameId is not None and nameId != userId:
             flash('User name already exists. Please try another one.', 'loginmsg')
-            return redirect(came_from)
+            return finishLogin(ready=False)
 
         # Use the existing user name; don't replace it with email
         userName = user_data['name']
     else:
         if timdb.users.getUserByName(userName) is not None:
             flash('User name already exists. Please try another one.', 'loginmsg')
-            return redirect(came_from)
+            return finishLogin(ready=False)
     
     if password != confirm:
         flash('Passwords do not match.', 'loginmsg')
-        return redirect(came_from)
+        return finishLogin(ready=False)
         
     if len(password) < 6:
         flash('A password should contain at least six characters.', 'loginmsg')
-        return redirect(came_from)
+        return finishLogin(ready=False)
     
     if userId == 0:
         userId = timdb.users.createUser(userName, realName, email, password=password)
@@ -215,11 +214,11 @@ def altSignupAfter():
     session['user_id'] = userId
     session['user_name'] = userName
     session['real_name'] = realName
-    flash('You were successfully logged in.', 'loginmsg')
-    return redirect(came_from)
-    
+    return finishLogin()
+
 @login_page.route("/altlogin", methods=['POST'])
 def altLogin():
+    saveCameFrom()
     email = request.form['email']
     password = request.form['password']
     timdb = getTimDb()
@@ -232,13 +231,14 @@ def altLogin():
         session['user_name'] = user['name']
         session['real_name'] = user['real_name']
         session['email'] = user['email']
-        flash('You were successfully logged in.', 'loginmsg')
 
         # Check if the users' group exists
         if (len(timdb.users.getUserGroupsByName(user['name'])) == 0):
             gid = timdb.users.createUserGroup(user['name'])
             timdb.users.addUserToGroup(gid, user['id'])
-        
+
+        return finishLogin()
+
     elif timdb.users.testPotentialUser(email, password):
         # New user
         session['user_id'] = 0
@@ -251,10 +251,28 @@ def altLogin():
     else:
         flash("Email address or password did not match. Please try again.", 'loginmsg')
     
-    return redirect(session.get('came_from', '/'))
+    return finishLogin(ready=False)
 
 @login_page.route("/testuser")
 @login_page.route("/testuser/<path:anything>")
 def testuser(anything=None):
     flash("Testuser route has been removed; please sign up using email.")
     return redirect(url_for('indexPage'))
+
+
+def saveCameFrom():
+    if request.args.get('came_from'):
+        session['came_from'] = request.args.get('came_from')
+        session['anchor'] = request.args.get('anchor', '')
+
+
+def finishLogin(ready=True):
+    anchor = session.get('anchor', '')
+    if anchor != "":
+        anchor = "#" + anchor
+    came_from = session.get('came_from', '/')
+    if ready:
+        flash('You were successfully logged in.', 'loginmsg')
+        session.pop('anchor', '')
+        session.pop('came_from', '/')
+    return redirect(came_from + anchor)
