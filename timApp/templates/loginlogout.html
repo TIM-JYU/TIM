@@ -46,7 +46,7 @@
             <p class="loginwelcome">
                 Welcome to TIM! We need just a few more details to get you started.
             </p>
-                <input type="hidden" name="token" value="{{ session.token }}"></input>
+                <input type="hidden" name="token" value="{{ session.token }}">
             <div class="loginFieldDiv">
                 <label for="name" class="loginFieldLabel">User name</label> 
                 <span name="name" class="loginFieldInput">{{ session.user_name }}</span>
@@ -61,11 +61,11 @@
             </div>
             <div class="loginFieldDiv">
                 <label for="password" class="loginFieldLabel">New password</label> 
-                <input name="password" class="loginFieldInput" type="password"">
+                <input name="password" class="loginFieldInput" type="password">
             </div>
             <div class="loginFieldDiv">
                 <label for="passconfirm" class="loginFieldLabel">Repeat new password</label> 
-                <input name="passconfirm" class="loginFieldInput" type="password"">
+                <input name="passconfirm" class="loginFieldInput" type="password">
             </div>
             <div class="loginButtonDiv">
                 <input type="submit" value="Create account">
