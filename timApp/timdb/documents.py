@@ -447,51 +447,38 @@ class Documents(TimDbBase):
     def ensureCached(self, document_id: 'DocIdentifier'):
         self.getDocumentAsBlocks(document_id)
 
-    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0):
-        end_str = str(end_index) if end_index >= 0 else 'end';
-        end2_str = str(end_index + offset) if end_index >= 0 else 'end + {0}'.format(offset);
-
-        #print("copyParMappings(doc {0}) : ver {1} : [{2}, {3}[ -> ver {4} : [{5}, {6}[".format(
-        #    old_document_id.id,
-        #    old_document_id.hash[:6], start_index, end_str,
-        #    new_document_id.hash[:6], start_index + offset, end2_str
-        #))
-
+    def getParMappings(self, doc_id : 'DocIdentifier', start_index = 0, end_index = -1) -> 'list(tuple)':
         cursor = self.db.cursor()
+        endclause = " and par_index < {}".format(end_index) if end_index >= 0 else ""
+        cursor.execute(
+            "select par_index, new_index from ParMappings where doc_id = ? and doc_ver = ? and par_index >= ?" + endclause,
+            [doc_id.id, doc_id.hash, start_index])
+        return cursor.fetchall()
 
-        if end_index < 0:
-            cursor.execute(
-                """
-                select par_index from ParMappings
-                where doc_id = ? and doc_ver = ? and par_index >= ?
-                """,
-                [old_document_id.id, old_document_id.hash, start_index])
-        else:
-            cursor.execute(
-                """
-                select par_index from ParMappings
-                where doc_id = ? and doc_ver = ? and par_index >= ? and par_index < ?
-                """,
-                [old_document_id.id, old_document_id.hash, start_index, end_index])
+    def addParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int', modified=False, commit=True):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            update ParMappings set new_ver = ?, new_index = ?, modified = ?
+            where doc_id = ? and doc_ver = ? and par_index = ?
+            """,
+            [new_document_id.hash, new_index, modified, old_document_id.id, old_document_id.hash, par_index])
+        cursor.execute(
+            """
+            insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
+            values (?, ?, ?, NULL, NULL, NULL)
+            """,
+            [old_document_id.id, new_document_id.hash, new_index])
 
-        old_pars = self.resultAsDictionary(cursor)
+        if commit:
+            self.db.commit()
 
-        for p in old_pars:
-            index = int(p['par_index'])
-            new_index = index + offset
-            #print("{0} par {1} -> {2} par {3}".format(old_document_id.hash[:6], index, new_document_id.hash[:6], new_index))
-            cursor.execute(
-                """
-                update ParMappings set new_ver = ?, new_index = ?, modified = 'False'
-                where doc_id = ? and doc_ver = ? and par_index = ?
-                """,
-                [new_document_id.hash, new_index, old_document_id.id, old_document_id.hash, index])
-            cursor.execute(
-                """
-                insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
-                values (?, ?, ?, NULL, NULL, NULL)
-                """,
-                [old_document_id.id, new_document_id.hash, new_index])
+    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0):
+        for m in self.getParMappings(old_document_id, start_index, end_index):
+            par_index = int(m[0])
+            new_index = par_index + offset
+            #print("{0} par {1} -> {2} par {3}".format(old_document_id.hash[:6], new_index, new_document_id.hash[:6], new_index))
+            self.addParMapping(old_document_id, new_document_id, par_index, new_index)
 
         self.db.commit()
 
@@ -596,7 +583,7 @@ class Documents(TimDbBase):
             insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
             values (?, ?, ?, NULL, NULL, NULL)
             """,
-            [old_document_id.id, new_document_id.hash, par_index])
+            [old_document_id.id, new_document_id.hash, new_index])
 
         self.db.commit()
 

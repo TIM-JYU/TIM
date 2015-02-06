@@ -252,7 +252,7 @@ class TimDbBase(object):
                 # We don't want to return read markings multiple times per paragraph (but notes yes)
                 if mapping is not None and (table == 'UserNotes' or mapping[0] not in mapped_pars):
                     par_index_new = mapping[0]
-                    modified = mapping[1]
+                    modified = mapping[1] or row['deprecated']
                     row['par_index'] = par_index_new
                     row['status'] = status_modified if modified else status_unmodified
                     row['doc_ver'] = read_ver if modified else doc_ver
