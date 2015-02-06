@@ -7,8 +7,9 @@
             var separator = target_url.indexOf('?') >= 0 ? '&' : '?';
             var came_from_raw = {{ came_from|tojson }};
             var came_from = encodeURIComponent(came_from_raw.replace("#", "%23"));
-            var anchor = encodeURIComponent(window.location.hash.replace('#', ''));
-            $("#anchor").val(anchor);
+            var anchor_raw = window.location.hash.replace('#', '');
+            var anchor = encodeURIComponent(anchor_raw);
+            $("#anchor").val(anchor_raw);
             window.korppiLogin = function () {
                 window.location.replace(target_url
                 + separator
