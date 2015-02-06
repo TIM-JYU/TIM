@@ -209,7 +209,7 @@ class TimDbBase(object):
         if not extra_fields:
             extra_fields = []
         cursor = self.db.cursor()
-        fields = ['par_index', 'doc_ver'] + extra_fields
+        fields = ['par_index', 'doc_ver', 'deprecated'] + extra_fields
 
         query = "select {} from {} where ({}) and doc_id = ? {}"\
             .format(','.join(fields),
@@ -232,7 +232,7 @@ class TimDbBase(object):
             par_index = int(row['par_index'])
 
             if read_ver == doc_ver:
-                row['status'] = status_unmodified
+                row['status'] = status_modified if row['deprecated'] else status_unmodified
 
                 # We don't want to return read markings multiple times per paragraph (but notes yes)
                 if table == 'UserNotes' or par_index not in mapped_pars:
@@ -259,22 +259,26 @@ class TimDbBase(object):
                     results.append(row)
                     mapped_pars[par_index_new] = True
 
-                    # Update UserNotes table; otherwise the notes won't be modifiable/deletable from UI
-                    if table == 'UserNotes':
-                        cursor = self.db.cursor()
-                        try:
-                            cursor.execute("""update UserNotes set par_index = ?, doc_ver = ?
-                                              where par_index = ? and doc_ver = ? and doc_id = ?""", [
-                                           par_index_new,
-                                           row['doc_ver'],
-                                           par_index,
-                                           read_ver,
-                                           doc_id
-                                           ])
-                        except sqlite3.IntegrityError:
-                            # Already exists
-                            pass
+                    # Update the entry to speed up future lookups
+                    # This is needed for UserNotes to make them editable too.
+                    try:
+                        cursor.execute("""update {} set par_index = ?, doc_ver = ?, deprecated = ?
+                                          where par_index = ? and doc_ver = ? and doc_id = ?""".format(table), [
+                                       par_index_new,
+                                       doc_ver,
+                                       modified,
+                                       par_index,
+                                       read_ver,
+                                       doc_id
+                                       ])
+                    except sqlite3.IntegrityError:
+                        # Already exists
+                        cursor.execute("""delete from {}
+                                          where par_index = ? and doc_ver = ? and doc_id = ?""".format(table), [
+                                       par_index,
+                                       read_ver,
+                                       doc_id
+                                       ])
 
-        # Commit in case of getParMapping optimizing the mappings
         self.db.commit()
         return results

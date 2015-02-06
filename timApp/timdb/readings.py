@@ -26,7 +26,8 @@ class Readings(TimDbBase):
                                     'ReadParagraphs',
                                     status_unmodified='read',
                                     order_by_sql='order by timestamp desc')
-        
+
+
     @contract
     def setAsRead(self, UserGroup_id: 'int', doc_id : 'int', doc_ver : 'str', par_index: 'int', commit : 'bool' = True):
         self.addEmptyParMapping(doc_id, doc_ver, par_index, commit=False)

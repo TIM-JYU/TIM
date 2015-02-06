@@ -250,6 +250,7 @@ created TIMESTAMP NOT NULL,
 modified TIMESTAMP NULL,
 access VARCHAR(20) NOT NULL,
 tags VARCHAR(20) NOT NULL,
+deprecated BOOLEAN,
 
 CONSTRAINT UserNotes_PK
 	PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index, note_index),
@@ -268,6 +269,7 @@ doc_id INTEGER NOT NULL,
 doc_ver INTEGER NOT NULL,
 par_index INTEGER NOT NULL,
 timestamp TIMESTAMP NOT NULL,
+deprecated BOOLEAN,
 
 CONSTRAINT ReadParagraphs_PK
 	PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index),
