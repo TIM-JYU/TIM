@@ -113,8 +113,8 @@ class GitClient:
                 return last_commit
 
             last_commit = cur_commit
-        print('__getLastCommit: oid {}, exists={}'.format(cur_commit.oid.hex), self.__itemExists(path))
-        return cur_commit if self.__itemExists(path) else None
+        #print('__getLastCommit: oid {}, exists={}'.format(cur_commit.oid.hex, self.__itemExists(cur_commit, path)))
+        return cur_commit if self.__itemExists(cur_commit, path) else None
 
     @contract
     def getLatestVersion(self, path : 'str') -> 'str|None':
