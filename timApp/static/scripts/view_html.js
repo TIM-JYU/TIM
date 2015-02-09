@@ -1,4 +1,4 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules), function($locationProvider){
+var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function($locationProvider){
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
 });
@@ -62,81 +62,47 @@ timApp.controller("ViewCtrl", ['$scope',
                 sc.editing = false;
             } else {
                 $(EDITOR_CLASS_DOT).remove();
+                var url;
+                if ($par.hasClass("new")) {
+                    url = '/newParagraph/';
+                } else {
+                    url = '/postParagraph/';
+                }
+                var par_id = sc.getParIndex($par);
+                var attrs = {
+                    "save-url": url,
+                    "extra-data": JSON.stringify({
+                        docId: sc.docId,
+                        par: par_id
+                    }),
+                    "show-delete": JSON.stringify({opt:options.showDelete}),
+                    "after-save": 'addSavedParToDom(saveData, extraData)',
+                    "after-cancel": 'handleCancel(extraData)',
+                    "after-delete": 'handleDelete(saveData, extraData)',
+                    "preview-url": '/preview/' + sc.docId,
+                    "delete-url": '/deleteParagraph/' + sc.docId + "/" + par_id
+                };
 
-                var $div = $("<div>", {class: EDITOR_CLASS});
-                $div.loadTemplate("/static/templates/parEditor.html?_=" + (new Date).getTime(), {}, {
-                    success: function () {
-                        var editorScope = sc.$new();
-                        var aceEdit = sc.applyAceEditor($div.find('.editor')[0]);
-                        editorScope.timer = null;
-                        editorScope.outofdate = false;
-                        aceEdit.on("change", function(){
-                            editorScope.outofdate = true;
-                            editorScope.$apply();
-                            if (editorScope.timer) {
-                                clearTimeout(editorScope.timer);
-                            }
-                            editorScope.timer = setTimeout(function() {
-                                var text = aceEdit.getSession().getValue();
-                                http.post('/preview/' + sc.docId, {
-                                    "text": text
-                                }).success(function (data, status, headers, config) {
-                                    var len = data.texts.length;
-                                    var $previewDiv = $(".previewcontent");
-                                    $previewDiv.html("");
-                                    for (var i = 0; i < len; i++) {
-                                        $previewDiv
-                                            .append($("<div>", {class: "par"})
-                                                .append($("<div>", {class: "parContent"})
-                                                    .html($compile(data.texts[i])(editorScope))));
-                                    }
-                                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
-                                    editorScope.outofdate = false;
-                                    editorScope.parCount = len;
-                                }).error(function (data, status, headers, config) {
-                                    alert("Failed to show preview: " + data.error);
-                                });
-                            }, 500);
+                var createEditor = function (attrs) {
+                    var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
+                    $compile($div[0])(sc);
+                    $par.append($div);
+                    sc.editing = true;
+                };
+
+                if (options.showDelete){
+                    $(".par.new").remove();
+                    http.get('/getBlock/' + sc.docId + "/" + par_id).
+                        success(function (data, status, headers, config) {
+                            attrs["initial-text"] = data.md;
+                            createEditor(attrs);
+                        }).
+                        error(function (data, status, headers, config) {
+                            alert(data.error);
                         });
-                        editorScope.onFileSelect = function (url, $files) {
-                            //$files: an array of files selected, each file has name, size, and type.
-                            for (var i = 0; i < $files.length; i++) {
-                                var file = $files[i];
-                                editorScope.upload = $upload.upload({
-                                    url: url,
-                                    method: 'POST',
-                                    file: file
-                                }).progress(function (evt) {
-                                    editorScope.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
-                                }).success(function (data, status, headers, config) {
-                                    editorScope.uploadedFile = '/images/' + data.file;
-                                    editorScope.progress = 'Uploading... Done!';
-                                    aceEdit.insert("![Image](" + editorScope.uploadedFile + ")");
-                                }).error(function (data, status, headers, config) {
-                                    editorScope.progress = 'Error while uploading: ' + data.error;
-                                });
-                            }
-                        };
-
-                        if (!options.showDelete) {
-                            $div.find(PAR_DELETE_BUTTON).hide();
-                        }
-                        else {
-                            $(".par.new").remove();
-                            aceEdit.getSession().setValue("Loading paragraph text...");
-                            http.get('/getBlock/' + sc.docId + "/" + sc.getParIndex($par)).
-                                success(function (data, status, headers, config) {
-                                    aceEdit.getSession().setValue(data.md);
-                                }).
-                                error(function (data, status, headers, config) {
-                                    alert(data.error);
-                                });
-                        }
-                        $compile($div[0])(editorScope);
-                        $par.append($div);
-                        sc.editing = true;
-                    }
-                });
+                } else {
+                    createEditor(attrs);
+                }
             }
         };
 
@@ -230,64 +196,34 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleParEditor($newpar, {showDelete: false});
         });
 
-        sc.addEvent(PAR_CANCEL_BUTTON, function (e) {
-            var $par = $(this).parent().parent().parent();
+        sc.handleCancel = function (extraData) {
+            var $par = sc.getElementByParIndex(extraData.par);
             if ($par.hasClass("new")) {
                 $par.remove();
             }
-            else {
-                $(this).parent().parent().remove(); // remove editor only
+            sc.editing = false;
+        };
+
+        sc.handleDelete = function (data, extraData) {
+            var $par = sc.getElementByParIndex(extraData.par);
+            http.defaults.headers.common.Version = data.version;
+            $par.remove();
+            sc.editing = false;
+        };
+
+        sc.addSavedParToDom = function (data, extraData) {
+            var $par = sc.getElementByParIndex(extraData.par);
+            http.defaults.headers.common.Version = data.version;
+            var len = data.texts.length;
+            for (var i = len - 1; i >= 0; i--) {
+                var $newpar = $("<div>", {class: "par"});
+                $par.after($newpar
+                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i])(sc))));
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
             }
+            $par.remove();
             sc.editing = false;
-        });
-
-        sc.addEvent(PAR_DELETE_BUTTON, function (e) {
-            var $par = $(this).parents('.par');
-            var par_id = sc.getParIndex($par);
-
-            http.get('/deleteParagraph/' + sc.docId + "/" + par_id).
-                success(function (data, status, headers, config) {
-                    http.defaults.headers.common.Version = data.version;
-                    $par.remove();
-                }).
-                error(function (data, status, headers, config) {
-                    alert("Failed to remove paragraph: " + data.error);
-                });
-
-            sc.editing = false;
-        });
-
-        sc.addEvent(PAR_SAVE_BUTTON, function (e) {
-            var $par = $(this).parents('.par');
-            var par_id = sc.getParIndex($par);
-            var editorElem = $par.find('.editor')[0];
-            var text = ace.edit(editorElem).getSession().getValue();
-            var url;
-            if ($par.hasClass("new")) {
-                url = '/newParagraph/';
-            } else {
-                url = '/postParagraph/';
-            }
-            http.post(url, {
-                "docId": sc.docId,
-                "par": par_id,
-                "text": text
-            }).success(function (data, status, headers, config) {
-                http.defaults.headers.common.Version = data.version;
-                var len = data.texts.length;
-                for (var i = len - 1; i >= 0; i--) {
-                    var $newpar = $("<div>", {class: "par"});
-                    $par.after($newpar
-                        .append($("<div>", {class: "parContent"}).html($compile(data.texts[i])(sc))));
-                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
-                }
-                $par.remove();
-            }).error(function (data, status, headers, config) {
-                alert("Failed to save paragraph: " + data.error);
-            });
-
-            sc.editing = false;
-        });
+        };
 
         sc.addEvent(".readline", function (e) {
             var par_id = sc.getParIndex($(this).parents('.par'));

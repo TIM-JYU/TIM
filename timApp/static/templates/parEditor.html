@@ -10,10 +10,14 @@
     <div class="previewcontent"></div>
 </div>
 <div class="editButtonArea">
-    <button class="timButton savePar">Save</button>
-    <button class="timButton cancelPar">Cancel</button>
-    <button class="timButton deletePar">Delete</button>
+    <button class="timButton savePar" ng-click="saveClicked()">Save</button>
+    <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
+    <button class="timButton deletePar" ng-show="showDelete" ng-click="deleteClicked()">Delete</button>
 </div>
-<div class="editor"></div>
+<div class="editor" ui-ace="{
+  useWrapMode : false,
+  onLoad: aceLoaded,
+  onChange: aceChanged
+}"></div>
 Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
 <span ng-bind="progress"></span>

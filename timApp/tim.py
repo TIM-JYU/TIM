@@ -9,7 +9,7 @@ import collections
 import re
 import sys
 
-from flask import Flask, redirect, url_for, flash
+from flask import Flask, redirect, url_for, flash, Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import g
@@ -46,6 +46,10 @@ app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
+app.register_blueprint(Blueprint('bower',
+                                 __name__,
+                                 static_folder='static/scripts/bower_components',
+                                 static_url_path='/static/scripts/bower_components'))
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 

@@ -7,11 +7,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
-        <script src="{{ url_for('static', filename='scripts/jquery-2.1.1.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/angular-file-upload-shim.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/angular/angular.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/angular/angular-sanitize.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/angular-file-upload.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/angular/angular-sanitize.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='ng-file-upload/angular-file-upload-all.js') }}"></script>
         <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
