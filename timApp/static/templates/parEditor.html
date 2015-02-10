@@ -18,22 +18,24 @@
   useWrapMode: false,
   onLoad: aceLoaded,
   onChange: aceChanged
-}"></div>
+}" ng-model="editorText"></div>
 <span ng-show="options.showImageUpload">
     Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
 <span ng-bind="progress"></span>
 </span>
 <div class="tags">
-    <label ng-repeat="(tag,enabled) in options.tags">
-        <input type="checkbox" ng-model="options.tags[tag]"/> {{ options.tagDesc[tag] }}
+    <label ng-repeat="tag in options.tags">
+        <input type="checkbox" ng-model="extraData.tags[tag.name]"/> {{ tag.desc }}
     </label>
 </div>
 <div class="choices">
     <div ng-repeat="choice in options.choices.desc">
         {{ choice.desc }}
         <label ng-repeat="opt in choice.opts">
-            <input type="radio" ng-model="options.choices.selections[choice.name]" ng-value="opt.value"/> {{ opt.desc }}
+            <input type="radio" ng-model="extraData[choice.name]" ng-value="opt.value"/> {{ opt.desc }}
         </label>
     </div>
 </div>
-{{ options | json }}
+Options: {{ options | json }}
+<br><br>
+Extradata: {{ extraData | json }}

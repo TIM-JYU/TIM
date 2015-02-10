@@ -13,9 +13,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
             afterCancel: '&',
             afterDelete: '&',
             options: '=',
-            initialText: '@'
+            editorText: '@',
+            initialTextUrl: '@'
         },
-        controller: function($scope) {
+        controller: function ($scope) {
             $scope.aceChanged = function () {
                 $scope.outofdate = true;
                 if ($scope.timer) {
@@ -53,7 +54,17 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
                 editor.getSession().setUseWrapMode(false);
                 editor.getSession().setWrapLimitRange(0, 79);
                 editor.setOptions({maxLines: 40, minLines: 3});
-                editor.getSession().setValue($scope.initialText);
+                if ($scope.initialTextUrl) {
+                    editor.getSession().setValue('Loading text...');
+                    $http.get($scope.initialTextUrl).
+                        success(function (data, status, headers, config) {
+                            $scope.editorText = data.text;
+                        }).
+                        error(function (data, status, headers, config) {
+                            alert(data.error);
+                        });
+                }
+
                 var iOS = /(iPad|iPhone|iPod)/g.test(navigator.platform);
 
                 // iPad does not open the keyboard if not manually focused to editable area
@@ -65,6 +76,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
         link: function ($scope, $element, $attrs) {
             $scope.timer = null;
             $scope.outofdate = false;
+            $scope.parCount = 0;
 
             $scope.saveClicked = function () {
                 var text = $scope.editor.getSession().getValue();
@@ -75,6 +87,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
                         extraData: $scope.extraData,
                         saveData: data
                     });
+                    if ($scope.options.destroyAfterSave) {
+                        $element.remove();
+                    }
                 }).error(function (data, status, headers, config) {
                     alert("Failed to save paragraph: " + data.error);
                 });
@@ -87,6 +102,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
                             extraData: $scope.extraData,
                             saveData: data
                         });
+                        if ($scope.options.destroyAfterSave) {
+                            $element.remove();
+                        }
                     }).
                     error(function (data, status, headers, config) {
                         alert("Failed to remove paragraph: " + data.error);
