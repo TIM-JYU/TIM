@@ -49,7 +49,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
             $scope.aceLoaded = function (editor) {
                 $scope.editor = editor;
                 editor.renderer.setPadding(10, 10, 10, 10);
-                editor.getSession().setMode("ace/mode/markdown");
+                editor.getSession().setMode("markdown");
                 editor.getSession().setUseWrapMode(false);
                 editor.getSession().setWrapLimitRange(0, 79);
                 editor.setOptions({maxLines: 40, minLines: 3});
