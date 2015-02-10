@@ -1,6 +1,7 @@
 var timApp = angular.module('timApp');
 
-timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function ($upload, $http, $sce, $compile) {
+timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
+    function ($upload, $http, $sce, $compile, $window) {
     return {
         templateUrl: "/static/templates/parEditor.html",
         restrict: 'E',
@@ -20,29 +21,28 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
             $scope.aceChanged = function () {
                 $scope.outofdate = true;
                 if ($scope.timer) {
-                    clearTimeout($scope.timer);
+                    $window.clearTimeout($scope.timer);
                 }
-                $scope.timer = setTimeout(function () {
+                $scope.timer = $window.setTimeout(function () {
                     var text = $scope.editor.getSession().getValue();
                     $http.post($scope.previewUrl, {
                         "text": text
                     }).success(function (data, status, headers, config) {
                         var len = data.texts.length;
 
-                        // TODO: More Angular, less jQuery
-                        var $previewDiv = $(".previewcontent");
+                        var $previewDiv = angular.element(".previewcontent");
                         $previewDiv.html("");
+
                         for (var i = 0; i < len; i++) {
-                            $previewDiv
-                                .append($("<div>", {class: "par"})
-                                    .append($("<div>", {class: "parContent"})
+                            $previewDiv.append(angular.element("<div>", {class: "par"})
+                                    .append(angular.element("<div>", {class: "parContent"})
                                         .html($compile(data.texts[i])($scope))));
                         }
                         MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
                         $scope.outofdate = false;
                         $scope.parCount = len;
                     }).error(function (data, status, headers, config) {
-                        alert("Failed to show preview: " + data.error);
+                        $window.alert("Failed to show preview: " + data.error);
                     });
                 }, 500);
             };
@@ -61,11 +61,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
                             $scope.editorText = data.text;
                         }).
                         error(function (data, status, headers, config) {
-                            alert(data.error);
+                            $window.alert('Failed to get text: ' + data.error);
                         });
                 }
 
-                var iOS = /(iPad|iPhone|iPod)/g.test(navigator.platform);
+                var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
 
                 // iPad does not open the keyboard if not manually focused to editable area
                 if (!iOS) {
@@ -91,7 +91,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
                         $element.remove();
                     }
                 }).error(function (data, status, headers, config) {
-                    alert("Failed to save paragraph: " + data.error);
+                    $window.alert("Failed to save: " + data.error);
                 });
             };
 
@@ -107,7 +107,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
                         }
                     }).
                     error(function (data, status, headers, config) {
-                        alert("Failed to remove paragraph: " + data.error);
+                        $window.alert("Failed to delete: " + data.error);
                     });
             };
 
