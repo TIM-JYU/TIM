@@ -12,7 +12,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', function 
             afterSave: '&',
             afterCancel: '&',
             afterDelete: '&',
-            showDelete: '=',
+            options: '=',
             initialText: '@'
         },
         controller: function($scope) {

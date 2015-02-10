@@ -75,7 +75,9 @@ timApp.controller("ViewCtrl", ['$scope',
                         docId: sc.docId,
                         par: par_id
                     }),
-                    "show-delete": JSON.stringify({opt:options.showDelete}),
+                    "options": JSON.stringify({
+                        showDelete: options.showDelete
+                    }),
                     "after-save": 'addSavedParToDom(saveData, extraData)',
                     "after-cancel": 'handleCancel(extraData)',
                     "after-delete": 'handleDelete(saveData, extraData)',
