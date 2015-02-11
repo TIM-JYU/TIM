@@ -68,6 +68,9 @@ run bower --allow-root install ng-file-upload
 run bower --allow-root install jquery
 run bower --allow-root install angular-sanitize
 
+# We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
+run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
+
 run npm uninstall bower
 run apt-get remove -y npm
 
