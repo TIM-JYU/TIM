@@ -63,10 +63,11 @@ expose 22
 run apt-get install -y npm
 run npm install -g bower
 run ln -s /usr/bin/nodejs /usr/bin/node
-run bower --allow-root install angular-ui-ace\#bower
-run bower --allow-root install ng-file-upload
-run bower --allow-root install jquery
-run bower --allow-root install angular-sanitize
+run bower --allow-root install angular#~1.3
+run bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048
+run bower --allow-root install ng-file-upload#~3.0
+run bower --allow-root install jquery#~2.1
+run bower --allow-root install angular-sanitize#~1.3
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
