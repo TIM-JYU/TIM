@@ -404,6 +404,7 @@ def getNotes(doc_id):
         for tag in KNOWN_TAGS:
             note[tag] = tag in note['tags']
         note.pop('tags', None)
+        note.pop('doc_ver', None)
     return jsonResponse(notes)
 
 @app.route("/read/<int:doc_id>", methods=['GET'])
@@ -412,6 +413,8 @@ def getReadParagraphs(doc_id):
     timdb = getTimDb()
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
+    for r in readings:
+        r.pop('doc_ver', None)
     return jsonResponse(readings)
 
 @app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
