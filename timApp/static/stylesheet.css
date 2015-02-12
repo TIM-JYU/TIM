@@ -93,6 +93,29 @@ body {
 	height: 3em;
 }
 
+.viewLogin {
+    font-size: 0.7em;
+    color: #3cc;
+    text-align: right;
+}
+
+input[type="submit"], button, input[type="button"] { 
+    background: #3CC;
+    border: 0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    /* font-weight: bold; */
+    cursor: pointer;
+    line-height: normal;
+    padding: 5px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+
+
 .viewLogin .loginButton:hover {
     width:auto;
 } 
@@ -138,15 +161,18 @@ body {
 }
  
 .viewLogin .loginButton {
-    width: auto;
-    height: 2em;
-    top: 1em;
-    left: 1em;
-/*    width: 100%; */
-    z-index: 300;
-/*    background-color: red; */
-    text-align: left;
-    font-size: 2em;
+    background: #3CC;
+    border: 0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .viewLogin form {
@@ -1042,11 +1068,15 @@ p.stem {
 		margin-left: 1px; 
 		margin-right: 5px;
 	}
+	.content { 
+		text-align: left;
+	}
 	.material {
 		display: inline-block;
 		width: 100%;
 	}
 	body {
+		text-align: left;
 		max-width: 50em;
 		margin-left: 0.0cm !important;
 		margin-right: 0.0cm;
@@ -1091,6 +1121,10 @@ p.stem {
     blockquote {
         margin-left: 0.2em;
         margin-right: 0.2em;
+    }
+    
+    ul, ol {
+      margin-left: 0.1em;
     }
 }
  
@@ -1482,3 +1516,62 @@ img.console {
   
 }
 
+.grconsole {
+  margin-top: 0.8em !important;
+  border: 1px double black;
+}
+
+@media print {
+  p {
+  font-size: 12pt;
+  page-break-inside: avoid;
+  }
+
+  body {
+  margin: 0px;
+  max-width: 100%;
+  }
+
+  .material {
+  width: 100%;
+  }
+
+  .readline {
+  display: none;
+  }
+
+  .unread {
+  display: none;
+  }
+
+  .parContent {
+  position: static;
+  border: 0px;
+  max-width: 100%;
+  }
+
+  .par {
+  position: static;
+  border: 0px;
+  max-width: 100%;
+  }
+
+  .headerlink {
+  display: none;
+  }
+
+  #header {
+  display: none;
+ }
+
+    /* Harmaa varjo dokumentilta pois */ 
+    .material {
+        box-shadow: none !important;
+            border: none !important;
+    }
+}
+    
+
+
+
+} 
