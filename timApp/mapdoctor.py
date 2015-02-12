@@ -91,7 +91,7 @@ def process(doc_ids, fix=False, verbose=False):
             print(sdoc_id, "is not an integer value, skipping.")
             continue
 
-        doc_vers = timdb.documents.getDocumentVersions(doc_id)
+        doc_vers = timdb.documents.getDocumentVersions(doc_id, 500)
         refs = get_all_references(doc_id)
         mappings = get_all_mappings(doc_id)
         vmappings = {}
