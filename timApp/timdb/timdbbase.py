@@ -123,28 +123,8 @@ class TimDbBase(object):
     @contract
     def addEmptyParMapping(self, doc_id : 'int', doc_ver : 'str', par_index : 'int', commit : 'bool' = True):
         cursor = self.db.cursor()
-
-        cursor.execute(
-            """
-            select par_index from ParMappings
-            where doc_id = ? and doc_ver = ? and par_index = ?
-            """,
-            [doc_id, doc_ver, par_index])
-
-        if cursor.fetchone() is not None:
-            #print("Mapping already exists - document {0} version {1} paragraph {2}".format(
-            #doc_id, doc_ver[:6], par_index))
-            return
-
-        #print("addEmptyParMapping(doc {0}, version {1}, paragraph {2})".format(
-        # doc_id, doc_ver[:6], par_index))
-
-        cursor.execute(
-            """
-            insert into ParMappings (doc_id, doc_ver, par_index) values (?, ?, ?)
-            """,
-            [doc_id, doc_ver, par_index])
-
+        cursor.execute("insert or ignore into ParMappings (doc_id, doc_ver, par_index) values (?, ?, ?)",
+                       [doc_id, doc_ver, par_index])
         if commit:
             self.db.commit()
 
@@ -271,6 +251,7 @@ class TimDbBase(object):
                                        read_ver,
                                        doc_id
                                        ])
+                        self.addEmptyParMapping(doc_id, doc_ver, par_index_new)
                     except sqlite3.IntegrityError:
                         # Already exists
                         cursor.execute("""delete from {}
