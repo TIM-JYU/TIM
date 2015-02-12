@@ -76,6 +76,12 @@ def startEphemeral():
     global ec
     ec = EphemeralClient(EPHEMERAL_URL)
 
+def getNextVersion(versions, doc_ver):
+    for i in range(0, len(versions)):
+        if (versions[i]['hash'] == doc_ver):
+            return versions[i - 1]['hash'] if i > 0 else None
+    return None
+
 def process(doc_ids, fix=False, verbose=False):
     initialize()
     if ('all' in doc_ids):
@@ -101,72 +107,79 @@ def process(doc_ids, fix=False, verbose=False):
             print("== Document {} ==".format(doc_id))
             print("{} versions, {} readings+notes, {} mappings in total.".format(len(doc_vers), len(refs), len(mappings)))
 
-        for ver_index in range(len(doc_vers) - 1, -1, -1):
-            doc_ver = doc_vers[ver_index]['hash']
-            vmappings[doc_ver] = [m for m in mappings if m['doc_ver'] == doc_ver]
-            mappings = [m for m in mappings if m['doc_ver'] != doc_ver]
-            vrefs[doc_ver] = [r for r in refs if r[0] == doc_ver]
-            refs = [r for r in refs if r[0] != doc_ver]
-            if verbose:
-                print("   Version {} has {} readings+notes and {} mapping(s).".format(doc_ver[:6], len(vrefs[doc_ver]), len(vmappings[doc_ver])))
+        #for ver_index in range(len(doc_vers) - 1, -1, -1):
+        #    doc_ver = doc_vers[ver_index]['hash']
+        #    vmappings[doc_ver] = [m for m in mappings if m['doc_ver'] == doc_ver]
+        #    mappings = [m for m in mappings if m['doc_ver'] != doc_ver]
+        #    vrefs[doc_ver] = [r for r in refs if r[0] == doc_ver]
+        #    refs = [r for r in refs if r[0] != doc_ver]
+        #    if verbose:
+        #        print("   Version {} has {} readings+notes and {} mapping(s).".format(doc_ver[:6], len(vrefs[doc_ver]), len(vmappings[doc_ver])))
 
         if verbose:
             print()
 
         nonverbosestr = " in document {}".format(doc_id) if not verbose else ""
 
-        if len(mappings) > 0:
-            n = len(mappings)
-            print("Detected {} orphaned mapping{}{}.".format(n, "s" if n > 1 else "", nonverbosestr))
-            for m in mappings:
-                print("   {} -> {}".format(vpstr(m["doc_ver"], m["par_index"]), vpstr(m["new_ver"], m["new_index"])))
-            print()
+        #if len(mappings) > 0:
+        #    n = len(mappings)
+        #    print("Detected {} orphaned mapping{}{}.".format(n, "s" if n > 1 else "", nonverbosestr))
+        #    for m in mappings:
+        #        print("   {} -> {}".format(vpstr(m["doc_ver"], m["par_index"]), vpstr(m["new_ver"], m["new_index"])))
+        #    print()
 
-        if len(refs) > 0:
-            n = len(refs)
-            print("Detected {0} orphaned reading{1} and/or note{1}{2}.".format(n, "s" if n != 1 else "", nonverbosestr))
+        #if len(refs) > 0:
+        #    n = len(refs)
+        #    print("Detected {0} orphaned reading{1} and/or note{1}{2}.".format(n, "s" if n != 1 else "", nonverbosestr))
 
         if verbose:
             print("Checking readings and notes")
-        unmapped = 0
-        build_mappings = []
-        for ver_index in range(0, 0, -1):
-            doc_ver = doc_vers[ver_index]["hash"]
-            next_ver = doc_vers[ver_index-1]["hash"]
 
-            for ref in vrefs[doc_ver]:
-                for check_ver_i in range(ver_index, 0, -1):
-                    check_ver = doc_vers[check_ver_i]["hash"]
-                    if not ref_in_mappings(ref, vmappings[check_ver]):
-                        unmapped += 1
-                        build_mappings.append((ver_index, ref[1]))
+        loose = 0
+        fixed = 0
+        for ref in get_all_references(doc_id):
+            current_ver = ref[0]
+            current_par = ref[1]
+            while current_ver != doc_vers[0]["hash"]:
+                cursor.execute(
+                    """
+                    select new_ver, new_index, modified
+                    from ParMappings
+                    where doc_id = ? and doc_ver = ? and par_index = ?
+                    and new_ver is not null and new_index is not null
+                    """, [doc_id, current_ver, current_par])
+                mappings = timdb.documents.resultAsDictionary(cursor)
+                if len(mappings) == 0:
+                    if verbose:
+                        print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
+                    loose += 1
+                    if fix:
+                        next_ver = getNextVersion(doc_vers, current_ver)
+                        cur_id = DocIdentifier(doc_id, current_ver)
+                        next_id = DocIdentifier(doc_id, next_ver)
+                        affinities = ec.getSingleBlockMapping(cur_id, next_id, current_par) 
+                        [affinity, next_par] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
+                        if affinity > 0.5:
+                            modified = affinity < 1
+                            timdb.documents.addParMapping(cur_id, next_id, current_par, next_par, modified, commit=False)
+                            mappings.append({'new_ver': next_ver, 'new_index': next_par})
+                            fixed += 1
+                            if verbose:
+                                print("Added a mapping -> {}({})".format(next_ver[:6], next_par))
+                        else:
+                            if verbose:
+                                print("Affinity {} too small to justify a mapping.".format(affinity))
+                            break
+                    else:
                         break
 
-        if unmapped > 0:
-            print("Found {} unmapped reference{}{}.".format(unmapped, "s" if unmapped != 1 else "", nonverbosestr))
+                #print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
+                #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index'], mappings[0]['modified']))
+                current_ver = mappings[0]['new_ver']
+                current_par = mappings[0]['new_index']
 
-        added = 0
-        skipped = 0
-        while len(build_mappings) > 0:
-            (ver_index, par_index) = build_mappings.pop()
-            cur_id = DocIdentifier(doc_id, doc_vers[ver_index]["hash"])
-            next_id = DocIdentifier(doc_id, doc_vers[ver_index-1]["hash"])
-            affinities = ec.getSingleBlockMapping(cur_id, next_id, par_index)
-            [affinity, new_index] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
-            if affinity > 0.5:
-                if fix:
-                    timdb.documents.addParMapping(cur_id, next_id, par_index, new_index, str(affinity < 1), commit=False)
-                if ver_index > 1:
-                    build_mappings.append((ver_index - 1, ver_index - 2, new_index))
-                added += 1
-            else:
-                print("Skipping paragraph ")
-
-        if added > 0 or skipped > 0:
-            timdb.commit()
-            verb = "Added" if fix else "Would add"
-            print("{} {} mapping{} ({} below affinity).".format(verb, added, "s" if added != 1 else "", skipped))
-
+        if loose > 0:
+            print("Found {} loose ends and fixed {} of them.".format(loose, fixed))
         if verbose:
             print()
 
