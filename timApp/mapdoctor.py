@@ -108,7 +108,7 @@ def process(doc_ids, fix=False, verbose=False):
             vrefs[doc_ver] = [r for r in refs if r[0] == doc_ver]
             refs = [r for r in refs if r[0] != doc_ver]
             if verbose:
-                print("...Version {} has {} readings+notes and {} mapping(s).".format(doc_ver[:6], len(vrefs[doc_ver]), len(vmappings[doc_ver])))
+                print("   Version {} has {} readings+notes and {} mapping(s).".format(doc_ver[:6], len(vrefs[doc_ver]), len(vmappings[doc_ver])))
 
         if verbose:
             print()
@@ -119,7 +119,7 @@ def process(doc_ids, fix=False, verbose=False):
             n = len(mappings)
             print("Detected {} orphaned mapping{}{}.".format(n, "s" if n > 1 else "", nonverbosestr))
             for m in mappings:
-                print("...{} -> {}".format(vpstr(m["doc_ver"], m["par_index"]), vpstr(m["new_ver"], m["new_index"])))
+                print("   {} -> {}".format(vpstr(m["doc_ver"], m["par_index"]), vpstr(m["new_ver"], m["new_index"])))
             print()
 
         if len(refs) > 0:
@@ -137,10 +137,9 @@ def process(doc_ids, fix=False, verbose=False):
             for ref in vrefs[doc_ver]:
                 if not ref_in_mappings(ref, vmappings):
                     unmapped += 1
-                    if fix:
-                        cur_id = DocIdentifier(doc_id, doc_ver)
-                        next_id = DocIdentifier(doc_id, next_ver)
-                        build_mappings.append((cur_id, next_id, ref[1]))
+                    cur_id = DocIdentifier(doc_id, doc_ver)
+                    next_id = DocIdentifier(doc_id, next_ver)
+                    build_mappings.append((cur_id, next_id, ref[1]))
 
         if unmapped > 0:
             print("Found {} unmapped reference{}{}.".format(unmapped, "s" if unmapped != 1 else "", nonverbosestr))
@@ -148,12 +147,12 @@ def process(doc_ids, fix=False, verbose=False):
         added = 0
         skipped = 0
         while len(build_mappings) > 0:
-            print("Badger")
             (cur_id, next_id, par_index) = build_mappings.pop()
             affinities = ec.getSingleBlockMapping(cur_id, next_id, par_index)
             [affinity, new_index] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
             if affinity > 0.5:
-                timdb.documents.addParMapping(cur_id, next_id, par_index, new_index, str(affinity < 1), commit=False)
+                if fix:
+                    timdb.documents.addParMapping(cur_id, next_id, par_index, new_index, str(affinity < 1), commit=False)
                 build_mappings.append(new_index)
                 added += 1
             else:
@@ -161,7 +160,8 @@ def process(doc_ids, fix=False, verbose=False):
 
         if added > 0 or skipped > 0:
             timdb.commit()
-            print("Added {} mapping{} ({} below affinity).".format(added, "s" if added != 1 else "", skipped))
+            verb = "Added" if fix else "Would add"
+            print("{} {} mapping{} ({} below affinity).".format(verb, added, "s" if added != 1 else "", skipped))
 
         if verbose:
             print()
