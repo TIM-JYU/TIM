@@ -1,7 +1,7 @@
 <div class="preview">
     <span>Preview
         (<ng-pluralize count="parCount"
-                      when="{'0': 'empty',
+                       when="{'0': 'empty',
                      '1': '1 paragraph',
                      'other': '{} paragraphs'}">
         </ng-pluralize>)</span>
@@ -10,10 +10,29 @@
     <div class="previewcontent"></div>
 </div>
 <div class="editButtonArea">
-    <button class="timButton savePar">Save</button>
-    <button class="timButton cancelPar">Cancel</button>
-    <button class="timButton deletePar">Delete</button>
+    <button class="timButton savePar" ng-click="saveClicked()">Save</button>
+    <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
+    <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
 </div>
-<div class="editor"></div>
-Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
+<div class="editor" ui-ace="{
+  useWrapMode: false,
+  onLoad: aceLoaded,
+  onChange: aceChanged
+}" ng-model="editorText"></div>
+<span ng-show="options.showImageUpload">
+    Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
 <span ng-bind="progress"></span>
+</span>
+<div class="tags">
+    <label ng-repeat="tag in options.tags">
+        <input type="checkbox" ng-model="extraData.tags[tag.name]"/> {{ tag.desc }}
+    </label>
+</div>
+<div class="choices">
+    <div ng-repeat="choice in options.choices.desc">
+        {{ choice.desc }}
+        <label ng-repeat="opt in choice.opts">
+            <input type="radio" ng-model="extraData[choice.name]" ng-value="opt.value"/> {{ opt.desc }}
+        </label>
+    </div>
+</div>

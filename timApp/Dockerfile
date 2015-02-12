@@ -28,19 +28,15 @@ run pip3 install lxml
 run pip3 install pyaml
 run pip3 install ansiconv
 run pip3 install cssutils
-run pip3 install pudb
-
-run apt-get install -y wget
-run apt-get install -y cmake
-
-# Create symbolic link for python3; otherwise CMake won't find it.
-run ln -s /usr/bin/python3 /usr/bin/python
 
 # Install pygit2 and dependencies
 run apt-get install -y libffi-dev
 run apt-get install -y libgit2-dev=0.19.0-2
 #env LD_LIBRARY_PATH /usr/local/lib
 run pip3 install pygit2==0.19
+
+# Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
+# run pip3 install -U six
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
@@ -64,10 +60,27 @@ run chown -R agent /service
 expose 5000
 expose 22
 
+run apt-get install -y npm
+run npm install -g bower
+run ln -s /usr/bin/nodejs /usr/bin/node
+run bower --allow-root install angular#~1.3
+run bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048
+run bower --allow-root install ng-file-upload#~3.0
+run bower --allow-root install jquery#~2.1
+run bower --allow-root install angular-sanitize#~1.3
+
+# We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
+run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
+
+run npm uninstall bower
+run apt-get remove -y npm
+
 run apt-get install -y openssh-server
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+run apt-get autoremove -y
 
 # Default startup command
 cmd cd /service/timApp && source initenv.sh && python3 launch.py

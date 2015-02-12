@@ -1,4 +1,4 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload'].concat(modules), function($locationProvider){
+var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function($locationProvider){
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
 });
@@ -45,156 +45,114 @@ timApp.controller("ViewCtrl", ['$scope',
             return $("#pars").children().eq(index - sc.startIndex);
         };
 
-        sc.getNoteEditorFields = function (parElement, editorArea) {
-            var editorElem = editorArea.find('.editor')[0];
-            return {
-                par_id: sc.getParIndex(parElement),
-                content: ace.edit(editorElem).getSession().getValue(),
-                access: editorArea.find('input[name=access]:checked').val(),
-                difficult: editorArea.find('input[name=difficult]').is(':checked'),
-                unclear: editorArea.find('input[name=unclear]').is(':checked')
+        sc.toggleParEditor = function ($par, options) {
+            var url;
+            if ($par.hasClass("new")) {
+                url = '/newParagraph/';
+            } else {
+                url = '/postParagraph/';
+            }
+            var par_id = sc.getParIndex($par);
+            var attrs = {
+                "save-url": url,
+                "extra-data": JSON.stringify({
+                    docId: sc.docId,
+                    par: par_id
+                }),
+                "options": JSON.stringify({
+                    showDelete: options.showDelete,
+                    showImageUpload: true,
+                    destroyAfterSave: true
+                }),
+                "after-save": 'addSavedParToDom(saveData, extraData)',
+                "after-cancel": 'handleCancel(extraData)',
+                "after-delete": 'handleDelete(saveData, extraData)',
+                "preview-url": '/preview/' + sc.docId,
+                "delete-url": '/deleteParagraph/' + sc.docId + "/" + par_id
             };
+            if (options.showDelete) {
+                attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
+            }
+            sc.toggleEditor($par, options, attrs);
         };
 
-        sc.toggleParEditor = function ($par, options) {
+        sc.toggleEditor = function ($par, options, attrs) {
             if ($par.children(EDITOR_CLASS_DOT).length) {
                 $par.children().remove(EDITOR_CLASS_DOT);
                 sc.editing = false;
             } else {
                 $(EDITOR_CLASS_DOT).remove();
 
-                var $div = $("<div>", {class: EDITOR_CLASS});
-                $div.loadTemplate("/static/templates/parEditor.html?_=" + (new Date).getTime(), {}, {
-                    success: function () {
-                        var editorScope = sc.$new();
-                        var aceEdit = sc.applyAceEditor($div.find('.editor')[0]);
-                        editorScope.timer = null;
-                        editorScope.outofdate = false;
-                        aceEdit.on("change", function(){
-                            editorScope.outofdate = true;
-                            editorScope.$apply();
-                            if (editorScope.timer) {
-                                clearTimeout(editorScope.timer);
-                            }
-                            editorScope.timer = setTimeout(function() {
-                                var text = aceEdit.getSession().getValue();
-                                http.post('/preview/' + sc.docId, {
-                                    "text": text
-                                }).success(function (data, status, headers, config) {
-                                    var len = data.texts.length;
-                                    var $previewDiv = $(".previewcontent");
-                                    $previewDiv.html("");
-                                    for (var i = 0; i < len; i++) {
-                                        $previewDiv
-                                            .append($("<div>", {class: "par"})
-                                                .append($("<div>", {class: "parContent"})
-                                                    .html($compile(data.texts[i])(editorScope))));
-                                    }
-                                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
-                                    editorScope.outofdate = false;
-                                    editorScope.parCount = len;
-                                }).error(function (data, status, headers, config) {
-                                    alert("Failed to show preview: " + data.error);
-                                });
-                            }, 500);
-                        });
-                        editorScope.onFileSelect = function (url, $files) {
-                            //$files: an array of files selected, each file has name, size, and type.
-                            for (var i = 0; i < $files.length; i++) {
-                                var file = $files[i];
-                                editorScope.upload = $upload.upload({
-                                    url: url,
-                                    method: 'POST',
-                                    file: file
-                                }).progress(function (evt) {
-                                    editorScope.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
-                                }).success(function (data, status, headers, config) {
-                                    editorScope.uploadedFile = '/images/' + data.file;
-                                    editorScope.progress = 'Uploading... Done!';
-                                    aceEdit.insert("![Image](" + editorScope.uploadedFile + ")");
-                                }).error(function (data, status, headers, config) {
-                                    editorScope.progress = 'Error while uploading: ' + data.error;
-                                });
-                            }
-                        };
+                var createEditor = function (attrs) {
+                    var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
+                    $compile($div[0])(sc);
+                    $par.append($div);
+                    sc.editing = true;
+                };
 
-                        if (!options.showDelete) {
-                            $div.find(PAR_DELETE_BUTTON).hide();
-                        }
-                        else {
-                            $(".par.new").remove();
-                            aceEdit.getSession().setValue("Loading paragraph text...");
-                            http.get('/getBlock/' + sc.docId + "/" + sc.getParIndex($par)).
-                                success(function (data, status, headers, config) {
-                                    aceEdit.getSession().setValue(data.md);
-                                }).
-                                error(function (data, status, headers, config) {
-                                    alert(data.error);
-                                });
-                        }
-                        $compile($div[0])(editorScope);
-                        $par.append($div);
-                        sc.editing = true;
-                    }
-                });
+                if (options.showDelete){
+                    $(".par.new").remove();
+                }
+                createEditor(attrs);
             }
         };
 
         sc.toggleNoteEditor = function ($par, options) {
-            if ($par.children(NOTE_EDITOR_CLASS_DOT).length) {
-                $par.children().remove(NOTE_EDITOR_CLASS_DOT);
-                sc.editing = false;
-            } else {
-                $(".par.new").remove();
-                $(EDITOR_CLASS_DOT).remove();
-                var $div = $("<div>", {class: NOTE_EDITOR_CLASS});
-                $div.loadTemplate("/static/templates/noteEditor.html?_=" + (new Date).getTime(), {}, {
-                    success: function () {
-                        if (options.isNew) {
-                            $div.find(NOTE_DELETE_BUTTON).hide();
-                            $div.data({});
-                        }
-                        else {
-                            var data = options.noteData;
-                            if (!data.editable) {
-                                alert('You cannot edit this note.');
-                                return;
-                            }
-                            $div.find('.editor').text(data.content);
-                            $div.find('input:radio[name=access]').val([data.access]);
-                            $div.find('input[name=difficult]').prop('checked', data.difficult);
-                            $div.find('input[name=unclear]').prop('checked', data.unclear);
-                        }
-                        sc.applyAceEditor($div.find('.editor')[0]);
-                        $div.data(data);
-                        $par.append($div);
-                        sc.editing = true;
+            var url;
+            var data;
+            if (options.isNew) {
+                url = '/postNote';
+                data = {
+                    access: 'everyone',
+                    tags: {
+                        difficult: false,
+                        unclear: false
                     }
-                });
+                };
+            } else {
+                url = '/editNote';
+                data = options.noteData;
+                if (!data.editable) {
+                    alert('You cannot edit this note.');
+                    return;
+                }
             }
+            var par_id = sc.getParIndex($par);
+            var attrs = {
+                "save-url": url,
+                "extra-data": JSON.stringify(angular.extend({
+                    docId: sc.docId,
+                    par: par_id
+                }, data)),
+                "options": JSON.stringify({
+                    showDelete: !options.isNew,
+                    showImageUpload: false,
+                    tags: [
+                        {name: 'difficult', desc: 'The text is difficult to understand'},
+                        {name: 'unclear', desc: 'The text is unclear'}
+                    ],
+                    choices: {desc: [{
+                        desc: 'Show note to:',
+                        name: 'access',
+                        opts: [
+                            {desc: 'Everyone', value: 'everyone'},
+                            {desc: 'Just me', value: 'justme'}
+                        ]
+                    }]},
+                    destroyAfterSave: true
+                }),
+                "after-save": 'handleNoteSave(saveData, extraData)',
+                "after-cancel": 'handleNoteCancel(extraData)',
+                "after-delete": 'handleNoteDelete(saveData, extraData)',
+                "preview-url": '/preview/' + sc.docId,
+                "delete-url": '/deleteNote',
+                "editor-text": data.content
+            };
+            sc.toggleEditor($par, options, attrs);
         };
 
         sc.forEachParagraph = function (func) {
             $('.paragraphs .par').each(func);
-        };
-
-        sc.applyAceEditor = function (element) {
-            var editor = new ace.edit(element);
-            editor.setTheme("ace/theme/eclipse");
-            editor.renderer.setPadding(10, 10, 10, 10);
-            editor.getSession().setMode("ace/mode/markdown");
-            editor.getSession().setUseWrapMode(false);
-            editor.getSession().setWrapLimitRange(0, 79);
-            editor.setOptions({maxLines: 40, minLines: 3});
-            //$('.' + elem.par).get()[0].focus();
-            var iOS = /(iPad|iPhone|iPod)/g.test(navigator.platform);
-            
-            // iPad does not open the keyboard if not manually focused to editable area
-            if (!iOS)
-            {
-                editor.focus();
-            }
-            return editor;
         };
 
         // Event handlers
@@ -230,64 +188,34 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleParEditor($newpar, {showDelete: false});
         });
 
-        sc.addEvent(PAR_CANCEL_BUTTON, function (e) {
-            var $par = $(this).parent().parent().parent();
+        sc.handleCancel = function (extraData) {
+            var $par = sc.getElementByParIndex(extraData.par);
             if ($par.hasClass("new")) {
                 $par.remove();
             }
-            else {
-                $(this).parent().parent().remove(); // remove editor only
+            sc.editing = false;
+        };
+
+        sc.handleDelete = function (data, extraData) {
+            var $par = sc.getElementByParIndex(extraData.par);
+            http.defaults.headers.common.Version = data.version;
+            $par.remove();
+            sc.editing = false;
+        };
+
+        sc.addSavedParToDom = function (data, extraData) {
+            var $par = sc.getElementByParIndex(extraData.par);
+            http.defaults.headers.common.Version = data.version;
+            var len = data.texts.length;
+            for (var i = len - 1; i >= 0; i--) {
+                var $newpar = $("<div>", {class: "par"});
+                $par.after($newpar
+                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i])(sc))));
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
             }
+            $par.remove();
             sc.editing = false;
-        });
-
-        sc.addEvent(PAR_DELETE_BUTTON, function (e) {
-            var $par = $(this).parents('.par');
-            var par_id = sc.getParIndex($par);
-
-            http.get('/deleteParagraph/' + sc.docId + "/" + par_id).
-                success(function (data, status, headers, config) {
-                    http.defaults.headers.common.Version = data.version;
-                    $par.remove();
-                }).
-                error(function (data, status, headers, config) {
-                    alert("Failed to remove paragraph: " + data.error);
-                });
-
-            sc.editing = false;
-        });
-
-        sc.addEvent(PAR_SAVE_BUTTON, function (e) {
-            var $par = $(this).parents('.par');
-            var par_id = sc.getParIndex($par);
-            var editorElem = $par.find('.editor')[0];
-            var text = ace.edit(editorElem).getSession().getValue();
-            var url;
-            if ($par.hasClass("new")) {
-                url = '/newParagraph/';
-            } else {
-                url = '/postParagraph/';
-            }
-            http.post(url, {
-                "docId": sc.docId,
-                "par": par_id,
-                "text": text
-            }).success(function (data, status, headers, config) {
-                http.defaults.headers.common.Version = data.version;
-                var len = data.texts.length;
-                for (var i = len - 1; i >= 0; i--) {
-                    var $newpar = $("<div>", {class: "par"});
-                    $par.after($newpar
-                        .append($("<div>", {class: "parContent"}).html($compile(data.texts[i])(sc))));
-                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
-                }
-                $par.remove();
-            }).error(function (data, status, headers, config) {
-                alert("Failed to save paragraph: " + data.error);
-            });
-
-            sc.editing = false;
-        });
+        };
 
         sc.addEvent(".readline", function (e) {
             var par_id = sc.getParIndex($(this).parents('.par'));
@@ -306,35 +234,19 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleNoteEditor($par, {isNew: true});
         });
 
-        sc.addEvent(NOTE_CANCEL_BUTTON, function (e) {
-            $(this).parent().parent().remove();
+        sc.handleNoteCancel = function (extraData) {
             sc.editing = false;
-        });
+        };
 
-        sc.addEvent(NOTE_DELETE_BUTTON, function (e) {
-            var noteElement = $(this).parents('.note');
-            var $par = $(this).parents('.par');
-            var par_id = sc.getParIndex($par);
-            var $editor = $par.find(NOTE_EDITOR_CLASS_DOT);
-            var data = $editor.data();
-            http.post('/deleteNote', {
-                par_id: par_id,
-                doc_id: sc.docId,
-                note_index: data.note_index
-            }).success(function (data, status, headers, config) {
-                // TODO: Maybe fetch notes only for this paragraph and not the
-                // whole document.
-                sc.getNotes();
-                $editor.remove();
-                sc.editing = false;
-            }).error(function (data, status, headers, config) {
-                alert('Could not save the note.');
-            });
-        });
+        sc.handleNoteDelete = function (data, extraData) {
+            sc.getNotes();
+            sc.editing = false;
+        };
 
-        sc.addEvent(NOTE_SAVE_BUTTON, function (e) {
-            sc.saveNote($(this).parent().parent().parent(), $(this).parent().parent().data());
-        });
+        sc.handleNoteSave = function (data, extraData) {
+            sc.getNotes();
+            sc.editing = false;
+        };
 
         sc.addEvent('.paragraphs .parContent', function (e) {
             if (sc.editing)
@@ -402,7 +314,7 @@ timApp.controller("ViewCtrl", ['$scope',
             for (var i = 0; i < notes.length; i++) {
                 var classes = ["note"];
                 for (var j = 0; j < sc.noteClassAttributes.length; j++) {
-                    if (notes[i][sc.noteClassAttributes[j]]) {
+                    if (notes[i][sc.noteClassAttributes[j]] || notes[i].tags[sc.noteClassAttributes[j]]) {
                         classes.push(sc.noteClassAttributes[j]);
                     }
                 }
@@ -411,47 +323,6 @@ timApp.controller("ViewCtrl", ['$scope',
                     .append($("<div>", {class: 'noteContent', html: notes[i].content})));
             }
             return $noteDiv;
-        };
-
-        sc.saveNote = function ($par, data) {
-            var fields = sc.getNoteEditorFields($par, $par.find(NOTE_EDITOR_CLASS_DOT));
-            if (!$.isEmptyObject(data)) {
-                // save edits to existing note
-                http.post('/editNote', {
-                    par_id: fields.par_id,
-                    doc_id: sc.docId,
-                    text: fields.content,
-                    access: fields.access,
-                    difficult: fields.difficult,
-                    unclear: fields.unclear,
-                    note_index: data.note_index
-                }).success(function (data, status, headers, config) {
-                    // TODO: Maybe fetch notes only for this paragraph and not the
-                    // whole document.
-                    sc.getNotes();
-                }).error(function (data, status, headers, config) {
-                    alert('Could not save the note.');
-                });
-            } else {
-                http.post('/postNote', {
-                    par_id: fields.par_id,
-                    doc_id: sc.docId,
-                    text: fields.content,
-                    visibility: fields.access,
-                    difficult: fields.difficult,
-                    unclear: fields.unclear
-                }).success(function (data, status, headers, config) {
-                    // TODO: Maybe fetch notes only for this paragraph and not the
-                    // whole document.
-                    $(NOTE_EDITOR_CLASS_DOT).remove();
-                    sc.editing = false;
-                    sc.getNotes();
-                }).error(function (data, status, headers, config) {
-                    alert('Could not save the note.');
-                });
-            }
-            var $editor = $par.find(NOTE_EDITOR_CLASS_DOT);
-            $editor.remove();
         };
 
         sc.getNotes = function () {

@@ -9,7 +9,7 @@ import collections
 import re
 import sys
 
-from flask import Flask, redirect, url_for, flash
+from flask import Flask, redirect, url_for, flash, Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import g
@@ -46,6 +46,10 @@ app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
+app.register_blueprint(Blueprint('bower',
+                                 __name__,
+                                 static_folder='static/scripts/bower_components',
+                                 static_url_path='/static/scripts/bower_components'))
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
@@ -306,7 +310,7 @@ def getBlockMd(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
     block = timdb.documents.getBlock(getNewest(docId), blockId)
-    return jsonResponse({"md": block})
+    return jsonResponse({"text": block})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
@@ -335,18 +339,19 @@ def postNote():
     verifyLoggedIn()
     jsondata = request.get_json()
     noteText = jsondata['text']
-    visibility = jsondata['visibility']
+    access = jsondata['access']
+    sent_tags = jsondata.get('tags', {})
     tags = []
     for tag in KNOWN_TAGS:
-        if jsondata[tag]:
+        if sent_tags[tag]:
             tags.append(tag)
-    doc_id = jsondata['doc_id']
+    doc_id = jsondata['docId']
     doc_ver = request.headers.get('Version')
-    paragraph_id = jsondata['par_id']
+    paragraph_id = jsondata['par']
 
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, visibility, tags)
+    timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, access, tags)
     #TODO: Handle error.
     return "Success"
 
@@ -355,15 +360,16 @@ def editNote():
     verifyLoggedIn()
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
-    doc_id = int(jsondata['doc_id'])
+    doc_id = int(jsondata['docId'])
     doc_ver = request.headers.get('Version')
-    paragraph_id = int(jsondata['par_id'])
+    paragraph_id = int(jsondata['par'])
     noteText = jsondata['text']
-    visibility = jsondata['access']
+    access = jsondata['access']
     note_index = int(jsondata['note_index'])
+    sent_tags = jsondata.get('tags', {})
     tags = []
     for tag in KNOWN_TAGS:
-        if jsondata[tag]:
+        if sent_tags[tag]:
             tags.append(tag)
     timdb = getTimDb()
 
@@ -371,7 +377,7 @@ def editNote():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
 
-    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, visibility, tags)
+    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, access, tags)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
@@ -401,10 +407,10 @@ def getNotes(doc_id):
     for note in notes:
         note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
         note['private'] = note['access'] == 'justme'
+        tags = note['tags']
+        note['tags'] = {}
         for tag in KNOWN_TAGS:
-            note[tag] = tag in note['tags']
-        note.pop('tags', None)
-        note.pop('doc_ver', None)
+            note['tags'][tag] = tag in tags
     return jsonResponse(notes)
 
 @app.route("/read/<int:doc_id>", methods=['GET'])
