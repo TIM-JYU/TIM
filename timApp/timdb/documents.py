@@ -483,7 +483,7 @@ class Documents(TimDbBase):
         self.db.commit()
 
     @contract
-    def __updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0):
+    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0):
         cursor = self.db.cursor()
         cursor.execute(
             """
@@ -723,7 +723,7 @@ class Documents(TimDbBase):
             return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.__updateParMappings(document_id, new_id)
+        self.updateParMappings(document_id, new_id)
         self.updateDocModified(new_id)
         return new_id
 
