@@ -135,11 +135,12 @@ def process(doc_ids, fix=False, verbose=False):
             next_ver = doc_vers[ver_index-1]["hash"]
 
             for ref in vrefs[doc_ver]:
-                if not ref_in_mappings(ref, vmappings):
-                    unmapped += 1
-                    cur_id = DocIdentifier(doc_id, doc_ver)
-                    next_id = DocIdentifier(doc_id, next_ver)
-                    build_mappings.append((cur_id, next_id, ref[1]))
+                for check_ver_i in range(ver_index, 0, -1):
+                    check_ver = doc_vers[check_ver_i]["hash"]
+                    if not ref_in_mappings(ref, vmappings[check_ver]):
+                        unmapped += 1
+                        build_mappings.append((ver_index, ref[1]))
+                        break
 
         if unmapped > 0:
             print("Found {} unmapped reference{}{}.".format(unmapped, "s" if unmapped != 1 else "", nonverbosestr))
@@ -147,13 +148,16 @@ def process(doc_ids, fix=False, verbose=False):
         added = 0
         skipped = 0
         while len(build_mappings) > 0:
-            (cur_id, next_id, par_index) = build_mappings.pop()
+            (ver_index, par_index) = build_mappings.pop()
+            cur_id = DocIdentifier(doc_id, doc_vers[ver_index]["hash"])
+            next_id = DocIdentifier(doc_id, doc_vers[ver_index-1]["hash"])
             affinities = ec.getSingleBlockMapping(cur_id, next_id, par_index)
             [affinity, new_index] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
             if affinity > 0.5:
                 if fix:
                     timdb.documents.addParMapping(cur_id, next_id, par_index, new_index, str(affinity < 1), commit=False)
-                build_mappings.append(new_index)
+                if ver_index > 1:
+                    build_mappings.append((ver_index - 1, ver_index - 2, new_index))
                 added += 1
             else:
                 print("Skipping paragraph ")
