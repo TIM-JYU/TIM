@@ -2,7 +2,6 @@
     Diagnoses and fixes paragraph mappings.
 """
 
-from timdb.gitclient import GitClient
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import DocIdentifier, TimDbException
 from ephemeralclient import EphemeralClient, EPHEMERAL_URL
@@ -12,6 +11,7 @@ import ephemeralclient
 import sqlite3
 import os
 import sys
+import difflib
 
 def getcount(cursor, table_name, condition = None):
     try:
@@ -42,7 +42,6 @@ def initialize():
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     FILES_ROOT_PATH = 'tim_files'
-    git = GitClient.connect(FILES_ROOT_PATH)
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
     cursor = timdb.db.cursor()
 
@@ -81,6 +80,14 @@ def getNextVersion(versions, doc_ver):
         if (versions[i]['hash'] == doc_ver):
             return versions[i - 1]['hash'] if i > 0 else None
     return None
+
+def getClosestIndex(texts, text, prevIndex, cutoff=0.5):
+    closest = (None, 0)
+    for i in range(0, len(texts)):
+        aff = difflib.SequenceMatcher(lambda x: x == " ", text, texts[i]).ratio()
+    if aff > closest[1] or (aff == closest[1] and closest[0] is not None and abs(prevIndex - i) < abs(prevIndex - closest[0])):
+        closest = (i, aff)
+    return closest
 
 def process(doc_ids, fix=False, verbose=False):
     initialize()
@@ -140,7 +147,7 @@ def process(doc_ids, fix=False, verbose=False):
         for ref in get_all_references(doc_id):
             current_ver = ref[0]
             current_par = ref[1]
-            while current_ver != doc_vers[0]["hash"]:
+            while current_ver != doc_vers[0]["hash"] and current_par is not None:
                 cursor.execute(
                     """
                     select new_ver, new_index, modified
@@ -150,22 +157,34 @@ def process(doc_ids, fix=False, verbose=False):
                     """, [doc_id, current_ver, current_par])
                 mappings = timdb.documents.resultAsDictionary(cursor)
                 if len(mappings) == 0:
-                    if verbose:
-                        print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
+                    #if verbose:
+                    #    print('Loose end: doc {} {}({}) -> ???'.format (doc_id, current_ver[:6], current_par))
                     loose += 1
                     if fix:
                         next_ver = getNextVersion(doc_vers, current_ver)
                         cur_id = DocIdentifier(doc_id, current_ver)
                         next_id = DocIdentifier(doc_id, next_ver)
-                        affinities = ec.getSingleBlockMapping(cur_id, next_id, current_par) 
-                        [affinity, next_par] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
-                        if affinity > 0.5:
-                            modified = affinity < 1
-                            timdb.documents.addParMapping(cur_id, next_id, current_par, next_par, modified, commit=False)
+                        blocks_cur = timdb.documents.getDocumentAsBlocks(cur_id)
+                        if blocks_cur is None:
+                            if verbose:
+                                print("Could not get document {} version {} as blocks!".format(doc_id, current_ver[:6]))
+                            break
+                        if current_par >= len(blocks_cur):
+                            if verbose:
+                                print("Paragraph index {} over bounds ({} paragraphs)".format(current_par, len(blocks_cur)))
+                            break
+                        blocks_next = timdb.documents.getDocumentAsBlocks(next_id)
+                        affinity = getClosestIndex(blocks_next, blocks_cur[current_par], current_par)
+                        #affinities = ec.getSingleBlockMapping(cur_id, next_id, current_par) 
+                        #[affinity, next_par] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)            
+                        if affinity is not None:
+                            next_par = affinity[0]
+                            modified = affinity[1] < 1
+                            timdb.documents.addParMapping(cur_id, next_id, current_par, next_par, modified)
                             mappings.append({'new_ver': next_ver, 'new_index': next_par})
                             fixed += 1
-                            if verbose:
-                                print("Added a mapping -> {}({})".format(next_ver[:6], next_par))
+                            #if verbose:
+                            #    print("Added a mapping -> {}({})".format(next_ver[:6], next_par))
                         else:
                             if verbose:
                                 print("Affinity {} too small to justify a mapping.".format(affinity))
