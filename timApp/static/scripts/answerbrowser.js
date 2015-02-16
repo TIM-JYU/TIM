@@ -13,11 +13,11 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
             },
             link: function ($scope, $element, $attrs) {
-                $scope.loading = false;
+                $scope.loading = 0;
                 $scope.changeAnswer = function () {
                     var $par = $element.parents('.par');
                     var par_id = $scope.$parent.getParIndex($par);
-                    $scope.loading = true;
+                    $scope.loading++;
                     $http.get('/getState', {
                         params: {
                             doc_id: $scope.$parent.docId,
@@ -30,7 +30,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }).error(function (data, status, headers, config) {
                         $window.alert('Error getting answers: ' + data.error);
                     }).finally(function () {
-                        $scope.loading = false;
+                        $scope.loading--;
                     });
                 };
 
@@ -53,6 +53,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.getAvailableAnswers = function () {
+                    $scope.loading++;
                     $http.get('/answers/' + $scope.taskId + '/' + $scope.user.name)
                         .success(function (data, status, headers, config) {
                             $scope.answers = data;
@@ -62,6 +63,8 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             }
                         }).error(function (data, status, headers, config) {
                             $window.alert('Error getting answers: ' + data.error);
+                        }).finally(function () {
+                            $scope.loading--;
                         });
                 };
                 $scope.getAvailableAnswers();
