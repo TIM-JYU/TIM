@@ -205,27 +205,49 @@ class Documents(TimDbBase):
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT id,description AS name,modified FROM Block WHERE type_id = ?', [blocktypes.DOCUMENT])
+        cursor.execute('SELECT id,description AS name,modified,latest_revision_id FROM Block WHERE type_id = ?', [blocktypes.DOCUMENT])
         results = self.resultAsDictionary(cursor)
         zombies = []
         for result in results:
             if not self.blockExists(result['id'], blocktypes.DOCUMENT):
                 print('getDocuments: document {} does not exist on the disk!'.format(result['id']))
                 zombies.append(result)
+                continue
             else:
                 result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
-            if result['modified'] is None:
+            if result['modified'] is None or result['latest_revision_id'] is None:
                 latest_version = self.getDocumentVersions(result['id'], limit=1, date_format='iso')
                 time_str = latest_version[0]['timestamp'].rsplit(' ', 1)[0]
                 cursor.execute("""UPDATE Block SET modified = strftime("%Y-%m-%d %H:%M:%S", ?)
                                   WHERE type_id = ? and id = ?""", [time_str, blocktypes.DOCUMENT, result['id']])
                 result['modified'] = time_str
+                if result['latest_revision_id'] is None:
+                    cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?)",
+                        [result['id'], latest_version[0]['hash']])
+                    cursor.execute("UPDATE Block SET latest_revision_id = ? WHERE type_id = ? and id = ?",
+                        [cursor.lastrowid, blocktypes.DOCUMENT, result['id']])
             result['modified'] = date_to_relative(datetime.strptime(result['modified'], "%Y-%m-%d %H:%M:%S"))
         self.db.commit()
         for zombie in zombies:
             results.remove(zombie)
 
         return results
+
+    @contract
+    def updateLatestVersion(doc_id : 'DocIdentifier'):
+        cursor = self.db.cursor()
+        cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
+        revid = cursor.fetchone()
+        if revid is None:
+            cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?, ?)",
+                [doc_id.id, doc_id.hash])
+            cursor.execute("UPDATE Block SET latest_revision = ? WHERE type_id = ? and id = ?",
+                [cursor.lastrowid, blocktypes.DOCUMENT, result['id']])
+        else:
+            cursor.execute("UPDATE ReadRevision SET Hash = ? WHERE revision_id = ?",
+                [doc_id.hash, revid])
+
+        self.db.commit()
 
     @contract
     def getDocumentsForGroup(self, group_id : 'int', historylimit: 'int'=100) -> 'list(dict)':
@@ -390,13 +412,22 @@ class Documents(TimDbBase):
         return self.git.getLatestVersionDetails(self.getDocumentPathAsRelative(document_id))
 
     @contract
-    def getNewestVersionHash(self, document_id: 'int') -> 'str|None':
+    def getNewestVersionHash(self, doc_id: 'int') -> 'str|None':
         """Gets the hash of the newest version for a document.
         
         :param document_id: The id of the document.
         :returns: The hash string, or None if not found.
         """
-        return self.git.getLatestVersion(self.getDocumentPathAsRelative(document_id))
+        cursor = self.db.cursor()
+        cursor.execute("SELECT latest_revision_id FROM Block WHERE id = ?", [doc_id])
+        revid = cursor.fetchone()
+        if revid is None:
+            doc_ver = self.git.getLatestVersion(self.getDocumentPathAsRelative(doc_id))
+            self.updateLatestRevision(DocIdentifier(doc_id, doc_ver))
+            return doc_ver
+        else:
+            cursor.execute("SELECT Hash FROM ReadRevision WHERE revision_id = ?", [revid[0]])
+            return cursor.fetchone()[0]
 
     @contract
     def importDocumentFromFile(self, document_file: 'str', document_name: 'str',
@@ -636,6 +667,7 @@ class Documents(TimDbBase):
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
 
         new_id = DocIdentifier(new_id.id, version)
+        self.updateLatestRevision(new_id)
         self.__copyParMappings(document_id, new_id, start_index = 0, end_index = mod_index)
 
         if mod_count >= 0:
