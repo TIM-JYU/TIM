@@ -142,24 +142,15 @@ CONSTRAINT BlockRelation_id
 
 
 CREATE TABLE ReadRevision (
-revision_id INTEGER NOT NULL,
+revision_id INTEGER NOT NULL PRIMARY KEY,
 Block_id INTEGER NOT NULL,
-User_id INTEGER NOT NULL,
+Hash VARCHAR(128),
 
-CONSTRAINT ReadRevision_PK
-	PRIMARY KEY (Block_id,User_id),
-CONSTRAINT ReadRevision_id 
-	FOREIGN KEY (Block_id)
-	REFERENCES Block (id)
-		ON DELETE NO ACTION
-		ON UPDATE CASCADE,
-CONSTRAINT ReadRevision_id 
-	FOREIGN KEY (User_id)
-	REFERENCES User (id)
-		ON DELETE NO ACTION
-		ON UPDATE CASCADE
-)
-;
+  CONSTRAINT ReadRevision_id
+  FOREIGN KEY (Block_id)
+  REFERENCES Block (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
 
 
 CREATE TABLE UserGroupMember (
