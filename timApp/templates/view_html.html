@@ -91,7 +91,7 @@
                     </div>
                     {% if 'task_id' in t %}
                         <answerbrowser
-                                user-id="{{ session.user_name }}"
+                                user-id="{{ current_user }}"
                                 task-id="{{ t['task_id'] }}">
                         </answerbrowser>
                     {% endif %}

@@ -77,15 +77,19 @@ def view(doc_name, template_name, view_range=None, user=0, teacher=False):
         start_index = max(view_range[0], 0)
         end_index = min(view_range[1], len(xs))
         xs = xs[start_index:end_index + 1]
-        
+
     if teacher:
-        texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, timdb.users.getUser(user)[1], timdb.answers, doc_id, user)
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         users = timdb.answers.getUsersForTasks(task_ids)
     else:
-        texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
+        user = getCurrentUserId()
         users = []
-               
+    current_user = timdb.users.getUser(user)[1]
+    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
+                                                                current_user,
+                                                                timdb.answers,
+                                                                doc_id,
+                                                                user)
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
@@ -99,6 +103,7 @@ def view(doc_name, template_name, view_range=None, user=0, teacher=False):
                            docName=doc['name'],
                            text=texts,
                            plugin_users=users,
+                           current_user=current_user,
                            version=version,
                            js=jsPaths,
                            cssFiles=cssPaths,
