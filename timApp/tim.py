@@ -434,16 +434,20 @@ def setReadParagraph(doc_id, specifier):
     timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
     return "Success"
 
+def parse_task_id(task_id):
+    # Assuming task_id is of the form "22.palindrome"
+    pieces = task_id.split('.')
+    if len(pieces) != 2:
+        abort(400, 'The format of task_id is invalid. Expected exactly one dot character.')
+    doc_id = int(pieces[0])
+    task_id_name = pieces[1]
+    return doc_id, task_id_name
+
 @app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
 
-    # Assuming task_id is of the form "22.palindrome"
-    pieces = task_id.split('.')
-    if len(pieces) != 2:
-        return jsonResponse({'error' : 'The format of task_id is invalid. Expected exactly one dot character.'}, 400)
-    doc_id = int(pieces[0])
-    task_id_name = pieces[1]
+    doc_id, task_id_name = parse_task_id(task_id)
     if not 'input' in request.get_json():
         return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -485,6 +489,48 @@ def saveAnswer(plugintype, task_id):
         timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
 
     return jsonResponse({'web':jsonresp['web']})
+
+@app.route("/answers/<task_id>/<user>")
+def get_answers(task_id, user):
+    verifyLoggedIn()
+    timdb = getTimDb()
+    doc_id, task_id_name = parse_task_id(task_id)
+    if not timdb.documents.documentExists(doc_id):
+        abort(404, 'No such document')
+    user_id = timdb.users.getUserByName(user)
+    if user_id != getCurrentUserId():
+        verifyOwnership(doc_id)
+    if user_id is None:
+        abort(400, 'Non-existent user')
+    answers = timdb.answers.getAnswers(user_id, task_id)
+    return jsonResponse(answers)
+
+@app.route("/getState")
+def get_state():
+    timdb = getTimDb()
+    doc_id, par_id, user, state = unpack_args('doc_id', 'par_id', 'user', 'state', types=[int, int, str, str])
+    if not timdb.documents.documentExists(doc_id):
+        abort(404, 'No such document')
+    user_id = timdb.users.getUserByName(user)
+    if user_id != getCurrentUserId():
+        verifyOwnership(doc_id)
+    if user_id is None:
+        abort(400, 'Non-existent user')
+    if not timdb.documents.documentExists(doc_id):
+        abort(404, 'No such document')
+    if not hasViewAccess(doc_id):
+        abort(403, 'Permission denied')
+
+    version = request.headers['Version']
+    block = timdb.documents.getBlockAsHtml(DocIdentifier(doc_id, version), par_id)
+
+    texts, jsPaths, cssPaths, modules = pluginControl.pluginify([block],
+                                                                user,
+                                                                timdb.answers,
+                                                                doc_id,
+                                                                user_id,
+                                                                custom_state=state)
+    return jsonResponse(texts[0])
 
 def getPluginMarkup(doc_id, plugintype, task_id):
     timdb = getTimDb()

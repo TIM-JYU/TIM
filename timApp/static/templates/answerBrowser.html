@@ -1,0 +1,13 @@
+<div class="answerBrowser">
+    User: {{ userId }}
+    <span ng-show="answers.length > 0">
+    <button ng-click="previous()">&larr;</button>
+    <select ng-model="selectedAnswer"
+            ng-options="answer.answered_on for answer in answers track by answer.id"
+            ng-change="changeAnswer()"></select>
+    <button ng-click="next()">&rarr;</button>
+    {{ answers.indexOf(selectedAnswer) + 1 }}/{{ answers.length }}
+    </span>
+    <span ng-show="answers.length == 0">(no answers)</span>
+    <img style="display: inline" src="/static/images/loading.gif" ng-show="loading">
+</div>

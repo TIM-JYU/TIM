@@ -87,14 +87,30 @@ def find_task_ids(blocks, doc_id):
     return task_ids
 
 
-# Take a set of blocks and search for plugin markers,
-# replace contents with plugin.
-def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
+def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
+    """ "Pluginifies" or sanitizes the specified HTML blocks by inspecting each block
+    for plugin markers, calling the corresponding plugin route if such is found. Sanitizes HTML
+    for each non-plugin block.
+
+    :param blocks: A list of HTML blocks to be processed.
+    :param user: The current user's username.
+    :param answer_db: A reference to the answer database.
+    :param doc_id: The document id.
+    :param user_id: The user id.
+    :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
+                         If this parameter is specified, the expression len(blocks) MUST be 1.
+    :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
+    """
+
+    if custom_state is not None:
+        if len(blocks) != 1:
+            raise PluginException('len(blocks) must be 1 if custom state is specified')
     final_html_blocks = []
     plugins = {}
     for idx, block in enumerate(blocks):
         found_plugins = find_plugins(block)
         if len(found_plugins) > 0:
+            assert len(found_plugins) == 1
             plugin_info = parse_plugin_values(found_plugins)
             error_messages = []
             for vals in plugin_info:
@@ -103,15 +119,17 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
                     error_messages.append(get_error_html(plugin_name, vals['error']))
                     continue
 
-                if not plugin_name in plugins:
+                if plugin_name not in plugins:
                     plugins[plugin_name] = OrderedDict()
                 vals['markup']["user_id"] = user
-                vals['markup']["browse_answers"] = browseAnswers
                 task_id = "{}.{}".format(doc_id, vals['taskId'])
                 states = answer_db.getAnswers(user_id, task_id)
 
-                # Don't show state for anonymous users.
-                state = None if user_id == 0 or len(states) == 0 else states[0]['content']
+                if custom_state is not None:
+                    state = custom_state
+                else:
+                    # Don't show state for anonymous users.
+                    state = None if user_id == 0 or len(states) == 0 else states[0]['content']
                 try:
                     if state is not None:
                         state = json.loads(state)
@@ -119,10 +137,14 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
                     pass
                 plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
 
-            final_html_blocks.append('<div class="pluginError">Error(s) occurred while rendering plugin. </div>'
-                                     + ''.join(error_messages))
+                final_html_blocks.append({'html': '<div class="pluginError">'
+                                                  'Error(s) occurred while rendering plugin.'
+                                                  '</div>'
+                                                  ''.join(error_messages),
+                                          'task_id': task_id})
+                break  # Assuming there is at most one plugin per paragraph
         else:
-            final_html_blocks.append(sanitize_html(block))
+            final_html_blocks.append({'html': sanitize_html(block)})
 
     js_paths = []
     css_paths = []
@@ -133,7 +155,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
-                final_html_blocks[idx] = get_error_html(plugin_name, str(e))
+                final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
             continue
         reqs = json.loads(resp)
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
@@ -164,25 +186,21 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, browseAnswers=False):
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
             except PluginException as e:
                 for idx in plugin_block_map.keys():
-                    final_html_blocks[idx] = get_error_html(plugin_name, str(e))
+                    final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
                 continue
             plugin_htmls = json.loads(response)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                if browseAnswers:
-                    html += make_browse_buttons(user_id, markup['taskID'], answer_db)
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
+                final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                          plugin_url,
                                                                                          html)
         else:
             for idx, val in plugin_block_map.items():
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
-                    if browseAnswers:
-                        html += make_browse_buttons(user_id, val['taskID'], answer_db)
                 except PluginException as e:
-                    final_html_blocks[idx] = get_error_html(plugin_name, str(e))
+                    final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
                     continue
-                final_html_blocks[idx] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                                          plugin_url,
                                                                                          html)
 
