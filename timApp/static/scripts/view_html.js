@@ -210,7 +210,7 @@ timApp.controller("ViewCtrl", ['$scope',
             for (var i = len - 1; i >= 0; i--) {
                 var $newpar = $("<div>", {class: "par"});
                 $par.after($newpar
-                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i])(sc))));
+                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i].html)(sc))));
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
             }
             $par.remove();
