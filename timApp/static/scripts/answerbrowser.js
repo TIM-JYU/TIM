@@ -7,7 +7,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             restrict: 'E',
             scope: {
                 taskId: '@',
-                userId: '@'
+                user: '='
             },
             controller: function ($scope) {
 
@@ -22,7 +22,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         params: {
                             doc_id: $scope.$parent.docId,
                             par_id: par_id,
-                            user: $scope.userId,
+                            user: $scope.user.name,
                             state: $scope.selectedAnswer.content
                         }
                     }).success(function (data, status, headers, config) {
@@ -53,10 +53,10 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.getAvailableAnswers = function () {
-                    $http.get('/answers/' + $scope.taskId + '/' + $scope.userId)
+                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.name)
                         .success(function (data, status, headers, config) {
                             $scope.answers = data;
-                            if ($scope.answers.length > 0 && !$scope.selectedAnswer) {
+                            if ($scope.answers.length > 0) {
                                 $scope.selectedAnswer = $scope.answers[0];
                                 $scope.changeAnswer();
                             }

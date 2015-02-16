@@ -198,7 +198,7 @@ class Users(TimDbBase):
         return cursor.fetchone() is not None
 
     @contract
-    def getUser(self, user_id: 'int') -> 'row':
+    def getUser(self, user_id: 'int') -> 'dict|None':
         """Gets the user with the specified id.
         
         :param user_id:
@@ -207,7 +207,8 @@ class Users(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute('SELECT id, name, real_name, email FROM User WHERE id = ?', [user_id])
-        return cursor.fetchone()
+        result = self.resultAsDictionary(cursor)
+        return result[0] if len(result) > 0 else None
 
     @contract
     def getUserByName(self, name: 'str') -> 'int|None':

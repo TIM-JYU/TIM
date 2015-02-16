@@ -17,6 +17,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.docName = docName;
         sc.canEdit = canEdit;
         sc.startIndex = startIndex;
+        sc.users = users;
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";

@@ -44,6 +44,11 @@
         var canEdit = {{editable|tojson}};
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
+        {% if plugin_users %}
+        var users = {{plugin_users|tojson}};
+        {% else %}
+        var users = [{{current_user|tojson}}];
+        {% endif %}
     </script>
 {% endblock %}
 {% block content %}
@@ -91,7 +96,7 @@
                     </div>
                     {% if 'task_id' in t %}
                         <answerbrowser
-                                user-id="{{ current_user }}"
+                                user="{{ current_user|e }}"
                                 task-id="{{ t['task_id'] }}">
                         </answerbrowser>
                     {% endif %}

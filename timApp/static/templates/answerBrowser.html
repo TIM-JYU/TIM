@@ -1,5 +1,7 @@
 <div class="answerBrowser">
-    User: {{ userId }}
+    <select ng-show="$parent.users.length > 1" ng-model="user"
+            ng-options="user.name for user in $parent.users track by user.id"
+            ng-change="getAvailableAnswers()"></select>
     <span ng-show="answers.length > 0">
     <button ng-click="previous()">&larr;</button>
     <select ng-model="selectedAnswer"

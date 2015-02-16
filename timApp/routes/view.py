@@ -32,7 +32,7 @@ def teacher_view(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
         userstr = request.args.get('user')
-        user = int(userstr) if userstr is not None and userstr != '' else 0
+        user = int(userstr) if userstr is not None and userstr != '' else None
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
 
@@ -46,7 +46,7 @@ def parse_range(start_index, end_index):
     return( int(start_index), int(end_index) )
 
 
-def view(doc_name, template_name, view_range=None, user=0, teacher=False):
+def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
     
@@ -81,15 +81,17 @@ def view(doc_name, template_name, view_range=None, user=0, teacher=False):
     if teacher:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         users = timdb.answers.getUsersForTasks(task_ids)
+        if user is None:
+            user = getCurrentUserId()
     else:
         user = getCurrentUserId()
         users = []
-    current_user = timdb.users.getUser(user)[1]
+    current_user = timdb.users.getUser(user)
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
-                                                                current_user,
+                                                                current_user['name'],
                                                                 timdb.answers,
                                                                 doc_id,
-                                                                user)
+                                                                current_user['id'])
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
