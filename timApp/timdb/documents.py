@@ -234,18 +234,18 @@ class Documents(TimDbBase):
         return results
 
     @contract
-    def updateLatestVersion(doc_id : 'DocIdentifier'):
+    def updateLatestRevision(self, doc_id: 'DocIdentifier'):
         cursor = self.db.cursor()
         cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
         revid = cursor.fetchone()
         if revid is None:
-            cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?, ?)",
+            cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?)",
                 [doc_id.id, doc_id.hash])
-            cursor.execute("UPDATE Block SET latest_revision = ? WHERE type_id = ? and id = ?",
-                [cursor.lastrowid, blocktypes.DOCUMENT, result['id']])
+            cursor.execute("UPDATE Block SET latest_revision_id = ? WHERE type_id = ? and id = ?",
+                [cursor.lastrowid, blocktypes.DOCUMENT, doc_id.id])
         else:
             cursor.execute("UPDATE ReadRevision SET Hash = ? WHERE revision_id = ?",
-                [doc_id.hash, revid])
+                [doc_id.hash, revid[0]])
 
         self.db.commit()
 
