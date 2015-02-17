@@ -254,11 +254,13 @@ timApp.controller("ViewCtrl", [
             if (sc.editing) {
                 return;
             }
-            
-            var tag = $(e.target).prop("tagName");
 
-            // Don't show paragraph menu on these specific tags
-            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'A') {
+            var $target = $(e.target);
+            var tag = $target.prop("tagName");
+
+            // Don't show paragraph menu on these specific tags or class
+            var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A'];
+            if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
                 return;
             }
 
