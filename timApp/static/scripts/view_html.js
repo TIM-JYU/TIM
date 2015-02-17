@@ -1,16 +1,26 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function($locationProvider){
+var MathJax, $, angular, modules, version, refererPath, docId, docName, canEdit, startIndex, users;
+
+var timApp = angular.module('timApp', [
+    'ngSanitize',
+    'angularFileUpload',
+    'ui.ace'].concat(modules), function ($locationProvider) {
+    "use strict";
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
 });
 
-timApp.controller("ViewCtrl", ['$scope',
+timApp.controller("ViewCtrl", [
+    '$scope',
     '$http',
     '$q',
     '$upload',
     '$injector',
     '$compile',
     '$location',
-    function (sc, http, q, $upload, $injector, $compile, $location) {
+    '$window',
+    '$document',
+    function (sc, http, q, $upload, $injector, $compile, $location, $window, $document) {
+        "use strict";
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
@@ -21,18 +31,10 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
-        var NOTE_EDITOR_CLASS_DOT = "." + NOTE_EDITOR_CLASS;
-        var NOTE_CANCEL_BUTTON = ".timButton.cancelNote";
-        var NOTE_DELETE_BUTTON = ".timButton.deleteNote";
-        var NOTE_SAVE_BUTTON = ".timButton.saveNote";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
-
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
-        var PAR_CANCEL_BUTTON = ".timButton.cancelPar";
-        var PAR_DELETE_BUTTON = ".timButton.deletePar";
-        var PAR_SAVE_BUTTON = ".timButton.savePar";
         var PAR_ADD_BUTTON_CLASS = "timButton addPar";
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
@@ -91,7 +93,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     sc.editing = true;
                 };
 
-                if (options.showDelete){
+                if (options.showDelete) {
                     $(".par.new").remove();
                 }
                 createEditor(attrs);
@@ -99,8 +101,8 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.toggleNoteEditor = function ($par, options) {
-            var url;
-            var data;
+            var url,
+                data;
             if (options.isNew) {
                 url = '/postNote';
                 data = {
@@ -114,41 +116,41 @@ timApp.controller("ViewCtrl", ['$scope',
                 url = '/editNote';
                 data = options.noteData;
                 if (!data.editable) {
-                    alert('You cannot edit this note.');
+                    $window.alert('You cannot edit this note.');
                     return;
                 }
             }
-            var par_id = sc.getParIndex($par);
-            var attrs = {
-                "save-url": url,
-                "extra-data": JSON.stringify(angular.extend({
-                    docId: sc.docId,
-                    par: par_id
-                }, data)),
-                "options": JSON.stringify({
-                    showDelete: !options.isNew,
-                    showImageUpload: false,
-                    tags: [
-                        {name: 'difficult', desc: 'The text is difficult to understand'},
-                        {name: 'unclear', desc: 'The text is unclear'}
-                    ],
-                    choices: {desc: [{
-                        desc: 'Show note to:',
-                        name: 'access',
-                        opts: [
-                            {desc: 'Everyone', value: 'everyone'},
-                            {desc: 'Just me', value: 'justme'}
-                        ]
-                    }]},
-                    destroyAfterSave: true
-                }),
-                "after-save": 'handleNoteSave(saveData, extraData)',
-                "after-cancel": 'handleNoteCancel(extraData)',
-                "after-delete": 'handleNoteDelete(saveData, extraData)',
-                "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteNote',
-                "editor-text": data.content
-            };
+            var par_id = sc.getParIndex($par),
+                attrs = {
+                    "save-url": url,
+                    "extra-data": JSON.stringify(angular.extend({
+                        docId: sc.docId,
+                        par: par_id
+                    }, data)),
+                    "options": JSON.stringify({
+                        showDelete: !options.isNew,
+                        showImageUpload: false,
+                        tags: [
+                            {name: 'difficult', desc: 'The text is difficult to understand'},
+                            {name: 'unclear', desc: 'The text is unclear'}
+                        ],
+                        choices: {desc: [{
+                            desc: 'Show note to:',
+                            name: 'access',
+                            opts: [
+                                {desc: 'Everyone', value: 'everyone'},
+                                {desc: 'Just me', value: 'justme'}
+                            ]
+                        }]},
+                        destroyAfterSave: true
+                    }),
+                    "after-save": 'handleNoteSave(saveData, extraData)',
+                    "after-cancel": 'handleNoteCancel(extraData)',
+                    "after-delete": 'handleNoteDelete(saveData, extraData)',
+                    "preview-url": '/preview/' + sc.docId,
+                    "delete-url": '/deleteNote',
+                    "editor-text": data.content
+                };
             sc.toggleEditor($par, options, attrs);
         };
 
@@ -158,11 +160,11 @@ timApp.controller("ViewCtrl", ['$scope',
 
         // Event handlers
 
-        var ua = navigator.userAgent,
+        var ua = $window.navigator.userAgent,
             eventName = (ua.match(/iPad/i)) ? "touchstart" : "click";
 
         sc.addEvent = function (className, func) {
-            $(document).on(eventName, className, func);
+            $document.on(eventName, className, func);
         };
 
         sc.addEvent(PAR_EDIT_BUTTON, function (e) {
@@ -181,8 +183,7 @@ timApp.controller("ViewCtrl", ['$scope',
 
             if ($(e.target).hasClass("above")) {
                 $par.before($newpar);
-            }
-            else if ($(e.target).hasClass("below")) {
+            } else if ($(e.target).hasClass("below")) {
                 $par.after($newpar);
             }
 
@@ -205,9 +206,9 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.addSavedParToDom = function (data, extraData) {
-            var $par = sc.getElementByParIndex(extraData.par);
+            var $par = sc.getElementByParIndex(extraData.par),
+                len = data.texts.length;
             http.defaults.headers.common.Version = data.version;
-            var len = data.texts.length;
             for (var i = len - 1; i >= 0; i--) {
                 var $newpar = $("<div>", {class: "par"});
                 $par.after($newpar
@@ -221,11 +222,11 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.addEvent(".readline", function (e) {
             var par_id = sc.getParIndex($(this).parents('.par'));
             $(this).hide();
-            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + (new Date).getTime())
+            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
                 }).error(function (data, status, headers, config) {
-                    alert('Could not save the read marking.');
+                    $window.alert('Could not save the read marking.');
                 });
         });
 
@@ -250,14 +251,16 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.addEvent('.paragraphs .parContent', function (e) {
-            if (sc.editing)
+            if (sc.editing) {
                 return;
+            }
             
             var tag = $(e.target).prop("tagName");
 
             // Don't show paragraph menu on these specific tags
-            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'A')
+            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'A') {
                 return;
+            }
 
             var $par = $(this).parent();
             var coords = { left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top };
@@ -327,7 +330,7 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.getNotes = function () {
-            var rn = "?_=" + (new Date).getTime();
+            var rn = "?_=" + Date.now();
 
             http.get('/notes/' + sc.docId + rn).success(function (data, status, headers, config) {
                 $('.notes').remove();
@@ -355,12 +358,12 @@ timApp.controller("ViewCtrl", ['$scope',
                 });
 
             }).error(function (data, status, headers, config) {
-                alert("Could not fetch notes.");
+                $window.alert("Could not fetch notes.");
             });
         };
 
         sc.getReadPars = function () {
-            var rn = "?_=" + (new Date).getTime();
+            var rn = "?_=" + Date.now();
             http.get('/read/' + sc.docId + rn).success(function (data, status, headers, config) {
                 var readCount = data.length;
                 $('.readline').remove();
@@ -383,9 +386,9 @@ timApp.controller("ViewCtrl", ['$scope',
                     }
                     var $div = $("<div>", {class: classes.join(" "), title: "Click to mark this paragraph as read"});
                     $(this).append($div);
-                })
+                });
             }).error(function (data, status, headers, config) {
-                alert("Could not fetch reading info.");
+                $window.alert("Could not fetch reading info.");
             });
         };
 
@@ -416,12 +419,12 @@ timApp.controller("ViewCtrl", ['$scope',
                 var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
-            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
+            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase();
         };
 
         sc.findIndexLevel = function (str) {
             for (var i = 0; i < str.length; i++) {
-                if (str.charAt(i) != '#') {
+                if (str.charAt(i) !== '#') {
                     return i;
                 }
             }
@@ -436,8 +439,9 @@ timApp.controller("ViewCtrl", ['$scope',
 
                 for (var i = 0; i < data.length; i++) {
                     var lvl = sc.findIndexLevel(data[i]);
-                    if (lvl < 1 || lvl > 3)
+                    if (lvl < 1 || lvl > 3) {
                         continue;
+                    }
 
                     var astyle = "a" + lvl;
                     var txt = data[i].substr(lvl);
@@ -451,64 +455,69 @@ timApp.controller("ViewCtrl", ['$scope',
                         state: ""
                     };
 
-                    if (lvl == 1) {
-                        if (parentEntry != null) {
-                            if ("items" in parentEntry && parentEntry.items.length > 0)
+                    if (lvl === 1) {
+                        if (parentEntry !== null) {
+                            if ("items" in parentEntry && parentEntry.items.length > 0) {
                                 parentEntry.state = 'col';
+                            }
                             sc.indexTable.push(parentEntry);
                         }
 
                         parentEntry = entry;
                     }
-                    else if (parentEntry != null) {
+                    else if (parentEntry !== null) {
                         if (!("items" in parentEntry)) {
                             // For IE
-                            parentEntry.items = []
+                            parentEntry.items = [];
                         }
-                        parentEntry.items.push(entry)
+                        parentEntry.items.push(entry);
                     }
                 }
 
-                if (parentEntry != null) {
-                    if (parentEntry.items.length > 0)
+                if (parentEntry !== null) {
+                    if (parentEntry.items.length > 0) {
                         parentEntry.state = 'col';
+                    }
                     sc.indexTable.push(parentEntry);
                 }
-
-                //sc.$apply();
             }).error(function (data, status, headers, config) {
-                alert("Could not fetch index entries.");
+                $window.alert("Could not fetch index entries.");
             });
         };
 
         sc.invertState = function (state) {
-            if (state == 'exp')
+            if (state === 'exp') {
                 return 'col';
-            if (state == 'col')
+            }
+            if (state === 'col') {
                 return 'exp';
+            }
             return state;
         };
 
         sc.clearSelection = function () {
-            if (document.selection)
-                document.selection.empty();
-            else if (window.getSelection)
-                window.getSelection().removeAllRanges();
+            if ($document.selection) {
+                $document.selection.empty();
+            }
+            else if ($window.getSelection) {
+                $window.getSelection().removeAllRanges();
+            }
         };
 
         sc.invertStateClearSelection = function (event, state) {
-            if (event.which != 1) {
+            if (event.which !== 1) {
                 // Listen only to the left mouse button
                 return state;
             }
-            if (event.target.className == 'a2' || event.target.className == 'a3') {
+            if (event.target.className === 'a2' || event.target.className === 'a3') {
                 // Do not collapse/expand if a subentry is clicked
                 return state;
             }
 
             var newState = sc.invertState(state);
-            if (newState != state)
+            if (newState !== state) {
                 sc.clearSelection();
+            }
             return newState;
         };
 
