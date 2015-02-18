@@ -1,0 +1,14 @@
+# We can ignore all files because we don't need them when building the image.
+__pycache__/
+modules/
+routes/
+static/
+templates/
+tim_files/
+test_files/
+timdb/
+*.py
+*.txt
+*.sh
+*.md
+*.sql
