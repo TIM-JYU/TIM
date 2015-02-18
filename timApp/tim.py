@@ -1,40 +1,31 @@
 # -*- coding: utf-8 -*-
 import logging
-import json
 import os
 import imghdr
 import io
-import codecs
 import collections
 import re
-import sys
 
-from flask import Flask, redirect, url_for, flash, Blueprint
+from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
 from flask import render_template
-from flask import g
-from flask import request
 from flask import send_from_directory
 from flask.ext.compress import Compress
-import requests
 from werkzeug.utils import secure_filename
-from flask import Response
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
-from werkzeug.contrib.profiler import ProfilerMiddleware
 
-from ReverseProxied import ReverseProxied
 import containerLink
 from routes.edit import edit_page
 from routes.manage import manage_page
 from routes.view import view_page
 from routes.login import login_page
-from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbException, DocIdentifier
+from timdb.timdbbase import TimDbException
 import pluginControl
 from containerLink import PluginException
 from routes.settings import settings_page
 from routes.common import *
+
 
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
