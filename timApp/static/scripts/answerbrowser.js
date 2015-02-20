@@ -1,7 +1,9 @@
+var angular;
 var timApp = angular.module('timApp');
 
 timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
+        "use strict";
         return {
             templateUrl: "/static/templates/answerBrowser.html",
             restrict: 'E',
@@ -67,7 +69,10 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             $scope.loading--;
                         });
                 };
-                $scope.getAvailableAnswers();
+                $element.appear();
+                $element.one('appear', function (event, $all_appeared_elements) {
+                    $scope.getAvailableAnswers();
+                });
             }
         };
     }]);
