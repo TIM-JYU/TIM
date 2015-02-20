@@ -8,7 +8,7 @@
             ng-options="answer.answered_on for answer in answers track by answer.id"
             ng-change="changeAnswer()"></select>
     <button ng-click="next()">&rarr;</button>
-    {{ answers.indexOf(selectedAnswer) + 1 }}/{{ answers.length }}
+    {{ answers.length - answers.indexOf(selectedAnswer) }}/{{ answers.length }}
     </span>
     <img style="display: inline" src="/static/images/loading.gif" ng-show="loading">
 </div>
