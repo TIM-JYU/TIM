@@ -36,7 +36,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     });
                 };
 
-                $scope.previous = function () {
+                $scope.next = function () {
                     var newIndex = $scope.answers.indexOf($scope.selectedAnswer) - 1;
                     if (newIndex < 0) {
                         newIndex = $scope.answers.length - 1;
@@ -45,7 +45,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.changeAnswer();
                 };
 
-                $scope.next = function () {
+                $scope.previous = function () {
                     var newIndex = $scope.answers.indexOf($scope.selectedAnswer) + 1;
                     if (newIndex >= $scope.answers.length) {
                         newIndex = 0;
