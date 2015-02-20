@@ -45,9 +45,9 @@
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         {% if plugin_users %}
-        var users = {{plugin_users|tojson}};
+            var users = {{plugin_users|tojson}};
         {% else %}
-        var users = [{{current_user|tojson}}];
+            var users = [{{current_user|tojson}}];
         {% endif %}
     </script>
 {% endblock %}
@@ -77,12 +77,12 @@
                 {% endraw %}
             </div>
         </div>
-        
+
         {% if plugin_users|length > 0 %}
             <div id="users" class="userlist">
                 {% for user in plugin_users %}
                     <div>
-                       <a class="userentry" href="?user={{user.id}}" target="_self">{{ user.name|safe }}</a>
+                        <a class="userentry" href="?user={{ user.id }}" target="_self">{{ user.name|safe }}</a>
                     </div>
                 {% endfor %}
             </div>
@@ -91,15 +91,15 @@
         <div id="pars">
             {% for t in text %}
                 <div class="par">
-                    <div class="parContent">
-                        {{ t['html']|safe }}
-                    </div>
                     {% if 'task_id' in t %}
                         <answerbrowser
                                 user="{{ current_user|e }}"
                                 task-id="{{ t['task_id'] }}">
                         </answerbrowser>
                     {% endif %}
+                    <div class="parContent">
+                        {{ t['html']|safe }}
+                    </div>
                 </div>
             {% endfor %}
         </div>
