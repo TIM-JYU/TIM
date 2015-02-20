@@ -421,7 +421,7 @@ timApp.controller("ViewCtrl", [
                 var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
-            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase();
+            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
         };
 
         sc.findIndexLevel = function (str) {
