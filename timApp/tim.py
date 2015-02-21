@@ -179,7 +179,7 @@ def getAllImages():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
 
-@app.route("/getDocuments/")
+@app.route("/getDocuments")
 def getDocuments():
     versions = 1
     if request.args.get('versions'):
