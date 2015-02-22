@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{de53d0ba-1932-4c1b-bd3a-8c285b805bdd}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>pykoe\to_yaml.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
+    <InterpreterVersion>3.4</InterpreterVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="aja.js" />
+    <Content Include="begin.html" />
+    <Content Include="consoleHTMLTemplate.html" />
+    <Content Include="consoleTemplate.html" />
+    <Content Include="cs.css" />
+    <Content Include="doc\protocolExample.txt" />
+    <Content Include="end.html" />
+    <Content Include="html\edit.html" />
+    <Content Include="iframeTemplate.html" />
+    <Content Include="images\index.html" />
+    <Content Include="images\ohj1\view_html-1.html" />
+    <Content Include="js\dir.js" />
+    <Content Include="jypeliHTMLTemplate.html" />
+    <Content Include="jypeliTemplate.html" />
+    <Content Include="ptauno\index.html" />
+    <Content Include="ptauno\indexi.html" />
+    <Content Include="ptauno\indexi2.html" />
+    <Content Include="ptauno\taulukko.css" />
+    <Content Include="ptauno\taulukko.js" />
+    <Content Include="ptauno\taulukko2.js" />
+    <Content Include="ptauno\taulukkoi.css" />
+    <Content Include="ptauno\taulukkoi.js" />
+    <Content Include="ptauno\taulukkoi2.js" />
+    <Content Include="ptauno\taulukkoOld.js" />
+    <Content Include="tauno\index.html" />
+    <Content Include="tauno\taulukko.css" />
+    <Content Include="tauno\taulukko.js" />
+    <Content Include="test\index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="cs3.py" />
+    <Compile Include="fileParams.py" />
+    <Compile Include="fileParams3.py" />
+    <Compile Include="Olio.py" />
+    <Compile Include="pykoe\to_yaml.py" />
+    <Compile Include="siivoatmp.py" />
+    <Compile Include="__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="doc" />
+    <Folder Include="html" />
+    <Folder Include="images" />
+    <Folder Include="images\ohj1" />
+    <Folder Include="js" />
+    <Folder Include="ptauno" />
+    <Folder Include="pykoe\" />
+    <Folder Include="tauno" />
+    <Folder Include="test" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\3.4" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>

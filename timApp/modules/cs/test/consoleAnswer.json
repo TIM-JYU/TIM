@@ -1,0 +1,19 @@
+{
+    "input": {
+        "usercode": "ls -la",
+        "isInput": false,
+        "markup": {
+            "taskId": "113087.consoletest",
+            "type": "shell"
+        },
+        "userinput": "",
+        "userargs": ""
+    },
+    "taskID": "113087.consoletest",
+    "markup": {
+        "type": "shell",
+        "path": "user",
+        "byCode": "ls -la"
+    },
+    "state": "{\"usercode\": \"ls -la\"}"
+}

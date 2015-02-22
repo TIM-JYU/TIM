@@ -18,7 +18,6 @@ run apt-get install -y imagemagick
 run apt-get install -y openjdk-7-jre-headless
 run apt-get install -y nunit-console
 run apt-get install -y wget
-run apt-get install -y libxtst6
 run locale-gen en_US.UTF-8 
 run locale-gen fi_FI.UTF-8 
 
@@ -57,7 +56,20 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 # Commonlisp
 RUN apt-get update
 # RUN apt-get install -y clisp
+# see: https://github.com/bakketun/docker-sbcl/blob/master/Dockerfile
 RUN apt-get install -y sbcl 
+
+# SqLite
+RUN apt-get -y install sqlite3 libsqlite3-dev
+
+RUN apt-get install -y libxtst6
+
+RUN apt-get install -y inotify-tools
+
+run apt-get update
+run apt-get install -y graphviz
+
+
 
 # Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
@@ -81,3 +93,13 @@ user agent
 expose 5000
 
 #volume /tim_files/:/service/tim_files/
+
+
+# run locale-gen C.UTF-8 
+#env LC_CTYPE C.UTF-8
+#env LC_ALL C.UTF-8 
+env LC_CTYPE en_US.UTF-8
+env LC_ALL en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US.UTF-8
+

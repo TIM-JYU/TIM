@@ -1,16 +1,15 @@
 {
-  "gprogram": "public class FunktioEsimerkki {\n    // REPLACE\n\n    public static void main(String[] args) {\n        int suuri = suurempi(5,9);\n        System.out.println(suuri);\n    }\n    \n    public static int suurempi(int a, int b)\n    {\n         if ( a >= b ) return a;\n         return b;\n    }\n}\n",
-  "file": "https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2015/demot/tehtavat/src/demo/d2/Etusuku.java",
-  "browse_answers":"False",
-  "breakCount":"4",
-  "break0":"String vaihdaEtuSuku",
-  "break1":"}",
-  "break2":"String vaihdaSukuEtu",
-  "break3":"}",
-  "type":"java",
-  "taskID":"121.funktio",
-  "user_id":"vesal",
-  "usercode":"public",
-  "byCode":"public"
+    "gprogram": "public class FunktioEsimerkki {\n    // REPLACE\n\n    public static void main(String[] args) {\n        int suuri = suurempi(5,9);\n        System.out.println(suuri);\n    }\n    \n    public static int suurempi(int a, int b)\n    {\n         if ( a >= b ) return a;\n         return b;\n    }\n}\n",
+    "file": "https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2015/demot/tehtavat/src/demo/d2/Etusuku.java",
+    "browse_answers": "False",
+    "breakCount": "4",
+    "break0": "String vaihdaEtuSuku",
+    "break1": "}",
+    "break2": "String vaihdaSukuEtu",
+    "break3": "}",
+    "type": "java",
+    "taskID": "121.funktio",
+    "user_id": "vesal",
+    "usercode": "public",
+    "byCode": "public"
 }
-    

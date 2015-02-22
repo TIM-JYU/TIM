@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-  
-# -*- coding: utf-8 -*-
 import threading
 
 import http.server
@@ -26,6 +25,67 @@ import datetime
 import stat  
 import sys  
 
+# cs3.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
+#
+# Ensin käynistettävä 
+#  ./csdaemon.sh    - demoni joka valvoo /tmp/uhome/run hakemistoon tulevia ajokomentoja
+#  ./dr             - käynnistää dockerin cs3.py varten
+#  ./r              - ajetaan dockerin sisällä cs3.py
+# Muut tarvittavat skriptit:
+#  rcmd.sh          - käynistetään ajettavan ohjelman kontin sisälle ajamaan 
+#                     cs3.py tuottama skripti 
+#   
+# Hakemistot:
+#  tim-koneessa
+#     /opt/cs               - varsinainen csPluginin hakemisto, skirptit yms
+#     /opt/cs/java          - javan tarvitsemat tavarat
+#     /opt/cs/images/cs     - kuvat jotka syntyvät csPlugin ajamista ohjelmista
+#     /opt/cs/jypeli        - jypelin tarvitsemat tiedostot  
+#     /tmp/uhome            - käyttäjän hakemistoja ohjelmien ajamisen ajan
+#     /tmp/uhome/user       - käyttäjän hakemistoja ohjelmien ajamisen ajan
+#     /tmp/uhome/user/HASH  - yhden käyttäjän hakemisto joka söilyy ajojen välillä
+#     /tmp/uhone/run        - tänne kirjoitetaan käynnistyskomento demonia varten
+#     /tmp/uhome/cs:        - c#-jypeli tiedostot
+#
+# tim-koneesta käynnistetään cs3 docker-kontti nimelle csPlugin (./dr), jossa
+# mountataan em. hakemistoja seuraavasti:
+#
+#   /opt/cs  ->          /cs/          read only
+#   /opt/cs/images/cs -> /csimages/    kuvat
+#   /tmp/uhome:          /tmp/         käyttäjien hakemistot ja ajokomennot tänne
+#   /tmp/uhome/cs:       /tmp/cs       c#-jypeli tiedostot, Jypeli ohjelmat myös laitetaan tänne
+#   /tmp/uhome/user:     /tmp/user     käyttäjän alihakemistot
+#
+# Käyttäjistä (csPlugin-kontissa) tehdään /tmp/user/HASHCODE
+# tai /tmp/HASHCODE nimiset hakemistot (USERPATH=user/HASHCODE tai HASHCODE), 
+# joihin tehdään ohjelmien käännökset ja joista ohjelmat ajetaan.
+# HASHCODE = käyttäjätunnuksesta muodostettu hakemiston nimi.  
+# Mikäli käyttäjätunnusta ei ole, on tiedoston nimi satunnainen.
+# 
+# Kääntämisen jälkeen luodaan /tmp/USERPATH hakemistoon
+# täydellinen ajokomento run/URNDFILE.sh
+# Tämä jälkeen tehdään /tmp/run -hakemistoon tiedosto
+# RNDNAME johon on kirjoitettu "USERPATH run/URNDFILE.sh" 
+# Tätä hakemistoa (tim-puolella /tmp/uhome/run) seuraa demoni, 
+# joka uuden tiedoston ilmestyessä
+# käynnistää uuden docker-kontin ohjelman ajamiseksi.
+# Tähän ajokonttiin mountataan tim-koneesta
+#
+#   /opt/cs  ->            /cs/          read only
+#   /tmp/uhome/USERPATH -> /home/me      käyttäjän "kotihakemisto"
+#   /tmp/uhome/cs ->       /home/cs      c#-jypeli tiedostot
+#
+# Docker-kontin käynnistyessä suoritetaan komento /cs/rcmd.sh
+# joka alustaa "näytön" ja luo sopivat ympäristömuuttajat mm. 
+# javan polkuja varten ja sitten vaihtaa hakemistoon /home/me
+# ja ajaa sieltä komennon ./run/URNDFILE.sh
+# stdout ja stderr tulevat tiedostoihin ./run/URNDFILE.in ja ./run/URNDFILE.err
+# Kun komento on ajettu, docker-kontti häviää.  Ajon lopuksi tuohotaan
+# ./run/URNDFILE.sh
+# ja kun tämä on hävinnyt, luetaan stdin ja stderr ja tiedot lähetetään
+# selaimelle (Timin kautta)
+#
+
 PORT = 5000
 
 
@@ -33,9 +93,9 @@ def generate_filename():
     return str(uuid.uuid4())
 
 
-def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs =None):
+def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs =None, code="utf-8"):
     s_in = None
-    if uargs: args.extend(shlex.split(uargs))
+    if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = PIPE
     p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env, stdin=s_in)  # , timeout=timeout)
     try:
@@ -57,6 +117,44 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
     except IOError as e:    
         return -2, '', 'IO Error'.encode()
     return p.returncode, stdout, stderr
+
+def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs =None, code="utf-8", extra=""):
+    s_in = ""
+    if uargs and len(uargs): args.extend(shlex.split(uargs))
+    if stdin: s_in = " <"+stdin;
+    mkdirs(cwd+"/run")
+    urndname="run/"+generate_filename()  # ohjaustiedostojen nimet
+    stdoutf =  urndname + ".in"
+    stderrf =  urndname + ".err"
+    cmdf = cwd + "/" + urndname + ".sh" # varsinaisen ajoskriptin nimi
+    cmnds = ' '.join(shlex.quote(arg) for arg in args) # otetaan args listan jonot yhteen
+    cmnds = "#!/bin/bash\n" + extra +  cmnds + " 1>" + "~/"+stdoutf + " 2>" + "~/"+stderrf + s_in + "\n" # tehdään komentojono jossa suuntaukset
+    # print(cwd)
+    # print(cmnds)
+    codecs.open(cmdf, "w", "utf-8").write(cmnds) # kirjoitetaan komentotiedosto
+    mkdirs("/tmp/run")                           # varmistetaan run-hakemisto
+    followfile = "/tmp/run/"+generate_filename() # urndname
+    udir = cwd.replace("/tmp/","")               # koska mountattu eri tavalla, poistetaan tmp alusta
+    codecs.open(followfile, "w", "utf-8").write(udir+ " " + urndname + ".sh") # kirjoitetaan tiedosto jota demoni katsoo ja käynnistää ajon
+    #print(udir,"\nWait for run")
+
+    # os.system("inotifywait "+ cmdf  + " -e delete")
+    p = Popen("inotifywait "+ cmdf  + " -e delete", shell=True) # skripti tuhoaa ajojonon kun se valmis
+    
+    try:
+        p.communicate(timeout=timeout)
+        # print("Run done!")
+        stdout = codecs.open(cwd+"/"+stdoutf, 'r', code).read().encode("utf-8") # luetaan stdin ja err
+        stderr = codecs.open(cwd+"/"+stderrf, 'r', "utf-8").read().encode("utf-8")
+        # print(stdout)
+        # print(stderr)
+        remove(cwd+"/"+stdoutf)
+        remove(cwd+"/"+stderrf)
+    except subprocess.TimeoutExpired:
+        return -9, '', ''
+    except IOError as e:    
+        return -2, '', ('IO Error').encode()
+    return 0, stdout, stderr
 
 
 def get_process_children(pid):
@@ -96,23 +194,45 @@ def remove_before(what, s):
     if i < 0: return ""
     return s[i + 1:]
 
+    
+def remove(fname):
+    try:
+        os.remove(fname)
+    except:
+        return
+
+def mkdirs(path):
+    if os.path.exists(path): return
+    os.makedirs(path)
+
+
+def removedir(dirname):
+    try:
+        # os.chdir('/tmp')
+        shutil.rmtree(dirname)
+    except:
+        return
+    
 
 def get_html(ttype, query):
     js = query_params_to_map_check_parts(query)
+    print(js)
     if "byFile" in js and not "byCode" in js:
         js["byCode"] = get_url_lines_as_string(js["byFile"])
     jso = json.dumps(js)
-    print(jso)
+    # print(jso)
     runner = 'cs-runner'
     #print(ttype)
     is_input = '';
     if "input" in ttype or "args" in ttype: is_input = '-input'
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
-    if "jypeli" in ttype: runner = 'cs-jypeli-runner'
+    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
+    if "csconsole" in ttype:  # erillinen konsoli
+        r = "cs-console";
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
         s = '<' + r + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>'
@@ -123,10 +243,11 @@ def log(self):
     t = datetime.datetime.now()
     agent = " :AG: " + self.headers["User-Agent"]
     if agent.find("ython") >= 0: agent = ""
-    logfile = "/cs/images/log.txt"
+    logfile = "/csimages/log.txt"
     try:
         open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path + agent + " u:" + self.user_id + "\n")
-    except:
+    except Exception as e:
+        print(e)
         return
 
     return
@@ -159,15 +280,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         do_headers(self, "application/json")
         is_tauno = self.path.find('/tauno') >= 0
         htmls = []
+        self.user_id = get_param(querys[0], "user_id", "--")
+        print("UserId:",self.user_id)
+        log(self)
+        # print(querys)
+
         for query in querys:
-            print(query.jso);
+            # print(query.jso)
+            # print(str(query))
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if usercode: query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
             if userinput: query.query["userinput"] = [userinput]
             userargs = get_json_param(query.jso, "state", "userargs", None)
             if userargs: query.query["userargs"] = [userargs]
-            ttype = get_param(query, "type", "console").lower()
+            ttype = get_param(query, "type", "cs").lower()
             if is_tauno: ttype = 'tauno'
             s = get_html(ttype, query)
             # print(s)
@@ -176,6 +303,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print(htmls)
         sresult = json.dumps(htmls)
         self.wout(sresult)
+        log(self)
 
 
     def do_PUT(self):
@@ -185,23 +313,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
 
-    def remove(self, fname):
-        try:
-            os.remove(fname)
-        except:
-            return
-
-    def mkdirs(self, path):
-        if os.path.exists(path): return
-        os.makedirs(path)
-
-
-    def removedir(self, dirname):
-        try:
-            # os.chdir('/tmp')
-            shutil.rmtree(dirname)
-        except:
-            return
 
 
     def do_all(self, query):
@@ -215,13 +326,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print("doAll ===================================================")
         # print(self.path)
         # print(self.headers)
-        # print query
 
         if self.path.find('/favicon.ico') >= 0:
             self.send_response(404)
             return
 
-        user_id = get_param(query, "user_id", None)
+            
+        # print(query)
+        self.user_id = get_param(query, "user_id", "--")
+        print("UserId:",self.user_id)
         log(self)
         '''
         if self.path.find('/login') >= 0:
@@ -266,14 +379,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
             # Get the template type
-        ttype = get_param(query, "type", "console").lower()
+        ttype = get_param(query, "type", "cs").lower()
         if is_tauno and not is_answer: ttype = 'tauno'  # answer is newer tauno
 
         if is_reqs:
-            result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
-                           "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
-            # result_json = {"js": ["cs/js/dir.js"], "angularModule": ["csApp"],
-            #              "css": ["cs/css/cs.css"], "multihtml": True}
+            # result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
+            #               "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
+            result_json = {"js": ["/cs/js/dir.js"], "angularModule": ["csApp","csConsoleApp"],
+                          "css": ["/cs/css/cs.css"], "multihtml": True}
             #result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)
@@ -326,24 +439,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # Check if user name or temp name
         rndname = generate_filename()
         delete_tmp = True
-        if get_param(query, "path", "") == "user" and user_id:
-            basename = "user/" + hash_user_dir(user_id)
+        if get_param(query, "path", "") == "user" and self.user_id:
+            basename = "user/" + hash_user_dir(self.user_id)
             delete_tmp = False
-            self.mkdirs("/tmp/user")
+            mkdirs("/tmp/user")
         else:
             # Generate random cs and exe filenames
-            basename = rndname
+            basename = "tmp/"+rndname
+            mkdirs("/tmp/tmp")
         filename = get_param(query, "filename", "prg")
         ifilename = get_param(query, "inputfilename", "input.txt")
         # csfname = "/tmp/%s.cs" % basename
         # exename = "/tmp/%s.exe" % basename
         csfname = "/tmp/%s/%s.cs" % (basename, filename)
         exename = "/tmp/%s/%s.exe" % (basename, filename)
+        pure_exename = "./%s.exe" % (filename)
         inputfilename = "/tmp/%s/%s" % (basename, ifilename)
         prgpath = "/tmp/%s" % basename
         filepath = prgpath
 
-        # if ttype == "console":
+        #if ttype == "console":
         # Console program
         if ttype == "cc":
             csfname = "/tmp/%s/%s.c" % (basename, filename)
@@ -357,36 +472,65 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if ttype == "py":
             csfname = "/tmp/%s/%s.py" % (basename, filename)
             exename = csfname
+            pure_exename = "./%s.py" % (filename)
 
+        if ttype == "alloy":
+            csfname = "/tmp/%s/%s.als" % (basename, filename)
+            exename = csfname
+            pure_exename = "./%s.als" % (filename)
+            bmpname = "%s/mm.png" % prgpath
+            pngname = "/csimages/%s.png" % rndname
+
+            
         if ttype == "shell":
+            csfname = "/tmp/%s/%s.sh" % (basename, filename)
+            exename = csfname
+            pure_exename = "/home/agent/%s.sh" % (filename)
+
+        if ttype == "run":
             csfname = "/tmp/%s/%s" % (basename, filename)
             exename = csfname
+            pure_exename = "/home/agent/%s" % (filename)
 
         if ttype == "jjs":
             csfname = "/tmp/%s/%s.js" % (basename, filename)
             exename = csfname
+            pure_exename = "./%s.js" % (filename)
+
+        if ttype == "sql":
+            csfname = "/tmp/%s/%s.sql" % (basename, filename)
+            exename = csfname
+            pure_exename = "%s.sql" % (filename)
+            dbname = get_param(query, "dbname", "db")
 
         if ttype == "clisp":
             csfname = "/tmp/%s/%s.lisp" % (basename, filename)
             exename = csfname
+            pure_exename = "./%s.lisp" % (filename)
 
         if "jypeli" in ttype:
             # Jypeli game
-            csfname = "/tmp/%s.cs" % basename
-            exename = "/tmp/%s.exe" % basename
-            bmpname = "/tmp/%s.bmp" % rndname
-            pngname = "/cs/images/%s.png" % rndname
+            basename = rndname
+            csfname = "/tmp/cs/%s.cs" % basename
+            exename = "/tmp/cs/%s.exe" % basename
+            bmpname = "/tmp/cs/%s.bmp" % rndname
+            pure_bmpname = "./%s.bmp" % rndname
+            pngname = "/csimages/%s.png" % rndname
+            pure_exename = "%s.exe" % (basename)
         if "comtest" in ttype:
             # ComTest test cases
             testcs = "/tmp/%s/%sTest.cs" % (basename, filename)
-            testdll = "/tmp/%s/%sTest.dll" % (basename, filename)
+            # testdll = "/tmp/%s/%sTest.dll" % (basename, filename)
+            testdll = "./%sTest.dll" % (filename)
         if "ccomtest" in ttype:
             # ComTest test cases
             csfname = "/tmp/%s/%s.cpp" % (basename, filename)
-            testcs = "/tmp/%s/%s.cpp" % (basename, filename)
+            # testcs = "/tmp/%s/%s.cpp" % (basename, filename)
+            testcs = "%s.cpp" % (filename)
         if "text" in ttype:
             #text file
-            csfname = "/tmp/%s/%s.txt" % (basename, filename)
+            csfname = "/tmp/%s/%s" % (basename, filename)
+            pure_exename = "./%s" % (filename)
 
             # Unknown template
             # self.wfile.write(("Invalid project type given (type=" + ttype + ")").encode())
@@ -416,7 +560,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # Open the file and write it
         if print_file: return self.wout(s)
 
-        self.mkdirs(prgpath)
+        mkdirs(prgpath)
         # os.chdir(prgpath)
 
         # /answer-path comes here
@@ -433,14 +577,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # java
             package, classname = find_java_package(s);
             javaclassname = classname
+            if not classname: classname = "Prg"
             if package:
                 filepath = prgpath + "/" + package.replace(".", "/")
-                self.mkdirs(filepath)
+                mkdirs(filepath)
                 javaclassname = package + "." + classname
             javaname = filepath + "/" + classname + ".java"
             csfname = javaname
-            bmpname = "/tmp/%s.bmp" % basename
-            pngname = "/cs/images/%s.png" % basename
+            #bmpname = "capture.png" % basename
+            bmpname = "%s/run/capture.png" % prgpath
+            # pngname = "/csimages/%s.png" % basename
+            pngname = "/csimages/%s.png" % rndname
             # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
 
         if "jcomtest" in ttype:
@@ -452,10 +599,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             print("Write file: " + csfname)
             codecs.open(csfname, "w", "utf-8").write(s)
 
+        is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         isInput = get_json_param(query.jso, "input", "isInput", None)
-        print(isInput)
+        # print(isInput)
         if isInput:
-            print("Write input file: " + inputfilename)
+            # print("Write input file: " + inputfilename)
             codecs.open(inputfilename, "w", "utf-8").write(userinput)
 
         if not os.path.isfile(csfname) or os.path.getsize(csfname) == 0:
@@ -464,7 +612,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print "=== Could not get the source file"
 
         # print(ttype)
-        # Compile
+        ########################### Compiling programs ###################################################    
         try:
             log(self)
 
@@ -496,10 +644,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 cmdline = ""
             elif ttype == "jjs":
                 cmdline = ""
+            elif ttype == "sql":
+                cmdline = ""
+            elif ttype == "alloy":
+                cmdline = ""
+            elif ttype == "run":
+                cmdline = ""
             elif ttype == "fs":
                 cmdline = "fsharpc --out:%s %s" % (exename, csfname)
-            else:
+            elif ttype == "cs":
                 cmdline = "mcs /out:%s %s" % (exename, csfname)
+            else:
+                cmdline = "";
 
             compiler_output = ""
             if cmdline:
@@ -507,7 +663,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 compiler_output = compiler_output.replace(prgpath, "")
             # self.wfile.write("*** Success!\n")
             print("*** Compile Success")
-            print(compiler_output)
+            # print(compiler_output)
         except subprocess.CalledProcessError as e:
             '''
             self.wout("!!! Error code " + str(e.returncode) + "\n")
@@ -531,9 +687,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             error_str += output.getvalue()
             output.close()
 
-            if delete_tmp: self.removedir(prgpath)
+            if delete_tmp: removedir(prgpath)
             return write_json_error(self.wfile, error_str, result)
 
+        ########################### Running programs ###################################################    
+            
         lang = ""
         plang = get_param(query, "lang", "")
         env = dict(os.environ)
@@ -551,19 +709,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         out = ""
 
         stdin = get_param(query, "stdin", None)
-        if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
+        # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
+        # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
+        if ttype == "sql": stdin = pure_exename
         
         if ttype == "jypeli":
-            code, out, err = run(["mono", exename, bmpname], cwd=prgpath, timeout=10, env=env)
+            # code, out, err = run(["mono", exename, pure_bmpname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+            code, out, err = run2(["mono", pure_exename, pure_bmpname], cwd="/tmp/cs", timeout=10, env=env, stdin = stdin, uargs = userargs)
             print(err)
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
             err = ""
             run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
             # print(bmpname, pngname)
-            self.remove(bmpname)
-            # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
-            print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % basename)
+            remove(bmpname)
+            # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
+            print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % basename)
             # TODO: clean up screenshot directory
             p = re.compile('Number of joysticks:.*\n.*')
             # out = out.replace("Number of joysticks:.*","")
@@ -571,35 +732,74 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if code == -9:
                 out = "Runtime exceeded, maybe loop forever\n" + out
             else:
-                # web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
-                web["image"] = "/csimages/" + basename + ".png"
+                # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                web["image"] = "/csimages/cs/" + basename + ".png"
             if delete_tmp:
-                self.remove(csfname)
-                self.remove(exename)
+                remove(csfname)
+                remove(exename)
         elif ttype == "graphics":
-            # code, out, err = run(["mono", exename, bmpname], timeout=10, env=env)
-            code, out, err = run(["java", javaclassname, bmpname], cwd=prgpath, timeout=30, env=env)
+            a = []
+            delay = get_json_param(query.jso, "markup", "delay", "0")
+            if delay != None: a.extend(["--delay",str(delay)])
+            rect = get_json_param(query.jso, "markup", "rect", None)
+            if rect: a.extend(["--rect",rect])
+            print(a)
+            bmplname = "/home/me/capture.png"
+            bmplname = "run/capture.png"
+            runcmd = ["java", "sample.Runner",javaclassname, "--captureName", bmplname]
+            runcmd.extend(a)
+            code, out, err = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             print(err)
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
             # err = ""
-            run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
-            # print(bmpname, pngname)
-            self.remove(bmpname)
-            # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % (basename))
-            print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/%s.png\n" % basename)
+            # run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
+            print(bmpname, pngname)
+            try:
+                shutil.copy2(bmpname, pngname)
+                remove(bmpname)
+            except OSError as e:
+                err = err + "\n" + str(e) + "\n" + out
+                print(e)    
+                
+            # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
+            print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % rndname)
             # TODO: clean up screenshot directory
-            p = re.compile('Number of joysticks:.*\n.*')
+            # p = re.compile('Number of joysticks:.*\n.*')
             # out = out.replace("Number of joysticks:.*","")
-            out = p.sub("", out)
+            # out = p.sub("", out)
             if code == -9:
                 out = "Runtime exceeded, maybe loop forever\n" + out
             else:
-                # web["image"] = "http://tim-beta.it.jyu.fi/csimages/" + basename + ".png"
-                web["image"] = "/csimages/" + basename + ".png"
+                # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                web["image"] = "/csimages/cs/" + rndname + ".png"
+                
+        elif ttype == "alloy":
+            runcmd = ["java", "-cp","/cs/java/alloy-dev.jar:/cs/java", "RunAll", pure_exename]
+            code, out, err = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+            print(err)
+            if type(out) != type(''): out = out.decode()
+            if type(err) != type(''): err = err.decode()
+            # bmpname = "run/capture.png"
+            image_ok = False
+            try:
+                shutil.copy2(bmpname, pngname)
+                image_ok = True
+                remove(bmpname)
+            except OSError as e:
+                if not is_optional_image:
+                    err = err + "\n" + str(e) + "\n" + out
+                    print(e)    
+            if code == -9:
+                out = "Runtime exceeded, maybe loop forever\n" + out
+            else:
+                # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                print(is_optional_image,image_ok)
+                if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
+                 
         elif ttype == "comtest":
             eri = -1
-            code, out, err = run(["nunit-console", "-nologo", "-nodots", testdll], cwd=prgpath, timeout=10, env=env)
+            code, out, err = run2(["nunit-console", "-nologo", "-nodots", testdll], cwd=prgpath, timeout=10, env=env)
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
             # print(code,out,err)
@@ -632,11 +832,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             eri = -1
             linenr_end = " "
             if ttype == "jcomtest":
-                code, out, err = run(["java", "org.junit.runner.JUnitCore", testdll], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run2(["java", "org.junit.runner.JUnitCore", testdll], cwd=prgpath, timeout=10, env=env)
             if ttype == "junit":
                 code, out, err = run(["java", "org.junit.runner.JUnitCore", javaclassname], cwd=prgpath, timeout=10, env=env)
             if ttype == "ccomtest":
-                code, out, err = run(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], cwd=prgpath, timeout=10, env=env)
+                code, out, err = run2(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], cwd=prgpath, timeout=10, env=env)
                 linenr_end = ":"
             if type(out) != type(''): out = out.decode()
             if type(err) != type(''): err = err.decode()
@@ -684,43 +884,61 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         else:
             if ttype == "java":
                 print("java: ", javaclassname)
-                # code, out, err = run(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
-                code, out, err = run(["java", javaclassname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
+                code, out, err = run2(["java", javaclassname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "shell":
-                print("shell: ", exename)
+                print("shell: ", pure_exename)
                 #os.chmod(exename, stat.S_IEXEC)
                 os.system("chmod +x "+exename)
+                extra = "cd $PWD\nsource " 
                 try:
-                    code, out, err = run([exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                    # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                    code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs, extra = extra)
                 except OSError as e:
+                    print(e)
+                    code, out, err = (-1, "",str(e).encode())
+            elif ttype == "run":
+                cmd =  shlex.split(get_param(query, "cmd", "ls -la") + " " + pure_exename)
+                print("run: ", cmd, pure_exename)
+                try:
+                    code, out, err = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                except Exeption as e:
                     print(e)
                     code, out, err = (-1, "",str(e).encode())
             elif ttype == "jjs":
                 print("jjs: ", exename)
-                code, out, err = run(["jjs",exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                code, out, err = run2(["jjs",pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+            elif ttype == "sql":
+                print("sql: ", exename)
+                code, out, err = run2(["sqlite3",dbname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs, code='iso-8859-1')
             elif ttype == "cc":
                 print("c: ", exename)
-                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "c++":
                 print("c++: ", exename)
-                code, out, err = run([exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "py":
                 print("py: ", exename)
-                code, out, err = run(["python3", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                code, out, err = run2(["python3", pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "clisp":
                 print("clips: ", exename)
-                code, out, err = run(["sbcl", "--script", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                code, out, err = run2(["sbcl", "--script", pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
                 # code, out, err = run(["sbcl", "--noinform --load " + exename + " --eval '(SB-EXT:EXIT)'"], timeout=10, env=env)
                 # code, out, err = run(["clisp",exename], timeout=10, env=env)
             elif ttype == "py2":
                 print("py2: ", exename)
-                code, out, err = run(["python2", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                code, out, err = run2(["python2", pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             elif ttype == "text":
                 print("text: ", csfname)
                 code, out, err = (0, "".encode("utf-8"),"tallennettu".encode("utf-8")) 
-            else:
+            elif ttype == "fs":
                 print("Exe: ", exename)
-                code, out, err = run(["mono", exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                code, out, err = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+            elif ttype == "cs":
+                print("Exe: ", exename)
+                code, out, err = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+            else:
+                out = "Unknown run type: " + ttype + "\n"
 
             print(code, out, err, compiler_output)
             if code == -9:
@@ -736,14 +954,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 if type(err) != type(''): err = err.decode()
                 # if type(out) != type(''): out = out.decode()
-                if out and out[0] in [254, 255]:
-                    out = out.decode('UTF16')
-                elif type(out) != type(''):
-                    out = out.decode('utf-8-sig')
+                try:
+                    if out and out[0] in [254, 255]:
+                        out = out.decode('UTF16')
+                    elif type(out) != type(''):
+                        out = out.decode('utf-8-sig')
+                except:
+                    out = out.decode('iso-8859-1')
 
-        if delete_tmp: self.removedir(prgpath)
+        if delete_tmp: removedir(prgpath)
 
-        out = out[0:8000]
+        out = out[0:20000]
         web["console"] = out
         web["error"] = err
 
@@ -751,7 +972,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # Clean up
         # print("FILE NAME:", csfname)
-        # self.remove(csfname)
+        # remove(csfname)
 
         # self.wfile.write(out)
         # self.wfile.write(err)

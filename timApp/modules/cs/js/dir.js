@@ -9,15 +9,15 @@ csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { csApp.sani
 csApp.directive('csTaunoRunnerInput', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',true); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
-var TESTWITHOUTPLUGINS = false;
+var TESTWITHOUTPLUGINS = true && false;
 csApp.taunoNr = 0;
 
 // =================================================================================================================
 // Things for konwn langueges
 
 var languageTypes = {}
-// What are known language types:
-languageTypes.runTypes     = ["console","jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs"];
+// What are known language types (be carefull not to include partial word):
+languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","sql","alloy","text","cs","run"];
 
 // What are known test types (be carefull not to include partial word):
 languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit"];
@@ -26,7 +26,9 @@ languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit"];
 languageTypes.impTestTypes = {console:"comtest", cc:"ccomtest", java:"jcomtest"};
 languageTypes.impTestTypes["c++"] = "ccomtest";
 
-languageTypes.whatIsIn = function(types,type,def) {
+languageTypes.whatIsIn = function (types, type, def) {
+    if (!type) return def;
+    type = type.toLowerCase();
     for (i=0; i< types.length; i++)
         if ( type.indexOf(types[i]) >= 0 ) return types[i];
     return def;
@@ -45,6 +47,10 @@ languageTypes.getTestType = function(type,def) {
     return t;     
 }
 // =================================================================================================================
+
+removeXML = function(s) {
+    return s.replace(/^<\?xml .*\?>\n/,"");
+}
 
 
 
@@ -173,7 +179,9 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
-				  (t == "jypeli" ? '<img  class="console" ng-src="{{imgURL}}" alt="" width="400" ng-if="runSuccess" />' : "") +
+				  '<div  class="htmlresult" ng-if="htmlresult"><span ng-bind-html="htmlresult"></span></div>'+
+                  
+				  (t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess" />' : "") +
 				  '<p class="footer">Here comes footer</p>'+
                  
 				  '</div>';
@@ -200,7 +208,7 @@ csApp.directiveFunction = function(t,isInput) {
 
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"lang");
-			csApp.set(scope,attrs,"type","console");
+			csApp.set(scope,attrs,"type","cs");
 			csApp.set(scope,attrs,"width");
 			csApp.set(scope,attrs,"height");
 			csApp.set(scope,attrs,"table");
@@ -227,6 +235,8 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"inputrows",1);
             csApp.set(scope,attrs,"indent",-1);
             csApp.set(scope,attrs,"user_id");
+            csApp.set(scope,attrs,"isHtml",false);
+            csApp.set(scope,attrs,"autoupdate",false);
             csApp.set(scope,attrs,"button","");
             csApp.set(scope,attrs,"noeditor",false);
             csApp.set(scope,attrs,"showCodeOn","Näytä koko koodi");
@@ -288,6 +298,7 @@ csApp.directiveFunction = function(t,isInput) {
                 b = b.replace('$charbuttons$' , charButtons);
                 scope.buttons = b.split("\n");
             }
+            if ( scope.attrs.autorun ) scope.runCode();
 		},		
 		scope: {},				 
 		controller: csApp.Controller,
@@ -384,6 +395,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	// $scope.replace = "INSERT YOUR CODE HERE";
 	// $scope.file = "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Jypeli/Jypeli.cs";
 	$scope.result = "";
+	$scope.htmlresult = "";
 	$scope.resImage = "";
 	$scope.imgURL = "";
 	$scope.viewCode = false;
@@ -396,6 +408,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 		if ( $scope.minRows < $scope.maxRows ) 
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
+        window.clearInterval($scope.runTimer);
+        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCode,$scope.autoupdate);
 
 		/* // tällä koodilla on se vika, että ei voi pyyhkiä alusta välilyönteä ja yhdistää rivejä
 		if ( $scope.carretPos && $scope.carretPos >= 0 ) {
@@ -408,7 +422,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 	}, true);
 	
 	$scope.runCode = function() {
-		var t = languageTypes.getRunType($scope.type,"console"); 
+		var t = languageTypes.getRunType($scope.type,"cs"); 
 		$scope.doRunCode(t);
 	}
 	
@@ -419,13 +433,16 @@ csApp.Controller = function($scope,$http,$transclude) {
 	
 	$scope.doRunCode = function(runType) {
 		// $scope.viewCode = false;
+        window.clearInterval($scope.runTimer);
 		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
 		$scope.checkIndent();
-		$scope.error = "... running ...";
+		if ( !$scope.autoupdate ) {
+            $scope.error = "... running ...";
+            $scope.runError = true;
+        }
 		$scope.resImage = "";
 		$scope.imgURL = "";
 		$scope.runSuccess = false;
-		$scope.runError = true;
 		$scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
@@ -446,8 +463,9 @@ csApp.Controller = function($scope,$http,$transclude) {
 		params = {
                   //   'input': 1
 				  'input': {'usercode':ucode, 'userinput':uinput, 'isInput' : isInput, 'userargs': uargs,
-                            'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id}, 
-                           }
+                            // 'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id}, 
+				      'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id },
+				  }
                   };
 		//		  alert($scope.usercode);
         url = "/cs/answer";
@@ -480,7 +498,10 @@ csApp.Controller = function($scope,$http,$transclude) {
 				$scope.result = data.web.console;
 			} else {
 				if ( $scope.runSuccess )  
-				   $scope.result = data.web.console;
+                    if ( $scope.isHtml )
+                        $scope.htmlresult = removeXML(data.web.console);
+                    else
+                        $scope.result = data.web.console;
 				else   
 				   $scope.error = data.replace("*** Success!\n","");
 			}
@@ -718,3 +739,198 @@ csApp.Controller = function($scope,$http,$transclude) {
 		})
 	};
 };
+
+
+var csConsoleApp = angular.module('csConsoleApp', ['ngSanitize']);
+// csApp.directive('csRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('console', false); }]);
+csConsoleApp.directive('csConsole', ['$sanitize', '$timeout', function ($sanitize, $timeout) { csConsoleApp.sanitize = $sanitize; return csConsoleApp.directiveFunction('shell', true, $timeout); }]);
+
+csConsoleApp.directiveFunction = function (t, isInput, $timeout) {
+
+// csConsoleApp.directive('csConsole', function ($timeout) {
+     return {
+         restrict: 'E',
+         controller: csConsoleApp.Controller,
+         scope: {},
+         template: csConsoleApp.directiveTemplateCS(t, isInput),
+         // templateUrl: function (elem, attrs) {
+         //    return "http://" + elem.parent().attr('data-plugin') + "/" + 'NewConsole/Console.template.html';
+         // },
+         transclude: true,
+         replace: true
+     };
+};
+
+
+// controller: function($scope,$http,$transclude,$element, $sce ) {
+csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeout) {
+    $scope.attrs = {};
+
+    $transclude(function(clone, scope) {
+        if ( TESTWITHOUTPLUGINS ) return;
+        if ( !clone[0] ) return;
+        var markJSON = "xxxJSONxxx";
+        var markHex = "xxxHEXJSONxxx";
+        var s = clone[0].textContent;
+        var chex = s.indexOf(markHex) == 0;
+        var cjson = s.indexOf(markJSON) == 0;
+        if ( !chex && !cjson ) {
+            $scope.byCode = s;
+            return;
+        }
+        if ( cjson ) s = s.substring(markJSON.length);
+        if ( chex ) s = csApp.Hex2Str(s.substring(markHex.length));
+        $scope.attrs = JSON.parse(s);
+        $scope.byCode = $scope.attrs.by || $scope.attrs.byCode;
+    });
+    //controller: function ($scope, $element, $sce, $http) {
+    // This block could be re-used
+    $scope.taskId = $element.parent().attr("id");
+    $scope.plugin = $element.parent().attr("data-plugin");
+    var reqPath = $scope.plugin + "/" + $scope.ident + "/";
+    // $scope.content = JSON.parse($element.attr("data-content"));
+    $scope.content = $scope.attrs;
+    // End of generally re-usable TIM stuff
+
+    $scope.examples = "";
+
+    if ( $scope.content.examples) {
+        var s = $scope.content.examples.replace(/'/g, '"');
+        $scope.examples = JSON.parse(s);
+    }
+
+
+    $scope.history = [];
+
+    $scope.loadExample = function (i) {
+        $scope.currentInput = $scope.examples[i].expr;
+        $scope.focusOnInput()
+    };
+    $scope.focusOnInput = function () {
+        var el = $element[0].querySelector(".console-input");
+        el.focus();
+
+    };
+    $scope.handler = function (e) {
+        var url = "/cs/answer";
+        if ($scope.plugin) {
+            // url = "/csPlugin" + /*$scope.plugin + */ "/" + $scope.taskId + "/answer/"; // Häck to get same origin
+            url = $scope.plugin;
+            var i = url.lastIndexOf("/");
+            if (i > 0) url = url.substring(i);
+            url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+        }
+        var t = languageTypes.getRunType($scope.content.type, "shell");
+        var ucode = $scope.currentInput;
+        var isInput = false;
+        var uargs = "";
+        var uinput = "";
+
+        $http({
+            method: 'PUT'
+              , url: url
+              , data: {
+                  'input': {
+                      'usercode': ucode, 'userinput': uinput, 'isInput': isInput, 'userargs': uargs,
+                      // "input": $scope.currentInput,
+                      'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.content.user_id },
+                  }
+              }
+        })
+         .success(function (data) {
+             var s = "";
+             if (data.web.error ) {
+                 s = data.web.error;
+                 s = "<pre>" + s + "</pre>";
+             } else {
+                 s = data.web.console
+                 if (!$scope.isHtml) s = "<pre>" + s + "</pre>";
+             }
+             $scope.submit(s);
+             console.log(["data", data.web]);
+         })
+         .error(function (data, status, hdrs, cfg) {
+             alert(["protocol error", data, status, hdrs, cfg]);
+         });
+
+    };
+    $scope.currentSize = "normal";
+    $scope.currentInput = "";
+    $scope.cursor = $scope.history.length; // $scope.history.length means new input is last command.
+
+    $scope.toggleSize = function () {
+        if ($scope.currentSize === "normal")
+        { $scope.currentSize = "enlarged"; }
+        else { $scope.currentSize = "normal"; }
+    };
+
+    $scope.submit = function (result) {
+
+        $scope.history.push({
+            input: $scope.currentInput,
+            response: result
+        });
+        $scope.currentInput = ""; $scope.cursor = $scope.history.length;
+        $timeout(function () {
+            var el = $element[0].querySelector(".console-output");
+            el.scrollTop = el.scrollHeight;
+        });
+    };
+
+    $scope.load = function () {
+        if ($scope.cursor >= $scope.history.length)
+        { $scope.currentInput = ""; $scope.cursor = $scope.history.length; return; }
+        var norm = Math.min($scope.history.length - 1, Math.max(0, $scope.cursor));
+        $scope.currentInput = $scope.history[norm].input;
+        $scope.cursor = norm;
+    }
+
+
+    $scope.handleKey = function (ev) {
+        if (ev.which === 13) $scope.handler();// submit();
+        if (ev.which === 40) { $scope.cursor++; $scope.load(); }
+        if (ev.which === 38) { $scope.cursor--; $scope.load(); }
+    };
+};
+ 
+
+csConsoleApp.directiveTemplateCS = function (t, isInput) {
+    if (TESTWITHOUTPLUGINS) return '';
+    return '<div class="web-console {{currentSize}}"'+
+     '    ng-keydown="handleKey($event)" >'+
+     ''+
+     '<code class="console-output">'+
+     ' <div class="console-output-elem" '+
+     '    ng-repeat="item in history track by $index">'+
+     '<span class="console-oldinput">'+
+     '  <span class="console-in">in_{{$index}}: </span>'+
+     '  <span class="console-userInput">{{item.input}}</span>'+
+     ' </span>'+
+     ' <br/>'+
+     ' <span class="console-oldresponse">'+
+     '  <span class="console-out">out_{{$index}}: </span>'+
+     '  <span class="console-response" ng-class="{error:item.error}"><span ng-bind-html="item.response"></span></span> <!-- Double span since ng-bind eats the innermost one --!>'+
+     ' </span>'+
+     '</div>'+
+     '<span class="console-expander-sym"'+
+     '    ng-click="toggleSize()"></span>'+
+     '</code>'+
+     '<div class="console-examples-box">'+
+     '    <span class="examples-title"'+
+     '    ng-click="examplesVisible=!examplesVisible" >'+
+     '    ▼ example expressions ▲</span>' +
+     '<div>Click to load:</div>'+
+     '<ul >'+
+     '    <li ng-repeat="example in examples track by $index">'+
+     '    <a ng-click="loadExample($index)" title="{{example.expr}}">{{example.title||example.expr}}</a>' +
+     '    </li>'+
+     '<ul>'+
+     '</div>'+
+     ''+
+     '<span class="console-curIndex">in_{{cursor}}</span>'+
+     '<input type="text" '+
+     '    placeholder="type expressions here"'+
+     '        class="console-input"'+
+     '        ng-model="currentInput" />'+
+     '</div>';
+}
