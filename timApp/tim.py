@@ -157,7 +157,7 @@ def upload_file():
     
 
 
-@app.route('/images/<int:image_id>/<image_filename>/')
+@app.route('/images/<int:image_id>/<image_filename>')
 def getImage(image_id, image_filename):
     timdb = getTimDb()
     if not timdb.images.imageExists(image_id, image_filename):
