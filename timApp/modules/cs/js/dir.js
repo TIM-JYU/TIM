@@ -1,4 +1,5 @@
-﻿var csApp = angular.module('csApp', ['ngSanitize']);
+﻿ "use strict";
+var csApp = angular.module('csApp', ['ngSanitize']);
 csApp.directive('csRunner',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',false); }]);
 csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',false); }]);
 csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',false); }]);
@@ -15,7 +16,7 @@ csApp.taunoNr = 0;
 // =================================================================================================================
 // Things for konwn langueges
 
-var languageTypes = {}
+var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
 languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","sql","alloy","text","cs","run"];
 
@@ -32,7 +33,7 @@ languageTypes.whatIsIn = function (types, type, def) {
     for (i=0; i< types.length; i++)
         if ( type.indexOf(types[i]) >= 0 ) return types[i];
     return def;
-}
+}   
 
 languageTypes.getRunType = function(type,def) {
     return this.whatIsIn(this.runTypes,type,def);
@@ -49,7 +50,7 @@ languageTypes.getTestType = function(type,def) {
 // =================================================================================================================
 
 removeXML = function(s) {
-    return s.replace(/^<\?xml .*\?>\n/,"");
+    return s.replace(/^<\?xml [^>]*\?>/,"");
 }
 
 
