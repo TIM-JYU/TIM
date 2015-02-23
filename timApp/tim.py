@@ -14,6 +14,7 @@ from flask.ext.compress import Compress
 from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
+from ReverseProxied import ReverseProxied
 
 import containerLink
 from routes.edit import edit_page
@@ -57,7 +58,7 @@ app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
-        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
 PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
@@ -157,7 +158,7 @@ def upload_file():
     
 
 
-@app.route('/images/<int:image_id>/<image_filename>/')
+@app.route('/images/<int:image_id>/<image_filename>')
 def getImage(image_id, image_filename):
     timdb = getTimDb()
     if not timdb.images.imageExists(image_id, image_filename):
@@ -538,6 +539,6 @@ def indexPage():
 
 
 def startApp():
-    #app.wsgi_app = ReverseProxied(app.wsgi_app)
+    app.wsgi_app = ReverseProxied(app.wsgi_app)
     #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
     app.run(host='0.0.0.0', port=5000, use_reloader=False)
