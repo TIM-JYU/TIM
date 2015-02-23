@@ -1,13 +1,12 @@
-﻿ "use strict";
-var csApp = angular.module('csApp', ['ngSanitize']);
-csApp.directive('csRunner',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',false); }]);
-csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',false); }]);
-csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',false); }]);
-csApp.directive('csRunnerInput',['$sanitize', function ($sanitize) {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',true); }]);
-csApp.directive('csJypeliRunnerInput', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',true); }]);
-csApp.directive('csComtestRunnerInput', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',true); }]);
-csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',false); }]);
-csApp.directive('csTaunoRunnerInput', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',true); }]);
+﻿var csApp = angular.module('csApp', ['ngSanitize']);
+csApp.directive('csRunner',['$sanitize', function ($sanitize) {	"use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('console',false); }]);
+csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',false); }]);
+csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',false); }]);
+csApp.directive('csRunnerInput',['$sanitize', function ($sanitize) { "use strict";	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',true); }]);
+csApp.directive('csJypeliRunnerInput', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',true); }]);
+csApp.directive('csComtestRunnerInput', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',true); }]);
+csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',false); }]);
+csApp.directive('csTaunoRunnerInput', ['$sanitize', function ($sanitize) {"use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',true); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 var TESTWITHOUTPLUGINS = true && false;
@@ -28,34 +27,42 @@ languageTypes.impTestTypes = {console:"comtest", cc:"ccomtest", java:"jcomtest"}
 languageTypes.impTestTypes["c++"] = "ccomtest";
 
 languageTypes.whatIsIn = function (types, type, def) {
+"use strict";
     if (!type) return def;
     type = type.toLowerCase();
-    for (i=0; i< types.length; i++)
+    for (var i=0; i< types.length; i++)
         if ( type.indexOf(types[i]) >= 0 ) return types[i];
     return def;
-}   
+};
 
 languageTypes.getRunType = function(type,def) {
+"use strict";
     return this.whatIsIn(this.runTypes,type,def);
-}
+};
 
 languageTypes.getTestType = function(type,def) {
+"use strict";
     var t = this.whatIsIn(this.testTypes,type,def);
-    if ( t != "comtest" ) return t;
+    if ( t !== "comtest" ) return t;
     var lt = this.whatIsIn(this.runTypes,type,"console");
     var impt = this.impTestTypes[lt];
     if ( impt ) return impt;
     return t;     
-}
+};
 // =================================================================================================================
 
-removeXML = function(s) {
-    return s.replace(/^<\?xml [^>]*\?>/,"");
-}
+var removeXML = function(s) {
+"use strict";
+    s = s.replace(/^<\?xml [^>]*\?>/,"");
+    s = s.replace(/(<svg [^>]*height="[0-9]+)pt/,"$1");
+    s = s.replace(/(<svg [^>]*width="[0-9]+)pt/,"$1");
+    return s;
+};
 
 
 
 csApp.directive('contenteditable', ['$sce', function($sce) {
+"use strict";
     return {
       restrict: 'A', // only activate on element attribute
       require: '?ngModel', // get a hold of NgModelController
@@ -93,13 +100,15 @@ csApp.directive('contenteditable', ['$sce', function($sce) {
 
 
 csApp.commentTrim = function(s) {
+"use strict";
 	if ( !s ) return "";
 	var n = s.indexOf("//\n");
-	if ( n != 0 ) return s;
+    if (n !== 0) return s;
 	return s.substr(3); 
-}
+};
 
 csApp.getHeading = function(a,key,$scope,defElem) {
+"use strict";
 	var h = csApp.set($scope,a,key,"");
 	if ( !h ) return "";
 	// if ( h.toLowerCase().indexOf("script") >= 0 ) return "";
@@ -109,22 +118,24 @@ csApp.getHeading = function(a,key,$scope,defElem) {
 	var attributes = "";
 	if ( st.length >= 2 ) { elem = st[0]; val = st[1]; }
 	var i = elem.indexOf(' ');
-	ea = [elem];
+	var ea = [elem];
 	if ( i >= 0 ) ea = [elem.substring(0,i),elem.substring(i)];
 	// var ea = elem.split(" ",2);
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
 	// if ( elem.toLowerCase().indexOf("script") >= 0 ) return "";
 	// attributes = "";  // ei laiteta näitä, niin on vähän turvallisempi
 	try {
-	  val = decodeURIComponent(escape(val))
+	  // val = decodeURIComponent(escape(val));
+	  val = decodeURIComponent(encodeURI(val));
 	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
 	html = csApp.sanitize(html);
 	return html;
-}
+};
 
 
 csApp.directiveTemplateCS = function(t,isInput) {
+"use strict";
 	csApp.taunoPHIndex = 3;
     if ( TESTWITHOUTPLUGINS ) return '';
 	return  '<div class="csRunDiv">' + 
@@ -132,7 +143,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-  				  (t == "tauno" ? 
+  				  (t === "tauno" ?
 				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">hide Tauno</a></p>' +
 				    '<div ><p></p></div>' + // Tauno code place holder nr 3!!
 				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">Click here to show Tauno</a></p>' +
@@ -172,32 +183,40 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<button ng-if="isRun"  ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
-				  '<a href="" ng-if="muokattu" ng-click="initCode();">Alusta</a></p>'+
+				  '<a href="" ng-if="muokattu" ng-click="initCode();">Alusta</a>' +
+				  '<a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">Editor</a>' +
+                  '</p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
-				  (t == "comtest" || t == "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
-				  (t == "comtest" || t == "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
+				  (t === "comtest" || t === "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
+				  (t === "comtest" || t === "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
 				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
-				  '<div  class="htmlresult" ng-if="htmlresult"><span ng-bind-html="htmlresult"></span></div>'+
+				  '<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="svgImageSnippet()"></span></div>'+
                   
-				  (t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess" />' : "") +
+                  //'<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="htmlresult"></span></div>'+
+				  //'<div  class="htmlresult" ng-if="htmlresult" >{{htmlresult}}</span></div>'+
+                  
+				  (t === "jypeli" || true ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  />' : "") +
+				  //(t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess"  />' : "") +
 				  '<p class="footer">Here comes footer</p>'+
                  
 				  '</div>';
-}
+};
 
 
 csApp.set = function(scope,attrs,name,def) {
+"use strict";
     scope[name] = def;
     if ( attrs && attrs[name] ) scope[name] = attrs[name];
     if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
     return scope[name];
-}
+};
 
 
 csApp.directiveFunction = function(t,isInput) {
+"use strict";
 	return {
 		link: function (scope, element, attrs) {
             if ( TESTWITHOUTPLUGINS ) return;
@@ -234,6 +253,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"userargs","");
 			csApp.set(scope,attrs,"inputstem","");
 			csApp.set(scope,attrs,"inputrows",1);
+			csApp.set(scope,attrs,"toggleEditor",false);
             csApp.set(scope,attrs,"indent",-1);
             csApp.set(scope,attrs,"user_id");
             csApp.set(scope,attrs,"isHtml",false);
@@ -247,7 +267,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showCodeLink = scope.showCodeOn;
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
-			if ( scope.usercode == "" && scope.byCode )  scope.usercode = scope.byCode;
+			if ( scope.usercode === "" && scope.byCode )  scope.usercode = scope.byCode;
 			scope.usercode = csApp.commentTrim(scope.usercode);
 			scope.byCode = csApp.commentTrim(scope.byCode);
 			// scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
@@ -258,8 +278,8 @@ csApp.directiveFunction = function(t,isInput) {
                 if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
             } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
             
-            scope.isRun = languageTypes.getRunType(scope.type,false) != false;
-            scope.isTest = languageTypes.getTestType(scope.type,false) != false;
+            scope.isRun = languageTypes.getRunType(scope.type,false) !== false;
+            scope.isTest = languageTypes.getTestType(scope.type,false) !== false;
             
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
@@ -292,7 +312,7 @@ csApp.directiveFunction = function(t,isInput) {
                                     'static \nvoid \n Main\n(\n)\n' + 
                                     '        Console.WriteLine(\n"\nworld!\n;\n ';
                 var typeButtons =  'bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhyscisObject \n[] \nreturn \n, ';
-                var charButtons = 'a\nb\nc\nd\ne\ni\nj\n\.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=';
+                var charButtons = 'a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=';
                 // var b = attrs.buttons;
                 b = b.replace('$hellobuttons$', helloButtons);
                 b = b.replace('$typebuttons$' , typeButtons);
@@ -311,68 +331,84 @@ csApp.directiveFunction = function(t,isInput) {
 		*/
 		transclude: true,
 		replace: 'true',
-		template: csApp.directiveTemplateCS(t,isInput),
+		template: csApp.directiveTemplateCS(t,isInput)
 		// templateUrl: 'csTempl.html'
 	}; 
-}
+};
 
 
 csApp.getInt = function(s) {
+"use strict";
    var n = parseInt(s);
-   if ( n == NaN ) return 0;
+   if ( isNaN(n) ) return 0;
    return n;
-}   
+};
 
 
 csApp.countChars = function (s,c) {
+"use strict";
 	var n = 0;
 	for (var i=0; i<s.length; n += +(c===s[i++]));
 	return n;
-}
+};
 
 
 csApp.updateEditSize = function(scope) {
+"use strict";
 //return;
     if ( !scope ) return;
 	if ( !scope.usercode ) return;
-    n = csApp.countChars(scope.usercode,'\n') + 1;
+    var n = csApp.countChars(scope.usercode,'\n') + 1;
 	if ( n < scope.minRows ) n = scope.minRows;
 	if ( n > scope.maxRows ) n = scope.maxRows;
 	if ( n < 1 ) n = 1;
 	scope.rows = n;
-}
+};
 
 csApp.ifIs = function(value,name,def) {
+"use strict";
 	if ( !value && !def ) return "";
 	if ( !value  ) return name+'="'+def+'" ';
 	return name+'="'+value+'" ';
-}
+};
 		
 csApp.doVariables = function(v,name) {
+"use strict";
 	if ( !v ) return "";
 	var r = "";
 	var va = v.split(";");
-	var n;
-	for ( n in va ) {
-		nv = va[n].trim();
-		if ( nv ) r += name+nv+"&";
+	for ( var n in va ) {
+        if ( va.hasOwnProperty(n)) {
+            var nv = va[n].trim();
+            if (nv) {
+                r += name + nv + "&";
+            }
+        }
 	}
 	return r.replace(/ /g,"");
-}
+};
+
 
 csApp.Hex2Str = function (s) {
+"use strict";
   var result = '';
   for (var i=0; i<s.length; i+=2) {
-    c = String.fromCharCode(parseInt(s[i]+s[i+1],16));
+    var c = String.fromCharCode(parseInt(s[i]+s[i+1],16));
     result += c;
   }
   return result;
-}
+};
 
 
-csApp.Controller = function($scope,$http,$transclude) {
+csApp.Controller = function($scope,$http,$transclude,$sce) {
+"use strict";
 	$scope.byCode ="";
 	$scope.attrs = {};
+    $scope.svgImageSnippet = function() {
+        var s = $sce.trustAsHtml($scope.htmlresult); 
+        return s;
+        // return $scope.htmlresult;
+    };
 
 	$transclude(function(clone, scope) {
         if ( TESTWITHOUTPLUGINS ) return;
@@ -380,8 +416,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 		var markJSON = "xxxJSONxxx";
 		var markHex = "xxxHEXJSONxxx";
 		var s = clone[0].textContent;
-		var chex = s.indexOf(markHex) == 0;
-		var cjson = s.indexOf(markJSON) == 0;
+		var chex = s.indexOf(markHex) === 0;
+		var cjson = s.indexOf(markJSON) === 0;
 		if ( !chex && !cjson ) {
 		    $scope.byCode = s;
 		    return;
@@ -404,8 +440,8 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.copyingFromTauno = false;
 
 	$scope.$watch('[usercode]', function() {
-		if ( !$scope.copyingFromTauno && $scope.usercode != $scope.byCode ) $scope.muokattu = true;
-		$scope.copyingFromTauno = false
+		if ( !$scope.copyingFromTauno && $scope.usercode !== $scope.byCode ) $scope.muokattu = true;
+		$scope.copyingFromTauno = false;
 		if ( $scope.minRows < $scope.maxRows ) 
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
@@ -425,13 +461,18 @@ csApp.Controller = function($scope,$http,$transclude) {
 	$scope.runCode = function() {
 		var t = languageTypes.getRunType($scope.type,"cs"); 
 		$scope.doRunCode(t);
-	}
+	};
 	
 	$scope.runTest = function() {
 		var t = languageTypes.getTestType($scope.type,"comtest"); 
 		$scope.doRunCode(t);
-	}
+	};
 	
+    
+    $scope.hideShowEditor = function() {
+        $scope.noeditor = !$scope.noeditor;
+    };
+    
 	$scope.doRunCode = function(runType) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
@@ -461,15 +502,15 @@ csApp.Controller = function($scope,$http,$transclude) {
 
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
-		params = {
+		var params = {
                   //   'input': 1
 				  'input': {'usercode':ucode, 'userinput':uinput, 'isInput' : isInput, 'userargs': uargs,
                             // 'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id}, 
-				      'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id },
+				      'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id }
 				  }
                   };
 		//		  alert($scope.usercode);
-        url = "/cs/answer";
+        var url = "/cs/answer";
         // url = "http://tim-beta.it.jyu.fi/cs/answer";
         if ( $scope.plugin ) {
             // url = "/csPlugin" + /*$scope.plugin + */ "/" + $scope.taskId + "/answer/"; // Häck to get same origin
@@ -509,14 +550,15 @@ csApp.Controller = function($scope,$http,$transclude) {
 
 		}).error(function(data, status) {
 			$scope.errors.push(status);
-			$scope.error = data;
-		})
+			// $scope.error = data;
+            $scope.error = "Ikuinen silmukka?";
+		});
 	};
 	
 	$scope.hideTauno = function() {
 		$scope.taunoOn = false;
 		$scope.taunoHtml.innerHTML = "<p></p>";
-	}
+	};
 
 	
 	$scope.copyTauno = function() {
@@ -524,10 +566,10 @@ csApp.Controller = function($scope,$http,$transclude) {
 		// var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
 		var s = f.contentWindow.getUserCodeFromTauno();
 		$scope.copyingFromTauno = true;
-        treplace = $scope.attrs.treplace || "";
+        var treplace = $scope.attrs.treplace || "";
         if ( treplace ) {
             var treps = treplace.split("&");
-            for (i = 0; i < treps.length; i++) { 
+            for (var i = 0; i < treps.length; i++) {
                 var reps = (treps[i]+"|").split("|");
                 s = s.replace(new RegExp(reps[0],'g'),reps[1]);
                 s = s.replace(new RegExp("\n\n",'g'),"\n");
@@ -536,7 +578,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.usercode = s;
         $scope.checkIndent();
 		$scope.muokattu = false;
-	}
+	};
 	
 	
 	$scope.addText = function (s) {
@@ -549,33 +591,33 @@ csApp.Controller = function($scope,$http,$transclude) {
 	    // $scope.insertAtCursor(tbox, s);
 	    //tbox.selectionStart += s.length;
 	    //tbox.selectionEnd += s.length;
-	}
+	};
 
 	$scope.addTextHtml = function (s) {
 	    var ret = s.trim();
-	    if (ret.length == 0) ret = "\u00A0";
+	    if (ret.length === 0) ret = "\u00A0";
 	    return ret;
-	}
+	};
 
 
 	$scope.insertAtCursor = function(myField, myValue) {
 	    //IE support
 	    if (document.selection) {
 	        myField.focus();
-	        sel = document.selection.createRange();
+	        var sel = document.selection.createRange();
 	        sel.text = myValue;
 	    }
 	        //MOZILLA and others
-	    else if (myField.selectionStart || myField.selectionStart == '0') {
+	    else if (myField.selectionStart || myField.selectionStart === 0) {
 	        var startPos = myField.selectionStart;
 	        var endPos = myField.selectionEnd;
-	        myField.value = myField.value.substring(0, startPos)
-                + myValue
-                + myField.value.substring(endPos, myField.value.length);
+	        myField.value = myField.value.substring(0, startPos) +
+                myValue +
+                myField.value.substring(endPos, myField.value.length);
 	    } else {
 	        myField.value += myValue;
 	    }
-	}
+	};
 
 	$scope.showTauno = function () {
 	
@@ -590,11 +632,11 @@ csApp.Controller = function($scope,$http,$transclude) {
 		var tt = "/cs/tauno/index.html?";
 		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://users.jyu.fi/~vesal/js/ptauno/index.html";
 		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://tim-beta.it.jyu.fi/cs/ptauno/index.html";
-		if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "/cs/tauno/index.html?s&";
+		if ( $scope.taunotype && $scope.taunotype === "ptauno" ) tt = "/cs/tauno/index.html?s&";
 		var taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
 		var s = $scope.table;
 		if ( s && s.length > 0) {
-			if ( s[0] == 's' ) p = "ts="+s.substring(1) + "&"; // table it's size param "table: s10"
+			if ( s[0] === 's' ) p = "ts="+s.substring(1) + "&"; // table it's size param "table: s10"
 			else p = "t="+s.trim() + "&";                      // table by it's items
 		}
 		 
@@ -611,7 +653,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		else   
 			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+vid+'" />';
 		$scope.taunoOn = true;	
-	}
+	};
 	
 	
 	$scope.initCode = function() {
@@ -624,24 +666,27 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.result = "";
 		$scope.viewCode = false;
 
-	}
+	};
 
 	
 	$scope.stopShow = function() {
 		if (angular.isDefined($scope.stop)) {
-			$interval.cancel(stop);
+			$interval.cancel($scope.stop);
 			$scope.stop = undefined;
 		}
-	}
+	};
 	
 	$scope.pushShowCodeNow = function() {
 		if ( !$scope.viewCode ) return;
-		$scope.showCodeNow(); return;
+		$scope.showCodeNow();
+        return;
+        /*
 		$scope.stopShow();
 		$scope.stop = $interval(function() {
 			$scope.showCodeNow();
-		}, 1000,1);	  
-	}
+		}, 1000,1);
+		*/
+	};
 	
 	
 	$scope.showCode = function() {
@@ -654,26 +699,26 @@ csApp.Controller = function($scope,$http,$transclude) {
 
 		$scope.localcode = undefined;
 		$scope.showCodeNow();
-	}
+	};
 		
         
     $scope.checkIndent = function() {
         if ( !$scope.indent || !$scope.usercode ) return;
         var start = $scope.edit.selectionStart;
         var spaces = "";
-        for (var i=0; i<$scope.indent; i++) spaces += " ";
+        for (var j1=0; j1<$scope.indent; j1++) spaces += " ";
         var n = 0;
         var len = 0;
 		var st = $scope.usercode.split("\n");
-        for (var i in st) {
+        for (var i in st) if ( st.hasOwnProperty(i) ) {
 			var s = st[i];
 			var l = s.length;
 			len += l;
-			var j = 0
-			for ( ; j<s.length; j++) if ( s[j] != " " ) break;
+			var j = 0;
+			for ( ; j<s.length; j++) if ( s[j] !== " " ) break;
 			// if ( s.lastIndexOf(spaces,0) == 0 ) continue;
 			if ( j >= spaces.length ) continue;
-            if ( s.trim() == "" ) continue; // do not indent empty lines
+            if ( s.trim() === "" ) continue; // do not indent empty lines
 			s = spaces + s.substring(j);
 			var dl = s.length - l;
 			if ( len - l < start ) start += dl;
@@ -685,22 +730,22 @@ csApp.Controller = function($scope,$http,$transclude) {
         $scope.usercode = st.join("\n");
         // $scope.edit[0].selectionStart = start; // aiheuttaa uuden tapahtuman
         $scope.carretPos = start; // seuraava tapahtuma nappaa tämän ja siirtää vain kursorin.
-    }
+    };
 		
 	$scope.showCodeLocal = function() {
 		// $scope.code = $scope.localcode;
-		if ( $scope.localcode == "" ) { $scope.code = $scope.usercode; return; }
+		if ( $scope.localcode === "" ) { $scope.code = $scope.usercode; return; }
 		var st = $scope.localcode.split("\n");
 		var r = "";
 		var rp = ["",""]; // alkuosa, loppuosa
 		var step = 0;
 		var nl = "";
 		var nls = "";
-		for (i in st) {
+		for (var i in st) if ( st.hasOwnProperty(i) ) {
 			var s = st[i];
 			if ( s.indexOf($scope.replace) >= 0 ) {
 				r += nl + $scope.usercode;
-				if ( step == 0 ) { step++; nls = ""; continue; }
+				if ( step === 0 ) { step++; nls = ""; continue; }
 			} else { 
 				r += nl + s;
 				rp[step] += nls + s;
@@ -710,7 +755,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 		$scope.code = r;
 		$scope.precode = rp[0];
 		$scope.postcode = rp[1];
-	}	
+	};
 		
 		
 	$scope.showCodeNow = function() {
@@ -718,15 +763,15 @@ csApp.Controller = function($scope,$http,$transclude) {
         // document.dispatchEvent(copyEvent);
 		if ( !$scope.viewCode ) return;
 		if ( angular.isDefined($scope.localcode) ) { $scope.showCodeLocal(); return; } 
-		if ( !$scope.file &!$scope.attrs.program ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
+		if ( !$scope.file &&!$scope.attrs.program ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
 		
 		// params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
-		params = $scope.attrs;
+		var params = $scope.attrs;
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		$http({method: 'POST', url: '/cs/?print=1&replace=', data:params, headers: {'Content-Type': 'application/json'}}
 		// $http({method: 'POST', url:"/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		).success(function(data, status, headers, config) {
-			if (data.msg != '')
+			if (data.msg !== '')
 			{
 				$scope.localcode = data;
 				$scope.showCodeLocal();
@@ -737,7 +782,7 @@ csApp.Controller = function($scope,$http,$transclude) {
 			}
 		}).error(function(data, status) {
 			$scope.errors.push(status);
-		})
+		});
 	};
 };
 
@@ -747,6 +792,7 @@ var csConsoleApp = angular.module('csConsoleApp', ['ngSanitize']);
 csConsoleApp.directive('csConsole', ['$sanitize', '$timeout', function ($sanitize, $timeout) { csConsoleApp.sanitize = $sanitize; return csConsoleApp.directiveFunction('shell', true, $timeout); }]);
 
 csConsoleApp.directiveFunction = function (t, isInput, $timeout) {
+"use strict";
 
 // csConsoleApp.directive('csConsole', function ($timeout) {
      return {
@@ -765,6 +811,7 @@ csConsoleApp.directiveFunction = function (t, isInput, $timeout) {
 
 // controller: function($scope,$http,$transclude,$element, $sce ) {
 csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeout) {
+"use strict";
     $scope.attrs = {};
 
     $transclude(function(clone, scope) {
@@ -773,8 +820,8 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
         var markJSON = "xxxJSONxxx";
         var markHex = "xxxHEXJSONxxx";
         var s = clone[0].textContent;
-        var chex = s.indexOf(markHex) == 0;
-        var cjson = s.indexOf(markJSON) == 0;
+        var chex = s.indexOf(markHex) === 0;
+        var cjson = s.indexOf(markJSON) === 0;
         if ( !chex && !cjson ) {
             $scope.byCode = s;
             return;
@@ -805,7 +852,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
 
     $scope.loadExample = function (i) {
         $scope.currentInput = $scope.examples[i].expr;
-        $scope.focusOnInput()
+        $scope.focusOnInput();
     };
     $scope.focusOnInput = function () {
         var el = $element[0].querySelector(".console-input");
@@ -828,13 +875,13 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
         var uinput = "";
 
         $http({
-            method: 'PUT'
-              , url: url
-              , data: {
+                method: 'PUT',
+                url: url,
+                data: {
                   'input': {
                       'usercode': ucode, 'userinput': uinput, 'isInput': isInput, 'userargs': uargs,
                       // "input": $scope.currentInput,
-                      'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.content.user_id },
+                      'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.content.user_id }
                   }
               }
         })
@@ -848,10 +895,11 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
                  if (!$scope.isHtml) s = "<pre>" + s + "</pre>";
              }
              $scope.submit(s);
-             console.log(["data", data.web]);
+             // console.log(["data", data.web]);
          })
          .error(function (data, status, hdrs, cfg) {
-             alert(["protocol error", data, status, hdrs, cfg]);
+             console.log(["protocol error", data, status, hdrs, cfg]);
+             $scope.submit("Endless loop?");
          });
 
     };
@@ -884,7 +932,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
         var norm = Math.min($scope.history.length - 1, Math.max(0, $scope.cursor));
         $scope.currentInput = $scope.history[norm].input;
         $scope.cursor = norm;
-    }
+    };
 
 
     $scope.handleKey = function (ev) {
@@ -896,6 +944,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
  
 
 csConsoleApp.directiveTemplateCS = function (t, isInput) {
+"use strict";
     if (TESTWITHOUTPLUGINS) return '';
     return '<div class="web-console {{currentSize}}"'+
      '    ng-keydown="handleKey($event)" >'+
@@ -934,4 +983,4 @@ csConsoleApp.directiveTemplateCS = function (t, isInput) {
      '        class="console-input"'+
      '        ng-model="currentInput" />'+
      '</div>';
-}
+};
