@@ -14,6 +14,7 @@ from flask.ext.compress import Compress
 from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
+from ReverseProxied import ReverseProxied
 
 import containerLink
 from routes.edit import edit_page
@@ -538,6 +539,6 @@ def indexPage():
 
 
 def startApp():
-    #app.wsgi_app = ReverseProxied(app.wsgi_app)
+    app.wsgi_app = ReverseProxied(app.wsgi_app)
     #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
     app.run(host='0.0.0.0', port=5000, use_reloader=False)
