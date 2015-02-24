@@ -157,7 +157,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
             for idx in plugin_block_map.keys():
                 final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
             continue
-        reqs = json.loads(resp)
+        try:
+            reqs = json.loads(resp)
+        except ValueError:
+            for idx in plugin_block_map.keys():
+                final_html_blocks[idx]['html'] = get_error_html(plugin_name,
+                                                                'Failed to parse JSON from plugin reqs route.')
+            continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
             if src.startswith("http") or src.startswith("/"):
