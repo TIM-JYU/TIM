@@ -45,6 +45,9 @@
     <Content Include="ptauno\taulukkoi.js" />
     <Content Include="ptauno\taulukkoi2.js" />
     <Content Include="ptauno\taulukkoOld.js" />
+    <Content Include="T:\cs\js\dir.js">
+      <Link>dir.js</Link>
+    </Content>
     <Content Include="tauno\index.html" />
     <Content Include="tauno\taulukko.css" />
     <Content Include="tauno\taulukko.js" />

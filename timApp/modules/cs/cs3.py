@@ -899,9 +899,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     code, out, err = (-1, "",str(e).encode())
             elif ttype == "run":
                 cmd =  shlex.split(get_param(query, "cmd", "ls -la") + " " + pure_exename)
-                print("run: ", cmd, pure_exename)
+                extra = get_param(query, "cmds", "")
+                if extra != "": cmd = [];
+                print("run: ", cmd, extra, pure_exename)
                 try:
-                    code, out, err = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
+                    code, out, err = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs, extra = extra)
                 except Exeption as e:
                     print(e)
                     code, out, err = (-1, "",str(e).encode())
