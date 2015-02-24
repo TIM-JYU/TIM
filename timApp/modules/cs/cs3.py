@@ -491,6 +491,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             csfname = "/tmp/%s/%s" % (basename, filename)
             exename = csfname
             pure_exename = "/home/agent/%s" % (filename)
+            pngname = "/csimages/%s.png" % rndname
+            bmpname = get_param(query, "bmpname", "")
 
         if ttype == "jjs":
             csfname = "/tmp/%s/%s.js" % (basename, filename)
@@ -596,6 +598,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             testdll = javaclassname + "Test"
 
         if not s.startswith("File not found"):
+            print(os.path.dirname(csfname))
+            mkdirs(os.path.dirname(csfname))
             print("Write file: " + csfname)
             codecs.open(csfname, "w", "utf-8").write(s)
 
@@ -899,14 +903,31 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     code, out, err = (-1, "",str(e).encode())
             elif ttype == "run":
                 cmd =  shlex.split(get_param(query, "cmd", "ls -la") + " " + pure_exename)
-                extra = get_param(query, "cmds", "")
+                extra = get_param(query, "cmds", "").format(pure_exename)
                 if extra != "": cmd = [];
-                print("run: ", cmd, extra, pure_exename)
+                print("run: ", cmd, extra, pure_exename, csfname)
                 try:
                     code, out, err = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs, extra = extra)
                 except Exeption as e:
                     print(e)
                     code, out, err = (-1, "",str(e).encode())
+                image_ok = False
+                if bmpname and pngname:
+                    try:
+                        shutil.copy2(filepath+"/"+bmpname, pngname)
+                        image_ok = True
+                        remove(bmpname)
+                    except OSError as e:
+                        if not is_optional_image:
+                            print(e)    
+                            err = (str(err) + "\n" + str(e) + "\n" + str(out)).encode("utf-8")
+                    if code == -9:
+                        out = "Runtime exceeded, maybe loop forever\n" + out
+                    else:
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        print(is_optional_image,image_ok)
+                        if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
+                    
             elif ttype == "jjs":
                 print("jjs: ", exename)
                 code, out, err = run2(["jjs",pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)

@@ -376,7 +376,7 @@ csApp.doVariables = function(v,name) {
 "use strict";
 	if ( !v ) return "";
 	var r = "";
-	var va = v.split(";");
+	var va = v.split(";");  
 	for ( var n in va ) {
         if ( va.hasOwnProperty(n)) {
             var nv = va[n].trim();
