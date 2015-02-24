@@ -100,6 +100,7 @@ class Documents(TimDbBase):
                           WHERE type_id = ? and id = ?""",
                        [blocktypes.DOCUMENT, docId.id])
         self.db.commit()
+        self.updateLatestRevision(docId)
         return docId
 
     @contract
@@ -237,7 +238,7 @@ class Documents(TimDbBase):
     def updateLatestRevision(self, doc_id: 'DocIdentifier'):
         cursor = self.db.cursor()
         cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
-        revid = cursor.fetchone()
+        revid = cursor.fetchone()[0]
         if revid is None:
             cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?)",
                 [doc_id.id, doc_id.hash])
@@ -245,7 +246,7 @@ class Documents(TimDbBase):
                 [cursor.lastrowid, blocktypes.DOCUMENT, doc_id.id])
         else:
             cursor.execute("UPDATE ReadRevision SET Hash = ? WHERE revision_id = ?",
-                [doc_id.hash, revid[0]])
+                [doc_id.hash, revid])
 
         self.db.commit()
 
@@ -757,6 +758,7 @@ class Documents(TimDbBase):
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
         self.updateParMappings(document_id, new_id)
         self.updateDocModified(new_id)
+        self.updateLatestRevision(new_id)
         return new_id
 
     def trimDoc(self, text: 'str'):
