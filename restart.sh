@@ -71,7 +71,7 @@ if param plugins ; then
 fi
 wait
 
-if param plugins ; then 
+if param plugins ; then
 # Start csPlugin
 pkill csdaemon
 nohup /opt/cs/csdaemon.sh &
