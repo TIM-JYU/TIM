@@ -69,9 +69,12 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             $scope.loading--;
                         });
                 };
-                $element.appear();
-                $element.one('appear', function (event, $all_appeared_elements) {
-                    $scope.getAvailableAnswers();
+                $element.waypoint({
+                    handler: function (direction) {
+                        $scope.getAvailableAnswers();
+                        this.destroy();
+                    },
+                    offset: 'bottom-in-view'
                 });
             }
         };
