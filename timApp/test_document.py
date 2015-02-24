@@ -358,5 +358,25 @@ class DocTest(unittest.TestCase):
         text = self.db.documents.getBlock(doc, 0)
         self.assertEqual(text, 'test')
 
+    def test_document_revisions(self):
+        doc = self.db.documents.createDocument('test', 0)
+        self.check_newest_version(doc)
+
+        doc = self.db.documents.updateDocument(doc, 'edit1')
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit2')
+        self.check_newest_version(doc)
+
+    def check_newest_version(self, latest_doc):
+        newest_hash = self.db.documents.getNewestVersionHash(latest_doc.id)
+        self.assertEqual(latest_doc.hash, newest_hash)
+
+        newest = self.db.documents.getNewestVersion(latest_doc.id)
+        self.assertEqual(newest['hash'], newest_hash)
+
+        versions = self.db.documents.getDocumentVersions(latest_doc.id)
+        self.assertEqual(versions[0]['hash'], newest_hash)
+
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
