@@ -3,11 +3,7 @@ var MathJax, $, angular, modules, version, refererPath, docId, docName, canEdit,
 var timApp = angular.module('timApp', [
     'ngSanitize',
     'angularFileUpload',
-    'ui.ace'].concat(modules), function ($locationProvider) {
-    "use strict";
-    $locationProvider.html5Mode(true);
-    $locationProvider.hashPrefix('!');
-});
+    'ui.ace'].concat(modules));
 
 timApp.controller("ViewCtrl", [
     '$scope',
@@ -16,10 +12,9 @@ timApp.controller("ViewCtrl", [
     '$upload',
     '$injector',
     '$compile',
-    '$location',
     '$window',
     '$document',
-    function (sc, http, q, $upload, $injector, $compile, $location, $window, $document) {
+    function (sc, http, q, $upload, $injector, $compile, $window, $document) {
         "use strict";
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
@@ -450,7 +445,7 @@ timApp.controller("ViewCtrl", [
                     txt = txt.trim().replace(/\\#/g, "#");
                     var entry = {
                         text: sc.totext(txt),
-                        target: encodeURIComponent($location.path().substring(1)) + sc.tolink(txt),
+                        target: sc.tolink(txt),
                         style: astyle,
                         level: lvl,
                         items: [],
