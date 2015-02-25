@@ -54,14 +54,18 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.changeAnswer();
                 };
 
-                $scope.getAvailableAnswers = function () {
+                $scope.getAvailableAnswers = function (updateHtml) {
+                    updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
                     $scope.loading++;
                     $http.get('/answers/' + $scope.taskId + '/' + $scope.user.name)
                         .success(function (data, status, headers, config) {
                             $scope.answers = data;
                             if ($scope.answers.length > 0) {
                                 $scope.selectedAnswer = $scope.answers[0];
-                                $scope.changeAnswer();
+
+                                if (updateHtml) {
+                                    $scope.changeAnswer();
+                                }
                             }
                         }).error(function (data, status, headers, config) {
                             $window.alert('Error getting answers: ' + data.error);
@@ -72,7 +76,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$on('answerSaved', function (event, args) {
                     if (args.taskId === $scope.taskId) {
-                        $scope.getAvailableAnswers();
+                        $scope.getAvailableAnswers(false);
                     }
                 });
 
