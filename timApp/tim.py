@@ -31,7 +31,7 @@ from routes.common import *
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
-Compress(app)
+#Compress(app)
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
