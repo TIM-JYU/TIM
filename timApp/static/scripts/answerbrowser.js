@@ -69,6 +69,13 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             $scope.loading--;
                         });
                 };
+
+                $scope.$on('answerSaved', function (event, args) {
+                    if (args.taskId === $scope.taskId) {
+                        $scope.getAvailableAnswers();
+                    }
+                });
+
                 $element.waypoint({
                     handler: function (direction) {
                         $scope.getAvailableAnswers();

@@ -3,7 +3,33 @@ var MathJax, $, angular, modules, version, refererPath, docId, docName, canEdit,
 var timApp = angular.module('timApp', [
     'ngSanitize',
     'angularFileUpload',
-    'ui.ace'].concat(modules));
+    'ui.ace'].concat(modules)).config(['$httpProvider', function($httpProvider){
+    var interceptor = [
+        '$q',
+        '$rootScope',
+        function($q, $rootScope) {
+
+            var service = {
+                'request': function(config) {
+                    return config;
+                },
+                'response': function(response) {
+                    var re = /\/[^/]+\/([^/]+)\/answer\/$/;
+                    if (re.test(response.config.url)){
+                        var match = re.exec(response.config.url);
+                        var taskId = match[1];
+                        //console.log(response);
+                        $rootScope.$broadcast('answerSaved', {taskId: taskId});
+                    }
+                    return response;
+                }
+            };
+            return service;
+        }
+    ];
+
+    $httpProvider.interceptors.push(interceptor);
+}]);
 
 timApp.controller("ViewCtrl", [
     '$scope',
