@@ -285,7 +285,14 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
                 for idx in plugin_block_map.keys():
                     final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
                 continue
-            plugin_htmls = json.loads(response)
+            try:
+                plugin_htmls = json.loads(response)
+            except ValueError:
+                for idx in plugin_block_map.keys():
+                    final_html_blocks[idx]['html'] = get_error_html(plugin_name,
+                                                                    'Failed to parse plugin response from reqs route.')
+                continue
+
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
                 final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                          plugin_url,
