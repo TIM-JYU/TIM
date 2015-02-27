@@ -1,6 +1,6 @@
 <div class="answerBrowser">
     <select ng-show="$parent.users.length > 1" ng-model="user"
-            ng-options="user.name for user in $parent.users track by user.id"
+            ng-options="(user.real_name + ' (' + user.name + ')') for user in $parent.users track by user.id"
             ng-change="getAvailableAnswers()"></select>
     <span ng-show="answers.length > 0">
     <button ng-click="previous()">&larr;</button>
@@ -10,5 +10,6 @@
     <button ng-click="next()">&rarr;</button>
     {{ answers.length - answers.indexOf(selectedAnswer) }}/{{ answers.length }}
     </span>
+    <span ng-show="answers.length == 0 && $parent.users.length > 1">(no answers)</span>
     <img style="display: inline" src="/static/images/loading.gif" ng-show="loading">
 </div>

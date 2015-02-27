@@ -55,7 +55,7 @@ class Answers(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute(
             """
-                SELECT id, name FROM User
+                SELECT id, name, real_name FROM User
                 WHERE id IN (
                     SELECT user_id FROM UserAnswer
                     WHERE answer_id IN (

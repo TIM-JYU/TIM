@@ -1280,7 +1280,7 @@ img.console {
 .userlist {
 	position: fixed;
 	top: 13px;
-	right: 240px;
+	right: 120px;
 	padding: 5px;
 	/*width: 240px;*/
 	word-wrap:break-word;

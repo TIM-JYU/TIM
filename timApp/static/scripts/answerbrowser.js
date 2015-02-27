@@ -83,6 +83,12 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 });
 
+                $scope.$on('userChanged', function (event, args) {
+                    $scope.user = args.user;
+                    $scope.getAvailableAnswers();
+
+                });
+
                 $element.waypoint({
                     handler: function (direction) {
                         $scope.getAvailableAnswers();

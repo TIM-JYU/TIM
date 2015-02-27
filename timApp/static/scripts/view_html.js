@@ -49,6 +49,7 @@ timApp.controller("ViewCtrl", [
         sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;
+        sc.selectedUser = sc.users[0];
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
@@ -60,6 +61,10 @@ timApp.controller("ViewCtrl", [
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+
+        sc.changeUser = function (user) {
+            sc.$broadcast('userChanged', {user: user});
+        };
 
         sc.getParIndex = function ($par) {
             return $par.index() + sc.startIndex;
