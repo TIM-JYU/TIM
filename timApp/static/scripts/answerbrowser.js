@@ -1,4 +1,4 @@
-var angular;
+var angular, Waypoint;
 var timApp = angular.module('timApp');
 
 timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window',
@@ -85,17 +85,31 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
-                    $scope.getAvailableAnswers();
-
-                });
-
-                $element.waypoint({
-                    handler: function (direction) {
+                    if ($scope.isVisible) {
                         $scope.getAvailableAnswers();
-                        this.destroy();
-                    },
-                    offset: 'bottom-in-view'
+                    } else {
+                        $scope.changed = true;
+                    }
                 });
+
+                $scope.loadIfChanged = function () {
+                    if ($scope.changed) {
+                        $scope.getAvailableAnswers();
+                        $scope.changed = false;
+                    }
+                };
+                $scope.waypointDown = new Waypoint.Inview({
+                    enter: function (direction) {
+                        $scope.isVisible = true;
+                        $scope.loadIfChanged();
+                    },
+                    exit: function (direction) {
+                        $scope.isVisible = false;
+                    },
+                    element: $element[0]
+                })[0];
+
+                $scope.changed = true;
             }
         };
     }]);
