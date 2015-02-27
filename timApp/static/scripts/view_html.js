@@ -1,4 +1,4 @@
-var MathJax, $, angular, modules, version, refererPath, docId, docName, canEdit, startIndex, users;
+var MathJax, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
@@ -46,7 +46,7 @@ timApp.controller("ViewCtrl", [
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
-        sc.canEdit = canEdit;
+        sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
@@ -122,6 +122,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleNoteEditor = function ($par, options) {
+            if (!sc.rights.can_comment) {
+                return;
+            }
             var url,
                 data;
             if (options.isNew) {
@@ -304,13 +307,18 @@ timApp.controller("ViewCtrl", [
         // Note-related functions
 
         sc.toggleActionButtons = function ($par, toggle1, toggle2, coords) {
+            if (!sc.rights.editable && !sc.rights.can_comment) {
+                return;
+            }
             if (toggle2) {
                 // Clicked twice successively
                 $par.addClass("selected");
                 var $actionDiv = $("<div>", {class: 'actionButtons'});
                 var button_width = $par.outerWidth() / 4;
-                $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
-                if (sc.canEdit) {
+                if (sc.rights.can_comment){
+                    $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
+                }
+                if (sc.rights.editable) {
                     $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
                     $actionDiv.append($("<button>", {
                         class: PAR_ADD_BUTTON_CLASS + ' above',
@@ -386,6 +394,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getReadPars = function () {
+            if (!sc.rights.can_mark_as_read) {
+                return;
+            }
             var rn = "?_=" + Date.now();
             http.get('/read/' + sc.docId + rn).success(function (data, status, headers, config) {
                 var readCount = data.length;

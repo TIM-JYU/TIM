@@ -62,12 +62,12 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     if teacher:
         verifyOwnership(doc_id)
 
-    if not loggedIn():
-        session['came_from'] = request.url
-        return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
-
     if not hasViewAccess(doc_id):
-        abort(403)
+        if not loggedIn():
+            session['came_from'] = request.url
+            return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
+        else:
+            abort(403)
 
     version = timdb.documents.getNewestVersion(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
@@ -99,7 +99,6 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
-    editable = hasEditAccess(doc_id)
     return render_template(template_name,
                            docID=doc['id'],
                            docName=doc['name'],
@@ -113,4 +112,8 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            custom_css_files=custom_css_files,
                            custom_css=custom_css,
                            start_index=start_index,
-                           editable=editable)
+                           rights={'editable': hasEditAccess(doc_id),
+                                   'can_mark_as_read': hasReadMarkingRight(doc_id),
+                                   'can_comment': hasCommentRight(doc_id),
+                                   'browse_own_answers': loggedIn()
+                                   })

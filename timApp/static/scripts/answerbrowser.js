@@ -56,6 +56,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
+                    if (!$scope.$parent.rights.browse_own_answers) {
+                        return;
+                    }
                     $scope.loading++;
                     $http.get('/answers/' + $scope.taskId + '/' + $scope.user.name)
                         .success(function (data, status, headers, config) {
