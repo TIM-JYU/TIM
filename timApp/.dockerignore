@@ -5,6 +5,7 @@ routes/
 static/
 templates/
 tim_files/
+tim_dev/
 test_files/
 timdb/
 *.py
@@ -12,3 +13,6 @@ timdb/
 *.sh
 *.md
 *.sql
+*.log
+*.orig
+*.markdown
