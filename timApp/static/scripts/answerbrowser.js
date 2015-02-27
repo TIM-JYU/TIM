@@ -103,7 +103,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         $scope.isVisible = true;
                         $scope.loadIfChanged();
                     },
-                    exit: function (direction) {
+                    exited: function (direction) {
                         $scope.isVisible = false;
                     },
                     element: $element[0]
