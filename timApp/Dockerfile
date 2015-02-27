@@ -45,7 +45,8 @@ run pip3 install requests --upgrade
 
 # Remove pip. It's no longer needed, we get slightly smaller image and less programs
 # for a potential attacker to use.
-run apt-get -y --purge remove python3-pip
+# UPDATE: Don't remove pip; it causes problems with running tests.
+# run apt-get -y --purge remove python3-pip
 
 # Set name and email for git.
 run git config --global user.email "agent@docker.com"
