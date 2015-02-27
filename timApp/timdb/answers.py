@@ -51,29 +51,23 @@ class Answers(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def getUsersForTask(self, task_id: 'str') -> 'list(dict)':
+    def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
         cursor = self.db.cursor()
+        placeholder = '?'
+        placeholders = ', '.join(placeholder for unused in task_ids)
         cursor.execute(
             """
                 SELECT id, name, real_name FROM User
                 WHERE id IN (
                     SELECT user_id FROM UserAnswer
                     WHERE answer_id IN (
-                        SELECT id FROM Answer WHERE task_id = ?
+                        SELECT id FROM Answer WHERE task_id IN (%s)
                     )
                 )
-            """, [task_id])
+                ORDER BY real_name ASC
+            """ % placeholders, task_ids)
             
         return self.resultAsDictionary(cursor)
-
-    @contract
-    def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
-        users = []
-        for task_id in task_ids:
-            for user in self.getUsersForTask(task_id):
-               if not user in users:
-                   users.append(user)
-        return users
 
     @contract
     def getAnswersForGroup(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
