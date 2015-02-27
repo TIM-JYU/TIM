@@ -57,13 +57,11 @@ class Answers(TimDbBase):
         placeholders = ', '.join(placeholder for unused in task_ids)
         cursor.execute(
             """
-                SELECT id, name, real_name FROM User
-                WHERE id IN (
-                    SELECT user_id FROM UserAnswer
-                    WHERE answer_id IN (
-                        SELECT id FROM Answer WHERE task_id IN (%s)
-                    )
-                )
+                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count FROM User
+                JOIN UserAnswer ON User.id = UserAnswer.user_id
+                JOIN Answer ON Answer.id = UserAnswer.answer_id
+                WHERE task_id IN (%s)
+                GROUP BY User.id
                 ORDER BY real_name ASC
             """ % placeholders, task_ids)
             
