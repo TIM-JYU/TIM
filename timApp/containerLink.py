@@ -18,12 +18,12 @@ TIM_URL = ""
 # must be made through a special bridge, which for docker containers is
 # by default 172.17.42.1
 PLUGINS = {
-    "csPlugin":      {"host": "http://tim-beta.it.jyu.fi/cs/"},
-    "taunoPlugin":   {"host": "http://tim-beta.it.jyu.fi/cs/tauno/"},
-    "csPluginRikki": {"host": "http://tim-beta.it.jyu.fi/cs/rikki/"},  # demonstrates a broken plugin
-    "showCode":      {"host": "http://tim-beta.it.jyu.fi/svn/"},
-    "showImage":     {"host": "http://tim-beta.it.jyu.fi/svn/image/"},
-    "showVideo":     {"host": "http://tim-beta.it.jyu.fi/svn/video/"},
+    "csPlugin":      {"host": "http://172.17.42.1:56000/cs/"},
+    "taunoPlugin":   {"host": "http://172.17.42.1:56000/cs/tauno/"},
+    "csPluginRikki": {"host": "http://172.17.42.1:56000/cs/rikki/"},  # demonstrates a broken plugin
+    "showCode":      {"host": "http://172.17.42.1:55000/svn/"},
+    "showImage":     {"host": "http://172.17.42.1:55000/svn/image/"},
+    "showVideo":     {"host": "http://172.17.42.1:55000/svn/video/"},
     "mcq":           {"host": "http://172.17.42.1:57000/"},
     "mmcq":          {"host": "http://172.17.42.1:58000/"},
     "shortNote":     {"host": "http://172.17.42.1:59000/"},
