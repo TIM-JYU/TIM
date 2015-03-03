@@ -279,3 +279,23 @@ def finishLogin(ready=True):
         session.pop('anchor', '')
         session.pop('came_from', '/')
     return redirect(came_from + anchor)
+
+
+@login_page.route("/quickLogin/<username>")
+def quickLogin(username):
+    """A debug helping method for logging in as another user.
+       For developer use only.
+    """
+    if getCurrentUserName() not in ['mikkalle', 'tojukarp', 'vesal']:
+        abort(403)
+    timdb = getTimDb()
+    user = timdb.users.getUserByName(username)
+    if user is None:
+        abort(404, 'User not found.')
+    user = timdb.users.getUser(user)
+    session['user_id'] = user['id']
+    session['user_name'] = user['name']
+    session['real_name'] = user['real_name']
+    session['email'] = user['email']
+    flash("Logged in as: {}".format(username))
+    return redirect(url_for('indexPage'))
