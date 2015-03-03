@@ -378,5 +378,89 @@ class DocTest(unittest.TestCase):
         versions = self.db.documents.getDocumentVersions(latest_doc.id)
         self.assertEqual(versions[0]['hash'], newest_hash)
 
+    def test_par_mappings(self):
+        doc, _ = self.create_test_document(5)
+        par_index = 3
+
+        result = self.get_mapping(doc, par_index)
+
+        self.assertEqual(len(result), 0)
+
+        self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
+        _, doc2 = self.db.documents.modifyMarkDownBlock(doc, par_index, 'edited')
+
+        result = self.get_mapping(doc, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc2.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        _, doc3 = self.db.documents.modifyMarkDownBlock(doc2, par_index, 'edited2')
+
+        result = self.get_mapping(doc, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc2.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        result = self.get_mapping(doc2, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc3.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        # This should trigger the optimization of mappings
+        readings = self.db.readings.getReadings(0, doc3.id, doc3.hash)
+
+        result = self.get_mapping(doc, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc3.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        doc4 = self.db.documents.updateDocument(doc3, 'edited2')
+        readings = self.db.readings.getReadings(0, doc4.id, doc4.hash)
+        result = self.get_mapping(doc3, par_index)
+        self.check_list_dict_contents(result, 'new_index', 0)
+        self.check_list_dict_contents(result, 'new_ver', doc4.hash)
+        self.check_list_dict_contents(result, 'modified', 'False')
+
+        doc5 = self.db.documents.updateDocument(doc4, 'öö')
+
+        readings = self.db.readings.getReadings(0, doc5.id, doc5.hash)
+        result = self.get_mapping(doc4, par_index)
+
+        # Document changed so much that there is no mapping for paragraph 3 from version 4 to 5
+        self.assertEqual(len(result), 0)
+
+        # First version mapping is not yet fully optimized:
+        result = self.get_mapping(doc, par_index)
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc3.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        result = self.db.readings.getParMapping(doc.id, doc.hash, doc5.hash, par_index)
+
+        # Should be None because the paragraph got lost at step 4 -> 5
+        self.assertEqual(result, None)
+
+        # But the mapping should be optimized by now (1 -> 4)
+        result = self.get_mapping(doc, par_index)
+        self.check_list_dict_contents(result, 'new_index', 0)
+        self.check_list_dict_contents(result, 'new_ver', doc4.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+
+    def get_mapping(self, doc, par_index):
+        cursor = self.db.readings.db.cursor()
+        cursor.execute(
+                """
+                select new_ver, new_index, modified, doc_ver
+                from ParMappings
+                where doc_id = ? and doc_ver = ? and par_index = ?
+                and new_ver is not null and new_index is not null
+                """, [doc.id, doc.hash, par_index])
+        return self.db.readings.resultAsDictionary(cursor)
+
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
