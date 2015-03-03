@@ -85,5 +85,8 @@ run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/ss
 
 run apt-get autoremove -y
 
+# Configure timezone and locale
+run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+
 # Default startup command
 cmd cd /service/timApp && source initenv.sh && python3 launch.py
