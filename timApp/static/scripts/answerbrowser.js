@@ -54,6 +54,11 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.changeAnswer();
                 };
 
+                $scope.setNewest = function () {
+                    $scope.selectedAnswer = $scope.answers[0];
+                    $scope.changeAnswer();
+                };
+
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
                     if (!$scope.$parent.rights.browse_own_answers) {

@@ -8,7 +8,7 @@
             ng-options="((answers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in answers track by answer.id"
             ng-change="changeAnswer()"></select>
     <button ng-click="next()">&rarr;</button>
-    {{ answers.length - answers.indexOf(selectedAnswer) }}/{{ answers.length }}
+    {{ answers.length - answers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ answers.length }}</a>
     </span>
     <span ng-show="answers.length == 0 && $parent.users.length > 1">(no answers)</span>
     <img style="display: inline" src="/static/images/loading.gif" ng-show="loading">
