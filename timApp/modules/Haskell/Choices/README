@@ -1,3 +1,8 @@
+# GIT
+
+Tämä plugin on nykyisin git-subtree. Jos haluatte päivittää sitä niin
+komento on `git subtree pull --prefix=timApp/modules/Haskell/Choices --squash git@yousource.it.jyu.fi:ties343-funktio-ohjelmointi/MultipleChoicePlugin.git master`
+
 # Prototyyppi monivalintapluginista
 
 ## Tila
