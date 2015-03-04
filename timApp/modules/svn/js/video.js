@@ -1,5 +1,7 @@
 ﻿var videoApp = angular.module('videoApp', ['ngSanitize']);
 videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
+videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
+videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('listvideo'); }]);
 
 
 videoApp.nr = 0;
@@ -29,14 +31,106 @@ videoApp.getHeading = function(a,key,$scope,deftype) {
 	return html;
 } 
 
+videoApp.muunna = function(value) {
+  if ( !value ) return value;
+//  var s = "0 0 0 " + value.replace(/,/g," ").replace(/\//g," ").replace(/;/g," ").replace(/\./g," ").replace(/:/g," ");
+//  var s = "0 0 0 " + value.replace(/s/g,"").value.replace(/[,\/;:\.hm]/g," ");
+  var s = "0 0 0 " + value.replace(/s/g,"").replace(/[,\/;:\.hm]/g," "); // loppu s unohdetaan muodosta 1h3m2s
+  s = s.trim();
+  var sc = s.split(" ");
+  var n = sc.length;
+  var h = sc[n-3];
+  var m = sc[n-2];
+  var s = sc[n-1];
+  return  h*3600.0 + m*60.0 + s*1.0;
+}
+
+
+videoApp.directiveTemplateVideo = function(t) {
+   if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv">' +
+				  '<p>Here comes header</p>' +
+				  '<p>' +
+                  '{{stem}} ' + 
+                  '<a ng-if="videoname" class="videoname" ng-click="showVideo()">' +
+                  '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
+                  '{{videoname}} {{duration}} {{span}}</a>' +
+                  '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
+                  '{{doctext}}</a>'+
+                  '</p>'+
+				  '<div ><p></p></div>' + 
+				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
+				  '<p class="footer">Here comes footer</p>'+
+				  '</div>';
+   if ( t == "listvideo" ) return '<div class="listVideoRunDiv">' +
+				  '<p>Here comes header</p>' +
+				  '<ul><li>{{stem}} '+
+                  '<a ng-if="videoname" class="videoname" ng-click="showVideo()">'+
+                  '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
+                  '{{videoname}}{{startt}} {{duration}} {{span}}</a>'+
+                  '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
+                  '{{doctext}}</a>'+
+                  '</li></ul>' +
+				  '<div ><p></p></div>' + 
+				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
+				  '<p class="footer">Here comes footer</p>'+
+				  '</div>';
+   return '<div class="videoRunDiv">' +
+				  '<p>Here comes header</p>' +
+				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+				  '<div ><p></p></div>' + 
+				  //'<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
+				  '<img src="/csimages/video.png" ng-if="!videoOn" ng-click="showVideo()" width="200" alt="Click here to show the video" />' +
+                  '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docoicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
+                  '{{doctext}}</a>'+
+				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
+				  '<p class="footer">Here comes footer</p>'+
+				  '</div>';
+}
+
+videoApp.time2String = function(t) {
+  if ( !t ) return "";
+  h = Math.floor(t / 3600);
+  t = (t - h*3600);
+  m = Math.floor(t/60);
+  s = (t - m*60);
+  if ( !h ) h = ""; else h =h+"h";
+  if ( !h && !m ) m = ""; else m =m+"m";
+  s = s+"s";
+  return h + m + s;
+}
+
+videoApp.set = function(scope,attrs,name,def) {
+    scope[name] = def;
+    if ( attrs && attrs[name] ) scope[name] = attrs[name];
+    if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
+    return scope[name];
+}
+
+
 videoApp.directiveFunction = function(t) {
 	return {
 		link: function (scope, element, attrs) {
-			scope.file = attrs.file;
-			scope.width = attrs.width;
-			scope.height = attrs.height;
-			scope.start = attrs.start;
-			scope.end = attrs.end;
+            videoApp.set(scope,attrs,"file");
+            videoApp.set(scope,attrs,"width");
+            videoApp.set(scope,attrs,"height");
+            videoApp.set(scope,attrs,"videoname");
+            videoApp.set(scope,attrs,"doctext");
+            videoApp.set(scope,attrs,"doclink");
+            videoApp.set(scope,attrs,"hidetext","hide video");
+            videoApp.set(scope,attrs,"videoicon","/csimages/video_small.png");
+            videoApp.set(scope,attrs,"docicon","/csimages/book.png");
+			videoApp.set(scope,attrs,"open",false);
+            if ( scope.videoicon == "False" ) scope.videoicon = "";
+            if ( scope.docicon == "False" ) scope.docicon = "";
+			scope.start = videoApp.muunna(attrs.start);
+			scope.end = videoApp.muunna(attrs.end);
+            scope.duration = videoApp.time2String(scope.end - scope.start);
+            if ( scope.duration != "" ) scope.duration = "(" + scope.duration + ") ";
+            scope.limits = "(" + videoApp.time2String(scope.start) + "-" + videoApp.time2String(scope.end) + ")";
+            if ( scope.limits == "(-)" ) scope.limits = "";
+            scope.span = "";
+            scope.startt = videoApp.time2String(scope.start);
+            if ( scope.startt ) scope.startt = ", " + videoApp.time2String(scope.start);
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
 			scope.videoHtml = element[0].childNodes[2]
@@ -44,6 +138,7 @@ videoApp.directiveFunction = function(t) {
 			element[0].childNodes[0].outerHTML = head;
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="footer"');
+            if ( scope.open ) scope.showVideo();
 		},		
 		scope: {},				
 		controller: videoApp.Controller,
@@ -55,15 +150,7 @@ videoApp.directiveFunction = function(t) {
 		*/
 		transclude: true,
 		replace: 'true',
-		template: '<div class="videoRunDiv">' +
-				  '<p>Here comes header</p>' +
-				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-				  '<div ><p></p></div>' + 
-				  //'<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
-				  '<img src="http://www.reiwired.com/media/uploads/thumbnails/video-default.png" ng-if="!videoOn" ng-click="showVideo()" width="200" alt="Click here to show the video" />' +
-				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">hide video</a></p>'+
-				  '<p class="footer">Here comes footer</p>'+
-				  '</div>'
+        template: videoApp.directiveTemplateVideo(t),
 		// templateUrl: 'csTempl.html'
 	}; 
 } 
@@ -91,10 +178,14 @@ videoApp.Controller = function($scope,$http,$transclude) {
 	$scope.hideVideo = function() {
 		$scope.videoOn = false;
 		$scope.videoHtml.innerHTML = "<p></p>";
+        $scope.span = "";
+        return true;
 	}
 	
 	$scope.showVideo = function() {
+        if ( $scope.videoOn ) return $scope.hideVideo(); 
 		videoApp.nr++;
+        $scope.span = $scope.limits;
 		var vid = 'vid'+videoApp.nr;
 		var w = videoApp.ifIs($scope.width,"width");
 		var h = videoApp.ifIs($scope.height,"height");
@@ -116,10 +207,11 @@ videoApp.Controller = function($scope,$http,$transclude) {
 			this.currentTime = $scope.start || 0;
 			}, false);
 			
+        $scope.watchEnd = $scope.end;    
 		$scope.myvid.addEventListener('timeupdate', function() {
-			if ( this.currentTime > $scope.end ) {
+			if ( this.currentTime > $scope.watchEnd ) {
 				this.pause();
-				$scope.end = 1000000;
+				$scope.watchEnd = 1000000;
 			}
 			}, false);
 		/*

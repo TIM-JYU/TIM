@@ -1,4 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-30     Camera.ZoomToLevel();
-31     Level.Background.Color = Color.Black;
-```

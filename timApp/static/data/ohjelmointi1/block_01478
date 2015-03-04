@@ -1,3 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Mouse.ListenOn(pallo, MouseButton.Left, ButtonState.Down, PoimiPallo, null);
-```

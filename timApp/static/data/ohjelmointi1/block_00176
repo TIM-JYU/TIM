@@ -1,4 +1,0 @@
-Huomaa, että fysiikkaolion Y-ominaisuuden asettamisen (*set*) lisäksi
-voimme myös lukea tai pyytää (*get*) kyseisen ominaisuuden arvon. Yllä
-teemme sen kirjoittamalla yksinkertaisesti sijoitusoperaattorin oikealle
-puolelle p1.Y.

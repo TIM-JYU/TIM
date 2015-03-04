@@ -1,9 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-36 /// <summary>
-37 /// Aliohjelma piirtää lumiukon
-38 /// annettuun paikkaan.
-39 /// </summary>
-40 /// <param name="g">Peliluokka</param>
-41 /// <param name="x">Lumiukon alimman pallon x-koordinaatti.</param>
-42 /// <param name="y">Lumiukon alimman pallon y-koordinaatti.</param>
-```

@@ -17,10 +17,29 @@ class QueryClass:
         self.jso = None
 
 
+def check_key(query, key):
+    # return key   
+    key2 = "-" + key;
+    if key in query.query: return key
+    if key2 in query.query: return key2
+    if key in query.get_query: return key
+    if key2 in query.get_query: return key2
+    if not query.jso: return key
+    if "input" in query.jso and "markup" in query.jso["input"]:
+       if key in query.jso["input"]["markup"]: return key
+       if key2 in query.jso["input"]["markup"]: return key2
+    if "markup" not in query.jso: return key
+    if key in query.jso["markup"]: key
+    if key2 in query.jso["markup"]: key2
+    return key
+
+
 def get_param(query, key, default):
-    dvalue = default;
+    key = check_key(query,key)
+    dvalue = default
     if key in query.query: dvalue = query.query[key][0]
-    if dvalue == 'undefined': dvalue = default
+    if dvalue == 'undefined': 
+        dvalue = default
 
     if key not in query.get_query:
         if query.jso is None: return dvalue
@@ -32,11 +51,33 @@ def get_param(query, key, default):
         if key in query.jso["markup"]: return query.jso["markup"][key]
         return dvalue
     value = query.get_query[key][0]
-    if value == 'undefined': return default
+    if value == 'undefined': return dvalue
     return value
 
 
+def handle_by(byc):
+    if not byc: return byc
+    bycs = byc.split("\n")
+    if len(bycs) > 0 and bycs[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
+        del bycs[0]
+        byc = "\n".join(bycs)
+    n = len(byc)
+    if n > 0 and byc[n - 1] == "\n": byc = byc[0:n - 1]
+    return byc
+
+
+def get_param_by(query, key, default):
+    byc = get_param(query, key, default)
+    # print("KEY: ", key, " PYC: ", byc, "|||")
+    if not byc: byc = default
+    if not byc: return byc
+    byc = handle_by(byc)
+    # print("KEY: ", key, " PYC: ", byc, "|||")
+    return byc
+
+
 def get_param_del(query, key, default):
+    key = check_key(query,key)
     if key not in query.query:
         if query.jso is None: return default
         if "markup" not in query.jso: return default
@@ -128,6 +169,7 @@ def get_chache_keys():
     for key in cache.keys(): s += key + "\n"
     return s
 
+
 def get_url_lines(url):
     global cache
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
@@ -135,7 +177,7 @@ def get_url_lines(url):
 
     try:
         req = urlopen(url)
-        ftype = req.headers['content-type']
+        # ftype = req.headers['content-type']
         lines = req.readlines()
     except:
         return False
@@ -158,6 +200,44 @@ def get_url_lines(url):
     return lines
 
 
+def get_url_lines_as_string(url):
+    global cache
+    # print("========= CACHE KEYS ==========\n", get_chache_keys())
+    cachename = "lines_" + url
+    # print(cachename + "\n")
+    #print(cache) # chache does not work in forkingMix
+    if cachename in cache:
+        # print("from cache\n")
+        return cache[cachename]
+
+    try:
+        req = urlopen(url)
+        # ftype = req.headers['content-type']
+        lines = req.readlines()
+    except:
+        return False
+    # filecontent = nltk.clean_html(html)
+
+    n = len(lines)
+    result = ""
+
+    for i in range(0, n):
+        line = lines[i]
+        try:
+            line = line.decode('utf-8-sig')
+        except:
+            try:
+                line = line.decode(encoding='iso8859_15')
+            except:
+                line = str(line)
+        result += line.replace("\r", "")
+
+    result = result.strip("\n")
+    cache[cachename] = result
+    # print(cache)
+    return result
+
+
 class FileParams:
     def __init__(self, query, nr, url):
         self.url = get_param(query, "file" + nr, "")
@@ -174,7 +254,42 @@ class FileParams:
         self.lastn = int(get_param(query, "lastn" + nr, "1000000"))
         self.include = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
-        self.by = get_param(query, "by" + nr, "")
+        self.by = get_param_by(query, "by" + nr, "")
+        self.prorgam = get_param_by(query, "program" + nr, "")
+        self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
+
+        self.reps = []
+
+        repNr = ""
+        if nr: repNr = nr + "."
+
+        for i in range(1, 10):
+            rep = do_matcher(
+                get_param(query, "replace" + repNr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
+            if not rep: break
+            byc = get_param_by(query, "byCode" + repNr + str(i), "")
+            self.reps.append({"by": rep, "bc": byc})
+
+        if self.breakCount:
+            self.breaks = []
+            self.breaksBegin = []
+            self.breaksBeforeBegin = []
+            self.breaksBefore = []
+            self.breaksAfter = []
+            defAfter = -1
+            for i in range(0, self.breakCount+1):
+                brkdef = ""
+                if i >= self.breakCount:
+                    brkdef = "!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    defAfter = 0
+                self.breaksBegin.append(do_matcher(get_param(query, "breakBegin" + repNr + str(i), "").replace("\\\\", "\\")))
+                self.breaks.append(do_matcher(get_param(query, "break" + repNr + str(i), brkdef).replace("\\\\", "\\")))
+                self.breaksBeforeBegin.append(int(get_param(query, "breakBeforeBegin" + repNr + str(i), 0)))
+                self.breaksBefore.append(int(get_param(query, "breakBefore" + repNr + str(i), 0)))
+                self.breaksAfter.append(int(get_param(query, "breakAfter" + repNr + str(i), defAfter)))
+                if defAfter < 0: defAfter = 0
+                else: defAfter = -1
+
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
@@ -189,17 +304,34 @@ class FileParams:
         if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
     def get_file(self, escape_html=False):
+        if self.prorgam:
+            # print(self.prorgam)
+            return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
         if not self.url:
             # print("SELF.BY:", self.by.encode());
             if not self.by: return ""
-            return self.by.replace("\\n", "\n")
+            return self.by # self.by.replace("\\n", "\n")
 
         lines = get_url_lines(self.url)
         if not lines: return "File not found " + self.url
 
         return self.scan_needed_lines(lines, escape_html)
 
-    def scan_needed_lines(self, lines, escape_html=False):
+    def get_raw_lines(self, escape_html=False):
+        if self.prorgam:
+            # print(self.prorgam)
+            return self.prorgam.split("\n")
+        if not self.url:
+            # print("SELF.BY:", self.by.encode());
+            if not self.by: return [];
+            return [] # self.by.replace("\\n", "\n")
+
+        lines = get_url_lines(self.url)
+        if not lines: return ["File not found " + self.url];
+
+        return lines
+
+    def scan_needed_range(self, lines):
         n = len(lines)
         n1 = scan_lines(lines, n, 0, self.start, 1)
         n2 = n1
@@ -215,7 +347,10 @@ class FileParams:
             n2 = n - 1
         n2 += self.endn
         if n2 >= n: n2 = n - 1
+        return n1, n2
 
+    def scan_needed_lines(self, lines, escape_html=False):
+        (n1,n2) = self.scan_needed_range(lines)
         ni = 0
 
         result = ""
@@ -231,7 +366,10 @@ class FileParams:
             line = lines[i]
             # if enc or True: line = line.decode('UTF8')
             # else: line = str(line)
-            if check(self.replace, line):  line = replace_by  # + "\n"
+            if check(self.replace, line): line = replace_by  # + "\n"
+            for r in self.reps:
+                if check(r["by"], line): line = r["bc"]  # + "\n"
+
             if escape_html: line = html.escape(line)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
@@ -242,34 +380,141 @@ class FileParams:
         return result
 
 
+    def join_lines(self, lines, n1, n2, escape_html):
+        result = ""
+        n = len(lines)
+        if n1 < 0: n1 = 0
+        if n2 >= n: n2 = n -1
+        for i in range(n1, n2 + 1):
+            line = lines[i]
+            #for r in self.reps:
+            #    if check(r["by"], line): line = r["bc"]  # + "\n"
+
+            if escape_html: line = html.escape(line)
+            ln = self.linefmt.format(i + 1)
+            result += ln + line + "\n"
+            if i + 1 >= self.lastn: break
+
+        return result
+
+
+
     def get_include(self, escapeHTML=False):
-        if not self.include:  return ""
+        if not self.include: return ""
         data = self.include.replace("\\n", "\n")
         if escapeHTML: data = html.escape(data)
         return data
 
 
+    def scan_line_parts_range(self, part, n0, lines):
+        n = len(lines)
+        n1 = scan_lines(lines, n, n0+self.breaksBeforeBegin[part], self.breaksBegin[part], 1)
+        n2 = n1
+        # n1 = scan_lines(lines, n, n1, self.start_scan, self.start_scan_dir)
+        n1 += self.breaksBefore[part]
+        if n1 < 0: n1 = 0
+        if n2 < n1: n2 = n1  # if n1 went forward
+
+        if self.breaks[part]:
+            n2 = scan_lines(lines, n, n2, self.breaks[part], 1)
+        # n2 = scan_lines(lines, n, n2, self.end_scan, self.end_scan_dir)
+        else:
+            n2 = n - 1
+        n2 += self.breaksAfter[part]
+        if n2 >= n: n2 = n - 1
+        return n1, n2
+
 def get_params(self):
     result = QueryClass()
     result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+    result.query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
     return result
 
 
 def get_file_to_output(query, show_html):
-    s = ""
+    try:
+        p0 = FileParams(query, "", "")
+        # if p0.url == "":
+        s = p0.get_file(show_html)
+        # if not s:
+        # return "Must give file= -parameter"
+        s += p0.get_include(show_html)
+        u = p0.url
+        for i in range(1, 10):
+            p = FileParams(query, "." + str(i), u)
+            s += p.get_file(show_html)
+            s += p.get_include(show_html)
+            if p.url: u = p.url
+        return s
+    except Exception as e:
+        return str(e)
+
+def get_file_parts_to_output(query, show_html):
     p0 = FileParams(query, "", "")
-    # if p0.url == "":
-    s = p0.get_file(show_html)
-    if not s:
-        return "Must give file= -parameter"
-    s += p0.get_include(show_html)
-    u = p0.url
-    for i in range(1, 10):
-        p = FileParams(query, str(i), u)
-        s += p.get_file(show_html)
-        s += p.get_include(show_html)
-        if p.url: u = p.url
+    parts = [];
+    n2 = -1
+    lines = p0.get_raw_lines(show_html)
+    j = 0
+    part0 = "";
+    s = get_param(query,"byCode","")
+    if s: part0 = s
+    s = usercode = get_json_param(query.jso, "input", "usercode", None)
+    if s: part0 = s
+    p0.reps.insert(0,{"by": "", "bc": part0});
+    for i in range(0,p0.breakCount+1):
+        n1, n2 = p0.scan_line_parts_range(i,n2+1,lines)
+        part = p0.join_lines(lines,n1,n2,show_html)
+        if i % 2 != 0:
+            if j < len(p0.reps) and p0.reps[j] and p0.reps[j]["bc"]:
+                part = p0.reps[j]["bc"]
+            #else:
+            #    p0.reps[j]["bc"] = part
+            j += 1
+        parts.append(part)
+    return parts
+
+
+def join_file_parts(p0,parts):
+    s = ""
+    for i in range(0,len(parts)):
+        s = s + parts[i];
+
     return s
+
+
+def multi_post_params(self):
+    content_length = int(self.headers['Content-Length'])
+    f = self.rfile.read(content_length)
+    # print(f)
+    # print(type(f))
+    u = f.decode("UTF8")
+    jsos = json.loads(u)
+    results = []
+    for jso in jsos:
+        results.append(get_query_from_json(jso))
+    return results
+
+
+def get_query_from_json(jso):
+    # print(jso.repr())
+    # print("====================================================")
+    result = QueryClass()
+    # print("result.query ================================== ")
+    # pp.pprint(result.query)
+    # print jso
+    result.jso = jso
+    for field in list(result.jso.keys()):
+        # print field + ":" + jso[field]
+        if field == "markup":
+            for f in list(result.jso[field].keys()):
+                if f == "byCode":
+                    result.query[f] = [handle_by(str(result.jso[field][f]))]
+                else:
+                    result.query[f] = [str(result.jso[field][f])]
+        else:
+            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
+    # print(jso)
+    return result
 
 
 def post_params(self):
@@ -277,8 +522,8 @@ def post_params(self):
     # print self
     # pprint(self.__dict__,indent=2)
     # print dir(self.request)
-    print(self.path)
-    print(self.headers)
+    # print(self.path)
+    # print(self.headers)
     content_length = int(self.headers['Content-Length'])
     content_type = "application/json"
     if 'Content-Type' in self.headers: content_type = self.headers['Content-Type']
@@ -294,42 +539,31 @@ def post_params(self):
 
     f = self.rfile.read(content_length)
     print(f)
-    print(type(f))
+    # print(type(f))
     u = f.decode("UTF8")
     # print(u)
     # print(type(u))
 
     result = QueryClass()
     result.query = {}  # parse_qs(urlparse(self.path).query, keep_blank_values=True)
-    print("result.query ================================== ")
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(result.query)
+    # print("result.query ================================== ")
+    # pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(result.query)
 
     if len(u) == 0: return result
     if content_type.find("json") < 0:  # ei JSON
-        print("POSTPARAMS============")
+        # print("POSTPARAMS============")
         q = parse_qs(urlparse('k/?' + u).query, keep_blank_values=True)
         for field in list(q.keys()):
-            print("FIELD=", field)
+            # print("FIELD=", field)
             result.query[field] = [q[field][0]]
-        return result
+    else:
+        jso = json.loads(u)
+        result = get_query_from_json(jso)
 
-    jso = json.loads(u)
-    # print(jso.repr())
-    print("====================================================")
-    result = QueryClass()
-    print("result.query ================================== ")
-    pp.pprint(result.query)
-    # print jso
-    result.jso = jso
-    for field in list(result.jso.keys()):
-        # print field + ":" + jso[field]
-        if field == "markup":
-            for f in list(result.jso[field].keys()):
-                result.query[f] = [str(result.jso[field][f])]
-        else:
-            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
-    # print(jso)
+    result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+    for f in result.get_query:
+        result.query[f] = [result.get_query[f][0]]
     return result
 
 
@@ -365,7 +599,24 @@ def query_params_to_attribute(query, leave_away):
 def query_params_to_map(query):
     result = {}
     for field in query.keys():
-        result[field] = query[field][0]
+        if not field.startswith("-"): result[field] = query[field][0]
+
+    return result
+
+
+def query_params_to_map_check_parts(query):
+    result = query_params_to_map(query.query)
+
+    # Replace all byCode by fileparts if exists
+    if int(get_param(query,"breakCount",0)) > 0:
+        parts = get_file_parts_to_output(query,False)
+        if not "byCode" in result and parts[1]:  result["byCode"] = parts[1]
+        j = 1
+        for i in range(3,len(parts)):
+            if i % 2 != 0:
+                byn = "byCode" + str(j)
+                if not byn in result and parts[i]:  result[byn] = parts[i]
+                j += 1
     return result
 
 
@@ -404,7 +655,7 @@ def string_to_string_replace_url(line, what_to_replace, query):
     params = urllib.parse.urlencode(qmap)
     line = line.replace(what_to_replace, params)
     height = get_param(query, "height", "100%")
-    line = line.replace('##HEIGHT##', height)
+    line = line.replace('##HEIGHT##', str(height))
     return line
 
 
@@ -425,11 +676,11 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     if "##USERCODE##" in line: leave_away = "byCode"
     params = query_params_to_attribute(query.query, leave_away)
     line = line.replace(what_to_replace, params)
-    by = get_param(query, "byCode", "")
-    by = get_param(query, "usercode", by)
-    print("BY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", by.encode())
+    by = get_param_by(query, "byCode", "")
+    by = get_param_by(query, "usercode", by)
+    # print("BY XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", by.encode())
     line = line.replace("##USERCODE##", by)
-    print(line.encode())
+    # print(line.encode())
     return line
 
 
@@ -479,7 +730,7 @@ def get_heading(query, key, def_elem):
 def get_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
     stem = allow(get_param(query, "stem", None))
-    if stem:  result += '<p class="stem" >' + stem + '</p>\n'
+    if stem: result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
     result += get_heading(query, "footer", 'p class="footer"')
     return result
@@ -488,3 +739,50 @@ def get_surrounding_headers(query, inside):
 def get_clean_param(query, key, default):
     s = get_param(query, key, default)
     return clean(s)
+
+
+def do_headers(self, content_type):
+    self.send_response(200)
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
+    self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
+    self.send_header('Content-type', content_type)
+    self.end_headers()
+
+    
+# Etsii paketin ja luokan nimen tiedostosta    
+def find_java_package(s):
+    p = ""
+    c = ""
+    r = re.search("package\s*([\s\.a-zA-Z0-9_]+)", s, flags=re.M)
+    if r: p = re.sub(r"\s*", "", r.group(1))
+    r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    if r: c = r.group(1)
+    else:
+        r = re.search("public\s*interface\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+        if r: c = r.group(1)
+
+    return p, c
+
+
+#Palauttaa intin joka löytyy jonon alusta    
+def getint(s):
+    i = 0
+    s = s.strip(" ")
+    while i < len(s):
+        if "0123456789".find(s[i:i+1]) < 0:
+            if i == 0:
+                return 0
+            return int(s[0:i])
+        i += 1
+    return int(s)
+
+
+import hashlib
+import binascii
+
+
+# see: https://docs.python.org/3/library/hashlib.html
+def hash_user_dir(user_id):
+    dk = hashlib.pbkdf2_hmac('sha256', str.encode(user_id), b"tim", 100)
+    return bytes.decode(binascii.hexlify(dk))

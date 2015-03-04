@@ -1,4 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-StringBuilder s1 = new StringBuilder("eka");
-StringBuilder s2 = new StringBuilder("eka");
-```

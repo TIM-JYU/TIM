@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Difference between revisions{% endblock %}
+{% block content %}
+    <pre class="ansi_fore ansi_back">
+        {{ diff_html|safe }}
+    </pre>
+{% endblock %}

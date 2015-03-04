@@ -1,7 +1,0 @@
-Jokaisessa C\#-ohjelmassa on vähintään yksi luokka, mutta luokkia voi
-olla enemmänkin. Luokan, jonka sisään ohjelma kirjoitetaan, on hyvä olla
-samanniminen kuin tiedoston nimi. Jos tiedoston nimi on HelloWorld.cs,
-on suositeltavaa, että luokan nimi on myös HelloWorld, kuten meidän
-esimerkissämme. Tässä vaiheessa ei kuitenkaan vielä kannata liikaa
-vaivata päätänsä sillä, mikä luokka oikeastaan on, se selviää tarkemmin
-myöhemmin.

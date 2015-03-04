@@ -1,4 +1,0 @@
-Kun decimal-tyyppinen muuttuja alustetaan jollain luvulla, tulee luvun
-perään (ennen puolipistettä) laittaa m (tai M)-merkki. Samoin
-float-tyyppisten muuttujien alustuksessa perään laitetaan f (tai
-F)-merkki.

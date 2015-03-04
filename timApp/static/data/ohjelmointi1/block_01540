@@ -1,5 +1,0 @@
-Ennen kuin voimme piirtää kolmiot, meidän on selvitettävä, mitkä ovat
-kolmion sivujen pituudet. Tasasivuisen kolmion kaikki sivut ovat yhtä
-pitkiä, joten yhden sivun pituuden laskeminen riittää meille! Käytämme
-vanhaa kunnon Pythagoraan lausetta. Olkoon h kolmion korkeus ja s sivun
-pituus.

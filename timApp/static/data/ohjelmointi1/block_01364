@@ -1,6 +1,0 @@
-Tehdään ohjelma, joka kysyy käyttäjältä positiivisia kokonaislukuja,
-laskee ne yhteen ja tulostaa tuloksen näytölle. Käyttäjä antaa luvut
-siten, että välilyönti ja pilkku toimivat erotinmerkkeinä. Mikäli
-käyttäjä antaa jotain muita merkkejä kuin positiivisia kokonaislukuja
-(ja erotinmerkkejä), ohjelma antaa virheilmoituksen ja suoritus päättyy.
-Ohjelmassa tehdään seuraavat aliohjelmat.

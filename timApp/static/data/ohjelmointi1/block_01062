@@ -1,5 +1,0 @@
-Edellä muistipaikan 8040 olio muuttui roskaksi sijoituksessa s2 = s1.
-Olio voidaan muuttaa roskaksi myös sijoittamalla sen viitemuuttujaan
-null-viite. Tämän takia koodissa pitää usein testata onko olioviite null
-ennen kuin oliota käytetään, jos ei olla varmoja onko viitteen päässä
-oliota.

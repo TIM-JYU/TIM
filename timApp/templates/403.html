@@ -1,24 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>TIM</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet"
-    href="{{url_for('static', filename='stylesheet.css')}}">
-<link
-    href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
-<link
-    href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
-
-<!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-</head>
-<body>
-    <h1>403 Forbidden</h1>
-    <p>{{message}}</p>
-    <p><a href="{{url_for('indexPage')}}">Return to the index page</a></p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}403 Forbidden{% endblock %}
+{% block content %}
+    <p>{{ message }}</p>
+{% endblock %}

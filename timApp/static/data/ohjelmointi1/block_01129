@@ -1,5 +1,0 @@
-Todellisuudessa henkilötietorekisteriä ei kuitenkaan tehdä tällä
-tavalla. Järkevämpää olisi tehdä Henkilo-luokka, jossa olisi kentät
-etunimelle ja sukunimelle ja mahdollisille muille tiedoille. Tästä
-luokasta luotaisiin sitten jokaiselle opiskelijalle oma olio. Tällä
-kurssilla ei kuitenkaan tehdä vielä omia olioluokkia.

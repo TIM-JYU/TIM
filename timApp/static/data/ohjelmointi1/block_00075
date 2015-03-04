@@ -1,4 +1,0 @@
-Kääntäjä kertoo, että tiedostossa HelloWorld.cs rivillä 5 ja sarakkeessa
-17 on seuraava virhe: System.Console-luokka ei tunne Writeline-komentoa.
-Tämä onkin aivan totta, sillä WriteLine kirjoitetaan isolla L:llä.
-Korjattuamme tuon ohjelma toimii jälleen.

@@ -1,4 +1,0 @@
-Yllä oleva lauseke tulostaa "Luku on negatiivinen", jos muuttuja luku on
-pienempi kuin nolla. Ehtona on siis looginen lauseke luku \< 0, joka saa
-arvon "tosi", aina kun muuttuja luku on nollaa pienempi. Tällöin perässä
-oleva lause tai lohko suoritetaan.

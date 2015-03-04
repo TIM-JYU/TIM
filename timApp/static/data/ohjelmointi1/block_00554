@@ -1,4 +1,0 @@
-Uusi Tyontekija-olio voitaisiin luoda esimerkiksi seuraavasti.
-Parametrit riippuisivat nyt siitä kuinka olemme toteuttaneet
-Tyontekija-luokan konstruktorin. Tässä tapauksessa annamme nyt
-parametrina oliolle kaikki attribuutit.

@@ -1,4 +1,0 @@
-Huomaa, että mikäli tiedostolle ei ole annettu absoluuttista polkua,
-ohjelma hakee tiedostoa suhteessa siihen kansioon, missä ajettava
-exe-tiedosto on. Tässä esimerkissä annettiin tiedoston absoluuttinen
-polku kokonaisuudessaan.

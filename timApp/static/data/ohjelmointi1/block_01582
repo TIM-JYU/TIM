@@ -1,5 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Console.WriteLine(elokuvat.Count); //tulostaa 1
-elokuvat.Add("Full Metal Jacket");
-Console.WriteLine(elokuvat.Count); //tulostaa 2
-```

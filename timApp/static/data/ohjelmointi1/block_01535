@@ -1,5 +1,0 @@
-Paint-aliohjelmassa määrittelemme ensimmäisenä piirrettävän, eli
-suurimman, kolmion korkeuden. Sen jälkeen kutsumme
-SierpinskinKolmio-aliohjelmaa, jolle välitämme parametrina canvas-olion,
-johon kolmioita piirretään, ja kolmion paikan (0, -korkeus) sekä
-tietenkin korkeuden.

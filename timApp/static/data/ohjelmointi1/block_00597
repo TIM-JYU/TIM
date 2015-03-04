@@ -1,7 +1,0 @@
-Avaa luokan String sivu String Constructor. Tämä kohta sisältää tiedot
-kaikista luokan konstruktoreista. Konstruktoreita voi olla useita,
-kunhan niiden parametrit eroavat toisistaan. Jokaisella konstruktorilla
-on oma sivu, ja sivulla kunkin ohjelmointikielen kohdalla oma versionsa,
-sillä .NET Framework käsittää useita ohjelmointikieliä. Me olemme
-luonnollisesti tässä vaiheessa kiinnostuneita vain C\#-kielisistä
-versioista.

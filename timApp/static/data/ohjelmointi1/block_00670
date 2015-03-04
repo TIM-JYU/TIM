@@ -1,6 +1,0 @@
-Aliohjelma ei kuitenkaan voi palauttaa kerralla suoranaisesti useita
-arvoja. Toki voidaan palauttaa esimerkiksi taulukko, jossa sitten on
-monia arvoja. Toinen keino olisi tehdä olio, joka sisältäisi useita
-arvoja ja palautettaisiin. C\#:ssa on olemassa kolmaskin keino on
-olemassa, jota ei käsitellä tällä kurssilla: ref- ja out-parametrit,
-katso

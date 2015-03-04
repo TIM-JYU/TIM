@@ -1,6 +1,0 @@
-catch-lohkoon mennään vain siinä tapauksessa, että try-lohko aiheuttaa
-sen tietyn poikkeuksen, jota catch-osassa ilmoitetaan otettavan kiinni.
-Muissa tapauksissa catch-lohko ohitetaan. Jos try-lohkossa on useita
-lauseita, catch-lohkoon mennään heti ensimmäisen poikkeuksen sattuessa,
-eikä loppuja lauseita enää suoriteta. Otetaan esimerkiksi nollalla
-jakaminen. Nollalla jako aiheuttaisi DivideByZeroException-poikkeuksen.

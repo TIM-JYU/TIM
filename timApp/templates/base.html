@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+        <base href="{{ request.path }}">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/jquery.waypoints.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/shortcuts/inview.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='ng-file-upload/angular-file-upload-all.js') }}"></script>
+        <!--[if lt IE 9]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+        <title>{% block title %}{% endblock %} - TIM</title>
+    {% endblock %}
+</head>
+<body>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+<div id="header">
+    {% block header %}
+        {% include 'loginlogout.html' %}
+        <a href="/">Main page</a>
+        {% if session.user_id %}
+            <a href="/settings">Customize TIM</a>
+        {% endif %}
+    {% endblock %}
+</div>
+<div class="material">
+    <h1>{{ self.title() }}</h1>
+    {% block content %}{% endblock %}
+</div>
+<div id="footer">
+    {% block footer %}
+    {% endblock %}
+</div>
+</body>
+</html>

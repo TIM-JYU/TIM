@@ -1,0 +1,8 @@
+/* Harmaa tausta dokumentin ulkopuolelle */
+html > body {
+  background-color: lightgray; 
+}
+
+.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
+    background-color: #d0d0d0;
+} 

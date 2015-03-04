@@ -1,5 +1,0 @@
-C\#:ssa on kahden mallisia rakenteita, joihin tietoja voidaan tallentaa.
-Tapauksesta riippuen tiedot tallennetaan joko *alkeistietotyyppeihin*
-tai *oliotietotyyppeihin*. Oliotietotyypit eroavat alkeistietotyypeistä
-siinä, että ne ovat *viitteitä* tiettyyn olioon, ja siksi niitä
-kutsutaan myös nimellä viitetyypit tai viitemuuttujat.

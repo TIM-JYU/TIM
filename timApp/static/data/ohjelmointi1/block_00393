@@ -1,6 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-bool onkoKalastaja = true;
-char merkki = 't';
-int kalojenLkm = 0;
-double luku1 = 0, luku2 = 0, luku3 = 0;
-```

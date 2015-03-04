@@ -202,11 +202,91 @@ Virtuaalikone.prototype.lisää_muuttuja = function(diviin, arvolla) {
     } else {
 	arvo = arvolla;
     }
+    // ***** Vesan muutokset alkaa ***** //
+    return this.lisää_muuttuja_nakyviin(diviin,nimi,arvo);
+}
+    
+Virtuaalikone.prototype.lisää_muuttuja_nakyviin = function(diviin, nimi, arvo) {
     this.ohjelma.uusi_muuttuja(nimi, arvo);
     var muuttuja = new Muuttuja(this, nimi, arvo, true); // TODO saisko tän edeltävän sisään?
     muuttuja.liitä(diviin);
     return muuttuja;
 };
+
+
+
+Virtuaalikone.prototype.lisää_muuttuja2_tee = function(diviin, arvolla) {
+    nimi = document.getElementById("uusiNimi").value.trim();
+    arvo = document.getElementById("uusiArvo").value.trim();
+    if (this._tila.muuttujat.hasOwnProperty(nimi) ) return this.naytaUusiMessage("Muuttuja " + nimi + " on jo olemassa!","red");
+    if (arvo === null || arvo === '') { arvo = null;  } 
+    else { arvo = parseInt(arvo); }
+    if ( arvo != null && isNotNumeric(arvo) ) return this.naytaUusiMessage("Arvon pitää olla numeerinen!","red");
+    if ( nimi ) nimi = nimi.trim();
+    if ( nimi && !nimi.match(/^[a-zA-Z_][a-zA-Z_0-9]*$/) ) return this.naytaUusiMessage("Nimessä saa olla vain kirjaimia, numeroita ja _!","red");
+    this.piilotaMuuttujanLisays();
+	if (nimi==null || nimi=='') return null;
+    nappi = document.getElementById("uudenLisays");
+    nappi.focus(); // Muuten WP( IE pistää fokuksen minne sattuu
+    return this.lisää_muuttuja_nakyviin(diviin,nimi,arvo);
+};
+ 
+Virtuaalikone.prototype.piilotaMuuttujanLisays = function(diviin, arvolla) {
+    document.getElementById("uudenMuuttujanAlue").style.visibility="collapse";
+    document.getElementById("muuttujaButtonAlue").style.visibility="visible";
+}
+
+// event.type must be keypress
+Virtuaalikone.prototype.getChar = function(event) {
+  if (event.which == null) {
+    return String.fromCharCode(event.keyCode) // IE
+  } else if (event.which!=0 && event.charCode!=0) {
+    return String.fromCharCode(event.which);   // the rest
+  } else {
+    return null; // special key
+  }
+}
+
+
+Virtuaalikone.prototype.naytaUusiMessage = function(teksti,vari) {
+    var message = document.getElementById("uusiMessage");
+    message.innerText = teksti;
+    message.style.color=vari;
+    return null;
+}
+
+Virtuaalikone.prototype.lisää_muuttuja2 = function(diviin, arvolla) {
+    document.getElementById("uudenMuuttujanAlue").style.visibility="visible";
+    document.getElementById("muuttujaButtonAlue").style.visibility="collapse";
+    var uusiNimi =  document.getElementById('uusiNimi');
+    uusiNimi.focus();
+    uusiNimi.value = "";
+    var message = document.getElementById("uusiMessage");
+    this.naytaUusiMessage("Anna uuden muuttujan nimi ja arvo","black");
+};
+
+Virtuaalikone.prototype.uusiNimiKeyPress = function(event,diviin) {
+    var ch = this.getChar(event || window.event)
+    if  ( ch.match(/[a-zA-Z_]/) ) return true;
+    var uusiNimi =  document.getElementById('uusiNimi').value;
+    if ( uusiNimi.length >= 1 && ch.match(/[0-9]/) ) return true;
+    if ( " " < ch ) return false; 
+    var uusiArvo =  document.getElementById('uusiArvo');
+    uusiArvo.focus();
+    return false;
+}
+
+Virtuaalikone.prototype.uusiArvoKeyPress = function(event,diviin) {
+    var ch = this.getChar(event || window.event)
+    if ( "0" <= ch && ch <= "9" ) return true; 
+    if ( " " <  ch  ) return false; 
+    this.lisää_muuttuja2_tee(diviin);
+    return false;
+}
+
+    // ***** Vesan muutokset loppuu ***** //
+
+
 
 Virtuaalikone.prototype.luo_taulukko = function() {
     // with jquery a must: _('#taulukko').empty();

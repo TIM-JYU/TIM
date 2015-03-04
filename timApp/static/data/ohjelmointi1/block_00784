@@ -1,3 +1,0 @@
-Merkkijono on *kokoelma peräkkäisiä merkkejä*. Tarkalleen ottaen
-merkkijono toteutetaan C\#:ssa sisäisesti taulukkona, joka sisältää
-merkkejä (char). Taulukoista on tässä monisteessa oma lukunsa myöhemmin.

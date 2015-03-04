@@ -1,8 +1,0 @@
-Kuten ehkä huomasit, aliohjelmilla ja metodeilla on paljon yhteistä.
-Monissa kirjoissa nimitetään myös aliohjelmia metodeiksi. Tällöin
-aliohjelmat erotetaan olioiden metodeista nimittämällä niitä
-staattisiksi metodeiksi. Tässä monisteessa metodeista puhutaan kuitenkin
-vain silloin, kun tarkoitetaan olioiden toimintoja. Jypelin
-dokumentaatiosta tutkit RandomGen-luokan staattisia metodeja, millä
-voidaan luoda esimerkiksi satunnaisia lukuja. Yksittäinen pallo
-poistettiin metodilla Destroy, joka on olion toiminto.

@@ -1,4 +1,0 @@
-Tuo mainitsemamme int on siis tietotyyppi, ja int-tyyppiseen muuttujaan
-voi tallentaa kokonaislukuja. Muuttujaan n voimme laittaa lukuja 1, 2,
-3, samoin 0, -1, -2, ja niin edelleen, mutta emme lukua 0.1 tai sanaa
-”Moi”.

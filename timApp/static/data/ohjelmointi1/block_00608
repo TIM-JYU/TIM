@@ -1,5 +1,0 @@
-Huomaa, että merkkijonon ympärille tulee lainausmerkit. Näppäimistöltä
-lainausmerkit saadaan näppäinyhdistelmällä
-`Shift+2`{.terminaali-western}. Vastaavasti merkkijono voitaisiin
-kuitenkin alustaa myös muilla String-luokan konstruktoreilla, joita on
-pitkä lista.

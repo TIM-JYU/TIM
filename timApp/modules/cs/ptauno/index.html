@@ -21,11 +21,28 @@
       <div id="toiminta" class="toiminta">
 	<div id="vasen" class="vasen">
 	  <div class="vasen-top">
-	  muuttujat: <button id="uusi-muuttuja" onclick="vk.lisää_muuttuja('muuttujat')">uusi muuttuja</button>
+      <div id="muuttujaButtonAlue" class="muuttujaButtonAlue">
+	  muuttujat: <button id="uusi-muuttuja" onclick="vk.lisää_muuttuja2('muuttujat')">uusi muuttuja</button>
+      </div>
+      <div id="uudenMuuttujanAlue" class="uudenMuuttujanAlue">
+        <div>
+          <label id="uusiMessage" >Anna uuden muuttujan nimi ja arvo</label>
+          <button id="suljeUusi" onclick="vk.piilotaMuuttujanLisays()" style="position: absolute;top: 0;right: 0em;">X</button>
+        </div>
+        <div>        
+          <label>nimi:</label>&nbsp;
+          <input id="uusiNimi" style="width:6em;" onkeypress="return vk.uusiNimiKeyPress(event,'muuttujat')">&nbsp;
+          <label>arvo:</label>&nbsp;
+          <input id="uusiArvo"  style="width:2em;"  onkeypress="return vk.uusiArvoKeyPress(event,'muuttujat')">&nbsp;
+          <button id="uudenLisays" onclick="vk.lisää_muuttuja2_tee('muuttujat')">lisää</button> 
+         </div> 
+      </div>
 	  <div draggable="false" ondrop="muuttujiin_pudotus(event,this)" ondragover="event.preventDefault();"
 	       ondragleave="event.preventDefault();" ondragenter="event.preventDefault();"
 	       id="muuttujat" class="muuttujatd"
-	       title="muuttujalista, lisää muuttuja yllä olevasta painikkeesta"><!--  hyi, globaali vk! TODO XXX --></div>
+	       title="muuttujalista, lisää muuttuja yllä olevasta painikkeesta"
+           onclick="vk.piilotaMuuttujanLisays()"
+           ><!--  hyi, globaali vk! TODO XXX --></div>
       </div>
 	  <div class="scratch" id="scratch">
 	    <div class="compound-statements" id="compound-statements" draggable="false"

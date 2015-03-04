@@ -1,38 +1,246 @@
 .content { 
-	max-width: 46em;
+	max-width: 52em;
+	text-align: justify;
+    margin-right: 1em;
+}
+
+.paragraph, .par  {
+	max-width: 52em;
+}
+
+body {
+	max-width: 60.2em;
 	text-align: justify;
 }
 
-/*=============================================*/
-/* Koeta kasata kaikki väreihin liittyvä tähän */
-/*=============================================*/
-body {
-	background-color: #d5d5d5;
+.correct {
+    background-color: limegreen;
+    padding: 0.5em;
 }
-.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton {
-    background-color: #d0d0d0;
+
+.wrong { 
+    background-color: red;
+    padding: 0.5em;
+}
+
+.mcq table p {
+    margin-left: 0;
+	text-align: left;
+}
+
+.mcq table  {
+    left: 2em;
+}
+
+.docEditor {
+    width: 100%;
+    height: 30em;
+}
+
+.flashes {
+    padding: 0;
+    margin: 0;
+}
+
+.flashes li {
+	list-style-type: none;
+	border: 1px solid black;
+	border-radius: 3px;
+	padding: 0.5em;
+}
+
+/*=============================================*/
+/* Gather all colors here                      */
+/*=============================================*/
+.ansi_fore { color: #FFFFFF; }
+.ansi_back { background-color: #000000; }
+.ansi1 { font-weight: bold; }
+.ansi3 { font-weight: italic; }
+.ansi4 { text-decoration: underline; }
+.ansi9 { text-decoration: line-through; }
+.ansi30 { color: #000000; }
+.ansi31 { color: #FF0000; }
+.ansi32 { color: #00FF00; }
+.ansi33 { color: #FFFF00; }
+.ansi34 { color: #0000FF; }
+.ansi35 { color: #FF00FF; }
+.ansi36 { color: #00FFFF; }
+.ansi37 { color: #FFFFFF; }
+.ansi40 { background-color: #000000; }
+.ansi41 { background-color: #FF0000; }
+.ansi42 { background-color: #00FF00; }
+.ansi43 { background-color: #FFFF00; }
+.ansi44 { background-color: #0000FF; }
+.ansi45 { background-color: #FF00FF; }
+.ansi46 { background-color: #00FFFF; }
+.ansi47 { background-color: #FFFFFF; }
+
+body {
+	/* background-color: #d5d5d5; */
+    margin: 0 260px;
+}
+.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
+    background-color: #f8f8f8;
 	color: white;
 	font-size: x-small;
 	text-align:center;
     border-radius: 12px;
 	outline: none;
-	border: 2px none;
+	
+    border: 2px none;
 	line-height: 0.8;
+	width: 5em;
+	height: 3em;
+}
+
+.viewLogin {
+    font-size: 0.7em;
+    color: #3cc;
+    text-align: right;
+}
+
+input[type="submit"], button, input[type="button"] { 
+    background: #3CC;
+    border: 0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    /* font-weight: bold; */
+    cursor: pointer;
+    line-height: normal;
+    padding: 5px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+
+
+.viewLogin .loginButton:hover {
+    width:auto;
+} 
+ 
+.viewLogin .loginButtonRow {
+} 
+
+.viewLogin .loginButtonDiv {
+    width: auto;
+    height: 2em;
+    margin-top: 0.2em;
+    margin-left: 7em;
+    z-index: 300;
+    font-size: 2em;
+    text-align: left;
+}
+
+.viewLogin .loginwelcome {
+    margin-top: 2em;
+}
+
+.viewLogin .loginFieldDiv {
+    font-size: 12px;
+    margin-top: 1.5em;
+    margin-left: 3em;
+    line-height: 20px;
+    text-align: left;
+}
+
+.viewLogin .loginFieldLabel {
+    float: left;
+    width: 120px;
+    text-align: right;
+    margin-right: 20px;
+}
+
+.viewLogin .loginFieldInput {
+    width: 200px;
+}
+
+.viewLogin .loginFieldStatic {
+    width: 120px;
+}
+ 
+.viewLogin .loginButton {
+    background: #3CC;
+    border: 0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.viewLogin form {
+    display: inline;
 }
  
 .material {
 	background-color: white;
 }
 
-.editorArea,  .noteEditorArea {
+.editorArea {
     background-color: #B0B0B0;
 }
 
 table th {
 	background-color: #dedede;
 }
+
+td p {
+    margin-left: 0;
+}
+.readline {
+	border-color: red;
+}
 	
+.readline:hover {
+    opacity: 0.5;
+	background: red;
+}
+	
+.readline.read {
+	display: none;
+}
+
+.readline.modified {
+	border-color: yellow;
+}
+
+.readline.modified:hover {
+	background: yellow;
+}
+
+.pluginError {
+    border: 1px solid red;
+    background-color: pink;
+}
+
+.note.private {
+    border-color: red;
+}
+
 /*=============================================*/
+li p {
+    margin-left: 0; 
+}
+
+ul, ol {
+    margin-left: 1.5em;  
+}
+
+ul ul, ol ol {
+    margin-left: -1em; 
+}
+
+ul ul  ul, ol ol ol { 
+    margin-left: -1em; 
+}
+
 
 
 .note p {
@@ -45,15 +253,24 @@ table th {
 	margin-bottom : 0;
 }
 
-.paragraph {
+.paragraph, .par {
 	position: relative;
-	max-width: 43em;
 	margin-left: 1em;
-	margin-top: 1em;
+	padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    border-bottom: 1px solid transparent;
+    border-top: 1px solid transparent;
+    border-right: 1px solid transparent;
 }
 
-ul {
-	margin-left: 2em;
+.par.lightselect {
+    background-color: #f7f7f7;
+}
+
+.par.selected {
+    background-color: lightgray;
 }
 
 .material img {
@@ -69,25 +286,19 @@ ul {
 
 .notes {
 	position: absolute;
-	left: 48.5em;
+	left: 112%;
 	width: 17em;
 	top: 0em;
 }
 
 .note {
-	border: 1px solid #BBB;
-	border-radius: 7px;
-}
-
-.noteeditor {
-	left: 5em;
-	width: 30em;
-	height: 6.5em;
+	/* border: 1px solid #BBB; */
+	/* border-radius: 7px; */
+	font-size: 0.7em;
 }
 
 .noteButton {
 	z-index: 3;
-    width: 5em;
     height: 1.8em;
     top: 0em;
 	float: left;
@@ -95,11 +306,60 @@ ul {
 
 .addNoteButton {
     position: absolute;
-	left: 72em;
-	z-index: 3;
-    width: 5em;
-    height: 3em;
+    right:-8.2em;
+    z-index: 3;
     top: 0em;
+}
+
+.actionButtons {
+    position: absolute;
+    padding: 1em;
+    margin: none;
+    background-color: #f8f8ff;
+    z-index: 100;
+    top: -1px;
+    right: -14em;
+    min-height: 100%;
+    background-color: lightgray;
+}
+
+.headerlink {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: none;
+}
+
+.par:hover .headerlink {
+    display: inherit;
+}
+
+.parContent {
+    position: relative;
+}
+
+.previewcontent {
+    border: 2px solid black;
+    border-radius: 15px;
+    padding: 1em;
+    margin: 2px;
+    background-color: #f0f0f8;
+}
+
+.timButton {
+    display: block;
+    margin: auto;
+}
+
+.readline {
+    position: absolute;
+    right: -1.2em;
+    z-index: 3;
+    width: 10em;
+    height: 100%;
+    top: 0em;
+    border-right: 0.5em solid;
+    border-color: red;
 }
 
 .addNoteButton:hover {
@@ -131,12 +391,7 @@ ul {
 .editButton {
     z-index: 3;
 	position: absolute;
-	left: 72em;
-	width: 5em;
-	height: 3em;
-	outline: none;
-/*
-*/	
+	right:-8.2em;
 }
 
 .editButton:hover {
@@ -149,16 +404,11 @@ ul {
 .deleteButton{
     /* position: absolute; */
     left:0em;
-	width: 5em;
     z-index: 10;
-	height: 3em;
 	top: 6em;
-	border: 2px none;
-	border-radius: 15px;
-	outline: none;
 	background: #FF0000;
-	color: white;
 }
+
 .deleteButton:hover{
         color:black;
 }
@@ -167,15 +417,8 @@ ul {
     /* position: absolute; */
 	top: 0em;
 	left: 0em;
-	width: 5em;
     z-index:10;
-	height: 3em; 
-	top: 0em;
-	border: 2px none;
-	border-radius: 15px;
-	outline: none;
 	background: #19D119;
-	color: white;
 }
 
 .parSaveButton:hover{
@@ -199,22 +442,17 @@ ul {
     z-index: 10;
 	top: 0em;
 	left: 0em;
-	width: 5em;
-	height: 3em;
 	top: 3em;
-	border: 2px none;
-	border-radius: 15px;
-	outline: none;
     background: #999966;	
-	color: white;
 }
 
 .material {
 	display: inline-block;
 	width: 90%;
-	border: 2px solid;
-	border-radius: 25px;
-	box-shadow: 10px 10px 5px #888888;
+	/* border: 2px solid; */
+	/* border-radius: 25px; */
+	/* box-shadow: 10px 10px 5px #888888; */
+	/* margin-left: 10em; */
 }
 #topBar{
     position:fixed;
@@ -243,19 +481,19 @@ ul {
     content:"Add";
 }
 
-.addParButton:hover:before { 
+.addParButton:hover:before {
     content:"Add new paragraph here";
 }
 
 .addParButton{
     z-index: 2;
-	left:72em;
-	bottom:-1.8em;
-    height:2em;
-	width:5em;
+	right:-8.2em;
+	bottom:-1.5em;
+    height:1.5em;
+    padding-top:0.5em;
     position: absolute;
 }
-	 
+ 
 .addParButton:hover{
 	content:"Add new paragraph here";
     display:block;
@@ -263,21 +501,26 @@ ul {
     border: 1px dotted #338533;
     border-radius:25px;
     opacity: 1;
-	width:80em;
+	width:110%;
 	left:0em;
 	color: black;
 }
  
 PRE {
-    border-style: solid;
-	border-width: 1px;
-	border-radius: 5px;
-	padding: 4px;
-	margin-left: 2em;
+    /* border-style: solid; */
+	
+    /* border-width: 1px; */
+	
+    /* border-radius: 5px; */
+	
+    padding: 4px;
+	
+    margin-left: 2.5em;
 	margin-right: 0.00cm;
 	line-height: 1;
 	font-size: 1em;
-	box-shadow: 10px 10px 5px #888888;
+	
+    /* box-shadow: 10px 10px 5px #888888; */
 }
 
 .leveaPre {
@@ -312,6 +555,10 @@ table {
 	border-collapse: collapse;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+table code {
+    font-size: 1.2em;
 }
 
 table th {
@@ -358,6 +605,10 @@ p.kannentiedotoikea-western {
     margin-right: 5em;
 }
 
+#footer {
+    height: 10em;
+}
+
 h1 {
 	text-align: center;
 	margin-top: 3cm;
@@ -397,9 +648,8 @@ blockquote {
 }
 /*Georgia, - huonot numerot pystysuunnassa*/
 body {
-	max-width: 50em;
-	margin-left: 0.7cm;
-	margin-right: 0.7cm;
+/*	margin-left: 0.7cm; */
+/*	margin-right: 0.7cm; */
 	font-family: Verdana, Arial, sans-serif;
 	font-size: 1em;
 	line-height: 1.2;
@@ -429,6 +679,10 @@ a:hover {
 	cursor: pointer;
 	color: navy;
 	text-decoration: underline;
+}
+
+answerbrowser a {
+    font-size: inherit;
 }
 
 sub {
@@ -519,6 +773,13 @@ a.anchor:hover {
 	visibility: hidden;
 }
 
+.kaava {
+    text-align: center;
+    line-height: 1.7em;
+    font-size: 1.2em;
+    font-family: serif;
+}
+
 .huomautus {
 	margin-left: 3em;
 	margin-top: 0.4cm;
@@ -537,31 +798,28 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	/* position: absolute; */
-	height: 100%;
-	width: 45em; 
-	top: 0em;
-	left: 3px;
+	width: 45em;
 	border: 2px solid;
 	padding: 15px 5px 5px 5px;
 	border-radius: 15px;
 	text-align: left;
-	float: left;
+    resize: both;
 }
 
-.editorArea,  .noteEditorArea {
-	z-index: 10;
-	position: absolute;
-	width: 100%;
-	top: 0em;
-	left: 49em;
+.editorArea {
+    z-index: 10;
+    position: absolute;
+    width: 100%;
+    top: 0em;
+    left: 112%;
     min-height:6.5em;
-	border-radius: 15px;
+    border-radius: 15px;
+    padding: 0.5em; 
 }
 
 .editButtonArea {
-	width: 3.5em;
 	float: left;
+    padding: 0.5em;
 }
 	
 video {
@@ -580,11 +838,21 @@ img.console {
   background: #000000;
   border: 3px double #ccc;
   padding: 10px;
-  width: 92% !important;  
+  width: 95% !important;  
 }
 
 p.stem {
   margin-bottom: 1em;
+}
+
+.csRunChanged {
+    background-color: rgb(41, 255, 0);
+    width: 0.5em;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: -0.5em;
+    /* margin-bottom: 2em; */
 }
 
 .csRunPre, .csRunPost {
@@ -596,6 +864,10 @@ p.stem {
 	margin-top: 0em;
 	line-height: 1.1;
 
+}
+
+.csRunError {
+    white-space: pre-wrap;
 }
 
 .csRunPre {
@@ -610,14 +882,17 @@ p.stem {
 .csRunCode {
     font-family:Courier;
 	margin-left: 2em;
-    border-style: solid;
-	border-width: 1px;
-	border-radius: 5px;
+    /* border-style: solid; */
+	
+    border-width: 1px;
+	
+    /* border-radius: 5px; */
 	padding: 4px;
 	margin-right: 0em;
 	line-height: 1;
 	font-size: 1em;
-	box-shadow: 10px 10px 5px #888888;
+	
+    /* box-shadow: 10px 10px 5px #888888; */
 	/* width: 98%; */
 }
 
@@ -651,6 +926,21 @@ p.stem {
 	margin: 0 auto;
 }
 
+.listVideoRunDiv {
+    /* margin-left: 2em; */
+    margin-top: -1em;
+}
+
+.listVideoRunDiv img {
+    display: inline-block;
+    width: 0.8em;
+}
+
+.smallVideoRunDiv img {
+    display: inline-block;
+    width: 0.8em;
+}
+
 .taunoOhje {
 	font-size: 0.7em;
 	margin-bottom: 1em;
@@ -677,15 +967,16 @@ p.stem {
 
 
 .unitTestGreen {
-  background: #00FF00;
-  width: 30%;
-  height: 1em;
+    background: #00FF00;
+    width: 30%;
+    margin-top: 5pt;
+    height: 1.5em;
 }
 
 .unitTestRed {
   background: #FF7777;
   /* width: 30%; */
-  height: 1em;
+  /* height: 1em; */
 }
 
 .smalllink {
@@ -697,15 +988,16 @@ p.stem {
 }
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
-@media only screen and (max-device-width: 1200px) {
+@media only screen and (max-width: 1200px) {
 	.editor {
 		/* height: 5em; */
 	}
 	.content { 
 		max-width: 45em;
 		text-align: justify;
+        margin-right: 0.5em;
 	}
-	.paragraph {
+	.paragraph,  .par {
 		position: relative;
 		max-width: 43em;
 		margin-left: 0em;
@@ -716,6 +1008,13 @@ p.stem {
 		top: 0em;
 		left: 106%;
 		outline: none;
+	}
+	.readline {
+		position: absolute;
+		top: 0em;
+		/*left: 100%; */
+        margin-left: 0.7em;
+		right: -2em;
 	}
 	.notes {
 		position: absolute;
@@ -735,29 +1034,14 @@ p.stem {
 		left: 0%;
 	}
 	
-	.noteEditorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
-	
 	.addParButton{
 		left: 106%;
-    }
-	
-	.cancelButton {
-	}
-	
-	.deleteButton{
-	}
-	 
-	.parSaveButton {
-	}
+    } 
 	
 	
 	body {
 		max-width: 45em;
-		margin-left: 5px;
+		margin-left: 5px !important;
 		margin-right: 10px;
 		font-family: Verdana, Arial, sans-serif;
 		font-size: 1em;
@@ -767,9 +1051,7 @@ p.stem {
 		background-color: white;
 		display: inline-block;
 		width: 100%;
-		border: 2px solid;
-		border-radius: 25px;
-		box-shadow: 10px 10px 5px #888888;
+        margin-left: 0em;
 	}
 	.noteeditor {
 	/*
@@ -790,32 +1072,30 @@ p.stem {
 		margin-left: 1px; 
 		margin-right: 5px;
 	}
+	.content { 
+		text-align: left;
+	}
 	.material {
 		display: inline-block;
 		width: 100%;
-		border: 2px solid;
-		border-radius: 25px;
-		box-shadow: 10px 10px 5px #888888;
 	}
 	body {
+		text-align: left;
 		max-width: 50em;
-		margin-left: 0.0cm;
+		margin-left: 0.0cm !important;
 		margin-right: 0.0cm;
 		font-family: Verdana, Arial, sans-serif;
 		font-size: 1em;
 		line-height: 1.2;
 	}
 	PRE {
-		border-style: solid;
-		border-width: 1px;
-		border-radius: 5px;
-		padding: 4px;
-		margin-left: 1em;
+		margin-left: 0.5em;
 		margin-right: 0.00cm;
-		line-height: 1;
-		font-size: 1em;
-		box-shadow: 10px 10px 5px #888888;
 	}
+    .csRunCode {
+        margin-left: 0.5em;
+        /*width: 98%;  */
+    }
 	.addNoteButton {
 		position: absolute;
 		line-height:0.8;
@@ -823,10 +1103,479 @@ p.stem {
 		left: 101%;
 		outline: none;
 	}
-	.notes {
+
+	.notes {  
 		position: absolute;
 		left: 115%;
 		width: 17em;
 		top: 0em;
 	}
+    .readline {
+		position: absolute;
+		top: 0em;
+        right: 0em;
+        margin-left: -1.3em;
+        border-right: 0.25em solid red;
+    }
+	
+    .huomautus {
+        margin-left: 0.1em;
+        text-align: left;
+    }
+    blockquote {
+        margin-left: 0.2em;
+        margin-right: 0.2em;
+    }
+    
+    ul, ol {
+      margin-left: 0.1em;
+    }
 }
+ 
+body {
+ 	line-height: 1.4;	
+}
+
+task, .csRunDiv {
+    border: solid 1px #3CC;
+    border-radius: 5px;
+    width: 100%;
+    margin-bottom: 0.3em;
+    margin-left: 2em;
+    margin-right: 2em;
+    margin-top: 0.3em;
+    padding-bottom: 0.5em;
+    width: 96.5%
+} 
+
+.csRunDiv h4  {
+    margin-top: 0.0em;
+    padding-top: 1em;
+    padding-left: 1em;
+    padding-bottom: 1em;
+    background-color: #3CC;
+    color: #FFF;
+    font-family: "Helvetica", Arial, sans-serif;
+
+}
+
+.note {
+    border-top: 4px solid;
+    width: 240px;
+    padding-bottom: 5px;
+    /*position: absolute;*/
+    overflow-y: auto;
+    border-color: #F60;
+}
+
+.note.private {
+    border-color: #3CC;
+}
+
+
+pre {
+    font-family: "Courier New", Courier, serif;
+    font-weight: 00;
+    border-left: 4px solid #3CC;
+    padding: 0.5em 0 0.5em 1em; 
+    /* margin: 0 0 1em 1em; */
+    font-size: 0.95em;
+}
+
+
+.csRunPre, .csRunPost, .csRunArea {
+    margin-left: -1.5em;
+    box-shadow: none;
+    word-wrap: initial;
+}
+
+.stem {
+    margin-left: 0.3em;	
+    margin-right:0.5em;
+}
+
+.csRunMenu {
+    margin-left: 0.3em;	
+}
+
+.csRunMenu button {
+    background: #3CC;
+    border:0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.console {
+	margin-left: 0.2em;
+	/* max-width: 60em; */
+}
+
+img.console {
+    margin-left: 0.2em;
+}
+
+.csRunMenu link,.csRunMenu :visited {
+	color:  #3CC;
+}
+
+.notes:hover {
+    background-color: white;
+    display: block;
+    z-index: 9;
+}
+
+
+/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
+@media only screen and (max-device-width: 1200px) {
+    .readline {
+        margin-left: -8.5em;
+    }
+}
+
+/* Kännyköiden erikoistyylit =============================================*/
+@media only screen and (max-device-width: 500px) {
+    .readline {
+        z-index: 30;
+        border-color: red;
+        border-right: 0.7em solid red;
+        margin-left: -10.7em;
+    }
+
+    task, .csRunDiv {
+        margin-left: 0.2em;
+        margin-right: 0em;
+    } 
+
+
+}
+
+
+@media only screen and (max-width: 1600px) {
+	.editorArea {
+		position: relative;
+		top: 0em;
+		left: 0%;
+	}
+
+	.notes:hover {
+        margin-left: -60%;
+        width: 200em;
+        background-color: white;
+
+        display: block;
+        z-index: 9;
+        // max-height: 100%;
+        padding-left: 2em;
+    }
+
+	
+}
+
+/* Opettajanäkymän käyttäjälistaa varten ================================*/
+
+.userlist {
+	position: fixed;
+	top: 13px;
+	right: 120px;
+	padding: 5px;
+	/*width: 240px;*/
+	word-wrap:break-word;
+	background-color: #e6e6e6;
+	z-index: 501;
+	overflow: auto;
+	overflow-x: hidden;
+}
+
+.userentry {
+     font-family: Verdana;
+     font-size: 12px;
+     color: #a6b6f6;
+}
+
+/* Sisällysluetteloa varten =============================================*/
+
+.sidebar{
+	position: fixed;
+	top: -1px;
+	left: -240px;
+	width: 240px;
+	word-wrap:break-word;
+	/* word-break:break-all; */
+	height: 100%;
+	background-color: #e6e6e6;
+	transition: 200ms all ease-in-out;
+	z-index: 501;
+	overflow: auto;
+	overflow-x: hidden;
+}
+
+.sidebar-buttons{
+	width: 100%;
+	padding: 20px;
+	padding-top: 50px;
+	background: #e6e6e6;
+	z-index: 502;
+	position:fixed;
+	border-bottom: solid 4px #CCC;
+}
+
+.sidebar ul {
+    padding-left: 20px;
+	text-align: left;
+	font-family:"Helvetica", Arial, sans-serif;
+	font-size: 0.85em;
+}
+
+.sidebar li {
+    padding-left: 15px;
+    list-style:none;
+}
+
+.sidebar li.exp {
+    list-style-image:url("/static/images/minus.png");
+    list-style-type:square;
+}
+
+.sidebar li.col {
+    list-style-image:url("/static/images/plus.png");
+    list-style-type:square;
+}
+
+.sidebar a {
+	margin: 0 0px 0 -15px;
+	text-align: left;  
+	color: #2bb;
+}
+
+.sidebar a:hover {
+	color: #3cc;
+	text-decoration: none;
+}
+
+.sidebar a.a1 {
+	font-size: 110%;
+}
+
+.sidebar a.a2 {
+	font-size: 100%;
+}
+
+.sidebar a.a3 {
+	font-size: 100%;
+    padding-left: 5pt;
+}
+
+.sidebar h1 {
+	font-size: 120%;
+	margin-top: 1cm;
+	margin-bottom: 0.5cm;
+	border-top: none;
+	border-bottom: none;
+	padding-top: 10pt;
+	padding-bottom: 10pt;
+	line-height: 1.3;
+
+    margin-left: 20px;
+    margin-right: 20px;
+	text-align: left;
+	color: #2bb;
+}
+
+.menu{ 
+	left: 0px; 
+	top:0px;
+	width: 60px;
+	position:fixed;
+	background:#e6e6e6;
+    width: 45px;
+    z-index: 501;
+}
+.menu-icon{
+    z-index: 501;
+	cursor:pointer;
+	filter: brightness(1);
+	-webkit-filter: brightness(1);
+	-moz-filter: brightness(1);
+}
+.menu-icon:hover{
+    z-index: 501;
+	filter: brightness(1);
+	-webkit-filter: brightness(1);
+	-moz-filter: brightness(1);
+}
+.close{
+	float: right;
+	position:relative;
+}
+
+.runo {
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 2em;
+    font-size: 0.9em;
+}
+
+.tehtava {
+    margin-left: 2em;
+    font-size: 0.9em;
+}
+
+/* =============================== Vesan lisäyksiä ==================================*/
+
+.editorArea {
+    z-index: 110;
+    position: absolute;
+    width: 102%;
+    top: 0em;
+    left: 0;
+    min-height: 6.5em;
+    border-radius: 9px;
+}
+
+.ace_editor {
+    position: relative;
+    overflow: hidden;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-size: 12px;
+    line-height: normal;
+    direction: ltr;
+    width: 98%;
+    margin-left: 2px;
+}
+
+.timButton {
+    display: block;
+    margin: auto;
+    background: #3CC;
+    border: 0;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin-bottom: 5px;
+}
+.actionButtons {
+    position: absolute;
+    border-radius: 3px;
+    padding: 1em;
+    margin: none;
+    background-color: #f8f8ff;
+    z-index: 100;
+    width: 220px;
+    min-height: 50px;
+    left: 103%;
+}  
+
+.par.selected {
+    background-color: #f8f8f8;
+}
+
+.addNote, .editPar, .addPar {
+    width: 220px;
+}
+
+.listVideoRunDiv {
+  /* margin-left: 2em; */
+  margin-top: -1.5em;
+  margin-bottom: -1.2em; 
+}
+
+.csArgsArea {
+  width: 90%;
+  margin-top: 0em;
+  margin-bottom: 0em;
+  border-style: none;
+  border-width: 0px;
+  border-left: thin solid #0066FF;
+}
+
+.csArgsDiv {
+  width: 100%;
+}
+
+.csArgsDiv span {
+  display: block;
+  overflow: hidden;
+  padding: 0 5px;
+}
+
+.csArgsDiv label {
+  margin-left: 0px;
+  float: left;
+  font-size: 0.96em;
+  
+}
+
+.grconsole {
+  margin-top: 0.8em !important;
+  border: 1px double black;
+}
+
+@media print {
+  p {
+  font-size: 12pt;
+  page-break-inside: avoid;
+  }
+
+  body {
+  margin: 0px;
+  max-width: 100%;
+  }
+
+  .material {
+  width: 100%;
+  }
+
+  .readline {
+  display: none;
+  }
+
+  .unread {
+  display: none;
+  }
+
+  .parContent {
+  position: static;
+  border: 0px;
+  max-width: 100%;
+  }
+
+  .par {
+  position: static;
+  border: 0px;
+  max-width: 100%;
+  }
+
+  .headerlink {
+  display: none;
+  }
+
+  #header {
+  display: none;
+ }
+
+    /* Harmaa varjo dokumentilta pois */ 
+    .material {
+        box-shadow: none !important;
+            border: none !important;
+    }
+}
+    
+
+
+
+} 

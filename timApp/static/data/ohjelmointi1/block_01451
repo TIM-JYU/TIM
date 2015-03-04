@@ -1,5 +1,0 @@
-StateVector antaa siis vektorin, joka kertoo mihin suuntaan tatti
-osoittaa. Vektorin X ja Y -koordinaattien arvot ovat molemmat väliltä
-miinus yhdestä yhteen (-1 - 1) tatin suunnasta riippuen. Tämän vektorin
-avulla voidaan esimerkiksi kertoa pelaajalle mihin suuntaan sen kuuluu
-liikkua.

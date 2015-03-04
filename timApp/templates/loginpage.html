@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Login required{% endblock %}
+{% block content %}
+    <script>
+        $(document).ready(function () {
+            var target_url = {{ target_url|tojson }};
+            var separator = target_url.indexOf('?') >= 0 ? '&' : '?';
+            var came_from_raw = {{ came_from|tojson }};
+            var came_from = encodeURIComponent(came_from_raw.replace("#", "%23"));
+            var anchor_raw = window.location.hash.replace('#', '');
+            var anchor = encodeURIComponent(anchor_raw);
+            $("#anchor").val(anchor_raw);
+            window.korppiLogin = function () {
+                window.location.replace(target_url
+                + separator
+                + 'came_from='
+                + came_from
+                + '&anchor='
+                + anchor);
+            }
+        });
+    </script>
+
+    <div class="viewLogin">
+        <form method="POST" action="/altlogin">
+            <p class="loginwelcome">
+                Login is required for this document. You can either login with Korppi
+            </p>
+
+            <div class="loginButtonDiv">
+                <input type="button" onclick="korppiLogin()" value="Login with Korppi">
+            </div>
+            <p class="loginwelcome">
+                or with your email address if you have a TIM email account.
+            </p>
+
+            <div class="loginFieldDiv">
+                <input type="hidden" name="came_from" value="{{ came_from }}">
+                <input id="anchor" type="hidden" name="anchor" value="">
+                <label for="email" class="loginFieldLabel">Email</label>
+                <input name="email" class="loginFieldInput" type="email" value="{{ session.email }}">
+            </div>
+            <div class="loginFieldDiv">
+                <label for="password" class="loginFieldLabel">Password</label>
+                <input name="password" class="loginFieldInput" type="password">
+            </div>
+            <div class="loginButtonDiv">
+                <input type="submit" value="Login">
+            </div>
+        </form>
+    </div>
+{% endblock %}
+

@@ -4,11 +4,12 @@ maintainer vesal "vesal@jyu.fi"
 
 # Asennetaan python, pip ja flask
 
+run apt-get update
 run apt-get install -y python3
 run apt-get install -y python3-pip
 run pip3 install Flask
 run pip3 install bleach
-run apt-get install -y mono-complete
+run apt-get install -y mono-complete fsharp
 run apt-get install -y libsdl1.2debian
 run apt-get install -y libsdl-mixer1.2
 run apt-get install -y xvfb
@@ -28,6 +29,47 @@ run locale-gen fi_FI.UTF-8
 
 # Lis‰t‰‰n alkuper‰inen hakemisto polkuun /service
 run mkdir /service
+
+#
+# Oracle Java 8 Dockerfile
+#
+# https://github.com/dockerfile/java
+# https://github.com/dockerfile/java/tree/master/oracle-java8
+#
+# Install Java.
+run apt-get install -y software-properties-common 
+#python-software-properties
+RUN \
+  echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
+  add-apt-repository -y ppa:webupd8team/java && \
+  apt-get update && \
+  apt-get install -y oracle-java8-installer && \
+  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /var/cache/oracle-jdk8-installer
+
+# Define working directory.
+#WORKDIR /data
+
+# Define commonly used JAVA_HOME variable
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+# Commonlisp
+RUN apt-get update
+# RUN apt-get install -y clisp
+# see: https://github.com/bakketun/docker-sbcl/blob/master/Dockerfile
+RUN apt-get install -y sbcl 
+
+# SqLite
+RUN apt-get -y install sqlite3 libsqlite3-dev
+
+RUN apt-get install -y libxtst6
+
+RUN apt-get install -y inotify-tools
+
+run apt-get update
+run apt-get install -y graphviz
+
+
 
 # Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
@@ -51,3 +93,13 @@ user agent
 expose 5000
 
 #volume /tim_files/:/service/tim_files/
+
+
+# run locale-gen C.UTF-8 
+#env LC_CTYPE C.UTF-8
+#env LC_ALL C.UTF-8 
+env LC_CTYPE en_US.UTF-8
+env LC_ALL en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US.UTF-8
+

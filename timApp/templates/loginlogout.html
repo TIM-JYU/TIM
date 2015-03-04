@@ -1,0 +1,94 @@
+<div class="viewLogin">
+{% if session.user_id %}
+        <span>Logged in as: {{ session.real_name }} ({{ session.user_name }})</span>
+        <form method="POST" action="/logout">
+            <input type="submit" value="Logout">
+        </form>
+    {% else %}
+        <form method="GET" action="/login">
+            <div class="loginButtonRow">
+                <input name="korppiLogin"
+                       type="submit"
+                       value="Login using Korppi"
+                       class="loginButton">
+                <input name="emailLogin"
+                       type="submit"
+                       value="Login using email"
+                       class="loginButton">
+                <input name="emailSignup"
+                       type="submit"
+                       value="Sign up using email"
+                       class="loginButton">
+                <input type="hidden"
+                       name="came_from"
+                       value="{{ request.path|urlencode }}">
+            </div>
+        </form>
+        {% if session.altlogin == "signup" %}
+        <form method="POST" action="/altsignup">
+            <p class="loginwelcome">
+                Welcome to TIM! Please fill in your email address to sign up.<br>
+                You will receive a confirmation email with your first password.<br>
+                You can also use this form to recover a lost password, or to change
+                your user name.
+            </p>
+            <div class="loginFieldDiv">
+                <label for="email" class="loginFieldLabel">Email</label> 
+                <input name="email" type="text" class="loginFieldInput">
+            </div>
+            <div class="loginButtonDiv">
+                <input type="submit" value="Sign up">
+            </div>
+        </form>
+        {% endif %}
+        {% if session.altlogin == "signup2" %}
+        <form method="POST" action="/altsignup2">
+            <p class="loginwelcome">
+                Welcome to TIM! We need just a few more details to get you started.
+            </p>
+                <input type="hidden" name="token" value="{{ session.token }}">
+            <div class="loginFieldDiv">
+                <label for="name" class="loginFieldLabel">User name</label> 
+                <span name="name" class="loginFieldInput">{{ session.user_name }}</span>
+            </div>
+            <div class="loginFieldDiv">
+                <label for="realname" class="loginFieldLabel">Real name</label> 
+                <input name="realname" class="loginFieldInput" type="text" value="{{ session.real_name }}">
+            </div>
+            <div class="loginFieldDiv">
+                <label for="email" class="loginFieldLabel">Email</label> 
+                <span name="email" class="loginFieldStatic"> {{ session.email }}</span>
+            </div>
+            <div class="loginFieldDiv">
+                <label for="password" class="loginFieldLabel">New password</label> 
+                <input name="password" class="loginFieldInput" type="password">
+            </div>
+            <div class="loginFieldDiv">
+                <label for="passconfirm" class="loginFieldLabel">Repeat new password</label> 
+                <input name="passconfirm" class="loginFieldInput" type="password">
+            </div>
+            <div class="loginButtonDiv">
+                <input type="submit" value="Create account">
+            </div>
+        </form>
+        {% endif %}
+        {% if session.altlogin == "login" %}
+        <form method="POST" action="/altlogin">
+            <p class="loginwelcome">
+            Welcome to TIM! Please enter your email address and password to log in.
+            </p>
+            <div class="loginFieldDiv">
+                <label for="email" class="loginFieldLabel">Email</label> 
+                <input name="email" class="loginFieldInput" type="email" value="{{session.email}}">
+            </div>
+            <div class="loginFieldDiv">
+                <label for="password" class="loginFieldLabel">Password</label> 
+                <input name="password" class="loginFieldInput" type="password">
+            </div>
+            <div class="loginButtonDiv">
+                <input type="submit" value="Login">
+            </div>
+        </form>
+        {% endif %}
+    {% endif %}
+</div>

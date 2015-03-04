@@ -1,23 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>Manage document</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
-<link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-<link href="{{url_for('static', filename='bootstrap/css/bootstrap.css')}}">
-<link href="{{url_for('static', filename='bootstrap/css/bootstrap-theme.css')}}">
+{% extends "base.html" %}
+{% block title %}Manage document{% endblock %}
+{% block head %}
+{{ super() }}
 <script src="{{url_for('static', filename='scripts/manageView/manageCtrl.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/showdown.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
 
-<!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
 <style type="text/css">
 table {
 	margin: 1em;
@@ -52,27 +38,32 @@ table td {
 	margin-bottom: 1em;
 }
 </style>
-<script type="text/javascript">
+<script>
 var doc = {{doc|tojson|safe}};
 var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
+var groups = {{user_groups|tojson|safe}};
 </script>
-</head>
-
-<body ng-app="permApp" ng-controller="PermCtrl">
+{% endblock %}
+{% block content %}
+<div ng-app="permApp" ng-controller="PermCtrl">
     {% with messages = get_flashed_messages() %} {% if messages %}
     <ul class="flashes">
         {% for message in messages %}
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    <h1>Managing document: {{ '{{doc.name}}' }}</h1>
-    <div class="material">
         <div class="margin">
-            <a href="/view/{{ '{{doc.id}}' }}">View this document</a> <br>
-            <a href="/edit/{{ '{{doc.id}}' }}">Edit this document</a>
+            <a href="/view/{{ '{{doc.name}}' }}">View this document</a> <br>
         </div>
-        Document owner: {{ '{{ doc.owner.name }}' }}
+        <div class="margin">
+            Document owner: <select ng-model="doc.owner"
+                                  ng-options="group.name for group in userGroups track by group.id"
+                ng-change="changeOwner()">
+
+        </select>
+            <span ng-show="ownerUpdating">Updating...</span>
+        </div>
         <div class="margin">
             Editors:
             <p ng-show="editors.length == 0">This document doesn't have editors.</p>
@@ -112,13 +103,22 @@ var viewers = {{viewers|tojson|safe}};
             </label>
             <input type="submit" value="Update" ng-disabled="newName === doc.name">
         </form>
-        <div class="uploadForm margin">
+        <form class="uploadForm margin">
             Upload a new version for this document
             <div>
-                <input type="file" ng-file-select="updateDocument(doc, $files)">
+                <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
                 <span ng-bind="progress"></span>
+                <button id="reset" type="reset" value="Reset">Clear</button>
             </div>
-        </div>
+        </form>
+        <form class="uploadForm">
+            Edit the full document
+            <div>
+                <textarea class="docEditor" ng-model="fulltext"></textarea>
+                <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument(doc)">Save</button>
+                <span ng-show="saving">Saving...</span>
+            </div>
+        </form>
         <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
         <div class="margin">
             <button ng-click="deleteDocument(doc.id)">Delete document</button>
@@ -129,18 +129,15 @@ var viewers = {{viewers|tojson|safe}};
                 <tr>
                     <td>Time</td>
                     <td>User</td>
-                    <td>Message</td>
-                    <td>Hash</td>
+                    <td>Difference</td>
                 </tr>
             </thead>
             <tr ng-repeat="version in doc.versions">
-                <td>{{ '{{ version.timestamp }}' }}</td>
+                <td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
                 <td>{{ '{{ version.user }}' }}</td>
-                <td>{{ '{{ version.message }}' }}</td>
-                <td>{{ '{{ version.hash }}' }}</td>
+                <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>
             </tr>
         </table>
         <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
-</body>
-</html>
+{% endblock %}

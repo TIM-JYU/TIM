@@ -1,3 +1,0 @@
-Jos muuttuja esitellään aliohjelmassa lokaalina muuttujana, se pitää
-alustaa ennen sen käyttöä. Jos muuttujaa tarvitaan useammassa metodissa,
-voi sen esitellä attribuuttina luokan sisällä:

@@ -1,13 +1,7 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase, blocktypes, TimDbException, DocIdentifier
-from ephemeralclient import EphemeralClient, EPHEMERAL_URL, NotInCacheException
-import os
+from timdb.timdbbase import TimDbBase
 
 class Notes(TimDbBase):
-    
-    def getDocIdentifierForNote(self, note_id):
-        return DocIdentifier('note', note_id)
-    
     @contract
     def __init__(self, db_path : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -16,101 +10,145 @@ class Notes(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-        self.ec = EphemeralClient(EPHEMERAL_URL)
-
-    @contract
-    def addNote(self, usergroup_id: 'int', content : 'str', block_id : 'int', block_specifier : 'int') -> 'str':
-        """Adds a note to the document.
-        
-        :param usergroup_id: The usergroup who owns the note.
-        :param content: The content of the note.
-        :param block_id: The block to which the comment is added.
-        :param block_specifier: A specifier that tells a more accurate position of the note.
-               Should be the index of the paragraph within the document.
-        """
-        #TODO: Needs revision id.
-        cursor = self.db.cursor()
-        cursor.execute('insert into Block (description, UserGroup_id, type_id) values (?, ?, ?)', [None, usergroup_id, blocktypes.NOTE])
-        note_id = cursor.lastrowid
-        assert note_id is not None, 'note_id was None'
-        cursor.execute('insert into BlockRelation (block_id, parent_block_specifier, parent_block_id, parent_block_revision_id) values (?,?,?,?)',
-                       [note_id, block_specifier, block_id, 0])
-        
-        self.writeUtf8(content, self.getBlockPath(note_id))
-        
-        self.db.commit()
-        
-        #TODO: Do notes need to be versioned?
-        
-        self.ec.loadDocument(self.getDocIdentifierForNote(note_id), content.encode('utf-8'))
-        return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
+        #self.ec = EphemeralClient(EPHEMERAL_URL)
     
     @contract
-    def deleteNote(self, note_id : 'int'):
-        """Deletes a note.
-        
-        :param note_id: The id of the note to be deleted.
+    def __tagstostr(self, tags : 'list(str)') -> 'str':
+        tagstr = ''
+        if 'difficult' in tags:
+            tagstr += 'd'
+        if 'unclear' in tags:
+            tagstr += 'u'
+        return tagstr
+                
+    @contract
+    def __strtotags(self, tagstr : 'str') -> 'list(str)':
+        tags = []
+        if 'd' in tagstr:
+            tags.append("difficult")
+        if 'u' in tagstr:
+            tags.append("unclear")
+        return tags
+                
+    @contract
+    def hasEditAccess(self, UserGroup_id : 'int', doc_id : 'int', par_index : 'int', note_index : 'int') -> 'bool':
         """
-        
+        :param user_id: The owner of the note.
+        :param doc_id: The document in which the note resides.
+        :param par_index: The paragraph index.
+        :param note_index: The note index, starting from 0 for each paragraph.
+        """
         cursor = self.db.cursor()
-        cursor.execute('delete from Block where id = ? and type_id = ?', [note_id, blocktypes.NOTE])
-        if cursor.rowcount == 0:
-            raise TimDbException('The block %d was not found.' % note_id)
+    
+        cursor.execute(
+        """
+            select UserGroup_id from UserNotes
+            where doc_id = ? and par_index = ? and note_index = ?
+        """, [doc_id, par_index, note_index])
+        row = cursor.fetchone()
+        return row is not None and int(row[0]) == UserGroup_id
+    
+    @contract
+    def addNote(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str', par_index : 'int', content : 'str', access : 'str', tags : 'list(str)', commit : 'bool' = True):
+        """Adds a note to the document.
         
-        cursor.execute('delete from BlockRelation where Block_id = ?', [note_id])
+        :param UserGroup_id: The user group who owns the note.
+        :param doc_id: The document in which the note exists.
+        :param doc_ver: The version of the document.
+        :param par_index: Index of the paragraph which the note is for.
+        :param content: The content of the note.
+        :param access: Who can read the note.
+        :param tags: Tags for the note (difficult, unclear).
+        """
+        self.addEmptyParMapping(doc_id, doc_ver, par_index, commit=False)
+        cursor = self.db.cursor()
+    
+        cursor.execute(
+        """
+            select note_index from UserNotes
+            where doc_id = ? and par_index = ?
+            order by note_index desc
+        """, [doc_id, par_index])
         
-        assert os.path.exists(self.getBlockPath(note_id)), "Block did not exist on file system."
+        lastindex = cursor.fetchone()
+        if lastindex is None:
+            note_index = 0
+        else:
+            note_index = int(lastindex[0]) + 1
         
-        os.remove(self.getBlockPath(note_id))
+        cursor.execute(
+        """
+            insert into UserNotes
+            (UserGroup_id, doc_id, doc_ver, par_index, note_index,
+            content, created, modified, access, tags)
+            values (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?)
+        """, [UserGroup_id, doc_id, doc_ver, par_index, note_index,
+        content, access, self.__tagstostr(tags)])
+
+        if commit:
+            self.db.commit()
+
+    @contract
+    def modifyNote(self, doc_id : 'int', doc_ver : 'str', par_index : 'int', note_index : 'int', new_content : 'str', access: 'str', new_tags : 'list(str)'):
+        """Modifies an existing note.
+
+        :param doc_id: The document in which the note resides.
+        :param par_index: The paragraph index.
+        :param note_index: The note index, starting from 0 for each paragraph.
+        :param new_content: New note text to set.
+        :param new_tags: New tags to set.
+        """
+        cursor = self.db.cursor()
+
+        # We need to refresh the UserNotes table at this point so that the comment will certainly be found
+        self.getMappedValues(UserGroup_id=None,
+                             doc_id=doc_id,
+                             doc_ver=doc_ver,
+                             table='UserNotes',
+                             custom_access='1')
+
+        cursor.execute(
+        """
+            update UserNotes
+            set doc_ver = ?, content = ?, tags = ?, access = ?
+            where doc_id = ? and par_index = ? and note_index = ?
+        """, [doc_ver, new_content, self.__tagstostr(new_tags), access,
+              doc_id, par_index, note_index])
+        
+        self.db.commit()
+
+    @contract
+    def deleteNote(self, doc_id : 'int', par_index : 'int', note_index : 'int'):
+        """Deletes a note.
+
+        :param doc_id: The document in which the note resides.
+        :param par_index: The paragraph index.
+        :param note_index: The note index, starting from 0 for each paragraph.
+        """
+        cursor = self.db.cursor()
+        
+        cursor.execute(
+        """
+            delete from UserNotes
+            where doc_id = ? and par_index = ? and note_index = ?
+        """, [doc_id, par_index, note_index])
         
         self.db.commit()
         
     @contract
-    def modifyNote(self, note_id : 'int', new_content : 'str') -> 'str':
-        """Modifies an existing note.
-        
-        :param note_id: The id of the note to be modified.
-        :param new_content: The new content of the note.
+    def getNotes(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
+        """Gets all notes for a document a particular user has access to.
+        :param user_id: The user requesting the notes.
+        :param group_id: The group of the user.
+        :param doc_id: The document to get the notes for.
         """
+        result = self.getMappedValues(
+            UserGroup_id, doc_id, doc_ver, 'UserNotes',
+            extra_fields=['UserGroup_id', 'note_index', 'content', 'created', 'modified', 'tags', 'access'],
+            custom_access="access = 'everyone'"
+        )
+
+        for item in result:
+            item["tags"] = self.__strtotags(item["tags"])
         
-        if not self.blockExists(note_id, blocktypes.NOTE):
-            raise TimDbException('The requested note was not found.')
-        
-        self.writeUtf8(new_content, self.getBlockPath(note_id))
-        
-        self.ec.loadDocument(self.getDocIdentifierForNote(note_id), new_content.encode('utf-8'))
-        return self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note_id))
-        
-    @contract
-    def getNotes(self, user_id : 'int', document_id : 'int') -> 'list(dict)':
-        """Gets all the notes for a document for a user.
-        
-        :param user_id: The id of the user whose notes will be fetched.
-        :param block_id: The id of the block whose notes will be fetched.
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""select id, parent_block_specifier from Block,BlockRelation where
-                             Block.id = BlockRelation.Block_id
-                          and id in
-                             (select Block_id from BlockRelation where parent_block_id = ?)
-                          and type_id = ?
-                          and UserGroup_id in
-                                 (select UserGroup_id from UserGroupMember where User_id = ?)""", [document_id, blocktypes.NOTE, user_id])
-        rows = [x for x in cursor.fetchall()]
-        
-        notes = []
-        for row in rows:
-            note_id = row[0]
-            note = {'id' : note_id, 'specifier' : row[1]}
-            with open(self.getBlockPath(note_id), 'r', encoding='utf-8') as f:
-                note['content'] = f.read()
-            notes.append(note)
-        
-        for note in notes:
-            try:
-                note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
-            except NotInCacheException:
-                self.ec.loadDocument(self.getDocIdentifierForNote(note['id']), note['content'].encode('utf-8'))
-                note['htmlContent'] = self.ec.getDocumentFullHtml(self.getDocIdentifierForNote(note['id']))
-        
-        return notes
+        return result

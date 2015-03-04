@@ -1,0 +1,466 @@
+/*  Solarized-paletti   */
+/* $base03:    #002b36; */
+/* $base02:    #073642; */
+/* $base01:    #586e75; */
+/* $base00:    #657b83; */
+/* $base0:     #839496; */
+/* $base1:     #93a1a1; */
+/* $base2:     #eee8d5; */
+/* $base3:     #fdf6e3; */
+/* $yellow:    #b58900; */
+/* $orange:    #cb4b16; */
+/* $red:       #dc322f; */
+/* $magenta:   #d33682; */
+/* $violet:    #6c71c4; */
+/* $blue:      #268bd2; */
+/* $cyan:      #2aa198; */
+/* $green:     #859900; */
+
+html, body {
+   /* height: 100%; */
+}
+
+body {
+    /* background-color: #fdf6e3; */
+	background-color: white;
+} 
+
+.uudenMuuttujanAlue, .uuden-muuttujan-alue{
+    visibility: collapse;
+    top: 5em;
+    position: absolute;
+    background: lightgray;
+    float: left;
+    padding: 0.5em;
+    border-radius: 5px;
+    border: solid;
+    border-width: 1px;
+    border-color: black;
+}
+
+/* From http://www.html5rocks.com/en/tutorials/dnd/basics/ */
+/* Prevent the text contents of draggable elements from being selectable. */
+[draggable] {
+    /* background-color: #fdf6e3; */
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    /* Required to make elements draggable in old WebKit */
+    -khtml-user-drag: element;
+    -webkit-user-drag: element;
+}
+
+.nayttod {
+    width: 100%;
+   
+    /* height: 640px; */
+    clear: both;
+}
+
+.indeksitd {
+    width: 30%;
+    display: inline-block;
+    float: left;
+    padding-left: 3%;
+    font-size: 130%;
+}
+
+.indeksi {
+    display: inline-block;
+    clear: both;
+    /* position: absolute; */
+    /* top: 80px; */
+    /* left: 400px; */
+    border: solid;
+    border-width: 1px;
+    font-size: 80%;
+    width: 95%;
+}
+
+.listad {
+    height: 100%;
+    min-height: 100%;
+    width: 29.5%;
+    float: left;
+}
+
+.tiedotd {
+    /* width:  100%; */
+    /* height: 16%; */
+    /* float: right; */
+    clear: both;
+    /* font-size: 2em; */
+}
+
+.n-ohje {
+    border-style: outset;
+    border-width: 1px;
+    float: left;
+    border-color:grey;
+    margin: 1px;
+}
+
+.lauseke {
+    /*
+    background-color:  #b58900;
+    border-style: outset;
+    border-width: 1px;
+    */
+    display: inline-block;
+    padding: 1px;
+    clear: both;
+    position: relative;
+    float: left;
+    margin: 1px;
+}
+
+.lause {
+    /*
+    background-color:  #b58900;
+    border-style: outset;
+    border-width: 1px;
+    */
+    display: inline-block;
+    padding: 1px;
+    clear: both;
+    position: relative;
+    float: left;
+    margin: 1px;
+}
+
+.toiminta {
+    width: 100%;
+    /* min-height: 400px; */
+    clear: both;
+    /* margin-top: 2em; */
+}
+
+.echo {
+    border-color: #93a1a1;
+    border-style: outset;
+    border-width: 2px;
+    /* background-color: #eee8d5; */
+    color:  black;
+    width: 100%;
+    height: 10%;
+    /* float: right; */
+    visibility: collapse;
+}
+
+.syottod {
+    height: 80%;
+    width: 100%;
+    /* clear: both; */
+}
+
+.taulunaytto {
+    width: 100%;
+    height: 15%;
+    position: absolute;
+}
+
+.taulukko {
+    /* width: 70%; */
+    margin: 0 auto;
+    display: block;
+}
+
+
+.solu-old {
+    width: 5%;
+    background-color: #fdf6e3;
+    /* text-align: center; */
+    /* font-size: 200%; */
+    float: left;
+    text-align: center;
+    font-size: 150%;
+    border-style: groove;
+    border-width: 3px;
+    padding: 3px 0px 3px 0px ;
+    /* padding-left: 1px; */
+    /* padding-right: 3px; */
+}
+
+.solu {
+    width: 3em;
+    /* background-color: #fdf6e3; */
+    /* text-align: center; */
+    font-size: 150%;
+    float: left;
+    text-align: center;
+    padding-left: 1px;
+    padding-right: 3px;
+}
+
+.solu-n {
+    text-align: left;
+    font-size: 70%;
+    padding-left: 2px;
+}
+
+.solu-a {
+    /* clear: both; */
+    text-align: center;
+    font-size: 150%;
+    border-style: groove;
+    border-width: 3px;
+    padding: 3px 0px 3px 0px ;
+}
+
+.solu-i, .solu-n {
+    text-align: left;
+    font-size: 50%;
+    /* border-style: dotted; */
+    border-width: 1px;
+    /* min-height: 40px; */
+    /* height: 40px; */
+    margin-left: 1em;
+}
+
+
+.muuttujan-nimi {
+    width: 1.1em;
+    text-align: left;
+    font-size: 150%;
+    border-style: none;
+    border-width: 3px;
+    padding: 10px 6px 10px 10px;
+    float: left;
+    /* display: inline-block; */
+    /* clear:both; */
+}
+
+.muuttuja {
+    width: 8em;
+    text-align: left;
+    /* background-color: #eee8d5; */
+    font-size: 150%;
+    border-style: none;
+    border-width: 3px;
+    padding: 10px 6px 10px 10px;
+    /* display: inline-block; */
+    clear:both;
+    float: left;
+}
+
+
+.muuttuja-arvo, .arg, .solu-a {
+    background-color: #fdf6e3;
+    border-radius: 5px;
+}
+
+.muuttuja-arvo {
+    text-align: right;
+    width: 2em;
+    font-size: 200%;
+    border-style: groove;
+    border-width: 3px 3px 3px 3px;
+    padding: 6px 2px 0px 2px;
+    float: left;
+}
+
+.muuttujatd {
+    /* background-color: #eee8d5; */
+    /* border-style: outset; */
+    /* border-width: 2px; */
+
+    min-height: 200px;
+    /* width: 100%; */
+    /* float: left; */
+}
+
+.equals-literal {
+    float: left;
+    padding: 0px 2px 0px 2px;
+}
+
+.vasen {
+    width: 23em;
+    height: 100%;
+    float:left;
+    display: inline;
+}
+
+.scratch {
+    /* background-color: #fdf6e3; */
+    /* border: solid; */
+    border-top-style: solid;
+    border-width: 2px;
+    width: 100%;
+    height: 10%;
+    float: left;
+    margin-top: 2px;
+    /* position: absolute; */
+    bottom: 0;
+    display: table-footer-group;
+    vertical-align: bottom;
+    font-size: 150%;
+}
+
+.compound-statements {
+    /* width: 70%; */
+    /* height: 80%; */
+    float: left;
+    clear: both;
+    padding-left: 5px;
+    display: inline-block;
+}
+
+.statement {
+    /* background-color: rgb(240,255,255); */
+    clear: both;
+}
+
+.compound-mode {
+    /* background-color: rgb(240,255,255); */
+    border-style: outset;
+    border-width: 2px;
+
+    width: 30%;
+    height: 80%;
+    float:right;
+}
+
+.compound-tools {
+    /* background-color: #fdf6e3; */
+    width: 100%;
+    height: 20%;
+    float: left;
+    display: inline-block;
+}
+
+.tools {
+    width: 100%;
+    /* height: 50%; */
+    /* float: left; */
+    /* display: inline-block; */
+    padding-left: 200px;
+}
+
+.if-sana {
+    float:left;
+    padding-right: 5px;
+    padding-left: 2px;
+}
+
+.if-ehto {
+    /* background-color: rgb(40,40,40); */
+    float:left;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.arg {
+    font-size: 120%;
+    float: left;
+    border-style: dotted;
+    border-width: 1px;
+}
+
+.op {
+    font-size: 120%;
+    float: left;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.unop {
+    padding-left: 2px;
+    padding-right: 2px;
+    border-style: solid;
+    border-width: 1px;
+    width: 2em;
+    text-align: center;
+    float: left;
+    border-radius: 4px;
+    margin-left: 6px;
+    margin-top: 4px;
+}
+
+.arvo {
+    font-size: 120%;
+    float: left;
+}
+
+.oikea {
+    width: auto;
+    height: 100%;
+    float: left;
+    /* display: block; */
+    /* float: left; */
+}
+
+.ohjelma {
+  /*  background-color: #eee8d5; */
+    border-style: outset;
+    border-width: 2px;
+    
+  width: 100%;
+    height: 93%;
+    overflow-y: scroll;
+  padding-left: 1em;
+  padding-top: 5px;
+  float: left;
+  min-height: 200px;
+  max-height: 22em;
+}
+
+.solu-i {
+	text-align: left;
+	font-size: 70%;
+	border-style: dotted;
+	border-width: 1px;
+	min-height: 40px;
+	margin-left: 0em;
+}
+
+.indeksi {
+	display: inline-block;
+	clear: both;
+	/* position: absolute; */
+	/* top: 80px; */
+	/* left: 400px; */
+	border: solid;
+	border-width: 1px;
+	font-size: 100%;
+	width: 85%;
+	padding-left: 5%;
+	/* padding-right: 5%; */
+	margin-left: 3%;
+}
+
+.toiminta {
+	clear: both;
+	padding-top: 1em;
+	display: block;
+}
+
+.unop, .const {
+	padding-left: 2px;
+	padding-right: 2px;
+	border-style: solid;
+	border-width: 1px;
+	width: 2em;
+	text-align: center;
+	float: left;
+	border-radius: 4px;
+	margin-left: 6px;
+	margin-top: 4px;
+	font-size: 90%;
+	font-weight: normal;
+}
+
+.tools {
+	width: 40%;
+	padding-left: 1em;
+	float: left;
+}
+
+.valittu {
+    background: lightblue;
+}
+
+.suljettu {
+    background: rgb(40, 40, 40);
+}

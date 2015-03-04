@@ -1,7 +1,0 @@
-Ohjelman suoritus aloitetaan aina pääohjelmasta ja sitten edetään rivi
-riviltä ylhäältä alaspäin ohjelman loppuun niin kauan kuin lauseita
-riittää. Ohjelmassa voi olla myös rakenteita, joissa toistetaan tiettyjä
-rivejä useampaan kertaan vain muuttamalla jotain arvoa tai arvoja.
-Pääohjelmassa voi olla myös aliohjelmakutsuja jolloin hypätään
-pääohjelmasta suorittamaan aliohjelmaa ja palataan sitten takaisin
-pääohjelman suoritukseen. Aliohjelmista puhutaan enemmän luvussa 6.

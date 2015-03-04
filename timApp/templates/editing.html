@@ -1,18 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Editing {{docName}} - TIM</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{url_for('static', filename='stylesheet.css')}}">
-    <script src="{{url_for('static', filename='scripts/jquery-1.11.1.min.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/angular-file-upload-shim.min.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/angular-1.2.9/angular.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/angular-file-upload.min.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/showdown.js')}}"></script> 
-    <script src="{{url_for('static', filename='scripts/angular-sanitize.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/Markdown.Converter.js')}}"></script>
-    <script src="{{url_for('static', filename='scripts/Markdown.Sanitizer.js')}}"></script>
+{% extends "base.html" %}
+{% block title %}Editing {{docName}}{% endblock %}
+{% block head %}
+{{ super() }}
     <script src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
     
     {% for cssFile in cssFiles %}
@@ -32,11 +21,10 @@
 
     var EditApp = angular.module("controller", modules );
     </script> 
-    <script type="text/javascript" src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
-    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="{{url_for('static', filename='scripts/src-min/ace.js')}}"> </script>
+    <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script src="{{url_for('static', filename='scripts/editView/editCtrl.js')}}"></script>
 
-    <!-- <script src="http://localhost:50004/exampleJs.js"> </script> -->
     <style type="text/css" media="screen">
     .editor { 
         position: relative;
@@ -56,16 +44,14 @@
     </style>
     <script>
         // Data from jinja2 template
-    var jsonDoc = JSON.parse({{ text|tojson|safe }});
+        var jsonDoc = JSON.parse({{ text|tojson|safe }});
         var docId = JSON.parse({{docId|tojson|safe}});
         var docName = {{ docName|tojson|safe}};
         var version = {{ version|tojson|safe}};
     </script>
-    <!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->  
-</head>
-<body  ng-app="controller" ng-controller="ParCtrl">   
+{% endblock %}
+{% block content %}
+<div  ng-app="controller" ng-controller="ParCtrl">
 <!--<div id="topBar">
     <div class="navigationBar" > 
         <a href="localhost:5000"> Home </a> 
@@ -80,7 +66,6 @@
             <span ng-bind="progress"></span>
 </div>
 <p ng-show="uploadedFile">Uploaded file: <a href="{{ '{{ uploadedFile }}' }}">{{ '{{ uploadedFile }}' }}</a></p>
-    <div class="material"> 
         <div class="paragraph">
              <div class="addParButton b0" ng-click="parAdd(0)"> </div>
              <br>
@@ -103,7 +88,5 @@
         $(".ace_editor").attr("onresize", function(){activeEdit.editor.editor.resize()});
         $(".ace_editor").css("resize", "both");
     </script>
-</body>
-
-
-</html>
+</div>
+{% endblock %}

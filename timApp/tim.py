@@ -1,58 +1,64 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, session, abort, flash, current_app
+import logging
+import os
+import imghdr
+import io
+import collections
+import re
+
+from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
 from flask import render_template
-from flask import g
-from flask import request
 from flask import send_from_directory
-import logging
-from ReverseProxied import ReverseProxied
-import json
-import os
-import containerLink
+from flask.ext.compress import Compress
 from werkzeug.utils import secure_filename
-from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbException, DocIdentifier
-from flask import Response
-import imghdr
 from flask.helpers import send_file
-import io
+from bs4 import UnicodeDammit
+from ReverseProxied import ReverseProxied
+
+import containerLink
+from routes.edit import edit_page
+from routes.manage import manage_page
+from routes.view import view_page
+from routes.login import login_page
+from timdb.timdbbase import TimDbException
 import pluginControl
-import collections
 from containerLink import PluginException
+from routes.settings import settings_page
+from routes.common import *
 
-app = Flask(__name__) 
-app.config.from_object(__name__)
 
-# Load default config and override config from an environment variable
-app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'tim_files/tim.db'),
-    DEBUG=True,
-    SECRET_KEY='development key',
-    USERNAME='admin',
-    PASSWORD='default',
-    FILES_PATH='tim_files',
-    UPLOAD_FOLDER = "./media/images/",
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1025 
-   ))
+app = Flask(__name__)
+app.config.from_pyfile('defaultconfig.py', silent=False)
+app.config.from_envvar('TIM_SETTINGS', silent=True)
+#Compress(app)
 
-LOG_FILENAME = "../tim_logs/timLog.log"
+app.register_blueprint(settings_page)
+app.register_blueprint(manage_page)
+app.register_blueprint(edit_page)
+app.register_blueprint(view_page)
+app.register_blueprint(login_page)
+app.register_blueprint(Blueprint('bower',
+                                 __name__,
+                                 static_folder='static/scripts/bower_components',
+                                 static_url_path='/static/scripts/bower_components'))
+
+print('Debug mode: {}'.format(app.config['DEBUG']))
+
+KNOWN_TAGS = ['difficult', 'unclear']
 
 # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
 formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
-handler = logging.FileHandler(LOG_FILENAME)
+if not os.path.exists(app.config['LOG_DIR']):
+    os.mkdir(app.config['LOG_DIR'])
+handler = logging.FileHandler(app.config['LOG_PATH'])
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
-        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
-#app.config.from_envvar('TIM_SETTINGS', silent=True)
-
-if os.path.abspath('..') == '/service':
-    app.config['DEBUG'] = False
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
 PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
@@ -65,132 +71,63 @@ LOG_LEVELS = {"CRITICAL" : app.logger.critical,
               "WARNING" : app.logger.warning,
               "INFO": app.logger.info,
               "DEBUG" : app.logger.debug}
-              #"NOTSET" : app.logger.notset}
-
 
 # Logger call
 @app.route("/log/", methods=["POST"])
 def logMessage():
     try:
         message = request.get_json()['message']
+        level = request.get_json()['level']
         LOG_LEVELS[level](message)
     except KeyError:
         app.logger.error("Failed logging call: " + str(request.get_data()))
     
 
+def error_generic(error, code):
+    if 'text/html' in request.headers.get("Accept", ""):
+        return render_template(str(code) + '.html', message=error.description), code
+    else:
+        return jsonResponse({'error': error.description}, code)
+
+@app.errorhandler(400)
+def bad_request(error):
+    return error_generic(error, 400)
+
 @app.errorhandler(403)
 def forbidden(error):
-
-    return render_template('403.html', message=error.description), 403
+    return error_generic(error, 403)
 
 @app.errorhandler(404)
 def notFound(error):
-    return render_template('404.html'), 404
+    return error_generic(error, 404)
 
-def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata), mimetype='application/json')
-    response.status_code = status_code
-    return response
-
-def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):
+@app.route('/diff/<int:doc_id>/<doc_hash>')
+def documentDiff(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
-        abort(403, message)
-
-def verifyViewAccess(block_id):
-    timdb = getTimDb()
-    if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
-        abort(403, "Sorry, you don't have permission to view this resource.")
-
-def verifyLoggedIn():
-    if not loggedIn():
-        abort(403, "You have to be logged in to perform this action.")
-
-def loggedIn():
-    return getCurrentUserId() != 0
-
-@app.route("/manage/<int:doc_id>")
-def manage(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
-    doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
-    doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
-    editors = timdb.users.getEditors(doc_id)
-    viewers = timdb.users.getViewers(doc_id)
-    return render_template('manage.html', doc=doc_data, editors=editors, viewers=viewers)
+    verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
+    try:
+        doc_diff = timdb.documents.getDifferenceToPrevious(DocIdentifier(doc_id, doc_hash))
+        return render_template('diff.html', diff_html=doc_diff)
+    except TimDbException as e:
+        abort(404, str(e))
 
-@app.route("/getPermissions/<int:doc_id>")
-def getPermissions(doc_id):
+@app.route('/download/<int:doc_id>/<doc_hash>')
+def documentHistory(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
+    if not timdb.documents.documentExists(doc_id):
         abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    doc_data = timdb.documents.getDocument(DocIdentifier(doc_id, ''))
-    editors = timdb.users.getEditors(doc_id)
-    viewers = timdb.users.getViewers(doc_id)
-    return jsonResponse({'doc' : doc_data, 'editors' : editors, 'viewers' : viewers})
-
-@app.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
-def addPermission(doc_id, group_name, perm_type):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    
-    groups = timdb.users.getUserGroupsByName(group_name)
-    if len(groups) == 0:
-        return jsonResponse({'message' : 'No user group with this name was found.'}, 404)
-    
-    group_id = groups[0]['id']
-    
-    if perm_type == 'edit':
-        timdb.users.grantEditAccess(group_id, doc_id)
-    elif perm_type == 'view':
-        timdb.users.grantViewAccess(group_id, doc_id)
-    else:
-        abort(400)
-    return "Success"
-
-@app.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
-def removePermission(doc_id, group_id, perm_type):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    if perm_type == 'edit':
-        timdb.users.removeEditAccess(group_id, doc_id)
-    elif perm_type == 'view':
-        timdb.users.removeViewAccess(group_id, doc_id)
-    else:
-        abort(400)
-    return "Success"
-
-@app.route("/rename/<int:doc_id>", methods=["PUT"])
-def renameDocument(doc_id):
-    timdb = getTimDb()
-    new_name = request.get_json()['new_name']
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
-    timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
-    return "Success"
+    verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
+    try:
+        doc_data = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, doc_hash))
+        return Response(doc_data, mimetype="text/plain")
+    except TimDbException as e:
+        abort(404, str(e))
 
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
-    doc_data = timdb.documents.getDocumentMarkdown(getNewest(doc_id))
-    return Response(doc_data, mimetype="text/plain")
+    return documentHistory(doc_id, getNewest(doc_id).hash)
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
@@ -203,10 +140,9 @@ def upload_file():
             return jsonResponse({'message': 'The file format is not allowed.'}, 403)
         filename = secure_filename(doc.filename)
         if(filename.endswith(tuple(DOC_EXTENSIONS))):
-            try:
-                content = doc.read().decode('utf-8')
-            except UnicodeDecodeError:
-                return jsonResponse({'message': 'The file should be in UTF-8 format.'}, 400)
+            content = UnicodeDammit(doc.read()).unicode_markup
+            if not content:
+                return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
             timdb.documents.importDocument(content, filename, getCurrentUserGroup())
             return "Successfully uploaded document"
         else:
@@ -220,19 +156,9 @@ def upload_file():
                 doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 return redirect(url_for('uploaded_file', filename=filename))
     
-@app.route('/update/<int:doc_id>/<version>', methods=['POST'])
-def updateDocument(doc_id, version):
-    timdb = getTimDb()
-    docId = DocIdentifier(doc_id, version)
-    if not timdb.documents.documentExists(docId):
-        abort(404)
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
-        abort(403)
-    doc = request.files['file']
-    newId = timdb.documents.updateDocument(docId, doc.read())
-    return jsonResponse({'version' : newId.hash})
 
-@app.route('/images/<int:image_id>/<image_filename>/')
+
+@app.route('/images/<int:image_id>/<image_filename>')
 def getImage(image_id, image_filename):
     timdb = getTimDb()
     if not timdb.images.imageExists(image_id, image_filename):
@@ -254,33 +180,77 @@ def getAllImages():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
 
-@app.route("/getDocuments/")
+@app.route("/getDocuments")
 def getDocuments():
+    versions = 1
+    if request.args.get('versions'):
+        ver_str = request.args.get('versions')
+        if re.match('^\d+$', ver_str) is None:
+            return "Invalid version argument."
+        else:
+            ver_int = int(ver_str)
+            if ver_int > 10:
+                # DoS prevention
+                return "Version limit is currently capped at 10."
+            else:
+                versions = ver_int
+
     timdb = getTimDb()
-    docs = timdb.documents.getDocuments(historylimit=1)
+    docs = timdb.documents.getDocuments(historylimit=versions)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    
+    req_folder = request.args.get('folder')
+    if req_folder is not None and len(req_folder) == 0:
+        req_folder = None
+        
+    #print('req_folder is "{}"'.format(req_folder))
+    
+    folders = []
+    finalDocs = []
+    
     for doc in allowedDocs:
+        fullname = doc['name']
+        
+        if req_folder:
+            if not fullname.startswith(req_folder + '/'):
+                continue
+            docname = fullname[len(req_folder) + 1:]
+        else:
+            docname = fullname
+        
+        if '/' in docname:
+            slash = docname.find('/')
+            foldername = docname[:slash]
+            
+            duplicate = False
+            for f in folders:
+                if f['name'] == foldername:
+                    duplicate = True
+                    break
+            if duplicate:
+                continue
+            
+            fullfolder = foldername if req_folder is None else req_folder + '/' + foldername            
+            folders.append({
+                'isFolder': True,
+                'name': foldername,
+                'fullname' : fullfolder,
+                'items': [],
+                'canEdit': False,
+                'isOwner': False,
+                'owner': timdb.users.getOwnerGroup(doc['id'])
+            })
+            continue
+
+        doc['name'] = docname
+        doc['fullname'] = fullname
+        doc['isFolder'] = False
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
         doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
-    return jsonResponse(allowedDocs)
-
-def getCurrentUserId():
-    uid = session.get('user_id')
-    return uid if uid is not None else 0
-
-def getCurrentUserName():
-    name = session.get('user_name')
-    return name if name is not None else 'Anonymous'
-
-def getCurrentUserGroup():
-    timdb = getTimDb()
-    return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
-
-def getTimDb():
-    if not hasattr(g, 'timdb'):
-        g.timdb = TimDb(db_path=app.config['DATABASE'], files_root_path=app.config['FILES_PATH'], current_user_name=getCurrentUserName())
-    return g.timdb
+        finalDocs.append(doc)
+        
+    return jsonResponse(folders + finalDocs)
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
@@ -288,7 +258,7 @@ def getJSON(doc_id):
     verifyViewAccess(doc_id)
     try:
         texts = timdb.documents.getDocumentBlocks(getNewest(doc_id))
-        doc = timdb.documents.getDocument(doc_id)
+        doc = timdb.documents.getDocument(doc_id.id)
         return jsonResponse({"name" : doc['name'], "text" : texts})
     except IOError as err:
         print(err)
@@ -301,7 +271,7 @@ def getJSON_HTML(doc_id):
     try:
         newest = getNewest(doc_id)
         blocks = timdb.documents.getDocumentAsHtmlBlocks(newest)
-        doc = timdb.documents.getDocument(newest)
+        doc = timdb.documents.getDocument(doc_id)
         return jsonResponse({"name" : doc['name'], "text" : blocks})
     except ValueError as err:
         print(err)
@@ -310,71 +280,29 @@ def getJSON_HTML(doc_id):
         print(err)
         return "[]"
 
-@app.route("/postParagraph/", methods=['POST'])
-def postParagraph():
-    timdb = getTimDb()
-    docId = request.get_json()['docId']
-    verifyEditAccess(docId)
-    paragraphText = request.get_json()['text']
-    parIndex = request.get_json()['par']
-    app.logger.info("Editing file: {}, paragraph {}".format(docId, parIndex ))
-    version = request.headers.get('Version')
-    identifier = getNewest(docId)#DocIdentifier(docId, version)
-    
-    try:
-        blocks, version = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
-    except IOError as err:
-        print(err)
-        return "Failed to modify block."
-    # Replace appropriate elements with plugin content, load plugin requirements to template
-    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
-    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
-
-    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
-
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
     if not loggedIn():
         return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
     jsondata = request.get_json()
     docName = jsondata['doc_name']
+    
+    if docName.startswith('/') or docName.endswith('/'):
+        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
+    
+    if re.match('^(\d)*$', docName) is not None:
+        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
+    
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonResponse({'id' : docId.id})
-
-@app.route("/documents/<int:doc_id>", methods=["DELETE"])
-def deleteDocument(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        return jsonResponse({'message': 'Document does not exist.'}, 404)
-    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
-    timdb.documents.deleteDocument(getNewest(doc_id))
-    return "Success"
-
-@app.route('/edit/<int:doc_id>')
-@app.route("/documents/<int:doc_id>")
-def editDocument(doc_id):
-    timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    verifyEditAccess(doc_id)
-    newest = getNewest(doc_id)
-    doc_metadata = timdb.documents.getDocument(newest)
-    xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
-    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
-    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
-    modules.append("ngSanitize")
-    modules.append("angularFileUpload")
-    return render_template('editing.html', docId=doc_metadata['id'], docName=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, cssFiles=cssPaths, jsMods=modules)
-
+    return jsonResponse({'id' : docId.id, 'name' : docName})
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
     block = timdb.documents.getBlock(getNewest(docId), blockId)
-    return jsonResponse({"md": block})
+    return jsonResponse({"text": block})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
@@ -383,105 +311,134 @@ def getBlockHtml(docId, blockId):
     block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)    
     return block
 
-def getNewest(docId):
-    docId = int(docId)
-    timdb = getTimDb()
-    version = timdb.documents.getNewestVersion(docId)['hash']
-    return DocIdentifier(docId, version)
-    
-@app.route("/newParagraph/", methods=["POST"])
-def addBlock():
-    timdb = getTimDb()
-    jsondata = request.get_json()
-    blockText = jsondata['text']
-    docId = jsondata['docId']
-    verifyEditAccess(docId)
-    paragraph_id = jsondata['par']
-    blocks, version = timdb.documents.addMarkdownBlock(getNewest(docId), blockText, int(paragraph_id))
-    (plugins, preparedBlocks) = pluginControl.pluginify(blocks, getCurrentUserName(), timdb.answers, docId, getCurrentUserId())
-    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
-    return jsonResponse({'texts' : preparedBlocks, 'js':jsPaths,'css':cssPaths,'angularModule':modules})
-
-@app.route("/deleteParagraph/<int:docId>/<int:blockId>")
-def removeBlock(docId, blockId):
-    timdb = getTimDb()
-    verifyEditAccess(docId)
-    timdb.documents.deleteParagraph(getNewest(docId), blockId)
-    return "Successfully removed paragraph"
-
 @app.route("/<plugin>/<path:fileName>")
 def pluginCall(plugin, fileName):
     try:
-        req = containerLink.callPluginResource(plugin, fileName)
+        req = containerLink.call_plugin_resource(plugin, fileName)
         return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
     except PluginException:
         abort(404)
 
-@app.route("/view/<int:doc_id>")
-def viewDocument(doc_id):
+@app.route("/index/<int:docId>")
+def getIndex(docId):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(DocIdentifier(doc_id, '')):
-        abort(404)
-    verifyViewAccess(doc_id)
-    versions = timdb.documents.getDocumentVersions(doc_id)
-    xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, versions[0]['hash']))
-    doc = timdb.documents.getDocument(DocIdentifier(doc_id, versions[0]['hash']))
-    (plugins,texts) = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
-    (jsPaths, cssPaths, modules) = pluginControl.getPluginDatas(plugins)
-    modules.append("ngSanitize")
-    modules.append("angularFileUpload")
-    return render_template('view.html', docID=doc['id'], docName=doc['name'], text=json.dumps(texts), version=versions[0], js=jsPaths, cssFiles=cssPaths, jsMods=modules)
-
+    verifyViewAccess(docId)
+    index = timdb.documents.getIndex(getNewest(docId))
+    return jsonResponse(index)
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
     jsondata = request.get_json()
     noteText = jsondata['text']
-    #group_id = jsondata['group_id']
-    
-    docId = jsondata['doc_id']
-    paragraph_id = jsondata['par_id']
+    access = jsondata['access']
+    sent_tags = jsondata.get('tags', {})
+    tags = []
+    for tag in KNOWN_TAGS:
+        if sent_tags[tag]:
+            tags.append(tag)
+    doc_id = jsondata['docId']
+    doc_ver = request.headers.get('Version')
+    paragraph_id = jsondata['par']
+    verifyCommentRight(doc_id)
     timdb = getTimDb()
-    group_id = timdb.users.getUserGroups(getCurrentUserId())[0]['id']
-    timdb.notes.addNote(group_id, noteText, int(docId), int(paragraph_id))
+    group_id = getCurrentUserGroup()
+    timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, access, tags)
     #TODO: Handle error.
     return "Success"
 
 @app.route("/editNote", methods=['POST'])
 def editNote():
+    verifyLoggedIn()
     jsondata = request.get_json()
+    group_id = getCurrentUserGroup()
+    doc_id = int(jsondata['docId'])
+    doc_ver = request.headers.get('Version')
+    paragraph_id = int(jsondata['par'])
     noteText = jsondata['text']
-    noteId = jsondata['note_id']
+    access = jsondata['access']
+    note_index = int(jsondata['note_index'])
+    sent_tags = jsondata.get('tags', {})
+    tags = []
+    for tag in KNOWN_TAGS:
+        if sent_tags[tag]:
+            tags.append(tag)
     timdb = getTimDb()
-    verifyEditAccess(noteId)
-    timdb.notes.modifyNote(noteId, noteText)
+
+    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+            or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+        abort(403, "Sorry, you don't have permission to edit this note.")
+
+    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, access, tags)
     return "Success"
 
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
+    verifyLoggedIn()
     jsondata = request.get_json()
-    noteId = int(jsondata['note_id'])
+    group_id = getCurrentUserGroup()
+    doc_id = int(jsondata['doc_id'])
+    paragraph_id = int(jsondata['par_id'])
+    note_index = int(jsondata['note_index'])
     timdb = getTimDb()
-    verifyEditAccess(noteId)
-    timdb.notes.deleteNote(noteId)
+
+    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+            or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+        abort(403, "Sorry, you don't have permission to remove this note.")
+
+    timdb.notes.deleteNote(doc_id, paragraph_id, note_index)
     return "Success"
 
 @app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
+    verifyViewAccess(doc_id)
     timdb = getTimDb()
-    notes = timdb.notes.getNotes(getCurrentUserId(), doc_id)
+    group_id = getCurrentUserGroup()
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
+    for note in notes:
+        note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
+        note['private'] = note['access'] == 'justme'
+        tags = note['tags']
+        note['tags'] = {}
+        for tag in KNOWN_TAGS:
+            note['tags'][tag] = tag in tags
     return jsonResponse(notes)
+
+@app.route("/read/<int:doc_id>", methods=['GET'])
+def getReadParagraphs(doc_id):
+    verifyReadMarkingRight(doc_id)
+    timdb = getTimDb()
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
+    for r in readings:
+        r.pop('doc_ver', None)
+    return jsonResponse(readings)
+
+@app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
+def setReadParagraph(doc_id, specifier):
+    verifyReadMarkingRight(doc_id)
+    timdb = getTimDb()
+    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    if len(blocks) <= specifier:
+        return jsonResponse({'error' : 'Invalid paragraph specifier.'}, 400)
+    timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
+    return "Success"
+
+def parse_task_id(task_id):
+    # Assuming task_id is of the form "22.palindrome"
+    pieces = task_id.split('.')
+    if len(pieces) != 2:
+        abort(400, 'The format of task_id is invalid. Expected exactly one dot character.')
+    doc_id = int(pieces[0])
+    task_id_name = pieces[1]
+    return doc_id, task_id_name
 
 @app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
-    
-    # Assuming task_id is of the form "22.palindrome"
-    pieces = task_id.split('.')
-    if len(pieces) != 2:
-        return jsonResponse({'error' : 'The format of task_id is invalid. Expected exactly one dot character.'}, 400)
-    doc_id = int(pieces[0])
-    task_id_name = pieces[1]
+
+    doc_id, task_id_name = parse_task_id(task_id)
     if not 'input' in request.get_json():
         return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
@@ -500,7 +457,7 @@ def saveAnswer(plugintype, task_id):
  
     answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata, 'taskID': task_id}
 
-    pluginResponse = containerLink.callPluginAnswer(plugintype, answerCallData)
+    pluginResponse = containerLink.call_plugin_answer(plugintype, answerCallData)
     
     try:
         jsonresp = json.loads(pluginResponse)
@@ -510,7 +467,7 @@ def saveAnswer(plugintype, task_id):
     if not 'web' in jsonresp:
         return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
     
-    if 'save' in jsonresp:
+    if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
         saveObject = jsonresp['save']
         
         #Save the new state
@@ -521,15 +478,57 @@ def saveAnswer(plugintype, task_id):
             points = None
             tags = []
         timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
-    
+
     return jsonResponse({'web':jsonresp['web']})
+
+@app.route("/answers/<task_id>/<user>")
+def get_answers(task_id, user):
+    verifyLoggedIn()
+    timdb = getTimDb()
+    doc_id, task_id_name = parse_task_id(task_id)
+    if not timdb.documents.documentExists(doc_id):
+        abort(404, 'No such document')
+    user_id = timdb.users.getUserByName(user)
+    if user_id != getCurrentUserId():
+        verifyOwnership(doc_id)
+    if user_id is None:
+        abort(400, 'Non-existent user')
+    answers = timdb.answers.getAnswers(user_id, task_id)
+    return jsonResponse(answers)
+
+@app.route("/getState")
+def get_state():
+    timdb = getTimDb()
+    doc_id, par_id, user, state = unpack_args('doc_id', 'par_id', 'user', 'state', types=[int, int, str, str])
+    if not timdb.documents.documentExists(doc_id):
+        abort(404, 'No such document')
+    user_id = timdb.users.getUserByName(user)
+    if user_id != getCurrentUserId():
+        verifyOwnership(doc_id)
+    if user_id is None:
+        abort(400, 'Non-existent user')
+    if not timdb.documents.documentExists(doc_id):
+        abort(404, 'No such document')
+    if not hasViewAccess(doc_id):
+        abort(403, 'Permission denied')
+
+    version = request.headers['Version']
+    block = timdb.documents.getBlockAsHtml(DocIdentifier(doc_id, version), par_id)
+
+    texts, jsPaths, cssPaths, modules = pluginControl.pluginify([block],
+                                                                user,
+                                                                timdb.answers,
+                                                                doc_id,
+                                                                user_id,
+                                                                custom_state=state)
+    return jsonResponse(texts[0])
 
 def getPluginMarkup(doc_id, plugintype, task_id):
     timdb = getTimDb()
     doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
     for block in doc_markdown:
         if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block):
-            markup = pluginControl.getBlockYaml(block)
+            markup = pluginControl.get_block_yaml(block)
             return markup
     return None
     
@@ -537,33 +536,8 @@ def getPluginMarkup(doc_id, plugintype, task_id):
 def indexPage():
     return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
 
-@app.route("/login", methods=['POST'])
-def login():
-    userName = request.form['user_name']
-    timdb = getTimDb()
-    userId = timdb.users.getUserByName(userName)
-    
-    #For now we just create a user if it doesn't exist.
-    if userId is None:
-        uid = timdb.users.createUser(userName)
-        gid = timdb.users.createUserGroup(userName)
-        timdb.users.addUserToGroup(gid, uid)
-        userId = uid
-    session['user_id'] = userId
-    session['user_name'] = userName
-    flash('You were successfully logged in.')
-    return redirect(url_for('indexPage'))
 
-@app.route("/logout", methods=['POST'])
-def logout():
-    session.pop('user_id', None)
-    session['user_name'] = 'Anonymous'
-    flash('You were successfully logged out.')
-    return redirect(url_for('indexPage'))
-    
-if __name__ == "__main__":
-#    app.debug = True
-#    app.run()
-    app.wsgi_app = ReverseProxied(app.wsgi_app)	
-    app.run(host='0.0.0.0',port=5000)
-
+def startApp():
+    app.wsgi_app = ReverseProxied(app.wsgi_app)
+    #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
+    app.run(host='0.0.0.0', port=5000, use_reloader=False)

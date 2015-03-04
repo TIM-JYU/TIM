@@ -1,4 +1,0 @@
-``` {.esimerkki-western lang="zxx" xml:lang="zxx"}
-Random rand = new Random();
-int satunnaisluku = rand.Next(50, 100);
-```

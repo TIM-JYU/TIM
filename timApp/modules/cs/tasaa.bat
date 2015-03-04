@@ -1,10 +1,15 @@
-@cd E:\kurssit\tim\timApp\modules\cs
+@pushd E:\kurssit\tim\timApp\modules\cs
 @cd t:\cs
 @t:
+@kopioi *.py e:    /q /s
 @kopioi *.js e:    /q /s
 @kopioi *.html e:  /q /s
 @kopioi *.css e:   /q /s
-@kopioi *.py e:    /q /s
 @kopioi *.bat e:   /q
 @kopioi *. e:      /q
-
+@kopioi *.sh e:    /q
+@kopioi r.* e:     /q
+@kopioi dr.* e:    /q
+@xcopy  ptauno\index.html E:\kurssit\pauno\taulukko.html /d /Y
+@xcopy  ptauno\taulukko.* E:\kurssit\pauno\  /d /Y
+@popd

@@ -1,3 +1,0 @@
-Kolmas parametri kertoo mitä tehdään, kun näppäin sitten on painettuna.
-Tähän tulee tapahtuman käsittelijä, eli sen aliohjelman nimi, jonka
-suoritukseen haluamme siirtyä näppäimen tapahtuman sattuessa.

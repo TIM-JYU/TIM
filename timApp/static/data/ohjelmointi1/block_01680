@@ -1,6 +1,0 @@
-Desimaaliluvuissa täytyy kokonaisosa ja desimaaliosa muuttaa
-binääriluvuiksi erikseen. Kokonaisosa muutetaan binääriluvuksi kuten
-yllä. Desimaaliosa muutetaan kertomalla desimaaliosaa toistuvasti
-kahdella ja merkkaamalla paperin syrjään nyt 1, jos tulo oli suurempaa
-tai yhtä suurta kuin 1 ja 0 jos tulo jäi alle yhden. Muutetaan luku
-0.8125~10~ binääriluvuksi.

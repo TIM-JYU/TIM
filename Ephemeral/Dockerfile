@@ -1,8 +1,7 @@
-# Aloitetaan ubuntun imagesta
+# Start from Ubuntu image
 from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
-# Asennetaan python, pip ja flask
 run apt-get update
 run apt-get install -y ghc
 run apt-get install -y cabal-install
@@ -12,21 +11,22 @@ env LANG en_US.UTF-8
 
 run cabal update
 run cabal install happy alex
-run cp .cabal/bin/happy /usr/bin
-run cp .cabal/bin/alex /usr/bin
-run cabal install zip-archive
-run cabal install snap-core snap-server pandoc-1.12.3.3 aeson Diff Diff3 
-# Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
-# palveluja roottina.
-#run chown -R dev /service
 
-# Varmuudeksi estet‰‰n root login ja poistetaan rootin salasana,
-# jos sellainen on.
-#run usermod -p '!' root
-#run passwd -l root
+#env PATH $HOME/.cabal/bin:$PATH
 
-# Avataan portti 5000 ulos containerista.
-expose 5000
+run cp $HOME/.cabal/bin/alex /usr/bin/
+run cp $HOME/.cabal/bin/happy /usr/bin/
 
-# Kun container k‰ynnistyy, suoritetaan:
+add Ephemeral.cabal /Ephemeral/
+
+run cd /Ephemeral && cabal install --only-dependencies
+
+add EphemeralPrelude.hs /Ephemeral/
+add Setup.hs /Ephemeral/
+add Simplistic.hs /Ephemeral/
+
+run cd /Ephemeral && cabal configure
+run cd /Ephemeral && cabal build
+
+# When the container starts up, execute:
 cmd /bin/bash

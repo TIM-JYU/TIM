@@ -1,4 +1,0 @@
-\
- Voisimme kuitenkin olla antamatta muotoa (ensimmäinen konstruktori) ja
-määritellä muodon vasta myöhemmin fysiikkaolionShape-ominaisuuden
-avulla.

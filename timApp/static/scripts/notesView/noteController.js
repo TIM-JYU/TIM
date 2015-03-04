@@ -20,16 +20,16 @@ controls.directive('focusMe', function($timeout) {
 controls.controller('NoteCtrl', function($scope, $controller, $http) {
 
     $scope.m = {};
-    $scope.visibility = 'everyone';
+    $scope.m.visibility = 'everyone';
 
     $scope.addNote = function(parIndex) {
         $http.post('/postNote', {
             "par_id" : parIndex,
             "doc_id" : $scope.docId,
             "text" : $scope.m.noteText,
-            // test group
-            "group_id" : 1
-
+            "visibility" : $scope.m.visibility,
+            "difficult" : $scope.m.difficult,
+            "unclear" : $scope.m.unclear
         }).success(function(data, status, headers, config) {
             // TODO: Maybe fetch notes only for this paragraph and not the
             // whole document.
@@ -39,10 +39,14 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         });
     };
 
-    $scope.editNote = function() {
+    $scope.editNote = function(parIndex) {
         $http.post('/editNote', {
-            "note_id" : $scope.m.editingNote,
-            "text" : $scope.m.noteText
+        	"doc_id" : $scope.docId,
+        	"par_id" : parIndex,
+            "note_index" : $scope.m.editingNote,
+            "text" : $scope.m.noteText,
+            "difficult" : $scope.m.difficult,
+            "unclear" : $scope.m.unclear
         }).success(function(data, status, headers, config) {
             // TODO: Maybe fetch notes only for this paragraph and not the
             // whole document.
@@ -53,15 +57,17 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
     }
 
     $scope.editButtonToggled = function(note) {
-        $scope.m.editingNote = note.id;
+        $scope.m.editingNote = note.note_index;
         $scope.m.noteText = note.content;
         $scope.m.showEditor = true;
+        $scope.m.difficult = note.difficult;
+        $scope.m.unclear = note.unclear;
         $scope.focusArea = true;
     }
 
     $scope.saveButtonToggled = function() {
         if ($scope.m.editingNote !== -1) {
-            $scope.editNote();
+            $scope.editNote($scope.parIndex);
         } else {
             $scope.addNote($scope.parIndex);
         }
@@ -69,16 +75,31 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         $scope.m.showEditor = false;
     }
 
-    $scope.addNoteButtonToggled = function() {
+    $scope.addNoteButtonToggled = function() {  
         $scope.m.showEditor = true;
         $scope.focusArea = true;
+        $scope.m.difficult = false;
+        $scope.m.unclear = false;
         $scope.m.editingNote = -1;
     }
 
-    $scope.deleteNote = function(docID) {
+    $scope.setAsRead = function(docID, par) {
+        par.readStatus = "read";
+        $http.put('/read/' + docID + '/' + par.par)
+        .success(function(data, status, headers, config) {
+//            $scope.getReadPars();
+        }).error(function(data, status, headers, config) {
+            alert('Could not set the reading status: ' + data.error);
+        });
+    }
+
+    $scope.deleteNote = function(docID, par) {
         console.log(docID);
         $http.post('/deleteNote', {
-            "note_id" : $scope.m.editingNote
+        	"doc_id" : docID,
+        	"par_id" : par.par,
+            "note_id" : $scope.m.editingNote,
+            "note_index" : $scope.m.editingNote
         }).success(function(data, status, headers, config) {
             // TODO: Maybe fetch notes only for this paragraph and not the
             // whole document.

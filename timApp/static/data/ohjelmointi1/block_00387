@@ -1,6 +1,0 @@
-Useimmiten liukuluvut ovat pelkkiä approksimaatioita oikeasta
-reaaliluvusta. Esimerkiksi lukua 0.1 ei pystytä tietokoneessa esittämään
-biteillä tarkasti. Tällöin laskujen määrän kasvaessa lukujen epätarkkuus
-vain lisääntyy. Tämän takia onkin turvallisempaa käyttää aina
-double-tietotyyppiä, koska se suuremman bittimääränsä takia pystyy
-tallettamaan enemmän merkitseviä desimaaleja.

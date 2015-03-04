@@ -1,4 +1,0 @@
-C\#:ssa taulukon voi luoda sekä alkeistietotyypeille, että
-oliotietotyypeille, mutta yhteen taulukkoon voi tallentaa aina vain yhtä
-tietotyyppiä. Taulukon määritteleminen ja luominen tapahtuu yleisessä
-muodossa seuraavasti:
