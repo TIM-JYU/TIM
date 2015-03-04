@@ -55,7 +55,7 @@ body {
 .ansi_fore { color: #FFFFFF; }
 .ansi_back { background-color: #000000; }
 .ansi1 { font-weight: bold; }
-.ansi3 { font-weight: italic; }
+.ansi3 { font-style: italic; }
 .ansi4 { text-decoration: underline; }
 .ansi9 { text-decoration: line-through; }
 .ansi30 { color: #000000; }
@@ -76,7 +76,6 @@ body {
 .ansi47 { background-color: #FFFFFF; }
 
 body {
-	/* background-color: #d5d5d5; */
     margin: 0 260px;
 }
 .noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
@@ -102,12 +101,10 @@ body {
 input[type="submit"], button, input[type="button"] { 
     background: #3CC;
     border: 0;
-    border: 0;
     border-radius: 3px;
     color: #FFF;
     display: inline-block;
     font-size: 11px;
-    /* font-weight: bold; */
     cursor: pointer;
     line-height: normal;
     padding: 5px 10px;
@@ -162,7 +159,6 @@ input[type="submit"], button, input[type="button"] {
  
 .viewLogin .loginButton {
     background: #3CC;
-    border: 0;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -241,8 +237,6 @@ ul ul  ul, ol ol ol {
     margin-left: -1em; 
 }
 
-
-
 .note p {
 	margin-left : 0;
 	margin-top: 0;
@@ -283,7 +277,6 @@ ul ul  ul, ol ol ol {
 	text-align:center;
 }
 
-
 .notes {
 	position: absolute;
 	left: 112%;
@@ -292,8 +285,6 @@ ul ul  ul, ol ol ol {
 }
 
 .note {
-	/* border: 1px solid #BBB; */
-	/* border-radius: 7px; */
 	font-size: 0.7em;
 }
 
@@ -314,8 +305,7 @@ ul ul  ul, ol ol ol {
 .actionButtons {
     position: absolute;
     padding: 1em;
-    margin: none;
-    background-color: #f8f8ff;
+    margin: 0;
     z-index: 100;
     top: -1px;
     right: -14em;
@@ -402,7 +392,6 @@ ul ul  ul, ol ol ol {
 
 
 .deleteButton{
-    /* position: absolute; */
     left:0em;
     z-index: 10;
 	top: 6em;
@@ -414,7 +403,6 @@ ul ul  ul, ol ol ol {
 }
  
 .parSaveButton {
-    /* position: absolute; */
 	top: 0em;
 	left: 0em;
     z-index:10;
@@ -438,9 +426,7 @@ ul ul  ul, ol ol ol {
 }
 
 .cancelButton {
-    /* position: absolute; */
     z-index: 10;
-	top: 0em;
 	left: 0em;
 	top: 3em;
     background: #999966;	
@@ -449,11 +435,8 @@ ul ul  ul, ol ol ol {
 .material {
 	display: inline-block;
 	width: 90%;
-	/* border: 2px solid; */
-	/* border-radius: 25px; */
-	/* box-shadow: 10px 10px 5px #888888; */
-	/* margin-left: 10em; */
 }
+
 #topBar{
     position:fixed;
     top:0;
@@ -833,12 +816,12 @@ img.console {
 
 /* csRun-tyylit ================================================== */
 .console {
-  font-family:Courier;
-  color: #ccc;
-  background: #000000;
-  border: 3px double #ccc;
-  padding: 10px;
-  width: 95% !important;  
+    font-family: Courier, serif;
+    color: #ccc;
+    background: #000000;
+    border: 3px double #ccc;
+    padding: 10px;
+    width: 95% !important;
 }
 
 p.stem {
@@ -880,7 +863,7 @@ p.stem {
 
 
 .csRunCode {
-    font-family:Courier;
+    font-family: Courier, serif;
 	margin-left: 2em;
     /* border-style: solid; */
 	
@@ -897,7 +880,7 @@ p.stem {
 }
 
 .csRunArea {
-    font-family:Courier;
+    font-family: Courier, serif;
 	margin-top: 0em;
 	margin-bottom: 0em;
     border-style: none;
@@ -1139,14 +1122,13 @@ body {
 task, .csRunDiv {
     border: solid 1px #3CC;
     border-radius: 5px;
-    width: 100%;
     margin-bottom: 0.3em;
     margin-left: 2em;
     margin-right: 2em;
     margin-top: 0.3em;
     padding-bottom: 0.5em;
     width: 96.5%
-} 
+}
 
 .csRunDiv h4  {
     margin-top: 0.0em;
@@ -1175,7 +1157,7 @@ task, .csRunDiv {
 
 pre {
     font-family: "Courier New", Courier, serif;
-    font-weight: 00;
+    font-weight: normal;
     border-left: 4px solid #3CC;
     padding: 0.5em 0 0.5em 1em; 
     /* margin: 0 0 1em 1em; */
@@ -1200,7 +1182,6 @@ pre {
 
 .csRunMenu button {
     background: #3CC;
-    border:0;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -1244,7 +1225,6 @@ img.console {
 @media only screen and (max-device-width: 500px) {
     .readline {
         z-index: 30;
-        border-color: red;
         border-right: 0.7em solid red;
         margin-left: -10.7em;
     }
@@ -1286,7 +1266,6 @@ img.console {
 	top: 13px;
 	right: 120px;
 	padding: 5px;
-	/*width: 240px;*/
 	word-wrap:break-word;
 	background-color: #e6e6e6;
 	z-index: 501;
@@ -1295,7 +1274,7 @@ img.console {
 }
 
 .userentry {
-     font-family: Verdana;
+     font-family: Verdana, serif;
      font-size: 12px;
      color: #a6b6f6;
 }
@@ -1391,8 +1370,7 @@ img.console {
 
 .menu{ 
 	left: 0px; 
-	top:0px;
-	width: 60px;
+	top: 0px;
 	position:fixed;
 	background:#e6e6e6;
     width: 45px;
@@ -1452,10 +1430,8 @@ img.console {
 }
 
 .timButton {
-    display: block;
     margin: auto;
     background: #3CC;
-    border: 0;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -1472,7 +1448,7 @@ img.console {
     position: absolute;
     border-radius: 3px;
     padding: 1em;
-    margin: none;
+    margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
     width: 220px;
@@ -1574,8 +1550,3 @@ img.console {
             border: none !important;
     }
 }
-    
-
-
-
-} 
