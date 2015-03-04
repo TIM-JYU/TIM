@@ -1,22 +1,23 @@
 {-#LANGUAGE RecordWildCards, DeriveGeneric, OverloadedStrings, NoMonomorphismRestriction #-}
 module Interpreter where
 
-import Data.Aeson
-import Data.Monoid
-import GHC.Generics
-import qualified Data.Text as T
-import qualified Data.Text.Lazy.Encoding as LT
-import Data.List
-import Data.Maybe
 import Control.Applicative
 import Control.Monad.Trans.Either
+import Data.Aeson
 import Data.Aeson.Types
+import Data.List
+import Data.Maybe
+import Data.Monoid
+import GHC.Generics
+import Text.HTML.SanitizeXSS
+import qualified Data.Text as T
+import qualified Data.Text.Lazy.Encoding as LT
 
+import CallApiHec
+import Data.Configurator       (Worth(..), load, require)
+import HecIFace as H
 import PluginType hiding (Input)
 import qualified PluginType as PT
-import CallApiHec
-import HecIFace as H
-import           Data.Configurator       (Worth(..), load, require)
 
 data Example = Example {title :: Maybe String
                        ,expr  :: String
@@ -25,10 +26,15 @@ data Example = Example {title :: Maybe String
 data Goal = Goal {cond::String
                  ,reply::String
                  ,tag::T.Text} deriving(Show,Generic)
-data InterpreterMarkup  = I {context::Maybe FilePath,examples::Maybe [Example],goals::Maybe [Goal]} deriving (Show,Generic)
+
+data InterpreterMarkup  = I {context::Maybe FilePath
+                            ,examples::Maybe [Example]
+                            ,goals::Maybe [Goal]} deriving (Show,Generic)
+
 data InterpreterCommand = Evaluate String deriving (Show,Generic)
 
 parsingOptions = defaultOptions{omitNothingFields=True}
+
 instance FromJSON Goal where
 instance ToJSON   Goal where
 instance FromJSON Example where
@@ -39,6 +45,10 @@ instance FromJSON InterpreterMarkup where
 instance ToJSON   InterpreterMarkup where
 instance FromJSON InterpreterCommand where
 instance ToJSON   InterpreterCommand where
+
+
+sanitizeString :: String -> String
+sanitizeString = T.unpack . sanitize . T.pack
 
 mkInterpreter :: IO (Plugin (PT.Markup InterpreterMarkup) 
                             (PT.Markup InterpreterMarkup,PT.Input InterpreterCommand) 
@@ -64,8 +74,7 @@ mkInterpreter = do
              case res of
                 H.Plain s  -> do
                             (chkTags,chkOut) <- mconcat . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
-                            reply chkTags $  "<span>"++s++"</span>"++chkOut 
-                            -- TODO: SANITIZE s!!
+                            reply chkTags $  "<span>"++sanitizeString s++"</span>"++chkOut 
                 H.Html  s  -> do
                             (chkTags,chkOut) <- mconcat . catMaybes <$> mapM (check ctx expr) (fromMaybe [] $ goals markup)
                             reply chkTags $ s++chkOut -- TODO: SANITIZE s!!
