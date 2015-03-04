@@ -29,6 +29,7 @@ library
       , snap-server >=0.9 
       , containers >= 0.5
       , unordered-containers >= 0.2.4
+      , xss-sanitize >= 0.3.5.5
       , directory >= 1.2
       , either >= 4.3
       , HecIFace >= 0.1
@@ -45,6 +46,7 @@ executable InterpreterPlugin
       , aeson >=0.7 
       , mtl >=2.1 
       , snap-core >=0.9 
+      , xss-sanitize >= 0.3.5.5
       , snap-server >=0.9 
       , configurator >= 0.3
       , containers >= 0.5
