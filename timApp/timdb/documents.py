@@ -235,7 +235,7 @@ class Documents(TimDbBase):
         return results
 
     @contract
-    def updateLatestRevision(self, doc_id: 'DocIdentifier'):
+    def updateLatestRevision(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
         revid = cursor.fetchone()[0]
@@ -248,7 +248,8 @@ class Documents(TimDbBase):
             cursor.execute("UPDATE ReadRevision SET Hash = ? WHERE revision_id = ?",
                 [doc_id.hash, revid])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def getDocumentsForGroup(self, group_id : 'int', historylimit: 'int'=100) -> 'list(dict)':
@@ -515,7 +516,7 @@ class Documents(TimDbBase):
             self.db.commit()
 
     @contract
-    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0):
+    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute(
             """
@@ -577,7 +578,8 @@ class Documents(TimDbBase):
                 """,
                 [old_document_id.id, new_document_id.hash, new_index])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def __updateParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int' = -1, commit: 'bool'=True):
@@ -760,9 +762,10 @@ class Documents(TimDbBase):
             return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.updateParMappings(document_id, new_id)
-        self.updateDocModified(new_id)
-        self.updateLatestRevision(new_id)
+        self.updateParMappings(document_id, new_id, commit=False)
+        self.updateDocModified(new_id, commit=False)
+        self.updateLatestRevision(new_id, commit=False)
+        self.db.commit()
         return new_id
 
     def trimDoc(self, text: 'str'):
