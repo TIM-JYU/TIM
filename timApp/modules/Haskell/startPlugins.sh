@@ -1,4 +1,9 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# This is used to (re)start all Haskell plugins. Note that the ports used here must match tim registry
+
 docker stop haskellplugins2
 docker rm haskellplugins2
 
