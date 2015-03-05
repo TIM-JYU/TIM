@@ -23,6 +23,8 @@ export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtes
 chmod 755 ~/.state
 source ~/.state 
 # cd /home/agent/run
+# echo "Running: $cmd" >> /tmp/log/log.txt
+# echo "Running: $cmd" >> log.txt
 chmod 755 ~/$cmd
 #cp $cmd a.sh
 #cd $PWD # ei tässä kun kaikki eivät kestä muutosta

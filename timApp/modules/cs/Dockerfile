@@ -69,17 +69,52 @@ RUN apt-get install -y inotify-tools
 run apt-get update
 run apt-get install -y graphviz
 
+# Configure timezone and locale
+RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+# run locale-gen C.UTF-8 
+#env LC_CTYPE C.UTF-8
+#env LC_ALL C.UTF-8 
+env LC_CTYPE en_US.UTF-8
+env LC_ALL en_US.UTF-8
+env LANG en_US.UTF-8
+env LANGUAGE en_US.UTF-8
+
+# Let's start with some basic stuff.
+RUN apt-get update -qq && apt-get install -qqy \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    lxc \
+    iptables
+
+# Install Docker from Docker Inc. repositories.
+#RUN curl -sSL https://get.docker.com/ubuntu/ | sh
+
+# Install the magic wrapper.
+#ADD ./wrapdocker /usr/local/bin/wrapdocker
+#RUN chmod u+s /usr/local/bin/wrapdocker
+#RUN chmod +x /usr/local/bin/wrapdocker
+
+# Define additional metadata for our image.
+#VOLUME /var/lib/docker
+#CMD ["sudo","wrapdocker"]
+# RUN sudo /usr/local/bin/wrapdocker
 
 
 # Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
-#run useradd -M agent 
+# run useradd -M agent 
 run useradd -m agent
 run chown -R agent /service
 
+# run groupadd docker
+#run gpasswd -a agent docker
+#run usermod -a -G sudo agent
+
 # testej‰ varten
 ENV MYPASSWORD password
-RUN echo "root:$MYPASSWORD" | chpasswd
+RUN echo root:kissa | chpasswd
+#RUN echo agent:kissa | chpasswd
 
 # Varmuudeksi estet‰‰n root login ja poistetaan rootin salasana,
 # jos sellainen on.
@@ -93,13 +128,4 @@ user agent
 expose 5000
 
 #volume /tim_files/:/service/tim_files/
-
-
-# run locale-gen C.UTF-8 
-#env LC_CTYPE C.UTF-8
-#env LC_ALL C.UTF-8 
-env LC_CTYPE en_US.UTF-8
-env LC_ALL en_US.UTF-8
-env LANG en_US.UTF-8
-env LANGUAGE en_US.UTF-8
 
