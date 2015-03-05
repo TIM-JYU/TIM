@@ -2,7 +2,7 @@
 cd /opt/cs
 RUNPATH=/tmp/uhome/run
 USERROOT=/tmp/uhome
-mkdir $USERROOT
+mkdir $USERROOT 
 mkdir $RUNPATH
 sudo chmod 777 $RUNPATH
 rm -f $RUNPATH/*
@@ -25,7 +25,7 @@ inotifywait -m $RUNPATH -e create  |
         else
             USERPATH="$USERROOT/$USERPATH"
 
-            # Ajetaan docker yhden cs-ajon ajaksi ja liitet‰‰n siihen k‰ytt‰j‰n hakemisto hakemistoksi /home/me
+            # Ajetaan docker yhden cs-ajon ajaksi ja liitet√§√§n siihen k√§ytt√§j√§n hakemisto hakemistoksi /home/me
             ( #docker run -t -i -v /opt/cs:/cs/:ro  -v $USERPATH:/home/agent/ -w /home/agent cs3 /cs/rcmd.sh $CMDNAME 
               ./docker-run-timeout.sh 10s -v /opt/cs:/cs/:ro  -v $USERPATH:/home/agent/ -w /home/agent cs3 /cs/rcmd.sh $CMDNAME 
               #DOCKERPID=$!

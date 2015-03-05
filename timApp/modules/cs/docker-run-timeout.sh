@@ -14,8 +14,10 @@ if [ -z "$code" ]; then
     echo "`date +%Y%m%d-%H%M%S` timeout: $starttime"
 fi
 
+echo "$@" >>/tmp/uhome/log/dr.txt
+
 # echo output:
 # pipe to sed simply for pretty nice indentation
 # docker logs $cont | sed 's/^/\t/'
 
-docker rm $cont &> /dev/null
+docker rm -f $cont &  #  > /dev/null
