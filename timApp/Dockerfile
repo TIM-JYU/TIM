@@ -30,10 +30,14 @@ run pip3 install ansiconv
 run pip3 install cssutils
 
 # Install pygit2 and dependencies
+run apt-get install -y wget
+run apt-get install -y cmake
+run wget https://github.com/libgit2/libgit2/archive/v0.22.0.tar.gz && tar xzf v0.22.0.tar.gz
+run cd libgit2-0.22.0/ && cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 . && make install
+
 run apt-get install -y libffi-dev
-run apt-get install -y libgit2-dev=0.19.0-2
-#env LD_LIBRARY_PATH /usr/local/lib
-run pip3 install pygit2==0.19
+env LD_LIBRARY_PATH /usr/local/lib
+run pip3 install pygit2
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six
