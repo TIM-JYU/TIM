@@ -1,13 +1,35 @@
-var MathJax, $, angular, modules, version, refererPath, docId, docName, canEdit, startIndex, users;
+var MathJax, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
     'angularFileUpload',
-    'ui.ace'].concat(modules), function ($locationProvider) {
-    "use strict";
-    $locationProvider.html5Mode(true);
-    $locationProvider.hashPrefix('!');
-});
+    'ui.ace'].concat(modules)).config(['$httpProvider', function($httpProvider){
+    var interceptor = [
+        '$q',
+        '$rootScope',
+        function($q, $rootScope) {
+
+            var service = {
+                'request': function(config) {
+                    return config;
+                },
+                'response': function(response) {
+                    var re = /\/[^/]+\/([^/]+)\/answer\/$/;
+                    if (re.test(response.config.url)){
+                        var match = re.exec(response.config.url);
+                        var taskId = match[1];
+                        //console.log(response);
+                        $rootScope.$broadcast('answerSaved', {taskId: taskId});
+                    }
+                    return response;
+                }
+            };
+            return service;
+        }
+    ];
+
+    $httpProvider.interceptors.push(interceptor);
+}]);
 
 timApp.controller("ViewCtrl", [
     '$scope',
@@ -16,18 +38,18 @@ timApp.controller("ViewCtrl", [
     '$upload',
     '$injector',
     '$compile',
-    '$location',
     '$window',
     '$document',
-    function (sc, http, q, $upload, $injector, $compile, $location, $window, $document) {
+    function (sc, http, q, $upload, $injector, $compile, $window, $document) {
         "use strict";
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
-        sc.canEdit = canEdit;
+        sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;
+        sc.selectedUser = sc.users[0];
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
@@ -39,6 +61,10 @@ timApp.controller("ViewCtrl", [
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+
+        sc.changeUser = function (user) {
+            sc.$broadcast('userChanged', {user: user});
+        };
 
         sc.getParIndex = function ($par) {
             return $par.index() + sc.startIndex;
@@ -101,6 +127,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleNoteEditor = function ($par, options) {
+            if (!sc.rights.can_comment) {
+                return;
+            }
             var url,
                 data;
             if (options.isNew) {
@@ -283,13 +312,18 @@ timApp.controller("ViewCtrl", [
         // Note-related functions
 
         sc.toggleActionButtons = function ($par, toggle1, toggle2, coords) {
+            if (!sc.rights.editable && !sc.rights.can_comment) {
+                return;
+            }
             if (toggle2) {
                 // Clicked twice successively
                 $par.addClass("selected");
                 var $actionDiv = $("<div>", {class: 'actionButtons'});
                 var button_width = $par.outerWidth() / 4;
-                $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
-                if (sc.canEdit) {
+                if (sc.rights.can_comment){
+                    $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
+                }
+                if (sc.rights.editable) {
                     $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
                     $actionDiv.append($("<button>", {
                         class: PAR_ADD_BUTTON_CLASS + ' above',
@@ -365,6 +399,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getReadPars = function () {
+            if (!sc.rights.can_mark_as_read) {
+                return;
+            }
             var rn = "?_=" + Date.now();
             http.get('/read/' + sc.docId + rn).success(function (data, status, headers, config) {
                 var readCount = data.length;
@@ -450,7 +487,7 @@ timApp.controller("ViewCtrl", [
                     txt = txt.trim().replace(/\\#/g, "#");
                     var entry = {
                         text: sc.totext(txt),
-                        target: encodeURIComponent($location.path().substring(1)) + sc.tolink(txt),
+                        target: sc.tolink(txt),
                         style: astyle,
                         level: lvl,
                         items: [],

@@ -1,3 +1,4 @@
+var angular, MathJax;
 var timApp = angular.module('timApp');
 
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',

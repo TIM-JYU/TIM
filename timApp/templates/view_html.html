@@ -41,7 +41,7 @@
         var docId = JSON.parse({{docID|tojson|safe}});
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
-        var canEdit = {{editable|tojson}};
+        var rights = {{rights|tojson}};
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         {% if plugin_users %}
@@ -60,7 +60,6 @@
             </div>
             <div class="sidebar">
                 {% raw %}
-                <!-- <h1>{{docName}}</h1> -->
                 <ul>
                     <span ng-repeat="entry in indexTable">
                         <li ng-class="entry.state"
@@ -80,11 +79,11 @@
 
         {% if plugin_users|length > 0 %}
             <div id="users" class="userlist">
-                {% for user in plugin_users %}
-                    <div>
-                        <a class="userentry" href="?user={{ user.id }}" target="_self">{{ user.name|safe }}</a>
-                    </div>
-                {% endfor %}
+                <select ng-show="users.length > 1"
+                        ng-model="selectedUser"
+                        ng-options="(user.real_name + ' (' + user.name + '), ' + user.task_count) for user in users track by user.id"
+                        ng-change="changeUser(selectedUser)"
+                        size="20"></select>
             </div>
         {% endif %}
 

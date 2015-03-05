@@ -31,7 +31,7 @@ from routes.common import *
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
-Compress(app)
+#Compress(app)
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
@@ -328,7 +328,6 @@ def getIndex(docId):
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
-    verifyLoggedIn()
     jsondata = request.get_json()
     noteText = jsondata['text']
     access = jsondata['access']
@@ -340,7 +339,7 @@ def postNote():
     doc_id = jsondata['docId']
     doc_ver = request.headers.get('Version')
     paragraph_id = jsondata['par']
-
+    verifyCommentRight(doc_id)
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
     timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, access, tags)
@@ -407,7 +406,7 @@ def getNotes(doc_id):
 
 @app.route("/read/<int:doc_id>", methods=['GET'])
 def getReadParagraphs(doc_id):
-    verifyViewAccess(doc_id)
+    verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
@@ -417,7 +416,7 @@ def getReadParagraphs(doc_id):
 
 @app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
 def setReadParagraph(doc_id, specifier):
-    verifyViewAccess(doc_id)
+    verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)

@@ -1,4 +1,8 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# This is used by the container to start relevant services
 
 cd /Haskell/Choices
 /hbin/ChoicesPlugin -p5001 &

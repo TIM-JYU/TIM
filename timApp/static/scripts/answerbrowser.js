@@ -1,4 +1,4 @@
-var angular;
+var angular, Waypoint;
 var timApp = angular.module('timApp');
 
 timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window',
@@ -54,14 +54,26 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.changeAnswer();
                 };
 
-                $scope.getAvailableAnswers = function () {
+                $scope.setNewest = function () {
+                    $scope.selectedAnswer = $scope.answers[0];
+                    $scope.changeAnswer();
+                };
+
+                $scope.getAvailableAnswers = function (updateHtml) {
+                    updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
+                    if (!$scope.$parent.rights.browse_own_answers) {
+                        return;
+                    }
                     $scope.loading++;
                     $http.get('/answers/' + $scope.taskId + '/' + $scope.user.name)
                         .success(function (data, status, headers, config) {
                             $scope.answers = data;
                             if ($scope.answers.length > 0) {
                                 $scope.selectedAnswer = $scope.answers[0];
-                                $scope.changeAnswer();
+
+                                if (updateHtml) {
+                                    $scope.changeAnswer();
+                                }
                             }
                         }).error(function (data, status, headers, config) {
                             $window.alert('Error getting answers: ' + data.error);
@@ -69,10 +81,40 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             $scope.loading--;
                         });
                 };
-                $element.appear();
-                $element.one('appear', function (event, $all_appeared_elements) {
-                    $scope.getAvailableAnswers();
+
+                $scope.$on('answerSaved', function (event, args) {
+                    if (args.taskId === $scope.taskId) {
+                        $scope.getAvailableAnswers(false);
+                    }
                 });
+
+                $scope.$on('userChanged', function (event, args) {
+                    $scope.user = args.user;
+                    if ($scope.isVisible) {
+                        $scope.getAvailableAnswers();
+                    } else {
+                        $scope.changed = true;
+                    }
+                });
+
+                $scope.loadIfChanged = function () {
+                    if ($scope.changed) {
+                        $scope.getAvailableAnswers();
+                        $scope.changed = false;
+                    }
+                };
+                $scope.waypointDown = new Waypoint.Inview({
+                    enter: function (direction) {
+                        $scope.isVisible = true;
+                        $scope.loadIfChanged();
+                    },
+                    exited: function (direction) {
+                        $scope.isVisible = false;
+                    },
+                    element: $element[0]
+                })[0];
+
+                $scope.changed = true;
             }
         };
     }]);

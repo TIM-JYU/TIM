@@ -144,6 +144,7 @@ class TimDbBase(object):
         current_par = par_index
         modified = False
         num_links = 0
+        steps = []
         while current_ver != target_ver:
             cursor.execute(
                 """
@@ -154,33 +155,37 @@ class TimDbBase(object):
                 """, [doc_id, current_ver, current_par])
             mappings = self.resultAsDictionary(cursor)
             if len(mappings) == 0:
-                #print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
-                return None
+                # print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
+                # return None
+                break
 
-            #print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
-            #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index'], mappings[0]['modified']))
+            # print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
+            #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6],
+            #       mappings[0]['new_index'], mappings[0]['modified']))
+            steps.append((current_ver, current_par))
             current_ver = mappings[0]['new_ver']
             current_par = mappings[0]['new_index']
             modified |= mappings[0]['modified'] == 'True'
             num_links += 1
 
-        #print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
+        # print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
         #      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
-        if num_links > 1 and current_ver == doc_ver:
+        if num_links > 1:
             # Flatten mappings to speed up future queries
             # a -> b -> c becomes a -> c
-            print('Mapping can be optimized: %s(%s) -> %s(%s)' %
-                  (read_ver[:6], read_par, current_ver[:6], current_par))
-            #cursor.execute(
-            #    """
-            #    update ParMappings
-            #    set new_ver = ?, new_index = ?, modified = ?
-            #    where doc_id = ? and doc_ver = ? and par_index = ?
-            #    """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
-            #if commit:
-            #    self.db.commit()
+            # print('Mapping can be optimized: %s(%s) -> %s(%s)' %
+            #      (doc_ver[:6], par_index, current_ver[:6], current_par))
+            for ver, par in steps:
+                cursor.execute(
+                   """
+                   update ParMappings
+                   set new_ver = ?, new_index = ?, modified = ?
+                   where doc_id = ? and doc_ver = ? and par_index = ?
+                   """, [current_ver, current_par, str(modified), doc_id, ver, par])
+            if commit:
+                self.db.commit()
 
-        return (current_par, modified)
+        return (current_par, modified) if current_ver == target_ver else None
 
     @contract
     def getMappedValues(self, UserGroup_id: 'int|None', doc_id: 'int', doc_ver: 'str', table: 'str',
@@ -251,7 +256,7 @@ class TimDbBase(object):
                                        read_ver,
                                        doc_id
                                        ])
-                        self.addEmptyParMapping(doc_id, doc_ver, par_index_new)
+                        self.addEmptyParMapping(doc_id, doc_ver, par_index_new, commit=False)
                     except sqlite3.IntegrityError:
                         # Already exists
                         cursor.execute("""delete from {}

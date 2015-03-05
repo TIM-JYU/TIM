@@ -235,7 +235,7 @@ class Documents(TimDbBase):
         return results
 
     @contract
-    def updateLatestRevision(self, doc_id: 'DocIdentifier'):
+    def updateLatestRevision(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
         revid = cursor.fetchone()[0]
@@ -248,7 +248,8 @@ class Documents(TimDbBase):
             cursor.execute("UPDATE ReadRevision SET Hash = ? WHERE revision_id = ?",
                 [doc_id.hash, revid])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def getDocumentsForGroup(self, group_id : 'int', historylimit: 'int'=100) -> 'list(dict)':
@@ -505,17 +506,17 @@ class Documents(TimDbBase):
         if commit:
             self.db.commit()
 
-    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0):
+    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0, commit: 'bool'=True):
         for m in self.getParMappings(old_document_id, start_index, end_index):
             par_index = int(m[0])
             new_index = par_index + offset
             #print("{0} par {1} -> {2} par {3}".format(old_document_id.hash[:6], new_index, new_document_id.hash[:6], new_index))
-            self.addParMapping(old_document_id, new_document_id, par_index, new_index)
-
-        self.db.commit()
+            self.addParMapping(old_document_id, new_document_id, par_index, new_index, commit=False)
+        if commit:
+            self.db.commit()
 
     @contract
-    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0):
+    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute(
             """
@@ -577,10 +578,11 @@ class Documents(TimDbBase):
                 """,
                 [old_document_id.id, new_document_id.hash, new_index])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
-    def __updateParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int' = -1):
+    def __updateParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int' = -1, commit: 'bool'=True):
         if new_index == -1:
             new_index = par_index
 
@@ -617,7 +619,8 @@ class Documents(TimDbBase):
             """,
             [old_document_id.id, new_document_id.hash, new_index])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def __deleteParMapping(self, document_id : 'DocIdentifier', par_index : 'int'):
@@ -669,22 +672,23 @@ class Documents(TimDbBase):
 
         new_id = DocIdentifier(new_id.id, version)
         self.updateLatestRevision(new_id)
-        self.__copyParMappings(document_id, new_id, start_index = 0, end_index = mod_index)
+        self.__copyParMappings(document_id, new_id, start_index = 0, end_index = mod_index, commit=False)
 
         if mod_count >= 0:
             # Add or modify
             #print("__handleModifyResponse({0}): adding {1} paragraph(s) to index {2}".format(document_id.id, mod_count, mod_index))
             if message[:3] == 'Add':
                 # No modifications to the paragraph at mod_index
-                self.__updateParMapping(document_id, new_id, mod_index, mod_index + mod_count)
+                self.__updateParMapping(document_id, new_id, mod_index, mod_index + mod_count, commit=False)
             else:
                 # This is a modify request, but there may still be more paragraphs...
-                self.__updateParMapping(document_id, new_id, mod_index)
+                self.__updateParMapping(document_id, new_id, mod_index, commit=False)
 
             self.__copyParMappings(
                 document_id, new_id,
                 start_index = mod_index + 1,
-                offset = mod_count
+                offset = mod_count,
+                commit=False
             )
         else:
             # Remove
@@ -693,10 +697,12 @@ class Documents(TimDbBase):
             self.__copyParMappings(
                 document_id, new_id,
                 start_index = mod_index - mod_count,
-                offset = mod_count
+                offset = mod_count,
+                commit=False
             )
 
-        self.updateDocModified(new_id)
+        self.updateDocModified(new_id, commit=False)
+        self.db.commit()
         return new_id
 
     @contract
@@ -756,9 +762,10 @@ class Documents(TimDbBase):
             return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.updateParMappings(document_id, new_id)
-        self.updateDocModified(new_id)
-        self.updateLatestRevision(new_id)
+        self.updateParMappings(document_id, new_id, commit=False)
+        self.updateDocModified(new_id, commit=False)
+        self.updateLatestRevision(new_id, commit=False)
+        self.db.commit()
         return new_id
 
     def trimDoc(self, text: 'str'):
@@ -770,11 +777,12 @@ class Documents(TimDbBase):
         return text.rstrip().strip('\r\n')
 
     @contract
-    def updateDocModified(self, doc_id: 'DocIdentifier'):
+    def updateDocModified(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute('UPDATE Block SET modified = CURRENT_TIMESTAMP WHERE type_id = ? and id = ?',
                        [blocktypes.DOCUMENT, doc_id.id])
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def setOwner(self, doc_id: 'int', usergroup_id: 'int'):

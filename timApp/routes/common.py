@@ -53,6 +53,20 @@ def hasViewAccess(block_id):
     timdb = getTimDb()
     return timdb.users.userHasViewAccess(getCurrentUserId(), block_id)
 
+def hasCommentRight(doc_id):
+    return hasViewAccess(doc_id) and loggedIn()
+
+def verifyCommentRight(doc_id):
+    if not hasCommentRight(doc_id):
+        abort(403)
+
+def hasReadMarkingRight(doc_id):
+    return hasViewAccess(doc_id) and loggedIn()
+
+def verifyReadMarkingRight(doc_id):
+    if not hasReadMarkingRight(doc_id):
+        abort(403)
+
 def verifyLoggedIn():
     if not loggedIn():
         abort(403, "You have to be logged in to perform this action.")
