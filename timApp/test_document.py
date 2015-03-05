@@ -462,5 +462,15 @@ class DocTest(unittest.TestCase):
                 """, [doc.id, doc.hash, par_index])
         return self.db.readings.resultAsDictionary(cursor)
 
+    def test_empty_edit(self):
+        doc = self.db.documents.createDocument('test', 0)
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit 1')
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit  1')
+        self.check_newest_version(doc)
+
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
