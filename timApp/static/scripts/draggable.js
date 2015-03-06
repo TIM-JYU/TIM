@@ -1,7 +1,7 @@
 var angular;
 var timApp = angular.module('timApp');
 
-timApp.directive('timDraggableFixed', ['$document', function ($document) {
+timApp.directive('timDraggableFixed', ['$document', '$window', function ($document, $window) {
     return function (scope, element, attr) {
         var startX = 0, startY = 0, x = 0, y = 0;
 
@@ -9,12 +9,24 @@ timApp.directive('timDraggableFixed', ['$document', function ($document) {
         var iRight = Number(element.css('right').slice(0, -2));
         x = -iRight;
         y = iTop;
-        element.on('mousedown', function (event) {
+
+        var ua = $window.navigator.userAgent, startEvent, moveEvent, endEvent;
+        if (ua.match(/iPad/i)) {
+            startEvent = "touchstart";
+            moveEvent = "touchmove";
+            endEvent = "touchend";
+        } else {
+            startEvent = "mousedown";
+            moveEvent = "mousemove";
+            endEvent = "mouseup";
+        }
+
+        element.on(startEvent, function (event) {
             event.preventDefault();
             startX = event.pageX - x;
             startY = event.pageY - y;
-            $document.on('mousemove', mousemove);
-            $document.on('mouseup', mouseup);
+            $document.on(moveEvent, mousemove);
+            $document.on(endEvent, mouseup);
         });
 
         function mousemove(event) {
@@ -27,8 +39,8 @@ timApp.directive('timDraggableFixed', ['$document', function ($document) {
         }
 
         function mouseup() {
-            $document.off('mousemove', mousemove);
-            $document.off('mouseup', mouseup);
+            $document.off(moveEvent, mousemove);
+            $document.off(endEvent, mouseup);
         }
     };
 }]);
