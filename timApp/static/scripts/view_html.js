@@ -1,4 +1,4 @@
-var MathJax, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users;
+var MathJax, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
@@ -49,6 +49,7 @@ timApp.controller("ViewCtrl", [
         sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;
+        sc.teacherMode = teacherMode;
         sc.selectedUser = sc.users[0];
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;

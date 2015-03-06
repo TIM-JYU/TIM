@@ -112,6 +112,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            custom_css_files=custom_css_files,
                            custom_css=custom_css,
                            start_index=start_index,
+                           teacher_mode=teacher,
                            rights={'editable': hasEditAccess(doc_id),
                                    'can_mark_as_read': hasReadMarkingRight(doc_id),
                                    'can_comment': hasCommentRight(doc_id),
