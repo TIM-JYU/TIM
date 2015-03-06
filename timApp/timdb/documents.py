@@ -327,7 +327,7 @@ class Documents(TimDbBase):
 
     @contract
     def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
-        return [block for block in self.getDocumentMarkdown(document_id).split('\n') if len(block) > 0 and block[0] == '#']
+        return [block for block in self.getDocumentAsBlocks(document_id) if len(block) > 0 and block[0] == '#']
 
     @contract
     def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
