@@ -22,6 +22,11 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
         }
 
         element.on(startEvent, function (event) {
+            var $target = angular.element(event.target);
+            var tag = $target.prop("tagName");
+            if (tag !== 'DIV') {
+                return;
+            }
             event.preventDefault();
             startX = event.pageX - x;
             startY = event.pageY - y;
