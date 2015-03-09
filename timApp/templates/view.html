@@ -2,6 +2,7 @@
 {% block title %}{{docName}}{% endblock %}
 {% block head %}
 {{ super() }}
+
 <script src="{{url_for('static', filename='scripts/checkModules.js')}}"></script>
 
 {% for script in js %}

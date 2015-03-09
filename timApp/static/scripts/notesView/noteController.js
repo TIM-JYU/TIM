@@ -33,7 +33,7 @@ controls.controller('NoteCtrl', function($scope, $controller, $http) {
         }).success(function(data, status, headers, config) {
             // TODO: Maybe fetch notes only for this paragraph and not the
             // whole document.
-            $scope.getNotes();
+            $scope.getMessages();
         }).error(function(data, status, headers, config) {
             alert('Could not save the note.');
         });

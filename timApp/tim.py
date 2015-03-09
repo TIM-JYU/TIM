@@ -56,7 +56,8 @@ print('Debug mode: {}'.format(app.config['DEBUG']))
 KNOWN_TAGS = ['difficult', 'unclear']
 
 # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
+formatter = logging.Formatter(
+    "{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
 if not os.path.exists(app.config['LOG_DIR']):
     os.mkdir(app.config['LOG_DIR'])
 handler = logging.FileHandler(app.config['LOG_PATH'])
@@ -64,9 +65,11 @@ handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
+
 def allowed_file(filename):
     return '.' in filename and \
-        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
 PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
@@ -74,11 +77,11 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
-LOG_LEVELS = {"CRITICAL" : app.logger.critical, 
-              "ERROR" : app.logger.error,
-              "WARNING" : app.logger.warning,
+LOG_LEVELS = {"CRITICAL": app.logger.critical,
+              "ERROR": app.logger.error,
+              "WARNING": app.logger.warning,
               "INFO": app.logger.info,
-              "DEBUG" : app.logger.debug}
+              "DEBUG": app.logger.debug}
 
 # Logger call
 @app.route("/log/", methods=["POST"])
@@ -89,7 +92,7 @@ def logMessage():
         LOG_LEVELS[level](message)
     except KeyError:
         app.logger.error("Failed logging call: " + str(request.get_data()))
-    
+
 
 def error_generic(error, code):
     if 'text/html' in request.headers.get("Accept", ""):
@@ -97,17 +100,21 @@ def error_generic(error, code):
     else:
         return jsonResponse({'error': error.description}, code)
 
+
 @app.errorhandler(400)
 def bad_request(error):
     return error_generic(error, 400)
+
 
 @app.errorhandler(403)
 def forbidden(error):
     return error_generic(error, 403)
 
+
 @app.errorhandler(404)
 def notFound(error):
     return error_generic(error, 404)
+
 
 @app.route('/diff/<int:doc_id>/<doc_hash>')
 def documentDiff(doc_id, doc_hash):
@@ -121,6 +128,7 @@ def documentDiff(doc_id, doc_hash):
     except TimDbException as e:
         abort(404, str(e))
 
+
 @app.route('/download/<int:doc_id>/<doc_hash>')
 def documentHistory(doc_id, doc_hash):
     timdb = getTimDb()
@@ -133,9 +141,11 @@ def documentHistory(doc_id, doc_hash):
     except TimDbException as e:
         abort(404, str(e))
 
+
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
     return documentHistory(doc_id, getNewest(doc_id).hash)
+
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
@@ -147,7 +157,7 @@ def upload_file():
         if not allowed_file(doc.filename):
             return jsonResponse({'message': 'The file format is not allowed.'}, 403)
         filename = secure_filename(doc.filename)
-        if(filename.endswith(tuple(DOC_EXTENSIONS))):
+        if (filename.endswith(tuple(DOC_EXTENSIONS))):
             content = UnicodeDammit(doc.read()).unicode_markup
             if not content:
                 return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
@@ -158,12 +168,11 @@ def upload_file():
             imgtype = imghdr.what(None, h=content)
             if imgtype is not None:
                 img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
-                timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
+                timdb.users.grantViewAccess(0, img_id)  # So far everyone can see all images
                 return jsonResponse({"file": str(img_id) + '/' + img_filename})
             else:
                 doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 return redirect(url_for('uploaded_file', filename=filename))
-    
 
 
 @app.route('/images/<int:image_id>/<image_filename>/')
@@ -177,16 +186,43 @@ def getImage(image_id, image_filename):
     f = io.BytesIO(img_data)
     return send_file(f, mimetype='image/' + imgtype)
 
+
 @app.route('/images')
 def getAllImages():
     timdb = getTimDb()
     images = timdb.images.getImages()
     allowedImages = [image for image in images if timdb.users.userHasViewAccess(getCurrentUserId(), image['id'])]
     return jsonResponse(allowedImages)
-    
+
+
+@app.route('/wall')
+def get_wall():
+    return render_template('wall.html')
+
+
+@app.route('/question')
+def show_question():
+    return render_template('question.html')
+
+
+@app.route('/getQuestion', methods=['GET'])
+def get_question():
+    timdb = getTimDb()
+    questions = timdb.questions.get_questions()
+    return jsonResponse(questions)
+
+@app.route('/addQuestion', methods=['POST'])
+def add_question():
+    question = request.args.get('question')
+    answer = request.args.get('answer')
+    timdb = getTimDb()
+    questions = timdb.questions.add_questions(question, answer)
+    return jsonResponse(questions)
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
+    return render_template('wall.html')
+
 
 @app.route("/getDocuments/")
 def getDocuments():
@@ -206,30 +242,30 @@ def getDocuments():
     timdb = getTimDb()
     docs = timdb.documents.getDocuments(historylimit=versions)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
-    
+
     req_folder = request.args.get('folder')
     if req_folder is not None and len(req_folder) == 0:
         req_folder = None
-        
-    #print('req_folder is "{}"'.format(req_folder))
-    
+
+    # print('req_folder is "{}"'.format(req_folder))
+
     folders = []
     finalDocs = []
-    
+
     for doc in allowedDocs:
         fullname = doc['name']
-        
+
         if req_folder:
             if not fullname.startswith(req_folder + '/'):
                 continue
             docname = fullname[len(req_folder) + 1:]
         else:
             docname = fullname
-        
+
         if '/' in docname:
             slash = docname.find('/')
             foldername = docname[:slash]
-            
+
             duplicate = False
             for f in folders:
                 if f['name'] == foldername:
@@ -237,12 +273,12 @@ def getDocuments():
                     break
             if duplicate:
                 continue
-            
-            fullfolder = foldername if req_folder is None else req_folder + '/' + foldername            
+
+            fullfolder = foldername if req_folder is None else req_folder + '/' + foldername
             folders.append({
                 'isFolder': True,
                 'name': foldername,
-                'fullname' : fullfolder,
+                'fullname': fullfolder,
                 'items': [],
                 'canEdit': False,
                 'isOwner': False,
@@ -257,8 +293,9 @@ def getDocuments():
         doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         finalDocs.append(doc)
-        
+
     return jsonResponse(folders + finalDocs)
+
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
@@ -267,10 +304,11 @@ def getJSON(doc_id):
     try:
         texts = timdb.documents.getDocumentBlocks(getNewest(doc_id))
         doc = timdb.documents.getDocument(doc_id.id)
-        return jsonResponse({"name" : doc['name'], "text" : texts})
+        return jsonResponse({"name": doc['name'], "text": texts})
     except IOError as err:
         print(err)
         return "No data found"
+
 
 @app.route("/getJSON-HTML/<int:doc_id>")
 def getJSON_HTML(doc_id):
@@ -280,7 +318,7 @@ def getJSON_HTML(doc_id):
         newest = getNewest(doc_id)
         blocks = timdb.documents.getDocumentAsHtmlBlocks(newest)
         doc = timdb.documents.getDocument(doc_id)
-        return jsonResponse({"name" : doc['name'], "text" : blocks})
+        return jsonResponse({"name": doc['name'], "text": blocks})
     except ValueError as err:
         print(err)
         return "[]"
@@ -288,22 +326,24 @@ def getJSON_HTML(doc_id):
         print(err)
         return "[]"
 
+
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
     if not loggedIn():
         return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
     jsondata = request.get_json()
     docName = jsondata['doc_name']
-    
+
     if docName.startswith('/') or docName.endswith('/'):
         return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
-    
+
     if re.match('^(\d)*$', docName) is not None:
         return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
-    
+
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonResponse({'id' : docId.id, 'name' : docName})
+    return jsonResponse({'id': docId.id, 'name': docName})
+
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
@@ -312,20 +352,23 @@ def getBlockMd(docId, blockId):
     block = timdb.documents.getBlock(getNewest(docId), blockId)
     return jsonResponse({"text": block})
 
+
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)    
+    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
     return block
+
 
 @app.route("/<plugin>/<path:fileName>")
 def pluginCall(plugin, fileName):
     try:
         req = containerLink.call_plugin_resource(plugin, fileName)
-        return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
+        return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
     except PluginException:
         abort(404)
+
 
 @app.route("/index/<int:docId>")
 def getIndex(docId):
@@ -333,6 +376,7 @@ def getIndex(docId):
     verifyViewAccess(docId)
     index = timdb.documents.getIndex(getNewest(docId))
     return jsonResponse(index)
+
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
@@ -352,8 +396,9 @@ def postNote():
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
     timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, access, tags)
-    #TODO: Handle error.
+    # TODO: Handle error.
     return "Success"
+
 
 @app.route("/editNote", methods=['POST'])
 def editNote():
@@ -380,6 +425,7 @@ def editNote():
     timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, access, tags)
     return "Success"
 
+
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
     verifyLoggedIn()
@@ -397,6 +443,7 @@ def deleteNote():
     timdb.notes.deleteNote(doc_id, paragraph_id, note_index)
     return "Success"
 
+
 @app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
     verifyViewAccess(doc_id)
@@ -413,6 +460,7 @@ def getNotes(doc_id):
             note['tags'][tag] = tag in tags
     return jsonResponse(notes)
 
+
 @app.route("/read/<int:doc_id>", methods=['GET'])
 def getReadParagraphs(doc_id):
     verifyViewAccess(doc_id)
@@ -423,6 +471,7 @@ def getReadParagraphs(doc_id):
         r.pop('doc_ver', None)
     return jsonResponse(readings)
 
+
 @app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
 def setReadParagraph(doc_id, specifier):
     verifyViewAccess(doc_id)
@@ -430,9 +479,10 @@ def setReadParagraph(doc_id, specifier):
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     if len(blocks) <= specifier:
-        return jsonResponse({'error' : 'Invalid paragraph specifier.'}, 400)
+        return jsonResponse({'error': 'Invalid paragraph specifier.'}, 400)
     timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
     return "Success"
+
 
 def parse_task_id(task_id):
     # Assuming task_id is of the form "22.palindrome"
@@ -443,13 +493,14 @@ def parse_task_id(task_id):
     task_id_name = pieces[1]
     return doc_id, task_id_name
 
+
 @app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
 def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
 
     doc_id, task_id_name = parse_task_id(task_id)
     if not 'input' in request.get_json():
-        return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
+        return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
 
     # Load old answers
@@ -457,29 +508,31 @@ def saveAnswer(plugintype, task_id):
 
     # Get the newest answer (state). Only for logged in users.
     state = oldAnswers[0]['content'] if loggedIn() and len(oldAnswers) > 0 else None
-    
+
     markup = getPluginMarkup(doc_id, plugintype, task_id_name)
     if markup is None:
-        return jsonResponse({'error' : 'The task was not found in the document. ' + str(doc_id) + ' ' + task_id_name}, 404)
+        return jsonResponse({'error': 'The task was not found in the document. ' + str(doc_id) + ' ' + task_id_name},
+                            404)
     if markup == "YAMLERROR: Malformed string":
-        return jsonResponse({'error' : 'Plugin markup YAML is malformed.'}, 400)
- 
-    answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata, 'taskID': task_id}
+        return jsonResponse({'error': 'Plugin markup YAML is malformed.'}, 400)
+
+    answerCallData = {'markup': markup, 'state': state, 'input': answerdata, 'taskID': task_id}
 
     pluginResponse = containerLink.call_plugin_answer(plugintype, answerCallData)
-    
+
     try:
         jsonresp = json.loads(pluginResponse)
     except ValueError:
-        return jsonResponse({'error' : 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
-    
+        return jsonResponse(
+            {'error': 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
+
     if not 'web' in jsonresp:
-        return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
-    
+        return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
+
     if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
         saveObject = jsonresp['save']
-        
-        #Save the new state
+
+        # Save the new state
         if isinstance(saveObject, collections.Iterable):
             points = jsonresp['save']['points'] if 'points' in saveObject else None
             tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
@@ -488,7 +541,8 @@ def saveAnswer(plugintype, task_id):
             tags = []
         timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
 
-    return jsonResponse({'web':jsonresp['web']})
+    return jsonResponse({'web': jsonresp['web']})
+
 
 @app.route("/answers/<task_id>/<user>")
 def get_answers(task_id, user):
@@ -504,6 +558,7 @@ def get_answers(task_id, user):
         abort(400, 'Non-existent user')
     answers = timdb.answers.getAnswers(user_id, task_id)
     return jsonResponse(answers)
+
 
 @app.route("/getState")
 def get_state():
@@ -532,21 +587,23 @@ def get_state():
                                                                 custom_state=state)
     return jsonResponse(texts[0])
 
+
 def getPluginMarkup(doc_id, plugintype, task_id):
     timdb = getTimDb()
     doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
     for block in doc_markdown:
-        if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block):
+        if ('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block):
             markup = pluginControl.get_block_yaml(block)
             return markup
     return None
-    
+
+
 @app.route("/")
 def indexPage():
     return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
 
 
 def startApp():
-    #app.wsgi_app = ReverseProxied(app.wsgi_app)
+    # app.wsgi_app = ReverseProxied(app.wsgi_app)
     #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
     app.run(host='0.0.0.0', port=5000, use_reloader=False)

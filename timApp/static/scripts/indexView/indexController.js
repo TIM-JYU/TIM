@@ -10,6 +10,7 @@ function(sc, controller, http, q, $upload) {
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     };
 
+
     sc.createDocument = function(name) {
         http.post('/createDocument', {
             "doc_name" : name
