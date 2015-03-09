@@ -113,7 +113,7 @@ def addBlock():
                          'angularModule': modules,
                          'version': new_doc.hash})
 
-@edit_page.route("/deleteParagraph/<int:doc_id>/<int:blockId>")
+@edit_page.route("/deleteParagraph/<int:doc_id>/<int:blockId>", methods=["POST"])
 def removeBlock(doc_id, blockId):
     timdb = getTimDb()
     verifyEditAccess(doc_id)
