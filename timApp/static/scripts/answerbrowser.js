@@ -82,7 +82,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.$on('answerSaved', function (event, args) {
-                    if (args.taskId === $scope.taskId) {
+                    if (!$scope.$parent.teacherMode && args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
                     }
                 });
