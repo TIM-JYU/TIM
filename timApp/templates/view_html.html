@@ -25,7 +25,6 @@
     <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/notesView/contents.js') }}"></script>
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
@@ -56,20 +55,20 @@
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
         <div id="contents" ng-show="indexTable.length > 0">
-            <div class="menu">
+            <div class="menu" ng-click="toggleSidebar()">
                 <img class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                      height="50"/>
             </div>
-            <div class="sidebar">
+            <div ng-class="['sidebar', sidebarState]">
                 {% raw %}
                 <ul>
                     <span ng-repeat="entry in indexTable">
                         <li ng-class="entry.state"
                             ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                            <a class="indexentry" ng-class="entry.style" onclick="autoHide()" href="{{entry.target}}">{{entry.text}}</a>
+                            <a class="indexentry" ng-class="entry.style" ng-click="" href="{{entry.target}}">{{entry.text}}</a>
                             <ul ng-show="entry.state == 'exp'">
                                 <li ng-repeat="subentry in entry.items">
-                                    <a ng-class="subentry.style" onclick="autoHide()" href="{{subentry.target}}">{{subentry.text}}</a>
+                                    <a ng-class="subentry.style" ng-click="" href="{{subentry.target}}">{{subentry.text}}</a>
                                 </li>
                             </ul>
                         </li>

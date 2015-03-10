@@ -50,6 +50,7 @@ timApp.controller("ViewCtrl", [
         sc.startIndex = startIndex;
         sc.users = users;
         sc.teacherMode = teacherMode;
+        sc.sidebarState = 'autohidden';
         sc.selectedUser = sc.users[0];
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
@@ -62,6 +63,21 @@ timApp.controller("ViewCtrl", [
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+
+        sc.toggleSidebar = function () {
+            var visible = angular.element('.sidebar').is(":visible");
+            if (visible) {
+                sc.sidebarState = 'hidden';
+            } else {
+                sc.sidebarState = 'open';
+            }
+        };
+
+        sc.autoHideSidebar = function () {
+            if (sc.sidebarState === 'open') {
+                sc.sidebarState = 'autohidden';
+            }
+        };
 
         sc.changeUser = function (user) {
             sc.$broadcast('userChanged', {user: user});
@@ -284,6 +300,9 @@ timApp.controller("ViewCtrl", [
             if (sc.editing) {
                 return;
             }
+
+            sc.autoHideSidebar();
+            sc.$apply();
 
             var $target = $(e.target);
             var tag = $target.prop("tagName");
