@@ -3,7 +3,7 @@
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response, request
 import json
-from timdb.timdbbase import DocIdentifier
+from timdb.docidentifier import DocIdentifier
 from werkzeug.exceptions import default_exceptions, HTTPException
 from flask import make_response, abort as flask_abort, request
 

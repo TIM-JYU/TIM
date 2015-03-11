@@ -3,7 +3,7 @@ import os
 import cssutils
 from flask import Blueprint, render_template, request
 from .common import *
-from timdb.timdbbase import DocIdentifier
+from timdb.docidentifier import DocIdentifier
 
 manage_page = Blueprint('manage_page',
                         __name__,

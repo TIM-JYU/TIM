@@ -1,21 +1,11 @@
 """"""
 import os
-from contracts import contract, new_contract
 import collections
 import sqlite3
-from collections import namedtuple
 
-
-# A document identifier consists of the id of the document and the version hash.
-class DocIdentifier(namedtuple("DocIdentifier", "id hash")):
-    __slots__ = ()
-
-    def __str__(self):
-        return str(self.id) + ':' + str(self.hash)
-
+from contracts import contract, new_contract
 
 new_contract('Connection', sqlite3.Connection)
-new_contract('DocIdentifier', DocIdentifier)
 
 BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING'))
 blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5)

@@ -5,7 +5,8 @@ from datetime import datetime
 from contracts import contract
 import ansiconv
 
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
+from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative

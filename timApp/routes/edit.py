@@ -5,7 +5,7 @@ import cssutils
 from flask import Blueprint, render_template, request, redirect, url_for
 from .common import *
 import pluginControl
-from timdb.timdbbase import DocIdentifier
+from timdb.docidentifier import DocIdentifier
 
 edit_page = Blueprint('edit_page',
                       __name__,
