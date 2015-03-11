@@ -55,8 +55,8 @@
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
         <div id="contents" ng-show="indexTable.length > 0">
-            <div class="menu" ng-click="toggleSidebar()">
-                <img class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+            <div class="menu">
+                <img ng-click="toggleSidebar()" class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                      height="50"/>
             </div>
             <div ng-class="['sidebar', sidebarState]">
