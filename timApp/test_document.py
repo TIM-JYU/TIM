@@ -9,7 +9,8 @@ import hypothesis.settings as hs
 from timdb.timdb2 import TimDb
 import ephemeralclient
 from timdb.gitclient import GitClient
-from timdb.timdbbase import TimDbException, DocIdentifier
+from timdb.timdbbase import TimDbException
+from timdb.docidentifier import DocIdentifier
 from timdbtest import TimDbTest
 
 hs.default.max_examples = 5
