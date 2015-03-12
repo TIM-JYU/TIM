@@ -6,7 +6,7 @@ cd Ephemeral
 cd ..
 # docker build --tag="haskellplugins" timApp/modules/Haskell
 cd timApp/modules/Haskell
-./buildeImages.sh
+./buildImages.sh
 cd ../../..
 docker build --tag="cs3" timApp/modules/cs
 docker build --tag="svn" timApp/modules/svn
