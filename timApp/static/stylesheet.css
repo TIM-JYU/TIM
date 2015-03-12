@@ -1043,7 +1043,9 @@ p.stem {
 		left: 0em;
 	*/	
 	}
-
+    .sidebar.autohidden {
+        display: none;
+    }
 	
 }
 
@@ -1112,6 +1114,9 @@ p.stem {
     
     ul, ol {
       margin-left: 0.1em;
+    }
+    .sidebar.autohidden {
+        display: none;
     }
 }
  
@@ -1281,19 +1286,25 @@ img.console {
 
 /* Sisällysluetteloa varten =============================================*/
 
-.sidebar{
-	position: fixed;
-	top: -1px;
-	left: -240px;
+#contents {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.sidebar {
 	width: 240px;
-	word-wrap:break-word;
-	/* word-break:break-all; */
-	height: 100%;
+	word-wrap: break-word;
 	background-color: #e6e6e6;
 	transition: 200ms all ease-in-out;
 	z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
+}
+
+.sidebar.hidden {
+    display: none;
 }
 
 .sidebar-buttons{
@@ -1368,10 +1379,7 @@ img.console {
 	color: #2bb;
 }
 
-.menu{ 
-	left: 0px; 
-	top: 0px;
-	position:fixed;
+.menu {
 	background:#e6e6e6;
     width: 45px;
     z-index: 501;

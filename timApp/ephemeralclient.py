@@ -7,6 +7,7 @@ import os
 import subprocess
 import signal
 from contracts import contract, new_contract
+import timdb.docidentifier
 
 EPHEMERAL_URL = 'http://127.0.0.1:8001'
 EPHEMERAL_PATH = os.path.join("..", "Ephemeral", "dist", "build", "Ephemeral")

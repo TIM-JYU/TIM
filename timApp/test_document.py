@@ -9,18 +9,11 @@ import hypothesis.settings as hs
 from timdb.timdb2 import TimDb
 import ephemeralclient
 from timdb.gitclient import GitClient
-from timdb.timdbbase import TimDbException, DocIdentifier
-
+from timdb.timdbbase import TimDbException
+from timdb.docidentifier import DocIdentifier
+from timdbtest import TimDbTest
 
 hs.default.max_examples = 5
-
-
-def change_permission_and_retry(func, path, exc_info):
-    import stat
-
-    # Change permission of the path so that it is deletable
-    os.chmod(path, stat.S_IWUSR)
-    func(path)
 
 
 def debug_print(name, msg):
@@ -29,30 +22,7 @@ def debug_print(name, msg):
 test_length = 50
 
 
-class DocTest(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        global e
-        global db
-        TEST_FILES_PATH = 'test_files'
-        if os.path.exists(TEST_FILES_PATH):
-            shutil.rmtree(TEST_FILES_PATH, onerror=change_permission_and_retry)
-        TEST_DB_NAME = ':memory:'
-
-        GitClient.initRepo(TEST_FILES_PATH)
-        db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
-        e = ephemeralclient.launch_ephemeral()
-        db.initializeTables("schema2.sql")
-        db.users.createAnonymousUser()
-
-    @classmethod
-    def tearDownClass(cls):
-        e.kill()
-
-    def setUp(self):
-        global db
-        self.db = db
+class DocTest(TimDbTest):
 
     @given(str)
     def test_create_document(self, name):
@@ -461,6 +431,16 @@ class DocTest(unittest.TestCase):
                 and new_ver is not null and new_index is not null
                 """, [doc.id, doc.hash, par_index])
         return self.db.readings.resultAsDictionary(cursor)
+
+    def test_empty_edit(self):
+        doc = self.db.documents.createDocument('test', 0)
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit 1')
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit  1')
+        self.check_newest_version(doc)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')

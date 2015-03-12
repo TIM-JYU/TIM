@@ -23,8 +23,8 @@
     <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script src="{{ url_for('static', filename='scripts/view_html.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/notesView/contents.js') }}"></script>
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
@@ -44,7 +44,8 @@
         var rights = {{rights|tojson}};
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
-        {% if plugin_users %}
+        var teacherMode = {{teacher_mode|tojson}};
+        {% if teacher_mode %}
             var users = {{plugin_users|tojson}};
         {% else %}
             var users = [{{current_user|tojson}}];
@@ -55,35 +56,38 @@
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
         <div id="contents" ng-show="indexTable.length > 0">
             <div class="menu">
-                <img class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+                <img ng-click="toggleSidebar()" class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                      height="50"/>
             </div>
-            <div class="sidebar">
+            <div ng-class="['sidebar', sidebarState]">
                 {% raw %}
                 <ul>
-                    <span ng-repeat="entry in indexTable">
-                        <li ng-class="entry.state"
-                            ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                            <a class="indexentry" ng-class="entry.style" onclick="autoHide()" href="{{entry.target}}">{{entry.text}}</a>
-                            <ul ng-show="entry.state == 'exp'">
-                                <li ng-repeat="subentry in entry.items">
-                                    <a ng-class="subentry.style" onclick="autoHide()" href="{{subentry.target}}">{{subentry.text}}</a>
-                                </li>
-                            </ul>
-                        </li>
-                    </span>
+                    <li ng-repeat="entry in indexTable"
+                        ng-class="entry.state"
+                        ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+                        <a class="indexentry" ng-class="entry.style" ng-click="" href="{{entry.target}}">{{entry.text}}</a>
+                        <ul ng-show="entry.state == 'exp'">
+                            <li ng-repeat="subentry in entry.items">
+                                <a ng-class="subentry.style" ng-click="" href="{{subentry.target}}">{{subentry.text}}</a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
                 {% endraw %}
             </div>
         </div>
 
-        {% if plugin_users|length > 0 %}
-            <div id="users" class="userlist">
-                <select ng-show="users.length > 1"
-                        ng-model="selectedUser"
+        {% if teacher_mode %}
+            <div id="users" class="userlist" tim-draggable-fixed>
+            {% if plugin_users %}
+                Users with answers:<br>
+                <select ng-model="selectedUser"
                         ng-options="(user.real_name + ' (' + user.name + '), ' + user.task_count) for user in users track by user.id"
                         ng-change="changeUser(selectedUser)"
                         size="20"></select>
+            {% else %}
+                No answerers.
+            {% endif %}
             </div>
         {% endif %}
 
@@ -92,7 +96,6 @@
                 <div class="par">
                     {% if 'task_id' in t %}
                         <answerbrowser
-                                user="{{ current_user|e }}"
                                 task-id="{{ t['task_id'] }}">
                         </answerbrowser>
                     {% endif %}

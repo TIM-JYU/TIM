@@ -203,37 +203,36 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
         if len(found_plugins) > 0:
             assert len(found_plugins) == 1
             plugin_info = parse_plugin_values(found_plugins)
-            error_messages = []
-            for vals in plugin_info:
-                plugin_name = vals['plugin']
-                if 'error' in vals:
-                    error_messages.append(get_error_html(plugin_name, vals['error']))
-                    continue
-
-                if plugin_name not in plugins:
-                    plugins[plugin_name] = OrderedDict()
-                vals['markup']["user_id"] = user
-                task_id = "{}.{}".format(doc_id, vals['taskId'])
-                states = answer_db.getAnswers(user_id, task_id)
-
-                if custom_state is not None:
-                    state = custom_state
-                else:
-                    # Don't show state for anonymous users.
-                    state = None if user_id == 0 or len(states) == 0 else states[0]['content']
-                try:
-                    if state is not None:
-                        state = json.loads(state)
-                except ValueError:
-                    pass
-                plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
-
+            vals = plugin_info[0]
+            plugin_name = vals['plugin']
+            if 'error' in vals:
                 final_html_blocks.append({'html': '<div class="pluginError">'
                                                   'Error(s) occurred while rendering plugin.'
                                                   '</div>'
-                                                  ''.join(error_messages),
-                                          'task_id': task_id})
-                break  # Assuming there is at most one plugin per paragraph
+                                                  + get_error_html(plugin_name, vals['error'])
+                                          })
+                continue
+
+            if plugin_name not in plugins:
+                plugins[plugin_name] = OrderedDict()
+            vals['markup']["user_id"] = user
+            task_id = "{}.{}".format(doc_id, vals['taskId'])
+            states = answer_db.getAnswers(user_id, task_id)
+
+            if custom_state is not None:
+                state = custom_state
+            else:
+                # Don't show state for anonymous users.
+                state = None if user_id == 0 or len(states) == 0 else states[0]['content']
+            try:
+                if state is not None:
+                    state = json.loads(state)
+            except ValueError:
+                pass
+            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
+
+            final_html_blocks.append({'html': '',  # This will be filled later
+                                      'task_id': task_id})
         else:
             final_html_blocks.append({'html': sanitize_html(block)})
 

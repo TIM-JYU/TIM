@@ -376,8 +376,8 @@ def deleteNote():
     verifyLoggedIn()
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
-    doc_id = int(jsondata['doc_id'])
-    paragraph_id = int(jsondata['par_id'])
+    doc_id = int(jsondata['docId'])
+    paragraph_id = int(jsondata['par'])
     note_index = int(jsondata['note_index'])
     timdb = getTimDb()
 

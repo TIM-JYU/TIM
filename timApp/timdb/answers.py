@@ -43,7 +43,9 @@ class Answers(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute("""SELECT id, task_id, content, points, answered_on FROM Answer WHERE task_id = ?
+        cursor.execute("""SELECT id, task_id, content, points, datetime(answered_on, 'localtime') as answered_on
+                          FROM Answer
+                          WHERE task_id = ?
                           AND id IN
                               (SELECT answer_id FROM UserAnswer WHERE user_id = ?)
                           ORDER BY answered_on DESC""", [task_id, user_id])

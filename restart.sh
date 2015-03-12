@@ -50,6 +50,7 @@ fi
 if param timdev ; then
     docker rm timdev &
 fi
+wait
 
 if param plugins ; then
  /opt/cs/startPlugins.sh

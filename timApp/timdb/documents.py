@@ -5,7 +5,8 @@ from datetime import datetime
 from contracts import contract
 import ansiconv
 
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
+from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative
@@ -327,7 +328,7 @@ class Documents(TimDbBase):
 
     @contract
     def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
-        return [block for block in self.getDocumentMarkdown(document_id).split('\n') if len(block) > 0 and block[0] == '#']
+        return [block for block in self.getDocumentAsBlocks(document_id) if len(block) > 0 and block[0] == '#']
 
     @contract
     def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):

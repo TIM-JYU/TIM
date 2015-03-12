@@ -3,7 +3,7 @@
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response, request
 import json
-from timdb.timdbbase import DocIdentifier
+from timdb.docidentifier import DocIdentifier
 from werkzeug.exceptions import default_exceptions, HTTPException
 from flask import make_response, abort as flask_abort, request
 
@@ -20,12 +20,8 @@ def getCurrentUserName():
 def getCurrentUserGroup():
     timdb = getTimDb()
     groups = timdb.users.getUserGroups(getCurrentUserId())
-    if (len(groups) == 0):
-       print("No group found for user id {} ({})!".format(getCurrentUserId(), getCurrentUserName))
-       return 0
-
+    assert len(groups) > 0
     return groups[0]['id']
-    #return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
 
 
 def getTimDb():

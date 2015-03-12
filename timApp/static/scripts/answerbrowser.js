@@ -8,8 +8,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             templateUrl: "/static/templates/answerBrowser.html",
             restrict: 'E',
             scope: {
-                taskId: '@',
-                user: '='
+                taskId: '@'
             },
             controller: function ($scope) {
 
@@ -83,7 +82,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.$on('answerSaved', function (event, args) {
-                    if (args.taskId === $scope.taskId) {
+                    if (!$scope.$parent.teacherMode && args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
                     }
                 });
@@ -115,6 +114,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 })[0];
 
                 $scope.changed = true;
+                $scope.user = $scope.$parent.users[0];
             }
         };
     }]);
