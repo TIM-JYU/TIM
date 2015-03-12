@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style> 
+      body { 
+        margin: 0px;
+        padding: 0px;
+      }
+      html, body {
+          width:  100%;
+          height: 100%;
+          margin: 0px;
+     }
+     .error, .mycanvas {
+        position: fixed;
+        top: 0px;
+     }
+     .jsconsole {
+     }
+     
+    </style>
+    <script>
+      var canvas; 
+      var error;
+      var myConsole;
+      var resized = false;
+      
+      function runJavaScript(text,userargs,userinput) {
+        try {
+            if ( !error ) error = document.getElementById('error');
+            error.innerHTML = "";
+            if ( !myConsole ) myConsole = document.getElementById('myConsole');
+            if ( myConsole ) myConsole.innerHTML = "";
+
+            if ( !canvas ) canvas = document.getElementById('myCanvas');
+            var paint = new Function("return ("+text+")")(); 
+            var ctx = canvas.getContext("2d");
+            if ( !resized ) {
+              ctx.canvas.width  = window.innerWidth;
+              ctx.canvas.height = window.innerHeight-20;
+              resized = true;
+            }  
+            var out=myConsole;
+            out.write = write;
+            out.writeln = writeln;
+            ctx.save(); 
+            paint(ctx,out,userargs,userinput);
+            ctx.restore(); 
+        } catch (exc) {
+          var rivi ='';
+          var sarake = '';
+          if (exc.column) sarake = ' Col '+exc.column.toString()+': ';
+          if (exc.line) rivi = 'Row '+exc.line+': ';                  // FF has line
+          else if (exc.lineNumber) rivi = 'Row '+exc.lineNumber+': '; // Safari has lineNUmber
+          if ( !error ) error = document.getElementById('error');
+          if ( error ) error.innerHTML = rivi+sarake+exc.toString();
+          else console.log("Ei error ikkunaa " + exc.message);
+       }
+      }
+      
+    function write(s) {
+       if ( !myConsole ) myConsole = document.getElementById('myConsole');
+       if ( myConsole ) myConsole.innerHTML += s;
+    }    
+      
+    function writeln(s) {
+       write(s+"\n");
+    }    
+      
+    function resize_canvas(){
+        resized = false;
+        /*
+        return;
+        /
+        if ( !canvas ) canvas = document.getElementById('myCanvas');
+        if (canvas.width  < window.innerWidth) {
+            canvas.width  = window.innerWidth;
+        }
+
+        if (canvas.height < window.innerHeight) {
+            canvas.height = window.innerHeight - 30;
+        }
+        */
+    }
+      /*
+      var x = 188;
+      var y = 30;
+      var width = 200;
+      var height = 137;
+      var imageObj = new Image();
+
+      imageObj.onload = function() {
+        context.drawImage(imageObj, x, y, width, height);
+      };
+      imageObj.src = 'http://www.html5canvastutorials.com/demos/assets/darth-vader.jpg';
+      */
+     /* Heh, lisätään fillCircle kontekstiin :) */
+     Object.getPrototypeOf(document.createElement('canvas').getContext('2d')).fillCircle =
+       function (x,y,r) {
+         this.beginPath();
+         this.arc(x, y, r, 0, Math.PI*2, false);
+         this.closePath();
+         this.fill();
+         this.stroke();
+       };
+      
+    </script>
+  </head>
+  <body onresize="resize_canvas()">
+    <div id="error" class="error" ></div>
+    <pre id="myConsole" class="jsconsole" ></pre>
+    <canvas id="myCanvas" class="mycanvas" width="578" height="200"></canvas>
+  </body>
+</html>     
