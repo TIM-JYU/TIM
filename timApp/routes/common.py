@@ -20,12 +20,8 @@ def getCurrentUserName():
 def getCurrentUserGroup():
     timdb = getTimDb()
     groups = timdb.users.getUserGroups(getCurrentUserId())
-    if (len(groups) == 0):
-       print("No group found for user id {} ({})!".format(getCurrentUserId(), getCurrentUserName))
-       return 0
-
+    assert len(groups) > 0
     return groups[0]['id']
-    #return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
 
 
 def getTimDb():
