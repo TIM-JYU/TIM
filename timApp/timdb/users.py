@@ -7,6 +7,9 @@ import sqlite3
 
 new_contract('row', sqlite3.Row)
 
+ANONYMOUS_GROUP = 2
+LOGGED_IN_GROUP = 0
+
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
@@ -349,18 +352,16 @@ class Users(TimDbBase):
 
         if self.userIsOwner(user_id, block_id):
             return True
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id FROM User WHERE
-                          (id = ? OR id = 0)
-                          AND (User.id IN
+        if self.checkAnonViewAccess(block_id):
+            return True
+        if user_id > 0 and self.checkLoggedInViewAccess(block_id):
+            return True
+        result = self.db.execute("""SELECT id FROM User WHERE
+                          id = ?
+                          AND User.id IN
                               (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
                                   (SELECT UserGroup_id FROM BlockViewAccess WHERE Block_id = ?))
-                              
-                          OR  (User.id IN
-                              (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                              (SELECT UserGroup_id FROM Block WHERE Block.id = ?))
-                              ))""", [user_id, block_id, block_id])
-        result = cursor.fetchall()
+                          """, [user_id, block_id]).fetchall()
         return len(result) > 0
 
     @contract
@@ -374,20 +375,40 @@ class Users(TimDbBase):
 
         if self.userIsOwner(user_id, block_id):
             return True
+        if self.checkAnonEditAccess(block_id):
+            return True
+        if user_id > 0 and self.checkLoggedInEditAccess(block_id):
+            return True
         # TODO: This method is pretty much copy-paste from userHasViewAccess. Should make some common method.
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id FROM User WHERE
-                          (id = ? OR id = 0)
-                          AND (User.id IN
+        result = self.db.execute("""SELECT id FROM User
+                          WHERE id = ?
+                          AND User.id IN
                               (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
                                   (SELECT UserGroup_id FROM BlockEditAccess WHERE Block_id = ?))
-                              
-                          OR  (User.id IN
-                              (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                              (SELECT UserGroup_id FROM Block WHERE Block.id = ?))
-                              ))""", [user_id, block_id, block_id])
-        result = cursor.fetchall()
+                          """, [user_id, block_id]).fetchall()
         return len(result) > 0
+
+    def checkUserGroupEditAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
+        result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess
+                           WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+        return len(result) > 0
+
+    def checkAnonEditAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupEditAccess(block_id, ANONYMOUS_GROUP)
+
+    def checkLoggedInEditAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupEditAccess(block_id, LOGGED_IN_GROUP)
+
+    def checkUserGroupViewAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
+        result = self.db.execute("""SELECT UserGroup_id FROM BlockViewAccess
+                           WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+        return len(result) > 0
+
+    def checkAnonViewAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupViewAccess(block_id, ANONYMOUS_GROUP)
+
+    def checkLoggedInViewAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupViewAccess(block_id, LOGGED_IN_GROUP)
 
     @contract
     def userIsOwner(self, user_id: 'int', block_id: 'int') -> 'bool':
