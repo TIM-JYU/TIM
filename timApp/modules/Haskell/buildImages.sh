@@ -1,5 +1,5 @@
 #!/bin/sh
-set -euo pipefail
+set -eu pipefail
 IFS=$'\n\t'
 
 # This build the development environment and the run environment images
