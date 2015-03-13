@@ -299,6 +299,10 @@ def removedir(dirname):
 
 
 def get_html(ttype, query):
+    user_id = get_param(query, "user_id", "--")
+    # print("UserId:", user_id)
+    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for user\'s who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    
     js = query_params_to_map_check_parts(query)
     print(js)
     if "byFile" in js and not ("byCode" in js):
@@ -488,7 +492,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         '''
 
         is_fullhtml = self.path.find('/fullhtml') >= 0
-        is_html = self.path.find('/html') >= 0 or self.path.find('.html') >= 0
+        is_gethtml = self.path.find('/gethtml') >= 0
+        is_html = (self.path.find('/html') >= 0 or self.path.find('.html') >= 0) and not is_gethtml
         is_css = self.path.find('.css') >= 0
         is_js = self.path.find('.js') >= 0
         is_reqs = self.path.find('/reqs') >= 0
@@ -497,10 +502,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_answer = self.path.find('/answer') >= 0
         is_tauno = self.path.find('/tauno') >= 0
         is_ptauno = self.path.find('/ptauno') >= 0
+        print_file = get_param(query, "print", "")
 
         content_type = 'text/plain'
         if is_reqs or is_answer: content_type = "application/json"
-        if is_fullhtml or is_html or is_ptauno or is_tauno: content_type = 'text/html; charset=utf-8'
+        if is_fullhtml or is_gethtml or is_html or is_ptauno or is_tauno: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         if is_js: content_type = 'application/javascript'
         do_headers(self, content_type)
@@ -510,6 +516,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             clear_cache()
             return
 
+        if is_gethtml:    
+            p = self.path.split("?")
+            print(p)
+            self.wout(file_to_string(p[0]))
+            return
+            
         if is_ptauno:
             # print("PTAUNO: " + content_type)
             p = self.path.split("?")
@@ -520,11 +532,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         ttype = get_param(query, "type", "cs").lower()
         if is_tauno and not is_answer: ttype = 'tauno'  # answer is newer tauno
 
+
         if is_reqs:
             # result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
             # result_json = {"js": ["/cs/js/dir.js"], "angularModule": ["csApp","csConsoleApp"],
-            result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js"],
+            # result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
+            # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
+            result_json = {"js": ["/cs/js/dir.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
@@ -537,6 +552,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             p = self.path.split("?")
             self.wout(file_to_string(p[0]))
             return
+
 
         # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
         usercode = get_json_param(query.jso, "state", "usercode", None)
@@ -569,7 +585,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(file_to_string('end.html'))
             return
 
-        if is_iframe:
+        if is_iframe and not print_file:
             s = string_to_string_replace_url(
                 '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                 'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
@@ -683,7 +699,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print(p0.replace)
         if p0.url == "" and p0.replace == "": p0.replace = "XXXX"
 
-        print_file = get_param(query, "print", "")
         # print("type=" + ttype)
 
         # s = ""
@@ -698,7 +713,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             s = get_file_to_output(query, False and print_file)
 
         # Open the file and write it
-        if print_file: return self.wout(s)
+        # print(print_file,"Haetaan")
+        if print_file: 
+            return self.wout(s)
 
         mkdirs(prgpath)
         # os.chdir(prgpath)
@@ -754,6 +771,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # self.wfile.write("Could not get the source file\n")
             # print "=== Could not get the source file"
 
+            
+        nocode = get_param(query, "nocode", False)
+    
+            
         # print(ttype)
         # ########################## Compiling programs ###################################################
         try:
@@ -795,6 +816,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 cmdline = ""
             elif ttype == "md":
                 cmdline = ""
+            elif ttype == "js":
+                cmdline = ""
             elif ttype == "fs":
                 cmdline = "fsharpc --out:%s %s" % (exename, csfname)
             elif ttype == "cs":
@@ -809,6 +832,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 compiler_output = compiler_output.replace(prgpath, "")
             # self.wfile.write("*** Success!\n")
             print("*** Compile Success")
+            if nocode: remove(csfname)
             # print(compiler_output)
         except subprocess.CalledProcessError as e:
             '''
@@ -828,8 +852,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             file = codecs.open(csfname, 'r', "utf-8")
             lines = file.read().splitlines()
             file.close()
-            if not get_param(query, "nocode", False):
-                print_lines(output, lines, 0, 10000)
+            if not nocode: print_lines(output, lines, 0, 10000)
             error_str += output.getvalue()
             output.close()
 
@@ -1098,6 +1121,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 code, out, err = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                       uargs=userargs)
             elif ttype == "md":
+                code, out, err = (0, "".encode(), "".encode())
+            elif ttype == "js":
                 code, out, err = (0, "".encode(), "".encode())
             elif ttype == "cs":
                 print("Exe: ", exename)
