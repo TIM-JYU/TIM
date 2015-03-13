@@ -29,7 +29,7 @@ class TimDbTest(unittest.TestCase):
         db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
         e = ephemeralclient.launch_ephemeral()
         db.initializeTables("schema2.sql")
-        db.users.createAnonymousUser()
+        db.users.createAnonymousAndLoggedInUserGroups()
 
     @classmethod
     def tearDownClass(cls):

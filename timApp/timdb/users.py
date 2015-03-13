@@ -15,15 +15,16 @@ class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
 
     @contract
-    def createAnonymousUser(self) -> 'int':
+    def createAnonymousAndLoggedInUserGroups(self) -> 'int':
         """Creates an anonymous user and a usergroup for it.
         The user id and its associated usergroup id is 0.
         """
 
         cursor = self.db.cursor()
         cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [0, 'Anonymous'])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [0, 'all'])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [0, 0])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUP, 'Anonymous users'])
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [0, ANONYMOUS_GROUP])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUP, 'Logged-in users'])
         self.db.commit()
         return 0
 
