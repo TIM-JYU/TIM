@@ -1,0 +1,41 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Kokeilu form</title>
+  <meta name="description" content="The HTML5 Herald">
+  <meta name="author" content="SitePoint">
+
+  <link rel="stylesheet" href="style.css?v=1.0">
+</head>
+
+<body>
+	<form class="basic-grey">
+		<fieldset>
+			<label>Kysymys:</label>
+			<textarea name="kysymys" rows="5" cols="100">
+			</textarea>
+			<br>
+			<label>Kysymystyyppi:</label>
+			<select name="tyyppi">
+				<option value="matriisi" selected>Matriisi</option>
+			</select><br>
+			<label>Vastaustyyppi:</label>
+			<select name="vtyyppi">
+				<option value="radiobutton" selected>Radiopainike</option>
+				<option value="vapaakenttä">Vapaakenttä</option>
+				<option value="checkbox">Checkbox</option>
+			</select><br><br>
+			<label>Vastausvaihtoehdot:</label><br>
+			<label>Vastausaika:</label>
+			<input type="radio" name="vastausaika" value="0">Ei 
+			<input type="radio" name="vastausaika" value=""><input type=text" size="3">
+			</select>
+			<br><br>
+			<input type="button" class="button" value="Submit">
+		</fieldset>
+	</form>
+</body>
+</html>
