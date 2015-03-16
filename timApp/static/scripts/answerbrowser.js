@@ -101,20 +101,26 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         $scope.getAvailableAnswers();
                         $scope.changed = false;
                     }
+                    else if (typeof $scope.answers === 'undefined') {
+                        $scope.getAvailableAnswers(false);
+                    }
                 };
-                $scope.waypointDown = new Waypoint.Inview({
-                    enter: function (direction) {
-                        $scope.isVisible = true;
-                        $scope.loadIfChanged();
-                    },
-                    exited: function (direction) {
-                        $scope.isVisible = false;
-                    },
-                    element: $element[0]
-                })[0];
 
-                $scope.changed = true;
-                $scope.user = $scope.$parent.users[0];
+                // The element is not visible in DOM at the time the link function runs, so we set
+                // 200 ms timeout to make sure the waypoint 'sees' it.
+                $window.setTimeout(function () {
+                    $scope.user = $scope.$parent.users[0];
+                    $scope.waypoint = new Waypoint.Inview({
+                        enter: function (direction) {
+                            $scope.isVisible = true;
+                            $scope.loadIfChanged();
+                        },
+                        exited: function (direction) {
+                            $scope.isVisible = false;
+                        },
+                        element: $element[0]
+                    })[0];
+                }, 200);
             }
         };
     }]);
