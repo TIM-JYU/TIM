@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Wall{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='scripts\wallView\wallController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts\wallView\wallApp.js') }}"></script>
+
+    <style type="text/css">
+        table {
+            margin: 1em;
+            border: none;
+        }
+
+        thead {
+            font-weight: bold;
+            border: none;
+        }
+
+        table td {
+            padding: 0.2em;
+            border: none;
+        }
+
+        .uploadForm {
+            border: 1px solid black;
+            padding: 1em;
+        }
+
+        .material {
+            padding: 1em;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div ng-app="wallApp" ng-controller="WallController">
+        <div>
+            <textarea readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+
+            <div class="buttons">
+                <input ng-model="newMsg" width="200" value="newMsg">
+                <button ng-click="sendMessage(newMsg)">Send</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

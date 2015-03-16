@@ -48,7 +48,7 @@ user_id INTEGER NOT NULL,
 
 CONSTRAINT UserAnswer_PK
 	PRIMARY KEY (id),
-CONSTRAINT UserAnswer_id 
+CONSTRAINT UserAnswer_id
 	FOREIGN KEY (answer_id)
 	REFERENCES Answer (id)
 		ON DELETE NO ACTION
@@ -75,7 +75,7 @@ CREATE TABLE UserGroup (
 id INTEGER NOT NULL,
 name VARCHAR(100) NOT NULL,
 
-CONSTRAINT UserGroup_PK 
+CONSTRAINT UserGroup_PK
 	PRIMARY KEY (id)
 )
 ;
@@ -89,7 +89,7 @@ email VARCHAR(100),
 prefs TEXT,
 pass VARCHAR(128),
 
-CONSTRAINT User_PK 
+CONSTRAINT User_PK
 	PRIMARY KEY (id)
 )
 ;
@@ -113,9 +113,9 @@ created TIMESTAMP,
 modified TIMESTAMP,
 UserGroup_id INTEGER NOT NULL,
 
-CONSTRAINT Block_PK 
+CONSTRAINT Block_PK
 	PRIMARY KEY (id),
-CONSTRAINT Block_id 
+CONSTRAINT Block_id
 	FOREIGN KEY (UserGroup_id)
 	REFERENCES UserGroup (id)
 		ON DELETE NO ACTION
@@ -132,7 +132,7 @@ Block_id INTEGER NOT NULL,
 
 CONSTRAINT BlockRelation_PK
 	PRIMARY KEY (Block_id),
-CONSTRAINT BlockRelation_id 
+CONSTRAINT BlockRelation_id
 	FOREIGN KEY (Block_id)
 	REFERENCES Block (id)
 		ON DELETE NO ACTION
@@ -159,12 +159,12 @@ User_id INTEGER NOT NULL,
 
 CONSTRAINT UserGroupMember_PK
 	PRIMARY KEY (UserGroup_id,User_id),
-CONSTRAINT UserGroupMember_id 
+CONSTRAINT UserGroupMember_id
 	FOREIGN KEY (UserGroup_id)
 	REFERENCES UserGroup (id)
 		ON DELETE NO ACTION
 		ON UPDATE CASCADE,
-CONSTRAINT UserGroupMember_id 
+CONSTRAINT UserGroupMember_id
 	FOREIGN KEY (User_id)
 	REFERENCES User (id)
 		ON DELETE NO ACTION
@@ -181,12 +181,12 @@ UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT BlockViewAccess_PK
 	PRIMARY KEY (Block_id,UserGroup_id),
-CONSTRAINT BlockViewAccess_id 
+CONSTRAINT BlockViewAccess_id
 	FOREIGN KEY (Block_id)
 	REFERENCES Block (id)
 		ON DELETE NO ACTION
 		ON UPDATE CASCADE,
-CONSTRAINT BlockViewAccess_id 
+CONSTRAINT BlockViewAccess_id
 	FOREIGN KEY (UserGroup_id)
 	REFERENCES UserGroup (id)
 		ON DELETE NO ACTION
@@ -203,12 +203,12 @@ UserGroup_id INTEGER NOT NULL,
 
 CONSTRAINT BlockEditAccess_PK
 	PRIMARY KEY (Block_id,UserGroup_id),
-CONSTRAINT BlockEditAccess_id 
+CONSTRAINT BlockEditAccess_id
 	FOREIGN KEY (Block_id)
 	REFERENCES Block (id)
 		ON DELETE NO ACTION
 		ON UPDATE CASCADE,
-CONSTRAINT BlockEditAccess_id 
+CONSTRAINT BlockEditAccess_id
 	FOREIGN KEY (UserGroup_id)
 	REFERENCES UserGroup (id)
 		ON DELETE NO ACTION
@@ -270,4 +270,10 @@ CONSTRAINT ReadParagraphs_id
 	REFERENCES ParMappings (doc_id, doc_ver, par_index)
 		ON DELETE CASCADE
 		ON UPDATE RESTRICT
+);
+
+CREATE TABLE Question (
+	Question_id	INTEGER PRIMARY KEY AUTOINCREMENT,
+	Question	TEXT NOT NULL,
+	Answer	TEXT
 );

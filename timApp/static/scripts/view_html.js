@@ -1,4 +1,4 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function($locationProvider){
+var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace', 'ngDialog'].concat(modules), function ($locationProvider) {
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
 });
@@ -10,7 +10,8 @@ timApp.controller("ViewCtrl", ['$scope',
     '$injector',
     '$compile',
     '$location',
-    function (sc, http, q, $upload, $injector, $compile, $location) {
+    'ngDialog',
+    function (sc, http, q, $upload, $injector, $compile, $location, ngDialog) {
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
@@ -37,6 +38,8 @@ timApp.controller("ViewCtrl", ['$scope',
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+        var QUESTION_ADD_BUTTON_CLASS = "timButton addQuestion";
+        var QUESTION_ADD_BUTTON = "." + QUESTION_ADD_BUTTON_CLASS.replace(" ", ".");
 
         sc.getParIndex = function ($par) {
             return $par.index() + sc.startIndex;
@@ -91,7 +94,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     sc.editing = true;
                 };
 
-                if (options.showDelete){
+                if (options.showDelete) {
                     $(".par.new").remove();
                 }
                 createEditor(attrs);
@@ -132,14 +135,16 @@ timApp.controller("ViewCtrl", ['$scope',
                         {name: 'difficult', desc: 'The text is difficult to understand'},
                         {name: 'unclear', desc: 'The text is unclear'}
                     ],
-                    choices: {desc: [{
-                        desc: 'Show note to:',
-                        name: 'access',
-                        opts: [
-                            {desc: 'Everyone', value: 'everyone'},
-                            {desc: 'Just me', value: 'justme'}
-                        ]
-                    }]},
+                    choices: {
+                        desc: [{
+                            desc: 'Show note to:',
+                            name: 'access',
+                            opts: [
+                                {desc: 'Everyone', value: 'everyone'},
+                                {desc: 'Just me', value: 'justme'}
+                            ]
+                        }]
+                    },
                     destroyAfterSave: true
                 }),
                 "after-save": 'handleNoteSave(saveData, extraData)',
@@ -187,6 +192,20 @@ timApp.controller("ViewCtrl", ['$scope',
             }
 
             sc.toggleParEditor($newpar, {showDelete: false});
+        });
+
+        // TODO: Keep working here
+        // Event handler for "Add question below"
+        // Opens pop-up window to create question.
+        sc.addEvent(QUESTION_ADD_BUTTON, function (e) {
+            var dialog = ngDialog.open({
+                template: "../question",
+                controller: "QuestionController",
+                className: 'ngdialog-theme-default ngdialog-theme-custom',
+                closeByDocument: false
+            });
+
+
         });
 
         sc.handleCancel = function (extraData) {
@@ -252,7 +271,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.addEvent('.paragraphs .parContent', function (e) {
             if (sc.editing)
                 return;
-            
+
             var tag = $(e.target).prop("tagName");
 
             // Don't show paragraph menu on these specific tags
@@ -260,7 +279,7 @@ timApp.controller("ViewCtrl", ['$scope',
                 return;
 
             var $par = $(this).parent();
-            var coords = { left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top };
+            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
             var toggle1 = $par.find(".actionButtons").length === 0;
             var toggle2 = $par.hasClass("lightselect");
 
@@ -283,7 +302,11 @@ timApp.controller("ViewCtrl", ['$scope',
                 $par.addClass("selected");
                 var $actionDiv = $("<div>", {class: 'actionButtons'});
                 var button_width = $par.outerWidth() / 4;
-                $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
+                $actionDiv.append($("<button>", {
+                    class: NOTE_ADD_BUTTON_CLASS,
+                    text: 'Comment/note',
+                    width: button_width
+                }));
                 if (sc.canEdit) {
                     $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
                     $actionDiv.append($("<button>", {
@@ -294,6 +317,11 @@ timApp.controller("ViewCtrl", ['$scope',
                     $actionDiv.append($("<button>", {
                         class: PAR_ADD_BUTTON_CLASS + ' below',
                         text: 'Add paragraph below',
+                        width: button_width
+                    }));
+                    $actionDiv.append($("<button>", {
+                        class: QUESTION_ADD_BUTTON_CLASS + ' below',
+                        text: 'Add question below',
                         width: button_width
                     }));
                 }
@@ -518,4 +546,27 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
+
     }]);
+
+//TODO: Controller for the question
+timApp.controller("QuestionController", ['$scope', 'ngDialog', '$http', function (scope, ngDialog, http) {
+    scope.close = function () {
+        ngDialog.closeAll();
+    }
+
+    scope.create = function (question, answer) {
+        var url;
+        console.log("Question: " + question);
+        console.log("Answer: " + answer);
+
+        ngDialog.closeAll();
+        http({method: 'POST', url: '/addQuestion', params: {'question': question, 'answer': answer}})
+            .success(function (data) {
+                console.log(data);
+            })
+            .error(function (data) {
+                console.log("This doesn't work yet")
+            });
+    }
+}]);
