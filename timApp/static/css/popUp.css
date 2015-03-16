@@ -1,0 +1,38 @@
+.question-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    opacity: 0.2;
+}
+
+.question-dialog {
+    z-index: 5;
+    position: fixed;
+
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: #fff;
+    box-shadow: 4px 4px 80px #000;
+}
+
+.question-dialog-content {
+    padding: 10px;
+    text-align: center;
+}
+
+.question-close {
+    position: fixed;
+    top: 3px;
+    right: 5px;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 120%;
+    display: inline-block;
+    font-weight: bold;
+    font-family: 'arial', 'sans-serif';
+}
