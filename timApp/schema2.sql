@@ -220,9 +220,9 @@ CREATE TABLE ParMappings(
 doc_id INTEGER NOT NULL,
 doc_ver INTEGER NOT NULL,
 par_index INTEGER NOT NULL,
-new_ver INTEGER NULL,
-new_index INTEGER NULL,
-modified BOOLEAN NULL,
+new_ver INTEGER NOT NULL,
+new_index INTEGER NOT NULL,
+modified BOOLEAN NOT NULL,
 
 CONSTRAINT ParMappings_PK
 	PRIMARY KEY (doc_id, doc_ver, par_index)
@@ -238,7 +238,7 @@ par_index INTEGER NOT NULL,
 note_index INTEGER NOT NULL,
 content VARCHAR(255) NOT NULL,
 created TIMESTAMP NOT NULL,
-modified TIMESTAMP NULL,
+modified TIMESTAMP NOT NULL,
 access VARCHAR(20) NOT NULL,
 tags VARCHAR(20) NOT NULL,
 deprecated BOOLEAN,
@@ -274,6 +274,6 @@ CONSTRAINT ReadParagraphs_id
 
 CREATE TABLE Question (
 	Question_id	INTEGER PRIMARY KEY AUTOINCREMENT,
-	Question	TEXT NOT NULL,
-	Answer	TEXT
+	question	TEXT NOT NULL,
+	answer	TEXT
 );
