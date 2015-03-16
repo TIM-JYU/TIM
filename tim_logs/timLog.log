@@ -1,0 +1,68 @@
+{"time":2015-03-04 10:04:54,181, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /index/4 [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 334, in getIndex
+    index = timdb.documents.getIndex(getNewest(docId))
+  File "/service/timApp/routes/common.py", line 80, in getNewest
+    version = timdb.documents.getNewestVersionHash(docId)
+  File "<string>", line 2, in getNewestVersionHash
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 430, in getNewestVersionHash
+    return cursor.fetchone()[0]
+TypeError: 'NoneType' object is not subscriptable
+{"time":2015-03-04 10:04:54,207, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /notes/4 [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 405, in getNotes
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+  File "<string>", line 2, in getNewestVersionHash
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 430, in getNewestVersionHash
+    return cursor.fetchone()[0]
+TypeError: 'NoneType' object is not subscriptable
+{"time":2015-03-04 10:04:54,226, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /read/4 [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 420, in getReadParagraphs
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+  File "<string>", line 2, in getNewestVersionHash
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 430, in getNewestVersionHash
+    return cursor.fetchone()[0]
+TypeError: 'NoneType' object is not subscriptable
