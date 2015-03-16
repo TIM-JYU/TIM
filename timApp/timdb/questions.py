@@ -6,12 +6,10 @@ from timdb.timdbbase import TimDbBase
 class Questions(TimDbBase):
     @contract
     def get_questions(self) -> 'list(dict)':
-        """Gets the answers of a user in a task, ordered descending by submission time.
-
-        :param user_id: The id of the user.
-        :param task_id: The id of the task.
         """
-
+        Gets the question
+        :return: Questions as a list
+        """
         cursor = self.db.cursor()
         cursor.execute("""SELECT id, question, answer FROM Question """)
 

@@ -1,4 +1,4 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace', 'ngDialog'].concat(modules), function ($locationProvider) {
+var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function ($locationProvider) {
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
 });
@@ -10,8 +10,7 @@ timApp.controller("ViewCtrl", ['$scope',
     '$injector',
     '$compile',
     '$location',
-    'ngDialog',
-    function (sc, http, q, $upload, $injector, $compile, $location, ngDialog) {
+    function (sc, http, q, $upload, $injector, $compile, $location) {
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
@@ -21,6 +20,10 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.users = users;
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
+        // TODO: Oma
+        sc.questionShown = false;
+        sc.questionValue = "";
+        sc.answerValue = "";
         var NOTE_EDITOR_CLASS = "editorArea";
         var NOTE_EDITOR_CLASS_DOT = "." + NOTE_EDITOR_CLASS;
         var NOTE_CANCEL_BUTTON = ".timButton.cancelNote";
@@ -197,16 +200,26 @@ timApp.controller("ViewCtrl", ['$scope',
         // TODO: Keep working here
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
+
+
         sc.addEvent(QUESTION_ADD_BUTTON, function (e) {
-            var dialog = ngDialog.open({
-                template: "../question",
-                controller: "QuestionController",
-                className: 'ngdialog-theme-default ngdialog-theme-custom',
-                closeByDocument: false
-            });
+            var $par = $(e.target).parent().parent();
+            sc.toggleQuestion();
+            sc.toggleActionButtons($par, false, false, null);
 
-
+            // Did now refresh view without this.
+            sc.$apply();
         });
+
+        // Shows question window
+        sc.toggleQuestion = function () {
+            sc.questionShown = !sc.questionShown;
+        };
+
+        $.fn.slideFadeToggle = function (easing, callback) {
+            console.log("here I am");
+            return this.animate({opacity: 'toggle', height: 'toggle'}, 'fast', easing, callback);
+        };
 
         sc.handleCancel = function (extraData) {
             var $par = sc.getElementByParIndex(extraData.par);
@@ -549,24 +562,60 @@ timApp.controller("ViewCtrl", ['$scope',
 
     }]);
 
+timApp.directive('questionDialog', function factory() {
+    return {
+        restrict: 'E',
+        scope: {
+            show: '='
+        },
+        replace: true, // Replace with the template below
+        transclude: true, // we want to insert custom content inside the directive
+        link: function (scope, element, attrs) {
+            scope.dialogStyle = {};
+            scope.hideQuestion = function () {
+                scope.show = false;
+            };
+        },
+        template: "<div class='question' ng-show='show'> " +
+        "<div class='question-overlay'></div> " +
+        "<div class='question-dialog'>" +
+        "<div class='question-close' ng-click='hideQuestion()'>X</div>" +
+        "<div class='question-dialog-content' ng-transclude></div>" +
+        "</div>" +
+        "</div>"
+    };
+});
+
 //TODO: Controller for the question
-timApp.controller("QuestionController", ['$scope', 'ngDialog', '$http', function (scope, ngDialog, http) {
+
+timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
     scope.close = function () {
-        ngDialog.closeAll();
-    }
+        scope.question = "";
+        scope.answer = "";
+        scope.toggleQuestion();
+    };
 
-    scope.create = function (question, answer) {
+    scope.createQuestion = function (questionVal, answerVal) {
         var url;
-        console.log("Question: " + question);
-        console.log("Answer: " + answer);
-
-        ngDialog.closeAll();
-        http({method: 'POST', url: '/addQuestion', params: {'question': question, 'answer': answer}})
+        console.log(questionVal);
+        scope.question = "";
+        scope.answer = "";
+        if (questionVal == undefined || questionVal.trim().length == 0) {
+            console.log("Can't save empty questions");
+            scope.toggleQuestion();
+            return;
+        }
+        console.log("Question: " + questionVal);
+        console.log("Answer: " + answerVal);
+        scope.toggleQuestion();
+        http({method: 'POST', url: '/addQuestion', params: {'question': questionVal, 'answer': answerVal}})
             .success(function (data) {
-                console.log(data);
+                console.log("The question was successfully added to database");
             })
             .error(function (data) {
-                console.log("This doesn't work yet")
+                console.log("There was some error creating question to database.")
             });
-    }
+
+    };
 }]);
+

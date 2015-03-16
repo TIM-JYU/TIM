@@ -1,7 +1,7 @@
 /**
  * Created by hajoviin on 24.2.2015.
  */
-var wallApp = angular.module('wallApp', ['ngSanitize', 'controller', 'angularFileUpload']);
+var wallApp = angular.module('wallApp', ['ngSanitize', 'controller' ]);
 wallApp.directive('bindOnce', function () {
     return {
         scope: true,

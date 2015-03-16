@@ -26,11 +26,8 @@
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/notesView/contents.js') }}"></script>
 
-    <script src="{{url_for('static', filename='scripts/bower_components/ngDialog/ngDialog.min.js')}}"></script>
+    <link rel="stylesheet" href="../static/css/popUp.css">
 
-    <link rel="stylesheet" href="../static/css/ngDialog.css">
-	<link rel="stylesheet" href="../static/css/ngDialog-theme-default.css">
-	<link rel="stylesheet" href="../static/css/ngDialog-theme-plain.css">
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
@@ -51,9 +48,9 @@
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         {% if plugin_users %}
-        var users = {{plugin_users|tojson}};
+            var users = {{plugin_users|tojson}};
         {% else %}
-        var users = [{{current_user|tojson}}];
+            var users = [{{current_user|tojson}}];
         {% endif %}
     </script>
 
@@ -84,12 +81,12 @@
                 {% endraw %}
             </div>
         </div>
-        
+
         {% if plugin_users|length > 0 %}
             <div id="users" class="userlist">
                 {% for user in plugin_users %}
                     <div>
-                       <a class="userentry" href="?user={{user.id}}" target="_self">{{ user.name|safe }}</a>
+                        <a class="userentry" href="?user={{ user.id }}" target="_self">{{ user.name|safe }}</a>
                     </div>
                 {% endfor %}
             </div>
@@ -110,5 +107,20 @@
                 </div>
             {% endfor %}
         </div>
+
+        <question-dialog show='questionShown'>
+            <div ng-controller="QuestionController">
+                <h4>Question</h4>
+                <input type="text" placeholder="The question" ng-model="question"/>
+                <h4>Answer</h4>
+                <input type="text" placeholder="Correct answer" ng-model="answer"/>
+
+                <p></p>
+                <button type="button" ng-click=createQuestion(question,answer)>Create</button>
+                <button type="button" ng-click=close(question,answer)>Cancel</button>
+            </div>
+        </question-dialog>
     </div>
+
+
 {% endblock %}

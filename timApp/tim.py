@@ -36,6 +36,20 @@ from containerLink import PluginException
 from routes.settings import settings_page
 from routes.common import *
 
+
+# TODO: This is for testing gevent- socketIO
+#import unicodedata
+#from socketio import socketio_manage
+#from socketio.namespace import BaseNamespace
+#from socketio.mixins import RoomsMixin, BroadcastMixin
+#from werkzeug.exceptions import NotFound
+#import threading
+#from gevent import monkey
+
+#monkey.patch_all()
+# TODO: Test thing ends here
+
+
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
@@ -211,8 +225,11 @@ def get_question():
     questions = timdb.questions.get_questions()
     return jsonResponse(questions)
 
+
 @app.route('/addQuestion', methods=['POST'])
 def add_question():
+    # TODO: Only lecturers should be able to create questions.
+    # verifyOwnership(doc_id)
     question = request.args.get('question')
     answer = request.args.get('answer')
     timdb = getTimDb()
