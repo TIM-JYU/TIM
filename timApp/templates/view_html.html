@@ -25,6 +25,7 @@
     <script src="{{ url_for('static', filename='scripts/view_html.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/resizable.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
 
     {% for cssFile in cssFiles %}
@@ -82,7 +83,7 @@
             <div id="users" class="userlist" tim-draggable-fixed>
             {% if plugin_users %}
                 Users with answers:<br>
-                <select ng-model="selectedUser"
+                <select resizable ng-model="selectedUser"
                         ng-options="(user.real_name + ' (' + user.name + '), ' + user.task_count) for user in users track by user.id"
                         ng-change="changeUser(selectedUser)"
                         size="20"></select>
