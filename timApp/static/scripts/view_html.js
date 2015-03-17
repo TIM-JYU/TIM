@@ -380,7 +380,7 @@ timApp.controller("ViewCtrl", [
                 }
                 $noteDiv.append($("<div>", {class: classes.join(" ")})
                     .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
+                    .append($("<div>", {class: 'noteContent', html: notes[i].htmlContent})));
             }
             return $noteDiv;
         };
@@ -409,7 +409,7 @@ timApp.controller("ViewCtrl", [
                     if (parIndex in pars) {
                         var $notediv = sc.getNoteHtml(pars[parIndex].notes);
                         $(this).append($notediv);
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, this]);
                     }
                 });
 
