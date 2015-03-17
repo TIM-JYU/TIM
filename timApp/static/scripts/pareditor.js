@@ -1,4 +1,4 @@
-var angular, MathJax;
+var angular;
 var timApp = angular.module('timApp');
 
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
@@ -39,7 +39,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                     .append(angular.element("<div>", {class: "parContent"})
                                         .html($compile(data.texts[i].html)($scope))));
                             }
-                            MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
+                            $scope.$parent.processAllMath($previewDiv);
                             $scope.outofdate = false;
                             $scope.parCount = len;
                         }).error(function (data, status, headers, config) {
