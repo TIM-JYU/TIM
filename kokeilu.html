@@ -1,41 +1,92 @@
 <!doctype html>
-
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-
-  <title>Kokeilu form</title>
-  <meta name="description" content="The HTML5 Herald">
-  <meta name="author" content="SitePoint">
-
-  <link rel="stylesheet" href="style.css?v=1.0">
-</head>
-
-<body>
-	<form class="basic-grey">
-		<fieldset>
-			<label>Kysymys:</label>
-			<textarea name="kysymys" rows="5" cols="100">
+<html ng-app>
+	<head>
+		<meta charset="utf-8">
+		<script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+		<title>Kokeilu form</title>
+		<meta name="description" content="The HTML5 Herald">
+		<meta name="author" content="SitePoint">
+		<link rel="stylesheet" href="style.css?v=1.0">
+	</head>
+	<body>
+		<div>
+			<form class="basic-grey">
+				<fieldset>
+					<label>Kysymys:</label>
+					<textarea name="kysymys" rows="1" cols="100">
 			</textarea>
-			<br>
-			<label>Kysymystyyppi:</label>
-			<select name="tyyppi">
-				<option value="matriisi" selected>Matriisi</option>
-			</select><br>
-			<label>Vastaustyyppi:</label>
-			<select name="vtyyppi">
-				<option value="radiobutton" selected>Radiopainike</option>
-				<option value="vapaakenttä">Vapaakenttä</option>
-				<option value="checkbox">Checkbox</option>
-			</select><br><br>
-			<label>Vastausvaihtoehdot:</label><br>
-			<label>Vastausaika:</label>
-			<input type="radio" name="vastausaika" value="0">Ei 
-			<input type="radio" name="vastausaika" value=""><input type=text" size="3">
-			</select>
-			<br><br>
-			<input type="button" class="button" value="Submit">
-		</fieldset>
-	</form>
-</body>
+					<br>
+					<label>Kysymystyyppi:</label>
+					<select name="tyyppi" ng-model="question.type" ng-dropdown required>
+						<option value="" ng-option disabled selected> -- select question type -- </option>
+						<option ng-option value="matriisi">Matriisi</option>
+						<option ng-option value="monivalinta">Monivalinta</option>
+					</select>
+					<br>
+					<div id="check" ng-if="question.type == 'matriisi'">
+						<label>Vastaustyyppi:</label>
+						<select name="vtyyppi">
+							<option disabled > -- select answer type -- </option>
+							<option value="radiobutton">Radiopainike</option>
+							<option value="vapaakenttä">Vapaakenttä</option>
+							<option value="checkbox">Checkbox</option>
+						</select>
+					</div>
+					<div id="check" ng-if="question.type == 'monivalinta'">
+						<label>Vastaustyyppi:</label>
+						<select name="vtyyppi">
+							<option disabled > -- select answer type -- </option>
+							<option value="checkbox">Checkbox</option>
+							<option value="radiobutton">Radiopainike</option>
+						</select>
+					</div>
+					<br><br>
+					<div ng-controller="Test" id="overflow">
+						<table ng-if="question.type == 'matriisi'">
+							<thead>
+								<tr>
+									<th>Table</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="item in rows">
+									<td ng-repeat="item in columns"><input type="template" placeholder="{{item.questionPlaceholder}}" ng-model="item.question" /></td>
+								</tr>								
+							</tbody>
+						</table>
+						<button ng-click="addColumn()()" ng-if="question.type == 'matriisi'" style="float:right">add_cell</button>	
+						<button ng-click="addRows()" ng-if="question.type == 'matriisi'">add_row</button>
+					</div>
+					<br>
+					<br>
+					<label>Vastausvaihtoehdot:</label><br>
+					<label>Vastausaika:</label>
+					<input type="radio" name="vastausaika" value="0">Ei 
+					<input type="radio" name="vastausaika" value=""><input type=text" size="3">
+					</select>
+					<br>		
+					<br>
+					<input type="button" class="button" value="Submit">
+				</fieldset>
+			</form>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.min.js"></script>
+		<script type="text/javascript">
+			var Test = function($scope){
+			  $scope.columns = [{text:'test', questionPlaceholder:'column'}];
+			$scope.rows =  [{text:'test'}];
+			
+			  
+			  $scope.addColumn = function () {
+			    $scope.columns.push({question: "column", questionPlaceholder: "column", text: "" });
+			  };
+			
+			$scope.addRows = function () {
+			$scope.rows.push({text: ""});          
+			
+			  };
+			}
+			
+		</script>
+	</body>
 </html>
