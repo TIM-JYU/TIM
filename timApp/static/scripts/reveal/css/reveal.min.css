@@ -1124,6 +1124,9 @@ body {
 .reveal aside.notes {
   display: none; }
 
+div.notes {
+  display: none; }
+
 /*********************************************
  * ZOOM PLUGIN
  *********************************************/

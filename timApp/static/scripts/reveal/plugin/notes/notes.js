@@ -48,7 +48,7 @@ var RevealNotes = (function() {
 		function post() {
 
 			var slideElement = Reveal.getCurrentSlide(),
-				notesElement = slideElement.querySelector( 'aside.notes' );
+				notesElement = slideElement.querySelector( 'div.notes' );
 
 			var messageData = {
 				namespace: 'reveal-notes',
