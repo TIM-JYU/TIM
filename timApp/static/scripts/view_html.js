@@ -200,12 +200,11 @@ timApp.controller("ViewCtrl", ['$scope',
         // TODO: Keep working here
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
-
-
         sc.addEvent(QUESTION_ADD_BUTTON, function (e) {
             var $par = $(e.target).parent().parent();
             sc.toggleQuestion();
             sc.toggleActionButtons($par, false, false, null);
+            sc.par = $par
 
             // Did now refresh view without this.
             sc.$apply();
@@ -334,7 +333,7 @@ timApp.controller("ViewCtrl", ['$scope',
                     }));
                     $actionDiv.append($("<button>", {
                         class: QUESTION_ADD_BUTTON_CLASS + ' below',
-                        text: 'Add question below',
+                        text: 'Add question',
                         width: button_width
                     }));
                 }
@@ -600,6 +599,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         console.log(questionVal);
         scope.question = "";
         scope.answer = "";
+        var doc_id = scope.docId;
+        var $par = scope.par;
+        var par_index = scope.getParIndex($par);
+        console.log(par_index);
+
         if (questionVal == undefined || questionVal.trim().length == 0) {
             console.log("Can't save empty questions");
             scope.toggleQuestion();
@@ -607,8 +611,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
         console.log("Question: " + questionVal);
         console.log("Answer: " + answerVal);
+
         scope.toggleQuestion();
-        http({method: 'POST', url: '/addQuestion', params: {'question': questionVal, 'answer': answerVal}})
+        http({
+            method: 'POST',
+            url: '/addQuestion',
+            params: {'question': questionVal, 'answer': answerVal, 'par_index': par_index, 'doc_id': doc_id}
+        })
             .success(function (data) {
                 console.log("The question was successfully added to database");
             })

@@ -1,5 +1,6 @@
 .question-overlay {
     position: fixed;
+    z-index: 5;
     top: 0;
     left: 0;
     width: 100%;
@@ -9,7 +10,7 @@
 }
 
 .question-dialog {
-    z-index: 5;
+    z-index: 6;
     position: fixed;
 
     top: 25%;
@@ -27,6 +28,7 @@
 
 .question-close {
     position: fixed;
+    z-index: 6;
     top: 3px;
     right: 5px;
     padding: 5px;

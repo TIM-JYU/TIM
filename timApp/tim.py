@@ -37,19 +37,6 @@ from routes.settings import settings_page
 from routes.common import *
 
 
-# TODO: This is for testing gevent- socketIO
-#import unicodedata
-#from socketio import socketio_manage
-#from socketio.namespace import BaseNamespace
-#from socketio.mixins import RoomsMixin, BroadcastMixin
-#from werkzeug.exceptions import NotFound
-#import threading
-#from gevent import monkey
-
-#monkey.patch_all()
-# TODO: Test thing ends here
-
-
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
@@ -219,7 +206,7 @@ def show_question():
     return render_template('question.html')
 
 
-@app.route('/getQuestion', methods=['GET'])
+@app.route('/getQuestions', methods=['GET'])
 def get_question():
     timdb = getTimDb()
     questions = timdb.questions.get_questions()
@@ -232,9 +219,12 @@ def add_question():
     # verifyOwnership(doc_id)
     question = request.args.get('question')
     answer = request.args.get('answer')
+    doc_id = int(request.args.get('doc_id'))
+    par_index = int(request.args.get('par_index'))
     timdb = getTimDb()
-    questions = timdb.questions.add_questions(question, answer)
+    questions = timdb.questions.add_questions(doc_id, par_index, question, answer)
     return jsonResponse(questions)
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -622,5 +612,5 @@ def indexPage():
 
 def startApp():
     # app.wsgi_app = ReverseProxied(app.wsgi_app)
-    #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
+    # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
     app.run(host='0.0.0.0', port=5000, use_reloader=False)

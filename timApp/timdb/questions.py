@@ -4,6 +4,40 @@ from timdb.timdbbase import TimDbBase
 
 
 class Questions(TimDbBase):
+    # TODO: Doesn't work until quesiton table has been altered
+    @contract
+    def get_paragraphs_question(self, doc_id: 'int', par_index: 'int'):
+        """
+        Gets the questions of some paragraph
+        :param par_id: Paragraph to get question.
+        :return: The list of question from that paragraph
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute("""
+                          SELECT id, question, answer
+                          FROM Question
+                          WHERE doc_id = ? AND par_index = ?
+                       """, [doc_id, par_index])
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def delete_question(self, question_id: 'int'):
+        """
+        Deletes the question from database
+        :param question_id: question to delete
+        """
+
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+                DELETE FROM Question
+                WHERE question_id = ?
+            """, [question_id])
+
+        self.db.commit()
+
     @contract
     def get_questions(self) -> 'list(dict)':
         """
@@ -16,7 +50,8 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def add_questions(self, question: 'str', answer: 'str', commit: 'bool'=True) -> 'int':
+    def add_questions(self, doc_id: 'int', par_index:'int', question: 'str', answer: 'str',
+                      commit: 'bool'=True) -> 'int':
         """ Creates a new questions
         :param question: Question to be saved
         :param answer: Answer to the question
@@ -25,7 +60,10 @@ class Questions(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Question (question,answer) VALUES(?,?)', [question, answer])
+        cursor.execute("""
+                       INSERT INTO Question (doc_id, par_index, question,answer)
+                       VALUES(?,?,?,?)
+                       """, [doc_id, par_index, question, answer])
         if commit:
             self.db.commit()
         question_id = cursor.lastrowid

@@ -1,10 +1,31 @@
 <div ng-controller="QuestionController">
-    <h4>Question</h4>
-    <input type="text" placeholder="The question" ng-model="question"/>
-    <h4>Answer</h4>
-    <input type="text" placeholder="Correct answer" ng-model="answer"/>
 
-    <p></p>
-    <button type="button" ng-click=createQuestion(question,answer)>Create</button>
-    <button type="button" ng-click=close(question,answer)>Cancel</button>
+    <form class="basic-grey">
+        <fieldset>
+            <label>Kysymys:</label>
+			<textarea name="kysymys" rows="5" cols="100" ng-model="question">
+			</textarea>
+            <br>
+            <label>Kysymystyyppi:</label>
+            <select name="tyyppi">
+                <option value="matriisi" selected>Matriisi</option>
+            </select><br>
+            <label>Vastaustyyppi:</label>
+            <select name="vtyyppi">
+                <option value="radiobutton" selected>Radiopainike</option>
+                <option value="vapaakenttä">Vapaakenttä</option>
+                <option value="checkbox">Checkbox</option>
+            </select><br><br>
+            <label>Vastausvaihtoehdot:</label><br>
+            <label>Vastausaika:</label>
+            <input type="radio" name="vastausaika" value="0">Ei
+            <input type="radio" name="vastausaika" value=""><input type=text" size="3">
+            </select>
+            <br><br>
+            <input type="button" class="button" value="Submit" ng-click="createQuestion('testi','vastaus')">
+        </fieldset>
+
+    </form>
+
+    <button ng-click="createQuestion('testi', 'vastaus')"> Nappula</button>
 </div>
