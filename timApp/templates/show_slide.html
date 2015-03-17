@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="generator" content="pandoc">
+    <meta name="author" content="John Doe"/>
+    <meta name="dcterms.date" content="2005-03-22"/>
+    <title>Habits</title>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/reveal.min.css') }}"/>
+    <style type="text/css">code {
+        white-space: pre;
+    }</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/theme/night.css') }}" id="theme">
+    <script>
+        if (window.location.search.match(/print-pdf/gi)) {
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = 'reveal.js/css/print/pdf.css';
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+    </script>
+    <script src="reveal.js/lib/js/html5shiv.js"></script>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+        {% for t in text %}
+                {% if t['html'] == "<div></div>" %}
+                    </section><section>
+                {% endif %}
+            {{ t['html']|safe }}
+        {% endfor %}
+        </section>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='scripts/reveal/lib/js/head.min.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/reveal/js/reveal.min.js') }}"></script>
+
+<script>
+
+    // Full list of configuration options available here:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'fade', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+            {
+                src: "{{ url_for('static', filename='scripts/reveal/lib/js/classList.js') }}", condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+
+                src: "{{ url_for('static', filename='scripts/reveal/plugin/zoom-js/zoom.js') }}", async: true, condition: function () {
+                return !!document.body.classList;
+            }
+            },
+            {
+
+                src: "{{ url_for('static', filename='scripts/reveal/plugin/notes/notes.js') }}", async: true, condition: function () {
+                return !!document.body.classList;
+            }
+            },
+            //          { src: 'reveal.js/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; }, }
+            //          { src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+    });
+</script>
+</body>
+</html>
