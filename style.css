@@ -2,7 +2,8 @@
 .basic-grey {
     margin-left:auto;
     margin-right:auto;
-    max-width: 500px;
+	max-width:500px;
+	overflow:scroll;
     background: #F7F7F7;
     padding: 25px 15px 25px 10px;
     font: 12px Georgia, "Times New Roman", Times, serif;
@@ -34,6 +35,14 @@
     margin-top: 10px;
     color: #888;
 }
+
+.basic-grey div {
+	overflow:scroll;
+	display: inline;
+
+}
+
+
 .basic-grey input[type="text"], .basic-grey input[type="email"], .basic-grey textarea, .basic-grey select {
     border: 1px solid #DADADA;
     color: #888;
