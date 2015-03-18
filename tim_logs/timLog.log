@@ -66,3 +66,655 @@ Traceback (most recent call last):
   File "/service/timApp/timdb/documents.py", line 430, in getNewestVersionHash
     return cursor.fetchone()[0]
 TypeError: 'NoneType' object is not subscriptable
+{"time":2015-03-18 11:30:30,270, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 127, in render_template
+    return _render(ctx.app.jinja_env.get_or_select_template(template_name_or_list),
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 830, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 791, in get_template
+    return self._load_template(name, self.make_globals(globals))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 765, in _load_template
+    template = self.loader.load(self, name, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/loaders.py", line 125, in load
+    code = environment.compile(source, name, filename)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 554, in compile
+    self.handle_exception(exc_info, source_hint=source)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 40, in <module>
+    <th ng-repeat="item in columns"><input type="text" class="column_titles" id="col{{ $index }}"/></th>
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 459, in _parse
+    return Parser(self, source, name, encode_filename(filename)).parse()
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 893, in parse
+    result = nodes.Template(self.subparse(), lineno=1)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 866, in subparse
+    next(self.stream)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 349, in __next__
+    self.current = next(self._iter)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 552, in wrap
+    for lineno, token, value in stream:
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 733, in tokeniter
+    name, filename)
+jinja2.exceptions.TemplateSyntaxError: unexpected char '$' at 1877
+{"time":2015-03-18 11:30:54,188, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 127, in render_template
+    return _render(ctx.app.jinja_env.get_or_select_template(template_name_or_list),
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 830, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 791, in get_template
+    return self._load_template(name, self.make_globals(globals))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 765, in _load_template
+    template = self.loader.load(self, name, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/loaders.py", line 125, in load
+    code = environment.compile(source, name, filename)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 554, in compile
+    self.handle_exception(exc_info, source_hint=source)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 40, in <module>
+    <th ng-repeat="item in columns"><input type="text" class="column_titles" id="col{{ $index }}"/></th>
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 459, in _parse
+    return Parser(self, source, name, encode_filename(filename)).parse()
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 893, in parse
+    result = nodes.Template(self.subparse(), lineno=1)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 866, in subparse
+    next(self.stream)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 349, in __next__
+    self.current = next(self._iter)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 552, in wrap
+    for lineno, token, value in stream:
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 733, in tokeniter
+    name, filename)
+jinja2.exceptions.TemplateSyntaxError: unexpected char '$' at 1877
+{"time":2015-03-18 11:31:51,816, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 127, in render_template
+    return _render(ctx.app.jinja_env.get_or_select_template(template_name_or_list),
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 830, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 791, in get_template
+    return self._load_template(name, self.make_globals(globals))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 765, in _load_template
+    template = self.loader.load(self, name, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/loaders.py", line 125, in load
+    code = environment.compile(source, name, filename)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 554, in compile
+    self.handle_exception(exc_info, source_hint=source)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 40, in <module>
+    <th ng-repeat="item in columns"><input type="text" class="column_titles" id="col{{  }}"/></th>
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 459, in _parse
+    return Parser(self, source, name, encode_filename(filename)).parse()
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 893, in parse
+    result = nodes.Template(self.subparse(), lineno=1)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 867, in subparse
+    add_data(self.parse_tuple(with_condexpr=True))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 629, in parse_tuple
+    describe_token(self.stream.current))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 51, in fail
+    raise exc(msg, lineno, self.name, self.filename)
+jinja2.exceptions.TemplateSyntaxError: Expected an expression, got 'end of print statement'
+{"time":2015-03-18 11:52:09,187, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 127, in render_template
+    return _render(ctx.app.jinja_env.get_or_select_template(template_name_or_list),
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 830, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 791, in get_template
+    return self._load_template(name, self.make_globals(globals))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 765, in _load_template
+    template = self.loader.load(self, name, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/loaders.py", line 125, in load
+    code = environment.compile(source, name, filename)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 554, in compile
+    self.handle_exception(exc_info, source_hint=source)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 48, in <module>
+    name="{{$row.id}} {{$column.id}}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 459, in _parse
+    return Parser(self, source, name, encode_filename(filename)).parse()
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 893, in parse
+    result = nodes.Template(self.subparse(), lineno=1)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 866, in subparse
+    next(self.stream)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 349, in __next__
+    self.current = next(self._iter)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 552, in wrap
+    for lineno, token, value in stream:
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 733, in tokeniter
+    name, filename)
+jinja2.exceptions.TemplateSyntaxError: unexpected char '$' at 2370
+{"time":2015-03-18 12:20:11,143, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 127, in render_template
+    return _render(ctx.app.jinja_env.get_or_select_template(template_name_or_list),
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 830, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 791, in get_template
+    return self._load_template(name, self.make_globals(globals))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 765, in _load_template
+    template = self.loader.load(self, name, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/loaders.py", line 125, in load
+    code = environment.compile(source, name, filename)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 554, in compile
+    self.handle_exception(exc_info, source_hint=source)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ $row }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 459, in _parse
+    return Parser(self, source, name, encode_filename(filename)).parse()
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 893, in parse
+    result = nodes.Template(self.subparse(), lineno=1)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 866, in subparse
+    next(self.stream)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 349, in __next__
+    self.current = next(self._iter)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 552, in wrap
+    for lineno, token, value in stream:
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 733, in tokeniter
+    name, filename)
+jinja2.exceptions.TemplateSyntaxError: unexpected char '$' at 2833
+{"time":2015-03-18 12:20:23,463, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 12:33:34,198, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 60, in <module>
+    {{ rows[row] }}:{{ column }}
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 378, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'rows' is undefined
+{"time":2015-03-18 12:35:12,065, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 60, in <module>
+    {{ rows.indexOf(row) }}:{{ column }}
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'rows' is undefined
+{"time":2015-03-18 12:42:38,475, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 60, in <module>
+    {{ row.text }}
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 12:46:31,779, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 12:52:59,844, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 13:13:59,089, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 13:14:00,910, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 13:14:52,301, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 127, in render_template
+    return _render(ctx.app.jinja_env.get_or_select_template(template_name_or_list),
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 830, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 791, in get_template
+    return self._load_template(name, self.make_globals(globals))
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 765, in _load_template
+    template = self.loader.load(self, name, globals)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/loaders.py", line 125, in load
+    code = environment.compile(source, name, filename)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 554, in compile
+    self.handle_exception(exc_info, source_hint=source)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ $index }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 459, in _parse
+    return Parser(self, source, name, encode_filename(filename)).parse()
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 893, in parse
+    result = nodes.Template(self.subparse(), lineno=1)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/parser.py", line 866, in subparse
+    next(self.stream)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 349, in __next__
+    self.current = next(self._iter)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 552, in wrap
+    for lineno, token, value in stream:
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/lexer.py", line 733, in tokeniter
+    name, filename)
+jinja2.exceptions.TemplateSyntaxError: unexpected char '$' at 2868
+{"time":2015-03-18 13:15:56,804, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 13:19:24,651, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="{{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 13:25:16,226, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 60, in <module>
+    {{ row[0] }}
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 378, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-18 13:30:54,350, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 206, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 56, in <module>
+    name="row_id {{ row.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'row' is undefined

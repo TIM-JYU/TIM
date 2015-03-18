@@ -15,8 +15,8 @@
 
             <div id="check" ng-if="question.type == 'matriisi'">
                 <label>Vastaustyyppi:</label>
-                <select name="vtyyppi">
-                    <option disabled> -- select answer type --</option>
+                <select name="vtyyppi" ng-model="question.matriisi.vastaus">
+                    <option value="" disabled selected> -- select answer type --</option>
                     <option value="radiobutton">Radiopainike</option>
                     <option value="vapaakenttä">Vapaakenttä</option>
                     <option value="checkbox">Checkbox</option>
@@ -25,35 +25,58 @@
             <div id="check" ng-if="question.type == 'monivalinta'">
                 <label>Vastaustyyppi:</label>
                 <select name="vtyyppi">
-                    <option disabled> -- select answer type --</option>
+                    <option disabled selected> -- select answer type --</option>
                     <option value="checkbox">Checkbox</option>
                     <option value="radiobutton">Radiopainike</option>
                 </select>
             </div>
+            <div id="direction" ng-if="question.type == 'matriisi'">
+                <label>Vastaussuunta:</label>
+                <select name="vsuunta" ng-model="question.matriisi.vastaus.vsuunta">
+                    <option value="" disabled selected> -- select answer direction --</option>
+                    <option value="vertical">Vertical</option>
+                    <option value="horizontal">Horizontal</option>
+                </select>
+            </div>
             <br><br>
-
+            <label>Vastausvaihtoehdot:</label><br>
             <div id="overflow">
                 <table ng-if="question.type == 'matriisi'">
                     <thead>
                     <tr>
-                        <th>Table</th>
+                        <th></th>
+                        <th ng-repeat="item in columns"><input type="text" class="column_titles" id="column-{[{$index}]}"/></th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr ng-repeat="item in rows">
-                        <td ng-repeat="item in columns"><input type="template"
+                    <tr ng-repeat="row in rows">
+                        <th><input type="text" id=column-{[{$index}]}"/></th>
+                        <td ng-repeat="column in columns"><input ng-if="question.matriisi.vastaus == 'radiobutton'"
+                                                               type="radio"
+                                                               name="{{ row }}"
+                                                               value="{{ column }}"
+                                                               placeholder="Placeholder"
+                                                               ng-model="item.question"/>
+                                                        <input ng-if="question.matriisi.vastaus == 'vapaakenttä'"
+                                                               type="text"
+                                                               placeholder="Placeholder"
+                                                               ng-model="item.question"/>
+                                                        <input ng-if="question.matriisi.vastaus == 'checkbox'"
+                                                               type="checkbox"
                                                                placeholder="Placeholder"
                                                                ng-model="item.question"/></td>
                     </tr>
                     </tbody>
                 </table>
-                <button ng-click="addColumn()" ng-if="question.type == 'matriisi'" style="float:right">add_cell
+                <button ng-click="addColumn()" ng-if="question.type == 'matriisi'" style="float:right">add_column
+                </button>
+                <!-- <button ng-click="deleteColumn()" ng-if="question.type == 'matriisi'" style="float:right">delete_column -->
                 </button>
                 <button ng-click="addRows()" ng-if="question.type == 'matriisi'">add_row</button>
+                <!--<button ng-click="deleteRows()" ng-if="question.type == 'matriisi'">delete_row</button> -->
             </div>
             <br>
             <br>
-            <label>Vastausvaihtoehdot:</label><br>
             <label>Vastausaika:</label>
             <input type="radio" name="vastausaika" value="0">Ei
             <input type="radio" name="vastausaika" value=""><input type=text" size="3">
