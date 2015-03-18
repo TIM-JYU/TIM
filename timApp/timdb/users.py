@@ -9,6 +9,7 @@ new_contract('row', sqlite3.Row)
 
 ANONYMOUS_GROUP = 2
 LOGGED_IN_GROUP = 0
+KORPPI_GROUP = 3
 
 
 class Users(TimDbBase):
@@ -89,6 +90,10 @@ class Users(TimDbBase):
         cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (?, ?)', [group_id, user_id])
         if commit:
             self.db.commit()
+
+    @contract
+    def addUserToKorppiGroup(self, user_id: 'int', commit: 'bool'=True):
+        self.addUserToGroup(KORPPI_GROUP, user_id, commit)
 
     @contract
     def createPotentialUser(self, email: 'str', password: 'str', commit : 'bool' = True):
