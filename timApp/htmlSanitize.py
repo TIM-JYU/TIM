@@ -70,3 +70,5 @@ def sanitize_html(html_string):
         return c.clean_html(html_string)
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
         return ""
+    except lxml.etree.XMLSyntaxError:  # Not yet sure why thrown
+        return ""
