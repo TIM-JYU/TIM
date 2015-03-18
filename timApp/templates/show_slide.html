@@ -41,7 +41,34 @@
     <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
     <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script src="{{ url_for('static', filename='scripts/view_html.js') }}"></script>
-    
+
+    {% for cssFile in cssFiles %}
+        <link rel="stylesheet" href="{{ cssFile }}">
+    {% endfor %}
+
+    {% for cssFile in custom_css_files %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
+    {% endfor %}
+
+    <style type="text/css">
+        {{ custom_css }}
+    </style>
+    <script>
+        var docId = JSON.parse({{docID|tojson|safe}});
+        var docName = {{docName|tojson|safe}};
+        var version = {{version|tojson|safe}};
+        var rights = {{rights|tojson}};
+        var startIndex = {{start_index|tojson}};
+        var refererPath = {{request.path|tojson|safe}};
+        var teacherMode = {{teacher_mode|tojson}};
+        {% if teacher_mode %}
+            var users = {{plugin_users|tojson}};
+        {% else %}
+            var users = [{{current_user|tojson}}];
+        {% endif %}
+    </script>
+
+
 
     <script>
         if (window.location.search.match(/print-pdf/gi)) {
