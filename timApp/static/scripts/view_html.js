@@ -206,7 +206,7 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleActionButtons($par, false, false, null);
             sc.par = $par
 
-            // Did now refresh view without this.
+            // TODO: Onko järkevä? Did not refresh view without this.
             sc.$apply();
         });
 
@@ -591,6 +591,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.columns = [{text: 'test', questionPlaceholder: 'column'}];
     scope.rows = [{text: 'test'}];
+    scope.question = {
+        question: ""
+    }
 
 
     scope.addColumn = function () {
@@ -604,7 +607,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
 
     scope.close = function () {
-        scope.question = "";
+        scope.question = {
+            question: ""
+         }
         scope.answer = "";
         scope.toggleQuestion();
     };
@@ -612,8 +617,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.createQuestion = function (questionVal, answerVal) {
         var url;
         console.log(questionVal);
-        scope.question = "";
-        scope.answer = "";
+        scope.question = {
+            question: ""
+        }
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
