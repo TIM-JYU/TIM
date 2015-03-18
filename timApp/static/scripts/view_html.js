@@ -588,6 +588,21 @@ timApp.directive('questionDialog', function factory() {
 //TODO: Controller for the question
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
+
+    scope.columns = [{text: 'test', questionPlaceholder: 'column'}];
+    scope.rows = [{text: 'test'}];
+
+
+    scope.addColumn = function () {
+        scope.columns.push({question: "column", questionPlaceholder: "column", text: ""});
+    };
+
+    scope.addRows = function () {
+        scope.rows.push({text: ""});
+
+    };
+
+
     scope.close = function () {
         scope.question = "";
         scope.answer = "";
@@ -624,7 +639,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             .error(function (data) {
                 console.log("There was some error creating question to database.")
             });
-
     };
-}]);
+
+
+}])
+;
 

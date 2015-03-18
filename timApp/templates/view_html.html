@@ -20,7 +20,7 @@
 
     <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
     <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
-    <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+   <!-- <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> -->
     <script src="{{ url_for('static', filename='scripts/view_html.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
@@ -118,37 +118,11 @@
             {% endfor %}
         </div>
 
-        <!-- Adding question to view. Hidden until creation of question-->
+        <!-- Adding question to view. Hidden until creation of question
+        NOT WORKING YET. KEEP WORKING FROM HERE TOMORROW!-->
         <question-dialog show='questionShown'>
-            <div ng-controller="QuestionController">
-
-                <form class="basic-grey">
-                    <fieldset>
-                        <label>Kysymys:</label>
-                        <input type="text" placeholder="Question" ng-model="question">
-                        <br>
-                        <label>Kysymystyyppi:</label>
-                        <select name="tyyppi">
-                            <option value="matriisi" selected>Matriisi</option>
-                        </select><br>
-                        <label>Vastaustyyppi:</label>
-                        <select name="vtyyppi">
-                            <option value="radiobutton" selected>Radiopainike</option>
-                            <option value="vapaakenttä">Vapaakenttä</option>
-                            <option value="checkbox">Checkbox</option>
-                        </select><br><br>
-                        <label>Vastausvaihtoehdot:</label><br>
-                        <label>Vastausaika:</label>
-                        <input type="radio" name="vastausaika" value="0">Ei
-                        <input type="radio" name="vastausaika" value=""><input type=text" size="3">
-                        </select>
-                        <br><br>
-                        <input type="button" class="button" value="Submit" ng-click="createQuestion('testi','vastaus')">
-                    </fieldset>
-
-                </form>
-
-                <button ng-click="createQuestion(question, 'vastaus')"> Nappula</button>
+            <div ng-controller="QuestionController" >
+                <ng-include src="'../../question'"></ng-include>
             </div>
         </question-dialog>
     </div>
