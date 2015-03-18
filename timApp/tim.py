@@ -205,9 +205,17 @@ def get_wall():
 def show_question():
     return render_template('question.html')
 
+@app.route('/getQuestion')
+def get_quesition():
+    doc_id = request.args.get('doc_id')
+    par_index = request.args.get('par_index')
+    timdb = getTimDb()
+    question = timdb.questions.get_paragraphs_question(doc_id, par_index);
+    return jsonResponse(question)
+
 
 @app.route('/getQuestions', methods=['GET'])
-def get_question():
+def get_questions():
     timdb = getTimDb()
     questions = timdb.questions.get_questions()
     return jsonResponse(questions)

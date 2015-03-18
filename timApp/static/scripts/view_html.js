@@ -20,10 +20,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.users = users;
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
-        // TODO: Oma
         sc.questionShown = false;
-        sc.questionValue = "";
-        sc.answerValue = "";
         var NOTE_EDITOR_CLASS = "editorArea";
         var NOTE_EDITOR_CLASS_DOT = "." + NOTE_EDITOR_CLASS;
         var NOTE_CANCEL_BUTTON = ".timButton.cancelNote";
@@ -571,14 +568,10 @@ timApp.directive('questionDialog', function factory() {
         transclude: true, // we want to insert custom content inside the directive
         link: function (scope, element, attrs) {
             scope.dialogStyle = {};
-            scope.hideQuestion = function () {
-                scope.show = false;
-            };
         },
         template: "<div class='question' ng-show='show'> " +
         "<div class='question-overlay'></div> " +
         "<div class='question-dialog'>" +
-        "<div class='question-close' ng-click='hideQuestion()'>X</div>" +
         "<div class='question-dialog-content' ng-transclude></div>" +
         "</div>" +
         "</div>"
@@ -609,7 +602,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.close = function () {
         scope.question = {
             question: ""
-         }
+        }
         scope.answer = "";
         scope.toggleQuestion();
     };
@@ -646,8 +639,21 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 console.log("There was some error creating question to database.")
             });
     };
+}]);
+// define the ctrl
+function chatController($scope) {
 
+    // the last received msg
+    $scope.msg = {};
 
-}])
-;
+    // handles the callback from the received event
+    var handleCallback = function (msg) {
+        $scope.$apply(function () {
+            $scope.msg = JSON.parse(msg.data)
+        });
+    }
+
+    var source = new EventSource('/stats');
+    source.addEventListener('message', handleCallback, false);
+}
 
