@@ -39,7 +39,7 @@
                 </select>
             </div>
             <br><br>
-            <label>Vastausvaihtoehdot:</label><br>
+            <label ng-if="question.type == 'matriisi'">Vastausvaihtoehdot:</label><br>
             <div id="overflow">
                 <table ng-if="question.type == 'matriisi'">
                     <thead>
