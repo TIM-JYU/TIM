@@ -118,9 +118,8 @@
             {% endfor %}
         </div>
 
-        <!-- Adding question to view. Hidden until creation of question
-        NOT WORKING YET. KEEP WORKING FROM HERE TOMORROW!-->
-        <question-dialog show='questionShown'>
+        <!-- Adding question to view. Hidden until creation of question -->
+        <question-dialog show='questionShown' >
             <div ng-controller="QuestionController" >
                 <ng-include src="'../../question'"></ng-include>
             </div>

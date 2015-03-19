@@ -201,7 +201,7 @@ timApp.controller("ViewCtrl", ['$scope',
             var $par = $(e.target).parent().parent();
             sc.toggleQuestion();
             sc.toggleActionButtons($par, false, false, null);
-            sc.par = $par
+            sc.par = $par;
 
             // TODO: Onko järkevä? Did not refresh view without this.
             sc.$apply();
@@ -561,20 +561,26 @@ timApp.controller("ViewCtrl", ['$scope',
 timApp.directive('questionDialog', function factory() {
     return {
         restrict: 'E',
-        scope: {
-            show: '='
-        },
-        replace: true, // Replace with the template below
-        transclude: true, // we want to insert custom content inside the directive
-        link: function (scope, element, attrs) {
-            scope.dialogStyle = {};
-        },
         template: "<div class='question' ng-show='show'> " +
         "<div class='question-overlay'></div> " +
         "<div class='question-dialog'>" +
         "<div class='question-dialog-content' ng-transclude></div>" +
         "</div>" +
-        "</div>"
+        "</div>",
+
+        scope: {
+            show: '='
+        },
+        replace: true,
+        transclude: true,
+
+        link: function (scope, element, attrs) {
+            scope.dialogStyle = {};
+            scope.hideQuestion = function () {
+                scope.show = false;
+
+            };
+        }
     };
 });
 
