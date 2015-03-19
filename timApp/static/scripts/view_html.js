@@ -597,20 +597,24 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         console.log(scope.rows);
     };
 
-    scope.close = function () {
+    scope.clearQuestion = function () {
         scope.question = {
             question: ""
         }
+        scope.columns.splice(0, scope.columns.length - 1);
+        scope.rows.splice(0, scope.rows.length - 1);
         scope.answer = "";
         scope.toggleQuestion();
+    }
+
+    scope.close = function () {
+        scope.clearQuestion();
+
     };
 
     scope.createQuestion = function (questionVal, answerVal) {
         var url;
         console.log(questionVal);
-        scope.question = {
-            question: ""
-        }
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
@@ -618,13 +622,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
         if (questionVal == undefined || questionVal.trim().length == 0) {
             console.log("Can't save empty questions");
-            scope.toggleQuestion();
             return;
         }
         console.log("Question: " + questionVal);
         console.log("Answer: " + answerVal);
 
-        scope.toggleQuestion();
+        scope.clearQuestion()
+
         http({
             method: 'POST',
             url: '/addQuestion',
