@@ -581,23 +581,21 @@ timApp.directive('questionDialog', function factory() {
 //TODO: Controller for the question
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
-
-    scope.columns = [{text: 'test', questionPlaceholder: 'column'}];
-    scope.rows = [{text: 'test'}];
+    scope.columns = [{id: 0, text: 'test', questionPlaceholder: 'column'}];
+    scope.rows = [{id: 0, text: 'test'}];
     scope.question = {
         question: ""
     }
 
 
     scope.addColumn = function () {
-        scope.columns.push({question: "column", questionPlaceholder: "column", text: ""});
+        scope.columns.push({id: scope.columns.length, question: "column", questionPlaceholder: "column", text: ""});
     };
 
     scope.addRows = function () {
-        scope.rows.push({text: ""});
-
+        scope.rows.push({id: scope.rows.length, text: ""});
+        console.log(scope.rows);
     };
-
 
     scope.close = function () {
         scope.question = {
