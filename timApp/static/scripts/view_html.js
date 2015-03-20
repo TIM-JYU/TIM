@@ -587,8 +587,15 @@ timApp.directive('questionDialog', function factory() {
 //TODO: Controller for the question
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
-    scope.columns = [{id: 0, text: 'test', questionPlaceholder: 'column'}];
-    scope.rows = [{id: 0, text: 'test'}];
+    scope.columns = [{
+                    id: 0,
+                    text: 'test',
+                    questionPlaceholder: 'column'
+                    }];
+    scope.rows =    [{
+                    id: 0,
+                    text: 'test'
+                    }];
     scope.question = {
         question: ""
     }

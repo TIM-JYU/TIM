@@ -1,4 +1,4 @@
-<div>
+<div tim-draggable-fixed>
     <form class="basic-grey">
         <fieldset>
             <label>Kysymys:</label>
@@ -17,7 +17,8 @@
                 <label>Vastaustyyppi:</label>
                 <select name="vtyyppi" ng-model="question.matriisi.vastaus">
                     <option value="" disabled selected> -- select answer type --</option>
-                    <option value="radiobutton">Radiopainike</option>
+                    <option value="radiobutton-horizontal">Radiopainike vaakaan</option>
+                    <option value="radiobutton-vertical">Radiopainike pystyyn</option>
                     <option value="vapaakenttä">Vapaakenttä</option>
                     <option value="checkbox">Checkbox</option>
                 </select>
@@ -30,14 +31,6 @@
                     <option value="radiobutton">Radiopainike</option>
                 </select>
             </div>
-            <div id="direction" ng-if="question.type == 'matriisi'">
-                <label>Vastaussuunta:</label>
-                <select name="vsuunta" ng-model="question.matriisi.vastaus.vsuunta">
-                    <option value="" disabled selected> -- select answer direction --</option>
-                    <option value="vertical">Vertical</option>
-                    <option value="horizontal">Horizontal</option>
-                </select>
-            </div>
             <br><br>
             <label ng-if="question.type == 'matriisi'">Vastausvaihtoehdot:</label><br>
             <div id="overflow">
@@ -45,16 +38,22 @@
                     <thead>
                     <tr>
                         <th></th>
-                        <th ng-repeat="item in columns"><input type="text" class="column_titles" id="column-{[{$index}]}"/><button ng-click="deleteCol($index)">del</button></th>
+                        <th ng-repeat="item in columns"><input type="text"/><button ng-click="deleteCol($index)">del</button></th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr ng-repeat="row in rows">
-                        <th><input type="text" id=column-{[{$index}]}"/><button ng-click="deleteRow($index)">del</button></th>
-                        <td ng-repeat="column in columns"><input ng-if="question.matriisi.vastaus == 'radiobutton'"
+                        <th><input type="text"/><button ng-click="deleteRow($index)">del</button></th>
+                        <td ng-repeat="column in columns"><input ng-if="question.matriisi.vastaus == 'radiobutton-horizontal'"
                                                                type="radio"
-                                                               name="{{ row }}"
-                                                               value="{{ column }}"
+                                                               ng-model="row.id"
+                                                               ng-value="column.id"
+                                                               placeholder="Placeholder"
+                                                               ng-model="item.question"/>
+                                                        <input ng-if="question.matriisi.vastaus == 'radiobutton-vertical'"
+                                                               type="radio"
+                                                               ng-model="column.id"
+                                                               ng-value="row.id"
                                                                placeholder="Placeholder"
                                                                ng-model="item.question"/>
                                                         <input ng-if="question.matriisi.vastaus == 'vapaakenttä'"
