@@ -603,6 +603,20 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         console.log(scope.rows);
     };
 
+    scope.deleteRow = function (indexToBeDeleted) {
+        if(indexToBeDeleted == -1)
+            scope.rows.splice(-1, 1);
+        else
+            scope.rows.splice(indexToBeDeleted,1);
+    };
+
+    scope.deleteCol = function (indexToBeDeleted) {
+        if(indexToBeDeleted == -1)
+            scope.columns.splice(-1, 1);
+        else
+            scope.columns.splice(indexToBeDeleted,1);
+    };
+
     scope.clearQuestion = function () {
         scope.question = {
             question: ""
