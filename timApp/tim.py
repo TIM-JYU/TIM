@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Modified hajoviin
 import logging
 import json
 import os
@@ -200,6 +201,7 @@ def getAllImages():
 
 @app.route('/wall')
 def get_wall():
+    verifyLoggedIn()
     return render_template('wall.html')
 
 
@@ -219,7 +221,8 @@ def get_messages():
             possibly_last_message = timdb.messages.get_message(last_id)
             if not possibly_last_message:
                 for message in messages:
-                    list_of_new_messages.append(message.get('message'))
+                    user = timdb.users.getUser(message.get('user_id'))
+                    list_of_new_messages.append(user.get('name') + ": " + message.get('message'))
                 last_message_id = messages[-1].get('msg_id')
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id})
@@ -227,7 +230,8 @@ def get_messages():
             possibly_last_message = possibly_last_message[-1]
             for message in messages:
                 if message.get("timestamp") > possibly_last_message.get('timestamp'):
-                    list_of_new_messages.append(message.get("message"))
+                    user = timdb.users.getUser(message.get('user_id'))
+                    list_of_new_messages.append(user.get('name') + ": " + message.get("message"))
                     last_message_id = message.get('msg_id')
 
             if len(list_of_new_messages) > 0:
@@ -250,7 +254,7 @@ def send_message():
     timdb = getTimDb()
     new_message = request.args.get("message")
     new_timestamp = str(datetime.datetime.now().time())
-    msg_id = timdb.messages.add_message(new_message, new_timestamp, True)
+    msg_id = timdb.messages.add_message(getCurrentUserId(),new_message, new_timestamp, True)
     return jsonResponse(msg_id)
 
 

@@ -64,7 +64,7 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
                             }, 1000);
                             if (payload.status == 'results') {
                                 jQuery.each(payload.data, function (i, msg) {
-                                    $scope.msg =  msg + "\n" + $scope.msg;
+                                    $scope.msg = msg + "\n" + $scope.msg;
                                     $scope.$apply();
                                 });
                             } else if (payload.status == 'no-results') {

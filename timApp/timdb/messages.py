@@ -1,4 +1,4 @@
-__author__ = 'localadmin'
+__author__ = 'hajoviin'
 from contracts import contract
 from timdb.timdbbase import TimDbBase
 
@@ -10,7 +10,7 @@ class Messages(TimDbBase):
     def get_message(self,msg_id: 'int'):
         cursor = self.db.cursor()
         cursor.execute("""
-                      SELECT msg_id, message, timestamp
+                      SELECT user_id,msg_id, message, timestamp
                       FROM Message
                       WHERE msg_id = ?
                       """, [msg_id])
@@ -24,20 +24,23 @@ class Messages(TimDbBase):
         :return: Questions as a list
         """
         cursor = self.db.cursor()
-        cursor.execute("""SELECT msg_id, message, timestamp FROM Message """)
+        cursor.execute("""
+                      SELECT msg_id,user_id, message, timestamp
+                      FROM Message
+                      """)
 
         return self.resultAsDictionary(cursor)
 
     @contract
-    def add_message(self, message: 'str', timestamp: 'str', commit: 'bool'=True) -> 'int':
+    def add_message(self,user_id: 'int', message: 'str', timestamp: 'str', commit: 'bool'=True) -> 'int':
         """ Creates a new message
         """
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       INSERT INTO Message (message,timestamp)
-                       VALUES(?,?)
-                       """, [message, timestamp])
+                       INSERT INTO Message (user_id,message,timestamp)
+                       VALUES(?,?,?)
+                       """, [user_id, message, timestamp])
         if commit:
             self.db.commit()
         msg_id = cursor.lastrowid
