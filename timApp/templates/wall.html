@@ -38,7 +38,8 @@
 
             <div class="buttons">
                 <input ng-model="newMsg" width="200" >
-                <button ng-click="sendMessage(newMsg)">Send</button>
+                <button ng-click="sendMessageEvent(newMsg)">Send</button>
+                <button ng-click="startLongPolling()">Poll</button>
             </div>
         </div>
     </div>

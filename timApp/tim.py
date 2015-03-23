@@ -8,6 +8,8 @@ import codecs
 import collections
 import re
 import sys
+import time
+import datetime
 
 from flask import Flask, redirect, url_for, flash, Blueprint
 from flask import stream_with_context
@@ -201,9 +203,61 @@ def get_wall():
     return render_template('wall.html')
 
 
+@app.route('/getMessages')
+def get_messages():
+    last_id = request.args.get('id')
+    if last_id:
+        last_id = int(last_id)
+
+    timdb = getTimDb()
+    step = 0
+    # TODO: Probably not good idea to get something from database all the time. Might get a bit slow with people
+    while step <= 10:
+        messages = timdb.messages.get_messages()
+        if len(messages) > 0:
+            list_of_new_messages = []
+            possibly_last_message = timdb.messages.get_message(last_id)
+            if not possibly_last_message:
+                for message in messages:
+                    list_of_new_messages.append(message.get('message'))
+                last_message_id = messages[-1].get('msg_id')
+                return jsonResponse(
+                    {"status": "results", "data": list_of_new_messages, "lastid": last_message_id})
+
+            possibly_last_message = possibly_last_message[-1]
+            for message in messages:
+                if message.get("timestamp") > possibly_last_message.get('timestamp'):
+                    list_of_new_messages.append(message.get("message"))
+                    last_message_id = message.get('msg_id')
+
+            if len(list_of_new_messages) > 0:
+                return jsonResponse(
+                    {"status": "results", "data": list_of_new_messages, "lastid": last_message_id})
+
+            else:
+                time.sleep(1)
+
+        else:
+            time.sleep(1)
+
+        step += 1
+
+    return jsonResponse({"status": "no-results", "data": ["No new messages"], "lastid": last_id})
+
+
+@app.route('/sendMessage', methods=['POST'])
+def send_message():
+    timdb = getTimDb()
+    new_message = request.args.get("message")
+    new_timestamp = str(datetime.datetime.now().time())
+    msg_id = timdb.messages.add_message(new_message, new_timestamp, True)
+    return jsonResponse(msg_id)
+
+
 @app.route('/question')
 def show_question():
     return render_template('question.html')
+
 
 @app.route('/getQuestion')
 def get_quesition():
@@ -621,4 +675,5 @@ def indexPage():
 def startApp():
     # app.wsgi_app = ReverseProxied(app.wsgi_app)
     # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
-    app.run(host='0.0.0.0', port=5000, use_reloader=False)
+    # TODO: Think if it is truly necessary to have threaded=True here
+    app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)

@@ -10,19 +10,32 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.test = "Hey!";
         $scope.count = 0;
-        $scope.msg = "Welcome to wall 0.0.1";
+        $scope.msg = "";
         $scope.newMsg = "";
 
         $scope.toggle = function () {
             alert("Test1");
         };
 
-        $scope.sendMessage = function (message) {
+        $scope.sendMessageEvent = function (message) {
             var today = new Date();
-            if(message != "") {
-                $scope.msg = $scope.msg + "\n" + today.getHours() + ":" + today.getMinutes() + " > " + message;
-                $scope.newMsg = "";
+            if (message.trim() == "") {
+                alert("Can't send empty messages");
+                return false;
             }
+
+            http({
+                url: '/sendMessage',
+                method: 'POST',
+                params: {'message': message}
+            })
+                .success(function (payload) {
+                    $scope.newMsg = "";
+                })
+                .error(function () {
+                console.log("Can't send message or something")
+            });
+
         };
 
         $scope.getMessages = function () {
@@ -30,4 +43,51 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
             return message;
         };
 
-    }]);
+        $scope.startLongPolling = function () {
+            function message_longPolling(timestamp, lastid) {
+                var t;
+
+                if (lastid == null) {
+                    lastid = -1;
+                }
+
+                jQuery.ajax({
+                    url: '/getMessages',
+                    type: 'GET',
+                    data: {id: lastid},
+                    success: function (payload) {
+                        clearInterval(t);
+
+                        if (payload.status == 'results' || payload.status == 'no-results') {
+                            t = setTimeout(function () {
+                                message_longPolling(payload.timeStamp, payload.lastid);
+                            }, 1000);
+                            if (payload.status == 'results') {
+                                jQuery.each(payload.data, function (i, msg) {
+                                    $scope.msg =  msg + "\n" + $scope.msg;
+                                    $scope.$apply();
+                                });
+                            } else if (payload.status == 'no-results') {
+                                console.log("No new messages. Sending new poll")
+                            }
+                        } else if (payload.status == 'error') {
+                            alert("Something went wrong");
+                        }
+                    }
+                    ,
+                    error: function (payload) {
+                        clearInterval(t);
+                        t = setTimeout(function () {
+                            message_longPolling(payload.timestamp, payload.lastid);
+                        }, 15000);
+                    }
+                });
+
+
+            }
+
+            message_longPolling(new Date);
+        }
+
+    }])
+;
