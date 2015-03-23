@@ -1,4 +1,4 @@
-<div tim-draggable-fixed>
+<div >
     <form class="basic-grey">
         <fieldset>
             <label>Kysymys:</label>
@@ -38,12 +38,12 @@
                     <thead>
                     <tr>
                         <th></th>
-                        <th ng-repeat="item in columns"><input type="text"/><button ng-click="deleteCol($index)">del</button></th>
+                        <th ng-repeat="item in columns"><input type="text"/><br /><button ng-click="addCol($index)">+</button><button ng-click="delCol($index)">-</button></th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr ng-repeat="row in rows">
-                        <th><input type="text"/><button ng-click="deleteRow($index)">del</button></th>
+                        <th><input type="text"/><br /><button ng-click="addRow($index)">+</button><button ng-click="delRow($index)">-</button></th>
                         <td ng-repeat="column in columns"><input ng-if="question.matriisi.vastaus == 'radiobutton-horizontal'"
                                                                type="radio"
                                                                ng-model="row.id"
@@ -67,12 +67,10 @@
                     </tr>
                     </tbody>
                 </table>
-                <button ng-click="deleteCol(-1)" ng-if="question.type == 'matriisi'" style="float:right">delete_column
-                </button>
-                <button ng-click="addColumn()" ng-if="question.type == 'matriisi'" style="float:right">add_column
-                </button>
-                <button ng-click="addRows()" ng-if="question.type == 'matriisi'">add_row</button>
-                <button ng-click="deleteRow(-1)" ng-if="question.type == 'matriisi'">delete_row</button>
+                <button ng-click="delCol(-1)" ng-if="question.type == 'matriisi'" style="float:right">delete_column</button>
+                <button ng-click="addCol(-1)" ng-if="question.type == 'matriisi'" style="float:right">add_column</button>
+                <button ng-click="addRow(-1)" ng-if="question.type == 'matriisi'">add_row</button>
+                <button ng-click="delRow(-1)" ng-if="question.type == 'matriisi'">delete_row</button>
             </div>
             <br>
             <br>

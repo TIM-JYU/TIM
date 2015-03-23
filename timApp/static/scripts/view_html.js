@@ -601,23 +601,36 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     }
 
 
-    scope.addColumn = function () {
-        scope.columns.push({id: scope.columns.length, question: "column", questionPlaceholder: "column", text: ""});
+    scope.addCol = function (loc) {
+        if(loc>=0) {
+            scope.columns.splice(loc, 0, {id: loc, question: "column", questionPlaceholder: "column", text: ""});
+            for(var i = 0; i < scope.rows.length; i++){
+                scope.rows[i].id = i;
+            }
+        }
+        else
+            scope.columns.push({id: scope.columns.length, question: "column", questionPlaceholder: "column", text: ""});
     };
 
-    scope.addRows = function () {
-        scope.rows.push({id: scope.rows.length, text: ""});
-        console.log(scope.rows);
+    scope.addRow = function (loc) {
+        if(loc>=0) {
+            scope.rows.splice(loc, 0, {id: loc, text: ""});
+            for(var i = 0; i < scope.rows.length; i++){
+                scope.rows[i].id = i;
+            }
+        }
+        else
+            scope.rows.push({id: scope.rows.length, text: ""})
     };
 
-    scope.deleteRow = function (indexToBeDeleted) {
+    scope.delRow = function (indexToBeDeleted) {
         if(indexToBeDeleted == -1)
             scope.rows.splice(-1, 1);
         else
             scope.rows.splice(indexToBeDeleted,1);
     };
 
-    scope.deleteCol = function (indexToBeDeleted) {
+    scope.delCol = function (indexToBeDeleted) {
         if(indexToBeDeleted == -1)
             scope.columns.splice(-1, 1);
         else
