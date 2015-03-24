@@ -2,6 +2,8 @@ __author__ = 'hajoviin'
 from contracts import contract
 from timdb.timdbbase import TimDbBase
 
+# TODO: Also need to save the lecture_id to comfirm that we can only show specific question.
+
 
 class Messages(TimDbBase):
 
