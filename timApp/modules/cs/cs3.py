@@ -301,7 +301,7 @@ def removedir(dirname):
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
-    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for user\'s who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
     
     js = query_params_to_map_check_parts(query)
     print(js)
@@ -530,6 +530,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Get the template type
         ttype = get_param(query, "type", "cs").lower()
+        
+
         if is_tauno and not is_answer: ttype = 'tauno'  # answer is newer tauno
 
 
@@ -568,6 +570,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_css:
             return self.wout(file_to_string('cs.css'))
 
+
         if is_js:
             if self.path.find('rikki') >= 0:
                 return self.wout(file_to_string('js/dirRikki.js'))
@@ -585,7 +588,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(file_to_string('end.html'))
             return
 
-        if is_iframe and not print_file:
+            
+        if is_iframe and not print_file and not ttype == "js":
             s = string_to_string_replace_url(
                 '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                 'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
@@ -614,6 +618,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         prgpath = "/tmp/%s" % basename
         filepath = prgpath
 
+        print("ttype: ",ttype)
+        
         # if ttype == "console":
         # Console program
         if ttype == "cc":

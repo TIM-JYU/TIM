@@ -1,9 +1,11 @@
 ﻿"use strict";
+var csPluginStartTime = new Date();
+
 var csApp = angular.module('csApp', ['ngSanitize']);
 csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
 csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',false); }]);
 csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',false); }]);
-csApp.directive('csRunnerInput',['$sanitize', function ($sanitize) { "use strict";	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',true); }]);
+csApp.directive('csRunnerInput',['$sanitize','$compile', function ($sanitize,$compile1) { "use strict";	csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',true); }]);
 csApp.directive('csJypeliRunnerInput', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',true); }]);
 csApp.directive('csComtestRunnerInput', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',true); }]);
 csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',false); }]);
@@ -19,13 +21,14 @@ csApp.taunoNr = 0;
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
 languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","sql","alloy","text","cs","run","md","js"];
-languageTypes.aceModes     = ["csharp","java","java"    ,"ccpp","ccpp","shell","python","fsharp","lisp","javascript","sql","alloy","text","csharp","run","md","javascript"];
+languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","alloy","text","csharp","run","markdown","javascript"];
+// For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
 languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit"];
 
 // If test type is comtest, how to change it for specific languages
-languageTypes.impTestTypes = {console:"comtest", cc:"ccomtest", java:"jcomtest"};
+languageTypes.impTestTypes = {cs:"comtest", console:"comtest", cc:"ccomtest", java:"jcomtest"};
 languageTypes.impTestTypes["c++"] = "ccomtest";
 
 languageTypes.whatIsIn = function (types, type, def) {
@@ -170,13 +173,16 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<div class="csRunCode">'+'<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
                   '<div>'+
-                  
-				  '<textarea class="csRunArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+
+                  '<div  class="csrunEditorDiv">'+
+				  '<textarea class="csRunArea" ng-hide="noeditor && !viewCode" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
 				  //'<div ng-if="mode" ui-ace="{  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
                   //  ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
                   
 				  //'<textarea  class="csRunArea csEditArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
                   // '<div class="csRunArea csEditArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+                  '</div>'+
+
 				  '<div class="csRunChanged" ng-if="usercode!=byCode"></div>'+
 				  //'<div class="csRunChanged" ng-if="muokattu"></div>'+
                   '</div>'+
@@ -187,14 +193,17 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   
                   (isInput  ?
                   '<div class="csInputDiv" ng-hide="!showInput">' +
-                  '<p ng-if="inputstem" class="stem" >{{inputstem}}</p>' +
+                  '<p ng-show="inputstem" class="stem" >{{inputstem}}</p>' +
                   '<div class="csRunCode" >' +
 				  '<textarea class="csRunArea csInputArea"  rows={{inputrows}} ng-model="userinput" ng-trim="false" placeholder="{{inputplaceholder}}"></textarea>'+
                   '</div>' + 
                   '</div>' + 
                   '<div class="csArgsDiv" ng-hide="!showArgs">' +
-				  '<label>{{argsstem}}</label><span><input type ="text" class="csArgsArea" ng-model="userargs" ng-trim="false" placeholder="{{argsplaceholder}}"></span>'+
-                  '</div>' : "") + // end of isInput
+				  '<label>{{argsstem}} </label><span><input type ="text" class="csArgsArea" ng-model="userargs" ng-trim="false" placeholder="{{argsplaceholder}}"></span>'+
+                  '</div>' +
+                  ''
+                  : "") + // end of isInput
+                  
                   
 				  '<p class="csRunSnippets" ng-if="buttons && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
@@ -205,7 +214,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">Alusta</a>' +
-				  '<a href="" ng-if="toggleEditor" ng-click="hideShowEditor();"> Editor</a>' +
+				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
+				  ' <a href="" ng-if="!noeditor" ng-click="showAceEditor();">{{editorText[editorIndex]}}</a>' +
                   '</p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t === "comtest" || t === "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
@@ -298,8 +308,13 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showCodeLink = scope.showCodeOn;
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
+            scope.editorIndex = 0;
+            scope.editorText = ["Highlight","Normal"];
             
-            scope.mode = languageTypes.getAceModeType(scope.type,"");
+            scope.toggleEditorText = ["Muokkaa","Piilota"];
+
+            if ( scope.toggleEditor && scope.toggleEditor != "True" ) scope.toggleEditorText =  scope.toggleEditor.split("|");
+            
 			csApp.set(scope,attrs,"usercode","");
 			if ( scope.usercode === "" && scope.byCode )  scope.usercode = scope.byCode;
 			scope.usercode = csApp.commentTrim(scope.usercode);
@@ -364,6 +379,10 @@ csApp.directiveFunction = function(t,isInput) {
             //scope.out = element[0].getElementsByClassName('console');
             scope.element0 = element[0];
             if ( scope.attrs.autorun ) scope.runCodeLink();
+            scope.mode = languageTypes.getAceModeType(scope.type,"");
+            var d = new Date();
+            var diff = d - csPluginStartTime;
+            console.log("cs: " + d.toLocaleTimeString()+ " " + diff.valueOf() + " - " + scope.taskId);          
 		},		
 		scope: {},				 
 		controller: csApp.Controller,
@@ -890,13 +909,65 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             for (var i = 0; i < len; i++) s += data.texts[i].html;
             $previewDiv.html(csApp.compile(s)($scope));
 
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
+            //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
+            // $scope.$parent.processAllMath($previewDiv[0]); 
+            $scope.$parent.processAllMath($previewDiv); 
             //$scope.outofdate = false;
             //$scope.parCount = len;
         }).error(function (data, status, headers, config) {
             $window.alert("Failed to show preview: " + data.error);
         });
     };
+    
+    $scope.showAceEditor = function() {
+        var editorHtml = '<textarea class="csRunArea csrunEditorDiv" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>';
+
+        var aceHtml = '<div class="no-popup-menu"><div ng-show="mode" ui-ace="{onLoad:aceLoaded,  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
+        // var aceHtml = '<div ng-show="mode" ui-ace="{  mode: \'{{mode}}\',    require: [\'/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
+                   // ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+                   ' style="left:-6em; " class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+                   /*
+                   '<div style="right:0px;">'+
+                   '<button ng-click="moveCursor(-1, 0);">&#x21d0;</button>'+
+                   '<button ng-click="moveCursor( 0,-1);">&#x21d1;</button>'+
+                   '<button ng-click="moveCursor( 1, 0);">&#x21d2;</button>'+
+                   '<button ng-click="moveCursor( 0, 1);">&#x21d3;</button>'+
+                   '</div>'+
+                   */
+                   '</div>';
+        var html = [editorHtml,aceHtml];                    
+        $scope.mode = languageTypes.getAceModeType($scope.type,"");
+        $scope.editorIndex++; if ( $scope.editorIndex > 1 ) $scope.editorIndex = 0; 
+        
+        var aceEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
+        var editorDiv = angular.element(aceEditDiv); 
+        editorDiv.html(csApp.compile(html[$scope.editorIndex])($scope));
+        //$scope.aceEditor.setFontSize(30);
+        $scope.aceEditor.setOptions({
+            maxLines: $scope.maxRows
+        });
+    };
+    
+    $scope.moveCursor = function(dx,dy) {
+        var p = $scope.aceEditor.getCursorPosition();
+        p.row +=  dy;
+        p.column += dx;
+        $scope.aceEditor.moveCursorToPosition(p);
+        
+    }
+    
+     // Runs when editor loads
+    $scope.aceLoaded = function(editor){
+      $scope.aceEditor = editor;
+      console.log('Ace editor loaded successfully');
+      var session = editor.getSession();
+      session.setUndoManager(new ace.UndoManager());
+      // Editor Events
+      // _session.on("change", function(){
+      //   console.log('[EditorCtrl] Session changed:', _session);
+      // });
+      // editor.renderer.setShowGutter(false);
+    };   
     
     $scope.write = function(s) {
        $scope.result += s;
@@ -924,8 +995,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                 var v = $scope.getVid();
                 $scope.irrotaKiinnita = "Irrota";
                 $scope.canvas = angular.element('<div tim-draggable-fixed style="top: 91px; right: 200px;" >'+
-                  '<span class="csRunMenu"><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></span>'+
-                  '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>'+
+                  '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></div></span>'+
+                  '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
                   '</div>');
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;
