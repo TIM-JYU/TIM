@@ -1028,3 +1028,135 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
     return getattr(obj, attribute)
 jinja2.exceptions.UndefinedError: 'row' is undefined
+{"time":2015-03-24 08:47:32,164, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /sendMessage [POST]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 253, in send_message
+    msg_id = timdb.messages.add_message(new_message, new_timestamp, True)
+  File "<string>", line 2, in add_message
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/messages.py", line 40, in add_message
+    """, [message, timestamp])
+sqlite3.OperationalError: no such table: Message
+{"time":2015-03-24 08:47:35,099, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getMessages [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 216, in get_messages
+    messages = timdb.messages.get_messages()
+  File "<string>", line 2, in get_messages
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/messages.py", line 27, in get_messages
+    cursor.execute("""SELECT msg_id, message, timestamp FROM Message """)
+sqlite3.OperationalError: no such table: Message
+{"time":2015-03-24 08:47:50,941, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getMessages [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 216, in get_messages
+    messages = timdb.messages.get_messages()
+  File "<string>", line 2, in get_messages
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/messages.py", line 27, in get_messages
+    cursor.execute("""SELECT msg_id, message, timestamp FROM Message """)
+sqlite3.OperationalError: no such table: Message
+{"time":2015-03-24 08:48:06,943, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getMessages [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 216, in get_messages
+    messages = timdb.messages.get_messages()
+  File "<string>", line 2, in get_messages
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/messages.py", line 27, in get_messages
+    cursor.execute("""SELECT msg_id, message, timestamp FROM Message """)
+sqlite3.OperationalError: no such table: Message
+{"time":2015-03-24 08:48:22,946, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getMessages [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 216, in get_messages
+    messages = timdb.messages.get_messages()
+  File "<string>", line 2, in get_messages
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/messages.py", line 27, in get_messages
+    cursor.execute("""SELECT msg_id, message, timestamp FROM Message """)
+sqlite3.OperationalError: no such table: Message
+{"time":2015-03-24 08:48:38,944, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getMessages [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 216, in get_messages
+    messages = timdb.messages.get_messages()
+  File "<string>", line 2, in get_messages
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/messages.py", line 27, in get_messages
+    cursor.execute("""SELECT msg_id, message, timestamp FROM Message """)
+sqlite3.OperationalError: no such table: Message

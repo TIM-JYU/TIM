@@ -10,6 +10,7 @@
 }
 
 .question-dialog {
+    max-height: calc(100% - 100px);
     z-index: 6;
     position: absolute;
     top: 50%;

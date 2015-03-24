@@ -1,5 +1,5 @@
 <div >
-    <form class="basic-grey">
+    <form class="basic-grey" id="question-form">
         <fieldset>
             <label>Kysymys:</label>
 					<textarea name="kysymys" rows="1" cols="100" ng-model="question.question">
@@ -38,12 +38,12 @@
                     <thead>
                     <tr>
                         <th></th>
-                        <th ng-repeat="item in columns"><input type="text"/><br /><button ng-click="addCol($index)">+</button><button ng-click="delCol($index)">-</button></th>
+                        <th ng-repeat="item in columns"><textarea form="question-form" rows="1" cols="20"></textarea><br /><button ng-click="addCol($index)">+</button><button ng-click="delCol($index)">-</button></th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr ng-repeat="row in rows">
-                        <th><input type="text"/><br /><button ng-click="addRow($index)">+</button><button ng-click="delRow($index)">-</button></th>
+                        <th><textarea form="question-form" rows="1" cols="20"></textarea><br /><button ng-click="addRow($index)">+</button><button ng-click="delRow($index)">-</button></th>
                         <td ng-repeat="column in columns"><input ng-if="question.matriisi.vastaus == 'radiobutton-horizontal'"
                                                                type="radio"
                                                                ng-model="row.id"
@@ -67,11 +67,11 @@
                     </tr>
                     </tbody>
                 </table>
+                </div>
                 <button ng-click="delCol(-1)" ng-if="question.type == 'matriisi'" style="float:right">delete_column</button>
                 <button ng-click="addCol(-1)" ng-if="question.type == 'matriisi'" style="float:right">add_column</button>
                 <button ng-click="addRow(-1)" ng-if="question.type == 'matriisi'">add_row</button>
                 <button ng-click="delRow(-1)" ng-if="question.type == 'matriisi'">delete_row</button>
-            </div>
             <br>
             <br>
             <label>Vastausaika:</label>
