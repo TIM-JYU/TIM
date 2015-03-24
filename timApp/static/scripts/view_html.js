@@ -588,23 +588,23 @@ timApp.directive('questionDialog', function factory() {
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
     scope.columns = [{
-                    id: 0,
-                    text: 'test',
-                    questionPlaceholder: 'column'
-                    }];
-    scope.rows =    [{
-                    id: 0,
-                    text: 'test'
-                    }];
+        id: 0,
+        text: 'test',
+        questionPlaceholder: 'column'
+    }];
+    scope.rows = [{
+        id: 0,
+        text: 'test'
+    }];
     scope.question = {
         question: ""
     }
 
 
     scope.addCol = function (loc) {
-        if(loc>=0) {
+        if (loc >= 0) {
             scope.columns.splice(loc, 0, {id: loc, question: "column", questionPlaceholder: "column", text: ""});
-            for(var i = 0; i < scope.rows.length; i++){
+            for (var i = 0; i < scope.rows.length; i++) {
                 scope.rows[i].id = i;
             }
         }
@@ -613,9 +613,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.addRow = function (loc) {
-        if(loc>=0) {
+        if (loc >= 0) {
             scope.rows.splice(loc, 0, {id: loc, text: ""});
-            for(var i = 0; i < scope.rows.length; i++){
+            for (var i = 0; i < scope.rows.length; i++) {
                 scope.rows[i].id = i;
             }
         }
@@ -624,17 +624,17 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.delRow = function (indexToBeDeleted) {
-        if(indexToBeDeleted == -1)
+        if (indexToBeDeleted == -1)
             scope.rows.splice(-1, 1);
         else
-            scope.rows.splice(indexToBeDeleted,1);
+            scope.rows.splice(indexToBeDeleted, 1);
     };
 
     scope.delCol = function (indexToBeDeleted) {
-        if(indexToBeDeleted == -1)
+        if (indexToBeDeleted == -1)
             scope.columns.splice(-1, 1);
         else
-            scope.columns.splice(indexToBeDeleted,1);
+            scope.columns.splice(indexToBeDeleted, 1);
     };
 
     scope.clearQuestion = function () {
@@ -682,20 +682,3 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             });
     };
 }]);
-// define the ctrl
-function chatController($scope) {
-
-    // the last received msg
-    $scope.msg = {};
-
-    // handles the callback from the received event
-    var handleCallback = function (msg) {
-        $scope.$apply(function () {
-            $scope.msg = JSON.parse(msg.data)
-        });
-    }
-
-    var source = new EventSource('/stats');
-    source.addEventListener('message', handleCallback, false);
-}
-

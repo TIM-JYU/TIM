@@ -12,7 +12,7 @@
             <textarea readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
 
             <div class="buttons">
-                <input ng-model="newMsg" width="200" >
+                <input ng-model="newMsg" width="200" ng-keypress="enterPressed($event)" >
                 <button ng-click="sendMessageEvent(newMsg)">Send</button>
                 <button ng-show="showPoll" ng-click="startLongPolling()">Poll</button>
             </div>

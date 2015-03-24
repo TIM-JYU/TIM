@@ -13,6 +13,7 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
         $scope.msg = "";
         $scope.newMsg = "";
         $scope.showPoll = true;
+        $scope.polling = false;
 
         $scope.toggle = function () {
             alert("Test1");
@@ -34,8 +35,8 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
                     $scope.newMsg = "";
                 })
                 .error(function () {
-                console.log("Can't send message or something")
-            });
+                    console.log("Can't send message or something")
+                });
 
         };
 
@@ -46,50 +47,59 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.startLongPolling = function () {
             $scope.showPoll = false;
-            function message_longPolling(timestamp, lastid) {
-                var t;
+            if (!$scope.polling) {
+                $scope.polling = true;
+                function message_longPolling(timestamp, lastid) {
+                    var t;
 
-                if (lastid == null) {
-                    lastid = -1;
+                    if (lastid == null) {
+                        lastid = -1;
+                    }
+
+                    jQuery.ajax({
+                        url: '/getMessages',
+                        type: 'GET',
+                        data: {id: lastid},
+                        success: function (payload) {
+                            clearInterval(t);
+
+                            if (payload.status == 'results' || payload.status == 'no-results') {
+                                t = setTimeout(function () {
+                                    message_longPolling(payload.timeStamp, payload.lastid);
+                                }, 1000);
+                                if (payload.status == 'results') {
+                                    jQuery.each(payload.data, function (i, msg) {
+                                        $scope.msg = msg + "\n" + $scope.msg;
+                                        $scope.$apply();
+                                    });
+                                } else if (payload.status == 'no-results') {
+                                    console.log("No new messages. Sending new poll")
+                                }
+                            } else if (payload.status == 'error') {
+                                alert("Something went wrong");
+                            }
+                        }
+                        ,
+                        error: function (payload) {
+                            clearInterval(t);
+                            t = setTimeout(function () {
+                                message_longPolling(payload.timestamp, payload.lastid);
+                            }, 15000);
+                        }
+                    });
+
+
                 }
 
-                jQuery.ajax({
-                    url: '/getMessages',
-                    type: 'GET',
-                    data: {id: lastid},
-                    success: function (payload) {
-                        clearInterval(t);
-
-                        if (payload.status == 'results' || payload.status == 'no-results') {
-                            t = setTimeout(function () {
-                                message_longPolling(payload.timeStamp, payload.lastid);
-                            }, 1000);
-                            if (payload.status == 'results') {
-                                jQuery.each(payload.data, function (i, msg) {
-                                    $scope.msg = msg + "\n" + $scope.msg;
-                                    $scope.$apply();
-                                });
-                            } else if (payload.status == 'no-results') {
-                                console.log("No new messages. Sending new poll")
-                            }
-                        } else if (payload.status == 'error') {
-                            alert("Something went wrong");
-                        }
-                    }
-                    ,
-                    error: function (payload) {
-                        clearInterval(t);
-                        t = setTimeout(function () {
-                            message_longPolling(payload.timestamp, payload.lastid);
-                        }, 15000);
-                    }
-                });
-
-
+                message_longPolling(new Date);
             }
-
-            message_longPolling(new Date);
         }
 
-    }])
-;
+        $scope.enterPressed = function(event) {
+            if (event.which === 13) {
+                $scope.sendMessageEvent($scope.newMsg);
+            }
+        };
+
+
+    }]);
