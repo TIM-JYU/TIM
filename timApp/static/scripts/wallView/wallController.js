@@ -12,6 +12,7 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
         $scope.count = 0;
         $scope.msg = "";
         $scope.newMsg = "";
+        $scope.showPoll = true;
 
         $scope.toggle = function () {
             alert("Test1");
@@ -44,6 +45,7 @@ WallController.controller("WallController", ['$scope', '$controller', "$http",
         };
 
         $scope.startLongPolling = function () {
+            $scope.showPoll = false;
             function message_longPolling(timestamp, lastid) {
                 var t;
 
