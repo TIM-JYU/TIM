@@ -4,7 +4,7 @@ from timdb.timdbbase import TimDbBase
 
 
 class Questions(TimDbBase):
-    # TODO: Doesn't work until quesiton table has been altered
+    # TODO: Doesn't work until question table has been altered
     @contract
     def get_paragraphs_question(self, doc_id: 'int', par_index: 'int'):
         """
