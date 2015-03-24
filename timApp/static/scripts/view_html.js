@@ -385,6 +385,30 @@ timApp.controller("ViewCtrl", [
             return $noteDiv;
         };
 
+        sc.getSpeakerNoteHtml = function (notes) {
+            $(notes).parent().append($(notes).clone());
+            $(notes).removeClass('speaker').addClass('notes');
+            var $noteDiv = $("<div>", {class: 'notes'});
+            for (var i = 0; i < notes.length; i++) {
+                var classes = ["note"];
+                for (var j = 0; j < sc.noteClassAttributes.length; j++) {
+                    if (notes[i][sc.noteClassAttributes[j]] || notes[i].tags[sc.noteClassAttributes[j]]) {
+                        classes.push(sc.noteClassAttributes[j]);
+                    }
+                }
+                $noteDiv.append($("<div>", {class: classes.join(" ")})
+                    .data(notes[i])
+                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
+            }
+
+            return $noteDiv;
+            /*
+            var $noteDiv = $("<div>", {class: 'notes'});
+            $(notes).removeClass('speaker').addClass('notes');
+            return notes;
+            */
+        };
+
         sc.getNotes = function () {
             var rn = "?_=" + Date.now();
 
@@ -404,6 +428,7 @@ timApp.controller("ViewCtrl", [
                     }
                     pars[pi].notes.push(data[i]);
                 }
+
                 sc.forEachParagraph(function (index, elem) {
                     var parIndex = index + sc.startIndex;
                     if (parIndex in pars) {
@@ -411,7 +436,16 @@ timApp.controller("ViewCtrl", [
                         $(this).append($notediv);
                         MathJax.Hub.Queue(["Typeset", MathJax.Hub, this]);
                     }
+                    /*
+                    var speakernotes = $(this).children('div').find('.speaker');
+                    if (speakernotes.length > 0) {
+                        var $notediv = sc.getSpeakerNoteHtml(speakernotes[0]);
+                        $(this).append($notediv);
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
+                    }
+                    */
                 });
+
 
             }).error(function (data, status, headers, config) {
                 $window.alert("Could not fetch notes.");
