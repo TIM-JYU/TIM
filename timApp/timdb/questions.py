@@ -1,4 +1,4 @@
-__author__ = 'localadmin'
+__author__ = 'hajoviin'
 from contracts import contract
 from timdb.timdbbase import TimDbBase
 

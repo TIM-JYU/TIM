@@ -2,34 +2,9 @@
 {% block title %}Wall{% endblock %}
 {% block head %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='scripts\wallView\wallController.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts\wallView\wallApp.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/wallView/wallController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/wallView/wallApp.js') }}"></script>
 
-    <style type="text/css">
-        table {
-            margin: 1em;
-            border: none;
-        }
-
-        thead {
-            font-weight: bold;
-            border: none;
-        }
-
-        table td {
-            padding: 0.2em;
-            border: none;
-        }
-
-        .uploadForm {
-            border: 1px solid black;
-            padding: 1em;
-        }
-
-        .material {
-            padding: 1em;
-        }
-    </style>
 {% endblock %}
 {% block content %}
     <div ng-app="wallApp" ng-controller="WallController">

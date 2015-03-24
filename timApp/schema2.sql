@@ -267,3 +267,10 @@ CREATE TABLE `Question` (
   `question`    TEXT    NOT NULL,
   `answer`      TEXT
 );
+
+CREATE TABLE `Message` (
+	`msg_id`	INTEGER PRIMARY KEY AUTOINCREMENT,
+	`user_id`	INTEGER NOT NULL,
+	`message`	TEXT NOT NULL,
+	`timestamp`	TEXT NOT NULL
+);
