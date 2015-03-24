@@ -1,4 +1,7 @@
+import hashlib
 from contracts import contract
+from ephemeralclient import EphemeralException, EphemeralClient, EPHEMERAL_URL
+from timdb.docidentifier import DocIdentifier
 from timdb.timdbbase import TimDbBase
 
 class Notes(TimDbBase):
@@ -10,7 +13,7 @@ class Notes(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-        #self.ec = EphemeralClient(EPHEMERAL_URL)
+        self.ec = EphemeralClient(EPHEMERAL_URL)
     
     @contract
     def __tagstostr(self, tags : 'list(str)') -> 'str':
@@ -116,6 +119,7 @@ class Notes(TimDbBase):
               doc_id, par_index, note_index])
         
         self.db.commit()
+        self.ec.loadDocument(self.getDocIdentifierForNote({'content': new_content}), new_content.encode('utf-8'))
 
     @contract
     def deleteNote(self, doc_id : 'int', par_index : 'int', note_index : 'int'):
@@ -148,7 +152,16 @@ class Notes(TimDbBase):
             custom_access="access = 'everyone'"
         )
 
-        for item in result:
-            item["tags"] = self.__strtotags(item["tags"])
+        for note in result:
+            note["tags"] = self.__strtotags(note["tags"])
+            note_id = self.getDocIdentifierForNote(note)
+            try:
+                note['htmlContent'] = self.ec.getDocumentFullHtmlSanitized(note_id)
+            except EphemeralException:
+                self.ec.loadDocument(note_id, note['content'].encode('utf-8'))
+                note['htmlContent'] = self.ec.getDocumentFullHtmlSanitized(note_id)
         
         return result
+
+    def getDocIdentifierForNote(self, note):
+        return DocIdentifier('note', hashlib.sha256(note['content'].encode()).hexdigest())

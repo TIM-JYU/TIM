@@ -439,6 +439,7 @@ def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
 
     doc_id, task_id_name = parse_task_id(task_id)
+    verifyViewAccess(doc_id)
     if not 'input' in request.get_json():
         return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']

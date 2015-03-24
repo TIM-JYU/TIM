@@ -1,4 +1,4 @@
-var MathJax, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode;
+var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
@@ -63,6 +63,25 @@ timApp.controller("ViewCtrl", [
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+
+        sc.processAllMath = function($elem) {
+            $elem.find('.math').each(function() {
+                sc.processMath(this);
+            });
+        };
+
+        sc.processMath = function(elem) {
+            var $this = $(elem);
+            var math = $this.text();
+            var hasDisplayMode = false;
+            if (math[1] === '[') {
+                hasDisplayMode = true;
+            }
+            else if (math[1] !== '(') {
+                return;
+            }
+            katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
+        };
 
         sc.toggleSidebar = function () {
             var visible = angular.element('.sidebar').is(":visible");
@@ -259,7 +278,7 @@ timApp.controller("ViewCtrl", [
                 var $newpar = $("<div>", {class: "par"});
                 $par.after($newpar
                     .append($("<div>", {class: "parContent"}).html($compile(data.texts[i].html)(sc))));
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
+                sc.processMath($newpar[0]);
             }
             $par.remove();
             sc.editing = false;
@@ -380,7 +399,7 @@ timApp.controller("ViewCtrl", [
                 }
                 $noteDiv.append($("<div>", {class: classes.join(" ")})
                     .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
+                    .append($("<div>", {class: 'noteContent', html: notes[i].htmlContent})));
             }
             return $noteDiv;
         };
@@ -408,8 +427,9 @@ timApp.controller("ViewCtrl", [
                     var parIndex = index + sc.startIndex;
                     if (parIndex in pars) {
                         var $notediv = sc.getNoteHtml(pars[parIndex].notes);
-                        $(this).append($notediv);
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
+                        var $this = $(this);
+                        $this.append($notediv);
+                        sc.processAllMath($this);
                     }
                 });
 
@@ -586,4 +606,5 @@ timApp.controller("ViewCtrl", [
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
+        sc.processAllMath($('body'));
     }]);

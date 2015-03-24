@@ -104,6 +104,7 @@ def loginWithKorppi():
             uid = timdb.users.createUser(userName, realName, email)
             gid = timdb.users.createUserGroup(userName)
             timdb.users.addUserToGroup(gid, uid)
+            timdb.users.addUserToKorppiGroup(uid)
             userId = uid
     else:
         if realName:

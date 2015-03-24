@@ -77,6 +77,7 @@ var groups = {{user_groups|tojson|safe}};
                     <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
                     <input type="submit" value="Add" ng-disabled="!editorName">
                     <input type="button" value="Cancel" ng-click="showAddEditor = false">
+                    <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'edit')">
                     <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'edit')">
                     <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'edit')">
                 </form>
@@ -95,6 +96,7 @@ var groups = {{user_groups|tojson|safe}};
                     <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
                     <input type="submit" value="Add" ng-disabled="!viewerName">
                     <input type="button" value="Cancel" ng-click="showAddViewer = false">
+                    <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'view')">
                     <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'view')">
                     <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'view')">
                 </form>
