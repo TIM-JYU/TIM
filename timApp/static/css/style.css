@@ -50,7 +50,6 @@
     margin-top: 2px;
     outline: 0 none;
     padding: 3px 3px 3px 5px;
-    width: 70%;
     font-size: 12px;
     line-height:15px;
     box-shadow: inset 0px 1px 4px #ECECEC;
@@ -77,6 +76,7 @@
 
 .basic-grey textarea{
     padding: 5px 3px 3px 5px;
+    width: 70%;
 }
 .basic-grey select {
    /* background: #FFF url('down-arrow.png') no-repeat right;  */
@@ -101,5 +101,13 @@
     cursor: pointer;
 }
 .basic-grey .button:hover {
-    background: #CF7A7A
+    background: #cccccc
+}
+
+#buttons {
+    display:none;
+}
+
+.cart:hover #buttons {
+    display:block;
 }

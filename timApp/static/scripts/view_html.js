@@ -598,8 +598,57 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     }];
     scope.question = {
         question: ""
-    }
+    };
+    scope.questionType = "";
 
+    scope.radioButtonQuestion = function () {
+        scope.rows = [{
+            id: 0,
+            text: 'test'
+        },{
+            id: 1,
+            text: 'test'
+        },{
+            id: 2,
+            text: 'test'
+        }];
+        scope.columns = [{
+            id: 0,
+            text: 'test',
+            questionPlaceholder: 'column'
+        }];
+        scope.questionType = "radio-button";
+    };
+
+    scope.trueFalseQuiz = function () {
+        scope.rows = [{
+            id: 0,
+            text: 'test'
+        }];
+        scope.columns = [{
+            id: 0,
+            text: 'True',
+            questionPlaceholder: 'column'
+        },{
+            id: 1,
+            text: 'False',
+            questionPlaceholder: 'column'
+        }];
+        scope.questionType = "true-false";
+    };
+
+    scope.matriisi = function() {
+        scope.rows = [{
+            id: 0,
+            text: 'test'
+        }];
+        scope.columns = [{
+            id: 0,
+            text: 'test',
+            questionPlaceholder: 'column'
+        }];
+        scope.questionType = "matriisi";
+    };
 
     scope.addCol = function (loc) {
         if (loc >= 0) {
