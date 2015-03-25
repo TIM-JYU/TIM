@@ -89,11 +89,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
-                    if ($scope.isVisible) {
-                        $scope.getAvailableAnswers();
-                    } else {
-                        $scope.changed = true;
-                    }
+                    $scope.changed = true;
                 });
 
                 $scope.loadIfChanged = function () {
@@ -106,21 +102,11 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 };
 
-                // The element is not visible in DOM at the time the link function runs, so we set
-                // 200 ms timeout to make sure the waypoint 'sees' it.
-                $window.setTimeout(function () {
-                    $scope.user = $scope.$parent.users[0];
-                    $scope.waypoint = new Waypoint.Inview({
-                        enter: function (direction) {
-                            $scope.isVisible = true;
-                            $scope.loadIfChanged();
-                        },
-                        exited: function (direction) {
-                            $scope.isVisible = false;
-                        },
-                        element: $element[0]
-                    })[0];
-                }, 200);
+                $scope.user = $scope.$parent.users[0];
+                $element.parent().on('mouseenter touchstart', function () {
+                    $scope.loadIfChanged();
+                });
+                $scope.changed = true;
             }
         };
     }]);
