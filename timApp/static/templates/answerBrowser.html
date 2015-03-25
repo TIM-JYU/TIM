@@ -11,6 +11,6 @@
     {{ answers.length - answers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ answers.length }}</a>
     </span>
     <span ng-show="$parent.teacherMode && changed">(hover/click to update)</span>
-    <span ng-show="answers.length == 0 && $parent.teacherMode">(no answers)</span>
+    <span ng-show="!changed && answers.length == 0 && $parent.teacherMode">(no answers)</span>
     <img style="display: inline" src="/static/images/loading.gif" ng-show="loading">
 </div>
