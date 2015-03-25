@@ -11,6 +11,7 @@ import re
 import sys
 import time
 import datetime
+from datetime import timezone
 
 from flask import Flask, redirect, url_for, flash, Blueprint
 from flask import stream_with_context
@@ -223,7 +224,7 @@ def get_messages():
                 for message in messages:
                     user = timdb.users.getUser(message.get('user_id'))
                     list_of_new_messages.append(
-                        user.get('name') + " <" + message.get("timestamp")[:8] + ">" + ": " + message.get('message'))
+                        user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
                 last_message_id = messages[-1].get('msg_id')
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id})
@@ -233,7 +234,7 @@ def get_messages():
                 if message.get("timestamp") > possibly_last_message.get('timestamp'):
                     user = timdb.users.getUser(message.get('user_id'))
                     list_of_new_messages.append(
-                        user.get('name') + " <" + message.get("timestamp")[:8] + ">" + ": " + message.get("message"))
+                        user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get("message"))
                     last_message_id = message.get('msg_id')
 
             if len(list_of_new_messages) > 0:
@@ -255,7 +256,8 @@ def get_messages():
 def send_message():
     timdb = getTimDb()
     new_message = request.args.get("message")
-    new_timestamp = str(datetime.datetime.now().time())
+
+    new_timestamp = str(datetime.datetime.now())
     msg_id = timdb.messages.add_message(getCurrentUserId(), new_message, new_timestamp, True)
     return jsonResponse(msg_id)
 

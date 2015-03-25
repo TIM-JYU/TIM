@@ -25,6 +25,7 @@
     <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/notesView/contents.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/wallView/wallController.js') }}"></script>
 
     <!-- Script to load question from another file -->
     <script>
@@ -119,11 +120,21 @@
         </div>
 
         <!-- Adding question to view. Hidden until creation of question -->
-        <question-dialog show='questionShown' >
-            <div ng-controller="QuestionController" >
+        <question-dialog show='questionShown'>
+            <div ng-controller="QuestionController">
                 <ng-include src="'../../question'"></ng-include>
             </div>
         </question-dialog>
+
+        <div ng-controller="WallController" class="wall-behind">
+            <textarea readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+
+            <div class="buttons">
+                <input ng-model="newMsg" width="200" ng-keypress="enterPressed($event)" ng-readonly="!polling">
+                <button ng-click="sendMessageEvent(newMsg)">Send</button>
+                <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button>
+            </div>
+        </div>
     </div>
 
 
