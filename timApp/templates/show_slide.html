@@ -75,7 +75,8 @@
             document.getElementsByTagName('head')[0].appendChild(link);
         }
     </script>
-    <script src="reveal.js/lib/js/html5shiv.js"></script>
+    <script src="{{ url_for('static', filename='scripts/reveal/lib/js/html5shiv.js') }}"></script>
+    <!-- <script src="reveal.js/lib/js/html5shiv.js"></script> -->
 </head>
 <body>
 <div class="reveal" ng-app="timApp" ng-controller="ViewCtrl">
