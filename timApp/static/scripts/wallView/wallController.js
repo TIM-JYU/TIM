@@ -2,9 +2,7 @@
  * Created by hajoviin on 24.2.2015.
  */
 
-var WallController = angular.module('controller', []);
-
-WallController.controller("WallController", ['$scope', '$controller', "$http",
+timApp.controller("WallController", ['$scope', '$controller', "$http",
 
     function ($scope, controller, http) {
 

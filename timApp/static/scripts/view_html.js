@@ -1,6 +1,7 @@
 var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function ($locationProvider) {
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
+
 });
 
 timApp.controller("ViewCtrl", ['$scope',
