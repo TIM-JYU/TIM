@@ -2055,3 +2055,36 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
     return getattr(obj, attribute)
 jinja2.exceptions.UndefinedError: 'item' is undefined
+{"time":2015-03-25 14:52:04,791, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 265, in show_question
+    @app.route('/question')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 17, in <module>
+    {% include 'matriisi.html' %}
+  File "/service/timApp/templates/matriisi.html", line 84, in <module>
+    id = "{{ column.id }}"
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 397, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'column' is undefined

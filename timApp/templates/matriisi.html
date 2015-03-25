@@ -6,8 +6,7 @@
             <option value="radiobutton-horizontal">Radiopainike vaakaan</option>
             <option value="radiobutton-vertical">Radiopainike pystyyn</option>
             <option value="vapaakenttä">Vapaakenttä</option>
-            <option value="checkbox-horizontal">Checkbox vaakaan</option>
-            <option value="checkbox-vertical">Checkbox pystyyn</option>
+            <option value="checkbox">Checkbox</option>
         </select>
     </div>
     <label>Vastausvaihtoehdot:</label>
@@ -52,49 +51,41 @@
                         <input type="radio"
                                ng-model="row.id"
                                ng-value="column.id"
-                               placeholder="Placeholder"
-                               ng-model="item.question"/>
+                               placeholder="Placeholder"/>
                         <input type="text"
                                ng-show="row.id == column.id"
                                size="1"
                                placeholder="pts"/>
                     </div>
                     <!-- Radiopainike pystysuoraan-->
-                    <div ng-if="question.matriisi.vastaus == 'radiobutton-vertical' || questionType == 'radio-button'">
-                        <input type="radio"
-                               ng-model="column.id"
-                               ng-value="row.id"
-                               placeholder="Placeholder"
-                               ng-model="item.question"/>
-                        <input type="text"
-                               ng-show="column.id == row.id"
-                               size="1"
-                               placeholder="pts" />
+                    <div ng-if="questionType != 'true-false'">
+                        <div ng-if="question.matriisi.vastaus == 'radiobutton-vertical' || questionType == 'radio-button'">
+                            <input type="radio"
+                                   ng-model="column.id"
+                                   ng-value="row.id"
+                                   placeholder="Placeholder"/>
+                            <input type="text"
+                                   ng-show="column.id == row.id"
+                                   size="1"
+                                   placeholder="pts" />
+                        </div>
+                        <!-- Vapaa tekstivastaus-->
+                        <div ng-if="questionType != 'radio-button'">
+                            <textarea ng-if="question.matriisi.vastaus == 'vapaakenttä'"
+                                      type="text"
+                                      placeholder="Placeholder"
+                                      rows="1"
+                                      cols="20"></textarea>
+                            <!-- Checkbox vaakaan-->
+                            <div ng-if="question.matriisi.vastaus == 'checkbox'">
+                                <input type="checkbox"
+                                       ng-model = "row.id"
+                                       ng-true-value = "column.id"
+                                       ng-false-value = "-1"
+                                        />
+                            </div>
+                        </div>
                     </div>
-                    <!-- Vapaa tekstivastaus-->
-                                    <textarea ng-if="question.matriisi.vastaus == 'vapaakenttä'"
-                                              type="text"
-                                              placeholder="Placeholder"
-                                              ng-model="item.question"
-                                              rows="1"
-                                              cols="20"></textarea>
-                    <!-- Checkbox vaakaan-->
-                    <div ng-if="question.matriisi.vastaus == 'checkbox-horizontal'">
-                        <input type="checkbox"
-                               ng-model = "row.id"
-                               placeholder="Placeholder"
-                               ng-model="item.question"/>
-                        <input type="text"
-                               ng-show="row.id"
-                               size="1"
-                               placeholder="pts" />
-                    </div>
-                    <!-- Checkbox pystyyn-->
-                    <input ng-if="question.matriisi.vastaus == 'checkbox'"
-                           type="checkbox"
-                           ng-model = "column.id"
-                           ng-value = "row.id"
-                           placeholder="Placeholder"/>
                 </td>
             </tr>
             </tbody>
