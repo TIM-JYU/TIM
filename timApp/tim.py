@@ -683,5 +683,6 @@ def indexPage():
 def startApp():
     # app.wsgi_app = ReverseProxied(app.wsgi_app)
     # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
+
     # TODO: Think if it is truly necessary to have threaded=True here
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)

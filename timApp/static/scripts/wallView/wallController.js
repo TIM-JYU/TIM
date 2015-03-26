@@ -12,6 +12,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.polling = true;
         $scope.latestID = null;
         $scope.requestOnTheWay = false;
+        $scope.showWall = true;
+
+        $scope.hide = function () {
+            $scope.showWall = !$scope.showWall;
+        }
+
+        $scope.detach = function () {
+            console.log("Should detach this window");
+        }
 
         $scope.sendMessageEvent = function (message) {
             if (message.trim() == "") {
@@ -61,6 +70,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                                             $scope.msg = $scope.msg + msg + "\n";
                                             $scope.$apply();
                                         });
+                                        var textarea = document.getElementById('wallArea');
+                                        textarea.scrollTop = textarea.scrollHeight;
                                     } else if (payload.status == 'no-results') {
                                         console.log("No new messages. Sending new poll.");
                                     }
