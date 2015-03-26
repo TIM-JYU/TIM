@@ -1,79 +1,28 @@
-<div >
+<div>
     <form class="basic-grey" id="question-form">
         <fieldset>
             <label>Kysymys:</label>
-					<textarea name="kysymys" rows="1" cols="100" ng-model="question.question">
-			</textarea>
+            <textarea name="kysymys" rows="10" cols="100" ng-model="question.question"></textarea>
             <br>
             <label>Kysymystyyppi:</label>
             <select name="tyyppi" ng-model="question.type" ng-dropdown required>
                 <option value="" ng-option disabled selected> -- select question type --</option>
-                <option ng-option value="matriisi">Matriisi</option>
-                <option ng-option value="monivalinta">Monivalinta</option>
+                <option ng-option value="radio-vertical">Radiolista alekkain</option>
+                <option ng-option value="true-false">True/False</option>
+                <option ng-option value="matriisi">Monta riviä/saraketta</option>
             </select>
             <br>
 
-            <div id="check" ng-if="question.type == 'matriisi'">
-                <label>Vastaustyyppi:</label>
-                <select name="vtyyppi" ng-model="question.matriisi.vastaus">
-                    <option value="" disabled selected> -- select answer type --</option>
-                    <option value="radiobutton-horizontal">Radiopainike vaakaan</option>
-                    <option value="radiobutton-vertical">Radiopainike pystyyn</option>
-                    <option value="vapaakenttä">Vapaakenttä</option>
-                    <option value="checkbox">Checkbox</option>
-                </select>
+            <div ng-if="question.type == 'radio-vertical'" ng-init="radioButtonQuestion()">
+                {% include 'matriisi.html' %}
             </div>
-            <div id="check" ng-if="question.type == 'monivalinta'">
-                <label>Vastaustyyppi:</label>
-                <select name="vtyyppi">
-                    <option disabled selected> -- select answer type --</option>
-                    <option value="checkbox">Checkbox</option>
-                    <option value="radiobutton">Radiopainike</option>
-                </select>
+            <div ng-if="question.type == 'true-false'" ng-init="trueFalseQuiz()">
+                {% include 'matriisi.html' %}
             </div>
-            <br><br>
-            <label ng-if="question.type == 'matriisi'">Vastausvaihtoehdot:</label><br>
-            <div id="overflow">
-                <table ng-if="question.type == 'matriisi'">
-                    <thead>
-                    <tr>
-                        <th></th>
-                        <th ng-repeat="item in columns"><textarea form="question-form" rows="1" cols="20"></textarea><br /><button ng-click="addCol($index)">+</button><button ng-click="delCol($index)">-</button></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr ng-repeat="row in rows">
-                        <th><textarea form="question-form" rows="1" cols="20"></textarea><br /><button ng-click="addRow($index)">+</button><button ng-click="delRow($index)">-</button></th>
-                        <td ng-repeat="column in columns"><input ng-if="question.matriisi.vastaus == 'radiobutton-horizontal'"
-                                                               type="radio"
-                                                               ng-model="row.id"
-                                                               ng-value="column.id"
-                                                               placeholder="Placeholder"
-                                                               ng-model="item.question"/>
-                                                        <input ng-if="question.matriisi.vastaus == 'radiobutton-vertical'"
-                                                               type="radio"
-                                                               ng-model="column.id"
-                                                               ng-value="row.id"
-                                                               placeholder="Placeholder"
-                                                               ng-model="item.question"/>
-                                                        <input ng-if="question.matriisi.vastaus == 'vapaakenttä'"
-                                                               type="text"
-                                                               placeholder="Placeholder"
-                                                               ng-model="item.question"/>
-                                                        <input ng-if="question.matriisi.vastaus == 'checkbox'"
-                                                               type="checkbox"
-                                                               placeholder="Placeholder"
-                                                               ng-model="item.question"/></td>
-                    </tr>
-                    </tbody>
-                </table>
-                </div>
-                <button ng-click="delCol(-1)" ng-if="question.type == 'matriisi'" style="float:right">delete_column</button>
-                <button ng-click="addCol(-1)" ng-if="question.type == 'matriisi'" style="float:right">add_column</button>
-                <button ng-click="addRow(-1)" ng-if="question.type == 'matriisi'">add_row</button>
-                <button ng-click="delRow(-1)" ng-if="question.type == 'matriisi'">delete_row</button>
-            <br>
-            <br>
+            <div ng-if="question.type == 'matriisi'" ng-init="matriisi()">
+                {% include 'matriisi.html' %}
+            </div>
+
             <label>Vastausaika:</label>
             <input type="radio" name="vastausaika" value="0">Ei
             <input type="radio" name="vastausaika" value=""><input type=text" size="3">

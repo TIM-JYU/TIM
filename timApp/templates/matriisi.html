@@ -1,0 +1,111 @@
+<div>
+    <div id="check" ng-if="question.type == 'matriisi'">
+        <label>Vastaustyyppi:</label>
+        <select name="vtyyppi" ng-if="question.type == 'matriisi'" ng-model="question.matriisi.vastaus" ng-dropdown>
+            <option value="" disabled selected> -- select answer type --</option>
+            <option value="radiobutton-horizontal">Radiopainike vaakaan</option>
+            <option value="radiobutton-vertical">Radiopainike pystyyn</option>
+            <option value="vapaakenttä">Vapaakenttä</option>
+            <option value="checkbox">Checkbox</option>
+        </select>
+    </div>
+    <label>Vastausvaihtoehdot:</label>
+    <br>
+    <div id="overflow">
+        <table>
+            <thead>
+            <tr ng-if="questionType == 'matriisi'">
+                <th></th>
+                <th ng-repeat="item in columns">
+                    <div class="cart">
+                        <textarea form="question-form" rows="1" cols="20"></textarea>
+                        <br />
+                        <div id="buttons">
+                            <button ng-click="addCol($index)">+</button>
+                            <button ng-click="delCol($index)">-</button>
+                        </div>
+                    </div>
+                </th>
+            </tr>
+            <tr ng-if="questionType == 'true-false'">
+                <th></th>
+                <th>True</th>
+                <th>False</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="row in rows">
+                <th>
+                    <div class="cart">
+                        <textarea form="question-form" rows="1" cols="20"></textarea>
+                        <br />
+                        <div id="buttons">
+                            <button ng-click="addRow($index)">+</button>
+                            <button ng-click="delRow($index)">-</button>
+                        </div>
+                    </div>
+                </th>
+                <td ng-repeat="column in columns">
+                    <!-- Radiopainike vaakasuoraan-->
+                    <div ng-if="question.matriisi.vastaus == 'radiobutton-horizontal' || questionType == 'true-false'">
+                        <input type="radio"
+                               ng-model="row.id"
+                               ng-value="column.id"
+                               placeholder="Placeholder"/>
+                        <input type="text"
+                               ng-show="row.id == column.id"
+                               size="1"
+                               placeholder="pts"/>
+                    </div>
+                    <!-- Radiopainike pystysuoraan-->
+                    <div ng-if="questionType != 'true-false'">
+                        <div ng-if="question.matriisi.vastaus == 'radiobutton-vertical' || questionType == 'radio-button'">
+                            <input type="radio"
+                                   ng-model="column.id"
+                                   ng-value="row.id"
+                                   placeholder="Placeholder"/>
+                            <input type="text"
+                                   ng-show="column.id == row.id"
+                                   size="1"
+                                   placeholder="pts" />
+                        </div>
+                        <!-- Vapaa tekstivastaus-->
+                        <div ng-if="questionType != 'radio-button'">
+                            <textarea ng-if="question.matriisi.vastaus == 'vapaakenttä'"
+                                      type="text"
+                                      placeholder="Placeholder"
+                                      rows="1"
+                                      cols="20"></textarea>
+                            <!-- Checkbox vaakaan-->
+                            <div ng-if="question.matriisi.vastaus == 'checkbox'">
+                                <input type="checkbox"
+                                       ng-model = "row.id"
+                                       ng-true-value = "column.id"
+                                       ng-false-value = "-1"
+                                        />
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div ng-if="questionType == 'true-false'">
+        <button ng-click="addRow(-1)" >add_row</button>
+        <button ng-click="delRow(-1)" >delete_row</button>
+    </div>
+    <div ng-if="questionType == 'radio-button'">
+        <button ng-click="addRow(-1)" >add_row</button>
+        <button ng-click="delRow(-1)" >delete_row</button>
+    </div>
+    <div ng-if="questionType == 'matriisi'">
+        <button ng-click="addRow(-1)" >add_row</button>
+        <button ng-click="delRow(-1)" >delete_row</button>
+        <button ng-click="delCol(-1)" style="float:right">delete_column</button>
+        <button ng-click="addCol(-1)" style="float:right">add_column</button>
+    </div>
+
+    <br>
+    <br>
+</div>
