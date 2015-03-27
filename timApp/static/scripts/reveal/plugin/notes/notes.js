@@ -103,6 +103,11 @@ var RevealNotes = (function() {
 			openNotes();
 		}
 
+        var notesButton = document.createElement('div');
+        notesButton.setAttribute('class', 'notesnavi enabled');
+        document.getElementsByClassName('controls')[0].appendChild(notesButton);
+
+
 		// Open the notes when the 's' key is hit
 		document.addEventListener( 'keydown', function( event ) {
 			// Disregard the event if the target is editable or a
@@ -114,6 +119,8 @@ var RevealNotes = (function() {
 				openNotes();
 			}
 		}, false );
+
+        notesButton.addEventListener('click', openNotes)
 
 	}
 

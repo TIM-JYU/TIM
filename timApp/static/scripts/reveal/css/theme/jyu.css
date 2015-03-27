@@ -259,6 +259,13 @@ body::-ms-backdrop {
 .reveal .controls div.fullscreen {
     border-color: #00008B; }
 
+
+.reveal .controls div.notesnavi{
+    background-color: #00008B; }
+
+.reveal .controls div.notesnavi:hover{
+    background-color: #0000f1; }
+
 .reveal .controls div.fullscreenon {
     border-color: #00008B; }
 

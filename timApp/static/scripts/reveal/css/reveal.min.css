@@ -227,10 +227,25 @@ body {
 .reveal .controls div.navigate-down.fragmented {
   opacity: 0.3; }
 
+.reveal .controls div.notesnavi{
+  left: -40px;
+  top: 56px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 3px;
+  -webkit-mask-image: url('note.png');
+  -moz-mask-image: url('note.png');
+  -ms-mask-image: url('note.png');
+  mask-image: url('note.png');
+}
+
 .reveal .controls div.fullscreen {
   border-radius: 5px;
-  left: -60px;
-  top: 40px;
+  left: -50px;
+  top: 18px;
   width: 30px;
   height: 20px;
   /*border: 0px;
@@ -251,8 +266,8 @@ body {
 
 .reveal .controls div.fullscreenon {
   border-radius: 5px;
-  left: -60px;
-  top: 40px;
+  left: -50px;
+  top: 10px;
   width: 30px;
   height: 20px;
   border-width: 2px;
