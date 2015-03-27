@@ -227,6 +227,28 @@ body {
 .reveal .controls div.navigate-down.fragmented {
   opacity: 0.3; }
 
+.reveal .controls div.fullscreen {
+  border-radius: 5px;
+  left: -60px;
+  top: 40px;
+  width: 30px;
+  height: 20px;
+  /*border: 0px;
+  margin: 4px; */
+  border-width: 2px;
+  border-top-width: 10px;
+  border-right-width: 15px  }
+
+.reveal .controls div.fullscreen:hover {
+    padding-top: 8px;
+    padding-right: 13px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    /*margin: 0px;
+    padding: 4px;
+    */
+}
+
 /*********************************************
  * PROGRESS BAR
  *********************************************/

@@ -19,6 +19,15 @@ body {
     background-size: auto 100%;
 }
 
+body::-ms-backdrop {
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: left;
+    background-image: url('pohja1.jpg');
+    background-size: auto 100%;
+}
+
 .reveal {
   font-family: 'Lato', sans-serif;
   font-size: 36px;
@@ -247,6 +256,13 @@ body {
 .reveal .controls div.navigate-down.enabled:hover {
   border-top-color: #0000f1; }
 
+.reveal .controls div.fullscreen {
+    border-color: #00008B;
+  /* background-color: #00008B; */ }
+
+.reveal .controls div.fullscreen:hover {
+    border-top-color: #0000f1;
+  /* background-color: #0000f1; */ }
 /*********************************************
  * PROGRESS BAR
  *********************************************/
