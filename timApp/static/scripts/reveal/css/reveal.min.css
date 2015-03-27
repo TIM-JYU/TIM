@@ -249,6 +249,24 @@ body {
     */
 }
 
+.reveal .controls div.fullscreenon {
+  border-radius: 5px;
+  left: -60px;
+  top: 40px;
+  width: 30px;
+  height: 20px;
+  border-width: 2px;
+  padding-top: 8px;
+  padding-right: 13px;
+  border-top-width: 2px;
+  border-right-width: 2px; }
+
+.reveal .controls div.fullscreenon:hover {
+    border-top-width: 10px;
+  border-right-width: 15px;
+    padding: 0;
+}
+
 /*********************************************
  * PROGRESS BAR
  *********************************************/
