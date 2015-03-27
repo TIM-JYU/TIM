@@ -257,12 +257,17 @@ body::-ms-backdrop {
   border-top-color: #0000f1; }
 
 .reveal .controls div.fullscreen {
-    border-color: #00008B;
-  /* background-color: #00008B; */ }
+    border-color: #00008B; }
+
+.reveal .controls div.fullscreenon {
+    border-color: #00008B; }
 
 .reveal .controls div.fullscreen:hover {
-    border-top-color: #0000f1;
-  /* background-color: #0000f1; */ }
+    border-top-color: #0000f1; }
+
+.reveal .controls div.fullscreenon:hover {
+    border-top-color: #0000f1; }
+
 /*********************************************
  * PROGRESS BAR
  *********************************************/
