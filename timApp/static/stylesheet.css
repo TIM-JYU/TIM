@@ -171,7 +171,7 @@ input[type="submit"], button, input[type="button"] {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.viewLogin form {
+.viewLogin form { 
     display: inline;
 }
  
@@ -191,12 +191,12 @@ td p {
     margin-left: 0;
 }
 .readline {
-	border-color: red;
+	border-color: #F60; /* rgb(236,103,27); */
 }
 	
 .readline:hover {
     opacity: 0.5;
-	background: red;
+	background: #F60; /* rgb(236,103,27); */
 }
 	
 .readline.read {
@@ -329,11 +329,11 @@ ul ul  ul, ol ol ol {
 }
 
 .previewcontent {
-    border: 2px solid black;
-    border-radius: 15px;
-    padding: 1em;
-    margin: 2px;
-    background-color: #f0f0f8;
+    border: 1px solid black;
+    border-radius: 5px;
+    padding-top: 0.0em;
+    margin-top: 5px;
+    background-color: #f8f8f8;
 }
 
 .timButton {
@@ -349,7 +349,7 @@ ul ul  ul, ol ol ol {
     height: 100%;
     top: 0em;
     border-right: 0.5em solid;
-    border-color: red;
+    border-color: #F60; /* rgb(236,103,27); */
 }
 
 .addNoteButton:hover {
@@ -782,9 +782,9 @@ a.anchor:hover {
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
 	width: 45em;
-	border: 2px solid;
+	border: 1px solid;
 	padding: 15px 5px 5px 5px;
-	border-radius: 15px;
+	border-radius: 5px;
 	text-align: left;
     resize: both;
 }
@@ -802,7 +802,9 @@ a.anchor:hover {
 
 .editButtonArea {
 	float: left;
-    padding: 0.5em;
+    
+	padding-right: 1em;
+	margin-bottom: 0em;
 }
 	
 video {
@@ -1421,9 +1423,10 @@ img.console {
     position: absolute;
     width: 102%;
     top: 0em;
-    left: 0;
+    left: -1.5em;
     min-height: 6.5em;
-    border-radius: 9px;
+    border-radius: 5px;
+    background: #e0e0e0;
 }
 
 .ace_editor {
@@ -1558,3 +1561,34 @@ img.console {
             border: none !important;
     }
 }
+
+.speaker {
+  position: absolute;
+  left: 105%;
+  width: 400px;
+}
+
+.doctitle {
+  font-size: 0.7em;
+  color: #3cc;
+  text-align: center;
+  margin-bottom: -1.5em;
+}
+
+.mcq {
+  padding-left: 2em;
+}
+
+.answerBrowser {
+  padding-left: 2em;
+}
+
+.csRunChanged {
+  background-color: rgb(41, 255, 0) !important;
+  width: 0.2em;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: -0.5em;
+}
+ 

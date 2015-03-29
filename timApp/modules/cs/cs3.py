@@ -506,9 +506,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         content_type = 'text/plain'
         if is_reqs or is_answer: content_type = "application/json"
+        if is_js: content_type = 'application/javascript'
         if is_fullhtml or is_gethtml or is_html or is_ptauno or is_tauno: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
-        if is_js: content_type = 'application/javascript'
         do_headers(self, content_type)
 
         if self.path.find("refresh") >= 0:
@@ -517,9 +517,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
         if is_gethtml:    
+            scripts = get_param(query, "scripts", "")
             p = self.path.split("?")
-            print(p)
-            self.wout(file_to_string(p[0]))
+            print(p,scripts)
+            self.wout(replace_scripts(file_to_string(p[0]),scripts,"%INCLUDESCRIPTS%"))
             return
             
         if is_ptauno:
@@ -541,7 +542,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # result_json = {"js": ["/cs/js/dir.js"], "angularModule": ["csApp","csConsoleApp"],
             # result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
-            result_json = {"js": ["/cs/js/dir.js"],
+            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],

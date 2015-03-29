@@ -113,12 +113,23 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.cancelClicked = function () {
-                    $element.remove();
+                    $element.remove(); 
                     $scope.afterCancel({
                         extraData: $scope.extraData
                     });
                 };
 
+                $scope.releaseClicked = function () {
+                    if ( document.getElementById("previewDiv").style.position ) {
+                        document.getElementById("previewDiv").style.position = "";
+                        document.getElementById("releaseButton").innerHTML = "&#8594;";
+                    } else {
+                        document.getElementById("previewDiv").style.position="absolute";
+                        document.getElementById("releaseButton").innerHTML = "&#8592;";
+                    }
+                };
+                
+                
                 $scope.onFileSelect = function (url, $files) {
                     //$files: an array of files selected, each file has name, size, and type.
                     for (var i = 0; i < $files.length; i++) {
