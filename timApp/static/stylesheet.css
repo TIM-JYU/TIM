@@ -277,7 +277,7 @@ ul ul  ul, ol ol ol {
 	text-align:center;
 }
 
-.notes {
+.notes, .speaker {
 	position: absolute;
 	left: 112%;
 	width: 17em;
@@ -1001,7 +1001,7 @@ p.stem {
         margin-left: 0.7em;
 		right: -2em;
 	}
-	.notes {
+	.notes, .speaker {
 		position: absolute;
 		left: 116%;
 		width: 17em;
@@ -1091,7 +1091,7 @@ p.stem {
 		outline: none;
 	}
 
-	.notes {  
+	.notes, .speaker {  
 		position: absolute;
 		left: 115%;
 		width: 17em;
@@ -1214,7 +1214,7 @@ img.console {
 	color:  #3CC;
 }
 
-.notes:hover {
+.notes:hover, .speaker:hover {
     background-color: white;
     display: block;
     z-index: 9;
@@ -1252,7 +1252,7 @@ img.console {
 		left: 0%;
 	}
 
-	.notes:hover {
+	.notes:hover, .speaker:hover {
         margin-left: -60%;
         width: 200em;
         background-color: white;
