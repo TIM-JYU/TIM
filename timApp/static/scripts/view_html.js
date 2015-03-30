@@ -294,12 +294,14 @@ timApp.controller("ViewCtrl", [
 
         sc.addEvent(".readline", function (e) {
             var par_id = sc.getParIndex($(this).parents('.par'));
-            $(this).hide();
+            var oldClass = $(this).attr("class");
+            $(this).attr("class", "readline read");
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
                 }).error(function (data, status, headers, config) {
                     $window.alert('Could not save the read marking.');
+                    $(this).attr("class", oldClass);
                 });
         });
 
