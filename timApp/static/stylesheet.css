@@ -433,7 +433,6 @@ ul ul  ul, ol ol ol {
 }
 
 .material {
-	display: inline-block;
 	width: 90%;
 }
 
@@ -1531,10 +1530,6 @@ img.console {
   display: none;
   }
 
-  .unread {
-  display: none;
-  }
-
   .parContent {
   position: static;
   border: 0px;
@@ -1554,6 +1549,10 @@ img.console {
   #header {
   display: none;
  }
+
+  #contents {
+      display: none;
+  }
 
     /* Harmaa varjo dokumentilta pois */ 
     .material {
