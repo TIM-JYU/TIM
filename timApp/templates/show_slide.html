@@ -82,8 +82,9 @@
 <div class="reveal" ng-app="timApp" ng-controller="ViewCtrl">
     <div class="slides">
         <section>
+        {% set ignore=False %}
         {% for t in text %}
-            {% if t['html'] == "<div></div>" %}
+            {% if t['html'] == "<div></div>" or t['html'].startswith("<h1") %}
                 </section><section>
             {% endif %}
             {{ t['html']|safe }}
