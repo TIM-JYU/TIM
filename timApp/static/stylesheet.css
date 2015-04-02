@@ -1555,7 +1555,6 @@ img.console {
   #contents {
       display: none;
   }
-
     /* Harmaa varjo dokumentilta pois */ 
     .material {
         box-shadow: none !important;
