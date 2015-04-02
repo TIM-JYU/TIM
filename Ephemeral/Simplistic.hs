@@ -1,5 +1,6 @@
 {-#LANGUAGE OverloadedStrings, ScopedTypeVariables, TupleSections#-}
 module Main where
+import Data.Monoid
 import qualified Text.Pandoc as PDC
 import qualified Text.Pandoc.Options as PDC_Opt
 import Data.Cache.LRU.IO as LRU
@@ -35,6 +36,8 @@ import Data.HashSet (HashSet)
 import Data.Hashable
 import Data.UUID
 import Data.UUID.V4
+import SecSplit
+import Data.Attoparsec.Text
 
 newtype DocID = DocID T.Text deriving(Eq,Ord,Show)
 
@@ -61,22 +64,25 @@ convert :: BS.ByteString -> Doc
 convert bs =  Doc (Seq.fromList convBlocks) fbii
             where 
                 blocks = 
-                  case (PDC.readMarkdown PDC.def . T.unpack . T.decodeUtf8 . LBS.toStrict .
-                        normaliseCRLF $ bs) of 
-                    PDC.Pandoc _ blocks -> blocks
+                  case parseOnly (document<*endOfInput) (T.decodeUtf8 bs) of 
+                    Left err      -> [Body (Sum (BS.length bs)) (T.decodeUtf8 bs)]
+                    Right blocked -> blocked
                 convBlocks = map convertBlock blocks
                 fbii = HashMap.fromListWith mappend [(bHash b,Set.singleton i) | (b,i) <- zip convBlocks [0..]]
                 normaliseCRLF  = BS.replace "\r\n" ("\n"::BS.ByteString)
                 htmlOpts = PDC.def{PDC.writerHTMLMathMethod=PDC.MathJax 
                             "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"}
                 markdownOpts = PDC.def{PDC.writerSetextHeaders=False}
-                convertBlock t = let pdc  = PDC.Pandoc mempty . box $ t
-                                     pckd = (T.pack . PDC.writeMarkdown markdownOpts $ pdc) 
-                                 in Block
-                                     pckd 
-                                     (renderHtml   . PDC.writeHtml      htmlOpts     $ pdc)
-                                     (Set.fromList . map T.pack . words . PDC.writeMarkdown PDC.def $ pdc)
-                                     (hash $ renorm pckd)
+                convertBlock (Heading _ _ t) 
+                     = Block t
+                             (renderHtml   . PDC.writeHtml      htmlOpts     $ PDC.readMarkdown PDC.def $ T.unpack t)
+                             (Set.fromList . T.words $ t)
+                             (hash $ renorm t)
+                convertBlock (Body _ t)
+                     = Block t
+                             (renderHtml   . PDC.writeHtml      htmlOpts     $ PDC.readMarkdown PDC.def $ T.unpack t)
+                             (Set.fromList . T.words $ t)
+                             (hash $ renorm t)
                 renorm = T.filter isAlphaNum
                             
 
@@ -308,7 +314,7 @@ main = do
         [
          -- Send the whole doc as markdown. Required: [?]
          (":docID", method GET . withDoc $ \d ->
-                traverse (\x -> writeText (markdown x) >> writeText "\n\n") (fromDoc d) >> return ())
+                traverse (\x -> writeText (markdown x)) (fromDoc d) >> return ())
          
          -- Send the whole doc as json containing html for the blocks. Required: [X]
          ,("/json-html/:docID", method GET . withDoc $ \d -> 
