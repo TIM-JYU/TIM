@@ -740,6 +740,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if "java" in ttype or "jcomtest" in ttype or "junit" in ttype or "graphics" in ttype:
             # java
+            classpath = get_param(query, "-cp", ".")
+            print("classpath=" ,classpath)
             package, classname = find_java_package(s)
             javaclassname = classname
             if not classname: classname = "Prg"
@@ -798,7 +800,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "junit":
                 cmdline = "javac %s" % javaname
             elif ttype == "java" or ttype == "graphics":
-                cmdline = "javac -Xlint:all %s" % javaname
+                cmdline = "javac -Xlint:all -cp %s %s" % (classpath, javaname)
             elif ttype == "cc":
                 cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
             elif ttype == "c++":
@@ -1055,7 +1057,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if ttype == "java":
                 print("java: ", javaclassname)
                 # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
-                code, out, err = run2(["java", javaclassname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                code, out, err = run2(["java", "-cp", classpath , javaclassname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                       uargs=userargs)
             elif ttype == "shell":
                 print("shell: ", pure_exename)

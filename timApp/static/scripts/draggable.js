@@ -48,6 +48,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             }
             event.preventDefault();
             //document.getElementById("releaseButton").innerText="dy="+event.touche + " iy="+y + " ix="+x; 
+            //console.log("mouse dy="+event + " iy="+y + " ix="+x);
             var p = getXY(event,x,y,false);
             startX = p.x;
             startY = p.y;
@@ -90,6 +91,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             $document.on(tendEvent, tmouseup);
         }, false);
         */
+        element.context.style.msTouchAction = 'none';
         
         element.on(tstartEvent, function (event) {
             // document.getElementById("releaseButton").innerText="Tarttu"; 
@@ -100,6 +102,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             }
             event.preventDefault();
             // document.getElementById("releaseButton").innerText="dy="+event + " iy="+y + " ix="+x; 
+            // console.log("dy="+event + " iy="+y + " ix="+x);
             var p = getXY(event,x,y,true);
             startX = p.x;
             startY = p.y;

@@ -3,13 +3,13 @@ var csPluginStartTime = new Date();
 
 var csApp = angular.module('csApp', ['ngSanitize']);
 csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
-csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',false); }]);
-csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',false); }]);
+csApp.directive('csJypeliRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
+csApp.directive('csComtestRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',false); }]);
 csApp.directive('csRunnerInput',['$sanitize','$compile', function ($sanitize,$compile1) { "use strict";	csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',true); }]);
-csApp.directive('csJypeliRunnerInput', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',true); }]);
-csApp.directive('csComtestRunnerInput', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',true); }]);
-csApp.directive('csTaunoRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',false); }]);
-csApp.directive('csTaunoRunnerInput', ['$sanitize', function ($sanitize) {"use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('tauno',true); }]);
+csApp.directive('csJypeliRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',true); }]);
+csApp.directive('csComtestRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
+csApp.directive('csTaunoRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
+csApp.directive('csTaunoRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 var TESTWITHOUTPLUGINS = true && false;
@@ -213,9 +213,9 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<button ng-if="isRun"  ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
-				  '<a href="" ng-if="muokattu" ng-click="initCode();">Alusta</a>' +
+				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
-				  ' <a href="" ng-if="!noeditor" ng-click="showAceEditor();">{{editorText[editorIndex]}}</a>' +
+				  ' <a href="" ng-if="!noeditor" ng-click="showAceEditor();">{{editorText[editorMode]}}</a>' +
                   '</p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t === "comtest" || t === "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
@@ -302,15 +302,17 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"button","");
             csApp.set(scope,attrs,"noeditor",false);
             csApp.set(scope,attrs,"norun",false);
+            csApp.set(scope,attrs,"highlight","Highlight");
+            csApp.set(scope,attrs,"editorMode",0);
             csApp.set(scope,attrs,"showCodeOn","Näytä koko koodi");
             csApp.set(scope,attrs,"showCodeOff","Piilota muu koodi");
+            csApp.set(scope,attrs,"resetText","Alusta");
             // csApp.set(scope,attrs,"program");
 
             scope.showCodeLink = scope.showCodeOn;
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
-            scope.editorIndex = 0;
-            scope.editorText = ["Highlight","Normal"];
+            scope.editorText = [scope.highlight,"Normal"];
             
             scope.toggleEditorText = ["Muokkaa","Piilota"];
 
@@ -380,10 +382,12 @@ csApp.directiveFunction = function(t,isInput) {
             //scope.out = element[0].getElementsByClassName('console');
             scope.element0 = element[0];
             if ( scope.attrs.autorun ) scope.runCodeLink();
+            if ( scope.editorMode != 0 ) scope.showAceEditor(scope.editorMode);
             scope.mode = languageTypes.getAceModeType(scope.type,"");
             var d = new Date();
             var diff = d - csPluginStartTime;
             console.log("cs: " + d.toLocaleTimeString()+ " " + diff.valueOf() + " - " + scope.taskId);          
+            
 		},		
 		scope: {},				 
 		controller: csApp.Controller,
@@ -920,7 +924,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         });
     };
     
-    $scope.showAceEditor = function() {
+    $scope.showAceEditor = function(editorMode) {
         var editorHtml = '<textarea class="csRunArea csrunEditorDiv" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>';
 
         var aceHtml = '<div class="no-popup-menu"><div ng-show="mode" ui-ace="{onLoad:aceLoaded,  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
@@ -938,11 +942,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                    '</div>';
         var html = [editorHtml,aceHtml];                    
         $scope.mode = languageTypes.getAceModeType($scope.type,"");
-        $scope.editorIndex++; if ( $scope.editorIndex > 1 ) $scope.editorIndex = 0; 
+        if (typeof editorMode !== 'undefined') $scope.editorMode = editorMode;
+        else $scope.editorMode++; 
+        if ( $scope.editorMode > 1 ) $scope.editorMode = 0; 
         
         var aceEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
         var editorDiv = angular.element(aceEditDiv); 
-        editorDiv.html(csApp.compile(html[$scope.editorIndex])($scope));
+        editorDiv.html(csApp.compile(html[$scope.editorMode])($scope));
         //$scope.aceEditor.setFontSize(30);
         $scope.aceEditor.setOptions({
             maxLines: $scope.maxRows
@@ -984,6 +990,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.irrotaKiinnita = "Irrota";
         } else {
             $scope.canvas.style["position"] = "fixed"        
+            $scope.canvas.style["width"] = 900;
             $scope.irrotaKiinnita = "Kiinnitä";
         }
     }
@@ -995,7 +1002,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             if ( $scope.iframe ) {
                 var v = $scope.getVid();
                 $scope.irrotaKiinnita = "Irrota";
-                $scope.canvas = angular.element('<div tim-draggable-fixed style="top: 91px; right: 200px;" >'+
+                $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px;" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></div></span>'+
                   '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html?scripts='+$scope.attrs.scripts + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
                   '</div>');
