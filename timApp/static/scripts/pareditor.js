@@ -97,6 +97,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.deleteClicked = function () {
+                    if (!$window.confirm("Delete - are you sure?")) {
+                        return;
+                    }
                     $http.post($scope.deleteUrl, $scope.extraData).
                         success(function (data, status, headers, config) {
                             $scope.afterDelete({

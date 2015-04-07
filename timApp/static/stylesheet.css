@@ -1292,6 +1292,8 @@ img.console {
     top: 0;
     left: 0;
     z-index: 1;
+    bottom: 0;
+    overflow-y: auto;
 }
 
 .sidebar {
@@ -1553,7 +1555,6 @@ img.console {
   #contents {
       display: none;
   }
-
     /* Harmaa varjo dokumentilta pois */ 
     .material {
         box-shadow: none !important;
