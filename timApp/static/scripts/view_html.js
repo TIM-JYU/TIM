@@ -275,9 +275,17 @@ timApp.controller("ViewCtrl", [
                 len = data.texts.length;
             http.defaults.headers.common.Version = data.version;
             for (var i = len - 1; i >= 0; i--) {
-                var $newpar = $("<div>", {class: "par"});
-                $par.after($newpar
-                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i].html)(sc))));
+                var $newpar = $("<div>", {class: "par"})
+                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i].html)(sc)));
+                var readClass = "unread";
+                if (i === 0 && !$par.hasClass("new")) {
+                    $par.find(".notes").appendTo($newpar);
+                    if ($par.find(".read, .modified").length > 0) {
+                        readClass = "modified";
+                    }
+                }
+                $par.after($newpar.append($("<div>",
+                    {class: "readline " + readClass, title: "Click to mark this paragraph as read"})));
                 sc.processMath($newpar[0]);
             }
             $par.remove();
@@ -286,12 +294,14 @@ timApp.controller("ViewCtrl", [
 
         sc.addEvent(".readline", function (e) {
             var par_id = sc.getParIndex($(this).parents('.par'));
-            $(this).hide();
+            var oldClass = $(this).attr("class");
+            $(this).attr("class", "readline read");
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
                 }).error(function (data, status, headers, config) {
                     $window.alert('Could not save the read marking.');
+                    $(this).attr("class", oldClass);
                 });
         });
 

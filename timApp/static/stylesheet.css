@@ -433,7 +433,6 @@ ul ul  ul, ol ol ol {
 }
 
 .material {
-	display: inline-block;
 	width: 90%;
 }
 
@@ -1293,6 +1292,8 @@ img.console {
     top: 0;
     left: 0;
     z-index: 1;
+    bottom: 0;
+    overflow-y: auto;
 }
 
 .sidebar {
@@ -1531,10 +1532,6 @@ img.console {
   display: none;
   }
 
-  .unread {
-  display: none;
-  }
-
   .parContent {
   position: static;
   border: 0px;
@@ -1555,6 +1552,9 @@ img.console {
   display: none;
  }
 
+  #contents {
+      display: none;
+  }
     /* Harmaa varjo dokumentilta pois */ 
     .material {
         box-shadow: none !important;
