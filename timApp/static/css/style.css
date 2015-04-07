@@ -120,7 +120,7 @@
 }
 
 .wall-behind {
-    max-width: 20em;
+    width: 20em;
     z-index: 6;
     position: fixed;
     bottom: 2%;
@@ -145,6 +145,8 @@
 .wall-topbar {
     width: 100%;
     background-color: #cccccc;
+    height: 10%;
+    
 
 }
 
