@@ -261,7 +261,7 @@ CREATE TABLE ReadParagraphs (
 );
 
 CREATE TABLE `Question` (
-  `question_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  `question_id` INTEGER NOT NULL PRIMARY KEY,
   `doc_id`      INTEGER NOT NULL,
   `par_index`   INTEGER NOT NULL,
   `question`    TEXT    NOT NULL,
@@ -269,7 +269,7 @@ CREATE TABLE `Question` (
 );
 
 CREATE TABLE `Message` (
-	`msg_id`	INTEGER PRIMARY KEY AUTOINCREMENT,
+	`msg_id`	INTEGER PRIMARY KEY,
 	`user_id`	INTEGER NOT NULL,
 	`message`	TEXT NOT NULL,
 	`timestamp`	TEXT NOT NULL
