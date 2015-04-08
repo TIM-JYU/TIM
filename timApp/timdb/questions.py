@@ -68,3 +68,14 @@ class Questions(TimDbBase):
             self.db.commit()
         question_id = cursor.lastrowid
         return question_id
+
+
+    @contract
+    def get_doc_questions(self, doc_id: 'int') -> 'list(dict)':
+        """
+        Gets questions related to a specific document
+        """
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT * FROM Question WHERE doc_id = ?""", [doc_id])
+
+        return self.resultAsDictionary(cursor)
