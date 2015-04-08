@@ -126,7 +126,7 @@
             </div>
         </question-dialog>
 
-        <div ng-controller="WallController" class="wall-behind">
+        <div ng-controller="WallController" class="wall-behind" id="wall">
             <div class="wall-topbar">
                 <div class="wall-topbar-content" ng-click="hide()">
                     Wall
@@ -137,7 +137,7 @@
                 <div ng-show="showWall">
                     <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
 
-                    <div class="buttons">
+                    <div class="wallButtons">
                         <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="enterPressed($event)"
                                ng-readonly="!polling">
                         <button ng-click="sendMessageEvent(newMsg)">Send</button>
