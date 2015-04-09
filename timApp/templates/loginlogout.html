@@ -1,7 +1,8 @@
 <div class="viewLogin">
 {% if session.user_id %}
-        <span>Logged in as: {{ session.real_name }} ({{ session.user_name }})</span>
-        <form method="POST" action="/logout">
+        <span>Logged in as: <br>{{ session.real_name }} ({{ session.user_name }})</span>
+        <br>
+		<form method="POST" action="/logout">
             <input type="submit" value="Logout">
         </form>
     {% else %}
