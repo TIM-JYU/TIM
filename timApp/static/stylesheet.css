@@ -95,7 +95,7 @@ body {
 
 .viewLogin {
     font-size: 0.7em;
-    color: #3cc;
+    color: #3CC;
     text-align: right;
 }
 
@@ -743,6 +743,7 @@ div.header {
 	/*padding: 1em 0 0.4em 0;*/
 	padding: 0;
 }
+
 
 div.header:hover .anchor {
 	visibility: visible;
