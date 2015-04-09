@@ -66,6 +66,7 @@
 
 {% endblock %}
 {% block content %}
+
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
         <div id="contents" ng-show="indexTable.length > 0">
             <div class="menu">
@@ -126,22 +127,26 @@
             </div>
         </question-dialog>
 
-        <div ng-controller="WallController" class="wall-behind" id="wall">
-            <div class="wall-topbar">
-                <div class="wall-topbar-content" ng-click="hide()">
-                    Wall
-                    <div id="rightWall">
-                        <input type="button" ng-click="detach()" id="detachButton" id="buttonRight">
+        <div ng-controller="WallController">
+            <input type="button" ng-click="startLecture()" value="Start" ng-show="canStart">
+            <input type="button" ng-click="stopLecture()" value="Stop" ng-show="canStop">
+            <div class="wall-behind" id="wall" ng-show="isLecture">
+                <div class="wall-topbar">
+                    <div class="wall-topbar-content" ng-click="hide()">
+                        Wall
+                        <div id="rightWall">
+                            <input type="button" ng-click="detach()" id="detachButton" id="buttonRight">
+                        </div>
                     </div>
-                </div>
-                <div ng-show="showWall">
-                    <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+                    <div ng-show="showWall">
+                        <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
 
-                    <div class="wallButtons">
-                        <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="enterPressed($event)"
-                               ng-readonly="!polling">
-                        <button ng-click="sendMessageEvent(newMsg)">Send</button>
-                        <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button>
+                        <div class="wallButtons">
+                            <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="enterPressed($event)"
+                                   ng-readonly="!polling">
+                            <button ng-click="sendMessageEvent(newMsg)">Send</button>
+                            <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button>
+                        </div>
                     </div>
                 </div>
             </div>
