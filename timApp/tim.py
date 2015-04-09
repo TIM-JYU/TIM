@@ -209,7 +209,8 @@ def get_wall():
 @app.route('/getAllMessages')
 def get_all_messages():
     timdb = getTimDb()
-    messages = timdb.messages.get_messages()
+    wall_name = request.args.get("wall_name")
+    messages = timdb.messages.get_messages(wall_name)
     if len(messages) > 0:
         list_of_new_messages = []
         for message in messages:
@@ -225,16 +226,17 @@ def get_all_messages():
 @app.route('/getMessages')
 def get_messages():
     client_last_id = int(request.args.get('id'))
+    wall_name = request.args.get("wall_name")
     timdb = getTimDb()
     step = 0
 
     while step <= 10:
-        last_message = timdb.messages.get_last_message()
+        last_message = timdb.messages.get_last_message(wall_name)
         if last_message:
             last_message_id = last_message[-1].get('msg_id')
             if last_message_id != client_last_id:
                 amount_of_new_messages = last_message_id - client_last_id
-                messages = timdb.messages.get_messages_amount(amount_of_new_messages)
+                messages = timdb.messages.get_messages_amount(wall_name, amount_of_new_messages)
                 messages.reverse()
                 list_of_new_messages = []
 
@@ -255,9 +257,11 @@ def get_messages():
 def send_message():
     timdb = getTimDb()
     new_message = request.args.get("message")
+    lecture_id = int(request.args.get("lecture_id"))
+    wall_name = request.args.get("wall_name")
 
     new_timestamp = str(datetime.datetime.now())
-    msg_id = timdb.messages.add_message(getCurrentUserId(), new_message, new_timestamp, True)
+    msg_id = timdb.messages.add_message(wall_name, getCurrentUserId(), lecture_id, new_message, new_timestamp, True)
     return jsonResponse(msg_id)
 
 
@@ -293,6 +297,30 @@ def add_question():
     timdb = getTimDb()
     questions = timdb.questions.add_questions(doc_id, par_index, question, answer)
     return jsonResponse(questions)
+
+
+@app.route('/createLecture', methods=['POST'])
+def start_lecture():
+    doc_id = int(request.args.get("doc_id"))
+    verifyOwnership(doc_id)
+    timdb = getTimDb()
+    new_timestamp = str(datetime.datetime.now())
+    lecture_id = timdb.lectures.create_lecture(doc_id, new_timestamp, "Joskus", "code111", "", True)
+    timdb.lectures.add_user_to_lecture(lecture_id, getCurrentUserId(), True)
+    wall_name = timdb.messages.create_message_table(lecture_id, True)
+    return jsonResponse({"lectureId": lecture_id, "wallName": wall_name})
+
+
+@app.route('/deleteLecture', methods=['POST'])
+def stop_lecture():
+    doc_id = int(request.args.get("doc_id"))
+    verifyOwnership(doc_id)
+    wall_name = request.args.get("wall_name")
+    lecture_id = int(request.args.get("lecture_id"))
+    timdb = getTimDb()
+    timdb.messages.delete_message_table(wall_name, True)
+    timdb.lectures.delete_lecture(lecture_id, True)
+    return jsonResponse("It's gone")
 
 
 @app.route('/uploads/<filename>')

@@ -128,8 +128,8 @@
         </question-dialog>
 
         <div ng-controller="WallController">
-            <input type="button" ng-click="startLecture()" value="Start" ng-show="canStart">
-            <input type="button" ng-click="stopLecture()" value="Stop" ng-show="canStop">
+            <input type="button" ng-click="createLecture()" value="Create" ng-show="canStart">
+            <input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
             <div class="wall-behind" id="wall" ng-show="isLecture">
                 <div class="wall-topbar">
                     <div class="wall-topbar-content" ng-click="hide()">
