@@ -1,230 +1,230 @@
 <fieldset class="window">
-   <h1>Create Lecture</h1>
-   <link rel="stylesheet" href="../../static/windowstyle.css">
-   <div>
-      <form class="createLecture">
-		 <div id="infoFields">
-			 <label for="lectureCode" >Lecture code:</label>
-			 <input id="lCode" type="text" name="code" size="45">
-			 <br>
-			 <label for="password">Password:</label>
-			 <input type="text" size="45">
-			 <br>
-		 </div>
-		 <div class="startingTime">
-			 <label id="lbstart" for="startTime">Starting time:</label>
-			 <br>
-			 <br>
-			 <div id="startInfo">
-				 <input type="radio" id="dateChosen" name="start" onclick="enableDate1()">
-				 <label for="useDate">Use date:</label>
-					<div class="date1">
-						   <label for="startDate">Date:</label>
-						   <input type="text" id="startDay" maxlength="2" size="2" placeholder="dd">
-						   <label>.</label>
-						   <input type="text" id="startMonth" maxlength="2" size="2" placeholder="mm">
-						   <label>.</label>
-						   <input type="text" id="startYear" maxlength="4" size="4" placeholder="yyyy">
-						   <label for="startDate">Time:</label>
-						   <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh">
-						   <label>:</label)>
-						   <input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm">
-						   <select id="startampm">
-							  <option value="am">AM</option>
-							  <option id="startpm" value="pm">PM</option>
-						   </select>
-					</div>
-				 <br>
-				 <input id="dueChosen" type="radio" name="start" onclick="enableDue1()">
-				 <label for="useTime">Due in:</label>
-					<div>
-					   <label for="hours">Hours:</label>
-					   <input id ="hours1" type="text" name="hour" maxlength="2" size="2">
-					   <label for="mins">Min:</label>
-					   <input id="mins1" type="text" name="min" maxlength="2" size="2">
-					   <label for="secs">Sec:</label>
-					   <input id="sec1" type="text" name="min" maxlength="2" size="2">
-					</div>
-				 <br>
-			 </div>
-		 </div>
-		 <div class="endingTime">
-			 <label id="lbend" for="endTime">Ending time:</label>
-			 <br>
-			 <br>
-			 <div id="endInfo">
-				<input type="radio" id="dateChosen2" name="stop" onclick="enableDate2()">
-				<label for="useDate">Use date:</label>
-					<div>
-					   <label for="endDate">Date:</label>
-					   <input type="text" id="stopDay" maxlength="2" size="2" placeholder="dd">
-					   <label>.</label>
-					   <input type="text" id="stopMonth" maxlength="2" size="2" placeholder="mm">
-					   <label>.</label>
-					   <input type="text" id="stopYear" maxlength="4" size="4" placeholder="yyyy">
-					   <label for="startDate">Time:</label>
-					   <input type="text" id="stopHour" name="hour" maxlength="2" size="2" placeholder="hh">
-					   <label>:</label)>
-					   <input type="text" id="stopMin" name="min" maxlength="2" size="2" placeholder="mm">
-					   <select id="stopampm">
-						  <option value="am">AM</option>
-						  <option id="stoppm" value="pm">PM</option>
-					   </select>
-					</div>
-				 <br>
-				 <input type="radio" id="durationChosen" name="stop" onclick="enableDue2()">
-				 <label for="useTime">Duration:</label>
-					<div>
-					   <label for="hours">Hours:</label>
-					   <input id="hours2" type="text" name="hour" maxlength="2" size="2">
-					   <label for="mins">Min:</label>
-					   <input id="mins2" type="text" name="min" maxlength="2" size="2">
-					   <label for="secs">Sec:</label>
-					   <input id="sec2" type="text" name="min" maxlength="2" size="2">
-					</div>
-				 <br>
-			 </div>
-		 </div>
-		 <div class="buttons">
-			 <input type="button" class="button" value="Submit" onclick="submitLecture()">
-			 <input type="button" class="button" value="Cancel" onclick="cancelCreation()">
-		 </div>
-		 <p id="demo"></p>
-	  </form>
-   </div>
- </fieldset>
- 
+    <h1>Create Lecture</h1>
+    <link rel="stylesheet" href="../../static/windowstyle.css">
+    <div>
+        <form class="createLecture">
+            <div id="infoFields">
+                <label for="lectureCode">Lecture code:</label>
+                <input id="lCode" type="text" name="code" size="45" ng-model="lectureCode">
+                <br>
+                <label for="password">Password:</label>
+                <input type="text" size="45" ng-model="password">
+                <br>
+            </div>
+            <div class="startingTime">
+                <label id="lbstart" for="startTime">Starting time:</label>
+                <br>
+                <br>
+
+                <div id="startInfo">
+                    <input type="radio" id="dateChosen" name="start" onclick="enableDate1()">
+                    <label for="useDate">Use date:</label>
+
+                    <div class="date1">
+                        <label for="startDate">Date:</label>
+                        <input type="text" id="startDay" maxlength="2" size="2" placeholder="dd" ng-model="startDay">
+                        <label>.</label>
+                        <input type="text" id="startMonth" maxlength="2" size="2" placeholder="mm"
+                               ng-model="startMonth">
+                        <label>.</label>
+                        <input type="text" id="startYear" maxlength="4" size="4" placeholder="yyyy"
+                               ng-model="startYear">
+                        <label for="startDate">Time:</label>
+                        <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
+                               ng-model="startHour">
+                        <label>:</label>
+                        <input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
+                               ng-model="startMin">
+                        <select id="startampm">
+                            <option value="am">AM</option>
+                            <option id="startpm" value="pm">PM</option>
+                        </select>
+                    </div>
+                    <br>
+                    <input id="dueChosen" type="radio" name="start" onclick="enableDue1()">
+                    <label for="useTime">Due in:</label>
+
+                    <div>
+                        <label for="hours">Hours:</label>
+                        <input id="hours1" type="text" name="hour" maxlength="2" size="2">
+                        <label for="mins">Min:</label>
+                        <input id="mins1" type="text" name="min" maxlength="2" size="2">
+                        <label for="secs">Sec:</label>
+                        <input id="sec1" type="text" name="min" maxlength="2" size="2">
+                    </div>
+                    <br>
+                </div>
+            </div>
+            <div class="endingTime">
+                <label id="lbend" for="endTime">Ending time:</label>
+                <br>
+                <br>
+
+                <div id="endInfo">
+                    <input type="radio" id="dateChosen2" name="stop" onclick="enableDate2()">
+                    <label for="useDate">Use date:</label>
+
+                    <div>
+                        <label for="endDate">Date:</label>
+                        <input type="text" id="stopDay" maxlength="2" size="2" placeholder="dd" ng-model="endDay">
+                        <label>.</label>
+                        <input type="text" id="stopMonth" maxlength="2" size="2" placeholder="mm" ng-model="endMonth">
+                        <label>.</label>
+                        <input type="text" id="stopYear" maxlength="4" size="4" placeholder="yyyy" ng-model="endYear">
+                        <label for="startDate">Time:</label>
+                        <input type="text" id="stopHour" name="hour" maxlength="2" size="2" placeholder="hh"
+                               ng-model="endHour">
+                        <label>:</label>
+                        <input type="text" id="stopMin" name="min" maxlength="2" size="2" placeholder="mm"
+                               ng-model="endMin">
+                        <select id="stopampm">
+                            <option value="am">AM</option>
+                            <option id="stoppm" value="pm">PM</option>
+                        </select>
+                    </div>
+                    <br>
+                    <input type="radio" id="durationChosen" name="stop" onclick="enableDue2()">
+                    <label for="useTime">Duration:</label>
+
+                    <div>
+                        <label for="hours">Hours:</label>
+                        <input id="hours2" type="text" name="hour" maxlength="2" size="2">
+                        <label for="mins">Min:</label>
+                        <input id="mins2" type="text" name="min" maxlength="2" size="2">
+                        <label for="secs">Sec:</label>
+                        <input id="sec2" type="text" name="min" maxlength="2" size="2">
+                    </div>
+                    <br>
+                </div>
+            </div>
+            <div class="buttons">
+                <input type="button" class="button" value="Submit" ng-click="createLecture()">
+                <input type="button" class="button" value="Cancel" onclick="cancelCreation()">
+            </div>
+            <p id="demo"></p>
+        </form>
+    </div>
+</fieldset>
+
 <script>
 
-	function getDateAndTime() {
-		var date = new Date();
+    function getDateAndTime() {
+        var date = new Date();
 
-		var day = date.getDate();
-		var month = date.getMonth() + 1;
-		var year = date.getFullYear();
-		var hour = date.getHours();
-		var minutes = date.getMinutes();
-		var seconds = date.getSeconds();
-		var isPM = false;
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        var hour = date.getHours();
+        var minutes = date.getMinutes();
+        var seconds = date.getSeconds();
+        var isPM = false;
 
-		if (month < 10) month = "0" + month;
-		if (day < 10) day = "0" + day;
-		if (hour == 12) isPM = true;
-		if (hour == 0) hour = 12;
-		if (hour < 10) hour = "0" + hour;
-		if (hour > 12) { isPM = true; hour = hour-12;}
-		if (minutes < 10) minutes = "0" + minutes;
-		if (seconds < 10) seconds = "0" + seconds;
+        if (month < 10) month = "0" + month;
+        if (day < 10) day = "0" + day;
+        if (hour == 12) isPM = true;
+        if (hour == 0) hour = 12;
+        if (hour < 10) hour = "0" + hour;
+        if (hour > 12) {
+            isPM = true;
+            hour = hour - 12;
+        }
+        if (minutes < 10) minutes = "0" + minutes;
+        if (seconds < 10) seconds = "0" + seconds;
 
-		var today = year + "-" + month + "-" + day;  
-		var time = hour + ":" + minutes + ":" + seconds;	
-		var dateTimeNow = today + "T"  + time;
-		return [day, month, year, hour, minutes, seconds, isPM, today, time, dateTimeNow];
-	}
-	function enableDate1() {
-		
-		var date = getDateAndTime();
-		document.getElementById("startDay").value = date[0];
-		document.getElementById("startMonth").value = date[1];
-		document.getElementById("startYear").value = date[2];
-		document.getElementById("startHour").value = date[3];
-		document.getElementById("startMin").value = date[4];
-		document.getElementById("startpm").selected = date[6];
-		document.getElementById("startDay").disabled = false;
-		document.getElementById("startMonth").disabled = false;
-		document.getElementById("startYear").disabled = false;
-		document.getElementById("startHour").disabled = false;
-		document.getElementById("startMin").disabled = false;
-		document.getElementById("startampm").disabled = false;
-		document.getElementById("hours1").disabled = true;
-		document.getElementById("mins1").disabled = true;
-		document.getElementById("sec1").disabled = true;
-		document.getElementById("hours1").value = "";
-		document.getElementById("mins1").value = "";
-		document.getElementById("sec1").value = "";
-	}
-	
-		function enableDue1() {
-		document.getElementById("hours1").disabled = false;
-		document.getElementById("mins1").disabled = false;
-		document.getElementById("sec1").disabled = false;
-		document.getElementById("startDay").value = "";
-		document.getElementById("startMonth").value = "";
-		document.getElementById("startYear").value = "";
-		document.getElementById("startHour").value = "";
-		document.getElementById("startMin").value = "";
-		document.getElementById("startDay").disabled = true;
-		document.getElementById("startMonth").disabled = true;
-		document.getElementById("startYear").disabled = true;
-		document.getElementById("startHour").disabled = true;
-		document.getElementById("startMin").disabled = true;
-		document.getElementById("startampm").disabled = true;
-	}
-	
-	function enableDate2() {
-	
-		if (document.getElementById("dateChosen").checked == true) {
-			var hours = parseInt(document.getElementById("startHour").value) + 2;
-			if (hours > 12) {
-				document.getElementById("stoppm").selected = true; 
-				document.getElementById("stopHour").value= hours-12;
-				}
-			else document.getElementById("stoppm").selected = false;
-			
-			document.getElementById("stopDay").value = document.getElementById("startDay").value;
-			document.getElementById("stopMonth").value = document.getElementById("startMonth").value;
-			document.getElementById("stopYear").value = document.getElementById("startYear").value;
-			document.getElementById("stopMin").value = document.getElementById("startMin").value;
-			document.getElementById("stopHour").value = hours;
-		}		
-		
-		document.getElementById("stopDay").disabled = false;
-		document.getElementById("stopMonth").disabled = false;
-		document.getElementById("stopYear").disabled = false;
-		document.getElementById("stopHour").disabled = false;
-		document.getElementById("stopMin").disabled = false;
-		document.getElementById("stopampm").disabled = false;
-		document.getElementById("hours2").disabled = true;
-		document.getElementById("mins2").disabled = true;
-		document.getElementById("sec2").disabled = true;
-		document.getElementById("hours2").value = "";
-		document.getElementById("mins2").value = "";
-		document.getElementById("sec2").value = "";
-	}
-	
-		function enableDue2() {
-		document.getElementById("hours2").disabled = false;
-		document.getElementById("mins2").disabled = false;
-		document.getElementById("sec2").disabled = false;
-		document.getElementById("stopDay").value = "";
-		document.getElementById("stopMonth").value = "";
-		document.getElementById("stopYear").value = "";
-		document.getElementById("stopHour").value = "";
-		document.getElementById("stopMin").value = "";
-		document.getElementById("stopDay").disabled = true;
-		document.getElementById("stopMonth").disabled = true;
-		document.getElementById("stopYear").disabled = true;
-		document.getElementById("stopHour").disabled = true;
-		document.getElementById("stopMin").disabled = true;
-		document.getElementById("stopampm").disabled = true;
-	}
-	
-	function submitLecture() {
-		if (document.getElementById("lCode").value == "") {
-			document.getElementById("lCode").style.border = "1px solid red";
-			document.getElementById("lCode").title = "You must type in something.";
-		}
-		if (document.getElementById("dateChosen").checked == false && document.getElementById("dueChosen").checked == false) {
-			document.getElementById("lbstart").style.border = "1px solid red";
-			document.getElementById("lbstart").title = "You must select something.";
-		}
-		if (document.getElementById("dateChosen2").checked == false && document.getElementById("durationChosen").checked == false) {
-			document.getElementById("lbend").style.border = "1px solid red";
-			document.getElementById("lbend").title = "You must select something.";
-		}
-	}
-	
-	function cancelCreation() {
-		document.getElementById("startLecturedialog").style.display = "none";
-	}
+        var today = year + "-" + month + "-" + day;
+        var time = hour + ":" + minutes + ":" + seconds;
+        var dateTimeNow = today + "T" + time;
+        return [day, month, year, hour, minutes, seconds, isPM, today, time, dateTimeNow];
+    }
+    function enableDate1() {
+
+        var date = getDateAndTime();
+        document.getElementById("startDay").value = date[0];
+        document.getElementById("startMonth").value = date[1];
+        document.getElementById("startYear").value = date[2];
+        document.getElementById("startHour").value = date[3];
+        document.getElementById("startMin").value = date[4];
+        document.getElementById("startpm").selected = date[6];
+        document.getElementById("startDay").disabled = false;
+        document.getElementById("startMonth").disabled = false;
+        document.getElementById("startYear").disabled = false;
+        document.getElementById("startHour").disabled = false;
+        document.getElementById("startMin").disabled = false;
+        document.getElementById("startampm").disabled = false;
+        document.getElementById("hours1").disabled = true;
+        document.getElementById("mins1").disabled = true;
+        document.getElementById("sec1").disabled = true;
+        document.getElementById("hours1").value = "";
+        document.getElementById("mins1").value = "";
+        document.getElementById("sec1").value = "";
+    }
+
+    function enableDue1() {
+        document.getElementById("hours1").disabled = false;
+        document.getElementById("mins1").disabled = false;
+        document.getElementById("sec1").disabled = false;
+        document.getElementById("startDay").value = "";
+        document.getElementById("startMonth").value = "";
+        document.getElementById("startYear").value = "";
+        document.getElementById("startHour").value = "";
+        document.getElementById("startMin").value = "";
+        document.getElementById("startDay").disabled = true;
+        document.getElementById("startMonth").disabled = true;
+        document.getElementById("startYear").disabled = true;
+        document.getElementById("startHour").disabled = true;
+        document.getElementById("startMin").disabled = true;
+        document.getElementById("startampm").disabled = true;
+    }
+
+    function enableDate2() {
+
+        if (document.getElementById("dateChosen").checked == true) {
+            var hours = parseInt(document.getElementById("startHour").value) + 2;
+            if (hours > 12) {
+                document.getElementById("stoppm").selected = true;
+                document.getElementById("stopHour").value = hours - 12;
+            }
+            else document.getElementById("stoppm").selected = false;
+
+            document.getElementById("stopDay").value = document.getElementById("startDay").value;
+            document.getElementById("stopMonth").value = document.getElementById("startMonth").value;
+            document.getElementById("stopYear").value = document.getElementById("startYear").value;
+            document.getElementById("stopMin").value = document.getElementById("startMin").value;
+            document.getElementById("stopHour").value = hours;
+        }
+
+        document.getElementById("stopDay").disabled = false;
+        document.getElementById("stopMonth").disabled = false;
+        document.getElementById("stopYear").disabled = false;
+        document.getElementById("stopHour").disabled = false;
+        document.getElementById("stopMin").disabled = false;
+        document.getElementById("stopampm").disabled = false;
+        document.getElementById("hours2").disabled = true;
+        document.getElementById("mins2").disabled = true;
+        document.getElementById("sec2").disabled = true;
+        document.getElementById("hours2").value = "";
+        document.getElementById("mins2").value = "";
+        document.getElementById("sec2").value = "";
+    }
+
+    function enableDue2() {
+        document.getElementById("hours2").disabled = false;
+        document.getElementById("mins2").disabled = false;
+        document.getElementById("sec2").disabled = false;
+        document.getElementById("stopDay").value = "";
+        document.getElementById("stopMonth").value = "";
+        document.getElementById("stopYear").value = "";
+        document.getElementById("stopHour").value = "";
+        document.getElementById("stopMin").value = "";
+        document.getElementById("stopDay").disabled = true;
+        document.getElementById("stopMonth").disabled = true;
+        document.getElementById("stopYear").disabled = true;
+        document.getElementById("stopHour").disabled = true;
+        document.getElementById("stopMin").disabled = true;
+        document.getElementById("stopampm").disabled = true;
+    }
+
+    function cancelCreation() {
+        document.getElementById("startLecturedialog").style.display = "none";
+    }
 </script>
