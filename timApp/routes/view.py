@@ -100,6 +100,9 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
     editable = hasEditAccess(doc_id)
+
+    questions = timdb.questions.get_doc_questions(doc_id)
+
     return render_template(template_name,
                            docID=doc['id'],
                            docName=doc['name'],
@@ -113,4 +116,5 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            custom_css_files=custom_css_files,
                            custom_css=custom_css,
                            start_index=start_index,
-                           editable=editable)
+                           editable=editable,
+                           questions=questions)
