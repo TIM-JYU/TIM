@@ -2,6 +2,7 @@
  * Created by hajoviin on 24.2.2015.
  */
 
+/* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
 timApp.controller("WallController", ['$scope', '$controller', "$http",
 
     function ($scope, controller, http) {
@@ -11,15 +12,95 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.showPoll = true;
         $scope.polling = true;
         $scope.requestOnTheWay = false;
-        $scope.showWall = true;
+        $scope.showWall = false;
+        $scope.isLecture = false;
+        $scope.canStart = true;
+        $scope.canStop = false;
+        $scope.lectureId = null;
+        $scope.wallName = null;
+        $scope.showLecture = false;
+
+
+        $scope.toggleLecture = function() {
+            $scope.showLecture= !$scope.showLecture
+        }
+
+        $scope.createLecture = function () {
+            var fail = false;
+
+            if (document.getElementById("lCode").value == "") {
+                document.getElementById("lCode").style.border = "1px solid red";
+                document.getElementById("lCode").title = "You must type in something.";
+                fail = true;
+            }
+            if (document.getElementById("dateChosen").checked == false && document.getElementById("dueChosen").checked == false) {
+                document.getElementById("lbstart").style.border = "1px solid red";
+                document.getElementById("lbstart").title = "You must select something.";
+                fail = true;
+            }
+            if (document.getElementById("dateChosen2").checked == false && document.getElementById("durationChosen").checked == false) {
+                document.getElementById("lbend").style.border = "1px solid red";
+                document.getElementById("lbend").title = "You must select something.";
+                fail = true;
+            }
+
+            if (fail) {
+                return;
+            }
+
+            console.log($scope.lectureCode);
+
+            var startDate = "" + $scope.startHour + $scope.startMin + "|" + $scope.startDay + $scope.startMonth + $scope.startYear;
+            var endDate = "" + $scope.endHour + $scope.endMin + "|" + $scope.endDay + $scope.endMonth + $scope.endYear;
+
+            http({
+                url: '/createLecture',
+                method: 'POST',
+                params: {
+                    'doc_id': $scope.docId, 'lecture_code': $scope.lectureCode, 'password': $scope.password,
+                    'start_date': startDate, 'end_date':endDate
+                }
+            })
+                .success(function (answer) {
+                    $scope.canStop = true;
+                    $scope.canStart = false;
+                    $scope.isLecture = true;
+                    $scope.lectureId = answer.lectureId;
+                    $scope.wallName = answer.wallName;
+                    $scope.getAllMessages();
+                    console.log("Lecture created: " + $scope.lectureId);
+                })
+                .error(function () {
+                    console.log("Failed to start a lecture");
+                })
+        };
+        $scope.deleteLecture = function () {
+            http({
+                url: '/deleteLecture',
+                method: 'POST',
+                params: {'doc_id': $scope.docId, 'lecture_id': $scope.lectureId, 'wall_name': $scope.wallName}
+            })
+                .success(function () {
+                    $scope.canStart = true;
+                    $scope.canStop = false;
+                    $scope.polling = false;
+                    $scope.isLecture = false;
+                    $scope.lectureId = null;
+                    console.log("Lecture deleted");
+
+                })
+                .error(function () {
+                    console.log("Failed to delete the lecture");
+                })
+        };
 
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
-        }
+        };
 
         $scope.detach = function () {
             console.log("Should detach this window");
-        }
+        };
 
         $scope.sendMessageEvent = function (message) {
             if (message.trim() == "") {
@@ -30,7 +111,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             http({
                 url: '/sendMessage',
                 method: 'POST',
-                params: {'message': message}
+                params: {'message': message, 'lecture_id': $scope.lectureId, 'wall_name': $scope.wallName}
             })
                 .success(function (answer) {
                     $scope.newMsg = "";
@@ -45,10 +126,13 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.getAllMessages = function () {
             var t;
-            jQuery.ajax({
+            console.log($scope.lectureId);
+            http({
                 url: '/getAllMessages',
                 type: 'GET',
-                success: function (answer) {
+                params: {'wall_name': $scope.wallName}
+            })
+                .success(function (answer) {
                     jQuery.each(answer.data, function (i, msg) {
                         $scope.msg = $scope.msg + msg + "\n";
                         $scope.$apply();
@@ -60,11 +144,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                     t = setTimeout(function () {
                         $scope.startLongPolling($scope.lastID);
                     }, 1000);
-                }
-            });
+                })
         };
-
-        $scope.getAllMessages();
 
         $scope.startLongPolling = function (lastID) {
             function message_longPolling(lastID) {
@@ -78,7 +159,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 jQuery.ajax({
                         url: '/getMessages',
                         type: 'GET',
-                        data: {id: lastID},
+                        data: {id: lastID, wall_name: $scope.wallName},
                         success: function (answer) {
 
                             $scope.requestOnTheWay = false;
@@ -114,12 +195,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                             }
                         }
                         ,
-                        error: function (payload) {
+                        error: function () {
                             $scope.requestOnTheWay = false;
                             clearInterval(t);
                             t = setTimeout(function () {
                                 message_longPolling();
-                            }, 15000);
+                            }, 30000);
                         }
                     }
                 )

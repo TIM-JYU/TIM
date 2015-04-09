@@ -1,0 +1,22 @@
+<!--html for upper menu-->
+<link rel="stylesheet" href="../../static/menustyle.css">
+<div class="menuSection">
+    <div class="lectureSection">
+        <h1>Now:</h1>
+
+        <p id="current">Not running</p>
+        <img id="add-icon" src="../../static/images/add-icon3.png" class="icon" ng-click="toggleLecture()">
+    </div>
+    <div class="lectureSection">
+        <h1>Next:</h1>
+
+        <p id="next">Not planned</p>
+    </div>
+    <div class="loginSection">
+        {% include 'loginlogout.html' %}
+    </div>
+</div>
+<div id="startLecturedialog" ng-show="showLecture">
+    {% include 'start_lecture.html' %}
+
+</div>

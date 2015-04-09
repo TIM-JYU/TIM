@@ -12,6 +12,7 @@ from timdb.answers import Answers
 from timdb.readings import Readings
 from timdb.questions import Questions
 from timdb.messages import Messages
+from timdb.lectures import Lectures
 import os
 
 
@@ -24,7 +25,8 @@ TABLE_NAMES = ['BlockEditAccess',
                'User',
                'UserGroup',
                'Question',
-               'Messages']
+               'Messages',
+               'Lectures']
 
 
 class TimDb(object):
@@ -56,6 +58,7 @@ class TimDb(object):
         self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
         self.questions = Questions(self.db, files_root_path, 'questions', current_user_name)
         self.messages = Messages(self.db, files_root_path, 'messages', current_user_name)
+        self.lectures = Lectures(self.db, files_root_path, 'lectures', current_user_name)
         
         
     def clear(self):

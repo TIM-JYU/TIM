@@ -606,10 +606,10 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         scope.rows = [{
             id: 0,
             text: 'test'
-        },{
+        }, {
             id: 1,
             text: 'test'
-        },{
+        }, {
             id: 2,
             text: 'test'
         }];
@@ -630,7 +630,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             id: 0,
             text: 'True',
             questionPlaceholder: 'column'
-        },{
+        }, {
             id: 1,
             text: 'False',
             questionPlaceholder: 'column'
@@ -638,18 +638,40 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         scope.questionType = "true-false";
     };
 
-    scope.matriisi = function() {
-        scope.rows = [{
-            id: 0,
-            text: 'test'
-        }];
-        scope.columns = [{
-            id: 0,
-            text: 'test',
-            questionPlaceholder: 'column'
-        }];
+    scope.matriisi = function () {
+        scope.rows = [];
+        for (var i = 0; i < 2; i++)
+            scope.rows[i] = {
+                id: i,
+                text: 'test',
+                isDisabled: false
+            }
+
+        scope.columns = [];
+        for (var i = 0; i < 2; i++)
+            scope.columns[i] = {
+                id: i, text: 'test',
+                questionPlaceholder: 'column',
+                isDisabled: false
+            }
+
         scope.questionType = "matriisi";
+
+        scope.columns[scope.columns.length - 1].isDisabled = true;
+        scope.rows[scope.rows.length - 1].isDisabled = true;
+
     };
+
+
+
+    scope.rowClick = function(index) {
+        if(scope.rows[index].isDisabled)
+        {
+            scope.rows[index].isDisabled = false;
+            scope.addRow(index);
+
+        }
+    }
 
     scope.addCol = function (loc) {
         if (loc >= 0) {
@@ -659,7 +681,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             }
         }
         else
-            scope.columns.push({id: scope.columns.length, question: "column", questionPlaceholder: "column", text: ""});
+            scope.columns.push({id: scope.columns.length, question: "column", questionPlaceholder: "column", text: "", isDisabled:true});
     };
 
     scope.addRow = function (loc) {
@@ -670,7 +692,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             }
         }
         else
-            scope.rows.push({id: scope.rows.length, text: ""})
+            scope.rows.push({id: scope.rows.length, text: "", isDisabled: true})
+
+        scope.rows[scope.rows.length -1].isDisabled = true;
     };
 
     scope.delRow = function (indexToBeDeleted) {

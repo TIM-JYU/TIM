@@ -260,17 +260,28 @@ CREATE TABLE ReadParagraphs (
   ON UPDATE RESTRICT
 );
 
-CREATE TABLE `Question` (
-  `question_id` INTEGER NOT NULL PRIMARY KEY,
-  `doc_id`      INTEGER NOT NULL,
-  `par_index`   INTEGER NOT NULL,
-  `question`    TEXT    NOT NULL,
-  `answer`      TEXT
+CREATE TABLE Question (
+  question_id INTEGER NOT NULL PRIMARY KEY,
+  doc_id      INTEGER NOT NULL,
+  par_index   INTEGER NOT NULL,
+  question    TEXT    NOT NULL,
+  answer      TEXT
 );
 
-CREATE TABLE `Message` (
-	`msg_id`	INTEGER PRIMARY KEY,
-	`user_id`	INTEGER NOT NULL,
-	`message`	TEXT NOT NULL,
-	`timestamp`	TEXT NOT NULL
+CREATE TABLE Lecture (
+  lecture_id   INTEGER,
+  lecture_code TEXT,
+  doc_id       INTEGER NOT NULL,
+  start_time   TEXT    NOT NULL,
+  end_time     TEXT,
+  password     TEXT,
+  PRIMARY KEY (lecture_id)
 );
+
+CREATE TABLE LectureUsers (
+  lecture_id INTEGER,
+  user_id    INTEGER,
+  FOREIGN KEY (lecture_id) REFERENCES Lecture (lecture_id),
+  FOREIGN KEY (user_id) REFERENCES User (user_id)
+);
+

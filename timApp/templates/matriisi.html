@@ -11,21 +11,46 @@
     </div>
     <label>Vastausvaihtoehdot:</label>
     <br>
+
     <div id="overflow">
         <table>
             <thead>
+            <!----Top "hidden row" with + and - buttons  ---->
             <tr ng-if="questionType == 'matriisi'">
-                <th></th>
-                <th ng-repeat="item in columns">
+            <tr style="border: none; background-color: inherit">
+                <th width="50px" style="border: none; background-color: inherit">
+                <th style="border: none; background-color: inherit"></th>
+                <th ng-repeat="item in columns" style="border: none; background-color: inherit">
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20"></textarea>
-                        <br />
-                        <div id="buttons">
-                            <button ng-click="addCol($index)">+</button>
-                            <button ng-click="delCol($index)">-</button>
-                        </div>
+
+                        <button ng-click="delCol($index)">-</button>
+                        <button ng-click="addCol($index)" style="float: right; margin-right: -25px;">+</button>
+
+
                     </div>
                 </th>
+
+            </tr>
+            <!--- ends--->
+            <tr>
+                <th width="50px"
+                    style="border-left: none; border-top: none; border-bottom: none; background-color:inherit">
+
+                </th>
+                <th>
+
+                </th>
+
+                <th ng-repeat="item in columns">
+                    <div class="cart">
+                        <textarea form="question-form" rows="1" cols="20" ng-disabled="item.isDisabled"></textarea>
+                        <br/>
+
+                    </div>
+                </th>
+
+            </tr>
+
             </tr>
             <tr ng-if="questionType == 'true-false'">
                 <th></th>
@@ -34,15 +59,17 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="row in rows">
+            <tr ng-repeat="row in rows" ng-click="rowClick($index)">
+                <th width="50px"
+                    style="border-left: none; border-top: none; border-bottom: none; background-color:inherit; vertical-align: bottom">
+                    <button ng-click="delRow($index)">-</button>
+                    <button ng-click="addRow($index)" style="margin-top: 5px">+</button>
+                </th>
                 <th>
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20"></textarea>
-                        <br />
-                        <div id="buttons">
-                            <button ng-click="addRow($index)">+</button>
-                            <button ng-click="delRow($index)">-</button>
-                        </div>
+                        <textarea form="question-form" rows="1" cols="20" ng-disabled="row.isDisabled"></textarea>
+                        <br/>
+
                     </div>
                 </th>
                 <td ng-repeat="column in columns">
@@ -67,7 +94,7 @@
                             <input type="text"
                                    ng-show="column.id == row.id"
                                    size="1"
-                                   placeholder="pts" />
+                                   placeholder="pts"/>
                         </div>
                         <!-- Vapaa tekstivastaus-->
                         <div ng-if="questionType != 'radio-button'">
@@ -79,31 +106,28 @@
                             <!-- Checkbox vaakaan-->
                             <div ng-if="question.matriisi.vastaus == 'checkbox'">
                                 <input type="checkbox"
-                                       ng-model = "row.id"
-                                       ng-true-value = "column.id"
-                                       ng-false-value = "-1"
+                                       ng-model="row.id"
+                                       ng-true-value="column.id"
+                                       ng-false-value="-1"
                                         />
                             </div>
                         </div>
                     </div>
                 </td>
             </tr>
+
+
             </tbody>
         </table>
     </div>
     <div ng-if="questionType == 'true-false'">
-        <button ng-click="addRow(-1)" >add_row</button>
-        <button ng-click="delRow(-1)" >delete_row</button>
+        <button ng-click="delRow(-1)">delete_row</button>
     </div>
     <div ng-if="questionType == 'radio-button'">
-        <button ng-click="addRow(-1)" >add_row</button>
-        <button ng-click="delRow(-1)" >delete_row</button>
+        <button ng-click="delRow(-1)">delete_row</button>
     </div>
     <div ng-if="questionType == 'matriisi'">
-        <button ng-click="addRow(-1)" >add_row</button>
-        <button ng-click="delRow(-1)" >delete_row</button>
-        <button ng-click="delCol(-1)" style="float:right">delete_column</button>
-        <button ng-click="addCol(-1)" style="float:right">add_column</button>
+        <button ng-click="delRow(-1)">delete_row</button>
     </div>
 
     <br>
