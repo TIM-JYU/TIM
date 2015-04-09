@@ -206,21 +206,38 @@ def get_wall():
     return render_template('wall.html')
 
 
+@app.route('/getAllMessages')
+def get_all_messages():
+    timdb = getTimDb()
+    messages = timdb.messages.get_messages()
+    if len(messages) > 0:
+        list_of_new_messages = []
+        for message in messages:
+            user = timdb.users.getUser(message.get('user_id'))
+            list_of_new_messages.append(
+                user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
+        return jsonResponse(
+            {"status": "results", "data": list_of_new_messages, "lastid": messages[-1].get('msg_id')})
+
+    return jsonResponse({"status": "no-results", "data": [], "lastid": -1})
+
+
 @app.route('/getMessages')
 def get_messages():
-    last_id = request.args.get('id')
-    if last_id:
-        last_id = int(last_id)
-
+    client_last_id = int(request.args.get('id'))
     timdb = getTimDb()
     step = 0
-    # TODO: Probably not good idea to get something from database all the time. Might get a bit slow with people
+
     while step <= 10:
-        messages = timdb.messages.get_messages()
-        if len(messages) > 0:
-            list_of_new_messages = []
-            possibly_last_message = timdb.messages.get_message(last_id)
-            if not possibly_last_message:
+        last_message = timdb.messages.get_last_message()
+        if last_message:
+            last_message_id = last_message[-1].get('msg_id')
+            if last_message_id != client_last_id:
+                amount_of_new_messages = last_message_id - client_last_id
+                messages = timdb.messages.get_messages_amount(amount_of_new_messages)
+                messages.reverse()
+                list_of_new_messages = []
+
                 for message in messages:
                     user = timdb.users.getUser(message.get('user_id'))
                     list_of_new_messages.append(
@@ -229,27 +246,9 @@ def get_messages():
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id})
 
-            possibly_last_message = possibly_last_message[-1]
-            for message in messages:
-                if message.get("timestamp") > possibly_last_message.get('timestamp'):
-                    user = timdb.users.getUser(message.get('user_id'))
-                    list_of_new_messages.append(
-                        user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get("message"))
-                    last_message_id = message.get('msg_id')
-
-            if len(list_of_new_messages) > 0:
-                return jsonResponse(
-                    {"status": "results", "data": list_of_new_messages, "lastid": last_message_id})
-
-            else:
-                time.sleep(1)
-
-        else:
-            time.sleep(1)
-
+        time.sleep(1)
         step += 1
-
-    return jsonResponse({"status": "no-results", "data": ["No new messages"], "lastid": last_id})
+    return jsonResponse({"status": "no-results", "data": ["No new messages"], "lastid": client_last_id})
 
 
 @app.route('/sendMessage', methods=['POST'])
@@ -683,5 +682,6 @@ def indexPage():
 def startApp():
     # app.wsgi_app = ReverseProxied(app.wsgi_app)
     # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
+
     # TODO: Think if it is truly necessary to have threaded=True here
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)

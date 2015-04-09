@@ -127,16 +127,27 @@
             </div>
         </question-dialog>
 
-        <div ng-controller="WallController" class="wall-behind">
-            <textarea readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+        <div ng-controller="WallController" class="wall-behind" id="wall">
+            <div class="wall-topbar">
+                <div class="wall-topbar-content" ng-click="hide()">
+                    Wall
+                    <div id="rightWall">
+                        <input type="button" ng-click="detach()" id="detachButton" id="buttonRight">
+                    </div>
+                </div>
+                <div ng-show="showWall">
+                    <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
 
-            <div class="buttons">
-                <input ng-model="newMsg" width="200" ng-keypress="enterPressed($event)" ng-readonly="!polling">
-                <button ng-click="sendMessageEvent(newMsg)">Send</button>
-                <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button>
+                    <div class="wallButtons">
+                        <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="enterPressed($event)"
+                               ng-readonly="!polling">
+                        <button ng-click="sendMessageEvent(newMsg)">Send</button>
+                        <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
+    {{ questions }}
 
 {% endblock %}

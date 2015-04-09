@@ -120,19 +120,51 @@
 }
 
 .wall-behind {
-    max-width: 20em;
+    width: 20em;
     z-index: 6;
     position: fixed;
-    bottom: 5%;
-    right: 5%;
+    bottom: 2%;
+    right: 2%;
     border-style: outset;
 
 }
-.wall-behind textarea{
+
+.wall-behind textarea {
     max-width: 100%;
     resize: none;
 }
 
 .wall-behind input {
-    margin: 5px;
+    margin: 3px;
+}
+
+#messagebox {
+    margin: 10px;
+}
+
+.wall-topbar {
+    width: 100%;
+    background-color: #cccccc;
+    height: 10%;
+    
+
+}
+
+.wall-topbar-content {
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    min-width: 20em;
+    min-height: 30px;
+
+}
+
+#detachButton {
+    background: url("../images/detach.png") no-repeat;
+
+}
+
+#rightWall {
+    float:right;
+    text-align: right;
 }
