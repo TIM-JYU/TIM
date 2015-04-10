@@ -69,7 +69,9 @@ class Messages(TimDbBase):
 
         return self.resultAsDictionary(cursor)
 
-    def get_last_message(self, wall_name:"str") -> 'list(dict)':
+    def get_last_message(self, wall_name: "str") -> 'list(dict)':
+        if not wall_name:
+            wall_name = "Message"
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT *
