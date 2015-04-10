@@ -7,24 +7,6 @@ from timdb.timdbbase import TimDbBase
 
 class Messages(TimDbBase):
     @contract
-    def create_message_table(self, lecture_id: 'int', commit: 'bool'):
-        message_table = "Message" + str(lecture_id)
-        cursor = self.db.cursor()
-        cursor.execute("CREATE TABLE " + message_table +
-                       "(msg_id INTEGER PRIMARY KEY, " +
-                       "user_id INTEGER NOT NULL, " +
-                       "lecture_id INTEGER NOT NULL, " +
-                       "message TEXT NOT NULL," +
-                       "timestamp TEXT NOT NULL" +
-                       ")"
-        )
-
-        if commit:
-            self.db.commit()
-
-        return message_table
-
-    @contract
     def delete_message_table(self, wall_name, commit: 'bool'):
         cursor = self.db.cursor()
         cursor.execute("DROP TABLE " + wall_name)
@@ -43,7 +25,7 @@ class Messages(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def get_messages(self, wall_name: 'string') -> 'list(dict)':
+    def get_messages(self, lecture_id: 'int') -> 'list(dict)':
         """
         Gets the question
         :return: Questions as a list
@@ -51,47 +33,50 @@ class Messages(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT msg_id, user_id, message, timestamp
-                      FROM """ + wall_name
+                      FROM Message
+                      WHERE lecture_id = ?
+                      """, [lecture_id]
         )
 
         return self.resultAsDictionary(cursor)
 
     @contract
-    def get_messages_amount(self, wall_name: 'string', amount: 'int') -> 'list(dict)':
+    def get_messages_amount(self, lecture_id: 'int', amount: 'int') -> 'list(dict)':
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT *
-                      FROM """ + wall_name + """
+                      FROM Message
+                      WHERE lecture_id = (?)
                       ORDER BY msg_id
                       DESC
                       LIMIT (?)
-                      """, [amount])
+                      """, [lecture_id, amount])
 
         return self.resultAsDictionary(cursor)
 
-    def get_last_message(self, wall_name: "str") -> 'list(dict)':
-        if not wall_name:
-            return
+    def get_last_message(self, lecture_id: "int") -> 'list(dict)':
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT *
-                      FROM """+ wall_name + """
+                      FROM Message
+                      WHERE lecture_id = (?)
                       ORDER BY msg_id
                       DESC
                       LIMIT 1
-                      """)
+                      """, [lecture_id])
 
         return self.resultAsDictionary(cursor)
 
     @contract
-    def add_message(self,wall_name: 'string', user_id: 'int', lecture_id: 'int', message: 'str', timestamp: 'str',
+    def add_message(self, user_id: 'int', lecture_id: 'int', message: 'str', timestamp: 'str',
                     commit: 'bool'=True) -> 'int':
         """ Creates a new message
         """
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       INSERT INTO """ + wall_name + """ (user_id,lecture_id,message,timestamp)
+                       INSERT INTO
+                       Message(user_id,lecture_id,message,timestamp)
                        VALUES(?,?,?,?)
                        """, [user_id, lecture_id, message, timestamp])
         if commit:

@@ -195,7 +195,6 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleParEditor($newpar, {showDelete: false});
         });
 
-        // TODO: Keep working here
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
         sc.addEvent(QUESTION_ADD_BUTTON, function (e) {
@@ -505,6 +504,7 @@ timApp.controller("ViewCtrl", ['$scope',
                         }
                         parentEntry.items.push(entry)
                     }
+
                 }
 
                 if (parentEntry != null) {
@@ -556,7 +556,6 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
-
     }]);
 
 timApp.directive('questionDialog', function factory() {
@@ -663,10 +662,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
 
-
-    scope.rowClick = function(index) {
-        if(scope.rows[index].isDisabled)
-        {
+    scope.rowClick = function (index) {
+        if (scope.rows[index].isDisabled) {
             scope.rows[index].isDisabled = false;
             scope.addRow(index);
 
@@ -681,7 +678,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             }
         }
         else
-            scope.columns.push({id: scope.columns.length, question: "column", questionPlaceholder: "column", text: "", isDisabled:true});
+            scope.columns.push({
+                id: scope.columns.length,
+                question: "column",
+                questionPlaceholder: "column",
+                text: "",
+                isDisabled: true
+            });
     };
 
     scope.addRow = function (loc) {
@@ -694,7 +697,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         else
             scope.rows.push({id: scope.rows.length, text: "", isDisabled: true})
 
-        scope.rows[scope.rows.length -1].isDisabled = true;
+        scope.rows[scope.rows.length - 1].isDisabled = true;
     };
 
     scope.delRow = function (indexToBeDeleted) {
