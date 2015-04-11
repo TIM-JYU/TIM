@@ -73,14 +73,14 @@ class Lectures(TimDbBase):
             self.db.commit()
 
     @contract
-    def get_document_lectures(self, doc_id: 'int'):
+    def get_document_lectures(self, doc_id: 'int', time: 'string'):
         cursor = self.db.cursor()
 
         cursor.execute("""
                         SELECT lecture_code
                         FROM Lecture
-                        WHERE doc_id = ?
-                        """, [doc_id])
+                        WHERE doc_id = ? AND start_time < ? AND end_time > ?
+                        """, [doc_id, time, time])
 
         return self.resultAsDictionary(cursor)
 

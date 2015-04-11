@@ -27,10 +27,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             })
                 .success(function (answer) {
                     if (answer.isInLecture) {
+                        console.log("Luennolla?")
                         $scope.inLecture = true;
                         $scope.lectureId = answer.lectureId;
                         $scope.canStop = true;
-                        $scope.getAllMessages();
+                        $scope.polling = true;
+                        if (!$scope.requestOnTheWay) {
+                            $scope.msg = "";
+                            $scope.getAllMessages();
+                        }
                         document.getElementById("lectureName").innerText = answer.lectureCode;
                     } else {
                         $scope.canStart = true;
@@ -39,30 +44,20 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         $scope.inLecture = false;
                         $scope.lectureId = null;
                         document.getElementById("lectureName").innerText = "Not running";
+                        if (answer.lectures != undefined) {
+                            jQuery.each(answer.lectures, function (i, lecture) {
+                                if ($scope.lectures.indexOf(lecture) == -1) {
+                                    $scope.lectures.push(lecture);
+                                }
+                            });
+                        }
                     }
                 })
         }
 
         $scope.checkIfInLecture();
 
-        $scope.getAvailableLectures = function() {
-            http({
-                url: '/getAvailabeLectures',
-                method: 'GET',
-                params: {'doc_id': $scope.docId}
-            })
-                .success(function(answer){
-                    jQuery.each(answer.lectures, function (i, lecture) {
-                        $scope.lectures.push(lecture);
-                    });
-
-            })
-        }
-
-        $scope.getAvailableLectures();
-
-
-        $scope.joinLecture = function() {
+        $scope.joinLecture = function () {
             if ($scope.chosenLecture == "") {
                 console.log("You must choose");
                 return;
@@ -75,11 +70,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 method: 'POST',
                 params: {'lecture_code': $scope.chosenLecture}
             })
-                .success(function(){
+                .success(function () {
                     console.log("Joined to lecture");
-                     $scope.checkIfInLecture();
-
-            })
+                    $scope.checkIfInLecture();
+                })
         }
 
         $scope.toggleLecture = function () {
@@ -112,8 +106,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.toggleLecture()
 
 
-            var startDate = "" + $scope.startHour + $scope.startMin + "|" + $scope.startDay + $scope.startMonth + $scope.startYear;
-            var endDate = "" + $scope.endHour + $scope.endMin + "|" + $scope.endDay + $scope.endMonth + $scope.endYear;
+            var startDate = "" + $scope.startYear + "." + $scope.startMonth + "." + $scope.startDay + "|" + $scope.startHour + ":" + $scope.startMin;
+            var endDate = "" + $scope.endYear + "." + $scope.endMonth + "." + $scope.endDay + "|" + $scope.endHour + ":" + $scope.endMin;
 
             http({
                 url: '/createLecture',
@@ -124,8 +118,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 }
             })
                 .success(function (answer) {
-                    $scope.checkLecture();
-                    console.log("Lecture created: " + $scope.lectureId);
+                    $scope.checkIfInLecture();
+                    console.log("Lecture created: " + answer.lectureId);
                 })
                 .error(function () {
                     console.log("Failed to start a lecture");
@@ -138,7 +132,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
             })
                 .success(function () {
-                    $scope.checkLecture();
+                    $scope.checkIfInLecture();
                     console.log("Lecture deleted");
 
                 })
@@ -147,13 +141,13 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 })
         };
 
-        $scope.leaveLecture = function() {
+        $scope.leaveLecture = function () {
             http({
                 url: '/leaveLecture',
                 method: "POST",
                 params: {'lecture_id': $scope.lectureId}
             })
-                .success(function(){
+                .success(function () {
                     $scope.checkIfInLecture();
                 })
         }

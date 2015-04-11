@@ -226,7 +226,12 @@ def get_all_messages():
 @app.route('/getMessages')
 def get_messages():
     client_last_id = int(request.args.get('client_message_id'))
-    lecture_id = int(request.args.get("lecture_id"))
+    helper = request.args.get("lecture_id")
+    if len(helper) > 0:
+        lecture_id = int(float(helper))
+    else:
+        lecture_id = -1
+
     timdb = getTimDb()
     step = 0
 
@@ -306,9 +311,16 @@ def check_lecture():
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture:
         lecture_code = lecture[0].get("lecture_code")
+        return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code})
     else:
-        lecture_code = "Not running";
-    return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code})
+        time_now = str(datetime.datetime.now().strftime("%Y.%m.%d|%H:%M"))
+        lecture_code = "Not running"
+        list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
+        lecture_codes = []
+        for lecture in list_of_lectures:
+            lecture_codes.append(lecture.get("lecture_code"))
+        return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
+
 
 # TODO: Change lecture primary key to lecture_code + doc_id
 
@@ -352,17 +364,6 @@ def leave_lecture():
     lecture_id = int(request.args.get("lecture_id"))
     timdb.lectures.leave_lecture(lecture_id, getCurrentUserId(), True)
     return jsonResponse("")
-
-@app.route('/getAvailabeLectures', methods=['GET'])
-def get_available_lectures():
-    timdb = getTimDb()
-    doc_id = int(request.args.get("doc_id"))
-    list_of_lectures = timdb.lectures.get_document_lectures(doc_id)
-    lecture_codes = []
-    for lecture in list_of_lectures:
-        lecture_codes.append(lecture.get("lecture_code"))
-    return jsonResponse({"lectures": lecture_codes})
-
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
