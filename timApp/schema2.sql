@@ -226,7 +226,7 @@ CREATE TABLE UserNotes (
   note_index   INTEGER      NOT NULL,
   content      VARCHAR(255) NOT NULL,
   created      TIMESTAMP    NOT NULL,
-  modified     TIMESTAMP, -- TODO: Does this really need to be NOT NULL? (removed because of the example doesn't work with not null)
+  modified     TIMESTAMP    NOT NULL,
   access       VARCHAR(20)  NOT NULL,
   tags         VARCHAR(20)  NOT NULL,
   deprecated   BOOLEAN,
@@ -285,3 +285,10 @@ CREATE TABLE LectureUsers (
   FOREIGN KEY (user_id) REFERENCES User (user_id)
 );
 
+CREATE TABLE `Message` (
+  `msg_id`     INTEGER PRIMARY KEY AUTOINCREMENT,
+  `lecture_id` INTEGER NOT NULL,
+  `user_id`    INTEGER NOT NULL,
+  `message`    TEXT    NOT NULL,
+  `timestamp`  TEXT    NOT NULL
+);

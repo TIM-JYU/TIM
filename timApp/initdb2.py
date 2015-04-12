@@ -32,15 +32,5 @@ if __name__ == "__main__":
     timdb.users.grantViewAccess(0, doc_id2.id)
     
     timdb.users.grantEditAccess(0, doc_id2.id)
-    
-    timdb.notes.addNote(1, doc_id.id, doc_id.hash, 0, 'Tämä on testimuistiinpano.', 'everyone', [])
-    timdb.notes.addNote(1, doc_id.id, doc_id.hash, 0, 'Tämä on toinen testimuistiinpano samassa kappaleessa.', 'everyone', [])
-    timdb.notes.addNote(1, doc_id.id, doc_id.hash, 0,
-                     """Vielä kolmas muistiinpano, jossa on pitkä teksti.
-                        Vielä kolmas muistiinpano, jossa on pitkä teksti.
-                        Vielä kolmas muistiinpano, jossa on pitkä teksti.
-                        Vielä kolmas muistiinpano, jossa on pitkä teksti.
-                        Vielä kolmas muistiinpano, jossa on pitkä teksti.
-                        Vielä kolmas muistiinpano, jossa on pitkä teksti.""", 'everyone', [])
 
     p.kill()

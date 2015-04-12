@@ -70,9 +70,17 @@
 
         <div ng-controller="WallController">
             {% include 'lectureinfo_menu.html' %}
+            <input type="button" ng-click="leaveLecture()" value="Leave" ng-show="inLecture">
             <input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
 
-            <div class="wall-behind" id="wall" ng-show="isLecture">
+            <div ng-show="!inLecture">
+                <select ng-model="chosenLecture" ng-options="lecture as lecture for lecture in lectures">
+                    <pre>{{ "{{ availableLectures || json }}" }}</pre>
+                </select>
+                <input type="button" ng-click="joinLecture()" value="Join">
+            </div>
+
+            <div class="wall-behind" id="wall" ng-show="inLecture">
                 <div class="wall-topbar">
                     <div class="wall-topbar-content" ng-click="hide()">
                         Wall

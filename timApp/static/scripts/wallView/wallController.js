@@ -13,16 +13,77 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.polling = true;
         $scope.requestOnTheWay = false;
         $scope.showWall = false;
-        $scope.isLecture = false;
         $scope.canStart = true;
         $scope.canStop = false;
         $scope.lectureId = null;
-        $scope.wallName = null;
         $scope.showLecture = false;
+        $scope.lectures = [];
+
+        $scope.checkIfInLecture = function () {
+            http({
+                url: '/checkLecture',
+                method: 'GET',
+                params: {'doc_id': $scope.docId}
+            })
+                .success(function (answer) {
+                    if (answer.isInLecture) {
+                        $scope.inLecture = true;
+                        $scope.lectureId = answer.lectureId;
+                        $scope.canStop = true;
+                        $scope.getAllMessages();
+                        document.getElementById("lectureName").innerText = answer.lectureCode;
+                    } else {
+                        $scope.canStart = true;
+                        $scope.canStop = false;
+                        $scope.polling = false;
+                        $scope.inLecture = false;
+                        $scope.lectureId = null;
+                        document.getElementById("lectureName").innerText = "Not running";
+                    }
+                })
+        }
+
+        $scope.checkIfInLecture();
+
+        $scope.getAvailableLectures = function() {
+            http({
+                url: '/getAvailabeLectures',
+                method: 'GET',
+                params: {'doc_id': $scope.docId}
+            })
+                .success(function(answer){
+                    jQuery.each(answer.lectures, function (i, lecture) {
+                        $scope.lectures.push(lecture);
+                    });
+
+            })
+        }
+
+        $scope.getAvailableLectures();
 
 
-        $scope.toggleLecture = function() {
-            $scope.showLecture= !$scope.showLecture
+        $scope.joinLecture = function() {
+            if ($scope.chosenLecture == "") {
+                console.log("You must choose");
+                return;
+            }
+
+            console.log($scope.chosenLecture);
+
+            http({
+                url: '/joinLecture',
+                method: 'POST',
+                params: {'lecture_code': $scope.chosenLecture}
+            })
+                .success(function(){
+                    console.log("Joined to lecture");
+                     $scope.checkIfInLecture();
+
+            })
+        }
+
+        $scope.toggleLecture = function () {
+            $scope.showLecture = !$scope.showLecture
         }
 
         $scope.createLecture = function () {
@@ -48,7 +109,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 return;
             }
 
-            console.log($scope.lectureCode);
+            $scope.toggleLecture()
+
 
             var startDate = "" + $scope.startHour + $scope.startMin + "|" + $scope.startDay + $scope.startMonth + $scope.startYear;
             var endDate = "" + $scope.endHour + $scope.endMin + "|" + $scope.endDay + $scope.endMonth + $scope.endYear;
@@ -58,16 +120,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 method: 'POST',
                 params: {
                     'doc_id': $scope.docId, 'lecture_code': $scope.lectureCode, 'password': $scope.password,
-                    'start_date': startDate, 'end_date':endDate
+                    'start_date': startDate, 'end_date': endDate
                 }
             })
                 .success(function (answer) {
-                    $scope.canStop = true;
-                    $scope.canStart = false;
-                    $scope.isLecture = true;
-                    $scope.lectureId = answer.lectureId;
-                    $scope.wallName = answer.wallName;
-                    $scope.getAllMessages();
+                    $scope.checkLecture();
                     console.log("Lecture created: " + $scope.lectureId);
                 })
                 .error(function () {
@@ -78,14 +135,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             http({
                 url: '/deleteLecture',
                 method: 'POST',
-                params: {'doc_id': $scope.docId, 'lecture_id': $scope.lectureId, 'wall_name': $scope.wallName}
+                params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
             })
                 .success(function () {
-                    $scope.canStart = true;
-                    $scope.canStop = false;
-                    $scope.polling = false;
-                    $scope.isLecture = false;
-                    $scope.lectureId = null;
+                    $scope.checkLecture();
                     console.log("Lecture deleted");
 
                 })
@@ -93,6 +146,17 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                     console.log("Failed to delete the lecture");
                 })
         };
+
+        $scope.leaveLecture = function() {
+            http({
+                url: '/leaveLecture',
+                method: "POST",
+                params: {'lecture_id': $scope.lectureId}
+            })
+                .success(function(){
+                    $scope.checkIfInLecture();
+                })
+        }
 
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
@@ -111,7 +175,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             http({
                 url: '/sendMessage',
                 method: 'POST',
-                params: {'message': message, 'lecture_id': $scope.lectureId, 'wall_name': $scope.wallName}
+                params: {'message': message, lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
                     $scope.newMsg = "";
@@ -130,12 +194,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             http({
                 url: '/getAllMessages',
                 type: 'GET',
-                params: {'wall_name': $scope.wallName}
+                params: {lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
                     jQuery.each(answer.data, function (i, msg) {
                         $scope.msg = $scope.msg + msg + "\n";
-                        $scope.$apply();
                     });
                     $scope.lastID = answer.lastid;
                     var textarea = document.getElementById('wallArea');
@@ -159,7 +222,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 jQuery.ajax({
                         url: '/getMessages',
                         type: 'GET',
-                        data: {id: lastID, wall_name: $scope.wallName},
+                        data: {'client_message_id': lastID, lecture_id: $scope.lectureId},
                         success: function (answer) {
 
                             $scope.requestOnTheWay = false;
