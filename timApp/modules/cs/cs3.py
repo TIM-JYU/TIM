@@ -543,7 +543,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # result_json = {"js": ["/cs/js/dir.js"], "angularModule": ["csApp","csConsoleApp"],
             # result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
-            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
+            # result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
+            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
@@ -576,7 +577,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_js:
             if self.path.find('rikki') >= 0:
                 return self.wout(file_to_string('js/dirRikki.js'))
-            return self.wout(file_to_string('js/dir.js'))
+            # return self.wout(file_to_string('js/dir.js'))
+            return self.wout(file_to_string(self.path))
 
         if is_html and not is_iframe:
             # print("HTML:==============")
@@ -741,7 +743,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if "java" in ttype or "jcomtest" in ttype or "junit" in ttype or "graphics" in ttype:
             # java
-            classpath = get_param(query, "-cp", ".")
+            classpath = get_param(query, "-cp", ".") +":$CLASSPATH"
             print("classpath=" ,classpath)
             package, classname = find_java_package(s)
             javaclassname = classname

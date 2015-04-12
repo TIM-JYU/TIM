@@ -1327,7 +1327,7 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
 csConsoleApp.directiveTemplateCS = function (t, isInput) {
 "use strict";
     if (TESTWITHOUTPLUGINS) return '';
-    return '<div class="web-console {{currentSize}}"'+
+    return '<div class="web-console no-popup-menu {{currentSize}} "'+
      '    ng-keydown="handleKey($event)" >'+
      ''+
      '<code class="console-output">'+

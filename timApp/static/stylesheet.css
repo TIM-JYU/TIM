@@ -1590,5 +1590,18 @@ img.console {
   position: absolute;
   top: 0;
   left: -0.5em;
-}
+} 
  
+.sagecell_editor {
+  line-height: 13px;
+  margin-bottom: 8px;
+  font-size: 10pt;
+}
+
+pre.sagecell_pyout {
+  border: none;
+}
+
+pre.sagecell_stdout {
+  border: none;
+}
