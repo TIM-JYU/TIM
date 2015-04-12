@@ -1,6 +1,8 @@
 ﻿"use strict";
 var csPluginStartTime = new Date();
-
+/*
+Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
+*/
 var csApp = angular.module('csApp', ['ngSanitize']);
 csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
 csApp.directive('csJypeliRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('jypeli',false); }]);
@@ -10,6 +12,7 @@ csApp.directive('csJypeliRunnerInput', ['$sanitize','$compile', function ($sanit
 csApp.directive('csComtestRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
 csApp.directive('csTaunoRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
 csApp.directive('csTaunoRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
+csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 var TESTWITHOUTPLUGINS = true && false;
@@ -20,8 +23,8 @@ csApp.taunoNr = 0;
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","sql","alloy","text","cs","run","md","js"];
-languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","alloy","text","csharp","run","markdown","javascript"];
+languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","sql","alloy","text","cs","run","md","js","sage"];
+languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","alloy","text","csharp","run","markdown","javascript","python"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -174,14 +177,11 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
                   '<div>'+
 
+                  (t=="sage" ? '<div class="computeSage no-popup-menu">' : 
                   '<div  class="csrunEditorDiv">'+
-				  '<textarea class="csRunArea" ng-hide="noeditor && !viewCode" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
-				  //'<div ng-if="mode" ui-ace="{  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
-                  //  ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
-                  
-				  //'<textarea  class="csRunArea csEditArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
-                  // '<div class="csRunArea csEditArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+				  '<textarea class="csRunArea csEditArea no-popup-menu" ng-hide="noeditor && !viewCode" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>')+
                   '</div>'+
+                  // (t=="sage" ? '</div>' : '') +
 
 				  '<div class="csRunChanged" ng-if="usercode!=byCode"></div>'+
 				  //'<div class="csRunChanged" ng-if="muokattu"></div>'+
@@ -264,9 +264,11 @@ csApp.directiveFunction = function(t,isInput) {
             scope.plugin = element.parent().attr("data-plugin");
             scope.taskId  = element.parent().attr("id");
 
+			csApp.set(scope,attrs,"type","cs");
+            scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
+            
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"lang");
-			csApp.set(scope,attrs,"type","cs");
 			csApp.set(scope,attrs,"width");
 			csApp.set(scope,attrs,"height");
 			csApp.set(scope,attrs,"table");
@@ -337,9 +339,9 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
             scope.buttonText = "Aja";
-            if ( scope.type.indexOf("text") >= 0 ) {
+            if ( scope.type.indexOf("text") >= 0 || scope.isSage ) {
                 scope.isRun = true;
-                scope.buttonText = "Talleta";
+                scope.buttonText = "Tallenna";
             }            
             if ( scope.button ) scope.buttonText = scope.button;
             
@@ -388,6 +390,12 @@ csApp.directiveFunction = function(t,isInput) {
             var diff = d - csPluginStartTime;
             console.log("cs: " + d.toLocaleTimeString()+ " " + diff.valueOf() + " - " + scope.taskId);          
             
+            if ( scope.isSage ) {
+                scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
+                scope.editArea = scope.element0.getElementsByClassName('csEditArea')[0];                    
+                alustaSage(scope);
+            }
+            
 		},		
 		scope: {},				 
 		controller: csApp.Controller,
@@ -404,6 +412,37 @@ csApp.directiveFunction = function(t,isInput) {
 	}; 
 };
 
+function alustaSage(scope) {
+    if ( scope.sagecellInfo ) {
+        if ( scope.sagecellInfo.inputLocation.sagecell_session ) {
+            scope.sagecellInfo.inputLocation.sagecell_session.code = scope.usercode;
+        }   
+        scope.sagecellInfo.code = scope.usercode,
+        sagecell.moveInputForm(scope.sagecellInfo);
+        sagecell.restoreInputForm(scope.sagecellInfo);
+        // sagecell.initCell(scope.sagecellInfo,scope.usercode);
+        //sagecell.deleteSagecell(scope.sagecellInfo);
+        return;
+    }    
+    scope.sagecellInfo = sagecell.makeSagecell({
+        inputLocation: scope.sageArea,
+        // inputLocation: scope.editArea,
+        // editor: "textarea",
+        code: scope.usercode,
+        autoeval: scope.attrs.autorun,
+        callback: function() {
+            scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();        
+            scope.sageButton.onclick = function() {
+                scope.checkSageSave();
+            };
+        },
+        languages: sagecell.allLanguages
+    });
+}    
+
+function valmis() {
+    var n = 2;
+}
 
 csApp.getInt = function(s) {
 "use strict";
@@ -555,6 +594,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		var t = languageTypes.getRunType($scope.type,"cs"); 
         if ( t == "md" ) { $scope.showMD(); } // return; }
         if ( t == "js" ) { $scope.showJS(); } // return; }
+        // if ( $scope.sageButton ) $scope.sageButton.click();
 		$scope.doRunCode(t,false);
 	};
 	
@@ -568,9 +608,36 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.noeditor = !$scope.noeditor;
     };
     
+    $scope.sageCode = function() {
+        if ( !$scope.sagecellInfo ) return false;
+        if ( !$scope.sagecellInfo.inputLocation ) return false;
+        if ( !$scope.sagecellInfo.inputLocation.sagecell_session ) return false;
+        if ( !$scope.sagecellInfo.inputLocation.sagecell_session.code ) return false;     
+        return $scope.sagecellInfo.inputLocation.sagecell_session.code;
+    }
+    
+	$scope.checkSageSave = function() {
+        window.clearInterval($scope.sageTimer);
+        // if ( $scope.autoupdate ) 
+        $scope.sageTimer = setInterval(
+           function() {
+                var sg = $scope.sageCode();
+                if ( !sg ) return;
+                window.clearInterval($scope.sageTimer);
+                if ( sg === $scope.usercode ) return; // Automatic does not save if not changed
+                $scope.doRunCode("sage",false);
+           },500);    
+    }
+    
 	$scope.doRunCode = function(runType, nosave) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
+        if ( $scope.sagecellInfo ) {
+            var sg = $scope.sageCode();
+            if ( !sg ) return;
+            // sagecell.restoreInputForm($scope.sageCell); 
+            $scope.usercode = sg;
+        }   
         // if ( runType == "md" ) { $scope.showMD(); return; }
 		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
 		$scope.checkIndent();
@@ -775,6 +842,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		$scope.runError = false;
 		$scope.result = "";
 		$scope.viewCode = false;
+        if ( $scope.isSage ) alustaSage($scope);
 
 	};
 

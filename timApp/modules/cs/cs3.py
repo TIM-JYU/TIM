@@ -316,6 +316,7 @@ def get_html(ttype, query):
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
+    if "sage" in ttype: runner = 'cs-sage-runner'
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
@@ -542,7 +543,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # result_json = {"js": ["/cs/js/dir.js"], "angularModule": ["csApp","csConsoleApp"],
             # result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
-            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js"],
+            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
@@ -826,6 +827,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "md":
                 cmdline = ""
             elif ttype == "js":
+                cmdline = ""
+            elif ttype == "sage":
                 cmdline = ""
             elif ttype == "fs":
                 cmdline = "fsharpc --out:%s %s" % (exename, csfname)
@@ -1132,6 +1135,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "md":
                 code, out, err = (0, "".encode(), "".encode())
             elif ttype == "js":
+                code, out, err = (0, "".encode(), "".encode())
+            elif ttype == "sage":
                 code, out, err = (0, "".encode(), "".encode())
             elif ttype == "cs":
                 print("Exe: ", exename)
