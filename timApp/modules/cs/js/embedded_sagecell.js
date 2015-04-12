@@ -1,3 +1,4 @@
+localStorage.accepted_tos = true;
 // TODO: put this tracking code in a site-specific file.
 // TODO: finish implementing our own stats service that handles,
 //       the phone apps, for example.
@@ -580,7 +581,9 @@ sagecell.initCell = (function (sagecellInfo, k) {
         }
         _gaq.push(['sagecell._trackEvent', 'SageCell', 'Execute',window.location.origin+window.location.pathname]);
 
-        var code = textArea.val();
+        var code;
+        if ( sagecellInfo.getCode ) code = sagecellInfo.getCode(); // TIM
+        else code = textArea.val();
         var language = langSelect[0].value;
         var session = new sagecell.Session(outputLocation, language,
             sagecellInfo.interacts || [], k, sagecellInfo.linked || false);

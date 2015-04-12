@@ -177,9 +177,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
                   '<div>'+
 
-                  (t=="sage" ? '<div class="computeSage no-popup-menu">' : 
                   '<div  class="csrunEditorDiv">'+
-				  '<textarea class="csRunArea csEditArea no-popup-menu" ng-hide="noeditor && !viewCode" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>')+
+				  '<textarea class="csRunArea csEditArea no-popup-menu" ng-hide="noeditor && !viewCode" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
                   '</div>'+
                   // (t=="sage" ? '</div>' : '') +
 
@@ -190,6 +189,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<pre class="csRunPost" ng-if="viewCode &&!codeunder &&!codeover">{{postcode}}</pre>'+
 				  '</div>'+
 				  //'<br />'+ 
+                  (t=="sage" ? '<div class="computeSage no-popup-menu"></div>' : '')+
                   
                   (isInput  ?
                   '<div class="csInputDiv" ng-hide="!showInput">' +
@@ -208,7 +208,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p class="csRunSnippets" ng-if="buttons && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
                   '</p>' +
-                  
+                  '<div class="csRunMenuArea">'+
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
@@ -217,6 +217,9 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showAceEditor();">{{editorText[editorMode]}}</a>' +
                   '</p>'+
+                  '</div>'+
+                  (t=="sage" ? '<div class="outputSage no-popup-menu"></div>' :"")+ 
+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t === "comtest" || t === "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
 				  (t === "comtest" || t === "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
@@ -339,7 +342,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
             scope.buttonText = "Aja";
-            if ( scope.type.indexOf("text") >= 0 || scope.isSage ) {
+            if ( scope.type.indexOf("text") >= 0 ) { // || scope.isSage ) {
                 scope.isRun = true;
                 scope.buttonText = "Tallenna";
             }            
@@ -390,11 +393,7 @@ csApp.directiveFunction = function(t,isInput) {
             var diff = d - csPluginStartTime;
             console.log("cs: " + d.toLocaleTimeString()+ " " + diff.valueOf() + " - " + scope.taskId);          
             
-            if ( scope.isSage ) {
-                scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
-                scope.editArea = scope.element0.getElementsByClassName('csEditArea')[0];                    
-                alustaSage(scope);
-            }
+            // if ( scope.isSage ) alustaSage(scope);
             
 		},		
 		scope: {},				 
@@ -412,37 +411,44 @@ csApp.directiveFunction = function(t,isInput) {
 	}; 
 };
 
-function alustaSage(scope) {
+function alustaSage(scope,firstTime) {
+// TODO: lisää kentätkin vasta kun 1. kerran alustetaan.
+// TODO: kielien valinnan tallentaminen
+// TODO: kielien valinta kunnolla float.    
     if ( scope.sagecellInfo ) {
-        if ( scope.sagecellInfo.inputLocation.sagecell_session ) {
-            scope.sagecellInfo.inputLocation.sagecell_session.code = scope.usercode;
-        }   
-        scope.sagecellInfo.code = scope.usercode,
-        sagecell.moveInputForm(scope.sagecellInfo);
-        sagecell.restoreInputForm(scope.sagecellInfo);
-        // sagecell.initCell(scope.sagecellInfo,scope.usercode);
-        //sagecell.deleteSagecell(scope.sagecellInfo);
+        var outputLocation = $(scope.sageOutput);
+        outputLocation.find(".sagecell_output_elements").hide();
+        scope.sagecellInfo.code = scope.usercode;
         return;
     }    
+    scope.sageArea = scope.element0.getElementsByClassName('computeSage')[0];                    
+    scope.editArea = scope.element0.getElementsByClassName('csEditArea')[0];                    
+    scope.sageOutput = scope.element0.getElementsByClassName('outputSage')[0];                    
+    
     scope.sagecellInfo = sagecell.makeSagecell({
         inputLocation: scope.sageArea,
         // inputLocation: scope.editArea,
-        // editor: "textarea",
+        editor: "textarea",
+        hide: ["editor","evalButton"],
+        outputLocation: scope.sageOutput,
+        requires_tos: false,
         code: scope.usercode,
-        autoeval: scope.attrs.autorun,
+        getCode: function() { return scope.getCode(); },
+        autoeval: scope.attrs.autorun || firstTime,
         callback: function() {
-            scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();        
+            scope.sageButton = scope.sageArea.getElementsByClassName("sagecell_evalButton")[0]; // .button();     
+            
             scope.sageButton.onclick = function() {
-                scope.checkSageSave();
+                // scope.checkSageSave();
             };
+            var sagecellOptions = scope.element0.getElementsByClassName('sagecell_options')[0];  
+            var csRunMenuArea = scope.element0.getElementsByClassName('csRunMenuArea')[0];
+            if ( csRunMenuArea && sagecellOptions ) csRunMenuArea.appendChild(sagecellOptions);
+            sagecellOptions.style.marginTop = "-2em";
         },
         languages: sagecell.allLanguages
     });
 }    
-
-function valmis() {
-    var n = 2;
-}
 
 csApp.getInt = function(s) {
 "use strict";
@@ -608,6 +614,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.noeditor = !$scope.noeditor;
     };
     
+    /*
     $scope.sageCode = function() {
         if ( !$scope.sagecellInfo ) return false;
         if ( !$scope.sagecellInfo.inputLocation ) return false;
@@ -628,16 +635,16 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                 $scope.doRunCode("sage",false);
            },500);    
     }
+    */
     
 	$scope.doRunCode = function(runType, nosave) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
-        if ( $scope.sagecellInfo ) {
-            var sg = $scope.sageCode();
-            if ( !sg ) return;
-            // sagecell.restoreInputForm($scope.sageCell); 
-            $scope.usercode = sg;
-        }   
+        // alert("moi");
+        
+        if ( $scope.sageButton ) $scope.sageButton.click();
+        if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
+        
         // if ( runType == "md" ) { $scope.showMD(); return; }
 		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
 		$scope.checkIndent();
@@ -1063,6 +1070,20 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         }
     }
     
+    $scope.getCode = function() {
+        if ( $scope.attrs.program && !$scope.codeInitialized ) {
+            $scope.localcode = $scope.attrs.program;
+            $scope.showCodeLocal();
+        }
+        $scope.codeInitialized = true;
+        var text = $scope.usercode.replace($scope.cursor,"");
+        if ( $scope.precode || $scope.postcode ) {
+        	text = $scope.precode + "\n" + text + "\n" + $scope.postcode;
+        }
+        return text;
+    }
+    
+    
    $scope.lastJS = "";
 	$scope.showJS = function() {
         if ( !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
@@ -1087,19 +1108,15 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $previewDiv.html($scope.previewIFrame = csApp.compile($scope.canvas)($scope));
             //$scope.canvas = $scope.preview.find(".csCanvas")[0];
             $scope.canvas = $scope.canvas[0];
-            if ( $scope.attrs.program ) {
-                $scope.localcode = $scope.attrs.program;
-                $scope.showCodeLocal();
-            }
         }
         var text = $scope.usercode.replace($scope.cursor,"");
         if ( text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
         $scope.lastJS = text;
         $scope.lastUserargs = $scope.userargs;
         $scope.lastUserinput = $scope.userinput;
-        if ( $scope.precode ) {
-        	text = $scope.precode + "\n" + text + "\n" + $scope.postcode;
-        }
+        
+        text = $scope.getCode();
+        
         if ( $scope.iframe ) { // in case of iframe, the text is send to iframe
             var f =  document.getElementById($scope.taunoId); // but on first time it might be not loaded yet
             // var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
