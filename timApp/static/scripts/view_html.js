@@ -587,87 +587,40 @@ timApp.directive('questionDialog', function factory() {
 //TODO: Controller for the question
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
-    scope.columns = [{
-        id: 0,
-        text: 'test',
-        questionPlaceholder: 'column'
-    }];
-    scope.rows = [{
-        id: 0,
-        text: 'test'
-    }];
+
     scope.question = {
         question: ""
     };
+
     scope.questionType = "";
+    scope.columns = [];
+    scope.rows = [];
 
-    scope.radioButtonQuestion = function () {
-        scope.rows = [{
-            id: 0,
-            text: 'test'
-        }, {
-            id: 1,
-            text: 'test'
-        }, {
-            id: 2,
-            text: 'test'
-        }];
-        scope.columns = [{
-            id: 0,
-            text: 'test',
-            questionPlaceholder: 'column'
-        }];
-        scope.questionType = "radio-button";
-    };
+    scope.createMatrix = function (rows, columns, type) {
 
-    scope.trueFalseQuiz = function () {
-        scope.rows = [{
-            id: 0,
-            text: 'test'
-        }];
-        scope.columns = [{
-            id: 0,
-            text: 'True',
-            questionPlaceholder: 'column'
-        }, {
-            id: 1,
-            text: 'False',
-            questionPlaceholder: 'column'
-        }];
-        scope.questionType = "true-false";
-    };
 
-    scope.matriisi = function () {
         scope.rows = [];
-        for (var i = 0; i < 2; i++)
+        for (var i = 0; i < rows; i++)
             scope.rows[i] = {
                 id: i,
-                text: 'test',
-                isDisabled: false
+                text: 'test'
             }
 
         scope.columns = [];
-        for (var i = 0; i < 2; i++)
+        for (var i = 0; i < columns; i++)
             scope.columns[i] = {
                 id: i, text: 'test',
-                questionPlaceholder: 'column',
-                isDisabled: false
+                questionPlaceholder: 'column'
             }
-
-        scope.questionType = "matriisi";
-
-        scope.columns[scope.columns.length - 1].isDisabled = true;
-        scope.rows[scope.rows.length - 1].isDisabled = true;
-
+        scope.questionType = type;
     };
 
 
     scope.rowClick = function (index) {
-        if (scope.rows[index].isDisabled) {
-            scope.rows[index].isDisabled = false;
-            scope.addRow(index);
 
-        }
+        scope.addRow(index);
+
+
     }
 
     scope.addCol = function (loc) {
@@ -683,7 +636,6 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 question: "column",
                 questionPlaceholder: "column",
                 text: "",
-                isDisabled: true
             });
     };
 
@@ -695,9 +647,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             }
         }
         else
-            scope.rows.push({id: scope.rows.length, text: "", isDisabled: true})
+            scope.rows.push({id: scope.rows.length, text: ""})
 
-        scope.rows[scope.rows.length - 1].isDisabled = true;
+
     };
 
     scope.delRow = function (indexToBeDeleted) {
