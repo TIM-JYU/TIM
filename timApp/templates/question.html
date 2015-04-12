@@ -18,7 +18,7 @@
             <div ng-if="question.type == 'true-false'" ng-init="createMatrix(2, 2, 'true-false')">
                 {% include 'matriisi.html' %}
             </div>
-            <div ng-if="question.type == 'matriisi'" ng-init="createMatrix( ($scope.rows.length >2) ? $scope.rows.length : 2, ($scope.columns.length == 1) ? 1 : 2, 'matriisi')">
+            <div ng-if="question.type == 'matriisi'" ng-init="createMatrix(  2, 2, 'matriisi')">
                 {% include 'matriisi.html' %}
             </div>
 
