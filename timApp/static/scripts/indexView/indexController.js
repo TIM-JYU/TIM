@@ -11,6 +11,9 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.getAbsolutePath = function(name) {
+        if (name.startsWith('/'))
+            return name.substr(1)
+
         if (sc.folder == '')
             return name
 
