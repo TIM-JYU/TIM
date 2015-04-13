@@ -50,7 +50,7 @@
                 </th>
 
 
-                <th ng-if="questionType == 'matriisi'">
+                <th ng-if="question.type == 'matriisi'">
                     <div>
                         <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
                     </div>
@@ -62,12 +62,14 @@
             <tbody>
             <tr ng-repeat="row in rows">
                 <td id="buttons" style="width:auto;">
-                    <button ng-click="addRow($index)" style="float:right; margin-top:-35px">+</button>
-                    <button ng-click="delRow($index)" style="float:right">-</button>
+                    <div style="left:20px; position:relative;">
+                        <button ng-click="addRow($index)" style="float:right; margin-top:-35px">+</button>
+                        <button ng-click="delRow($index)" style="float:right">-</button>
+                    </div>
                 </td>
                 <th>
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20"></textarea>
+                        <textarea style="margin-left:5px" form="question-form" rows="1" cols="20"></textarea>
                         <br/>
 
                     </div>
