@@ -11,6 +11,8 @@
 
 .question-dialog {
     max-height: calc(100% - 100px);
+    max-width: calc(100% - 100px);
+    overflow: auto;
     z-index: 6;
     position: absolute;
     top: 50%;

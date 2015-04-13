@@ -596,22 +596,24 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.columns = [];
     scope.rows = [];
 
-    scope.createMatrix = function (rows, columns, type) {
-        scope.questionType = type;
-        if(type != 'matriisi') {
-            scope.rows = [];
-            scope.columns = [];
-        } else if (scope.rows.length > 0 && scope.columns.length > 0){
-            rows = scope.rows.length;
-            columns = scope.columns.length;
-            return;
+    scope.createMatrix = function (rowsCount, columnsCount, type) {
+
+
+        if(scope.columns.length == 1 && type != "true-false"){
+            columnsCount = scope.columns.length;
         }
-        for (var i = 0; i < rows; i++)
+
+       if(scope.rows.length > rowsCount) {
+           rowsCount = scope.rows.length;
+       }
+        scope.rows = [];
+        for (var i = 0; i < rowsCount; i++)
             scope.rows[i] = {
                 id: i,
                 text: 'test'
             }
-        for (var i = 0; i < columns; i++)
+        scope.columns = [];
+        for (var i = 0; i < columnsCount; i++)
             scope.columns[i] = {
                 id: i, text: 'test',
                 questionPlaceholder: 'column'

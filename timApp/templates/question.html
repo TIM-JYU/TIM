@@ -1,4 +1,4 @@
-<div>
+<div align="left">
     <form id="question-form">
         <fieldset>
             <label>Kysymys:</label>
@@ -12,7 +12,7 @@
                 <option ng-option value="matriisi">Monta riviä/saraketta</option>
             </select>
 
-            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio-button')">
+            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio-button')" >
                 {% include 'matriisi.html' %}
             </div>
             <div ng-if="question.type == 'true-false'" ng-init="createMatrix(2, 2, 'true-false')">
