@@ -21,7 +21,9 @@ function(sc, controller, http, q, $upload) {
     };
 
     sc.getDocs = function() {
-       sc.folder = sc.getParameterByName('folder');
+       paramFolder = angular.element( document.querySelector( '#foldername' ) ).val();
+       sc.folder = paramFolder != '' ? paramFolder : sc.getParameterByName('folder');
+
        if (sc.folder === '' || sc.folder === undefined || sc.folder === null)
            sc.parentfolder = null;
        else

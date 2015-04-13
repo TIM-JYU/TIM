@@ -45,6 +45,19 @@ def parse_range(start_index, end_index):
 
     return( int(start_index), int(end_index) )
 
+def try_return_folder(doc_name):
+    timdb = getTimDb()
+    docs = timdb.documents.getDocuments(historylimit=0)
+    allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    folder_name = doc_name.rstrip('/')
+    path_name = folder_name + '/'
+
+    for doc in allowedDocs:
+        if doc['name'].startswith(path_name):
+            return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId(), folder=folder_name)
+
+    abort(404)
+
 
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
@@ -55,9 +68,11 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         try:
             doc_id = int(doc_name)
             if not timdb.documents.documentExists(doc_id):
-                abort(404)
+                #abort(404)
+                return try_return_folder(doc_name)
         except ValueError:
-            abort(404)
+            return try_return_folder(doc_name)
+            #abort(404)
 
     if teacher:
         verifyOwnership(doc_id)

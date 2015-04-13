@@ -534,6 +534,7 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     return None
     
 @app.route("/")
+@app.route("/view/")
 def indexPage():
     return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
 
