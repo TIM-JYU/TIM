@@ -251,7 +251,8 @@ def get_messages():
                         user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
                 last_message_id = messages[-1].get('msg_id')
                 return jsonResponse(
-                    {"status": "results", "data": list_of_new_messages, "lastid": last_message_id})
+                    {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
+                     "lectureId": lecture_id})
 
         time.sleep(1)
         step += 1
@@ -356,7 +357,13 @@ def stop_lecture():
     timdb.messages.delete_messages_from_lecture(lecture_id, True)
     timdb.lectures.delete_users_from_lecture(lecture_id, True)
     timdb.lectures.delete_lecture(lecture_id, True)
-    return jsonResponse("It's gone")
+    time_now = str(datetime.datetime.now().strftime("%Y.%m.%d|%H:%M"))
+    lecture_code = "Not running"
+    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
+    lecture_codes = []
+    for lecture in list_of_lectures:
+        lecture_codes.append(lecture.get("lecture_code"))
+    return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
 
 
 @app.route('/joinLecture', methods=['POST'])
@@ -384,8 +391,15 @@ def join_lecture():
 def leave_lecture():
     timdb = getTimDb()
     lecture_id = int(request.args.get("lecture_id"))
+    doc_id = int(request.args.get("doc_id"))
     timdb.lectures.leave_lecture(lecture_id, getCurrentUserId(), True)
-    return jsonResponse("")
+    time_now = str(datetime.datetime.now().strftime("%Y.%m.%d|%H:%M"))
+    lecture_code = "Not running"
+    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
+    lecture_codes = []
+    for lecture in list_of_lectures:
+        lecture_codes.append(lecture.get("lecture_code"))
+    return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
 
 
 @app.route('/uploads/<filename>')

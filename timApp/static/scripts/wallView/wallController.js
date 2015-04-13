@@ -3,6 +3,7 @@
  */
 
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
+/* TODO: Seinä ei toimi kunnolla, jos pomppii luennolta toiselle */
 timApp.controller("WallController", ['$scope', '$controller', "$http",
 
     function ($scope, controller, http) {
@@ -12,6 +13,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.showPoll = true;
         $scope.polling = true;
         $scope.requestOnTheWay = false;
+        $scope.requestLectureId;
         $scope.showWall = false;
         $scope.canStart = true;
         $scope.canStop = false;
@@ -20,7 +22,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.lectures = [];
         $scope.chosenLecture = "";
         $scope.passwordQuess = "";
-
 
         $scope.checkIfInLecture = function () {
             http({
@@ -51,11 +52,13 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 params: {'lecture_code': $scope.chosenLecture, 'password_quess': $scope.passwordQuess}
             })
                 .success(function (answer) {
+                    $scope.passwordQuess = "";
                     if (!answer.correctPassword) {
-                        $scope.passwordQuess = "";
                         document.getElementById("passwordInput").style.border = "1px solid red";
                         document.getElementById("passwordInput").placeholder = "Wrong password";
                     } else {
+                        document.getElementById("passwordInput").style.border = "1px solid black";
+                        document.getElementById("passwordInput").placeholder = "Password";
                         if (answer.inLecture) {
                             console.log(answer)
                             $scope.showLectureView(answer);
@@ -74,7 +77,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.inLecture = true;
             $scope.lectureId = answer.lectureId;
             $scope.polling = true;
-            if (!$scope.requestOnTheWay) {
+            $scope.showWall = true;
+            if ($scope.requestOnTheWay && $scope.requestDocId == $scope.lectureId) {
+                console.log("Not getting new messages");
+            } else {
                 $scope.msg = "";
                 $scope.getAllMessages();
             }
@@ -151,8 +157,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 method: 'POST',
                 params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
             })
-                .success(function () {
-                    $scope.checkIfInLecture();
+                .success(function (answer) {
+                    $scope.showBasicView(answer)
                     console.log("Lecture deleted");
 
                 })
@@ -165,10 +171,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             http({
                 url: '/leaveLecture',
                 method: "POST",
-                params: {'lecture_id': $scope.lectureId}
+                params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId}
             })
-                .success(function () {
-                    $scope.checkIfInLecture();
+                .success(function (answer) {
+                    $scope.showBasicView(answer)
                 })
         }
 
@@ -216,6 +222,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                     $scope.lastID = answer.lastid;
                     var textarea = document.getElementById('wallArea');
                     textarea.scrollTop = textarea.scrollHeight;
+                    $scope.requestDocId = $scope.lectureId;
 
                     t = setTimeout(function () {
                         $scope.startLongPolling($scope.lastID);
@@ -237,8 +244,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         type: 'GET',
                         data: {'client_message_id': lastID, lecture_id: $scope.lectureId},
                         success: function (answer) {
-
                             $scope.requestOnTheWay = false;
+                            if(answer.lectureId != $scope.lectureId){
+                                console.log("Old request from other lecture came back")
+                                return;
+                            }
                             clearInterval(t);
                             if ($scope.polling) {
                                 if (answer.status == 'results' || answer.status == 'no-results') {
@@ -286,9 +296,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             message_longPolling(lastID);
         };
 
-        $scope.enterPressed = function (event) {
+        $scope.chatEnterPressed = function (event) {
             if (event.which === 13) {
                 $scope.sendMessageEvent($scope.newMsg);
+            }
+        };
+
+        $scope.passEnterPressed = function (event) {
+            if (event.which === 13) {
+                $scope.joinLecture();
             }
         };
 

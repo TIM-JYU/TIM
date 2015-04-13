@@ -72,15 +72,13 @@
             {% include 'lectureinfo_menu.html' %}
             <input type="button" ng-click="leaveLecture()" value="Leave" ng-show="inLecture">
             <input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
-
             <div ng-show="!inLecture">
                 <select ng-model="chosenLecture" ng-options="lecture as lecture for lecture in lectures">
                     <pre>{{ "{{ availableLectures || json }}" }}</pre>
                 </select>
-                <input id="passwordInput" ng-model="passwordQuess" placeholder="Password">
-                <input type="button" ng-click="joinLecture()" value="Join"
+                <input id="passwordInput" ng-model="passwordQuess" placeholder="Password" ng-keypress="passEnterPressed($event)">
+                <input type="button" ng-click="joinLecture()" value="Join">
             </div>
-
             <div class="wall-behind" id="wall" ng-show="inLecture">
                 <div class="wall-topbar">
                     <div class="wall-topbar-content" ng-click="hide()">
@@ -93,7 +91,7 @@
                         <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
 
                         <div class="wallButtons">
-                            <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="enterPressed($event)"
+                            <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="chatEnterPressed($event)"
                                    ng-readonly="!polling">
                             <button ng-click="sendMessageEvent(newMsg)">Send</button>
                             <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button>

@@ -47,7 +47,7 @@ td.selected {
 }
 
 .wall-behind textarea {
-    max-width: 100%;
+    max-width: 99%;
     resize: none;
 }
 
