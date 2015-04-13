@@ -37,10 +37,10 @@
 
                 </th>
 
-                <th ng-if="questionType == 'true-false'">True</th>
-                <th ng-if="questionType == 'true-false'">False</th>
+                <th ng-if="question.type == 'true-false'">True</th>
+                <th ng-if="question.type == 'true-false'">False</th>
 
-                <th ng-repeat="item in columns" ng-if="questionType != 'true-false'">
+                <th ng-repeat="item in columns" ng-if="question.type != 'true-false'">
                     <div class="cart">
                         <textarea form="question-form" rows="1" cols="20"></textarea>
                         <br/>
@@ -74,7 +74,7 @@
                 </th>
                 <td ng-repeat="column in columns">
                     <!-- Radiopainike vaakasuoraan-->
-                    <div ng-if="question.matriisi.vastaus == 'radiobutton-horizontal' || questionType == 'true-false'">
+                    <div ng-if="question.matriisi.vastaus == 'radiobutton-horizontal' || question.type == 'true-false'">
                         <input type="radio"
                                ng-model="row.id"
                                ng-value="column.id"
@@ -85,8 +85,8 @@
                                placeholder="pts"/>
                     </div>
                     <!-- Radiopainike pystysuoraan-->
-                    <div ng-if="questionType != 'true-false'">
-                        <div ng-if="question.matriisi.vastaus == 'radiobutton-vertical' || questionType == 'radio-button'">
+                    <div ng-if="question.type != 'true-false'">
+                        <div ng-if="question.matriisi.vastaus == 'radiobutton-vertical' || question.type == 'radio-vertical'">
                             <input type="radio"
                                    ng-model="column.id"
                                    ng-value="row.id"
@@ -97,7 +97,7 @@
                                    placeholder="pts"/>
                         </div>
                         <!-- Vapaa tekstivastaus-->
-                        <div ng-if="questionType != 'radio-button'">
+                        <div ng-if="question.type != 'radio-button'">
                             <textarea ng-if="question.matriisi.vastaus == 'vapaakenttä'"
                                       type="text"
                                       placeholder="Placeholder"
