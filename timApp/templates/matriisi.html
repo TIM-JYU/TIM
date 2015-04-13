@@ -11,7 +11,7 @@
     </div>
     <label>Vastausvaihtoehdot:</label>
 
-    <div>
+    <div style="float:left">
         <table>
             <thead>
             <!----Top "hidden row" with + and - buttons  ---->
@@ -20,11 +20,10 @@
                 <th width="50px" style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
                 <th ng-repeat="item in columns" style="border: none; background-color: inherit"
-                    ng-if="questionType == 'matriisi'">
-                    <div class="cart">
-                        <button ng-click="addCol($index)" style="float: left; margin-left: -20px; margin-bottom: -50px">+</button>
-                        <button ng-click="delCol($index)">-</button>
-
+                    ng-if="question.type == 'matriisi'">
+                    <div style="top:35px; position:relative;">
+                        <button ng-click="addCol($index)" style="float:left; margin-left: -20px;">+</button>
+                        <button ng-click="delCol($index)" >-</button>
                     </div>
                 </th>
             </tr>
@@ -58,17 +57,14 @@
                 </th>
 
             </tr>
-
             </tr>
             </thead>
             <tbody>
             <tr ng-repeat="row in rows">
-                <th width="50px"
-                    style="border: none; background-color:inherit;">
-                    <button ng-click="addRow($index)" style="float:left; margin-top:-35px">+</button>
-                    <button ng-click="delRow($index)" style="vertical-align: middle">-</button>
-
-                </th>
+                <td id="buttons" style="width:auto;">
+                    <button ng-click="addRow($index)" style="float:right; margin-top:-35px">+</button>
+                    <button ng-click="delRow($index)" style="float:right">-</button>
+                </td>
                 <th>
                     <div class="cart">
                         <textarea form="question-form" rows="1" cols="20"></textarea>

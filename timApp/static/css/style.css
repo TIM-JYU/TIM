@@ -14,6 +14,11 @@ th {
     transition: all 0.2s;
 }
 
+#buttons {
+    width: 30px;
+    border: none;
+    background-color:inherit;
+}
 tr {
 
 }
@@ -26,14 +31,6 @@ td {
 
 td.selected {
     background: #d7e4ef;
-}
-
-#buttons {
-    display: none;
-}
-
-.cart:hover #buttons {
-    display: block;
 }
 
 .wall-behind {
