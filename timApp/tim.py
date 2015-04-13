@@ -5,6 +5,7 @@ import imghdr
 import io
 import collections
 import re
+import posixpath
 
 from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
@@ -136,9 +137,10 @@ def upload_file():
     timdb = getTimDb()
     if request.method == 'POST':
         doc = request.files['file']
+        folder = request.form['folder']
         if not allowed_file(doc.filename):
             return jsonResponse({'message': 'The file format is not allowed.'}, 403)
-        filename = secure_filename(doc.filename)
+        filename = posixpath.join(folder, secure_filename(doc.filename))
         if(filename.endswith(tuple(DOC_EXTENSIONS))):
             content = UnicodeDammit(doc.read()).unicode_markup
             if not content:

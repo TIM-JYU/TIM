@@ -10,9 +10,19 @@ function(sc, controller, http, q, $upload) {
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     };
 
+    sc.getAbsolutePath = function(name) {
+        if (sc.folder == '')
+            return name
+
+        if (sc.folder.endsWith('/'))
+            return sc.folder + name;
+
+        return sc.folder + '/' + name;
+    };
+
     sc.createDocument = function(name) {
         http.post('/createDocument', {
-            "doc_name" : name
+            "doc_name" : sc.getAbsolutePath(name)
         }).success(function(data, status, headers, config) {
             window.location.href = "/view/" + data.name;
         }).error(function(data, status, headers, config) {
@@ -61,7 +71,8 @@ function(sc, controller, http, q, $upload) {
             sc.upload = $upload.upload({
                 url : url,
                 method : 'POST',
-                file : file
+                file : file,
+                fields : {'folder' : sc.folder}
             }).progress(function(evt) {
                 sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
             }).success(function(data, status, headers, config) {
