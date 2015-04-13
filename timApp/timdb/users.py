@@ -282,6 +282,15 @@ class Users(TimDbBase):
                           ORDER BY id ASC""", [user_id])
         return self.resultAsDictionary(cursor)
 
+    @contract
+    def isUserInGroup(self, user_name : 'str', usergroup_name : 'str') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
+                          User_id      = (SELECT id from User where name = ?) AND
+                          UserGroup_id = (SELECT id from UserGroup where name = ?)
+                       """, [user_name, usergroup_name])
+        return len(cursor.fetchall()) > 0
+
     def __grantAccess(self, group_id: 'int', block_id: 'int', access_type: 'str'):
         """Grants access to a group for a block.
         

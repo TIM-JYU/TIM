@@ -287,9 +287,10 @@ def quickLogin(username):
     """A debug helping method for logging in as another user.
        For developer use only.
     """
-    if getCurrentUserName() not in ['mikkalle', 'tojukarp', 'vesal']:
-        abort(403)
     timdb = getTimDb()
+    #if getCurrentUserName() not in ['mikkalle', 'tojukarp', 'vesal']:
+    if not timdb.users.isUserInGroup(getCurrentUserName(), 'Administrators'):
+        abort(403)
     user = timdb.users.getUserByName(username)
     if user is None:
         abort(404, 'User not found.')

@@ -132,31 +132,39 @@ def downloadDocument(doc_id):
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
+    if request.method != 'POST':
+        return jsonResponse({'message': 'Only POST method is supported.'}, 405)
     if not loggedIn():
         return jsonResponse({'message': 'You have to be logged in to upload a file.'}, 403)
     timdb = getTimDb()
-    if request.method == 'POST':
-        doc = request.files['file']
-        folder = request.form['folder']
-        if not allowed_file(doc.filename):
-            return jsonResponse({'message': 'The file format is not allowed.'}, 403)
-        filename = posixpath.join(folder, secure_filename(doc.filename))
-        if(filename.endswith(tuple(DOC_EXTENSIONS))):
-            content = UnicodeDammit(doc.read()).unicode_markup
-            if not content:
-                return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-            timdb.documents.importDocument(content, filename, getCurrentUserGroup())
-            return "Successfully uploaded document"
+
+    doc = request.files['file']
+    folder = request.form['folder']
+    filename = posixpath.join(folder, secure_filename(doc.filename))
+
+    userName = getCurrentUserName()
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and re.match('^' + userName + '\/', filename) is None:
+        return jsonResponse({'message': "You're not authorized to write here."}, 403)
+
+    if not allowed_file(doc.filename):
+        return jsonResponse({'message': 'The file format is not allowed.'}, 403)
+
+    if(filename.endswith(tuple(DOC_EXTENSIONS))):
+        content = UnicodeDammit(doc.read()).unicode_markup
+        if not content:
+            return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
+        timdb.documents.importDocument(content, filename, getCurrentUserGroup())
+        return "Successfully uploaded document"
+    else:
+        content = doc.read()
+        imgtype = imghdr.what(None, h=content)
+        if imgtype is not None:
+            img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
+            timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
+            return jsonResponse({"file": str(img_id) + '/' + img_filename})
         else:
-            content = doc.read()
-            imgtype = imghdr.what(None, h=content)
-            if imgtype is not None:
-                img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
-                timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
-                return jsonResponse({"file": str(img_id) + '/' + img_filename})
-            else:
-                doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                return redirect(url_for('uploaded_file', filename=filename))
+            doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file', filename=filename))
     
 
 
@@ -296,6 +304,11 @@ def createDocument():
         return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
     
     timdb = getTimDb()
+
+    userName = getCurrentUserName()
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and re.match('^' + userName + '\/', docName) is None:
+        return jsonResponse({'message': 'You can only create new documents in your own folder ({}).'.format(userName)}, 403)
+
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonResponse({'id' : docId.id, 'name' : docName})
 
