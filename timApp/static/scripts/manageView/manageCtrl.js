@@ -82,7 +82,7 @@ PermApp.controller("PermCtrl", [
             }).success(function (data, status, headers, config) {
                 sc.doc.name = newName;
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                alert(data.message);
             });
         };
 
@@ -92,7 +92,7 @@ PermApp.controller("PermCtrl", [
                     .success(function (data, status, headers, config) {
                         location.replace('/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.error);
+                        alert(data.message);
                     });
             }
         };

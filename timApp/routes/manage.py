@@ -84,18 +84,18 @@ def renameDocument(doc_id):
     new_name = request.get_json()['new_name']
 
     if not timdb.documents.documentExists(doc_id):
-        abort(404)
+        return jsonResponse({'message': 'The document does not exist!'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        abort(403)
+        return jsonResponse({'message': "You don't have permission to rename this document."}, 403)
 
-    old_name = timdb.documents.getDocument()['name']
+    old_name = timdb.documents.getDocument(doc_id)['name']
+    userName = getCurrentUserName()
 
     if not timdb.users.isUserInGroup(userName, 'Administrators'):
-        userName = getCurrentUserName()
         if re.match('^' + userName + '\/', old_name) is None:
-            abort(403, "You cannot rename this document as it's outside your folder.")
+            return jsonResponse({'message': "You can't rename this document as it's outside your folder."}, 403)
         if re.match('^' + userName + '\/', new_name) is None:
-            abort(403, 'You cannot move documents outside your own folder ({}).'.format(userName))
+            return jsonResponse({'message': 'You cannot move documents outside your own folder ({}).'.format(userName)}, 403)
 
     timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
     return "Success"
@@ -116,8 +116,8 @@ def getPermissions(doc_id):
 def deleteDocument(doc_id):
     timdb = getTimDb()
     if not timdb.documents.documentExists(doc_id):
-        return jsonResponse({'error': 'Document does not exist.'}, 404)
+        return jsonResponse({'message': 'Document does not exist.'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'error': "You don't have permission to delete this document."}, 403)
+        return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
     timdb.documents.deleteDocument(doc_id)
     return "Success"
