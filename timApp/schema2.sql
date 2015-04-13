@@ -28,8 +28,6 @@ DROP TABLE IF EXISTS UserNotes;
 
 DROP TABLE IF EXISTS ReadParagraphs;
 
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE Answer (
   id          INTEGER      NOT NULL,
   task_id     VARCHAR(255) NOT NULL,
@@ -274,7 +272,7 @@ CREATE TABLE Lecture (
   lecture_id   INTEGER,
   lecture_code TEXT,
   doc_id       INTEGER NOT NULL,
-  lecturer     INTEGER NOT NULL REFERENCES User (user_id),
+  lecturer     INTEGER NOT NULL,
   start_time   TEXT    NOT NULL,
   end_time     TEXT,
   password     TEXT,
@@ -285,14 +283,28 @@ CREATE TABLE Lecture (
 CREATE TABLE LectureUsers (
   lecture_id INTEGER,
   user_id    INTEGER,
-  FOREIGN KEY (lecture_id) REFERENCES Lecture (lecture_id),
-  FOREIGN KEY (user_id) REFERENCES User (user_id)
+
+  FOREIGN KEY (lecture_id)
+  REFERENCES Lecture (lecture_id)
+  ON DELETE CASCADE,
+
+  FOREIGN KEY (user_id)
+  REFERENCES User (user_id)
+  ON DELETE CASCADE
 );
 
 CREATE TABLE `Message` (
   msg_id     INTEGER PRIMARY KEY,
-  lecture_id INTEGER NOT NULL REFERENCES Lecture (lecture_id),
+  lecture_id INTEGER NOT NULL,
   user_id    INTEGER NOT NULL,
   message    TEXT    NOT NULL,
-  timestamp  TEXT    NOT NULL
+  timestamp  TEXT    NOT NULL,
+
+  FOREIGN KEY (lecture_id)
+  REFERENCES Lecture (lecture_id)
+  ON DELETE CASCADE,
+
+  FOREIGN KEY (user_id)
+  REFERENCES User (user_id)
+  ON DELETE CASCADE
 );

@@ -353,6 +353,8 @@ def stop_lecture():
     verifyOwnership(doc_id)
     lecture_id = int(request.args.get("lecture_id"))
     timdb = getTimDb()
+    timdb.messages.delete_messages_from_lecture(lecture_id, True)
+    timdb.lectures.delete_users_from_lecture(lecture_id, True)
     timdb.lectures.delete_lecture(lecture_id, True)
     return jsonResponse("It's gone")
 
