@@ -369,7 +369,8 @@ def join_lecture():
         is_lecturer = True
     else:
         is_lecturer = False
-    return jsonResponse({"inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer})
+    return jsonResponse(
+        {"inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer, "lectureCode": lecture_code})
 
 
 @app.route('/leaveLecture', methods=['POST'])
