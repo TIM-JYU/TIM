@@ -21,8 +21,8 @@
                 <th style="border: none; background-color: inherit"></th>
                 <th ng-repeat="item in columns" style="border: none; background-color: inherit"
                     ng-if="questionType == 'matriisi'">
-                    <div class="cart" style="margin-bottom: -50px;">
-                        <button ng-click="addCol($index)" style="float: left; margin-left: -20px;">+</button>
+                    <div class="cart">
+                        <button ng-click="addCol($index)" style="float: left; margin-left: -20px; margin-bottom: -50px">+</button>
                         <button ng-click="delCol($index)">-</button>
 
                     </div>
@@ -64,9 +64,9 @@
             <tbody>
             <tr ng-repeat="row in rows">
                 <th width="50px"
-                    style="border: none; background-color:inherit; vertical-align: bottom">
-                    <button ng-click="addRow($index)" style="margin-bottom: 5px">+</button>
-                    <button ng-click="delRow($index)">-</button>
+                    style="border: none; background-color:inherit;">
+                    <button ng-click="addRow($index)" style="float:left; margin-top:-35px">+</button>
+                    <button ng-click="delRow($index)" style="vertical-align: middle">-</button>
 
                 </th>
                 <th>

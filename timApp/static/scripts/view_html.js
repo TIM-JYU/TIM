@@ -597,22 +597,25 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.rows = [];
 
     scope.createMatrix = function (rows, columns, type) {
-
-
-        scope.rows = [];
+        scope.questionType = type;
+        if(type != 'matriisi') {
+            scope.rows = [];
+            scope.columns = [];
+        } else if (scope.rows.length > 0 && scope.columns.length > 0){
+            rows = scope.rows.length;
+            columns = scope.columns.length;
+            return;
+        }
         for (var i = 0; i < rows; i++)
             scope.rows[i] = {
                 id: i,
                 text: 'test'
             }
-
-        scope.columns = [];
         for (var i = 0; i < columns; i++)
             scope.columns[i] = {
                 id: i, text: 'test',
                 questionPlaceholder: 'column'
             }
-        scope.questionType = type;
     };
 
 
