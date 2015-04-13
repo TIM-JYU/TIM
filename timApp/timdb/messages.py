@@ -7,9 +7,15 @@ from timdb.timdbbase import TimDbBase
 
 class Messages(TimDbBase):
     @contract
-    def delete_message_table(self, wall_name, commit: 'bool'):
+    def delete_messages_from_lecture(self, lecture_id:"int", commit: "bool"):
         cursor = self.db.cursor()
-        cursor.execute("DROP TABLE " + wall_name)
+        cursor.execute(
+            """
+            DELETE FROM Message
+            WHERE lecture_id = ?
+            """, [lecture_id]
+        )
+
         if commit:
             self.db.commit()
 

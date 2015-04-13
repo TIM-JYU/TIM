@@ -51,7 +51,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             })
                 .success(function (answer) {
                     if (answer.inLecture) {
-                        console.log(answer);
+                        console.log(answer)
                         $scope.showLectureView(answer);
                     } else {
                         $scope.showBasicView(answer);
@@ -66,11 +66,13 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.showLectureView = function (answer) {
             $scope.inLecture = true;
             $scope.lectureId = answer.lectureId;
-            $scope.canStop = true;
             $scope.polling = true;
             if (!$scope.requestOnTheWay) {
                 $scope.msg = "";
                 $scope.getAllMessages();
+            }
+            if (answer.isLecturer) {
+                $scope.canStop = true;
             }
             document.getElementById("lectureName").innerText = answer.lectureCode;
         }
@@ -195,7 +197,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.getAllMessages = function () {
             var t;
-            console.log($scope.lectureId);
             http({
                 url: '/getAllMessages',
                 type: 'GET',

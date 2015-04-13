@@ -6,14 +6,15 @@ from timdb.timdbbase import TimDbBase
 
 class Lectures(TimDbBase):
     @contract
-    def create_lecture(self, doc_id: "int", start_time: "string", end_time: "string", lecture_code: "string",
+    def create_lecture(self, doc_id: "int", lecturer: 'int', start_time: "string", end_time: "string",
+                       lecture_code: "string",
                        password: "string", commit: "bool") -> "int":
         cursor = self.db.cursor()
 
         cursor.execute("""
-                          INSERT INTO Lecture(lecture_code, doc_id, start_time, end_time, password)
-                          VALUES (?,?,?,?,?)
-                          """, [lecture_code, doc_id, start_time, end_time, password])
+                          INSERT INTO Lecture(lecture_code, doc_id,lecturer, start_time, end_time, password)
+                          VALUES (?,?,?,?,?,?)
+                          """, [lecture_code, doc_id, lecturer, start_time, end_time, password])
 
         if commit:
             self.db.commit()
@@ -27,9 +28,24 @@ class Lectures(TimDbBase):
 
         cursor.execute(
             """
-                DELETE FROM Lecture
-                WHERE lecture_id = ?
+            DELETE
+            FROM Lecture
+            WHERE lecture_id = ?
             """, [lecture_id])
+
+        if commit:
+            self.db.commit()
+
+    @contract
+    def delete_users_from_lecture(self, lecture_id: 'int', commit: 'bool'):
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+            DELETE FROM LectureUsers
+            WHERE lecture_id = ?
+            """, [lecture_id]
+        )
 
         if commit:
             self.db.commit()
@@ -79,7 +95,7 @@ class Lectures(TimDbBase):
         cursor.execute("""
                         SELECT lecture_code
                         FROM Lecture
-                        WHERE doc_id = ? AND start_time < ? AND end_time > ?
+                        WHERE doc_id = ? AND start_time <= ? AND end_time >= ?
                         """, [doc_id, time, time])
 
         return self.resultAsDictionary(cursor)

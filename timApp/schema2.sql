@@ -28,6 +28,8 @@ DROP TABLE IF EXISTS UserNotes;
 
 DROP TABLE IF EXISTS ReadParagraphs;
 
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE Answer (
   id          INTEGER      NOT NULL,
   task_id     VARCHAR(255) NOT NULL,
@@ -272,9 +274,11 @@ CREATE TABLE Lecture (
   lecture_id   INTEGER,
   lecture_code TEXT,
   doc_id       INTEGER NOT NULL,
+  lecturer     INTEGER NOT NULL REFERENCES User (user_id),
   start_time   TEXT    NOT NULL,
   end_time     TEXT,
   password     TEXT,
+
   PRIMARY KEY (lecture_id)
 );
 
@@ -286,9 +290,9 @@ CREATE TABLE LectureUsers (
 );
 
 CREATE TABLE `Message` (
-  `msg_id`     INTEGER PRIMARY KEY AUTOINCREMENT,
-  `lecture_id` INTEGER NOT NULL,
-  `user_id`    INTEGER NOT NULL,
-  `message`    TEXT    NOT NULL,
-  `timestamp`  TEXT    NOT NULL
+  msg_id     INTEGER PRIMARY KEY,
+  lecture_id INTEGER NOT NULL REFERENCES Lecture (lecture_id),
+  user_id    INTEGER NOT NULL,
+  message    TEXT    NOT NULL,
+  timestamp  TEXT    NOT NULL
 );

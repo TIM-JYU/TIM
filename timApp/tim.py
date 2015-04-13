@@ -307,11 +307,17 @@ def add_question():
 def check_lecture():
     doc_id = int(request.args.get('doc_id'))
     timdb = getTimDb()
-    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_lecture(doc_id, getCurrentUserId())
+    current_user = getCurrentUserId()
+    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_lecture(doc_id, current_user)
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture:
         lecture_code = lecture[0].get("lecture_code")
-        return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code})
+        if lecture[0].get("lecturer") == current_user:
+            is_lecturer = True
+        else:
+            is_lecturer = False
+        return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
+                             "isLecturer": is_lecturer})
     else:
         time_now = str(datetime.datetime.now().strftime("%Y.%m.%d|%H:%M"))
         lecture_code = "Not running"
@@ -335,8 +341,9 @@ def start_lecture():
     password = request.args.get("password")
     if not password:
         password = ""
-    lecture_id = timdb.lectures.create_lecture(doc_id, start_time, end_time, lecture_code, password, True)
-    timdb.lectures.join_lecture(lecture_id, getCurrentUserId(), True)
+    current_user = getCurrentUserId()
+    lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
+    timdb.lectures.join_lecture(lecture_id, current_user, True)
     return jsonResponse({"lectureId": lecture_id})
 
 
@@ -350,14 +357,20 @@ def stop_lecture():
     return jsonResponse("It's gone")
 
 
-# TODO: VAIHDA
 @app.route('/joinLecture', methods=['POST'])
 def join_lecture():
     timdb = getTimDb()
     lecture_code = request.args.get("lecture_code")
     lecture_id = timdb.lectures.get_lecture_by_code(lecture_code)
-    timdb.lectures.join_lecture(lecture_id, getCurrentUserId(), True)
-    return jsonResponse({"inLecture": True, "lectureId": lecture_id})
+    current_user = getCurrentUserId()
+    timdb.lectures.join_lecture(lecture_id, current_user, True)
+    lecture = timdb.lectures.get_lecture(lecture_id)
+    if lecture[0].get("lecturer") == current_user:
+        is_lecturer = True
+    else:
+        is_lecturer = False
+    return jsonResponse({"inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer})
+
 
 @app.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
@@ -365,6 +378,7 @@ def leave_lecture():
     lecture_id = int(request.args.get("lecture_id"))
     timdb.lectures.leave_lecture(lecture_id, getCurrentUserId(), True)
     return jsonResponse("")
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
