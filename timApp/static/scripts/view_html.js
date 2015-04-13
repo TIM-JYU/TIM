@@ -598,6 +598,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
 
+
         if(scope.columns.length == 1 && type != "true-false"){
             columnsCount = scope.columns.length;
         }

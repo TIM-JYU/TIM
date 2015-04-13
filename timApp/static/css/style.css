@@ -1,20 +1,17 @@
 table {
-  width: 100%;
-  max-width: 600px;
-  height: 320px;
-  border-collapse: collapse;
-  margin: 50px auto;
-  background: white;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 50px auto;
+    background: white;
 }
+
 th {
-  background: steelblue;
-  height: 54px;
-  width: 25%;
-  font-weight: lighter;
-  text-shadow: 0 1px 0 #38678f;
-  color: white;
-  border: 1px solid #38678f;
-  transition: all 0.2s;
+    background: steelblue;
+    height: 54px;
+    width: 25%;
+    color: #000000;
+    border: 1px solid #38678f;
+    transition: all 0.2s;
 }
 
 tr {
@@ -22,23 +19,21 @@ tr {
 }
 
 td {
-  border-right: 1px solid #cccccc;
-  padding: 10px;
-  transition: all 0.2s;
+    border-right: 1px solid #cccccc;
+    padding: 10px;
+    transition: all 0.2s;
 }
 
 td.selected {
-  background: #d7e4ef;
- }
-
-
+    background: #d7e4ef;
+}
 
 #buttons {
-    display:none;
+    display: none;
 }
 
 .cart:hover #buttons {
-    display:block;
+    display: block;
 }
 
 .wall-behind {
@@ -68,7 +63,6 @@ td.selected {
     width: 100%;
     background-color: #cccccc;
     height: 10%;
-    
 
 }
 
@@ -87,6 +81,6 @@ td.selected {
 }
 
 #rightWall {
-    float:right;
+    float: right;
     text-align: right;
 }
