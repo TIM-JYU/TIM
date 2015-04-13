@@ -16,7 +16,7 @@ gitGet () {
      then
          git clone $2 $1 #http://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/PluginConstructionKit.git
      else 
-         (cd $1 && exec git fetch && exec git merge origin/master)
+         (cd $1 && git fetch && git merge origin/master)
     fi
 }
 gitGet PluginConstructionKit git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/PluginConstructionKit.git
