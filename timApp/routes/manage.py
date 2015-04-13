@@ -1,6 +1,5 @@
 """Routes for manage view."""
-import os
-import cssutils
+import re
 from flask import Blueprint, render_template, request
 from .common import *
 from timdb.docidentifier import DocIdentifier
@@ -83,10 +82,21 @@ def removePermission(doc_id, group_id, perm_type):
 def renameDocument(doc_id):
     timdb = getTimDb()
     new_name = request.get_json()['new_name']
+
     if not timdb.documents.documentExists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
+
+    old_name = timdb.documents.getDocument()['name']
+
+    if not timdb.users.isUserInGroup(userName, 'Administrators'):
+        userName = getCurrentUserName()
+        if re.match('^' + userName + '\/', old_name) is None:
+            abort(403, "You cannot rename this document as it's outside your folder.")
+        if re.match('^' + userName + '\/', new_name) is None:
+            abort(403, 'You cannot move documents outside your own folder ({}).'.format(userName))
+
     timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
     return "Success"
 
