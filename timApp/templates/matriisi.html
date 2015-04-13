@@ -10,27 +10,25 @@
         </select>
     </div>
     <label>Vastausvaihtoehdot:</label>
-    <br>
 
-    <div id="overflow">
+    <div>
         <table>
             <thead>
             <!----Top "hidden row" with + and - buttons  ---->
-            <tr ng-if="questionType == 'matriisi'">
+            <tr>
             <tr style="border: none; background-color: inherit">
                 <th width="50px" style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
-                <th ng-repeat="item in columns" style="border: none; background-color: inherit">
-                    <div class="cart">
-
+                <th ng-repeat="item in columns" style="border: none; background-color: inherit"
+                    ng-if="questionType == 'matriisi'">
+                    <div class="cart" style="margin-bottom: -50px;">
+                        <button ng-click="addCol($index)" style="float: left; margin-left: -20px;">+</button>
                         <button ng-click="delCol($index)">-</button>
-                        <button ng-click="addCol($index)" style="float: right; margin-right: -25px;">+</button>
-
 
                     </div>
                 </th>
-
             </tr>
+
             <!--- ends--->
             <tr>
                 <th width="50px"
@@ -41,33 +39,39 @@
 
                 </th>
 
-                <th ng-repeat="item in columns">
+                <th ng-if="questionType == 'true-false'">True</th>
+                <th ng-if="questionType == 'true-false'">False</th>
+
+                <th ng-repeat="item in columns" ng-if="questionType != 'true-false'">
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20" ng-disabled="item.isDisabled"></textarea>
+                        <textarea form="question-form" rows="1" cols="20"></textarea>
                         <br/>
 
+                    </div>
+                </th>
+
+
+                <th ng-if="questionType == 'matriisi'">
+                    <div>
+                        <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
                     </div>
                 </th>
 
             </tr>
 
             </tr>
-            <tr ng-if="questionType == 'true-false'">
-                <th></th>
-                <th>True</th>
-                <th>False</th>
-            </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="row in rows" ng-click="rowClick($index)">
+            <tr ng-repeat="row in rows">
                 <th width="50px"
-                    style="border-left: none; border-top: none; border-bottom: none; background-color:inherit; vertical-align: bottom">
+                    style="border: none; background-color:inherit; vertical-align: bottom">
+                    <button ng-click="addRow($index)" style="margin-bottom: 5px">+</button>
                     <button ng-click="delRow($index)">-</button>
-                    <button ng-click="addRow($index)" style="margin-top: 5px">+</button>
+
                 </th>
                 <th>
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20" ng-disabled="row.isDisabled"></textarea>
+                        <textarea form="question-form" rows="1" cols="20"></textarea>
                         <br/>
 
                     </div>
@@ -115,19 +119,18 @@
                     </div>
                 </td>
             </tr>
+            <tr>
+                <td style="border: none"></td>
+                <th>
+                    <div>
+                        <button style="width: 150px; height: 50px;" ng-click="addRow(-1)">+</button>
+                    </div>
+                </th>
+            </tr>
 
 
             </tbody>
         </table>
-    </div>
-    <div ng-if="questionType == 'true-false'">
-        <button ng-click="delRow(-1)">delete_row</button>
-    </div>
-    <div ng-if="questionType == 'radio-button'">
-        <button ng-click="delRow(-1)">delete_row</button>
-    </div>
-    <div ng-if="questionType == 'matriisi'">
-        <button ng-click="delRow(-1)">delete_row</button>
     </div>
 
     <br>

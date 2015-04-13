@@ -1,5 +1,5 @@
-<div>
-    <form class="basic-grey" id="question-form">
+<div align="left">
+    <form id="question-form">
         <fieldset>
             <label>Kysymys:</label>
             <textarea name="kysymys" rows="10" cols="100" ng-model="question.question"></textarea>
@@ -11,15 +11,14 @@
                 <option ng-option value="true-false">True/False</option>
                 <option ng-option value="matriisi">Monta riviä/saraketta</option>
             </select>
-            <br>
 
-            <div ng-if="question.type == 'radio-vertical'" ng-init="radioButtonQuestion()">
+            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio-button')" >
                 {% include 'matriisi.html' %}
             </div>
-            <div ng-if="question.type == 'true-false'" ng-init="trueFalseQuiz()">
+            <div ng-if="question.type == 'true-false'" ng-init="createMatrix(2, 2, 'true-false')">
                 {% include 'matriisi.html' %}
             </div>
-            <div ng-if="question.type == 'matriisi'" ng-init="matriisi()">
+            <div ng-if="question.type == 'matriisi'" ng-init="createMatrix(2, 2, 'matriisi')">
                 {% include 'matriisi.html' %}
             </div>
 
