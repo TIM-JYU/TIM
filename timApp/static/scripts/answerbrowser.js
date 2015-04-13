@@ -90,15 +90,14 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
                     $scope.changed = true;
+                    $scope.shouldUpdateHtml = true;
                 });
 
                 $scope.loadIfChanged = function () {
                     if ($scope.changed) {
-                        $scope.getAvailableAnswers();
+                        $scope.getAvailableAnswers($scope.shouldUpdateHtml);
                         $scope.changed = false;
-                    }
-                    else if (typeof $scope.answers === 'undefined') {
-                        $scope.getAvailableAnswers(false);
+                        $scope.shouldUpdateHtml = false;
                     }
                 };
 
@@ -107,6 +106,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.loadIfChanged();
                 });
                 $scope.changed = true;
+                $scope.shouldUpdateHtml = false;
             }
         };
     }]);
