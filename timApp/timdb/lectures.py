@@ -105,7 +105,7 @@ class Lectures(TimDbBase):
         cursor = self.db.cursor()
 
         cursor.execute("""
-                        SELECT lecture_id
+                        SELECT lecture_id, password
                         FROM Lecture
                         WHERE lecture_code = ?
                         """, [lecture_code])

@@ -19,6 +19,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.showLecture = false;
         $scope.lectures = [];
         $scope.chosenLecture = "";
+        $scope.passwordQuess = "";
 
 
         $scope.checkIfInLecture = function () {
@@ -40,21 +41,27 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.joinLecture = function () {
             if ($scope.chosenLecture == "") {
-                console.log("You must choose");
+                console.log("Choose lecture to join");
                 return;
             }
 
             http({
                 url: '/joinLecture',
                 method: 'POST',
-                params: {'lecture_code': $scope.chosenLecture}
+                params: {'lecture_code': $scope.chosenLecture, 'password_quess': $scope.passwordQuess}
             })
                 .success(function (answer) {
-                    if (answer.inLecture) {
-                        console.log(answer)
-                        $scope.showLectureView(answer);
+                    if (!answer.correctPassword) {
+                        $scope.passwordQuess = "";
+                        document.getElementById("passwordInput").style.border = "1px solid red";
+                        document.getElementById("passwordInput").placeholder = "Wrong password";
                     } else {
-                        $scope.showBasicView(answer);
+                        if (answer.inLecture) {
+                            console.log(answer)
+                            $scope.showLectureView(answer);
+                        } else {
+                            $scope.showBasicView(answer);
+                        }
                     }
                 })
         }
@@ -292,7 +299,5 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 }
             }
         }
-
-
     }])
 ;

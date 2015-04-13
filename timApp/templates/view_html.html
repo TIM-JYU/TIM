@@ -77,7 +77,8 @@
                 <select ng-model="chosenLecture" ng-options="lecture as lecture for lecture in lectures">
                     <pre>{{ "{{ availableLectures || json }}" }}</pre>
                 </select>
-                <input type="button" ng-click="joinLecture()" value="Join">
+                <input id="passwordInput" ng-model="passwordQuess" placeholder="Password">
+                <input type="button" ng-click="joinLecture()" value="Join"
             </div>
 
             <div class="wall-behind" id="wall" ng-show="inLecture">

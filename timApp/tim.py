@@ -363,16 +363,21 @@ def stop_lecture():
 def join_lecture():
     timdb = getTimDb()
     lecture_code = request.args.get("lecture_code")
+    password_quess = request.args.get("password_quess")
     lecture_id = timdb.lectures.get_lecture_by_code(lecture_code)
     current_user = getCurrentUserId()
-    timdb.lectures.join_lecture(lecture_id, current_user, True)
     lecture = timdb.lectures.get_lecture(lecture_id)
+    if lecture[0].get("password") != password_quess:
+        return jsonResponse({"correctPassword": False});
+
+    timdb.lectures.join_lecture(lecture_id, current_user, True)
     if lecture[0].get("lecturer") == current_user:
         is_lecturer = True
     else:
         is_lecturer = False
     return jsonResponse(
-        {"inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer, "lectureCode": lecture_code})
+        {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
+         "lectureCode": lecture_code})
 
 
 @app.route('/leaveLecture', methods=['POST'])
