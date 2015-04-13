@@ -8,6 +8,7 @@ docker stop haskellplugins2
 docker rm haskellplugins2
 
  docker run \
+   -d
    -v /opt/tim/timApp/modules/Haskell/.cabal-sandbox/bin/:/hbin\
    -v /opt/tim/timApp/modules/Haskell/:/Haskell\
    -v /opt/tim/timApp/modules/Haskell/startAll.sh:/startAll.sh\
