@@ -114,8 +114,6 @@ input[type="submit"], button, input[type="button"] {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-
-
 .viewLogin .loginButton:hover {
     width:auto;
 } 

@@ -3,6 +3,8 @@ table {
     border-collapse: collapse;
     margin: 50px auto;
     background: white;
+    padding: 0;
+    margin: 0;
 }
 
 th {
@@ -14,8 +16,14 @@ th {
     transition: all 0.2s;
 }
 
+#buttons {
+    border: none;
+    background-color:inherit;
+}
+.negative {
+    background: #c12e2a;
+}
 tr {
-
 }
 
 td {
@@ -26,14 +34,6 @@ td {
 
 td.selected {
     background: #d7e4ef;
-}
-
-#buttons {
-    display: none;
-}
-
-.cart:hover #buttons {
-    display: block;
 }
 
 .wall-behind {

@@ -612,14 +612,12 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 id: i,
                 text: 'test'
             }
-
         scope.columns = [];
         for (var i = 0; i < columnsCount; i++)
             scope.columns[i] = {
                 id: i, text: 'test',
                 questionPlaceholder: 'column'
             }
-        scope.questionType = type;
     };
 
 
@@ -633,8 +631,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.addCol = function (loc) {
         if (loc >= 0) {
             scope.columns.splice(loc, 0, {id: loc, question: "column", questionPlaceholder: "column", text: ""});
-            for (var i = 0; i < scope.rows.length; i++) {
-                scope.rows[i].id = i;
+            for (var i = 0; i < scope.columns.length; i++) {
+                scope.columns[i].id = i;
             }
         }
         else
