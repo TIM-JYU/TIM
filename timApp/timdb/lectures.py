@@ -98,6 +98,13 @@ class Lectures(TimDbBase):
 
     @contract
     def check_if_in_lecture(self, doc_id: "int", user_id: "int") -> "tuple":
+        """
+        Check if user is in lecture from specific document
+        :param doc_id: document id
+        :param user_id: user id
+        :return:
+        """
+
         cursor = self.db.cursor()
 
         cursor.execute("""
@@ -110,22 +117,26 @@ class Lectures(TimDbBase):
         if len(lecture_ids) <= 0:
             return False, 0
 
-        list_of_lectures = "("
+        string_of_lectures = ""
+        comma = ""
         for lecture in lecture_ids:
-            list_of_lectures += str(lecture[0])
+            string_of_lectures += comma + str(lecture[0])
+            comma = ","
 
-        list_of_lectures += ")"
+        if len(string_of_lectures) <= 0:
+            return False, -1
 
         cursor.execute("""
                            SELECT lecture_id, user_id
                            FROM LectureUsers
-                           WHERE lecture_id = """ + list_of_lectures + """ AND user_id = ?
+                           WHERE lecture_id IN """ + "(" + string_of_lectures + ")" + """ AND user_id = ?
                             """, [user_id])
 
         result = cursor.fetchall()
-        if result:
-            return len(result) == 1, result[0][0]
+        if len(result) > 0:
+            return True, result[0][0]
         else:
-            return len(result) == 1, -1
+            return False, -1
+
 
 

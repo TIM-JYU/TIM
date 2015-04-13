@@ -349,14 +349,15 @@ def stop_lecture():
     timdb.lectures.delete_lecture(lecture_id, True)
     return jsonResponse("It's gone")
 
-#TODO: VAIHDA
+
+# TODO: VAIHDA
 @app.route('/joinLecture', methods=['POST'])
 def join_lecture():
     timdb = getTimDb()
     lecture_code = request.args.get("lecture_code")
     lecture_id = timdb.lectures.get_lecture_by_code(lecture_code)
-    timdb.lectures.join_lecture(lecture_id, getCurrentUserId(),True)
-    return jsonResponse("")
+    timdb.lectures.join_lecture(lecture_id, getCurrentUserId(), True)
+    return jsonResponse({"inLecture": True, "lectureId": lecture_id})
 
 @app.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
@@ -484,7 +485,8 @@ def createDocument():
         return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
 
     if re.match('^(\d)*$', docName) is not None:
-        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
+        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'},
+                            400)
 
     timdb = getTimDb()
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
@@ -657,8 +659,9 @@ def saveAnswer(plugintype, task_id):
 
     markup = getPluginMarkup(doc_id, plugintype, task_id_name)
     if markup is None:
-        return jsonResponse({'error': 'The task was not found in the document. ' + str(doc_id) + ' ' + task_id_name},
-                            404)
+        return jsonResponse(
+            {'error': 'The task was not found in the document. ' + str(doc_id) + ' ' + task_id_name},
+            404)
     if markup == "YAMLERROR: Malformed string":
         return jsonResponse({'error': 'Plugin markup YAML is malformed.'}, 400)
 

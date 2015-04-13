@@ -18,6 +18,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.lectureId = null;
         $scope.showLecture = false;
         $scope.lectures = [];
+        $scope.chosenLecture = "";
+
 
         $scope.checkIfInLecture = function () {
             http({
@@ -27,30 +29,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             })
                 .success(function (answer) {
                     if (answer.isInLecture) {
-                        console.log("Luennolla?")
-                        $scope.inLecture = true;
-                        $scope.lectureId = answer.lectureId;
-                        $scope.canStop = true;
-                        $scope.polling = true;
-                        if (!$scope.requestOnTheWay) {
-                            $scope.msg = "";
-                            $scope.getAllMessages();
-                        }
-                        document.getElementById("lectureName").innerText = answer.lectureCode;
+                        $scope.showLectureView(answer);
                     } else {
-                        $scope.canStart = true;
-                        $scope.canStop = false;
-                        $scope.polling = false;
-                        $scope.inLecture = false;
-                        $scope.lectureId = null;
-                        document.getElementById("lectureName").innerText = "Not running";
-                        if (answer.lectures != undefined) {
-                            jQuery.each(answer.lectures, function (i, lecture) {
-                                if ($scope.lectures.indexOf(lecture) == -1) {
-                                    $scope.lectures.push(lecture);
-                                }
-                            });
-                        }
+                        $scope.showBasicView(answer);
                     }
                 })
         }
@@ -63,21 +44,51 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 return;
             }
 
-            console.log($scope.chosenLecture);
-
             http({
                 url: '/joinLecture',
                 method: 'POST',
                 params: {'lecture_code': $scope.chosenLecture}
             })
-                .success(function () {
-                    console.log("Joined to lecture");
-                    $scope.checkIfInLecture();
+                .success(function (answer) {
+                    if (answer.inLecture) {
+                        console.log(answer);
+                        $scope.showLectureView(answer);
+                    } else {
+                        $scope.showBasicView(answer);
+                    }
                 })
         }
 
         $scope.toggleLecture = function () {
             $scope.showLecture = !$scope.showLecture
+        }
+
+        $scope.showLectureView = function (answer) {
+            $scope.inLecture = true;
+            $scope.lectureId = answer.lectureId;
+            $scope.canStop = true;
+            $scope.polling = true;
+            if (!$scope.requestOnTheWay) {
+                $scope.msg = "";
+                $scope.getAllMessages();
+            }
+            document.getElementById("lectureName").innerText = answer.lectureCode;
+        }
+
+        $scope.showBasicView = function (answer) {
+            $scope.canStart = true;
+            $scope.canStop = false;
+            $scope.polling = false;
+            $scope.inLecture = false;
+            $scope.lectureId = null;
+            document.getElementById("lectureName").innerText = "Not running";
+            if (answer.lectures != undefined) {
+                jQuery.each(answer.lectures, function (i, lecture) {
+                    if ($scope.lectures.indexOf(lecture) == -1) {
+                        $scope.lectures.push(lecture);
+                    }
+                });
+            }
         }
 
         $scope.createLecture = function () {
