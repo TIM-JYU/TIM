@@ -1,7 +1,7 @@
-<div class="ng-scope">
+<div class="ng-scope" style="text-align:left">
     <form id="question-form">
         <fieldset>
-            <label>Kysymys:</label>
+            <label>Kysymys:</label><br>
             <textarea name="kysymys" rows="10" cols="100" ng-model="question.question"></textarea>
             <br>
             <label>Kysymystyyppi:</label>
@@ -28,8 +28,8 @@
             </select>
             <br>
             <br>
-            <input type="button" class="button" value="Submit" ng-click="createQuestion(question.question,'test')">
-            <input type="button" class="button" value="Cancel" ng-click="close()">
+            <input type="button" value="Submit" ng-click="createQuestion(question.question,'test')">
+            <input type="button" value="Cancel" ng-click="close()" style="background: #c12e2a;">
         </fieldset>
     </form>
 </div>

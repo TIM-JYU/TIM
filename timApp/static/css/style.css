@@ -3,6 +3,8 @@ table {
     border-collapse: collapse;
     margin: 50px auto;
     background: white;
+    padding: 0;
+    margin: 0;
 }
 
 th {
@@ -15,12 +17,13 @@ th {
 }
 
 #buttons {
-    width: 30px;
     border: none;
     background-color:inherit;
 }
+.negative {
+    background: #c12e2a;
+}
 tr {
-
 }
 
 td {
