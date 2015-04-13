@@ -5,7 +5,7 @@ from contracts import contract
 
 class Answers(TimDbBase):
     @contract
-    def saveAnswer(self, user_ids: 'list(int)', task_id: 'str', content: 'str', points: 'str|None', tags: 'list(str)'):
+    def saveAnswer(self, user_ids: 'list(int)', task_id: 'str', content: 'str', points: 'str|int|float|None', tags: 'list(str)'):
         """Saves an answer to the database.
         
         :param user_ids: The id of the usergroup to which the answer belongs.
@@ -59,9 +59,15 @@ class Answers(TimDbBase):
         placeholders = ', '.join(placeholder for unused in task_ids)
         cursor.execute(
             """
-                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count FROM User
+                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, SUM(points) as total_points
+                FROM User
                 JOIN UserAnswer ON User.id = UserAnswer.user_id
                 JOIN Answer ON Answer.id = UserAnswer.answer_id
+                JOIN (SELECT Answer.id, MIN(answered_on)
+                      FROM Answer
+                      JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
+                      GROUP BY UserAnswer.user_id, Answer.task_id
+                      )tmp ON tmp.id = Answer.id
                 WHERE task_id IN (%s)
                 GROUP BY User.id
                 ORDER BY real_name ASC

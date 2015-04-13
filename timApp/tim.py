@@ -470,14 +470,13 @@ def saveAnswer(plugintype, task_id):
     
     if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
         saveObject = jsonresp['save']
-        
+        tags = []
+        tim_info = jsonresp.get('tim_info', {})
+        points = tim_info.get('points', None)
+
         #Save the new state
         if isinstance(saveObject, collections.Iterable):
-            points = jsonresp['save']['points'] if 'points' in saveObject else None
             tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
-        else:
-            points = None
-            tags = []
         timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
 
     return jsonResponse({'web':jsonresp['web']})

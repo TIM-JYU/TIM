@@ -666,6 +666,10 @@ answerbrowser a {
     font-size: inherit;
 }
 
+answerbrowser .firstanswer {
+    float: right;
+}
+
 sub {
 	font-size: 0.8em;
 	/* gecko-pohjaisilla selaimilla sub nakyy liian ylhaalla, ellei fonttia pienenna */
