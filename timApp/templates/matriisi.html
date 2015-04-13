@@ -70,7 +70,7 @@
                 </th>
                 <td ng-repeat="column in columns">
                     <!-- Radiopainike vaakasuoraan-->
-                    <div ng-if="question.matriisi.vastaus == 'radiobutton-horizontal' || question.type == 'true-false'">
+                    <div ng-if="(question.matriisi.vastaus == 'radiobutton-horizontal' && question.type=='matriisi') || question.type == 'true-false'">
                         <input type="radio"
                                ng-model="row.id"
                                ng-value="column.id"
@@ -82,7 +82,7 @@
                     </div>
                     <!-- Radiopainike pystysuoraan-->
                     <div ng-if="question.type != 'true-false'">
-                        <div ng-if="question.matriisi.vastaus == 'radiobutton-vertical' || question.type == 'radio-vertical'">
+                        <div ng-if="(question.matriisi.vastaus == 'radiobutton-vertical' && question.type=='matriisi') || question.type == 'radio-vertical'">
                             <input type="radio"
                                    ng-model="column.id"
                                    ng-value="row.id"
@@ -94,13 +94,13 @@
                         </div>
                         <!-- Vapaa tekstivastaus-->
                         <div ng-if="question.type != 'radio-button'">
-                            <textarea ng-if="question.matriisi.vastaus == 'vapaakenttä'"
+                            <textarea ng-if="question.matriisi.vastaus == 'vapaakenttä' && question.type=='matriisi'"
                                       type="text"
                                       placeholder="Placeholder"
                                       rows="1"
                                       cols="20"></textarea>
                             <!-- Checkbox vaakaan-->
-                            <div ng-if="question.matriisi.vastaus == 'checkbox'">
+                            <div ng-if="question.matriisi.vastaus == 'checkbox' && question.type=='matriisi'">
                                 <input type="checkbox"
                                        ng-model="row.id"
                                        ng-true-value="column.id"
