@@ -3,7 +3,6 @@
  */
 
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-/* TODO: Seinä ei toimi kunnolla, jos pomppii luennolta toiselle */
 timApp.controller("WallController", ['$scope', '$controller', "$http",
 
     function ($scope, controller, http) {
@@ -13,7 +12,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.showPoll = true;
         $scope.polling = true;
         $scope.requestOnTheWay = false;
-        $scope.requestLectureId;
         $scope.showWall = false;
         $scope.canStart = true;
         $scope.canStop = false;
@@ -22,6 +20,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.lectures = [];
         $scope.chosenLecture = "";
         $scope.passwordQuess = "";
+        $scope.pollingLectures = [];
 
         $scope.checkIfInLecture = function () {
             http({
@@ -78,12 +77,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.lectureId = answer.lectureId;
             $scope.polling = true;
             $scope.showWall = true;
-            if ($scope.requestOnTheWay && $scope.requestDocId == $scope.lectureId) {
-                console.log("Not getting new messages");
-            } else {
-                $scope.msg = "";
-                $scope.getAllMessages();
-            }
+
+            $scope.getAllMessages();
+
             if (answer.isLecturer) {
                 $scope.canStop = true;
             }
@@ -95,7 +91,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.canStop = false;
             $scope.polling = false;
             $scope.inLecture = false;
-            $scope.lectureId = null;
+            $scope.lectureId = -1;
             document.getElementById("lectureName").innerText = "Not running";
             if (answer.lectures != undefined) {
                 jQuery.each(answer.lectures, function (i, lecture) {
@@ -168,6 +164,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         };
 
         $scope.leaveLecture = function () {
+            $scope.msg = "";
             http({
                 url: '/leaveLecture',
                 method: "POST",
@@ -224,15 +221,17 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                     textarea.scrollTop = textarea.scrollHeight;
                     $scope.requestDocId = $scope.lectureId;
 
-                    t = setTimeout(function () {
+                    if ($scope.pollingLectures.indexOf(answer.lectureId) == -1) {
                         $scope.startLongPolling($scope.lastID);
-                    }, 1000);
+                        $scope.pollingLectures.push(answer.lectureId);
+                    }
+
                 })
         };
 
         $scope.startLongPolling = function (lastID) {
             function message_longPolling(lastID) {
-                var t;
+                var timeOut;
 
                 if (lastID == null) {
                     lastID = -1;
@@ -244,16 +243,19 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         type: 'GET',
                         data: {'client_message_id': lastID, lecture_id: $scope.lectureId},
                         success: function (answer) {
-                            $scope.requestOnTheWay = false;
-                            if(answer.lectureId != $scope.lectureId){
-                                console.log("Old request from other lecture came back")
+                            $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
+                            if (answer.lectureId != $scope.lectureId) {
                                 return;
                             }
-                            clearInterval(t);
+
+                            $scope.requestOnTheWay = false;
+                            clearInterval(timeOut);
                             if ($scope.polling) {
+
+                                $scope.pollingLectures.push(answer.lectureId);
                                 if (answer.status == 'results' || answer.status == 'no-results') {
 
-                                    t = setTimeout(function () {
+                                    timeOut = setTimeout(function () {
                                         message_longPolling(answer.lastid);
                                     }, 1000);
 
@@ -283,8 +285,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         ,
                         error: function () {
                             $scope.requestOnTheWay = false;
-                            clearInterval(t);
-                            t = setTimeout(function () {
+                            clearInterval(timeOut);
+                            timeOut = setTimeout(function () {
                                 message_longPolling();
                             }, 30000);
                         }

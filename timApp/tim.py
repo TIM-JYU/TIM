@@ -218,9 +218,10 @@ def get_all_messages():
             list_of_new_messages.append(
                 user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
         return jsonResponse(
-            {"status": "results", "data": list_of_new_messages, "lastid": messages[-1].get('msg_id')})
+            {"status": "results", "data": list_of_new_messages, "lastid": messages[-1].get('msg_id'),
+             "lectureId": lecture_id})
 
-    return jsonResponse({"status": "no-results", "data": [], "lastid": -1})
+    return jsonResponse({"status": "no-results", "data": [], "lastid": -1,"lectureId": lecture_id})
 
 
 @app.route('/getMessages')
@@ -240,8 +241,7 @@ def get_messages():
         if last_message:
             last_message_id = last_message[-1].get('msg_id')
             if last_message_id != client_last_id:
-                amount_of_new_messages = last_message_id - client_last_id
-                messages = timdb.messages.get_messages_amount(lecture_id, amount_of_new_messages)
+                messages = timdb.messages.get_new_messages(lecture_id, client_last_id)
                 messages.reverse()
                 list_of_new_messages = []
 
@@ -256,7 +256,8 @@ def get_messages():
 
         time.sleep(1)
         step += 1
-    return jsonResponse({"status": "no-results", "data": ["No new messages"], "lastid": client_last_id})
+    return jsonResponse(
+        {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id})
 
 
 @app.route('/sendMessage', methods=['POST'])
@@ -328,8 +329,6 @@ def check_lecture():
             lecture_codes.append(lecture.get("lecture_code"))
         return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
 
-
-# TODO: Change lecture primary key to lecture_code + doc_id
 
 @app.route('/createLecture', methods=['POST'])
 def start_lecture():

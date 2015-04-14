@@ -47,16 +47,15 @@ class Messages(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def get_messages_amount(self, lecture_id: 'int', amount: 'int') -> 'list(dict)':
+    def get_new_messages(self, lecture_id: 'int', client_last_message: 'int') -> 'list(dict)':
         cursor = self.db.cursor()
         cursor.execute("""
                       SELECT *
                       FROM Message
-                      WHERE lecture_id = (?)
+                      WHERE lecture_id = ? AND msg_id > ?
                       ORDER BY msg_id
                       DESC
-                      LIMIT (?)
-                      """, [lecture_id, amount])
+                      """, [lecture_id,client_last_message ])
 
         return self.resultAsDictionary(cursor)
 
