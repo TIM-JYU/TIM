@@ -23,6 +23,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.pollingLectures = [];
         $scope.useDate = false;
         $scope.useDuration = false;
+        $scope.dateChosen = false;
+        $scope.durationChosen = false;
 
         var date = new Date();
 
@@ -310,6 +312,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.endHour = parseInt($scope.startHour) + 2;
             $scope.endMin = $scope.startMin;
 
+
             document.getElementById("calendarStop").disabled = false;
             $scope.useDate = true;
             $scope.useDuration = false;
@@ -325,6 +328,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.enableDue2 = function () {
             $scope.useDuration = true;
             $scope.useDate = false;
+            $scope.endDay = "";
+            $scope.endMonth = "";
+            $scope.endYear = "";
+            $scope.endHour = "";
+            $scope.endMin = "";
+
             document.getElementById("calendarStop").disabled = true;
             $scope.defInputStyle(document.getElementById("stopDay"));
             $scope.defInputStyle(document.getElementById("stopMonth"));
@@ -518,9 +527,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             }
             $scope.showLecture = false;
             document.getElementById("errorMessage").innerHTML = "";
-            document.getElementById("lectureForm").reset();
             $scope.useDate = false;
             $scope.useDuration = false;
+            $scope.dateChosen = false;
+            $scope.durationChosen = false;
             g_globalObject.closeCalendar();
             g_globalObject2.closeCalendar();
         };
@@ -535,9 +545,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
             g_globalObject.setOnSelectedDelegate(function () {
                 var obj = g_globalObject.getSelectedDay();
-                document.getElementById("startDay").value = obj.day;
-                document.getElementById("startMonth").value = obj.month;
-                document.getElementById("startYear").value = obj.year;
+                $scope.startDay = obj.day;
+                $scope.startMonth = obj.month;
+                $scope.startYear = obj.year;
+                // TODO: This if necessary or if there is other way
+                $scope.$apply();
                 g_globalObject.closeCalendar();
             });
 
@@ -560,9 +572,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
             g_globalObject2.setOnSelectedDelegate(function () {
                 var obj = g_globalObject2.getSelectedDay();
-                document.getElementById("stopDay").value = obj.day;
-                document.getElementById("stopMonth").value = obj.month;
-                document.getElementById("stopYear").value = obj.year;
+                $scope.endDay = obj.day;
+                $scope.endMonth = obj.month;
+                $scope.endYear = obj.year;
+                // TODO: This if necessary or if there is other way
+                $scope.$apply();
                 g_globalObject2.closeCalendar();
             });
         };

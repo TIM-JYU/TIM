@@ -42,7 +42,7 @@
                 <br>
 
                 <div id="endInfo">
-                    <input type="radio" id="dateChosen2" name="stop" ng-click="enableDate2()">
+                    <input type="radio" id="dateChosen2" name="stop" ng-click="enableDate2()" ng-model="dateChosen">
                     <label for="useDate">Use date:</label>
 
                     <div>
@@ -64,7 +64,7 @@
                                is-valid-change="" ng-model="endMin" ng-disabled="!useDate">
                     </div>
                     <br>
-                    <input type="radio" id="durationChosen" name="stop" ng-click="enableDue2()">
+                    <input type="radio" id="durationChosen" name="stop" ng-click="enableDue2()" ng-model="durationChosen">
                     <label for="useTime">Duration:</label>
 
                     <div>
