@@ -226,7 +226,7 @@ CREATE TABLE UserNotes (
   note_index   INTEGER      NOT NULL,
   content      VARCHAR(255) NOT NULL,
   created      TIMESTAMP    NOT NULL,
-  modified     TIMESTAMP, -- TODO: Does this really need to be NOT NULL? (removed because of the example doesn't work with not null)
+  modified     TIMESTAMP    NOT NULL,
   access       VARCHAR(20)  NOT NULL,
   tags         VARCHAR(20)  NOT NULL,
   deprecated   BOOLEAN,
@@ -260,17 +260,51 @@ CREATE TABLE ReadParagraphs (
   ON UPDATE RESTRICT
 );
 
-CREATE TABLE `Question` (
-  `question_id` INTEGER NOT NULL PRIMARY KEY,
-  `doc_id`      INTEGER NOT NULL,
-  `par_index`   INTEGER NOT NULL,
-  `question`    TEXT    NOT NULL,
-  `answer`      TEXT
+CREATE TABLE Question (
+  question_id INTEGER NOT NULL PRIMARY KEY,
+  doc_id      INTEGER NOT NULL,
+  par_index   INTEGER NOT NULL,
+  question    TEXT    NOT NULL,
+  answer      TEXT
+);
+
+CREATE TABLE Lecture (
+  lecture_id   INTEGER,
+  lecture_code TEXT,
+  doc_id       INTEGER NOT NULL,
+  lecturer     INTEGER NOT NULL,
+  start_time   TEXT    NOT NULL,
+  end_time     TEXT,
+  password     TEXT,
+
+  PRIMARY KEY (lecture_id)
+);
+
+CREATE TABLE LectureUsers (
+  lecture_id INTEGER,
+  user_id    INTEGER,
+
+  FOREIGN KEY (lecture_id)
+  REFERENCES Lecture (lecture_id)
+  ON DELETE CASCADE,
+
+  FOREIGN KEY (user_id)
+  REFERENCES User (user_id)
+  ON DELETE CASCADE
 );
 
 CREATE TABLE `Message` (
-	`msg_id`	INTEGER PRIMARY KEY,
-	`user_id`	INTEGER NOT NULL,
-	`message`	TEXT NOT NULL,
-	`timestamp`	TEXT NOT NULL
+  msg_id     INTEGER PRIMARY KEY,
+  lecture_id INTEGER NOT NULL,
+  user_id    INTEGER NOT NULL,
+  message    TEXT    NOT NULL,
+  timestamp  TEXT    NOT NULL,
+
+  FOREIGN KEY (lecture_id)
+  REFERENCES Lecture (lecture_id)
+  ON DELETE CASCADE,
+
+  FOREIGN KEY (user_id)
+  REFERENCES User (user_id)
+  ON DELETE CASCADE
 );

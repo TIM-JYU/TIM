@@ -1,7 +1,7 @@
-<div>
-    <form class="basic-grey" id="question-form">
+<div class="ng-scope" style="text-align:left">
+    <form id="question-form">
         <fieldset>
-            <label>Kysymys:</label>
+            <label>Kysymys:</label><br>
             <textarea name="kysymys" rows="10" cols="100" ng-model="question.question"></textarea>
             <br>
             <label>Kysymystyyppi:</label>
@@ -11,26 +11,25 @@
                 <option ng-option value="true-false">True/False</option>
                 <option ng-option value="matriisi">Monta riviä/saraketta</option>
             </select>
-            <br>
 
-            <div ng-if="question.type == 'radio-vertical'" ng-init="radioButtonQuestion()">
+            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio-button')" >
                 {% include 'matriisi.html' %}
             </div>
-            <div ng-if="question.type == 'true-false'" ng-init="trueFalseQuiz()">
+            <div ng-if="question.type == 'true-false'" ng-init="createMatrix(2, 2, 'true-false')">
                 {% include 'matriisi.html' %}
             </div>
-            <div ng-if="question.type == 'matriisi'" ng-init="matriisi()">
+            <div ng-if="question.type == 'matriisi'" ng-init="createMatrix(2, 2, 'matriisi')">
                 {% include 'matriisi.html' %}
             </div>
-
+            <br><br>
             <label>Vastausaika:</label>
             <input type="radio" name="vastausaika" value="0">Ei
             <input type="radio" name="vastausaika" value=""><input type=text" size="3">
             </select>
             <br>
             <br>
-            <input type="button" class="button" value="Submit" ng-click="createQuestion(question.question,'test')">
-            <input type="button" class="button" value="Cancel" ng-click="close()">
+            <input type="button" value="Submit" ng-click="createQuestion(question.question,'test')">
+            <input type="button" value="Cancel" ng-click="close()" style="background: #c12e2a;">
         </fieldset>
     </form>
 </div>

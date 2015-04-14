@@ -195,7 +195,6 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleParEditor($newpar, {showDelete: false});
         });
 
-        // TODO: Keep working here
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
         sc.addEvent(QUESTION_ADD_BUTTON, function (e) {
@@ -505,6 +504,7 @@ timApp.controller("ViewCtrl", ['$scope',
                         }
                         parentEntry.items.push(entry)
                     }
+
                 }
 
                 if (parentEntry != null) {
@@ -556,7 +556,6 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
-
     }]);
 
 timApp.directive('questionDialog', function factory() {
@@ -588,78 +587,61 @@ timApp.directive('questionDialog', function factory() {
 //TODO: Controller for the question
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
-    scope.columns = [{
-        id: 0,
-        text: 'test',
-        questionPlaceholder: 'column'
-    }];
-    scope.rows = [{
-        id: 0,
-        text: 'test'
-    }];
+
     scope.question = {
         question: ""
     };
+
     scope.questionType = "";
+    scope.columns = [];
+    scope.rows = [];
 
-    scope.radioButtonQuestion = function () {
-        scope.rows = [{
-            id: 0,
-            text: 'test'
-        },{
-            id: 1,
-            text: 'test'
-        },{
-            id: 2,
-            text: 'test'
-        }];
-        scope.columns = [{
-            id: 0,
-            text: 'test',
-            questionPlaceholder: 'column'
-        }];
-        scope.questionType = "radio-button";
+    scope.createMatrix = function (rowsCount, columnsCount, type) {
+
+
+        if(scope.columns.length == 1 && type != "true-false"){
+            columnsCount = scope.columns.length;
+        }
+
+       if(scope.rows.length > rowsCount) {
+           rowsCount = scope.rows.length;
+       }
+        scope.rows = [];
+        for (var i = 0; i < rowsCount; i++)
+            scope.rows[i] = {
+                id: i,
+                text: 'test'
+            }
+        scope.columns = [];
+        for (var i = 0; i < columnsCount; i++)
+            scope.columns[i] = {
+                id: i, text: 'test',
+                questionPlaceholder: 'column'
+            }
     };
 
-    scope.trueFalseQuiz = function () {
-        scope.rows = [{
-            id: 0,
-            text: 'test'
-        }];
-        scope.columns = [{
-            id: 0,
-            text: 'True',
-            questionPlaceholder: 'column'
-        },{
-            id: 1,
-            text: 'False',
-            questionPlaceholder: 'column'
-        }];
-        scope.questionType = "true-false";
-    };
 
-    scope.matriisi = function() {
-        scope.rows = [{
-            id: 0,
-            text: 'test'
-        }];
-        scope.columns = [{
-            id: 0,
-            text: 'test',
-            questionPlaceholder: 'column'
-        }];
-        scope.questionType = "matriisi";
-    };
+    scope.rowClick = function (index) {
+
+        scope.addRow(index);
+
+
+    }
 
     scope.addCol = function (loc) {
         if (loc >= 0) {
             scope.columns.splice(loc, 0, {id: loc, question: "column", questionPlaceholder: "column", text: ""});
-            for (var i = 0; i < scope.rows.length; i++) {
-                scope.rows[i].id = i;
+            for (var i = 0; i < scope.columns.length; i++) {
+                scope.columns[i].id = i;
             }
         }
         else
-            scope.columns.push({id: scope.columns.length, question: "column", questionPlaceholder: "column", text: ""});
+            scope.columns.push({
+                id: scope.columns.length,
+                question: "column",
+                questionPlaceholder: "column",
+                text: "",
+            });
     };
 
     scope.addRow = function (loc) {
@@ -671,6 +653,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
         else
             scope.rows.push({id: scope.rows.length, text: ""})
+
+
     };
 
     scope.delRow = function (indexToBeDeleted) {

@@ -76,6 +76,10 @@ class Questions(TimDbBase):
         Gets questions related to a specific document
         """
         cursor = self.db.cursor()
-        cursor.execute("""SELECT * FROM Question WHERE doc_id = ?""", [doc_id])
+        cursor.execute("""
+                      SELECT *
+                      FROM Question
+                      WHERE doc_id = ?
+                      """, [doc_id])
 
         return self.resultAsDictionary(cursor)

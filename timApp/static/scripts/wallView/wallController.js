@@ -2,6 +2,7 @@
  * Created by hajoviin on 24.2.2015.
  */
 
+/* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
 timApp.controller("WallController", ['$scope', '$controller', "$http",
 
     function ($scope, controller, http) {
@@ -11,15 +12,176 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.showPoll = true;
         $scope.polling = true;
         $scope.requestOnTheWay = false;
-        $scope.showWall = true;
+        $scope.showWall = false;
+        $scope.canStart = true;
+        $scope.canStop = false;
+        $scope.lectureId = null;
+        $scope.showLecture = false;
+        $scope.lectures = [];
+        $scope.chosenLecture = "";
+        $scope.passwordQuess = "";
+        $scope.pollingLectures = [];
+
+        $scope.checkIfInLecture = function () {
+            http({
+                url: '/checkLecture',
+                method: 'GET',
+                params: {'doc_id': $scope.docId}
+            })
+                .success(function (answer) {
+                    if (answer.isInLecture) {
+                        $scope.showLectureView(answer);
+                    } else {
+                        $scope.showBasicView(answer);
+                    }
+                })
+        }
+
+        $scope.checkIfInLecture();
+
+        $scope.joinLecture = function () {
+            if ($scope.chosenLecture == "") {
+                console.log("Choose lecture to join");
+                return;
+            }
+
+            http({
+                url: '/joinLecture',
+                method: 'POST',
+                params: {'lecture_code': $scope.chosenLecture, 'password_quess': $scope.passwordQuess}
+            })
+                .success(function (answer) {
+                    $scope.passwordQuess = "";
+                    if (!answer.correctPassword) {
+                        document.getElementById("passwordInput").style.border = "1px solid red";
+                        document.getElementById("passwordInput").placeholder = "Wrong password";
+                    } else {
+                        document.getElementById("passwordInput").style.border = "1px solid black";
+                        document.getElementById("passwordInput").placeholder = "Password";
+                        if (answer.inLecture) {
+                            console.log(answer)
+                            $scope.showLectureView(answer);
+                        } else {
+                            $scope.showBasicView(answer);
+                        }
+                    }
+                })
+        }
+
+        $scope.toggleLecture = function () {
+            $scope.showLecture = !$scope.showLecture
+        }
+
+        $scope.showLectureView = function (answer) {
+            $scope.inLecture = true;
+            $scope.lectureId = answer.lectureId;
+            $scope.polling = true;
+            $scope.showWall = true;
+
+            $scope.getAllMessages();
+
+            if (answer.isLecturer) {
+                $scope.canStop = true;
+            }
+            document.getElementById("lectureName").innerText = answer.lectureCode;
+        }
+
+        $scope.showBasicView = function (answer) {
+            $scope.canStart = true;
+            $scope.canStop = false;
+            $scope.polling = false;
+            $scope.inLecture = false;
+            $scope.lectureId = -1;
+            document.getElementById("lectureName").innerText = "Not running";
+            if (answer.lectures != undefined) {
+                jQuery.each(answer.lectures, function (i, lecture) {
+                    if ($scope.lectures.indexOf(lecture) == -1) {
+                        $scope.lectures.push(lecture);
+                    }
+                });
+            }
+        }
+
+        $scope.createLecture = function () {
+            var fail = false;
+
+            if (document.getElementById("lCode").value == "") {
+                document.getElementById("lCode").style.border = "1px solid red";
+                document.getElementById("lCode").title = "You must type in something.";
+                fail = true;
+            }
+            if (document.getElementById("dateChosen").checked == false && document.getElementById("dueChosen").checked == false) {
+                document.getElementById("lbstart").style.border = "1px solid red";
+                document.getElementById("lbstart").title = "You must select something.";
+                fail = true;
+            }
+            if (document.getElementById("dateChosen2").checked == false && document.getElementById("durationChosen").checked == false) {
+                document.getElementById("lbend").style.border = "1px solid red";
+                document.getElementById("lbend").title = "You must select something.";
+                fail = true;
+            }
+
+            if (fail) {
+                return;
+            }
+
+            $scope.toggleLecture()
+
+
+            var startDate = "" + $scope.startYear + "." + $scope.startMonth + "." + $scope.startDay + "|" + $scope.startHour + ":" + $scope.startMin;
+            var endDate = "" + $scope.endYear + "." + $scope.endMonth + "." + $scope.endDay + "|" + $scope.endHour + ":" + $scope.endMin;
+
+            http({
+                url: '/createLecture',
+                method: 'POST',
+                params: {
+                    'doc_id': $scope.docId, 'lecture_code': $scope.lectureCode, 'password': $scope.password,
+                    'start_date': startDate, 'end_date': endDate
+                }
+            })
+                .success(function (answer) {
+                    $scope.checkIfInLecture();
+                    console.log("Lecture created: " + answer.lectureId);
+                })
+                .error(function () {
+                    console.log("Failed to start a lecture");
+                })
+        };
+        $scope.deleteLecture = function () {
+            http({
+                url: '/deleteLecture',
+                method: 'POST',
+                params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
+            })
+                .success(function (answer) {
+                    $scope.showBasicView(answer)
+                    console.log("Lecture deleted");
+
+                })
+                .error(function () {
+                    console.log("Failed to delete the lecture");
+                })
+        };
+
+        $scope.leaveLecture = function () {
+            $scope.msg = "";
+            http({
+                url: '/leaveLecture',
+                method: "POST",
+                params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId}
+            })
+                .success(function (answer) {
+                    $scope.showBasicView(answer)
+                })
+        }
 
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
-        }
+        };
 
         $scope.detach = function () {
             console.log("Should detach this window");
-        }
+        };
 
         $scope.sendMessageEvent = function (message) {
             if (message.trim() == "") {
@@ -30,7 +192,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             http({
                 url: '/sendMessage',
                 method: 'POST',
-                params: {'message': message}
+                params: {'message': message, lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
                     $scope.newMsg = "";
@@ -45,30 +207,31 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.getAllMessages = function () {
             var t;
-            jQuery.ajax({
+            http({
                 url: '/getAllMessages',
                 type: 'GET',
-                success: function (answer) {
+                params: {lecture_id: $scope.lectureId}
+            })
+                .success(function (answer) {
                     jQuery.each(answer.data, function (i, msg) {
                         $scope.msg = $scope.msg + msg + "\n";
-                        $scope.$apply();
                     });
                     $scope.lastID = answer.lastid;
                     var textarea = document.getElementById('wallArea');
                     textarea.scrollTop = textarea.scrollHeight;
+                    $scope.requestDocId = $scope.lectureId;
 
-                    t = setTimeout(function () {
+                    if ($scope.pollingLectures.indexOf(answer.lectureId) == -1) {
                         $scope.startLongPolling($scope.lastID);
-                    }, 1000);
-                }
-            });
-        };
+                        $scope.pollingLectures.push(answer.lectureId);
+                    }
 
-        $scope.getAllMessages();
+                })
+        };
 
         $scope.startLongPolling = function (lastID) {
             function message_longPolling(lastID) {
-                var t;
+                var timeOut;
 
                 if (lastID == null) {
                     lastID = -1;
@@ -78,15 +241,21 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 jQuery.ajax({
                         url: '/getMessages',
                         type: 'GET',
-                        data: {id: lastID},
+                        data: {'client_message_id': lastID, lecture_id: $scope.lectureId},
                         success: function (answer) {
+                            $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
+                            if (answer.lectureId != $scope.lectureId) {
+                                return;
+                            }
 
                             $scope.requestOnTheWay = false;
-                            clearInterval(t);
+                            clearInterval(timeOut);
                             if ($scope.polling) {
+
+                                $scope.pollingLectures.push(answer.lectureId);
                                 if (answer.status == 'results' || answer.status == 'no-results') {
 
-                                    t = setTimeout(function () {
+                                    timeOut = setTimeout(function () {
                                         message_longPolling(answer.lastid);
                                     }, 1000);
 
@@ -114,12 +283,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                             }
                         }
                         ,
-                        error: function (payload) {
+                        error: function () {
                             $scope.requestOnTheWay = false;
-                            clearInterval(t);
-                            t = setTimeout(function () {
+                            clearInterval(timeOut);
+                            timeOut = setTimeout(function () {
                                 message_longPolling();
-                            }, 15000);
+                            }, 30000);
                         }
                     }
                 )
@@ -129,9 +298,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             message_longPolling(lastID);
         };
 
-        $scope.enterPressed = function (event) {
+        $scope.chatEnterPressed = function (event) {
             if (event.which === 13) {
                 $scope.sendMessageEvent($scope.newMsg);
+            }
+        };
+
+        $scope.passEnterPressed = function (event) {
+            if (event.which === 13) {
+                $scope.joinLecture();
             }
         };
 
@@ -142,7 +317,5 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 }
             }
         }
-
-
     }])
 ;
