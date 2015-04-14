@@ -154,7 +154,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
-                    $scope.showBasicView(answer)
+                    $scope.showBasicView(answer);
+                    $scope.lectures.splice($scope.lectureId, 1);
+                    $scope.chosenLecture = "";
                     console.log("Lecture deleted");
 
                 })

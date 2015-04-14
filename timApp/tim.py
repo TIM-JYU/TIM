@@ -371,6 +371,8 @@ def join_lecture():
     lecture_code = request.args.get("lecture_code")
     password_quess = request.args.get("password_quess")
     lecture_id = timdb.lectures.get_lecture_by_code(lecture_code)
+    if lecture_id == -1:
+        abort(400)
     current_user = getCurrentUserId()
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture[0].get("password") != password_quess:
