@@ -629,6 +629,14 @@ def deleteNote():
     return "Success"
 
 
+@app.route("/questions/<int:doc_id>")
+def getQuestions(doc_id):
+    verifyViewAccess(doc_id)
+    timdb = getTimDb()
+    questions = timdb.questions.get_doc_questions(doc_id)
+    return jsonResponse(questions)
+
+
 @app.route("/notes/<int:doc_id>")
 def getNotes(doc_id):
     verifyViewAccess(doc_id)
