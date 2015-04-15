@@ -1,17 +1,11 @@
 import os
 import shutil
 import unittest
+
 import ephemeralclient
+from filemodehelper import change_permission_and_retry
 from timdb.gitclient import GitClient
 from timdb.timdb2 import TimDb
-
-
-def change_permission_and_retry(func, path, exc_info):
-    import stat
-
-    # Change permission of the path so that it is deletable
-    os.chmod(path, stat.S_IWUSR)
-    func(path)
 
 
 class TimDbTest(unittest.TestCase):
