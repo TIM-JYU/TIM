@@ -1,0 +1,33 @@
+var angular;
+
+var timApp = angular.module('timApp');
+
+timApp.controller('UserListController', ['$scope', '$filter', 'ngTableParams',
+    function ($scope, $filter, ngTableParams) {
+        $scope.tableParams = new ngTableParams({
+            page: 1,
+            count: 20,
+            filter: {
+                //name: 'M'
+            },
+            sorting: {
+                //name: 'asc'
+            }
+        }, {
+            counts: [],
+            total: $scope.users.length,
+            filterDelay: 20,
+            getData: function ($defer, params) {
+
+                var filteredData = params.filter() ?
+                    $filter('filter')($scope.users, params.filter()) :
+                    $scope.users;
+                var orderedData = params.sorting() ?
+                    $filter('orderBy')(filteredData, params.orderBy()) :
+                    $scope.users;
+
+                params.total(orderedData.length);
+                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+            }
+        });
+    }]);

@@ -1287,6 +1287,26 @@ img.console {
 	overflow-x: hidden;
 }
 
+.userlist td, .userlist th {
+    max-width: 50px;
+}
+
+.userlist td {
+    padding: 1px;
+}
+
+.userlist td:first-child, .userlist th:first-child {
+    max-width: 200px;
+}
+
+.userlist .input-filter {
+    width: 95%;
+}
+
+.userlist .sortable.header {
+    cursor: pointer;
+}
+
 .userentry {
      font-family: Verdana, serif;
      font-size: 12px;
