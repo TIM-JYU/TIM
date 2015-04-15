@@ -1,310 +1,90 @@
-
 <fieldset class="popUpWindow">
-   <h1>Create Lecture</h1>
-	<link rel="stylesheet" href="../../static/windowstyle.css">
-	<link rel="stylesheet" type="text/css" media="all" href="../../static/jsDatePick_ltr.min.css" />
-   <div> 
-      <form class="createLecture" id="lectureForm">
-		 <div id="infoFields">
-			 <label for="lectureCode" ">Lecture code:</label>
-			 <input id="lCode" type="text" name="code" size="45" onchange="notEmpty(this)">
-			 <br>
-			 <label for="password">Lecture access code:<br>(Optional)</label>
-			 <input type="text" size="45">
-			 <br>
-		 </div>
-		 <div class="startingTime">
-			 <label id="lbstart" for="startTime">Starting time:</label>
-			 <br>
-			 <br>
-			 <div id="startInfo">
-			   <label for="startDate">Date:</label>
-			   <input type="text" id="startDay" maxlength="2" size="2" placeholder="dd" onchange="isValid(this)" >
-			   <label>.</label>
-			   <input type="text" id="startMonth" maxlength="2" size="2" placeholder="mm" onchange="isValid(this)" >
-			   <label>.</label>
-			   <input type="text" id="startYear" maxlength="4" size="4" placeholder="yyyy" onchange="isValid(this)" >
-			   <input type="button" id="calendarStart" value="...">
-			   <label for="startDate">Time:</label>
-			   <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh" onchange="isValid(this)" >
-			   <label>:</label)>
-			   <input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm" onchange="isValid(this)" >
-			</div>
-		</div>
-		 <div class="endingTime">
-			 <label id="lbend" for="endTime">Ending time:</label>
-			 <br>
-			 <br>
-			 <div id="endInfo">
-				<input type="radio" id="dateChosen2" name="stop" onclick="enableDate2()">
-				<label for="useDate">Use date:</label>
-					<div>
-					   <label for="endDate">Date:</label>
-					   <input type="text" id="stopDay" maxlength="2" size="2" placeholder="dd" disabled onchange="isValid(this)">
-					   <label>.</label>
-					   <input type="text" id="stopMonth" maxlength="2" size="2" placeholder="mm" disabled onchange="isValid(this)">
-					   <label>.</label>
-					   <input type="text" id="stopYear" maxlength="4" size="4" placeholder="yyyy" disabled onchange="isValid(this)">
-					   <input type="button" id="calendarStop" value="..." disabled>
-					   <label for="startDate">Time:</label>
-					   <input type="text" id="stopHour" name="hour" maxlength="2" size="2" placeholder="hh" disabled onchange="isValid(this)">
-					   <label>:</label)>
-					   <input type="text" id="stopMin" name="min" maxlength="2" size="2" placeholder="mm" disabled onchange="isValid(this)">
-					</div>
-				 <br>
-				 <input type="radio" id="durationChosen" name="stop" onclick="enableDue2()">
-				 <label for="useTime">Duration:</label>
-					<div>
-					   <label for="hours">Hours:</label>
-					   <input id="hours2" type="text" name="hour" maxlength="2" size="2" disabled onchange="isValid(this)">
-					   <label for="mins">Min:</label>
-					   <input id="mins2" type="text" name="min" maxlength="2" size="2" disabled onchange="isValid(this)">
-					</div>
-				 <br>
-			 </div>
-		 </div>
-		 <div>
-			<p id="errorMessage"></p>
-		 </div>
-		 <div class="buttons">
-			 <button id ="btnSubmitLecture" type="button" onclick="submitLecture()">Submit</button>
-			 <button type="button"  onclick="cancelCreation()">Cancel</button>
-		 </div>
-	  </form>
-   </div>
- </fieldset>
- 
-<script type="text/javascript" src="/../../static/scripts/jsDatePick.full.1.3.js"></script> 
-<script>
-	/*Function for enabling fields and buttons for "Use date" and disabling them for "Duration".*/
-	function enableDate2() {
-	
-		var hours = parseInt(document.getElementById("startHour").value) + 2;
-		
-		document.getElementById("stopDay").value = document.getElementById("startDay").value;
-		document.getElementById("stopMonth").value = document.getElementById("startMonth").value;
-		document.getElementById("stopYear").value = document.getElementById("startYear").value;
-		document.getElementById("stopMin").value = document.getElementById("startMin").value;
-		document.getElementById("stopHour").value = hours;	
-		
-		document.getElementById("stopDay").disabled = false;
-		document.getElementById("stopMonth").disabled = false;
-		document.getElementById("stopYear").disabled = false;
-		document.getElementById("stopHour").disabled = false;
-		document.getElementById("stopMin").disabled = false;
-		document.getElementById("calendarStop").disabled = false;
-		document.getElementById("hours2").disabled = true;
-		document.getElementById("mins2").disabled = true;
-		document.getElementById("hours2").value = "";
-		document.getElementById("mins2").value = "";
-		defInputStyle(document.getElementById("hours2"));
-		defInputStyle(document.getElementById("mins2"));
-		
-		defInputStyle(document.getElementById("lbend"));
-	}
-	
-	/*Function for enabling fields and buttons for "Duration" and disabling them for "Use date".*/
-	function enableDue2() {
-		document.getElementById("hours2").disabled = false;
-		document.getElementById("mins2").disabled = false;
-		document.getElementById("stopDay").value = "";
-		document.getElementById("stopMonth").value = "";
-		document.getElementById("stopYear").value = "";
-		document.getElementById("stopHour").value = "";
-		document.getElementById("stopMin").value = "";
-		document.getElementById("stopDay").disabled = true;
-		document.getElementById("stopMonth").disabled = true;
-		document.getElementById("stopYear").disabled = true;
-		document.getElementById("stopHour").disabled = true;
-		document.getElementById("stopMin").disabled = true;
-		document.getElementById("calendarStop").disabled = true;
-		defInputStyle(document.getElementById("stopDay"));
-		defInputStyle(document.getElementById("stopMonth"));
-		defInputStyle(document.getElementById("stopYear"));
-		defInputStyle(document.getElementById("stopHour"));
-		defInputStyle(document.getElementById("stopMin"));
-		
-		defInputStyle(document.getElementById("lbend"));
-	}
-	
-	/*Function for checking that elements value isn't empty.*/
-	function notEmpty(element) {
-		if (element.value == "") {
-			element.style.border = "1px solid red";
-			element.title = "This field can't be empty.";
-			errors++;
-		} else {
-			defInputStyle(element);
-		} 
-		
-	}
-		
-	/*Function for showing the error message.*/
-	function showErrorMessage() {
-		document.getElementById("errorMessage").innerHTML = "Errors in the form. Please, correct the fields marked with red to continue.";
-	}
-	
-	/*Function for checking that input is a number.*/
-	function isValid(element) {
-		if (isNaN(element.value) == true) {
-			element.style.border = "1px solid red";
-			element.title = "Use a number.";
-			errors++;
-		}
-		else {
-			notEmpty(element);
-		}
-	}
-	
-	/*Removes error style from element (red border around field).*/
-	function defInputStyle(element) {
-		element.style.border = "";
-		element.title = "";
-	}
-	
-	/*Function for checking that hours are correct (between 0 and 23).*/
-	function isHour(element) {
-		if (element.value > 23 || element.value < 0) {
-			element.style.border = "1px solid red";
-			element.title = "Hour has to be between 0 and 23.";
-			showErrorMessage();
-		}
-	}
-	
-	/*Function for checking that minutes are correct (between 0 and 59).*/
-	function isMinute(element) {
-		if (element.value > 59 || element.value < 0) {
-			element.style.border = "1px solid red";
-			element.title = "Minutes has to be between 0 and 59.";
-			showErrorMessage();
-		}
-	}
-	
-	/*Function for checking that number is positive.*/
-	function isPositiveNumber(element) {
-		if (element.value < 0) {
-			element.style.border = "1px solid red";
-			element.title = "Number has to be positive.";
-			showErrorMessage();
-		}
-	}
-	
-	/*Function for creating a new lecture and error checking.*/
-	function submitLecture() {
-		var elements = [ 	document.getElementById("startDay"),
-						document.getElementById("startMonth"),
-						document.getElementById("startYear"),
-						document.getElementById("startHour"),
-						document.getElementById("startMin"),
-						document.getElementById("stopDay"),
-						document.getElementById("stopMonth"),
-						document.getElementById("stopYear"),
-						document.getElementById("stopHour"),
-						document.getElementById("stopMin"),
-						document.getElementById("hours2"),
-						document.getElementById("mins2")];
-		
-		var i;
-		/*Checks if there are errors in input.*/
-		for (i = 0; i < elements.length; i++ ) {
-			if (elements[i].style.border == "1px solid red") {
-				showErrorMessage();
-			} 
-			else document.getElementById("errorMessage").innerHTML = "";
-		}
-		/*This checks that "lecture code"-field is not empty.*/
-		if (document.getElementById("lCode").value == "") {
-			document.getElementById("lCode").style.border = "1px solid red";
-			document.getElementById("lCode").title = "You must type in something.";
-			showErrorMessage();
-		} else defInputStyle(document.getElementById("lCode"));
-		/*This checks that either "Use date" or "Duration" is chosen for ending time.*/
-		if (document.getElementById("dateChosen2").checked == false && document.getElementById("durationChosen").checked == false) {
-			document.getElementById("lbend").style.border = "1px solid red";
-			document.getElementById("lbend").title = "You must select something.";
-			showErrorMessage();
-		} else defInputStyle(document.getElementById("lbend"));
-		/*Checks that hours in starting and ending time are between 0 and 23.
-		Checks that minutes in starting and ending time are between 0 and 59*/
-		isHour(elements[3]);
-		isMinute(elements[4]);
-		if (document.getElementById("dateChosen2").checked == true) {
-			isHour(elements[8]);
-			isMinute(elements[9]);
-		}
-		g_globalObject.closeCalendar();
-		g_globalObject2.closeCalendar();
-		
-		if (document.getElementById("errorMessage").innerHTML == "") document.getElementById("startLecturedialog").style.display = "none";
-	}
-	
-	/*Function for cancelling the lecture creation.*/
-	function cancelCreation() {
-		var elementsToClear = [ document.getElementById("lCode"),
-								document.getElementById("lbend"),
-								document.getElementById("startDay"),
-								document.getElementById("startMonth"),
-								document.getElementById("startYear"),
-								document.getElementById("startHour"),
-								document.getElementById("startMin"),
-								document.getElementById("stopDay"),
-								document.getElementById("stopMonth"),
-								document.getElementById("stopYear"),
-								document.getElementById("stopHour"),
-								document.getElementById("stopMin"),
-								document.getElementById("hours2"),
-								document.getElementById("mins2")];
-		var i;
-		for (i = 0; i < elementsToClear.length; i++ ) {
-			defInputStyle(elementsToClear[i]);
-		}
-		document.getElementById("startLecturedialog").style.display = "none";
-		document.getElementById("errorMessage").innerHTML = "";
-		document.getElementById("lectureForm").reset();
-		g_globalObject.closeCalendar();
-		g_globalObject2.closeCalendar();
-	}
+    <h1>Create Lecture</h1>
+    <link rel="stylesheet" href="../../static/windowstyle.css">
+    <link rel="stylesheet" type="text/css" media="all" href="../../static/jsDatePick_ltr.min.css"/>
+    <div>
+        <form class="createLecture" id="lectureForm">
+            <div id="infoFields">
+                <label for="lectureCode" >Lecture code:</label>
+                <input id="lCode" type="text" name="code" size="45" ng-model="lectureCode" not-empty-change="">
+                <br>
+                <label for="password" ng-model="password">Lecture access code:<br>(Optional)</label>
+                <input type="text" size="45">
+                <br>
+            </div>
+            <div class="startingTime">
+                <label id="lbstart" for="startTime">Starting time:</label>
+                <br>
+                <br>
 
-	window.onload = function(){
-		g_globalObject = new JsDatePick({
-			useMode:2,
-			target:"calendarStart",
-			dateFormat:"%d-%M-%Y",
-			yearsRange:[2010,2020]
-		});
-		
-		g_globalObject.setOnSelectedDelegate(function(){
-			var obj = g_globalObject.getSelectedDay();
-			document.getElementById("startDay").value = obj.day;
-			document.getElementById("startMonth").value = obj.month
-			document.getElementById("startYear").value = obj.year;
-			g_globalObject.closeCalendar();
-		});
-		
-		g_globalObject2 = new JsDatePick({
-			useMode:2,
-			target:"calendarStop",
-			dateFormat:"%d-%M-%Y"
-			/*selectedDate:{				This is an example of what the full configuration offers.
-				day:5,						For full documentation about these settings please see the full version of the code.
-				month:9,
-				year:2006
-			},
-			yearsRange:[1978,2020],
-			limitToToday:false,
-			cellColorScheme:"beige",
-			dateFormat:"%m-%d-%Y",
-			imgPath:"img/",
-			weekStartDay:1*/
-		});
-		
-		g_globalObject2.setOnSelectedDelegate(function(){
-			var obj = g_globalObject2.getSelectedDay();
-			document.getElementById("stopDay").value = obj.day;
-			document.getElementById("stopMonth").value = obj.month
-			document.getElementById("stopYear").value = obj.year;
-			g_globalObject2.closeCalendar();
-		});
-	};
+                <div id="startInfo">
+                    <label for="startDate">Date:</label>
+                    <input type="text" id="startDay" maxlength="2" size="2" placeholder="dd" is-valid-change=""
+                           ng-model="startDay">
+                    <label>.</label>
+                    <input type="text" id="startMonth" maxlength="2" size="2" placeholder="mm" is-valid-change=""
+                           ng-model="startMonth">
+                    <label>.</label>
+                    <input type="text" id="startYear" maxlength="4" size="4" placeholder="yyyy" is-valid-change=""
+                           ng-model="startYear">
+                    <input type="button" id="calendarStart" value="...">
+                    <label for="startDate">Time:</label>
+                    <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
+                           is-valid-change="" ng-model="startHour">
+                    <label>:</label>
+                    <input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
+                           is-valid-change="" ng-model="startMin">
+                </div>
+            </div>
+            <div class="endingTime">
+                <label id="lbend" for="endTime">Ending time:</label>
+                <br>
+                <br>
 
-</script>
+                <div id="endInfo">
+                    <input type="radio" id="dateChosen2" name="stop" ng-click="enableDate2()" ng-model="dateChosen">
+                    <label for="useDate">Use date:</label>
+
+                    <div>
+                        <label for="endDate">Date:</label>
+                        <input type="text" id="stopDay" maxlength="2" size="2" placeholder="dd" disabled
+                               is-valid-change="" ng-model="endDay" ng-disabled="!useDate">
+                        <label>.</label>
+                        <input type="text" id="stopMonth" maxlength="2" size="2" placeholder="mm" disabled
+                               is-valid-change="" ng-model="endMonth" ng-disabled="!useDate">
+                        <label>.</label>
+                        <input type="text" id="stopYear" maxlength="4" size="4" placeholder="yyyy" disabled
+                               is-valid-change="" ng-model="endYear" ng-disabled="!useDate">
+                        <input type="button" id="calendarStop" value="..." disabled>
+                        <label for="startDate">Time:</label>
+                        <input type="text" id="stopHour" name="hour" maxlength="2" size="2" placeholder="hh" disabled
+                               is-valid-change="" ng-model="endHour" ng-disabled="!useDate">
+                        <label>:</label>
+                        <input type="text" id="stopMin" name="min" maxlength="2" size="2" placeholder="mm" disabled
+                               is-valid-change="" ng-model="endMin" ng-disabled="!useDate">
+                    </div>
+                    <br>
+                    <input type="radio" id="durationChosen" name="stop" ng-click="enableDue2()" ng-model="durationChosen">
+                    <label for="useTime">Duration:</label>
+
+                    <div>
+                        <label for="hours">Hours:</label>
+                        <input id="hours2" type="text" name="hour" maxlength="2" size="2" disabled
+                               is-valid-change="" ng-model="durationHour" ng-disabled="!useDuration">
+                        <label for="mins">Min:</label>
+                        <input id="mins2" type="text" name="min" maxlength="2" size="2" disabled
+                               is-valid-change="" ng-model="durationMin" ng-disabled="!useDuration">
+                    </div>
+                    <br>
+                </div>
+            </div>
+            <div>
+                <p id="errorMessage"></p>
+            </div>
+            <div class="buttons">
+                <button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>
+                <button type="button" ng-click="cancelCreation()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</fieldset>

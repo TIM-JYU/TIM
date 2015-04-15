@@ -363,6 +363,16 @@ timApp.controller("ViewCtrl", ['$scope',
             return $noteDiv;
         };
 
+
+        sc.getQuestions = function () {
+            var rn = "?_=" + (new Date).getTime();
+           // alert("HAHA");
+            http.get('/questions/' + sc.docId).success(function (data, status, headers, config) {
+                //alert('Success getting questions: ' + data[0].question);
+            })
+        }
+
+
         sc.getNotes = function () {
             var rn = "?_=" + (new Date).getTime();
 
@@ -556,6 +566,7 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
+        sc.getQuestions();
     }]);
 
 timApp.directive('questionDialog', function factory() {

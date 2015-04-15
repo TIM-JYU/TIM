@@ -1,69 +1,22 @@
 <!--html for upper menu-->
-
 <link rel="stylesheet" href="../../static/menustyle.css">
-<div class="menuSection" >
+<div class="menuSection">
 	<div id="largeMenu">
 	   <div class="lectureSection">
 			   <h1>Now:</h1> 
-				  <p id="current">Not running</p>
-				  <img id="add-icon" src="../../static/images/add-icon3.png" class="icon" onclick="createLecture()">
-			</div>
-			<div class="lectureSection">
-			   <h1>Next:</h1>
-			   <p id="next">Not planned</p>
-			</div>
-			<div class="loginSection">
-			   {% include 'loginlogout.html' %}
-			</div>
-	</div>
-       
-	<div id="smallMenu" style="display:none">
-		{% include 'lectureinfo_menu_min.html' %}
-	</div>
+			   <p id="lectureName">Not running </p>
+			   <img id="add-icon" src="../../static/images/add-icon3.png" class="icon" ng-click="toggleLecture()">
+		</div>
+    <div class="lectureSection">
+        <h1>Next:</h1>
+        <p id="next">Not planned</p>
+    </div>
+    <div class="loginSection">
+        {% include 'loginlogout.html' %}
+    </div>
+    </div>
+</div>
+<div id="startLecturedialog" ng-show="showLecture">
+    {% include 'start_lecture.html' %}
 </div>
 
-<div id="startLecturedialog" style="display:none">
-	{% include 'start_lecture.html' %}
-</div>
-   
-<script>
-   function createLecture() {
-		document.getElementById("startLecturedialog").style.display = "inline-block";
-		getDate();
-   }
-   
-   /*Function for getting current date and time.*/
-	function getDate() {
-		var date = new Date();
-	
-		var day = date.getDate();
-		var month = date.getMonth() + 1;
-		var year = date.getFullYear();
-		var hour = date.getHours();
-		var minutes = date.getMinutes();
-		var seconds = date.getSeconds();
-
-		if (month < 10) month = "0" + month;
-		if (day < 10) day = "0" + day;
-		if (hour < 10) hour = "0" + hour;
-		if (minutes < 10) minutes = "0" + minutes;
-		if (seconds < 10) seconds = "0" + seconds;
-
-		var today = year + "-" + month + "-" + day;  
-		var time = hour + ":" + minutes + ":" + seconds;	
-		var dateTimeNow = today + "T"  + time;
-		/*Script for getting current date and time ends here.*/
-		
-		/*Script for assigning current date and time as "Starting time".*/
-		document.getElementById("startDay").value = day;
-		document.getElementById("startMonth").value = month;
-		document.getElementById("startYear").value = year;
-		document.getElementById("startHour").value = hour;
-		document.getElementById("startMin").value = minutes;
-	}
-	window.onscroll = function minimize() {
-		document.getElementById("largeMenu").style.display = "none";
-		document.getElementById("smallMenu").style.display = "inline";		
-	}
-   
-</script>

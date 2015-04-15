@@ -96,6 +96,7 @@ class Lectures(TimDbBase):
                         SELECT lecture_code
                         FROM Lecture
                         WHERE doc_id = ? AND start_time <= ? AND end_time >= ?
+                        ORDER BY lecture_code
                         """, [doc_id, time, time])
 
         return self.resultAsDictionary(cursor)
@@ -109,6 +110,9 @@ class Lectures(TimDbBase):
                         FROM Lecture
                         WHERE lecture_code = ?
                         """, [lecture_code])
+
+        if len(cursor.fetchall()) <= 0:
+            return -1
 
         return cursor.fetchone()[0]
 

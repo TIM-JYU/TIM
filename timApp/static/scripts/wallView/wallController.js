@@ -21,6 +21,23 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.chosenLecture = "";
         $scope.passwordQuess = "";
         $scope.pollingLectures = [];
+        $scope.useDate = false;
+        $scope.useDuration = false;
+        $scope.dateChosen = false;
+        $scope.durationChosen = false;
+
+        var date = new Date();
+
+
+        $scope.setCurrentTime = function () {
+            $scope.startDay = date.getDate();
+            $scope.startMonth = date.getMonth() + 1;
+            $scope.startYear = date.getFullYear();
+            $scope.startHour = date.getHours();
+            $scope.startMin = date.getMinutes();
+        };
+
+        $scope.setCurrentTime();
 
         $scope.checkIfInLecture = function () {
             http({
@@ -70,6 +87,16 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.toggleLecture = function () {
             $scope.showLecture = !$scope.showLecture
+            if ($scope.showLecture) {
+                $scope.setCurrentTime();
+                document.getElementById("startMonth").value = $scope.startMonth;
+                document.getElementById("startYear").value = $scope.startYear;
+                document.getElementById("startHour").value = $scope.startHour;
+                document.getElementById("startMin").value = $scope.startMin;
+                document.getElementById("startDay").value = $scope.startDay;
+            } else {
+                $scope.cancelCreation();
+            }
         }
 
         $scope.showLectureView = function (answer) {
@@ -102,51 +129,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             }
         }
 
-        $scope.createLecture = function () {
-            var fail = false;
-
-            if (document.getElementById("lCode").value == "") {
-                document.getElementById("lCode").style.border = "1px solid red";
-                document.getElementById("lCode").title = "You must type in something.";
-                fail = true;
-            }
-            if (document.getElementById("dateChosen").checked == false && document.getElementById("dueChosen").checked == false) {
-                document.getElementById("lbstart").style.border = "1px solid red";
-                document.getElementById("lbstart").title = "You must select something.";
-                fail = true;
-            }
-            if (document.getElementById("dateChosen2").checked == false && document.getElementById("durationChosen").checked == false) {
-                document.getElementById("lbend").style.border = "1px solid red";
-                document.getElementById("lbend").title = "You must select something.";
-                fail = true;
-            }
-
-            if (fail) {
-                return;
-            }
-
-            $scope.toggleLecture()
-
-
-            var startDate = "" + $scope.startYear + "." + $scope.startMonth + "." + $scope.startDay + "|" + $scope.startHour + ":" + $scope.startMin;
-            var endDate = "" + $scope.endYear + "." + $scope.endMonth + "." + $scope.endDay + "|" + $scope.endHour + ":" + $scope.endMin;
-
-            http({
-                url: '/createLecture',
-                method: 'POST',
-                params: {
-                    'doc_id': $scope.docId, 'lecture_code': $scope.lectureCode, 'password': $scope.password,
-                    'start_date': startDate, 'end_date': endDate
-                }
-            })
-                .success(function (answer) {
-                    $scope.checkIfInLecture();
-                    console.log("Lecture created: " + answer.lectureId);
-                })
-                .error(function () {
-                    console.log("Failed to start a lecture");
-                })
-        };
         $scope.deleteLecture = function () {
             http({
                 url: '/deleteLecture',
@@ -154,7 +136,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
-                    $scope.showBasicView(answer)
+                    $scope.showBasicView(answer);
+                    $scope.lectures.splice($scope.lectureId, 1);
+                    $scope.chosenLecture = "";
                     console.log("Lecture deleted");
 
                 })
@@ -316,6 +300,315 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                     $scope.startLongPolling($scope.lastID);
                 }
             }
+        };
+
+        var errors = 0;
+
+        $scope.enableDate2 = function () {
+
+            $scope.endDay = $scope.startDay;
+            $scope.endMonth = $scope.startMonth;
+            $scope.endYear = $scope.startYear;
+            $scope.endHour = parseInt($scope.startHour) + 2;
+            $scope.endMin = $scope.startMin;
+
+
+            document.getElementById("calendarStop").disabled = false;
+            $scope.useDate = true;
+            $scope.useDuration = false;
+            document.getElementById("hours2").value = "";
+            document.getElementById("mins2").value = "";
+            $scope.defInputStyle(document.getElementById("hours2"));
+            $scope.defInputStyle(document.getElementById("mins2"));
+
+            $scope.defInputStyle(document.getElementById("lbend"));
+        };
+
+        /*Function for enabling fields and buttons for "Duration" and disabling them for "Use date".*/
+        $scope.enableDue2 = function () {
+            $scope.useDuration = true;
+            $scope.useDate = false;
+            $scope.endDay = "";
+            $scope.endMonth = "";
+            $scope.endYear = "";
+            $scope.endHour = "";
+            $scope.endMin = "";
+
+            document.getElementById("calendarStop").disabled = true;
+            $scope.defInputStyle(document.getElementById("stopDay"));
+            $scope.defInputStyle(document.getElementById("stopMonth"));
+            $scope.defInputStyle(document.getElementById("stopYear"));
+            $scope.defInputStyle(document.getElementById("stopHour"));
+            $scope.defInputStyle(document.getElementById("stopMin"));
+
+            $scope.defInputStyle(document.getElementById("lbend"));
+        };
+
+        /*Function for checking that elements value isn't empty.*/
+        $scope.notEmpty = function (element) {
+            if (element.value == "") {
+                element.style.border = "1px solid red";
+                element.title = "This field can't be empty.";
+                errors++;
+            } else {
+
+                $scope.defInputStyle(element);
+            }
+
+        };
+
+        /*Function for showing the error message.*/
+        $scope.showErrorMessage = function () {
+            document.getElementById("errorMessage").innerHTML = "Errors in the form. Please, correct the fields marked with red to continue.";
+        };
+
+        /*Function for checking that input is a number.*/
+        $scope.isValid = function (element) {
+            if (isNaN(element.value) == true) {
+                element.style.border = "1px solid red";
+                element.title = "Use a number.";
+                errors++;
+            }
+            else {
+                $scope.notEmpty(element);
+            }
+        };
+
+        /*Removes error style from element (red border around field).*/
+        $scope.defInputStyle = function (element) {
+            element.style.border = "";
+            element.style.title = "";
+        };
+
+        /*Function for checking that hours are correct (between 0 and 23).*/
+        $scope.isHour = function (element) {
+            if (element.value > 23 || element.value < 0) {
+                element.style.border = "1px solid red";
+                element.title = "Hour has to be between 0 and 23.";
+                $scope.showErrorMessage();
+            }
+        };
+
+        /*Function for checking that minutes are correct (between 0 and 59).*/
+        $scope.isMinute = function (element) {
+            if (element.value > 59 || element.value < 0) {
+                element.style.border = "1px solid red";
+                element.title = "Minutes has to be between 0 and 59.";
+                $scope.showErrorMessage();
+            }
+        };
+
+        /*Function for checking that number is positive.*/
+        $scope.isPosiviteNumber = function (element) {
+            if (element.value < 0) {
+                element.style.border = "1px solid red";
+                element.title = "Number has to be positive.";
+                $scope.showErrorMessage();
+            }
+        };
+
+        /*Function for creating a new lecture and error checking.*/
+        $scope.submitLecture = function () {
+            var elements = [document.getElementById("startDay"),
+                document.getElementById("startMonth"),
+                document.getElementById("startYear"),
+                document.getElementById("startHour"),
+                document.getElementById("startMin"),
+                document.getElementById("stopDay"),
+                document.getElementById("stopMonth"),
+                document.getElementById("stopYear"),
+                document.getElementById("stopHour"),
+                document.getElementById("stopMin"),
+                document.getElementById("hours2"),
+                document.getElementById("mins2")];
+
+            var i;
+            /*Checks if there are errors in input.*/
+            for (i = 0; i < elements.length; i++) {
+                if (elements[i].style.border == "1px solid red") {
+                    $scope.showErrorMessage();
+                }
+                else document.getElementById("errorMessage").innerHTML = "";
+            }
+
+
+            /*This checks that "lecture code"-field is not empty.*/
+            if (document.getElementById("lCode").value == "") {
+                document.getElementById("lCode").style.border = "1px solid red";
+                document.getElementById("lCode").title = "You must type in something.";
+                $scope.showErrorMessage();
+            } else  $scope.defInputStyle(document.getElementById("lCode"));
+
+            /*This checks that either "Use date" or "Duration" is chosen for ending time.*/
+            if (document.getElementById("dateChosen2").checked == false && document.getElementById("durationChosen").checked == false) {
+                document.getElementById("lbend").style.border = "1px solid red";
+                document.getElementById("lbend").title = "You must select something.";
+                $scope.showErrorMessage();
+            } else  $scope.defInputStyle(document.getElementById("lbend"));
+            /*Checks that hours in starting and ending time are between 0 and 23.
+             Checks that minutes in starting and ending time are between 0 and 59*/
+            $scope.isHour(elements[3]);
+            $scope.isMinute(elements[4]);
+
+            if (document.getElementById("dateChosen2").checked == true) {
+                $scope.isHour(elements[8]);
+                $scope.isMinute(elements[9]);
+            }
+
+            g_globalObject.closeCalendar();
+            g_globalObject2.closeCalendar();
+
+            if (document.getElementById("errorMessage").innerHTML.length > 0) {
+                return;
+            }
+
+            $scope.cancelCreation();
+
+
+            var startDate = "" + $scope.numberFormatter($scope.startYear, 4) + "."
+                + $scope.numberFormatter($scope.startMonth, 2) + "."
+                + $scope.numberFormatter($scope.startDay, 2) + "|"
+                + $scope.numberFormatter($scope.startHour, 2) + ":"
+                + $scope.numberFormatter($scope.startMin, 2);
+
+            var endDate = "" + $scope.numberFormatter($scope.endYear, 4) + "."
+                + $scope.numberFormatter($scope.endMonth, 2) + "."
+                + $scope.numberFormatter($scope.endDay, 2) + "|"
+                + $scope.numberFormatter($scope.endHour, 2) + ":"
+                + $scope.numberFormatter($scope.endMin, 2);
+
+            http({
+                url: '/createLecture',
+                method: 'POST',
+                params: {
+                    'doc_id': $scope.docId, 'lecture_code': $scope.lectureCode, 'password': $scope.password,
+                    'start_date': startDate, 'end_date': endDate
+                }
+            })
+                .success(function (answer) {
+                    $scope.checkIfInLecture();
+                    console.log("Lecture created: " + answer.lectureId);
+                })
+                .error(function () {
+                    console.log("Failed to start a lecture");
+                })
+        };
+
+        $scope.numberFormatter = function (number, size) {
+            var formattedNumber = "" + number;
+            var len = formattedNumber.length;
+            while (len < size) {
+                formattedNumber = "0" + formattedNumber
+                len++;
+            }
+            return parseInt(formattedNumber);
+
         }
-    }])
-;
+
+        /*Function for cancelling the lecture creation.*/
+        $scope.cancelCreation = function () {
+            var elementsToClear = [document.getElementById("lCode"),
+                document.getElementById("lbend"),
+                document.getElementById("startDay"),
+                document.getElementById("startMonth"),
+                document.getElementById("startYear"),
+                document.getElementById("startHour"),
+                document.getElementById("startMin"),
+                document.getElementById("stopDay"),
+                document.getElementById("stopMonth"),
+                document.getElementById("stopYear"),
+                document.getElementById("stopHour"),
+                document.getElementById("stopMin"),
+                document.getElementById("hours2"),
+                document.getElementById("mins2")];
+            var i;
+            for (i = 0; i < elementsToClear.length; i++) {
+                $scope.defInputStyle(elementsToClear[i]);
+            }
+            $scope.showLecture = false;
+            document.getElementById("errorMessage").innerHTML = "";
+            $scope.useDate = false;
+            $scope.useDuration = false;
+            $scope.dateChosen = false;
+            $scope.durationChosen = false;
+            g_globalObject.closeCalendar();
+            g_globalObject2.closeCalendar();
+        };
+
+        $scope.prepareCalender = function () {
+            g_globalObject = new JsDatePick({
+                useMode: 2,
+                target: "calendarStart",
+                dateFormat: "%d-%M-%Y",
+                yearsRange: [2010, 2020]
+            });
+
+            g_globalObject.setOnSelectedDelegate(function () {
+                var obj = g_globalObject.getSelectedDay();
+                $scope.startDay = obj.day;
+                $scope.startMonth = obj.month;
+                $scope.startYear = obj.year;
+                // TODO: This if necessary or if there is other way
+                $scope.$apply();
+                g_globalObject.closeCalendar();
+            });
+
+            g_globalObject2 = new JsDatePick({
+                useMode: 2,
+                target: "calendarStop",
+                dateFormat: "%d-%M-%Y"
+                /*selectedDate:{				This is an example of what the full configuration offers.
+                 day:5,						For full documentation about these settings please see the full version of the code.
+                 month:9,
+                 year:2006
+                 },
+                 yearsRange:[1978,2020],
+                 limitToToday:false,
+                 cellColorScheme:"beige",
+                 dateFormat:"%m-%d-%Y",
+                 imgPath:"img/",
+                 weekStartDay:1*/
+            });
+
+            g_globalObject2.setOnSelectedDelegate(function () {
+                var obj = g_globalObject2.getSelectedDay();
+                $scope.endDay = obj.day;
+                $scope.endMonth = obj.month;
+                $scope.endYear = obj.year;
+                // TODO: This if necessary or if there is other way
+                $scope.$apply();
+                g_globalObject2.closeCalendar();
+            });
+        };
+        $scope.prepareCalender();
+
+
+    }]);
+
+timApp.directive('notEmptyChange', function () {
+    return {
+        scrope: false,
+        link: function (scope, element) {
+            element.bind('change', function () {
+                scope.isValid(element.context);
+            });
+            element.bind('blur', function () {
+                scope.notEmpty(element.context);
+            });
+        }
+    }
+});
+
+timApp.directive('isValidChange', function () {
+    return {
+        scrope: false,
+        link: function (scope, element) {
+            element.bind('blur', function () {
+                scope.isValid(element.context);
+            });
+            element.bind('change', function () {
+                scope.isValid(element.context);
+            });
+        }
+    }
+});
