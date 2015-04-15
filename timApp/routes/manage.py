@@ -11,23 +11,39 @@ manage_page = Blueprint('manage_page',
 @manage_page.route("/manage/<int:doc_id>")
 def manage(doc_id):
     timdb = getTimDb()
+    isFolder = False
     if not timdb.documents.documentExists(doc_id):
-        abort(404)
+        if timdb.folders.folderExists(doc_id):
+            isFolder = True
+        else:
+            abort(404)
+
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
-    doc_data = timdb.documents.getDocument(doc_id)
-    doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
-    hash = doc_data['versions'][0]['hash']
-    doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
+
     possible_groups = timdb.users.getUserGroups(getCurrentUserId())
-    doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, hash))
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
+
+    if isFolder:
+        doc_data = timdb.folders.getFolder(doc_id)
+        doc_data['versions'] = []
+        doc_data['fulltext'] = ''
+    else:
+        doc_data = timdb.documents.getDocument(doc_id)
+        doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
+        hash = doc_data['versions'][0]['hash']
+        doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, hash))
+
+    doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
     return render_template('manage.html',
+                           objName='folder' if isFolder else 'document',
+                           objNameC='Folder' if isFolder else 'Document',
                            doc=doc_data,
                            editors=editors,
                            viewers=viewers,
-                           user_groups=possible_groups)
+                           user_groups=possible_groups,
+                           isFolder=str(isFolder).lower())
 
 @manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
 def changeOwner(doc_id, new_owner):

@@ -10,6 +10,7 @@ from timdb.images import Images
 from timdb.documents import Documents
 from timdb.answers import Answers
 from timdb.readings import Readings
+from timdb.folders import Folders
 import os
 
 
@@ -50,8 +51,8 @@ class TimDb(object):
         self.images = Images(self.db, files_root_path, 'images', current_user_name)
         self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
         self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
-        
-        
+        self.folders = Folders(self.db, files_root_path, 'folders', current_user_name)
+
     def clear(self):
         """Clears the contents of all database tables."""
         for table in TABLE_NAMES:
@@ -65,7 +66,7 @@ class TimDb(object):
         """Closes the database connection."""
         self.db.commit()
         self.db.close()
-    
+
     def initializeTables(self, schema_file='schema2.sql'):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""

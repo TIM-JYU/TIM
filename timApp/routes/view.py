@@ -54,7 +54,12 @@ def try_return_folder(doc_name):
 
     for doc in allowedDocs:
         if doc['name'].startswith(path_name):
-            return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId(), folder=folder_name)
+            possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+            return render_template('index.html',
+                                   userName=getCurrentUserName(),
+                                   userId=getCurrentUserId(),
+                                   userGroups=possible_groups,
+                                   folder=folder_name)
 
     abort(404)
 

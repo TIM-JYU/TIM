@@ -49,23 +49,6 @@ class Documents(TimDbBase):
         return response['paragraphs'], new_doc
 
     @contract
-    def __insertBlockToDb(self, name: 'str', owner_group_id: 'int', block_type: 'int') -> 'int':
-        """Inserts a block to database.
-        
-        :param name: The name (description) of the block.
-        :param owner_group_id: The owner group of the block.
-        :param block_type: The type of the block.
-        :returns: The id of the block.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
-                       [name, owner_group_id, block_type])
-        block_id = cursor.lastrowid
-        self.db.commit()
-        return block_id
-
-    @contract
     def createDocument(self, name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
         """Creates a new document with the specified name.
         
@@ -77,7 +60,7 @@ class Documents(TimDbBase):
         if '\0' in name:
             raise TimDbException('Document name cannot contain null characters.')
 
-        document_id = self.__insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
+        document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document_path = os.path.join(self.blocks_path, str(document_id))
 
         try:
@@ -444,7 +427,7 @@ class Documents(TimDbBase):
         """
 
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
-        doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
+        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         copyfile(document_file, self.getDocumentPath(doc_id.id))
 
         self.git.add(self.getDocumentPathAsRelative(doc_id.id))
@@ -458,7 +441,7 @@ class Documents(TimDbBase):
 
     @contract
     def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
-        doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
+        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         doc_hash = self.__commitDocumentChanges(doc_id, content,
                                                 'Imported document: %s (id = %d)' % (document_name, doc_id.id))
         doc_id = DocIdentifier(doc_id.id, doc_hash)

@@ -33,33 +33,65 @@ function(sc, controller, http, q, $upload) {
         });
     };
 
-    sc.getDocs = function() {
-       paramFolder = angular.element( document.querySelector( '#foldername' ) ).val();
-       sc.folder = paramFolder != '' ? paramFolder : sc.getParameterByName('folder');
+    sc.createFolder = function(name, owner) {
+        http.post('/createFolder', {
+            "name" : sc.getAbsolutePath(name),
+            "owner" : owner
+        }).success(function(data, status, headers, config) {
+            window.location.href = "/view/" + data.name;
+        }).error(function(data, status, headers, config) {
+            alert(data.message);
+        });
+    };
+
+    sc.initFolderVars = function() {
+       sc.folder = folder;
+
+       if (sc.getParameterByName('folder') != '')
+           sc.folder = sc.getParameterByName('folder');
 
        if (sc.folder === '' || sc.folder === undefined || sc.folder === null)
            sc.parentfolder = null;
        else
            sc.parentfolder = sc.folder.substr(0, sc.folder.lastIndexOf('/'));
-       
+    };
+
+    sc.getFolders = function() {
+       http({
+            method : 'GET',
+            url : '/getFolders',
+            params: {root_path: sc.folder}
+        }).success(function(data, status, headers, config) {
+            sc.folderList = data;
+            sc.displayIndex++;
+        }).error(function(data, status, headers, config) {
+            sc.folderList = [];
+            // TODO: Show some error message.
+        });
+    };
+
+    sc.getDocs = function() {
        http({
             method : 'GET',
             url : '/getDocuments',
             params: {versions: 0, folder: sc.folder}
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
-            sc.displayIndex = true;
+            sc.displayIndex++;
         }).error(function(data, status, headers, config) {
             sc.documentList = [];
             // TODO: Show some error message.
         });
     };
 
+    sc.userGroups = groups;
 	sc.parentfolder = "";
-    sc.folder = "";
+    sc.initFolderVars();
+    sc.folderList = [];
     sc.documentList = [];
+    sc.getFolders();
     sc.getDocs();
-    sc.displayIndex = false;
+    sc.displayIndex = 0;
     sc.displayTimes = false;
     sc.m = {};
     

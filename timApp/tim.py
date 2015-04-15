@@ -215,7 +215,6 @@ def getDocuments():
         
     #print('req_folder is "{}"'.format(req_folder))
     
-    folders = []
     finalDocs = []
     
     for doc in allowedDocs:
@@ -229,38 +228,29 @@ def getDocuments():
             docname = fullname
         
         if '/' in docname:
-            slash = docname.find('/')
-            foldername = docname[:slash]
-            
-            duplicate = False
-            for f in folders:
-                if f['name'] == foldername:
-                    duplicate = True
-                    break
-            if duplicate:
-                continue
-            
-            fullfolder = foldername if req_folder is None else req_folder + '/' + foldername            
-            folders.append({
-                'isFolder': True,
-                'name': foldername,
-                'fullname' : fullfolder,
-                'items': [],
-                'canEdit': False,
-                'isOwner': False,
-                'owner': timdb.users.getOwnerGroup(doc['id'])
-            })
             continue
 
         doc['name'] = docname
         doc['fullname'] = fullname
-        doc['isFolder'] = False
         doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
         doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         finalDocs.append(doc)
         
-    return jsonResponse(folders + finalDocs)
+    return jsonResponse(finalDocs)
+
+@app.route("/getFolders")
+def getFolders():
+    root_path = request.args.get('root_path')
+    timdb = getTimDb()
+    folders = timdb.folders.getFolderNames(root_path, getCurrentUserGroup())
+    #allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+
+    for f in folders:
+        f['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), f['id'])
+        f['owner'] = timdb.users.getOwnerGroup(f['id'])
+
+    return jsonResponse(folders)
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
@@ -311,6 +301,33 @@ def createDocument():
 
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
     return jsonResponse({'id' : docId.id, 'name' : docName})
+
+@app.route("/createFolder", methods=["POST"])
+def createFolder():
+    if not loggedIn():
+        return jsonResponse({'message': 'You have to be logged in to create a folder.'}, 403)
+    jsondata = request.get_json()
+    folderName = jsondata['name']
+    ownerId = jsondata['owner']
+
+    print("Creating a folder {} for group {}".format(folderName, ownerId))
+    return jsonResponse({'name' : folderName})
+
+    if '/' in folderName:
+        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
+
+    if re.match('^(\d)*$', folderName) is not None:
+        return jsonResponse({'message': 'Folder name can not be a number to avoid confusion with document id.'}, 400)
+
+    timdb = getTimDb()
+
+    userName = getCurrentUserName()
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and re.match('^' + userName + '\/', folderName) is None:
+        return jsonResponse({'message': 'You can only create new documents in your own folder ({}).'.format(userName)}, 403)
+
+    blockId = timdb.documents.createFolder(folderName, ownerId)
+    return jsonResponse({'id' : blockId, 'name' : folderName})
+
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
@@ -550,7 +567,12 @@ def getPluginMarkup(doc_id, plugintype, task_id):
 @app.route("/")
 @app.route("/view/")
 def indexPage():
-    return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
+    timdb = getTimDb()
+    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    return render_template('index.html',
+                           userName=getCurrentUserName(),
+                           userId=getCurrentUserId(),
+                           userGroups=possible_groups)
 
 
 def startApp():

@@ -25,6 +25,7 @@ PermApp.controller("PermCtrl", [
         sc.viewers = viewers;
         sc.userGroups = groups;
         sc.doc = doc;
+        sc.isFolder = isFolder;
         sc.newName = doc.name;
         doc.fulltext = doc.fulltext.trim();
         sc.fulltext = doc.fulltext;

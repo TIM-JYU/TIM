@@ -7,8 +7,8 @@ from contracts import contract, new_contract
 
 new_contract('Connection', sqlite3.Connection)
 
-BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING'))
-blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5)
+BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING', 'FOLDER'))
+blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5, 6)
 
 
 class TimDbException(Exception):
@@ -38,6 +38,23 @@ class TimDbBase(object):
         self.db = db
 
     @contract
+    def insertBlockToDb(self, name: 'str', owner_group_id: 'int', block_type: 'int') -> 'int':
+        """Inserts a block to database.
+
+        :param name: The name (description) of the block.
+        :param owner_group_id: The owner group of the block.
+        :param block_type: The type of the block.
+        :returns: The id of the block.
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+                       [name, owner_group_id, block_type])
+        block_id = cursor.lastrowid
+        self.db.commit()
+        return block_id
+
+    @contract
     def getBlockPath(self, block_id: 'int') -> 'str':
         """Gets the path of the specified block.
         
@@ -47,7 +64,7 @@ class TimDbBase(object):
         return os.path.join(self.blocks_path, str(block_id))
 
     @contract
-    def blockExists(self, block_id: 'int', block_type: 'int') -> 'bool':
+    def blockExists(self, block_id: 'int', block_type: 'int', check_file: 'bool' = True) -> 'bool':
         """Checks whether the specified block exists.
         
         :param block_id: The id of the block to check.
@@ -60,11 +77,9 @@ class TimDbBase(object):
                        [block_id, block_type])
         result = cursor.fetchone()
         if result[0] == 1:
-            if not os.path.exists(self.getBlockPath(block_id)):
+            if check_file and not os.path.exists(self.getBlockPath(block_id)):
                 print ('blockExists: the block {} was in database but the file was not found'.format(block_id))
                 return False
-            #assert os.path.exists(
-            #    self.getBlockPath(block_id)), 'the block {} was in database but the file was not found'.format(block_id)
             return True
         return False
 
