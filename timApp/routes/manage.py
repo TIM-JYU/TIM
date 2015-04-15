@@ -107,7 +107,7 @@ def renameDocument(doc_id):
     old_name = timdb.documents.getDocument(doc_id)['name']
     userName = getCurrentUserName()
 
-    if not timdb.users.isUserInGroup(userName, 'Administrators'):
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä"):
         if re.match('^' + userName + '\/', old_name) is None:
             return jsonResponse({'message': "You can't rename this document as it's outside your folder."}, 403)
         if re.match('^' + userName + '\/', new_name) is None:
