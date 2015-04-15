@@ -28,7 +28,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
         var date = new Date();
 
-
         $scope.setCurrentTime = function () {
             $scope.startDay = date.getDate();
             $scope.startMonth = date.getMonth() + 1;
@@ -52,7 +51,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         $scope.showBasicView(answer);
                     }
                 })
-        }
+        };
 
         $scope.checkIfInLecture();
 
@@ -83,21 +82,19 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         }
                     }
                 })
-        }
+        };
 
         $scope.toggleLecture = function () {
             $scope.showLecture = !$scope.showLecture
             if ($scope.showLecture) {
                 $scope.setCurrentTime();
-                document.getElementById("startMonth").value = $scope.startMonth;
+                document.getElementById("startMonth").value = $scope.startMonth
                 document.getElementById("startYear").value = $scope.startYear;
-                document.getElementById("startHour").value = $scope.startHour;
-                document.getElementById("startMin").value = $scope.startMin;
+                document.getElementById("startHour").value = $scope.leftPadder($scope.startHour, 2);
+                document.getElementById("startMin").value = $scope.leftPadder($scope.startMin, 2);
                 document.getElementById("startDay").value = $scope.startDay;
-            } else {
-                $scope.cancelCreation();
             }
-        }
+        };
 
         $scope.showLectureView = function (answer) {
             $scope.inLecture = true;
@@ -111,7 +108,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 $scope.canStop = true;
             }
             document.getElementById("lectureName").innerText = answer.lectureCode;
-        }
+        };
 
         $scope.showBasicView = function (answer) {
             $scope.canStart = true;
@@ -127,7 +124,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                     }
                 });
             }
-        }
+        };
 
         $scope.deleteLecture = function () {
             http({
@@ -157,7 +154,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 .success(function (answer) {
                     $scope.showBasicView(answer)
                 })
-        }
+        };
 
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
@@ -312,6 +309,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.endHour = parseInt($scope.startHour) + 2;
             $scope.endMin = $scope.startMin;
 
+            document.getElementById("stopDay").value = $scope.endDay;
+            document.getElementById("stopMonth").value = $scope.endMonth;
+            document.getElementById("stopYear").value = $scope.endYear;
+            document.getElementById("stopHour").value = $scope.endHour;
+            document.getElementById("stopMin").value = $scope.endMin;
+
 
             document.getElementById("calendarStop").disabled = false;
             $scope.useDate = true;
@@ -462,20 +465,81 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 return;
             }
 
+            var startDate = "" + $scope.leftPadder($scope.startYear, 4) + "-"
+                + $scope.leftPadder($scope.startMonth, 2) + "-"
+                + $scope.leftPadder($scope.startDay, 2) + " "
+                + $scope.leftPadder($scope.startHour, 2) + ":"
+                + $scope.leftPadder($scope.startMin, 2);
+
+            console.log($scope.useDuration);
+            if ($scope.useDuration) {
+
+                $scope.endDay = $scope.startDay;
+                $scope.endMonth = $scope.startMonth;
+                $scope.endYear = $scope.startYear;
+
+                if ($scope.durationMin == undefined) {
+                    $scope.durationMin = 0;
+                }
+
+                if ($scope.durationHour == undefined) {
+                    $scope.durationHour = 0;
+                }
+
+                var extraHour = 0;
+
+                var hoursFromMins = parseInt($scope.durationMin) / 60 >> 0;
+                $scope.endMin = parseInt($scope.startMin) + parseInt($scope.durationMin) % 60
+                $scope.endHour = parseInt($scope.startHour) + parseInt($scope.durationHour) + hoursFromMins;
+                if ($scope.endHour >= 24) {
+                    var extraDays = parseInt($scope.endHour) / 24 >> 0;
+                    $scope.endHour = $scope.endHour % 24;
+                    $scope.endDay = $scope.endDay + extraDays;
+                    switch ($scope.endMonth) {
+                        case 1:
+                        case 3:
+                        case 5:
+                        case 7:
+                        case 8:
+                        case 10:
+                        case 12:
+                            if ($scope.endDay > 31) {
+                                $scope.endMonth += 1;
+                                $scope.endDay = 1;
+                            }
+                            break;
+                        case 2:
+                            if ($scope.endDay > 28) {
+                                $scope.endMonth += 1;
+                                $scope.endDay = 1;
+                            }
+                            break;
+                        default :
+                            if ($scope.endDay > 30) {
+                                $scope.endMonth += 1;
+                                $scope.endDay = 1;
+                            }
+                    }
+
+                    if ($scope.endMonth > 12 ){
+                        $scope.endMonth = 1;
+                        $scope.endYear += 1;
+                    }
+                }
+
+            }
+
+            var endDate = "" + $scope.leftPadder($scope.endYear, 4) + "-"
+                + $scope.leftPadder($scope.endMonth, 2) + "-"
+                + $scope.leftPadder($scope.endDay, 2) + " "
+                + $scope.leftPadder($scope.endHour, 2) + ":"
+                + $scope.leftPadder($scope.endMin, 2);
+
+            console.log(startDate);
+            console.log(endDate);
+
             $scope.cancelCreation();
 
-
-            var startDate = "" + $scope.numberFormatter($scope.startYear, 4) + "."
-                + $scope.numberFormatter($scope.startMonth, 2) + "."
-                + $scope.numberFormatter($scope.startDay, 2) + "|"
-                + $scope.numberFormatter($scope.startHour, 2) + ":"
-                + $scope.numberFormatter($scope.startMin, 2);
-
-            var endDate = "" + $scope.numberFormatter($scope.endYear, 4) + "."
-                + $scope.numberFormatter($scope.endMonth, 2) + "."
-                + $scope.numberFormatter($scope.endDay, 2) + "|"
-                + $scope.numberFormatter($scope.endHour, 2) + ":"
-                + $scope.numberFormatter($scope.endMin, 2);
 
             http({
                 url: '/createLecture',
@@ -492,18 +556,19 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 .error(function () {
                     console.log("Failed to start a lecture");
                 })
-        };
+        }
+        ;
 
-        $scope.numberFormatter = function (number, size) {
-            var formattedNumber = "" + number;
-            var len = formattedNumber.length;
+        $scope.leftPadder = function (number, size) {
+            var paddedNumber = "" + number;
+            var len = paddedNumber.length;
             while (len < size) {
-                formattedNumber = "0" + formattedNumber
+                paddedNumber = "0" + paddedNumber
                 len++;
             }
-            return parseInt(formattedNumber);
+            return paddedNumber;
 
-        }
+        };
 
         /*Function for cancelling the lecture creation.*/
         $scope.cancelCreation = function () {
@@ -525,8 +590,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             for (i = 0; i < elementsToClear.length; i++) {
                 $scope.defInputStyle(elementsToClear[i]);
             }
+            for (i = 7; i < elementsToClear.length; i++) {
+                elementsToClear[i].value = "";
+            }
             $scope.showLecture = false;
             document.getElementById("errorMessage").innerHTML = "";
+            document.getElementById("lectureForm").reset();
             $scope.useDate = false;
             $scope.useDuration = false;
             $scope.dateChosen = false;
@@ -583,7 +652,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.prepareCalender();
 
 
-    }]);
+    }
+])
+;
 
 timApp.directive('notEmptyChange', function () {
     return {

@@ -111,9 +111,6 @@ class Lectures(TimDbBase):
                         WHERE lecture_code = ?
                         """, [lecture_code])
 
-        if len(cursor.fetchall()) <= 0:
-            return -1
-
         return cursor.fetchone()[0]
 
     @contract

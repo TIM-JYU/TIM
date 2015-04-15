@@ -221,7 +221,7 @@ def get_all_messages():
             {"status": "results", "data": list_of_new_messages, "lastid": messages[-1].get('msg_id'),
              "lectureId": lecture_id})
 
-    return jsonResponse({"status": "no-results", "data": [], "lastid": -1,"lectureId": lecture_id})
+    return jsonResponse({"status": "no-results", "data": [], "lastid": -1, "lectureId": lecture_id})
 
 
 @app.route('/getMessages')
@@ -307,7 +307,11 @@ def add_question():
 
 @app.route('/checkLecture', methods=['GET'])
 def check_lecture():
-    doc_id = int(request.args.get('doc_id'))
+    arg_id = request.args.get('doc_id')
+    if not arg_id:
+        return abort(400)
+
+    doc_id = int(arg_id)
     timdb = getTimDb()
     current_user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_lecture(doc_id, current_user)
@@ -321,13 +325,17 @@ def check_lecture():
         return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
                              "isLecturer": is_lecturer})
     else:
-        time_now = str(datetime.datetime.now().strftime("%Y.%m.%d|%H:%M"))
-        lecture_code = "Not running"
-        list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
-        lecture_codes = []
-        for lecture in list_of_lectures:
-            lecture_codes.append(lecture.get("lecture_code"))
-        return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
+        return get_running_lectures(doc_id)
+
+def get_running_lectures(doc_id):
+    timdb = getTimDb()
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    lecture_code = "Not running"
+    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
+    lecture_codes = []
+    for lecture in list_of_lectures:
+        lecture_codes.append(lecture.get("lecture_code"))
+    return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
 
 
 @app.route('/createLecture', methods=['POST'])
@@ -343,7 +351,10 @@ def start_lecture():
         password = ""
     current_user = getCurrentUserId()
     lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
-    timdb.lectures.join_lecture(lecture_id, current_user, True)
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    if start_time <= current_time <= end_time:
+        timdb.lectures.join_lecture(lecture_id, current_user, True)
     return jsonResponse({"lectureId": lecture_id})
 
 
@@ -356,13 +367,7 @@ def stop_lecture():
     timdb.messages.delete_messages_from_lecture(lecture_id, True)
     timdb.lectures.delete_users_from_lecture(lecture_id, True)
     timdb.lectures.delete_lecture(lecture_id, True)
-    time_now = str(datetime.datetime.now().strftime("%Y.%m.%d|%H:%M"))
-    lecture_code = "Not running"
-    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
-    lecture_codes = []
-    for lecture in list_of_lectures:
-        lecture_codes.append(lecture.get("lecture_code"))
-    return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
+    return get_running_lectures(doc_id)
 
 
 @app.route('/joinLecture', methods=['POST'])
@@ -371,8 +376,6 @@ def join_lecture():
     lecture_code = request.args.get("lecture_code")
     password_quess = request.args.get("password_quess")
     lecture_id = timdb.lectures.get_lecture_by_code(lecture_code)
-    if lecture_id == -1:
-        abort(400)
     current_user = getCurrentUserId()
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture[0].get("password") != password_quess:
@@ -394,13 +397,7 @@ def leave_lecture():
     lecture_id = int(request.args.get("lecture_id"))
     doc_id = int(request.args.get("doc_id"))
     timdb.lectures.leave_lecture(lecture_id, getCurrentUserId(), True)
-    time_now = str(datetime.datetime.now().strftime("%Y.%m.%d|%H:%M"))
-    lecture_code = "Not running"
-    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
-    lecture_codes = []
-    for lecture in list_of_lectures:
-        lecture_codes.append(lecture.get("lecture_code"))
-    return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
+    return get_running_lectures(doc_id)
 
 
 @app.route('/uploads/<filename>')
