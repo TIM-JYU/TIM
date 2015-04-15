@@ -1,4 +1,4 @@
-.menuSection {
+.menuSection #largeMenu {
    background-color:#3cc;
    border: 1px solid #3cc;
    border-radius: 25px;
@@ -8,6 +8,28 @@
    right:600px;
    height: 35px;
    position: fixed;
+}
+
+#smallMenu {
+   font-size: 90%;
+   background-color:#3cc;
+   border: 1px solid #3cc;
+   border-radius: 25px;
+   padding: 12px 10px 1px 10px;
+   top:0;
+   left:250px;
+   right:600px;
+   height: 30px;
+   position: fixed;
+}
+
+#smallMenu input[type="submit"] {
+	position: relative;
+	top: -25px;
+}
+
+#smallMenu .viewLogin {
+	color: #3cc;
 }
 
 .lectureSection {

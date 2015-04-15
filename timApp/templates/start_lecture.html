@@ -234,6 +234,8 @@
 		}
 		g_globalObject.closeCalendar();
 		g_globalObject2.closeCalendar();
+		
+		if (document.getElementById("errorMessage").innerHTML == "") document.getElementById("startLecturedialog").style.display = "none";
 	}
 	
 	/*Function for cancelling the lecture creation.*/
