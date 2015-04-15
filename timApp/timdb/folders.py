@@ -76,17 +76,17 @@ class Folders(TimDbBase):
         return self.blockExists(document_id, blocktypes.FOLDER, check_file = False)
 
     @contract
-    def getFolderId(self, folderName: 'str', createWithOwner: 'int|None' = None) -> 'int':
+    def getFolderId(self, folderName: 'str', createWithOwner: 'int|None' = None) -> 'int|None':
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM Block WHERE type_id = ? AND description = ?', [blocktypes.FOLDER, folderName])
         result = cursor.fetchone()
         if result is None and createWithOwner is not None:
-            print("I created a folder record for " + folderName)
+            #print("I created a folder record for " + folderName)
             return self.insertBlockToDb(folderName, createWithOwner, blocktypes.FOLDER)
         return result[0] if result is not None else None
 
     @contract
-    def getFolderNames(self, root_path: 'str|None' = None, group_id: 'int|None' = None) -> 'list(dict)':
+    def getFolders(self, root_path: 'str|None' = None, group_id: 'int|None' = None) -> 'list(dict)':
         """Gets all the folders under a path.
         :returns: A list of dictionaries of the form {'id': <folder_id>, 'name': 'folder_name', 'fullname': 'folder_path'}
         """
@@ -95,13 +95,24 @@ class Folders(TimDbBase):
         #self.db.commit()
 
         if root_path is None or root_path == '' or root_path == '.':
-            cursor.execute('SELECT description AS name FROM Block WHERE type_id = ? AND description LIKE "%/%"', [blocktypes.DOCUMENT])
+            cursor.execute(
+                """
+                SELECT description FROM Block WHERE type_id = ? AND description LIKE "%/%"
+                UNION
+                SELECT description || "/" FROM Block WHERE type_id = ?
+                """, [blocktypes.DOCUMENT, blocktypes.FOLDER])
             startindex = 0
         else:
-            cursor.execute('SELECT description AS name FROM Block WHERE type_id = ? AND description LIKE "' + root_path + '/%/%"', [blocktypes.DOCUMENT])
+            cursor.execute(
+                """
+                SELECT description FROM Block WHERE type_id = ? AND description LIKE "{0}/%/%"
+                UNION
+                SELECT description || "/" FROM Block WHERE type_id = ? AND description LIKE "{0}/%"
+                """.format(root_path), [blocktypes.DOCUMENT, blocktypes.FOLDER])
             startindex = len(root_path) + 1
 
-        foldernames = {doc['name'][startindex:doc['name'].find('/', startindex)] for doc in self.resultAsDictionary(cursor)}
+        foldernames = {doc['description'][startindex:doc['description'].find('/', startindex)] for doc in self.resultAsDictionary(cursor)}
+
         folders = [{
                        'id': self.getFolderId(posixpath.join(root_path, name), group_id),
                        'name': name,

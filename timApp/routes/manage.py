@@ -48,7 +48,7 @@ def manage(doc_id):
 @manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
 def changeOwner(doc_id, new_owner):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.documentExists(doc_id) and not timdb.folders.folderExists(doc_id):
         abort(404)
     verifyOwnership(doc_id)
     possible_groups = timdb.users.getUserGroups(getCurrentUserId())
@@ -60,7 +60,7 @@ def changeOwner(doc_id, new_owner):
 @manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
 def addPermission(doc_id, group_name, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.documentExists(doc_id) and not timdb.folders.folderExists(doc_id):
         abort(404, 'This document does not exist.')
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to add permissions to this document.")
@@ -82,7 +82,7 @@ def addPermission(doc_id, group_name, perm_type):
 @manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def removePermission(doc_id, group_id, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.documentExists(doc_id) and not timdb.folders.folderExists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -119,11 +119,16 @@ def renameDocument(doc_id):
 @manage_page.route("/getPermissions/<int:doc_id>")
 def getPermissions(doc_id):
     timdb = getTimDb()
+    isFolder = False
     if not timdb.documents.documentExists(doc_id):
-        abort(404)
+        if timdb.folders.folderExists(doc_id):
+            isFolder = True
+        else:
+            abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
-    doc_data = timdb.documents.getDocument(doc_id)
+
+    doc_data = timdb.folders.getFolder(doc_id) if isFolder else timdb.documents.getDocument(doc_id)
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return jsonResponse({'doc' : doc_data, 'editors' : editors, 'viewers' : viewers})

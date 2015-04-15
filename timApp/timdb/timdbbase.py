@@ -83,6 +83,18 @@ class TimDbBase(object):
             return True
         return False
 
+    @contract
+    def setOwner(self, block_id: 'int', usergroup_id: 'int'):
+        """Changes the owner group for a block.
+
+        :param block_id: The id of the block.
+        :param usergroup_id: The id of the new usergroup.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('UPDATE Block SET UserGroup_id = ? WHERE id = ?',
+                       [usergroup_id, block_id])
+        self.db.commit()
+
     # TODO: contract
     def resultAsDictionary(self, cursor):
         """Converts the result in database cursor object to JSON."""

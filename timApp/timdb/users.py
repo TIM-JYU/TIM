@@ -227,6 +227,7 @@ class Users(TimDbBase):
         :returns: The id of the user or None if the user does not exist.
         """
 
+
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM User WHERE name = ?', [name])
         result = cursor.fetchone()

@@ -47,21 +47,30 @@ def parse_range(start_index, end_index):
 
 def try_return_folder(doc_name):
     timdb = getTimDb()
-    docs = timdb.documents.getDocuments(historylimit=0)
-    allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    #docs = timdb.documents.getDocuments(historylimit=0)
+    #allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
     folder_name = doc_name.rstrip('/')
-    path_name = folder_name + '/'
+    #path_name = folder_name + '/'
 
-    for doc in allowedDocs:
-        if doc['name'].startswith(path_name):
-            possible_groups = timdb.users.getUserGroups(getCurrentUserId())
-            return render_template('index.html',
-                                   userName=getCurrentUserName(),
-                                   userId=getCurrentUserId(),
-                                   userGroups=possible_groups,
-                                   folder=folder_name)
+    if timdb.folders.getFolderId(folder_name) is None:
+        abort(404)
 
-    abort(404)
+    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    return render_template('index.html',
+                           userName=getCurrentUserName(),
+                           userId=getCurrentUserId(),
+                           userGroups=possible_groups,
+                           folder=folder_name)
+
+    #for doc in allowedDocs:
+    #    if doc['name'].startswith(path_name):
+    #        possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    #        return render_template('index.html',
+    #                               userName=getCurrentUserName(),
+    #                               userId=getCurrentUserId(),
+    #                               userGroups=possible_groups,
+    #                               folder=folder_name)
+
 
 
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):

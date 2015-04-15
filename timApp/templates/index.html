@@ -40,7 +40,7 @@ table td {
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
         <div ng-show="displayIndex == 2">
-            <table ng-show="documentList.length > 0">
+            <table ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
                 <thead>
                     <tr>
                     	<td></td>
@@ -94,7 +94,7 @@ table td {
                     </td>
                 </tr>
             </table>
-            <p ng-show="documentList.length == 0">There are no documents to show.</p>
+            <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
             {% if session.user_id %}
             <a ng-click="setCurrentDocument({})">Upload a new document</a>
             <div class="uploadForm" ng-show="m.currDoc">

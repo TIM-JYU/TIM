@@ -243,14 +243,14 @@ def getDocuments():
 def getFolders():
     root_path = request.args.get('root_path')
     timdb = getTimDb()
-    folders = timdb.folders.getFolderNames(root_path, getCurrentUserGroup())
-    #allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+    allowedFolders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
 
-    for f in folders:
+    for f in allowedFolders:
         f['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), f['id'])
         f['owner'] = timdb.users.getOwnerGroup(f['id'])
 
-    return jsonResponse(folders)
+    return jsonResponse(allowedFolders)
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
@@ -310,9 +310,6 @@ def createFolder():
     folderName = jsondata['name']
     ownerId = jsondata['owner']
 
-    print("Creating a folder {} for group {}".format(folderName, ownerId))
-    return jsonResponse({'name' : folderName})
-
     if '/' in folderName:
         return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
 
@@ -322,10 +319,10 @@ def createFolder():
     timdb = getTimDb()
 
     userName = getCurrentUserName()
-    if not timdb.users.isUserInGroup(userName, 'Administrators') and re.match('^' + userName + '\/', folderName) is None:
-        return jsonResponse({'message': 'You can only create new documents in your own folder ({}).'.format(userName)}, 403)
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and folderName != userName and re.match('^' + userName + '\/', folderName) is None:
+        return jsonResponse({'message': 'You can only create new folders in your own folder ({}).'.format(userName)}, 403)
 
-    blockId = timdb.documents.createFolder(folderName, ownerId)
+    blockId = timdb.folders.createFolder(folderName, ownerId)
     return jsonResponse({'id' : blockId, 'name' : folderName})
 
 
