@@ -6,7 +6,7 @@ timApp.controller('UserListController', ['$scope', '$filter', 'ngTableParams',
     function ($scope, $filter, ngTableParams) {
         $scope.tableParams = new ngTableParams({
             page: 1,
-            count: 20,
+            count: $scope.users.length,
             filter: {
                 //name: 'M'
             },
