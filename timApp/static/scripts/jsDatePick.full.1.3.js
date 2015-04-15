@@ -85,7 +85,7 @@ g_l["ERROR_4"] = g_l["ERROR_3"] = "Target invalid";
 	at javascriptcalendar.org
 	Thank you!
 */
-g_jsDatePickImagePath = "img/";
+g_jsDatePickImagePath = "/static/images/img/";
 g_jsDatePickDirectionality = "ltr";
 
 g_arrayOfUsedJsDatePickCalsGlobalNumbers = [];
