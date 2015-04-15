@@ -402,8 +402,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         };
 
         /*Function for checking that number is positive.*/
-        $scope.isPosiviteNumber = function (element) {
-            if (element.value < 0) {
+        $scope.isPositiveNumber = function (element) {
+            if (isNaN(element.value) || element.value < 0 || element.value.length <= 0) {
                 element.style.border = "1px solid red";
                 element.title = "Number has to be positive.";
                 $scope.showErrorMessage();
@@ -453,9 +453,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.isHour(elements[3]);
             $scope.isMinute(elements[4]);
 
-            if (document.getElementById("dateChosen2").checked == true) {
+            if ($scope.useDate) {
                 $scope.isHour(elements[8]);
                 $scope.isMinute(elements[9]);
+            }
+
+            if ($scope.useDuration) {
+                $scope.isPositiveNumber(elements[10]);
+                $scope.isPositiveNumber(elements[11]);
             }
 
             g_globalObject.closeCalendar();
@@ -471,7 +476,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 + $scope.leftPadder($scope.startHour, 2) + ":"
                 + $scope.leftPadder($scope.startMin, 2);
 
-            console.log($scope.useDuration);
             if ($scope.useDuration) {
 
                 $scope.endDay = $scope.startDay;
@@ -534,9 +538,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 + $scope.leftPadder($scope.endDay, 2) + " "
                 + $scope.leftPadder($scope.endHour, 2) + ":"
                 + $scope.leftPadder($scope.endMin, 2);
-
-            console.log(startDate);
-            console.log(endDate);
 
             $scope.cancelCreation();
 
@@ -679,6 +680,20 @@ timApp.directive('isValidChange', function () {
             });
             element.bind('change', function () {
                 scope.isValid(element.context);
+            });
+        }
+    }
+});
+
+timApp.directive('isPositive', function () {
+    return {
+        scrope: false,
+        link: function (scope, element) {
+            element.bind('blur', function () {
+                scope.isPositiveNumber(element.context);
+            });
+            element.bind('change', function () {
+                scope.isPositiveNumber(element.context);
             });
         }
     }
