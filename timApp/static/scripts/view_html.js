@@ -366,12 +366,11 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.getQuestionHtml = function(questions) {
             var questionImage = '../static/images/qustionBubble.png';
             var $questionDiv = $("<div>", {class: 'questions'});
+
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image();
                 img.src = questionImage;
-                img.title = questions[i].question;
-                $questionDiv.append(img);
-                //$questionDiv.append($("<div>", {class: 'question', html: questions[i].question}));
+                $questionDiv.append($("<div>", {title: questions[i].question, class: 'question', question_id: questions[i].question_id, html: img}));
             }
             return $questionDiv;
         }

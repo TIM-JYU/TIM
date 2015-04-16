@@ -41,6 +41,7 @@ td.selected {
     display: inline-flex;
     float: left;
     margin-left: 2em;
+    position: absolute;
 }
 
 .wall-behind {
