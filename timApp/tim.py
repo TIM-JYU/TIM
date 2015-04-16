@@ -327,15 +327,23 @@ def check_lecture():
     else:
         return get_running_lectures(doc_id)
 
+
 def get_running_lectures(doc_id):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     lecture_code = "Not running"
     list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
-    lecture_codes = []
+    current_lecture_codes = []
+    future_lecture_codes = []
+    is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
-        lecture_codes.append(lecture.get("lecture_code"))
-    return jsonResponse({"lectures": lecture_codes, "lectureCode": lecture_code})
+        if lecture.get("start_time") < time_now:
+            current_lecture_codes.append(lecture.get("lecture_code"))
+        else:
+            future_lecture_codes.append(lecture.get("lecture_code"))
+    return jsonResponse(
+        {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
+         "lectureCode": lecture_code})
 
 
 @app.route('/createLecture', methods=['POST'])

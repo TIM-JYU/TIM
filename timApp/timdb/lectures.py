@@ -93,11 +93,11 @@ class Lectures(TimDbBase):
         cursor = self.db.cursor()
 
         cursor.execute("""
-                        SELECT lecture_code
+                        SELECT lecture_code, start_time
                         FROM Lecture
-                        WHERE doc_id = ? AND start_time <= ? AND end_time >= ?
+                        WHERE doc_id = ? AND end_time >= ?
                         ORDER BY lecture_code
-                        """, [doc_id, time, time])
+                        """, [doc_id, time])
 
         return self.resultAsDictionary(cursor)
 

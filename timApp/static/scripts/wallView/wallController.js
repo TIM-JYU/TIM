@@ -3,9 +3,9 @@
  */
 
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http",
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window",
 
-    function ($scope, controller, http) {
+    function ($scope, controller, http, $window) {
 
         $scope.msg = "";
         $scope.newMsg = "";
@@ -18,6 +18,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.lectureId = null;
         $scope.showLecture = false;
         $scope.lectures = [];
+        $scope.futureLectures = [];
         $scope.chosenLecture = "";
         $scope.passwordQuess = "";
         $scope.pollingLectures = [];
@@ -25,6 +26,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         $scope.useDuration = false;
         $scope.dateChosen = false;
         $scope.durationChosen = false;
+        $scope.durationHour = "";
+        $scope.durationMin = "";
+        $scope.isLecturer = false;
 
         var date = new Date();
 
@@ -75,7 +79,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         document.getElementById("passwordInput").style.border = "1px solid black";
                         document.getElementById("passwordInput").placeholder = "Password";
                         if (answer.inLecture) {
-                            console.log(answer)
+                            console.log(answer);
                             $scope.showLectureView(answer);
                         } else {
                             $scope.showBasicView(answer);
@@ -85,10 +89,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         };
 
         $scope.toggleLecture = function () {
-            $scope.showLecture = !$scope.showLecture
+            $scope.showLecture = !$scope.showLecture;
             if ($scope.showLecture) {
                 $scope.setCurrentTime();
-                document.getElementById("startMonth").value = $scope.startMonth
+                document.getElementById("startMonth").value = $scope.startMonth;
                 document.getElementById("startYear").value = $scope.startYear;
                 document.getElementById("startHour").value = $scope.leftPadder($scope.startHour, 2);
                 document.getElementById("startMin").value = $scope.leftPadder($scope.startMin, 2);
@@ -111,19 +115,29 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         };
 
         $scope.showBasicView = function (answer) {
-            $scope.canStart = true;
-            $scope.canStop = false;
+            $scope.isLecturer = answer.isLecturer;
+            if ($scope.isLecturer) {
+                $scope.canStart = true;
+                $scope.canStop = false;
+            }
             $scope.polling = false;
             $scope.inLecture = false;
             $scope.lectureId = -1;
             document.getElementById("lectureName").innerText = "Not running";
-            if (answer.lectures != undefined) {
-                jQuery.each(answer.lectures, function (i, lecture) {
-                    if ($scope.lectures.indexOf(lecture) == -1) {
-                        $scope.lectures.push(lecture);
-                    }
-                });
-            }
+
+            angular.forEach(answer.lectures, function (lecture, i) {
+                if ($scope.lectures.indexOf(lecture) == -1) {
+                    $scope.lectures.push(lecture);
+                }
+            });
+
+            angular.forEach(answer.futureLectures, function (lecture, i) {
+                console.log(lecture);
+                if ($scope.futureLectures.indexOf(lecture) == -1) {
+                    $scope.futureLectures.push(lecture);
+                }
+            });
+
         };
 
         $scope.deleteLecture = function () {
@@ -175,26 +189,26 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 method: 'POST',
                 params: {'message': message, lecture_id: $scope.lectureId}
             })
-                .success(function (answer) {
+                .success(function () {
                     $scope.newMsg = "";
+                    // TODO: Find way to do this without getElementById
                     var textarea = document.getElementById('wallArea');
                     textarea.scrollTop = textarea.scrollHeight;
                 })
                 .error(function () {
-                    console.log("Can't send message or something")
+                    console.log("Can't send message or something");
                 });
 
         };
 
         $scope.getAllMessages = function () {
-            var t;
             http({
                 url: '/getAllMessages',
                 type: 'GET',
                 params: {lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
-                    jQuery.each(answer.data, function (i, msg) {
+                    angular.forEach(answer.data, function (msg, i) {
                         $scope.msg = $scope.msg + msg + "\n";
                     });
                     $scope.lastID = answer.lastid;
@@ -212,7 +226,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
 
         $scope.startLongPolling = function (lastID) {
             function message_longPolling(lastID) {
-                var timeOut;
+                var timeout;
 
                 if (lastID == null) {
                     lastID = -1;
@@ -230,34 +244,30 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                             }
 
                             $scope.requestOnTheWay = false;
-                            clearInterval(timeOut);
+                            $window.clearTimeout(timeout);
                             if ($scope.polling) {
 
                                 $scope.pollingLectures.push(answer.lectureId);
-                                if (answer.status == 'results' || answer.status == 'no-results') {
+                                timeOut = setTimeout(function () {
+                                    message_longPolling(answer.lastid);
+                                }, 1000);
 
-                                    timeOut = setTimeout(function () {
-                                        message_longPolling(answer.lastid);
-                                    }, 1000);
-
-                                    if (answer.status == 'results') {
-                                        jQuery.each(answer.data, function (i, msg) {
-                                            $scope.msg = $scope.msg + msg + "\n";
-                                            $scope.$apply();
-                                        });
-                                        $scope.lastID = answer.lastid;
-                                        var textarea = document.getElementById('wallArea');
-                                        var areaHeight = $("#wallArea").height();
-                                        if (textarea.scrollHeight - textarea.scrollTop - areaHeight < 200) {
-                                            textarea.scrollTop = textarea.scrollHeight;
-                                        }
-
-
-                                    } else if (answer.status == 'no-results') {
-                                        console.log("No new messages. Sending new poll.");
+                                if (answer.status == 'results') {
+                                    angular.forEach(answer.data, function (msg, i) {
+                                        $scope.msg = $scope.msg + msg + "\n";
+                                        $scope.$apply();
+                                    });
+                                    $scope.lastID = answer.lastid;
+                                    var textarea = document.getElementById('wallArea');
+                                    var areaHeight = $("#wallArea").height();
+                                    if (textarea.scrollHeight - textarea.scrollTop - areaHeight < 200) {
+                                        textarea.scrollTop = textarea.scrollHeight;
                                     }
-                                } else if (answer.status == 'error') {
-                                    alert("Something went wrong");
+
+
+                                } else {
+                                    console.log("No new messages. Sending new poll.");
+
                                 }
                             } else {
                                 console.log("Got answer but not polling anymore.")
@@ -266,8 +276,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                         ,
                         error: function () {
                             $scope.requestOnTheWay = false;
-                            clearInterval(timeOut);
-                            timeOut = setTimeout(function () {
+                            $window.clearTimeout(timeout);
+                            timeout = setTimeout(function () {
                                 message_longPolling();
                             }, 30000);
                         }
@@ -402,11 +412,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
         };
 
         /*Function for checking that number is positive.*/
-        $scope.isPosiviteNumber = function (element) {
-            if (element.value < 0) {
+        $scope.isPositiveNumber = function (element) {
+            if (isNaN(element.value) || element.value < 0) {
                 element.style.border = "1px solid red";
                 element.title = "Number has to be positive.";
                 $scope.showErrorMessage();
+            } else {
+                element.style.border = "";
+                element.title = "Number has to be positive.";
             }
         };
 
@@ -453,14 +466,30 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             $scope.isHour(elements[3]);
             $scope.isMinute(elements[4]);
 
-            if (document.getElementById("dateChosen2").checked == true) {
+            if ($scope.useDate) {
                 $scope.isHour(elements[8]);
                 $scope.isMinute(elements[9]);
+            }
+
+
+            if ($scope.useDuration) {
+
+                $scope.isPositiveNumber(elements[10]);
+                $scope.isPositiveNumber(elements[11]);
+
+                if ($scope.durationHour.length <= 0 && $scope.durationMin.length <= 0) {
+                    elements[10].style.border = "1px solid red";
+                    elements[11].style.border = "1px solid red";
+                    elements[10].title = "Please give positive number.";
+                    elements[11].title = "Please give positive number.";
+                    $scope.showErrorMessage()
+                }
             }
 
             g_globalObject.closeCalendar();
             g_globalObject2.closeCalendar();
 
+            // TODO: Make better way to check errors.
             if (document.getElementById("errorMessage").innerHTML.length > 0) {
                 return;
             }
@@ -471,25 +500,22 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 + $scope.leftPadder($scope.startHour, 2) + ":"
                 + $scope.leftPadder($scope.startMin, 2);
 
-            console.log($scope.useDuration);
             if ($scope.useDuration) {
 
                 $scope.endDay = $scope.startDay;
                 $scope.endMonth = $scope.startMonth;
                 $scope.endYear = $scope.startYear;
 
-                if ($scope.durationMin == undefined) {
+                if ($scope.durationMin == "") {
                     $scope.durationMin = 0;
                 }
 
-                if ($scope.durationHour == undefined) {
+                if ($scope.durationHour == "") {
                     $scope.durationHour = 0;
                 }
 
-                var extraHour = 0;
-
                 var hoursFromMins = parseInt($scope.durationMin) / 60 >> 0;
-                $scope.endMin = parseInt($scope.startMin) + parseInt($scope.durationMin) % 60
+                $scope.endMin = parseInt($scope.startMin) + parseInt($scope.durationMin) % 60;
                 $scope.endHour = parseInt($scope.startHour) + parseInt($scope.durationHour) + hoursFromMins;
                 if ($scope.endHour >= 24) {
                     var extraDays = parseInt($scope.endHour) / 24 >> 0;
@@ -521,7 +547,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                             }
                     }
 
-                    if ($scope.endMonth > 12 ){
+                    if ($scope.endMonth > 12) {
                         $scope.endMonth = 1;
                         $scope.endYear += 1;
                     }
@@ -534,9 +560,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
                 + $scope.leftPadder($scope.endDay, 2) + " "
                 + $scope.leftPadder($scope.endHour, 2) + ":"
                 + $scope.leftPadder($scope.endMin, 2);
-
-            console.log(startDate);
-            console.log(endDate);
 
             $scope.cancelCreation();
 
@@ -563,7 +586,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http",
             var paddedNumber = "" + number;
             var len = paddedNumber.length;
             while (len < size) {
-                paddedNumber = "0" + paddedNumber
+                paddedNumber = "0" + paddedNumber;
                 len++;
             }
             return paddedNumber;
@@ -679,6 +702,20 @@ timApp.directive('isValidChange', function () {
             });
             element.bind('change', function () {
                 scope.isValid(element.context);
+            });
+        }
+    }
+});
+
+timApp.directive('isPositive', function () {
+    return {
+        scrope: false,
+        link: function (scope, element) {
+            element.bind('blur', function () {
+                scope.isPositiveNumber(element.context);
+            });
+            element.bind('change', function () {
+                scope.isPositiveNumber(element.context);
             });
         }
     }
