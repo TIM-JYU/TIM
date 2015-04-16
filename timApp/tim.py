@@ -143,7 +143,7 @@ def upload_file():
     filename = posixpath.join(folder, secure_filename(doc.filename))
 
     userName = getCurrentUserName()
-    if not timdb.users.isUserInGroup(userName, 'Administrators') and re.match('^' + userName + '\/', filename) is None:
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä") and re.match('^' + userName + '\/', filename) is None:
         return jsonResponse({'message': "You're not authorized to write here."}, 403)
 
     if not allowed_file(doc.filename):
@@ -306,7 +306,7 @@ def createDocument():
     timdb = getTimDb()
 
     userName = getCurrentUserName()
-    if not timdb.users.isUserInGroup(userName, 'Administrators') and re.match('^' + userName + '\/', docName) is None:
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä") and re.match('^' + userName + '\/', docName) is None:
         return jsonResponse({'message': 'You can only create new documents in your own folder ({}).'.format(userName)}, 403)
 
     docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
