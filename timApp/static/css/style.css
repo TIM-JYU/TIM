@@ -38,8 +38,9 @@ td.selected {
 }
 
 .questions {
-  display: inline-flex;
-  float: right;
+    display: inline-flex;
+    float: left;
+    margin-left: 2em;
 }
 
 .wall-behind {
