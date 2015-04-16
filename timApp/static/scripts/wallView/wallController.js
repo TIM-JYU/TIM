@@ -120,13 +120,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.inLecture = false;
             $scope.lectureId = -1;
             document.getElementById("lectureName").innerText = "Not running";
-            jQuery.each(answer.lectures, function (i, lecture) {
+
+            angular.forEach(answer.lectures, function (lecture, i) {
                 if ($scope.lectures.indexOf(lecture) == -1) {
                     $scope.lectures.push(lecture);
                 }
             });
 
-            jQuery.each(answer.futureLectures, function (i, lecture) {
+            angular.forEach(answer.futureLectures, function (lecture, i) {
                 console.log(lecture);
                 if ($scope.futureLectures.indexOf(lecture) == -1) {
                     $scope.futureLectures.push(lecture);
@@ -203,7 +204,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 params: {lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
-                    jQuery.each(answer.data, function (i, msg) {
+                    angular.forEach(answer.data, function (msg,i) {
                         $scope.msg = $scope.msg + msg + "\n";
                     });
                     $scope.lastID = answer.lastid;
@@ -248,7 +249,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                 }, 1000);
 
                                 if (answer.status == 'results') {
-                                    jQuery.each(answer.data, function (i, msg) {
+                                    angular.forEach(answer.data, function (msg,i) {
                                         $scope.msg = $scope.msg + msg + "\n";
                                         $scope.$apply();
                                     });
