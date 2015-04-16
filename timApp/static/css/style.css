@@ -1,3 +1,4 @@
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -34,6 +35,11 @@ td {
 
 td.selected {
     background: #d7e4ef;
+}
+
+.questions {
+  width: 5em;
+  float: right;
 }
 
 .wall-behind {
