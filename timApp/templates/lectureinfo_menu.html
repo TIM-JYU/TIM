@@ -1,19 +1,40 @@
 <!--html for upper menu-->
 <link rel="stylesheet" href="../../static/menustyle.css">
 <div class="menuSection">
-	<div id="largeMenu">
-	   <div class="lectureSection">
-			   <h1>Now:</h1> 
-			   <p id="lectureName">Not running </p>
-			   <img id="add-icon" src="../../static/images/add-icon3.png" class="icon" ng-click="toggleLecture()">
-		</div>
-    <div class="lectureSection">
-        <h1>Next:</h1>
-        <p id="next">Not planned</p>
-    </div>
-    <div class="loginSection">
-        {% include 'loginlogout.html' %}
-    </div>
+    <div id="largeMenu">
+        <div class="lectureSection" ng-show="!inLecture">
+            <h1>Now:</h1>
+            <select ng-model="chosenLecture" ng-options="lecture as lecture for lecture in lectures">
+                <pre>{{ "{{ availableLectures || json }}" }}</pre>
+            </select>
+            <input id="passwordInput" ng-model="passwordQuess" placeholder="access code"
+                   ng-keypress="passEnterPressed($event)" size="7">
+
+            <div>
+                <input type="button" ng-click="joinLecture()" value="Join" class="loginSection">
+                <img id="add-icon" src="../../static/images/add-icon3.png" class="icon" ng-click="toggleLecture()">
+            </div>
+
+        </div>
+        <div class="lectureSection" ng-show="inLecture">
+            <h1>Currently:</h1>
+
+            <p id="lectureName"></p>
+
+            <input type="button" ng-click="leaveLecture()" value="Leave" ng-show="inLecture">
+            <input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
+
+
+        </div>
+        <div class="lectureSection" ng-show="!inLecture">
+            <h1>Next:</h1>
+            <select ng-model="futureLecture" ng-options="lecture as lecture for lecture in futureLectures">
+                <pre>{{ "{{ futureLectures || json }}" }}</pre>
+            </select>
+        </div>
+        <div class="loginSection">
+            {% include 'loginlogout.html' %}
+        </div>
     </div>
 </div>
 <div id="startLecturedialog" ng-show="showLecture">
