@@ -38,7 +38,8 @@ td.selected {
 }
 
 .questions {
-
+  display: inline-flex;
+  float: right;
 }
 
 .wall-behind {
