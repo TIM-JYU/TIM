@@ -363,12 +363,43 @@ timApp.controller("ViewCtrl", ['$scope',
             return $noteDiv;
         };
 
+        sc.getQuestionHtml = function(questions) {
+            var questionImage = '../static/images/qustionBubble.png';
+            var $questionDiv = $("<div>", {class: 'questions'});
+            for (var i = 0; i < questions.length; i++) {
+                var img = new Image();
+                img.src = questionImage;
+                img.title = questions[i].question;
+                $questionDiv.append(img);
+                //$questionDiv.append($("<div>", {class: 'question', html: questions[i].question}));
+            }
+            return $questionDiv;
+        }
 
         sc.getQuestions = function () {
             var rn = "?_=" + (new Date).getTime();
-           // alert("HAHA");
             http.get('/questions/' + sc.docId).success(function (data, status, headers, config) {
-                //alert('Success getting questions: ' + data[0].question);
+                var pars = {};
+                var questionCount = data.length;
+                for (var i = 0; i < questionCount; i++){
+                    var pi = data[i].par_index;
+                    if(!(pi in pars)){
+                        pars[pi] = {questions: []};
+                    }
+
+                    pars[pi].questions.push(data[i]);
+                }
+
+                sc.forEachParagraph(function (index, elem) {
+                    var parIndex = index + sc.startIndex;
+                    if (parIndex in pars) {
+                        var $questionDiv = sc.getQuestionHtml(pars[parIndex].questions);
+                        $(this).append($questionDiv);
+
+                    }
+                });
+
+
             })
         }
 
