@@ -28,6 +28,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.durationChosen = false;
         $scope.durationHour = "";
         $scope.durationMin = "";
+        $scope.isLecturer = false;
 
         var date = new Date();
 
@@ -114,8 +115,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.showBasicView = function (answer) {
-            $scope.canStart = true;
-            $scope.canStop = false;
+            $scope.isLecturer = answer.isLecturer;
+            if ($scope.isLecturer) {
+                $scope.canStart = true;
+                $scope.canStop = false;
+            }
             $scope.polling = false;
             $scope.inLecture = false;
             $scope.lectureId = -1;
@@ -204,7 +208,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 params: {lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
-                    angular.forEach(answer.data, function (msg,i) {
+                    angular.forEach(answer.data, function (msg, i) {
                         $scope.msg = $scope.msg + msg + "\n";
                     });
                     $scope.lastID = answer.lastid;
@@ -249,7 +253,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                 }, 1000);
 
                                 if (answer.status == 'results') {
-                                    angular.forEach(answer.data, function (msg,i) {
+                                    angular.forEach(answer.data, function (msg, i) {
                                         $scope.msg = $scope.msg + msg + "\n";
                                         $scope.$apply();
                                     });

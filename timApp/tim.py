@@ -335,13 +335,15 @@ def get_running_lectures(doc_id):
     list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
     current_lecture_codes = []
     future_lecture_codes = []
+    is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
         if lecture.get("start_time") < time_now:
             current_lecture_codes.append(lecture.get("lecture_code"))
         else:
             future_lecture_codes.append(lecture.get("lecture_code"))
     return jsonResponse(
-        {"lectures": current_lecture_codes, "futureLectures": future_lecture_codes, "lectureCode": lecture_code})
+        {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
+         "lectureCode": lecture_code})
 
 
 @app.route('/createLecture', methods=['POST'])
