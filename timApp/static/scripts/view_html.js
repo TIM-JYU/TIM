@@ -365,14 +365,17 @@ timApp.controller("ViewCtrl", ['$scope',
 
         sc.getQuestionHtml = function(questions) {
             var questionImage = '../static/images/qustionBubble.png';
-            var $questionDiv = $("<div>", {class: 'questions'});
+            var $questionsDiv = $("<div>", {class: 'questions'});
 
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image();
                 img.src = questionImage;
-                $questionDiv.append($("<div>", {title: questions[i].question, class: 'question', question_id: questions[i].question_id, html: img}));
+                var $questionDiv = $("<div>", {title: questions[i].question, class: 'question', question_id: questions[i].question_id, html: img});
+                $questionDiv.attr("onClick", "console.log(" + '"' + questions[i].answer + '"' + ")");
+
+                $questionsDiv.append($questionDiv);
             }
-            return $questionDiv;
+            return $questionsDiv;
         }
 
         sc.getQuestions = function () {
@@ -392,8 +395,8 @@ timApp.controller("ViewCtrl", ['$scope',
                 sc.forEachParagraph(function (index, elem) {
                     var parIndex = index + sc.startIndex;
                     if (parIndex in pars) {
-                        var $questionDiv = sc.getQuestionHtml(pars[parIndex].questions);
-                        $(this).append($questionDiv);
+                        var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
+                        $(this).append($questionsDiv);
 
                     }
                 });
