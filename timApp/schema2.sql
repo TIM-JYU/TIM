@@ -226,7 +226,7 @@ CREATE TABLE UserNotes (
   note_index   INTEGER      NOT NULL,
   content      VARCHAR(255) NOT NULL,
   created      TIMESTAMP    NOT NULL,
-  modified     TIMESTAMP    NOT NULL,
+  modified     TIMESTAM,
   access       VARCHAR(20)  NOT NULL,
   tags         VARCHAR(20)  NOT NULL,
   deprecated   BOOLEAN,
