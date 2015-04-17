@@ -10,6 +10,7 @@ new_contract('row', sqlite3.Row)
 ANONYMOUS_GROUP = 2
 LOGGED_IN_GROUP = 0
 KORPPI_GROUP = 3
+ADMIN_GROUP = 4
 
 
 class Users(TimDbBase):
@@ -26,6 +27,8 @@ class Users(TimDbBase):
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUP, 'Anonymous users'])
         cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [0, ANONYMOUS_GROUP])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUP, 'Logged-in users'])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [KORPPI_GROUP, 'Korppi users'])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ADMIN_GROUP, 'Administrators'])
         self.db.commit()
         return 0
 
@@ -94,6 +97,10 @@ class Users(TimDbBase):
     @contract
     def addUserToKorppiGroup(self, user_id: 'int', commit: 'bool'=True):
         self.addUserToGroup(KORPPI_GROUP, user_id, commit)
+
+    @contract
+    def addUserToAdmins(self, user_id: 'int', commit: 'bool'=True):
+        self.addUserToGroup(self.getUserGroupsByName('Administrators')[0]['id'], user_id, commit)
 
     @contract
     def createPotentialUser(self, email: 'str', password: 'str', commit : 'bool' = True):

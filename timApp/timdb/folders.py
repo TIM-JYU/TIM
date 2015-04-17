@@ -54,7 +54,7 @@ class Folders(TimDbBase):
         return row[0] if row is not None else None
 
     @contract
-    def getFolder(self, block_id: 'int') -> 'dict':
+    def getFolder(self, block_id: 'int') -> 'dict|None':
         """Gets the metadata information of the specified folder.
 
         :param document_id: The block id of the folder to be retrieved.
@@ -64,7 +64,8 @@ class Folders(TimDbBase):
         cursor.execute('SELECT id, description AS name FROM Block WHERE id = ? AND type_id = ?',
                        [block_id, blocktypes.FOLDER])
 
-        return self.resultAsDictionary(cursor)[0]
+        result = self.resultAsDictionary(cursor)
+        return result[0] if len(result) > 0 else None
 
     @contract
     def getContainingFolderName(self, document_name: 'str') -> 'str':
@@ -125,3 +126,29 @@ class Folders(TimDbBase):
                    } for name in foldernames]
         folders.sort(key=lambda x: x['name'])
         return folders
+
+    @contract
+    def renameFolder(self, block_id: 'int', new_name: 'str') -> 'None':
+        """Renames a folder, updating all the documents within.
+
+        :param block_id: The id of the folder to be renamed.
+        :param new_name: The new name for the folder.
+        """
+
+        folder_info = self.getFolder(block_id)
+        assert folder_info is not None, 'folder does not exist: ' + str(block_id)
+        old_name = folder_info['name']
+
+        cursor = self.db.cursor()
+        cursor.execute('UPDATE Block SET description = ? WHERE type_id = ? AND id = ?',
+                       [new_name, blocktypes.FOLDER, block_id])
+
+        cursor.execute('SELECT description FROM Block WHERE description LIKE "{}/%"'.format(old_name))
+        for row in cursor.fetchall():
+            # TODO: update sqlite and use sql update set description = replace(...) ...
+            old_docname = row[0]
+            new_docname = old_docname.replace(old_name, new_name)
+            cursor.execute('UPDATE Block SET description = ? WHERE description = ?',
+                           [new_docname, old_docname])
+
+        self.db.commit()

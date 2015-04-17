@@ -294,6 +294,9 @@ def createItem(itemName, itemType, createFunction):
 
     userName = getCurrentUserName()
 
+    if timdb.documents.getDocumentId(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
+        return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+
     if not canWriteToFolder(itemName):
         return jsonResponse({'message': 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName)}, 403)
 

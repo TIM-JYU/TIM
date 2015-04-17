@@ -103,10 +103,15 @@ var groups = {{user_groups|tojson|safe}};
                 </form>
             </div>
         </div>
-        <form ng-submit="renameDocument(newName)" ng-show="!isFolder">
+        <form ng-submit="renameDocument(newName)">
             <label>{{objNameC}} name: <input type="text" ng-model="newName">
             </label>
-            <input type="submit" value="Update" ng-disabled="newName === doc.name">
+            <input type="submit" value="Update" ng-disabled="newName === oldName">
+        </form>
+        <form ng-submit="moveDocument(newFolderName)">
+            <label>Location: <input type="text" ng-model="newFolderName">
+            </label>
+            <input type="submit" value="Update" ng-disabled="newFolderName === oldFolderName">
         </form>
         <form class="uploadForm margin" ng-show="!isFolder">
             Upload a new version for this {{objName}}
