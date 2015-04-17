@@ -111,6 +111,17 @@ PermApp.controller("PermCtrl", [
             }
         };
 
+        sc.deleteFolder = function (folder) {
+            if (confirm('Are you sure you want to delete this folder?')) {
+                $http.delete('/folders/' + folder)
+                    .success(function (data, status, headers, config) {
+                        location.replace('/');
+                    }).error(function (data, status, headers, config) {
+                        alert(data.message);
+                    });
+            }
+        };
+
         sc.onFileSelect = function (url, $files) {
             // $files: an array of files selected, each file has name, size,
             // and type.

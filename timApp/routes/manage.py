@@ -161,3 +161,17 @@ def deleteDocument(doc_id):
         return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
     timdb.documents.deleteDocument(doc_id)
     return "Success"
+
+@manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
+def deleteFolder(doc_id):
+    timdb = getTimDb()
+    if not timdb.folders.folderExists(doc_id):
+        return jsonResponse({'message': 'Folder does not exist.'}, 404)
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        return jsonResponse({'message': "You don't have permission to delete this folder."}, 403)
+    if not timdb.folders.isEmpty(doc_id):
+        return jsonResponse({'message': "The folder is not empty. Only empty folders can be deleted."}, 403)
+
+    timdb.folders.deleteFolder(doc_id)
+    return "Success"
+

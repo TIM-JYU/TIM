@@ -135,7 +135,9 @@ var groups = {{user_groups|tojson|safe}};
         <div class="margin" ng-show="!isFolder">
             <button ng-click="deleteDocument(doc.id)">Delete document</button>
         </div>
-
+        <div class="margin" ng-show="isFolder">
+            <button ng-click="deleteFolder(doc.id)">Delete folder</button>
+        </div>
         <div ng-show="!isFolder">
             <p>Document version history</p>
             <table>

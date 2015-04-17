@@ -139,10 +139,12 @@ class Folders(TimDbBase):
         assert folder_info is not None, 'folder does not exist: ' + str(block_id)
         old_name = folder_info['name']
 
+        # Rename folder itself
         cursor = self.db.cursor()
         cursor.execute('UPDATE Block SET description = ? WHERE type_id = ? AND id = ?',
                        [new_name, blocktypes.FOLDER, block_id])
 
+        # Rename contents
         cursor.execute('SELECT description FROM Block WHERE description LIKE "{}/%"'.format(old_name))
         for row in cursor.fetchall():
             # TODO: update sqlite and use sql update set description = replace(...) ...
@@ -151,4 +153,31 @@ class Folders(TimDbBase):
             cursor.execute('UPDATE Block SET description = ? WHERE description = ?',
                            [new_docname, old_docname])
 
+        self.db.commit()
+
+    @contract
+    def isEmpty(self, block_id: 'int') -> 'bool':
+        folder_info = self.getFolder(block_id)
+        assert folder_info is not None, 'folder does not exist: ' + str(block_id)
+        folder_name = folder_info['name']
+
+        cursor = self.db.cursor()
+        cursor.execute('SELECT exists(SELECT description FROM Block WHERE description LIKE "{}/%")'.format(folder_name))
+        return cursor.fetchone()[0] == 0
+
+    @contract
+    def deleteFolder(self, block_id: 'int') -> 'None':
+        """Deletes an empty folder.
+        """
+        folder_info = self.getFolder(block_id)
+        assert folder_info is not None, 'folder does not exist: ' + str(block_id)
+        folder_name = folder_info['name']
+
+        # Check that our folder is empty
+        assert self.isEmpty(block_id), 'folder {} is not empty!'.format(folder_name)
+
+        # Delete it
+        cursor = self.db.cursor()
+        cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?',
+                       [blocktypes.FOLDER, block_id])
         self.db.commit()
