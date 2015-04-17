@@ -300,8 +300,9 @@ def add_question():
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     par_index = int(request.args.get('par_index'))
+    questionJson = request.args.get('questionJson')
     timdb = getTimDb()
-    questions = timdb.questions.add_questions(doc_id, par_index, question, answer)
+    questions = timdb.questions.add_questions(doc_id, par_index, question, answer, questionJson)
     return jsonResponse(questions)
 
 
