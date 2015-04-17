@@ -280,50 +280,43 @@ def getJSON_HTML(doc_id):
         print(err)
         return "[]"
 
-@app.route("/createDocument", methods=["POST"])
-def createDocument():
+def createItem(itemName, itemType, createFunction):
     if not loggedIn():
-        return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
-    jsondata = request.get_json()
-    docName = jsondata['doc_name']
-    
-    if docName.startswith('/') or docName.endswith('/'):
-        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
-    
-    if re.match('^(\d)*$', docName) is not None:
-        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
-    
+        return jsonResponse({'message': 'You have to be logged in to create a {}.'.format(itemType)}, 403)
+
+    if itemName.startswith('/') or itemName.endswith('/'):
+        return jsonResponse({'message': 'The {} name cannot start or end with /.'.format(itemType)}, 400)
+
+    if re.match('^(\d)*$', itemName) is not None:
+        return jsonResponse({'message': 'The {} name can not be a number to avoid confusion with document id.'.format(itemType)}, 400)
+
     timdb = getTimDb()
 
     userName = getCurrentUserName()
-    if not timdb.users.isUserInGroup(userName, 'Administrators') and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä") and re.match('^' + userName + '\/', docName) is None:
-        return jsonResponse({'message': 'You can only create new documents in your own folder ({}).'.format(userName)}, 403)
 
-    docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonResponse({'id' : docId.id, 'name' : docName})
+    if not canWriteToFolder(itemName):
+        return jsonResponse({'message': 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName)}, 403)
+
+    itemId = createFunction(itemName)
+    return jsonResponse({'id' : itemId, 'name' : itemName})
+
+
+@app.route("/createDocument", methods=["POST"])
+def createDocument():
+    jsondata = request.get_json()
+    docName = jsondata['doc_name']
+    timdb = getTimDb()
+    createFunc = lambda docName: timdb.documents.createDocument(docName, getCurrentUserGroup())
+    return createItem(docName, 'document', createFunc)
 
 @app.route("/createFolder", methods=["POST"])
 def createFolder():
-    if not loggedIn():
-        return jsonResponse({'message': 'You have to be logged in to create a folder.'}, 403)
     jsondata = request.get_json()
     folderName = jsondata['name']
     ownerId = jsondata['owner']
-
-    if '/' in folderName:
-        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
-
-    if re.match('^(\d)*$', folderName) is not None:
-        return jsonResponse({'message': 'Folder name can not be a number to avoid confusion with document id.'}, 400)
-
     timdb = getTimDb()
-
-    userName = getCurrentUserName()
-    if not timdb.users.isUserInGroup(userName, 'Administrators') and folderName != userName and re.match('^' + userName + '\/', folderName) is None:
-        return jsonResponse({'message': 'You can only create new folders in your own folder ({}).'.format(userName)}, 403)
-
-    blockId = timdb.folders.createFolder(folderName, ownerId)
-    return jsonResponse({'id' : blockId, 'name' : folderName})
+    createFunc = lambda folderName: timdb.folders.createFolder(folderName, ownerId)
+    return createItem(folderName, 'folder', createFunc)
 
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")

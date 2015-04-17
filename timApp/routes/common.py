@@ -79,6 +79,23 @@ def verifyOwnership(block_id):
 def loggedIn():
     return getCurrentUserId() != 0
 
+def canWriteToFolder(folderName):
+    timdb = getTimDb()
+    userFolder = "users/" + getCurrentUserName()
+    folder = folderName
+    while folder != '':
+        if folder == userFolder:
+            return True
+
+        folderId = timdb.folders.getFolderId(folder)
+        if folderId is not None:
+            return hasEditAccess(folderId)
+
+        folder = timdb.folders.getContainingFolderName(folder)
+
+    return timdb.users.isUserInGroup(getCurrentUserName(), 'Administrators')
+
+
 def jsonResponse(jsondata, status_code=200):
     response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
     response.status_code = status_code

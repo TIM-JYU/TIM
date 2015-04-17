@@ -54,17 +54,22 @@ class Folders(TimDbBase):
         return row[0] if row is not None else None
 
     @contract
-    def getFolder(self, document_id: 'int') -> 'dict':
+    def getFolder(self, block_id: 'int') -> 'dict':
         """Gets the metadata information of the specified folder.
 
-        :param document_id: The id of the folder to be retrieved.
+        :param document_id: The block id of the folder to be retrieved.
         :returns: A row representing the folder.
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT id, description AS name FROM Block WHERE id = ? AND type_id = ?',
-                       [document_id, blocktypes.FOLDER])
+                       [block_id, blocktypes.FOLDER])
 
         return self.resultAsDictionary(cursor)[0]
+
+    @contract
+    def getContainingFolderName(self, document_name: 'str') -> 'str':
+        separator = document_name.rfind('/')
+        return '' if separator < 0 else document_name[:separator]
 
     @contract
     def folderExists(self, document_id: 'int') -> 'bool':
