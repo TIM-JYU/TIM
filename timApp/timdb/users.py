@@ -417,10 +417,10 @@ class Users(TimDbBase):
         return len(result) > 0
 
     def checkAnonEditAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupEditAccess(block_id, ANONYMOUS_GROUP)
+        return self.checkUserGroupEditAccess(block_id, ANONYMOUS_GROUP) or self.userIsOwner(ANONYMOUS_GROUP, block_id)
 
     def checkLoggedInEditAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupEditAccess(block_id, LOGGED_IN_GROUP)
+        return self.checkUserGroupEditAccess(block_id, LOGGED_IN_GROUP) or self.userIsOwner(LOGGED_IN_GROUP, block_id)
 
     def checkUserGroupViewAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
         result = self.db.execute("""SELECT UserGroup_id FROM BlockViewAccess
@@ -428,10 +428,12 @@ class Users(TimDbBase):
         return len(result) > 0
 
     def checkAnonViewAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupViewAccess(block_id, ANONYMOUS_GROUP)
+        return self.checkUserGroupViewAccess(block_id, ANONYMOUS_GROUP) or self.userIsOwner(ANONYMOUS_GROUP, block_id)
+
 
     def checkLoggedInViewAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupViewAccess(block_id, LOGGED_IN_GROUP)
+        return self.checkUserGroupViewAccess(block_id, LOGGED_IN_GROUP) or self.userIsOwner(LOGGED_IN_GROUP, block_id)
+
 
     @contract
     def userIsOwner(self, user_id: 'int', block_id: 'int') -> 'bool':
