@@ -285,9 +285,14 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
-                          (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)
-                          ORDER BY id ASC""", [user_id])
+        if self.userHasAdminAccess(user_id):
+            # Admin is part of every user group
+            cursor.execute("""SELECT id, name FROM UserGroup ORDER BY id ASC""")
+        else:
+            cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
+                              (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)
+                              ORDER BY id ASC""", [user_id])
+
         return self.resultAsDictionary(cursor)
 
     @contract
@@ -297,6 +302,15 @@ class Users(TimDbBase):
                           User_id      = (SELECT id from User where name = ?) AND
                           UserGroup_id = (SELECT id from UserGroup where name = ?)
                        """, [user_name, usergroup_name])
+        return len(cursor.fetchall()) > 0
+
+    @contract
+    def isUserIdInGroup(self, user_id : 'int', usergroup_name : 'str') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
+                          User_id      = ? AND
+                          UserGroup_id = (SELECT id from UserGroup where name = ?)
+                       """, [user_id, usergroup_name])
         return len(cursor.fetchall()) > 0
 
     def __grantAccess(self, group_id: 'int', block_id: 'int', access_type: 'str'):
@@ -363,6 +377,10 @@ class Users(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("DELETE FROM BlockEditAccess WHERE UserGroup_id = ? AND Block_id = ?", [group_id, block_id])
         self.db.commit()
+
+    @contract
+    def userHasAdminAccess(self, user_id: 'int') -> 'bool':
+        return self.isUserIdInGroup(user_id, 'Administrators')
 
     @contract
     def userHasViewAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
@@ -443,6 +461,9 @@ class Users(TimDbBase):
         :param block_id:
         :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
         """
+        if self.userHasAdminAccess(user_id):
+            return True
+
         cursor = self.db.cursor()
         cursor.execute("""SELECT id FROM User WHERE
                           id = ?

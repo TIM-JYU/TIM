@@ -143,7 +143,7 @@ def upload_file():
     filename = posixpath.join(folder, secure_filename(doc.filename))
 
     userName = getCurrentUserName()
-    if not timdb.users.isUserInGroup(userName, 'Administrators') and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä") and re.match('^' + userName + '\/', filename) is None:
+    if not timdb.users.userHasAdminAccess(getCurrentUserId()) and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä") and re.match('^' + userName + '\/', filename) is None:
         return jsonResponse({'message': "You're not authorized to write here."}, 403)
 
     if not allowed_file(doc.filename):
@@ -230,10 +230,11 @@ def getDocuments():
         if '/' in docname:
             continue
 
+        uid = getCurrentUserId()
         doc['name'] = docname
         doc['fullname'] = fullname
-        doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['canEdit'] = timdb.users.userHasEditAccess(uid, doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.userHasAdminAccess(uid)
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         finalDocs.append(doc)
         
@@ -245,9 +246,10 @@ def getFolders():
     timdb = getTimDb()
     folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
     allowedFolders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
+    uid = getCurrentUserId()
 
     for f in allowedFolders:
-        f['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), f['id'])
+        f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.userHasAdminAccess(uid)
         f['owner'] = timdb.users.getOwnerGroup(f['id'])
 
     return jsonResponse(allowedFolders)
