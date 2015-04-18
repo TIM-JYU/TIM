@@ -324,7 +324,7 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleNoteEditor($(this).parent().parent().parent(), {isNew: false, noteData: $(this).parent().data()});
         });
 
-        sc.addEvent(".question", function () {
+        sc.addEvent(".questionAdded", function () {
             sc.showQuestion($(this).parent().parent().parent(), $(this))
         });
 
@@ -395,7 +395,7 @@ timApp.controller("ViewCtrl", ['$scope',
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image();
                 img.src = questionImage;
-                var $questionDiv = $("<div>", {class: 'question', html: img, json: questions[i].questionJson})
+                var $questionDiv = $("<div>", {class: 'questionAdded', html: img, json: questions[i].questionJson})
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
