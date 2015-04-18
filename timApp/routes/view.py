@@ -53,7 +53,7 @@ def try_return_folder(doc_name):
     if block_id is None:
         abort(404)
 
-    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
     return render_template('index.html',
                            docID=block_id,
                            userName=getCurrentUserName(),

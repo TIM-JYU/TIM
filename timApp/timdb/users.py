@@ -296,6 +296,19 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def getUserGroupsPrintable(self, user_id: 'int', max_group_len: 'int' = 32) -> 'list(dict)':
+        """Gets the user groups of a user, truncating the group names.
+
+        :param user_id: The id of the user.
+        :returns: The user groups that the user belongs to.
+        """
+        groups = self.getUserGroups(user_id)
+        for group in groups:
+            if len(group['name']) > max_group_len:
+               group['name'] = group['name'][:max_group_len]
+        return groups
+
+    @contract
     def isUserInGroup(self, user_name : 'str', usergroup_name : 'str') -> 'bool':
         cursor = self.db.cursor()
         cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
