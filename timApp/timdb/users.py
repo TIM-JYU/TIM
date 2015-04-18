@@ -277,6 +277,22 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def getPersonalUserGroup(self, user_id: 'int') -> 'int':
+        """Gets the personal user group for the user.
+        """
+        userName = self.getUser(user_id)['name']
+        groups = self.getUserGroupsByName(userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        groups = self.getUserGroupsByName('group of user ' + userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        return getUserGroups(user_id)[0]
+
+
+    @contract
     def getUserGroups(self, user_id: 'int') -> 'list(dict)':
         """Gets the user groups of a user.
         
