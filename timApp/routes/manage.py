@@ -25,6 +25,11 @@ def manage(doc_id):
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
 
+    # Don't show overly long group names in full
+    for group in possible_groups:
+        if len(group['name']) > 32:
+           group['name'] = group['name'][:32]
+
     if isFolder:
         doc_data = timdb.folders.getFolder(doc_id)
         doc_data['versions'] = []
