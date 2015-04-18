@@ -85,6 +85,7 @@ body {
 	text-align:center;
     border-radius: 12px;
 	outline: none;
+	float: left;
 	
     border: 2px none;
 	line-height: 0.8;
@@ -1512,6 +1513,7 @@ img.console {
 
 .defaultButton {
     margin: 0.2em;
+    float: right;
 }
 
 .listVideoRunDiv {
