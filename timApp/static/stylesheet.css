@@ -1506,8 +1506,12 @@ img.console {
     background-color: #f8f8f8;
 }
 
-.addNote, .editPar, .addPar {
+.addNote, .editPar, .addPar .menuClose {
     width: 220px;
+}
+
+.defaultButton {
+    margin: 0.2em;
 }
 
 .listVideoRunDiv {
