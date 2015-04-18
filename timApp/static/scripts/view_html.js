@@ -475,11 +475,22 @@ timApp.controller("ViewCtrl", [
             }
             if (toggle2) {
                 // Clicked twice successively
+                var clicktime = new Date().getTime() - sc.lastclick;
+                //console.log(clicktime);
                 $par.addClass("selected");
-                sc.defaultAction(e, $par, coords);
+
+                if (clicktime < 500) {
+                    // Double click
+                    sc.defaultAction(e, $par, coords);
+                }
+                else {
+                    // Two clicks
+                    sc.showOptionsWindow(e, $par, coords);
+                }
             } else if (toggle1) {
                 // Clicked once
                 $par.addClass("lightselect");
+                sc.lastclick = new Date().getTime();
             } else {
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
