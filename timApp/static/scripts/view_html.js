@@ -1,17 +1,18 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function ($locationProvider) {
+var timApp = angular.module('timApp', ['fundoo.services', 'ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function ($locationProvider) {
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
 
 });
 
 timApp.controller("ViewCtrl", ['$scope',
+    'createDialog',
     '$http',
     '$q',
     '$upload',
     '$injector',
     '$compile',
     '$location',
-    function (sc, http, q, $upload, $injector, $compile, $location) {
+    function (sc, createDialog, http, q, $upload, $injector, $compile, $location) {
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
@@ -103,12 +104,24 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.showQuestion = function ($par, $question) {
-         var json = "No data"
-          if( $question[0].hasAttribute('json')){
+            var json = "No data"
+            if ($question[0].hasAttribute('json')) {
                 json = $question[0].getAttribute('json')
             }
-            //TODO create the actual question form
-           alert(json);
+            //TODO event handlers for dialog buttons
+            createDialog('../static/templates/showQuestionTeacher.html', {
+                id: 'simpleDialog',
+                title: 'Question dialog',
+                backdrop: true,
+                success: {
+                    label: 'Ask', fn: function () {
+                        console.log('Successfully closed complex modal');
+                    }
+                },
+                controller: 'ComplexModalController'
+            }, {
+                json: json
+            });
         }
 
         sc.toggleNoteEditor = function ($par, options) {
@@ -376,13 +389,13 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.getQuestionHtml = function (questions) {
-            var questionImage = '../static/images/qustionBubble.png';
+            var questionImage = '../static/images/questionBubble.png';
             var $questionsDiv = $("<div>", {class: 'questions'});
 
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image();
                 img.src = questionImage;
-                var $questionDiv = $("<div>", {class: 'question', html: img, json :questions[i].questionJson })
+                var $questionDiv = $("<div>", {class: 'question', html: img, json: questions[i].questionJson})
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
@@ -639,7 +652,13 @@ timApp.directive('questionDialog', function factory() {
     };
 });
 
-//TODO: Controller for the question
+timApp.controller('ComplexModalController', ['$scope', 'json',
+    function ($scope, json) {
+        //TODO parse json and set values from rows and columns to scope variables
+        //TODO edit showQuestionTeacher.html to repeat rows and columns
+        $scope.jsonRaw = json;
+    }]);
+
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
 
