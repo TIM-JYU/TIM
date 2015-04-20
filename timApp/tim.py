@@ -323,7 +323,8 @@ def check_lecture():
         else:
             is_lecturer = False
         return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
-                             "isLecturer": is_lecturer})
+                             "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
+                             "endTime": lecture[0].get("end_time")})
     else:
         return get_running_lectures(doc_id)
 
@@ -396,7 +397,8 @@ def join_lecture():
         is_lecturer = False
     return jsonResponse(
         {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
-         "lectureCode": lecture_code})
+         "lectureCode": lecture_code, "startTime": lecture[0].get("start_time"),
+         "endTime": lecture[0].get("end_time")})
 
 
 @app.route('/leaveLecture', methods=['POST'])

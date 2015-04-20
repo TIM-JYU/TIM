@@ -7,6 +7,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
     function ($scope, controller, http, $window) {
 
+        $scope.lectureStartTime = "";
+        $scope.lectureEndTime = "";
+        $scope.lectureName = "";
         $scope.msg = "";
         $scope.newMsg = "";
         $scope.showPoll = true;
@@ -16,7 +19,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.canStart = true;
         $scope.canStop = false;
         $scope.lectureId = null;
-        $scope.showLecture = false;
+        $scope.showLectureCreation = false;
         $scope.lectures = [];
         $scope.futureLectures = [];
         $scope.chosenLecture = "";
@@ -77,7 +80,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         document.getElementById("passwordInput").placeholder = "Wrong password";
                     } else {
                         document.getElementById("passwordInput").style.border = "1px solid black";
-                        document.getElementById("passwordInput").placeholder = "Password";
+                        document.getElementById("passwordInput").placeholder = "Access code";
                         if (answer.inLecture) {
                             console.log(answer);
                             $scope.showLectureView(answer);
@@ -89,8 +92,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.toggleLecture = function () {
-            $scope.showLecture = !$scope.showLecture;
-            if ($scope.showLecture) {
+            $scope.showLectureCreation = !$scope.showLectureCreation;
+            if ($scope.showLectureCreation) {
                 $scope.setCurrentTime();
                 document.getElementById("startMonth").value = $scope.startMonth;
                 document.getElementById("startYear").value = $scope.startYear;
@@ -101,6 +104,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.showLectureView = function (answer) {
+            $scope.lectureName = answer.lectureCode;
+            $scope.lectureStartTime = "Started: " + answer.startTime;
+            $scope.lectureEndTime = "Ends: " + answer.endTime;
             $scope.inLecture = true;
             $scope.lectureId = answer.lectureId;
             $scope.polling = true;
@@ -111,7 +117,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             if (answer.isLecturer) {
                 $scope.canStop = true;
             }
-            document.getElementById("lectureName").innerText = answer.lectureCode;
         };
 
         $scope.showBasicView = function (answer) {
@@ -123,15 +128,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.polling = false;
             $scope.inLecture = false;
             $scope.lectureId = -1;
-            document.getElementById("lectureName").innerText = "Not running";
+            $scope.lectureName = "Not running";
 
-            angular.forEach(answer.lectures, function (lecture, i) {
+            angular.forEach(answer.lectures, function (lecture) {
                 if ($scope.lectures.indexOf(lecture) == -1) {
                     $scope.lectures.push(lecture);
                 }
             });
 
-            angular.forEach(answer.futureLectures, function (lecture, i) {
+            angular.forEach(answer.futureLectures, function (lecture) {
                 console.log(lecture);
                 if ($scope.futureLectures.indexOf(lecture) == -1) {
                     $scope.futureLectures.push(lecture);
@@ -150,6 +155,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     $scope.showBasicView(answer);
                     $scope.lectures.splice($scope.lectureId, 1);
                     $scope.chosenLecture = "";
+                    $scope.msg = "";
                     console.log("Lecture deleted");
 
                 })
@@ -173,6 +179,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
         };
+
+        $scope.modifyLecture = function () {
+            $scope.showLectureCreation = true;
+        }
 
         $scope.detach = function () {
             console.log("Should detach this window");
@@ -208,7 +218,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 params: {lecture_id: $scope.lectureId}
             })
                 .success(function (answer) {
-                    angular.forEach(answer.data, function (msg, i) {
+                    angular.forEach(answer.data, function (msg) {
                         $scope.msg = $scope.msg + msg + "\n";
                     });
                     $scope.lastID = answer.lastid;
@@ -248,15 +258,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             if ($scope.polling) {
 
                                 $scope.pollingLectures.push(answer.lectureId);
-                                timeOut = setTimeout(function () {
+                                timeout = setTimeout(function () {
                                     message_longPolling(answer.lastid);
                                 }, 1000);
 
                                 if (answer.status == 'results') {
-                                    angular.forEach(answer.data, function (msg, i) {
+                                    angular.forEach(answer.data, function (msg) {
                                         $scope.msg = $scope.msg + msg + "\n";
-                                        $scope.$apply();
                                     });
+                                    $scope.$apply();
                                     $scope.lastID = answer.lastid;
                                     var textarea = document.getElementById('wallArea');
                                     var areaHeight = $("#wallArea").height();
@@ -616,7 +626,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             for (i = 7; i < elementsToClear.length; i++) {
                 elementsToClear[i].value = "";
             }
-            $scope.showLecture = false;
+            $scope.showLectureCreation = false;
             document.getElementById("errorMessage").innerHTML = "";
             document.getElementById("lectureForm").reset();
             $scope.useDate = false;
