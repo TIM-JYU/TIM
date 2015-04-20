@@ -714,7 +714,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 id: scope.columns.length,
                 question: "column",
                 questionPlaceholder: "column",
-                text: "",
+                text: ""
             });
     };
 
@@ -760,30 +760,26 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     };
 
-    scope.createQuestion = function (questionVal, answerVal) {
+    scope.createQuestion = function () {
         var url;
-        console.log(questionVal);
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
-        var questionJson = '{"questionJson":{"time":"20","data":{"rows":[{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 123-1?"}],"columns":[{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"}]}}}';
-        console.log(par_index);
+        var questionJson = "TYPE: " + scope.question.type + " ROWS: " + scope.rows.length + " COLS: " + scope.columns.length + " TIME: " + scope.question.time;
+        //'{"questionJson":{"time":"20","data":{"rows":[{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 123-1?"}],"columns":[{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"}]}}}';
 
-        if (questionVal == undefined || questionVal.trim().length == 0) {
+        if (scope.question.question == undefined || scope.question.question.trim().length == 0) {
             console.log("Can't save empty questions");
             return;
         }
-        console.log("Question: " + questionVal);
-        console.log("Answer: " + answerVal);
-
-        scope.clearQuestion()
+        console.log("Question: " + scope.question.question);
 
         http({
             method: 'POST',
             url: '/addQuestion',
             params: {
-                'question': questionVal,
-                'answer': answerVal,
+                'question': scope.question.question,
+                'answer': "test", //answerVal,
                 'par_index': par_index,
                 'doc_id': doc_id,
                 'questionJson': questionJson
@@ -791,6 +787,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         })
             .success(function (data) {
                 console.log("The question was successfully added to database");
+                scope.clearQuestion()
             })
             .error(function (data) {
                 console.log("There was some error creating question to database.")
