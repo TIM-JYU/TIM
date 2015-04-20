@@ -50,7 +50,7 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def add_questions(self, doc_id: 'int', par_index:'int', question: 'str', answer: 'str',
+    def add_questions(self, doc_id: 'int', par_index:'int', question: 'str', answer: 'str', questionJson: 'str',
                       commit: 'bool'=True) -> 'int':
         """ Creates a new questions
         :param question: Question to be saved
@@ -61,9 +61,9 @@ class Questions(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       INSERT INTO Question (doc_id, par_index, question,answer)
-                       VALUES(?,?,?,?)
-                       """, [doc_id, par_index, question, answer])
+                       INSERT INTO Question (doc_id, par_index, question,answer, questionJson)
+                       VALUES(?,?,?,?,?)
+                       """, [doc_id, par_index, question, answer, questionJson])
         if commit:
             self.db.commit()
         question_id = cursor.lastrowid

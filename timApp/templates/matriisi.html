@@ -1,15 +1,15 @@
 <div>
     <div id="check" ng-if="question.type == 'matriisi'">
-        <label>Vastaustyyppi:</label>
+        <label>Answer type:</label>
         <select name="vtyyppi" ng-if="question.type == 'matriisi'" ng-model="question.matriisi.vastaus" ng-dropdown>
             <option value="" disabled selected> -- select answer type --</option>
-            <option value="radiobutton-horizontal">Radiopainike vaakaan</option>
-            <option value="radiobutton-vertical">Radiopainike pystyyn</option>
-            <option value="vapaakenttä">Vapaakenttä</option>
+            <option value="radiobutton-horizontal">Horizontal radio button</option>
+            <option value="radiobutton-vertical">Vertical radio button</option>
+            <option value="vapaakenttä">Textarea</option>
             <option value="checkbox">Checkbox</option>
         </select>
     </div>
-    <label>Vastausvaihtoehdot:</label>
+    <label>Answers:</label>
     <div>
         <table>
             <thead>

@@ -265,7 +265,8 @@ CREATE TABLE Question (
   doc_id      INTEGER NOT NULL,
   par_index   INTEGER NOT NULL,
   question    TEXT    NOT NULL,
-  answer      TEXT
+  answer      TEXT,
+  questionJson TEXT
 );
 
 CREATE TABLE Lecture (
