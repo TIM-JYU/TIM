@@ -6,3 +6,4 @@ IFS=$'\n\t'
 
 docker build --tag "pali" .
 
+ 
