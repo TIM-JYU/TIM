@@ -1,9 +1,9 @@
-.createLecture {
+.createLecture, .showAnswersWindow, .questioninfoWindow {
     margin-left: auto;
     margin-right: auto;
     max-width: 1000px;
     background: #F0F0F0;
-    padding: 25px 15px 25px 10px;
+    padding: 15px 15px 25px 10px;
     font: 12px Georgia, "Times New Roman", Times, serif;
     color: #505050;
     text-shadow: 1px 1px 1px #FFF;
@@ -13,6 +13,19 @@
 #infoFields label {
     display:inline-block;
 	width: 150px;
+}
+
+.icon {
+	display: inline-block;
+	width: 35px;
+	height: 35px;
+	
+}
+
+.questionInfo {
+	border: 1px solid #E4E4E4;
+	margin-bottom: 10px;
+	padding: 10px;
 }
 
 .startingTime #startInfo, #endInfo{
@@ -53,6 +66,7 @@
 .createLecture.buttons {
     background: #33cccc;
     border: none;
+	margin: 10px;
     padding: 10px 25px 10px 25px;
     color: #FFF;
     box-shadow: 1px 1px 5px #B6B6B6;
@@ -62,7 +76,6 @@
 	display: inline-block;
     font-size: 11px;
     line-height: normal;
-    padding: 5px 10px;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; 
 }
 
@@ -79,6 +92,15 @@
 .createLecture p {
 	color: red;
 	margin-left: 0px;
+}
+
+.answerStatistics select, .questioninfoWindow label {
+	display: block;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+.sectionDetails {
+	border: 1px solid #E4E4E4;
 }
 
 

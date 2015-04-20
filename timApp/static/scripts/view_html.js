@@ -1,17 +1,18 @@
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function ($locationProvider) {
+var timApp = angular.module('timApp', ['fundoo.services', 'ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function ($locationProvider) {
     $locationProvider.html5Mode(true);
     $locationProvider.hashPrefix('!');
 
 });
 
 timApp.controller("ViewCtrl", ['$scope',
+    'createDialog',
     '$http',
     '$q',
     '$upload',
     '$injector',
     '$compile',
     '$location',
-    function (sc, http, q, $upload, $injector, $compile, $location) {
+    function (sc, createDialog, http, q, $upload, $injector, $compile, $location) {
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
@@ -101,6 +102,27 @@ timApp.controller("ViewCtrl", ['$scope',
                 createEditor(attrs);
             }
         };
+
+        sc.showQuestion = function ($par, $question) {
+            var json = "No data"
+            if ($question[0].hasAttribute('json')) {
+                json = $question[0].getAttribute('json')
+            }
+            //TODO event handlers for dialog buttons
+            createDialog('../static/templates/showQuestionTeacher.html', {
+                id: 'simpleDialog',
+                title: 'Question dialog',
+                backdrop: true,
+                success: {
+                    label: 'Ask', fn: function () {
+                        console.log('Successfully closed complex modal');
+                    }
+                },
+                controller: 'ComplexModalController'
+            }, {
+                json: json
+            });
+        }
 
         sc.toggleNoteEditor = function ($par, options) {
             var url;
@@ -302,6 +324,9 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleNoteEditor($(this).parent().parent().parent(), {isNew: false, noteData: $(this).parent().data()});
         });
 
+        sc.addEvent(".questionAdded", function () {
+            sc.showQuestion($(this).parent().parent().parent(), $(this))
+        });
 
         // Note-related functions
 
@@ -363,29 +388,28 @@ timApp.controller("ViewCtrl", ['$scope',
             return $noteDiv;
         };
 
-        sc.getQuestionHtml = function(questions) {
-            var questionImage = '../static/images/qustionBubble.png';
+        sc.getQuestionHtml = function (questions) {
+            var questionImage = '../static/images/questionBubble.png';
             var $questionsDiv = $("<div>", {class: 'questions'});
 
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image();
                 img.src = questionImage;
-                var $questionDiv = $("<div>", {title: questions[i].question, class: 'question', question_id: questions[i].question_id, html: img});
-                $questionDiv.attr("onClick", "console.log(" + '"' + questions[i].answer + '"' + ")");
-
+                var $questionDiv = $("<div>", {class: 'questionAdded', html: img, json: questions[i].questionJson})
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
         }
+
 
         sc.getQuestions = function () {
             var rn = "?_=" + (new Date).getTime();
             http.get('/questions/' + sc.docId).success(function (data, status, headers, config) {
                 var pars = {};
                 var questionCount = data.length;
-                for (var i = 0; i < questionCount; i++){
+                for (var i = 0; i < questionCount; i++) {
                     var pi = data[i].par_index;
-                    if(!(pi in pars)){
+                    if (!(pi in pars)) {
                         pars[pi] = {questions: []};
                     }
 
@@ -628,7 +652,13 @@ timApp.directive('questionDialog', function factory() {
     };
 });
 
-//TODO: Controller for the question
+timApp.controller('ComplexModalController', ['$scope', 'json',
+    function ($scope, json) {
+        //TODO parse json and set values from rows and columns to scope variables
+        //TODO edit showQuestionTeacher.html to repeat rows and columns
+        $scope.jsonRaw = json;
+    }]);
+
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
 
@@ -643,13 +673,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.createMatrix = function (rowsCount, columnsCount, type) {
 
 
-        if(scope.columns.length == 1 && type != "true-false"){
+        if (scope.columns.length == 1 && type != "true-false") {
             columnsCount = scope.columns.length;
         }
 
-       if(scope.rows.length > rowsCount) {
-           rowsCount = scope.rows.length;
-       }
+        if (scope.rows.length > rowsCount) {
+            rowsCount = scope.rows.length;
+        }
         scope.rows = [];
         for (var i = 0; i < rowsCount; i++)
             scope.rows[i] = {
@@ -736,6 +766,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
+        var questionJson = '{"questionJson":{"time":"20","data":{"rows":[{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 123-1?"}],"columns":[{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"}]}}}';
         console.log(par_index);
 
         if (questionVal == undefined || questionVal.trim().length == 0) {
@@ -750,7 +781,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         http({
             method: 'POST',
             url: '/addQuestion',
-            params: {'question': questionVal, 'answer': answerVal, 'par_index': par_index, 'doc_id': doc_id}
+            params: {
+                'question': questionVal,
+                'answer': answerVal,
+                'par_index': par_index,
+                'doc_id': doc_id,
+                'questionJson': questionJson
+            }
         })
             .success(function (data) {
                 console.log("The question was successfully added to database");
