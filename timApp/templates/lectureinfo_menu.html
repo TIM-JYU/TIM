@@ -19,7 +19,10 @@
         <div class="lectureSection" ng-show="inLecture">
             <h1>Currently:</h1>
 
-            <p id="lectureName"></p>
+            <p ng-bind="lectureName"></p>
+            <p ng-bind="lectureStartTime"></p>
+            <p ng-bind="lectureEndTime"></p>
+
 
             <input type="button" ng-click="leaveLecture()" value="Leave" ng-show="inLecture">
             <input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
@@ -37,7 +40,7 @@
         </div>
     </div>
 </div>
-<div id="startLecturedialog" ng-show="showLecture">
+<div id="startLecturedialog" ng-show="showLectureCreation">
     {% include 'start_lecture.html' %}
 </div>
 

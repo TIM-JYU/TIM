@@ -88,6 +88,8 @@ LOG_LEVELS = {"CRITICAL": app.logger.critical,
               "INFO": app.logger.info,
               "DEBUG": app.logger.debug}
 
+__question_to_be_asked = []
+
 # Logger call
 @app.route("/log/", methods=["POST"])
 def logMessage():
@@ -250,6 +252,8 @@ def get_messages():
                     list_of_new_messages.append(
                         user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
                 last_message_id = messages[-1].get('msg_id')
+                if lecture_id in __question_to_be_asked[1:]:
+                    test = ""
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                      "lectureId": lecture_id})
@@ -643,6 +647,21 @@ def getQuestions(doc_id):
     timdb = getTimDb()
     questions = timdb.questions.get_doc_questions(doc_id)
     return jsonResponse(questions)
+
+
+@app.route("/askQuestion", methods=['GET'])
+def ask_question():
+    doc_id = request.args.get('doc_id')
+    question_id = request.args.get('question_id')
+    lecture_id = request.args.get('lecture_id')
+
+    if not doc_id or not question_id or not lecture_id:
+        abort(400, "Missing parameter")
+
+    verifyOwnership(int(doc_id))
+    __question_to_be_asked.append((lecture_id, question_id))
+
+
 
 
 @app.route("/notes/<int:doc_id>")

@@ -1,87 +1,86 @@
 .menuSection #largeMenu {
-   background-color:#3cc;
-   border: 1px solid #3cc;
-   border-radius: 25px;
-   padding: 1px 50px 75px 10px;
-   top:0;
-   left:250px;
-   right:600px;
-   height: 35px;
-   position: fixed;
+    background-color: #3cc;
+    border: 1px solid #3cc;
+    border-radius: 25px;
+    padding: 1px 50px 75px 10px;
+    top: 0;
+    height: 35px;
+    width: 55%;
+    position: absolute;
 }
 
 #smallMenu {
-   font-size: 90%;
-   background-color:#3cc;
-   border: 1px solid #3cc;
-   border-radius: 25px;
-   padding: 12px 10px 1px 10px;
-   top:0;
-   left:250px;
-   right:600px;
-   height: 30px;
-   position: fixed;
+    font-size: 90%;
+    background-color: #3cc;
+    border: 1px solid #3cc;
+    border-radius: 25px;
+    padding: 12px 10px 1px 10px;
+    top: 0;
+    left: 250px;
+    right: 600px;
+    height: 30px;
+    position: fixed;
 }
 
 #smallMenu input[type="submit"] {
-	position: relative;
-	top: -25px;
+    position: relative;
+    top: -25px;
 }
 
 #smallMenu .viewLogin {
-	color: #3cc;
+    color: #3cc;
 }
 
 .lectureSection {
-   line-height:70%;
-   width: 250px;
-   float: left;
+    line-height: 70%;
+    width: 250px;
+    float: left;
 }
 
 #add-icon {
-   width:40px;
-   height:40px;
-   padding-right:50px;
-   cursor: pointer;
-   float:right;
+    width: 40px;
+    height: 40px;
+    padding-right: 50px;
+    cursor: pointer;
+    float: right;
 }
 
-.menuSection .lectureSection h1{
-   font-family: verdana;
-   padding-right: 100px;
-   padding-left: 10px;
-   color:white; 
-   text-align: left;
-   margin-top: 0cm;
-   margin-bottom: 0cm;
-   border-top: none;
-   border-bottom: none;
-   padding-top: 10px;
-   padding-bottom: 10px;
-   line-height: 1;
+.menuSection .lectureSection h1 {
+    font-family: verdana;
+    padding-right: 100px;
+    padding-left: 10px;
+    color: white;
+    text-align: left;
+    margin-top: 0cm;
+    margin-bottom: 0cm;
+    border-top: none;
+    border-bottom: none;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    line-height: 1;
 }
 
 .lectureSection h2 {
-   font-family: verdana;
-   color:white;
-   font-size: 70%;
-   text-align: right;
+    font-family: verdana;
+    color: white;
+    font-size: 70%;
+    text-align: right;
 }
 
 .lectureSection p {
-   float:left;
-   padding-left:10px;
-   margin-left: 0;
+    float: left;
+    padding-left: 10px;
+    margin-left: 0;
 }
 
 .viewLogin {
     font-size: 0.7em;
     color: white;
     text-align: right;
-	line-height:1.5;
+    line-height: 1.5;
 }
 
-input[type="submit"] { 
+input[type="submit"] {
     background: #E6E6E6;
     border: 0;
     border: 0;

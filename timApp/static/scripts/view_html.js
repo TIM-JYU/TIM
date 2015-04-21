@@ -104,17 +104,32 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.showQuestion = function ($par, $question) {
-            var json = "No data"
+            var json = "No data";
+            var qId = -1;
             if ($question[0].hasAttribute('json')) {
-                json = $question[0].getAttribute('json')
+                json = $question[0].getAttribute('json');
+                qId = $question[0].getAttribute('id');
             }
+            console.log(sc.lectureId);
             //TODO event handlers for dialog buttons
+            //TODO: Jatka tästä tekemistä, pitää saada luentoID jostain.
             createDialog('../static/templates/showQuestionTeacher.html', {
                 id: 'simpleDialog',
                 title: 'Question dialog',
                 backdrop: true,
                 success: {
                     label: 'Ask', fn: function () {
+                        http({
+                            url: '/askQuestion',
+                            method: 'GET',
+                            params: {lecture_id: sc.lectureId, question_id: qId, doc_id:sc.docId}
+                        })
+                            .success(function () {
+
+                            })
+                            .error(function () {
+                                console.log("Can't ask question");
+                            });
                         console.log('Successfully closed complex modal');
                     }
                 },
@@ -224,8 +239,6 @@ timApp.controller("ViewCtrl", ['$scope',
             sc.toggleQuestion();
             sc.toggleActionButtons($par, false, false, null);
             sc.par = $par;
-
-            // TODO: Onko järkevä? Did not refresh view without this.
             sc.$apply();
         });
 
@@ -392,14 +405,16 @@ timApp.controller("ViewCtrl", ['$scope',
             var questionImage = '../static/images/questionBubble.png';
             var $questionsDiv = $("<div>", {class: 'questions'});
 
+            // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image();
                 img.src = questionImage;
-                var $questionDiv = $("<div>", {class: 'questionAdded', html: img, json: questions[i].questionJson})
+                var $questionDiv = $("<div>", {class: 'questionAdded', html: img, json: questions[i].questionJson,id:
+                questions[i].question_id})
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
-        }
+        };
 
 
         sc.getQuestions = function () {
@@ -427,7 +442,7 @@ timApp.controller("ViewCtrl", ['$scope',
 
 
             })
-        }
+        };
 
 
         sc.getNotes = function () {
@@ -700,7 +715,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         scope.addRow(index);
 
 
-    }
+    };
 
     scope.addCol = function (loc) {
         if (loc >= 0) {
@@ -714,7 +729,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 id: scope.columns.length,
                 question: "column",
                 questionPlaceholder: "column",
-                text: "",
+                text: ""
             });
     };
 
@@ -748,12 +763,12 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.clearQuestion = function () {
         scope.question = {
             question: ""
-        }
+        };
         scope.columns.splice(0, scope.columns.length - 1);
         scope.rows.splice(0, scope.rows.length - 1);
         scope.answer = "";
         scope.toggleQuestion();
-    }
+    };
 
     scope.close = function () {
         scope.clearQuestion();
@@ -776,7 +791,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         console.log("Question: " + questionVal);
         console.log("Answer: " + answerVal);
 
-        scope.clearQuestion()
+        scope.clearQuestion();
 
         http({
             method: 'POST',

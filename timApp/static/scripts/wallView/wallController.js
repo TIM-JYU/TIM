@@ -18,7 +18,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.showWall = false;
         $scope.canStart = true;
         $scope.canStop = false;
-        $scope.lectureId = null;
         $scope.showLectureCreation = false;
         $scope.lectures = [];
         $scope.futureLectures = [];
@@ -32,6 +31,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.durationHour = "";
         $scope.durationMin = "";
         $scope.isLecturer = false;
+        $scope.lectureId = null;
 
         var date = new Date();
 
@@ -59,6 +59,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     }
                 })
         };
+
 
         $scope.checkIfInLecture();
 
@@ -93,6 +94,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.toggleLecture = function () {
             $scope.showLectureCreation = !$scope.showLectureCreation;
+            console.log("huh?");
             if ($scope.showLectureCreation) {
                 $scope.setCurrentTime();
                 document.getElementById("startMonth").value = $scope.startMonth;
@@ -182,7 +184,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.modifyLecture = function () {
             $scope.showLectureCreation = true;
-        }
+        };
 
         $scope.detach = function () {
             console.log("Should detach this window");
