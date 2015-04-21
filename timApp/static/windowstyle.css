@@ -1,4 +1,4 @@
-.createLecture, .showAnswersWindow, .questioninfoWindow {
+.createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow {
     margin-left: auto;
     margin-right: auto;
     max-width: 1000px;
@@ -94,7 +94,7 @@
 	margin-left: 0px;
 }
 
-.answerStatistics select, .questioninfoWindow label {
+.answerStatistics select, .questioninfoWindow label , .questionAskedWindow label {
 	display: block;
 	margin-top: 10px;
 	margin-bottom: 10px;
