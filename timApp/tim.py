@@ -210,6 +210,8 @@ def get_wall():
 
 @app.route('/getAllMessages')
 def get_all_messages():
+    if not request.args.get("lecture_id"):
+        abort(400, "Bad request, missing lecture id")
     timdb = getTimDb()
     lecture_id = int(request.args.get("lecture_id"))
     messages = timdb.messages.get_messages(lecture_id)
@@ -226,8 +228,8 @@ def get_all_messages():
     return jsonResponse({"status": "no-results", "data": [], "lastid": -1, "lectureId": lecture_id})
 
 
-@app.route('/getMessages')
-def get_messages():
+@app.route('/getUpdates')
+def get_updates():
     if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
             "question_id"):
         abort(400, "Bad requst")
@@ -669,15 +671,15 @@ def getQuestions(doc_id):
 def ask_question():
     if not request.args.get('doc_id') or not request.args.get('question_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
-    doc_id = request.args.get('doc_id')
-    question_id = request.args.get('question_id')
-    lecture_id = request.args.get('lecture_id')
+    doc_id = int(request.args.get('doc_id'))
+    question_id = int(request.args.get('question_id'))
+    lecture_id = int(request.args.get('lecture_id'))
 
-    if not doc_id or not question_id or not lecture_id:
-        abort(400, "Missing parameter")
+    if lecture_id < 0:
+        abort(400, "Not valid lecture id")
 
     verifyOwnership(int(doc_id))
-    __question_to_be_asked.append((int(lecture_id), int(question_id), []))
+    __question_to_be_asked.append((lecture_id, question_id, []))
 
     return jsonResponse("Wololoo")
 

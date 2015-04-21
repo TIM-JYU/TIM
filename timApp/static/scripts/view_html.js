@@ -120,9 +120,6 @@ timApp.controller("ViewCtrl", ['$scope',
 
             $rootScope.$broadcast('get_lectureId', 'lecture_id');
 
-
-            //TODO event handlers for dialog buttons
-            //TODO: Jatka tästä tekemistä, pitää saada luentoID jostain.
             createDialog('../static/templates/showQuestionTeacher.html', {
                 id: 'simpleDialog',
                 title: 'Question dialog',
@@ -135,12 +132,11 @@ timApp.controller("ViewCtrl", ['$scope',
                             params: {lecture_id: lectureId, question_id: qId, doc_id: sc.docId}
                         })
                             .success(function () {
-
+                                console.log("Added question to be asked");
                             })
-                            .error(function () {
-                                console.log("Can't ask question");
+                            .error(function (error) {
+                                console.log(error);
                             });
-                        console.log('Successfully closed complex modal');
                     }
                 },
                 controller: 'ComplexModalController'

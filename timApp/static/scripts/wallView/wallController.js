@@ -110,6 +110,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.showLectureView = function (answer) {
+            $scope.isLecturer = answer.isLecturer;
             $scope.lectureName = answer.lectureCode;
             $scope.lectureStartTime = "Started: " + answer.startTime;
             $scope.lectureEndTime = "Ends: " + answer.endTime;
@@ -254,7 +255,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                 $scope.requestOnTheWay = true;
                 jQuery.ajax({
-                        url: '/getMessages',
+                        url: '/getUpdates',
                         type: 'GET',
                         data: {
                             'client_message_id': lastID,
@@ -267,6 +268,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                 return;
                             }
 
+                            if (answer.question) {
+                                console.log("Now I will ask question if you are a student: " + answer.questionId);
+                            }
                             if (answer.question && $scope.isLecturer == false) {
                                 alert("This would be question that is asked from you!\n" + answer.questionJson);
                             }
