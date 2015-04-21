@@ -427,7 +427,7 @@ timApp.controller("ViewCtrl", [
 
         sc.showOptionsWindow = function(e, $par, coords) {
             var default_width = $par.outerWidth() / 16;
-            var button_width = $par.outerWidth() / 4 - default_width;
+            var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
             var $actionDiv = $("<div>", {class: 'actionButtons'});
             if (sc.rights.can_comment){
                 var $span = $("<span>");
