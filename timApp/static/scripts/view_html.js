@@ -8,17 +8,27 @@ var timApp = angular.module('timApp', [
         '$q',
         '$rootScope',
         function($q, $rootScope) {
-
+            var re = /\/[^/]+\/([^/]+)\/answer\/$/;
             var service = {
                 'request': function(config) {
+                    console.log($rootScope);
+                    if (re.test(config.url)){
+                        var match = re.exec(config.url);
+                        var taskId = match[1];
+                        //console.log(taskId);
+                        var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
+                        var browserScope = ab.isolateScope();
+                        //console.log(browserScope);
+                        angular.extend(config.data, {abData: browserScope.getTeacherData()});
+                        console.log(config);
+                    }
                     return config;
                 },
                 'response': function(response) {
-                    var re = /\/[^/]+\/([^/]+)\/answer\/$/;
+
                     if (re.test(response.config.url)){
                         var match = re.exec(response.config.url);
                         var taskId = match[1];
-                        //console.log(response);
                         $rootScope.$broadcast('answerSaved', {taskId: taskId});
                     }
                     return response;
