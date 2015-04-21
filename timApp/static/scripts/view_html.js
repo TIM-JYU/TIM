@@ -656,8 +656,12 @@ timApp.controller('ComplexModalController', ['$scope', 'json',
     function ($scope, json) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
+        var jsonData = JSON.parse(json);
         $scope.jsonRaw = json;
-    }]);
+        
+
+    }
+]);
 
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
@@ -682,16 +686,36 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
         scope.rows = [];
         for (var i = 0; i < rowsCount; i++)
-            scope.rows[i] = {
-                id: i,
-                text: 'test'
+            if (type = "true-false") {
+                scope.rows[i] = {
+                    id: i,
+                    type: 'Question',
+                    value: 'test'
+                }
+            }
+            else {
+                 scope.rows[i] = {
+                    id: i,
+                    text: 'test',
+                    type: 'test123'
+                }
             }
         scope.columns = [];
         for (var i = 0; i < columnsCount; i++)
+        if(type = "true-false") {
             scope.columns[i] = {
                 id: i, text: 'test',
-                questionPlaceholder: 'column'
+                type: 'Answer',
+                value: 'radio-button'
             }
+        }
+        else {
+              scope.columns[i] = {
+                id: i, text: 'test',
+                questionPlaceholder: 'column',
+                type: 'test321'
+            }
+        }
     };
 
 
@@ -704,7 +728,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.addCol = function (loc) {
         if (loc >= 0) {
-            scope.columns.splice(loc, 0, {id: loc, question: "column", questionPlaceholder: "column", text: ""});
+            scope.columns.splice(loc, 0, {
+                id: loc,
+                question: "column",
+                questionPlaceholder: "column",
+                text: "",
+                type: "test321"
+            });
             for (var i = 0; i < scope.columns.length; i++) {
                 scope.columns[i].id = i;
             }
@@ -714,19 +744,20 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 id: scope.columns.length,
                 question: "column",
                 questionPlaceholder: "column",
-                text: ""
+                text: "",
+                type: "test321"
             });
     };
 
     scope.addRow = function (loc) {
         if (loc >= 0) {
-            scope.rows.splice(loc, 0, {id: loc, text: ""});
+            scope.rows.splice(loc, 0, {id: loc, text: "", type: "test123"});
             for (var i = 0; i < scope.rows.length; i++) {
                 scope.rows[i].id = i;
             }
         }
         else
-            scope.rows.push({id: scope.rows.length, text: ""})
+            scope.rows.push({id: scope.rows.length, text: "", type: "test123"})
 
 
     };
@@ -765,7 +796,22 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
-        var questionJson = "TYPE: " + scope.question.type + " ROWS: " + scope.rows.length + " COLS: " + scope.columns.length + " TIME: " + scope.question.time;
+        //TODO use  JSON.stringify
+
+        var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": { "ROWS": [';
+        for (i = 0; i < scope.rows.length; i++) {
+            questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '"},'
+        }
+        questionJson = questionJson.substring(0, questionJson.length - 1);
+        questionJson += '], "Columns":['
+
+        for (i = 0; i < scope.columns.length; i++) {
+            questionJson += '{"Type": "' + scope.columns[i].type + '" ,"Value": "' + scope.columns[i].value + '" },'
+        }
+        questionJson = questionJson.substring(0, questionJson.length - 1);
+        questionJson += ']}}'
+
+
         //'{"questionJson":{"time":"20","data":{"rows":[{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 123-1?"}],"columns":[{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"}]}}}';
 
         if (scope.question.question == undefined || scope.question.question.trim().length == 0) {
