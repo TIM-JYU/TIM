@@ -259,9 +259,11 @@ def get_messages():
                         user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
                 last_message_id = messages[-1].get('msg_id')
 
+        current_user = getCurrentUserId()
         for pair in __question_to_be_asked:
-            if pair[0] == lecture_id and pair[1] is not client_last_question_id:
+            if pair[0] == lecture_id and pair[1] is not client_last_question_id and current_user not in pair[2]:
                 question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
+                pair[2].append(getCurrentUserId())
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                      "lectureId": lecture_id, "question": True, "questionId": pair[1], "questionJson": question_json})
@@ -675,7 +677,7 @@ def ask_question():
         abort(400, "Missing parameter")
 
     verifyOwnership(int(doc_id))
-    __question_to_be_asked.append((int(lecture_id), int(question_id)))
+    __question_to_be_asked.append((int(lecture_id), int(question_id), []))
 
     return jsonResponse("Wololoo")
 

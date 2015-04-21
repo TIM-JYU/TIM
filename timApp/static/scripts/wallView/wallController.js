@@ -267,8 +267,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                 return;
                             }
 
-                            if (answer.question) {
-                                console.log("Ask question from user!");
+                            if (answer.question && $scope.isLecturer == false) {
+                                alert("This would be question that is asked from you!\n" + answer.questionJson);
                             }
 
                             $scope.requestOnTheWay = false;
