@@ -12,7 +12,7 @@
                 <option ng-option value="matriisi">Many rows and columns</option>
             </select>
 
-            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio-button')" >
+            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio-button')">
                 {% include 'matriisi.html' %}
             </div>
             <div ng-if="question.type == 'true-false'" ng-init="createMatrix(2, 2, 'true-false')">
@@ -22,13 +22,12 @@
                 {% include 'matriisi.html' %}
             </div>
             <br><br>
-            <label>Answer time:</label>
+            <label>Time limit:</label>
             <input type="radio" name="vastausaika" value="0">No
-            <input type="radio" name="vastausaika" value=""><input type=text" size="3">
-            </select>
+            <input type="radio" name="vastausaika" value=""> <input ng-model="question.time" type="text" size="3">
             <br>
             <br>
-            <input type="button" value="Submit" ng-click="createQuestion(question.question,'test')">
+            <input type="button" value="Submit" ng-click="createQuestion(question.question, question.type)">
             <input type="button" value="Cancel" ng-click="close()" style="background: #c12e2a;">
         </fieldset>
     </form>
