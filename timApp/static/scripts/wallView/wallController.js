@@ -60,6 +60,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
+        $scope.$on('get_lectureId', function () {
+            $scope.$emit('test', $scope.lectureId);
+        });
+
 
         $scope.checkIfInLecture();
 
@@ -236,23 +240,35 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
-        $scope.startLongPolling = function (lastID) {
-            function message_longPolling(lastID) {
+        $scope.startLongPolling = function (lastID, lastQuestionId) {
+            function message_longPolling(lastID, lastQuestionId) {
                 var timeout;
 
                 if (lastID == null) {
                     lastID = -1;
                 }
 
+                if (lastQuestionId == null) {
+                    lastQuestionId = -1;
+                }
+
                 $scope.requestOnTheWay = true;
                 jQuery.ajax({
                         url: '/getMessages',
                         type: 'GET',
-                        data: {'client_message_id': lastID, lecture_id: $scope.lectureId},
+                        data: {
+                            'client_message_id': lastID,
+                            lecture_id: $scope.lectureId,
+                            'question_id': lastQuestionId
+                        },
                         success: function (answer) {
                             $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
                             if (answer.lectureId != $scope.lectureId) {
                                 return;
+                            }
+
+                            if (answer.question) {
+                                console.log("Ask question from user!");
                             }
 
                             $scope.requestOnTheWay = false;
@@ -261,7 +277,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                                 $scope.pollingLectures.push(answer.lectureId);
                                 timeout = setTimeout(function () {
-                                    message_longPolling(answer.lastid);
+                                    message_longPolling(answer.lastid, answer.questionId);
                                 }, 1000);
 
                                 if (answer.status == 'results') {
@@ -298,7 +314,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 ;
             }
 
-            message_longPolling(lastID);
+            message_longPolling(lastID, lastQuestionId);
         };
 
         $scope.chatEnterPressed = function (event) {

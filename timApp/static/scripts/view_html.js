@@ -12,7 +12,8 @@ timApp.controller("ViewCtrl", ['$scope',
     '$injector',
     '$compile',
     '$location',
-    function (sc, createDialog, http, q, $upload, $injector, $compile, $location) {
+    '$rootScope',
+    function (sc, createDialog, http, q, $upload, $injector, $compile, $location, $rootScope) {
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
@@ -103,6 +104,7 @@ timApp.controller("ViewCtrl", ['$scope',
             }
         };
 
+
         sc.showQuestion = function ($par, $question) {
             var json = "No data";
             var qId = -1;
@@ -110,7 +112,15 @@ timApp.controller("ViewCtrl", ['$scope',
                 json = $question[0].getAttribute('json');
                 qId = $question[0].getAttribute('id');
             }
-            console.log(sc.lectureId);
+
+            var lectureId = "";
+            sc.$on('test', function (event,response) {
+                lectureId = response;
+            });
+
+            $rootScope.$broadcast('get_lectureId', 'lecture_id');
+
+
             //TODO event handlers for dialog buttons
             //TODO: Jatka tästä tekemistä, pitää saada luentoID jostain.
             createDialog('../static/templates/showQuestionTeacher.html', {
@@ -122,7 +132,7 @@ timApp.controller("ViewCtrl", ['$scope',
                         http({
                             url: '/askQuestion',
                             method: 'GET',
-                            params: {lecture_id: sc.lectureId, question_id: qId, doc_id:sc.docId}
+                            params: {lecture_id: lectureId, question_id: qId, doc_id: sc.docId}
                         })
                             .success(function () {
 
@@ -409,8 +419,9 @@ timApp.controller("ViewCtrl", ['$scope',
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image();
                 img.src = questionImage;
-                var $questionDiv = $("<div>", {class: 'questionAdded', html: img, json: questions[i].questionJson,id:
-                questions[i].question_id})
+                var $questionDiv = $("<div>", {
+                    class: 'questionAdded', html: img, json: questions[i].questionJson, id: questions[i].question_id
+                })
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
@@ -667,13 +678,13 @@ timApp.directive('questionDialog', function factory() {
     };
 });
 
-timApp.controller('ComplexModalController', ['$scope', 'json',
-    function ($scope, json) {
+timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
+    function ($scope, json, controller) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
         var jsonData = JSON.parse(json);
         $scope.jsonRaw = json;
-        
+
 
     }
 ]);
@@ -684,6 +695,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.question = {
         question: ""
     };
+
 
     scope.questionType = "";
     scope.columns = [];
@@ -709,7 +721,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 }
             }
             else {
-                 scope.rows[i] = {
+                scope.rows[i] = {
                     id: i,
                     text: 'test',
                     type: 'test123'
@@ -717,20 +729,20 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             }
         scope.columns = [];
         for (var i = 0; i < columnsCount; i++)
-        if(type = "true-false") {
-            scope.columns[i] = {
-                id: i, text: 'test',
-                type: 'Answer',
-                value: 'radio-button'
+            if (type = "true-false") {
+                scope.columns[i] = {
+                    id: i, text: 'test',
+                    type: 'Answer',
+                    value: 'radio-button'
+                }
             }
-        }
-        else {
-              scope.columns[i] = {
-                id: i, text: 'test',
-                questionPlaceholder: 'column',
-                type: 'test321'
+            else {
+                scope.columns[i] = {
+                    id: i, text: 'test',
+                    questionPlaceholder: 'column',
+                    type: 'test321'
+                }
             }
-        }
     };
 
 
@@ -833,10 +845,6 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             console.log("Can't save empty questions");
             return;
         }
-        console.log("Question: " + questionVal);
-        console.log("Answer: " + answerVal);
-
-        scope.clearQuestion();
         console.log("Question: " + scope.question.question);
 
         http({

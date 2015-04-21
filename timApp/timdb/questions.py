@@ -39,6 +39,26 @@ class Questions(TimDbBase):
         self.db.commit()
 
     @contract
+    def get_question(self, question_id) -> 'list(dict)':
+        """
+        Gets question with specific id
+        :param question_id: question id
+        :return: the question
+        """
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+            SELECT *
+            FROM Question
+            WHERE question_id = ?
+            """, [question_id]
+        )
+
+        return self.resultAsDictionary(cursor)
+
+
+    @contract
     def get_questions(self) -> 'list(dict)':
         """
         Gets the question
