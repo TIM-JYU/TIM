@@ -160,7 +160,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 "use strict";
 	csApp.taunoPHIndex = 3;
     if ( TESTWITHOUTPLUGINS ) return '';
-	return  '<div class="csRunDiv">' + 
+	return  '<div class="csRunDiv no-popup-menu">' + 
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>

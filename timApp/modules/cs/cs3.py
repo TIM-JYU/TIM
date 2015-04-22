@@ -603,6 +603,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # Check if user name or temp name
         rndname = generate_filename()
         delete_tmp = True
+        opt = get_param(query, "opt", "") 
         if get_param(query, "path", "") == "user" and self.user_id:
             basename = "user/" + hash_user_dir(self.user_id)
             delete_tmp = False
@@ -807,7 +808,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "cc":
                 cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
             elif ttype == "c++":
-                cmdline = "g++ -std=c++11 -Wall %s -o %s" % (csfname, exename)
+                cmdline = "g++ -std=c++11 -Wall %s %s -o %s" % (opt, csfname, exename)
             elif ttype == "py":
                 cmdline = ""
             elif ttype == "clisp":
