@@ -563,7 +563,7 @@ def getPluginMarkup(doc_id, plugintype, task_id):
 @app.route("/view/")
 def indexPage():
     timdb = getTimDb()
-    possible_groups = timdb.users.getUserGroups(getCurrentUserId())
+    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
     return render_template('index.html',
                            userName=getCurrentUserName(),
                            userId=getCurrentUserId(),

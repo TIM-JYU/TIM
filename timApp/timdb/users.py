@@ -277,6 +277,22 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def getPersonalUserGroup(self, user_id: 'int') -> 'int':
+        """Gets the personal user group for the user.
+        """
+        userName = self.getUser(user_id)['name']
+        groups = self.getUserGroupsByName(userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        groups = self.getUserGroupsByName('group of user ' + userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        return self.getUserGroups(user_id)[0]
+
+
+    @contract
     def getUserGroups(self, user_id: 'int') -> 'list(dict)':
         """Gets the user groups of a user.
         
@@ -294,6 +310,19 @@ class Users(TimDbBase):
                               ORDER BY id ASC""", [user_id])
 
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUserGroupsPrintable(self, user_id: 'int', max_group_len: 'int' = 32) -> 'list(dict)':
+        """Gets the user groups of a user, truncating the group names.
+
+        :param user_id: The id of the user.
+        :returns: The user groups that the user belongs to.
+        """
+        groups = self.getUserGroups(user_id)
+        for group in groups:
+            if len(group['name']) > max_group_len:
+               group['name'] = group['name'][:max_group_len]
+        return groups
 
     @contract
     def isUserInGroup(self, user_name : 'str', usergroup_name : 'str') -> 'bool':

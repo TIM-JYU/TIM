@@ -55,6 +55,7 @@ timApp.controller("ViewCtrl", [
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
+        var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
         var EDITOR_CLASS = "editorArea";
@@ -63,6 +64,8 @@ timApp.controller("ViewCtrl", [
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+        var PAR_CLOSE_BUTTON_CLASS = "timButton menuClose";
+        var PAR_CLOSE_BUTTON = "." + PAR_CLOSE_BUTTON_CLASS.replace(" ", ".");
 
         sc.processAllMath = function($elem) {
             $elem.find('.math').each(function() {
@@ -232,17 +235,41 @@ timApp.controller("ViewCtrl", [
             $document.on(eventName, className, func);
         };
 
-        sc.addEvent(PAR_EDIT_BUTTON, function (e) {
-            var $par = $(e.target).parent().parent();
-            $(".par.new").remove();
-            sc.toggleActionButtons($par, false, false, null);
+        sc.showEditWindow = function (e, $par, coords) {
             sc.toggleParEditor($par, {showDelete: true});
+        };
+
+        sc.addEvent(PAR_EDIT_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            $(".par.new").remove();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.showEditWindow(e, $par, null)
         });
 
+        sc.addEvent("#defaultEdit", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showEditWindow;
+        });
+
+        sc.showAddParagraphAbove = function(e, $par, coords) {
+            var $newpar = $("<div>", {class: "par new"})
+                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+            $par.before($newpar);
+            sc.toggleParEditor($newpar, {showDelete: false});
+        };
+
+        sc.showAddParagraphBelow = function(e, $par, coords) {
+            var $newpar = $("<div>", {class: "par new"})
+                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+            $par.after($newpar);
+            sc.toggleParEditor($newpar, {showDelete: false});
+        };
+
         sc.addEvent(PAR_ADD_BUTTON, function (e) {
-            var $par = $(e.target).parent().parent();
+            var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
-            sc.toggleActionButtons($par, false, false, null);
+            sc.toggleActionButtons(e, $par, false, false, null);
             var $newpar = $("<div>", {class: "par new"})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
 
@@ -253,6 +280,34 @@ timApp.controller("ViewCtrl", [
             }
 
             sc.toggleParEditor($newpar, {showDelete: false});
+        });
+
+        sc.addEvent("#defaultPrepend", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showAddParagraphAbove;
+        });
+
+        sc.addEvent("#defaultAppend", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showAddParagraphBelow;
+        });
+
+        sc.doNothing = function (e, $par, coords) {
+            sc.toggleActionButtons(e, $par, false, false, null);
+        };
+
+        sc.addEvent(PAR_CLOSE_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            $(".par.new").remove();
+            sc.toggleActionButtons(e, $par, false, false, null);
+        });
+
+        sc.addEvent("#defaultClose", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.doNothing;
         });
 
         sc.handleCancel = function (extraData) {
@@ -305,10 +360,20 @@ timApp.controller("ViewCtrl", [
                 });
         });
 
-        sc.addEvent(NOTE_ADD_BUTTON, function (e) {
-            var $par = $(e.target).parent().parent();
-            sc.toggleActionButtons($par, false, false, null);
+        sc.showNoteWindow = function (e, $par, coords) {
             sc.toggleNoteEditor($par, {isNew: true});
+        };
+
+        sc.addEvent(NOTE_ADD_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.showNoteWindow(e, $par, null);
+        });
+
+        sc.addEvent("#defaultAdd", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showNoteWindow;
         });
 
         sc.handleNoteCancel = function (extraData) {
@@ -350,7 +415,7 @@ timApp.controller("ViewCtrl", [
             $(".par.selected").removeClass("selected");
             $(".par.lightselect").removeClass("lightselect");
             $(".actionButtons").remove();
-            sc.toggleActionButtons($par, toggle1, toggle2, coords);
+            sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
         });
 
         sc.addEvent(".noteContent", function () {
@@ -360,37 +425,72 @@ timApp.controller("ViewCtrl", [
 
         // Note-related functions
 
-        sc.toggleActionButtons = function ($par, toggle1, toggle2, coords) {
+        sc.showOptionsWindow = function(e, $par, coords) {
+            var default_width = $par.outerWidth() / 16;
+            var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
+            var $actionDiv = $("<div>", {class: 'actionButtons'});
+            if (sc.rights.can_comment){
+                var $span = $("<span>");
+                $span.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
+                $span.append($("<button>", {id: 'defaultAdd', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $actionDiv.append($span);
+            }
+            if (sc.rights.editable) {
+                var $span = $("<span>");
+                $span.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
+                $span.append($("<button>", {id: 'defaultEdit', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $actionDiv.append($span);
+
+                var $span = $("<span>");
+                $span.append($("<button>", {
+                    class: PAR_ADD_BUTTON_CLASS + ' above',
+                    text: 'Add paragraph above',
+                    width: button_width
+                }));
+                $span.append($("<button>", {id: 'defaultPrepend', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $actionDiv.append($span);
+
+                var $span = $("<span>");
+                $span.append($("<button>", {
+                    class: PAR_ADD_BUTTON_CLASS + ' below',
+                    text: 'Add paragraph below',
+                    width: button_width
+                }));
+                $span.append($("<button>", {id: 'defaultAppend', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $actionDiv.append($span);
+
+                var $span = $("<span>");
+                $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
+                $span.append($("<button>", {id: 'defaultClose', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $actionDiv.append($span);
+            }
+            $actionDiv.offset(coords);
+            $actionDiv.css('position', 'absolute'); // IE needs this
+            $par.prepend($actionDiv);
+        };
+
+        sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
             if (!sc.rights.editable && !sc.rights.can_comment) {
                 return;
             }
             if (toggle2) {
                 // Clicked twice successively
+                var clicktime = new Date().getTime() - sc.lastclick;
+                //console.log(clicktime);
                 $par.addClass("selected");
-                var $actionDiv = $("<div>", {class: 'actionButtons'});
-                var button_width = $par.outerWidth() / 4;
-                if (sc.rights.can_comment){
-                    $actionDiv.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
+
+                if (clicktime < 500) {
+                    // Double click
+                    sc.defaultAction(e, $par, coords);
                 }
-                if (sc.rights.editable) {
-                    $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
-                    $actionDiv.append($("<button>", {
-                        class: PAR_ADD_BUTTON_CLASS + ' above',
-                        text: 'Add paragraph above',
-                        width: button_width
-                    }));
-                    $actionDiv.append($("<button>", {
-                        class: PAR_ADD_BUTTON_CLASS + ' below',
-                        text: 'Add paragraph below',
-                        width: button_width
-                    }));
+                else {
+                    // Two clicks
+                    sc.showOptionsWindow(e, $par, coords);
                 }
-                $actionDiv.offset(coords);
-                $actionDiv.css('position', 'absolute'); // IE needs this
-                $par.prepend($actionDiv);
             } else if (toggle1) {
                 // Clicked once
                 $par.addClass("lightselect");
+                sc.lastclick = new Date().getTime();
             } else {
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
@@ -617,4 +717,6 @@ timApp.controller("ViewCtrl", [
         sc.getNotes();
         sc.getReadPars();
         sc.processAllMath($('body'));
+
+        sc.defaultAction = sc.showOptionsWindow;
     }]);

@@ -19,9 +19,7 @@ def getCurrentUserName():
 
 def getCurrentUserGroup():
     timdb = getTimDb()
-    groups = timdb.users.getUserGroups(getCurrentUserId())
-    assert len(groups) > 0
-    return groups[0]['id']
+    return timdb.users.getPersonalUserGroup(getCurrentUserId())
 
 
 def getTimDb():
