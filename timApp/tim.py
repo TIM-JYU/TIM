@@ -11,6 +11,7 @@ import re
 import sys
 import time
 import datetime
+from time import mktime
 from datetime import timezone
 
 from flask import Flask, redirect, url_for, flash, Blueprint
@@ -214,13 +215,22 @@ def get_all_messages():
         abort(400, "Bad request, missing lecture id")
     timdb = getTimDb()
     lecture_id = int(request.args.get("lecture_id"))
+
     messages = timdb.messages.get_messages(lecture_id)
     if len(messages) > 0:
         list_of_new_messages = []
         for message in messages:
             user = timdb.users.getUser(message.get('user_id'))
+            time_as_time = datetime.datetime.fromtimestamp(
+                mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
             list_of_new_messages.append(
-                user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
+                user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get('message'))
+            # Prevents previously asked question to be asked from user.
+            current_user = getCurrentUserId()
+            for triple in __question_to_be_asked:
+                if triple[0] == lecture_id and current_user not in triple[2]:
+                    triple[2].append(current_user)
+
         return jsonResponse(
             {"status": "results", "data": list_of_new_messages, "lastid": messages[-1].get('msg_id'),
              "lectureId": lecture_id})
@@ -231,10 +241,10 @@ def get_all_messages():
 @app.route('/getUpdates')
 def get_updates():
     if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
-            "question_id"):
+            'doc_id') or not request.args.get('is_lecturer'):
         abort(400, "Bad requst")
     client_last_id = int(request.args.get('client_message_id'))
-    client_last_question_id = int(request.args.get('question_id'))
+
     helper = request.args.get("lecture_id")
     if len(helper) > 0:
         lecture_id = int(float(helper))
@@ -243,6 +253,15 @@ def get_updates():
 
     timdb = getTimDb()
     step = 0
+
+    doc_id = int(request.args.get('doc_id'))
+
+    if not check_if_lecture_is_running(lecture_id):
+        timdb.lectures.delete_users_from_lecture(lecture_id)
+        for pair in __question_to_be_asked:
+            if pair[0] == lecture_id:
+                __question_to_be_asked.remove(pair)
+        return get_running_lectures(doc_id)
 
     list_of_new_messages = []
     last_message_id = -1
@@ -257,29 +276,34 @@ def get_updates():
 
                 for message in messages:
                     user = timdb.users.getUser(message.get('user_id'))
+                    time_as_time = datetime.datetime.fromtimestamp(
+                        mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
                     list_of_new_messages.append(
-                        user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
+                        user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get(
+                            'message'))
                 last_message_id = messages[-1].get('msg_id')
 
         current_user = getCurrentUserId()
         for pair in __question_to_be_asked:
-            if pair[0] == lecture_id and pair[1] is not client_last_question_id and current_user not in pair[2]:
+            if pair[0] == lecture_id and current_user not in pair[2]:
                 question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
                 pair[2].append(getCurrentUserId())
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                     "lectureId": lecture_id, "question": True, "questionId": pair[1], "questionJson": question_json})
+                     "lectureId": lecture_id, "question": True, "questionJson": question_json,
+                     "isLecture": True})
 
         if len(list_of_new_messages) > 0:
             return jsonResponse(
                 {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                 "lectureId": lecture_id})
+                 "lectureId": lecture_id, "isLecture": True})
 
         time.sleep(1)
         step += 1
 
     return jsonResponse(
-        {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id})
+        {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
+         "isLecture": True})
 
 
 @app.route('/sendMessage', methods=['POST'])
@@ -316,11 +340,14 @@ def get_questions():
 
 @app.route('/addQuestion', methods=['POST'])
 def add_question():
-    # TODO: Only lecturers should be able to create questions.
-    # verifyOwnership(doc_id)
+    if not request.args.get('question') or not request.args.get('answer') or not request.args.get(
+            'doc_id') or not request.args.get('par_index'):
+        abort(400, "Wrong parameters")
+
+    doc_id = int(request.args.get('doc_id'))
+    verifyOwnership(doc_id)
     question = request.args.get('question')
     answer = request.args.get('answer')
-    doc_id = int(request.args.get('doc_id'))
     par_index = int(request.args.get('par_index'))
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
@@ -352,6 +379,12 @@ def check_lecture():
         return get_running_lectures(doc_id)
 
 
+def check_if_lecture_is_running(lecture_id):
+    timdb = getTimDb()
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    return timdb.lectures.check_if_lecture_is_running(lecture_id, time_now)
+
+
 def get_running_lectures(doc_id):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -367,11 +400,14 @@ def get_running_lectures(doc_id):
             future_lecture_codes.append(lecture.get("lecture_code"))
     return jsonResponse(
         {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
-         "lectureCode": lecture_code})
+         "lectureCode": lecture_code, "isLecture": False})
 
 
 @app.route('/createLecture', methods=['POST'])
 def start_lecture():
+    if not request.args.get("doc_id") or not request.args.get("start_date") or not request.args.get(
+            "end_date") or not request.args.get("lecture_code"):
+        abort(400, "Missing parameters")
     doc_id = int(request.args.get("doc_id"))
     verifyOwnership(doc_id)
     timdb = getTimDb()
@@ -382,6 +418,8 @@ def start_lecture():
     if not password:
         password = ""
     current_user = getCurrentUserId()
+    if not timdb.lectures.check_if_correct_name(doc_id, lecture_code):
+        abort(400, "Can't create lecture with same code to same document")
     lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -390,28 +428,54 @@ def start_lecture():
     return jsonResponse({"lectureId": lecture_id})
 
 
+@app.route('/endLecture', methods=['POST'])
+def end_lecture():
+    if not request.args.get("doc_id") or not request.args.get("lecture_id"):
+        abort(400)
+
+    doc_id = int(request.args.get("doc_id"))
+    lecture_id = int(request.args.get("lecture_id"))
+    verifyOwnership(doc_id)
+    timdb = getTimDb()
+    timdb.lectures.delete_users_from_lecture(lecture_id)
+    for pair in __question_to_be_asked:
+        if pair[0] == lecture_id:
+            __question_to_be_asked.remove(pair)
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    timdb.lectures.set_end_for_lecture(lecture_id, str(now))
+    return jsonResponse("")
+
+
 @app.route('/deleteLecture', methods=['POST'])
-def stop_lecture():
+def delete_lecture():
+    if not request.args.get("doc_id") or not request.args.get("lecture_id"):
+        abort(400)
     doc_id = int(request.args.get("doc_id"))
     verifyOwnership(doc_id)
     lecture_id = int(request.args.get("lecture_id"))
     timdb = getTimDb()
     timdb.messages.delete_messages_from_lecture(lecture_id, True)
     timdb.lectures.delete_users_from_lecture(lecture_id, True)
+    for pair in __question_to_be_asked:
+        if pair[0] == lecture_id:
+            __question_to_be_asked.remove(pair)
     timdb.lectures.delete_lecture(lecture_id, True)
     return get_running_lectures(doc_id)
 
 
 @app.route('/joinLecture', methods=['POST'])
 def join_lecture():
+    if not request.args.get("doc_id") or not request.args.get("lecture_code"):
+        abort(400, "Missing parameters")
     timdb = getTimDb()
+    doc_id = int(request.args.get("doc_id"))
     lecture_code = request.args.get("lecture_code")
     password_quess = request.args.get("password_quess")
-    lecture_id = timdb.lectures.get_lecture_by_code(lecture_code)
+    lecture_id = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     current_user = getCurrentUserId()
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture[0].get("password") != password_quess:
-        return jsonResponse({"correctPassword": False});
+        return jsonResponse({"correctPassword": False})
 
     timdb.lectures.join_lecture(lecture_id, current_user, True)
     if lecture[0].get("lecturer") == current_user:

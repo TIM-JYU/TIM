@@ -3,9 +3,9 @@
  */
 
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window",
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog',
 
-    function ($scope, controller, http, $window) {
+    function ($scope, controller, http, $window, createDialog) {
 
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
@@ -76,7 +76,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/joinLecture',
                 method: 'POST',
-                params: {'lecture_code': $scope.chosenLecture, 'password_quess': $scope.passwordQuess}
+                params: {
+                    'doc_id': $scope.docId,
+                    'lecture_code': $scope.chosenLecture,
+                    'password_quess': $scope.passwordQuess
+                }
             })
                 .success(function (answer) {
                     $scope.passwordQuess = "";
@@ -150,6 +154,24 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 }
             });
 
+        };
+
+        $scope.endLecture = function () {
+            http({
+                url: '/endLecture',
+                method: 'POST',
+                params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
+            })
+                .success(function (answer) {
+                    $scope.showBasicView(answer);
+                    $scope.chosenLecture = "";
+                    $scope.msg = "";
+                    console.log("Lecture ended, not deleted");
+
+                })
+                .error(function () {
+                    console.log("Failed to delete the lecture");
+                })
         };
 
         $scope.deleteLecture = function () {
@@ -241,84 +263,104 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
-        $scope.startLongPolling = function (lastID, lastQuestionId) {
-            function message_longPolling(lastID, lastQuestionId) {
+        $scope.startLongPolling = function (lastID) {
+            function message_longPolling(lastID) {
                 var timeout;
 
                 if (lastID == null) {
                     lastID = -1;
                 }
 
-                if (lastQuestionId == null) {
-                    lastQuestionId = -1;
-                }
-
                 $scope.requestOnTheWay = true;
-                jQuery.ajax({
-                        url: '/getUpdates',
-                        type: 'GET',
-                        data: {
-                            'client_message_id': lastID,
-                            lecture_id: $scope.lectureId,
-                            'question_id': lastQuestionId
-                        },
-                        success: function (answer) {
-                            $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
-                            if (answer.lectureId != $scope.lectureId) {
-                                return;
-                            }
-
-                            if (answer.question) {
-                                console.log("Now I will ask question if you are a student: " + answer.questionId);
-                            }
-                            if (answer.question && $scope.isLecturer == false) {
-                                alert("This would be question that is asked from you!\n" + answer.questionJson);
-                            }
-
-                            $scope.requestOnTheWay = false;
-                            $window.clearTimeout(timeout);
-                            if ($scope.polling) {
-
-                                $scope.pollingLectures.push(answer.lectureId);
-                                timeout = setTimeout(function () {
-                                    message_longPolling(answer.lastid, answer.questionId);
-                                }, 1000);
-
-                                if (answer.status == 'results') {
-                                    angular.forEach(answer.data, function (msg) {
-                                        $scope.msg = $scope.msg + msg + "\n";
-                                    });
-                                    $scope.$apply();
-                                    $scope.lastID = answer.lastid;
-                                    var textarea = document.getElementById('wallArea');
-                                    var areaHeight = $("#wallArea").height();
-                                    if (textarea.scrollHeight - textarea.scrollTop - areaHeight < 200) {
-                                        textarea.scrollTop = textarea.scrollHeight;
-                                    }
-
-
-                                } else {
-                                    console.log("No new messages. Sending new poll.");
-
-                                }
-                            } else {
-                                console.log("Got answer but not polling anymore.")
-                            }
-                        }
-                        ,
-                        error: function () {
-                            $scope.requestOnTheWay = false;
-                            $window.clearTimeout(timeout);
-                            timeout = setTimeout(function () {
-                                message_longPolling();
-                            }, 30000);
-                        }
+                http({
+                    url: '/getUpdates',
+                    type: 'GET',
+                    params: {
+                        'client_message_id': lastID,
+                        'lecture_id': $scope.lectureId,
+                        'doc_id': $scope.docId,
+                        'is_lecturer': $scope.isLecturer
                     }
-                )
-                ;
+                })
+                    .success(function (answer) {
+
+                        if (!answer.isLecture) {
+                            $scope.showBasicView(answer);
+                            return;
+                        }
+                        $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
+                        if (answer.lectureId != $scope.lectureId) {
+                            return;
+                        }
+
+                        if (answer.question) {
+                            createDialog('../static/templates/question_asked_student.html', {
+                                id: 'questionAskDialog',
+                                title: 'Question',
+                                backdrop: true,
+                                success: {
+                                    label: 'Answer', fn: function () {
+                                        http({
+                                            url: '/answerQuestion',
+                                            method: 'POST',
+                                            params: {}
+                                        })
+                                            .success(function () {
+                                                console.log("Answered to the question");
+                                            })
+                                            .error(function (error) {
+                                                console.log(error);
+                                            });
+                                    }
+                                },
+                                controller: 'QuestionAnswerController'
+                            });
+                        }
+                        /* Correct version where the lecturer is not shown the question, but something else
+                         if (answer.question && $scope.isLecturer == false) {
+                         alert("This would be question that is asked from you!\n" + answer.questionJson);
+                         }
+                         */
+                        $scope.requestOnTheWay = false;
+                        $window.clearTimeout(timeout);
+                        if ($scope.polling) {
+
+                            $scope.pollingLectures.push(answer.lectureId);
+                            timeout = setTimeout(function () {
+                                message_longPolling(answer.lastid);
+                            }, 1000);
+
+                            if (answer.status == 'results') {
+                                angular.forEach(answer.data, function (msg) {
+                                    $scope.msg = $scope.msg + msg + "\n";
+                                });
+                                $scope.lastID = answer.lastid;
+                                // TODO: Do no use getElementById:tä
+                                var textarea = document.getElementById('wallArea');
+                                var areaHeight = $("#wallArea").height();
+                                if (textarea.scrollHeight - textarea.scrollTop - areaHeight < 200) {
+                                    textarea.scrollTop = textarea.scrollHeight;
+                                }
+
+
+                            } else {
+                                console.log("Sending new poll.");
+
+                            }
+                        } else {
+                            console.log("Got answer but not polling anymore.")
+                        }
+                    })
+                    .error(function () {
+                        $scope.requestOnTheWay = false;
+                        $window.clearTimeout(timeout);
+                        timeout = setTimeout(function () {
+                            message_longPolling();
+                        }, 30000);
+                    });
             }
 
-            message_longPolling(lastID, lastQuestionId);
+            message_longPolling(lastID);
         };
 
         $scope.chatEnterPressed = function (event) {
@@ -608,8 +650,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     $scope.checkIfInLecture();
                     console.log("Lecture created: " + answer.lectureId);
                 })
-                .error(function () {
-                    console.log("Failed to start a lecture");
+                .error(function (answer) {
+                    if (answer.error == "Can't create lecture with same code to same document") {
+                        $window.alert(answer.error);
+                    } else {
+                        console.log("Sorry, failed to create new lecture");
+                    }
                 })
         }
         ;

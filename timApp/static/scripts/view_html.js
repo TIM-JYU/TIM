@@ -856,10 +856,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         })
             .success(function (data) {
                 console.log("The question was successfully added to database");
-                scope.clearQuestion()
+                scope.clearQuestion();
             })
             .error(function (data) {
                 console.log("There was some error creating question to database.")
+                scope.clearQuestion();
             });
     };
 }]);
