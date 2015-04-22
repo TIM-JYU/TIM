@@ -16,6 +16,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             link: function ($scope, $element, $attrs) {
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
+                    $scope.points = $scope.selectedAnswer.points;
                     var $par = $element.parents('.par');
                     var par_id = $scope.$parent.getParIndex($par);
                     $scope.loading++;
@@ -62,7 +63,8 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     return {
                         answer_id: $scope.selectedAnswer.id,
                         saveTeacher: $scope.saveTeacher,
-                        teacher: true
+                        teacher: true,
+                        points: $scope.points
                     };
                 };
 
@@ -86,7 +88,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             $scope.answers = data;
                             if ($scope.answers.length > 0) {
                                 $scope.selectedAnswer = $scope.answers[0];
-
+                                $scope.points = $scope.selectedAnswer.points;
                                 if (updateHtml) {
                                     $scope.changeAnswer();
                                 }

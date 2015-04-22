@@ -526,6 +526,9 @@ def saveAnswer(plugintype, task_id):
                     return jsonResponse({'error': 'No users found for the specified answer'}, 400)
                 if not getCurrentUserId() in users:
                     users.append(getCurrentUserId())
+                points = answer_browser_data.get('points', points)
+                if points == "":
+                    points = None
                 timdb.answers.saveAnswer(users, task_id, json.dumps(saveObject), points, tags)
 
     return jsonResponse({'web': jsonresp['web']})
