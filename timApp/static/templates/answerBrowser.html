@@ -12,13 +12,13 @@
         <span class="firstanswer" ng-show="answers[answers.length - 1].points !== null">1st answer points: {{ answers[answers.length - 1].points }}</span>
     </span>
     <br>
-    <label ng-show="$parent.teacherMode">
+    <label ng-show="!changed && $parent.teacherMode">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
     </label>
-    <div ng-show="selectedAnswer.collaborators.length > 1">
+    <div ng-show="selectedAnswer.collaborators.length > 1 && !changed">
         Collaborators:
         <ul>
-            <li ng-repeat="c in selectedAnswer.collaborators">{{ getUserById(c['user_id']).real_name }}</li>
+            <li ng-repeat="c in selectedAnswer.collaborators">{{ c.real_name }}</li>
         </ul>
     </div>
     <span ng-show="$parent.teacherMode && changed">(hover/click to update)</span>
