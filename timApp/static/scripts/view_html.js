@@ -707,38 +707,46 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         if (scope.rows.length > rowsCount) {
             rowsCount = scope.rows.length;
         }
-        scope.rows = [];
-        for (var i = 0; i < rowsCount; i++)
-            if (type = "true-false") {
-                scope.rows[i] = {
-                    id: i,
-                    type: 'Question',
-                    value: 'test'
+
+        if (typeof scope.rows === 'undefined' || rowsCount > scope.rows.length) {
+            scope.rows = [];
+            for (var i = 0; i < rowsCount; i++)
+                if (type = "true-false") {
+                    scope.rows[i] = {
+                        id: i,
+                        type: 'Question',
+                        text: 'text'
+                    }
                 }
-            }
-            else {
-                scope.rows[i] = {
-                    id: i,
-                    text: 'test',
-                    type: 'test123'
+                else {
+                    scope.rows[i] = {
+                        id: i,
+                        text: 'text',
+                        type: 'test123'
+                    }
                 }
-            }
-        scope.columns = [];
-        for (var i = 0; i < columnsCount; i++)
-            if (type = "true-false") {
-                scope.columns[i] = {
-                    id: i, text: 'test',
-                    type: 'Answer',
-                    value: 'radio-button'
+        }
+
+        if (typeof scope.columns === 'undefined' || columnsCount > scope.columns.length) {
+            scope.columns = [];
+            for (var i = 0; i < columnsCount; i++)
+                if (type = "true-false") {
+                    scope.columns[i] = {
+                        id: i, text: 'test',
+                        type: 'Answer',
+                        value: 'radio-button',
+                        text: 'text'
+                    }
                 }
-            }
-            else {
-                scope.columns[i] = {
-                    id: i, text: 'test',
-                    questionPlaceholder: 'column',
-                    type: 'test321'
+                else {
+                    scope.columns[i] = {
+                        id: i, text: 'test',
+                        questionPlaceholder: 'column',
+                        type: 'test321',
+                        text: 'text'
+                    }
                 }
-            }
+        }
     };
 
 
@@ -774,13 +782,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.addRow = function (loc) {
         if (loc >= 0) {
-            scope.rows.splice(loc, 0, {id: loc, text: "", type: "test123"});
+            scope.rows.splice(loc, 0, {id: loc, text: "test", type: "test123"});
             for (var i = 0; i < scope.rows.length; i++) {
                 scope.rows[i].id = i;
             }
         }
         else
-            scope.rows.push({id: scope.rows.length, text: "", type: "test123"})
+            scope.rows.push({id: scope.rows.length, text: "test", type: "test123"})
 
 
     };
