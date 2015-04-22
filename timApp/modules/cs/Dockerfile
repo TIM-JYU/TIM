@@ -87,6 +87,8 @@ RUN apt-get update -qq && apt-get install -qqy \
     lxc \
     iptables
 
+RUN apt-get install -y postgresql-client    
+    
 # Install Docker from Docker Inc. repositories.
 #RUN curl -sSL https://get.docker.com/ubuntu/ | sh
 
