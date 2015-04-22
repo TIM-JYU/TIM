@@ -58,6 +58,23 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.changeAnswer();
                 };
 
+                $scope.getTeacherData = function () {
+                    return {
+                        answer_id: $scope.selectedAnswer.id,
+                        saveTeacher: $scope.saveTeacher,
+                        teacher: true
+                    };
+                };
+
+                $scope.getUserById = function (user_id) {
+                    for (var i = 0; i < $scope.$parent.users.length; i++) {
+                        if ($scope.$parent.users[i].id === user_id) {
+                            return $scope.$parent.users[i];
+                        }
+                    }
+                    return null;
+                };
+
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
                     if (!$scope.$parent.rights.browse_own_answers) {
@@ -82,7 +99,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.$on('answerSaved', function (event, args) {
-                    if (!$scope.$parent.teacherMode && args.taskId === $scope.taskId) {
+                    if (args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
                     }
                 });
@@ -107,6 +124,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 });
                 $scope.changed = true;
                 $scope.shouldUpdateHtml = false;
+                $scope.saveTeacher = false;
             }
         };
     }]);

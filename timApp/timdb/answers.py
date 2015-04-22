@@ -16,10 +16,9 @@ class Answers(TimDbBase):
 
         cursor = self.db.cursor()
 
-        if len(user_ids) == 1:
-            existing_answers = self.getAnswers(user_ids[0], task_id)
-            if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
-                return
+        existing_answers = self.get_common_answers(user_ids, task_id)
+        if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
+            return
 
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on) VALUES (?,?,?,CURRENT_TIMESTAMP)',
                        [task_id, content, points])
@@ -50,7 +49,44 @@ class Answers(TimDbBase):
                               (SELECT answer_id FROM UserAnswer WHERE user_id = ?)
                           ORDER BY answered_on DESC""", [task_id, user_id])
 
-        return self.resultAsDictionary(cursor)
+        answers = self.resultAsDictionary(cursor)
+        for answer in answers:
+            cursor.execute("""SELECT user_id, real_name FROM UserAnswer
+                              JOIN Answer ON Answer.id = UserAnswer.answer_id
+                              JOIN User ON UserAnswer.user_id = User.id
+                              WHERE answer_id = ?""", [answer['id']])
+            r = self.resultAsDictionary(cursor)
+            answer['collaborators'] = r
+        return answers
+
+    @contract
+    def get_common_answers(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
+        common_answers_ids = None
+        for user_id in user_ids:
+            ids = self.db.execute("""SELECT answer_id
+                               FROM UserAnswer
+                               JOIN Answer ON Answer.id = UserAnswer.answer_id
+                               WHERE user_id = ? AND task_id = ?
+                            """, [user_id, task_id]).fetchall()
+            if common_answers_ids is None:
+                common_answers_ids = set()
+                for answer_id in ids:
+                    common_answers_ids.add(answer_id[0])
+            else:
+                curr_answers = set()
+                for answer_id in ids:
+                    curr_answers.add(answer_id[0])
+                common_answers_ids.intersection_update(curr_answers)
+        if common_answers_ids is None:
+            return []
+        template = ','.join('?' * len(common_answers_ids))
+        common_answers = self.resultAsDictionary(
+            self.db.execute("""SELECT id, task_id, content, points
+                               FROM Answer
+                               WHERE id IN (%s)
+                               ORDER BY answered_on DESC
+                            """ % template, list(common_answers_ids)))
+        return common_answers
 
     @contract
     def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
@@ -90,3 +126,21 @@ class Answers(TimDbBase):
         print(sql)
         cursor.execute(sql, [task_id])
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def get_users(self, answer_id: 'int') -> 'list(int)':
+        """Gets the user ids of the specified answer.
+
+        :param answer_id: The id of the answer.
+        :return: The user ids.
+        """
+        return [u['user_id'] for u in self.resultAsDictionary(
+            self.db.execute("""SELECT user_id FROM UserAnswer
+                               WHERE answer_id = ?""", [answer_id]))]
+
+    @contract
+    def get_task_id(self, answer_id: 'int') -> 'str|None':
+        result = self.resultAsDictionary(
+                 self.db.execute("""SELECT task_id FROM Answer
+                                    WHERE id = ?""", [answer_id]))
+        return result[0]['task_id'] if len(result) > 0 else None
