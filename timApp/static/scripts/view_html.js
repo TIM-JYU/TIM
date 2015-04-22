@@ -114,7 +114,7 @@ timApp.controller("ViewCtrl", ['$scope',
             }
 
             var lectureId = "";
-            sc.$on('test', function (event,response) {
+            sc.$on('test', function (event, response) {
                 lectureId = response;
             });
 
@@ -694,51 +694,55 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
 
     scope.questionType = "";
-    scope.columns = [];
     scope.rows = [];
+    scope.columns = [];
+    scope.answerDirection = "horizontal";
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
 
-
-        if (scope.columns.length == 1 && type != "true-false") {
-            columnsCount = scope.columns.length;
+        switch (scope.answerDirection) {
+            case "horizontal":
+                scope.createRowMatrix(rowsCount, columnsCount, type);
+                break;
+            case "vertical":
+                //TODO implement this, or think of some better way
+                scope.createColumnMatrix(rowsCount, columnsCount, type);
+                break;
+            default:
+                console.log("wtf");
         }
 
-        if (scope.rows.length > rowsCount) {
-            rowsCount = scope.rows.length;
-        }
-        scope.rows = [];
-        for (var i = 0; i < rowsCount; i++)
-            if (type = "true-false") {
-                scope.rows[i] = {
-                    id: i,
-                    type: 'Question',
-                    value: 'test'
-                }
-            }
-            else {
-                scope.rows[i] = {
-                    id: i,
+
+    };
+
+    scope.createRowMatrix = function (rowsCount, columnsCount, type) {
+
+        for (var i = 0; i < rowsCount; i++) {
+            var columns = [];
+            for (var j = 0; j < columnsCount; j++) {
+                columns[j] = {
+                    id: j,
+                    rowId: i,
                     text: 'test',
-                    type: 'test123'
-                }
-            }
-        scope.columns = [];
-        for (var i = 0; i < columnsCount; i++)
-            if (type = "true-false") {
-                scope.columns[i] = {
-                    id: i, text: 'test',
-                    type: 'Answer',
-                    value: 'radio-button'
-                }
-            }
-            else {
-                scope.columns[i] = {
-                    id: i, text: 'test',
                     questionPlaceholder: 'column',
-                    type: 'test321'
+                    type: 'answer',
+                    value: 'textfield'
                 }
             }
+            scope.rows[i] = {
+                id: i,
+                text: 'test',
+                type: 'question',
+                //TODO get question text
+                value: '',
+                columns: columns
+            }
+
+        }
+    };
+
+    scope.createColumnMatrix = function (rowsCount, columnsCount, type) {
+
     };
 
 
@@ -750,37 +754,58 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.addCol = function (loc) {
-        if (loc >= 0) {
-            scope.columns.splice(loc, 0, {
-                id: loc,
-                question: "column",
-                questionPlaceholder: "column",
-                text: "",
-                type: "test321"
-            });
-            for (var i = 0; i < scope.columns.length; i++) {
-                scope.columns[i].id = i;
-            }
+        var location = loc;
+        if (loc == -1) {
+            location = scope.rows[0].columns.length;
+            loc = scope.rows[0].columns.length;
         }
-        else
-            scope.columns.push({
-                id: scope.columns.length,
-                question: "column",
-                questionPlaceholder: "column",
-                text: "",
-                type: "test321"
+        //add new column to columns
+        for (var i = 0; i < scope.rows.length; i++) {
+            scope.rows[i].columns.splice(loc, 0, {
+                id: location,
+                rowId: i,
+                type: "answer",
+                value: 'textfield'
             });
-    };
+        }
 
+
+    }
     scope.addRow = function (loc) {
-        if (loc >= 0) {
-            scope.rows.splice(loc, 0, {id: loc, text: "", type: "test123"});
-            for (var i = 0; i < scope.rows.length; i++) {
-                scope.rows[i].id = i;
+
+        scope.CreateColumnsForRow = function (location) {
+            var columns = [];
+            for (var j = 0; j < scope.rows[0].columns.length; j++) {
+                columns[j] = {
+                    id: j,
+                    rowId: location,
+                    type: "answer",
+                    value: 'textfield'
+                };
+
             }
+            return columns;
+        };
+
+        var location = loc;
+        if (loc == -1) {
+            location = scope.rows.length;
+            loc = scope.rows.length;
         }
-        else
-            scope.rows.push({id: scope.rows.length, text: "", type: "test123"})
+
+        var columns = scope.CreateColumnsForRow(location);
+        scope.rows.splice(loc, 0,
+            {
+                id: location,
+                text: "",
+                type: "question",
+                value: "",
+                columns: columns
+            });
+
+        for (var i = 0; i < scope.rows.length; i++) {
+            scope.rows[i].id = i;
+        }
 
 
     };
@@ -793,17 +818,19 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.delCol = function (indexToBeDeleted) {
-        if (indexToBeDeleted == -1)
-            scope.columns.splice(-1, 1);
-        else
-            scope.columns.splice(indexToBeDeleted, 1);
+        for (var i = 0; i < scope.rows.length; i++) {
+            if (indexToBeDeleted == -1)
+                scope.rows[i].columns.splice(-1, 1);
+            else
+                scope.rows[i].columns.splice(indexToBeDeleted, 1);
+        }
     };
 
     scope.clearQuestion = function () {
         scope.question = {
             question: ""
         };
-        scope.columns.splice(0, scope.columns.length - 1);
+
         scope.rows.splice(0, scope.rows.length - 1);
         scope.answer = "";
         scope.toggleQuestion();
@@ -823,15 +850,15 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
         var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": { "ROWS": [';
         for (i = 0; i < scope.rows.length; i++) {
-            questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '"},'
+            questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
+            for (j = 0; j < scope.rows[i].columns.length; j++) {
+                questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
+            }
+            questionJson = questionJson.substring(0, questionJson.length - 1);
+            questionJson += ']},';
         }
         questionJson = questionJson.substring(0, questionJson.length - 1);
-        questionJson += '], "Columns":['
 
-        for (i = 0; i < scope.columns.length; i++) {
-            questionJson += '{"Type": "' + scope.columns[i].type + '" ,"Value": "' + scope.columns[i].value + '" },'
-        }
-        questionJson = questionJson.substring(0, questionJson.length - 1);
         questionJson += ']}}'
 
 
