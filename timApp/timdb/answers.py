@@ -50,7 +50,14 @@ class Answers(TimDbBase):
                               (SELECT answer_id FROM UserAnswer WHERE user_id = ?)
                           ORDER BY answered_on DESC""", [task_id, user_id])
 
-        return self.resultAsDictionary(cursor)
+        answers = self.resultAsDictionary(cursor)
+        for answer in answers:
+            cursor.execute("""SELECT user_id FROM UserAnswer
+                              JOIN Answer ON Answer.id = UserAnswer.answer_id
+                              WHERE answer_id = ?""", [answer['id']])
+            r = self.resultAsDictionary(cursor)
+            answer['collaborators'] = r
+        return answers
 
     @contract
     def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
@@ -90,3 +97,21 @@ class Answers(TimDbBase):
         print(sql)
         cursor.execute(sql, [task_id])
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def get_users(self, answer_id: 'int') -> 'list(int)':
+        """Gets the user ids of the specified answer.
+
+        :param answer_id: The id of the answer.
+        :return: The user ids.
+        """
+        return [u['user_id'] for u in self.resultAsDictionary(
+            self.db.execute("""SELECT user_id FROM UserAnswer
+                               WHERE answer_id = ?""", [answer_id]))]
+
+    @contract
+    def get_task_id(self, answer_id: 'int') -> 'str|None':
+        result = self.resultAsDictionary(
+                 self.db.execute("""SELECT task_id FROM Answer
+                                    WHERE id = ?""", [answer_id]))
+        return result[0]['task_id'] if len(result) > 0 else None
