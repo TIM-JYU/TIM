@@ -5,6 +5,7 @@ import imghdr
 import io
 import collections
 import re
+import posixpath
 
 from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
@@ -131,30 +132,39 @@ def downloadDocument(doc_id):
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
+    if request.method != 'POST':
+        return jsonResponse({'message': 'Only POST method is supported.'}, 405)
     if not loggedIn():
         return jsonResponse({'message': 'You have to be logged in to upload a file.'}, 403)
     timdb = getTimDb()
-    if request.method == 'POST':
-        doc = request.files['file']
-        if not allowed_file(doc.filename):
-            return jsonResponse({'message': 'The file format is not allowed.'}, 403)
-        filename = secure_filename(doc.filename)
-        if(filename.endswith(tuple(DOC_EXTENSIONS))):
-            content = UnicodeDammit(doc.read()).unicode_markup
-            if not content:
-                return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-            timdb.documents.importDocument(content, filename, getCurrentUserGroup())
-            return "Successfully uploaded document"
+
+    doc = request.files['file']
+    folder = request.form['folder']
+    filename = posixpath.join(folder, secure_filename(doc.filename))
+
+    userName = getCurrentUserName()
+    if not timdb.users.userHasAdminAccess(getCurrentUserId()) and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä") and re.match('^' + userName + '\/', filename) is None:
+        return jsonResponse({'message': "You're not authorized to write here."}, 403)
+
+    if not allowed_file(doc.filename):
+        return jsonResponse({'message': 'The file format is not allowed.'}, 403)
+
+    if(filename.endswith(tuple(DOC_EXTENSIONS))):
+        content = UnicodeDammit(doc.read()).unicode_markup
+        if not content:
+            return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
+        timdb.documents.importDocument(content, filename, getCurrentUserGroup())
+        return "Successfully uploaded document"
+    else:
+        content = doc.read()
+        imgtype = imghdr.what(None, h=content)
+        if imgtype is not None:
+            img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
+            timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
+            return jsonResponse({"file": str(img_id) + '/' + img_filename})
         else:
-            content = doc.read()
-            imgtype = imghdr.what(None, h=content)
-            if imgtype is not None:
-                img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
-                timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
-                return jsonResponse({"file": str(img_id) + '/' + img_filename})
-            else:
-                doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                return redirect(url_for('uploaded_file', filename=filename))
+            doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file', filename=filename))
     
 
 
@@ -205,7 +215,6 @@ def getDocuments():
         
     #print('req_folder is "{}"'.format(req_folder))
     
-    folders = []
     finalDocs = []
     
     for doc in allowedDocs:
@@ -219,38 +228,31 @@ def getDocuments():
             docname = fullname
         
         if '/' in docname:
-            slash = docname.find('/')
-            foldername = docname[:slash]
-            
-            duplicate = False
-            for f in folders:
-                if f['name'] == foldername:
-                    duplicate = True
-                    break
-            if duplicate:
-                continue
-            
-            fullfolder = foldername if req_folder is None else req_folder + '/' + foldername            
-            folders.append({
-                'isFolder': True,
-                'name': foldername,
-                'fullname' : fullfolder,
-                'items': [],
-                'canEdit': False,
-                'isOwner': False,
-                'owner': timdb.users.getOwnerGroup(doc['id'])
-            })
             continue
 
+        uid = getCurrentUserId()
         doc['name'] = docname
         doc['fullname'] = fullname
-        doc['isFolder'] = False
-        doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['canEdit'] = timdb.users.userHasEditAccess(uid, doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.userHasAdminAccess(uid)
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         finalDocs.append(doc)
         
-    return jsonResponse(folders + finalDocs)
+    return jsonResponse(finalDocs)
+
+@app.route("/getFolders")
+def getFolders():
+    root_path = request.args.get('root_path')
+    timdb = getTimDb()
+    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+    allowedFolders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
+    uid = getCurrentUserId()
+
+    for f in allowedFolders:
+        f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.userHasAdminAccess(uid)
+        f['owner'] = timdb.users.getOwnerGroup(f['id'])
+
+    return jsonResponse(allowedFolders)
 
 @app.route("/getJSON/<int:doc_id>/")
 def getJSON(doc_id):
@@ -280,22 +282,47 @@ def getJSON_HTML(doc_id):
         print(err)
         return "[]"
 
+def createItem(itemName, itemType, createFunction):
+    if not loggedIn():
+        return jsonResponse({'message': 'You have to be logged in to create a {}.'.format(itemType)}, 403)
+
+    if itemName.startswith('/') or itemName.endswith('/'):
+        return jsonResponse({'message': 'The {} name cannot start or end with /.'.format(itemType)}, 400)
+
+    if re.match('^(\d)*$', itemName) is not None:
+        return jsonResponse({'message': 'The {} name can not be a number to avoid confusion with document id.'.format(itemType)}, 400)
+
+    timdb = getTimDb()
+
+    userName = getCurrentUserName()
+
+    if timdb.documents.getDocumentId(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
+        return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+
+    if not canWriteToFolder(itemName):
+        return jsonResponse({'message': 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName)}, 403)
+
+    itemId = createFunction(itemName)
+    return jsonResponse({'id' : itemId, 'name' : itemName})
+
+
 @app.route("/createDocument", methods=["POST"])
 def createDocument():
-    if not loggedIn():
-        return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
     jsondata = request.get_json()
     docName = jsondata['doc_name']
-    
-    if docName.startswith('/') or docName.endswith('/'):
-        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
-    
-    if re.match('^(\d)*$', docName) is not None:
-        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'}, 400)
-    
     timdb = getTimDb()
-    docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonResponse({'id' : docId.id, 'name' : docName})
+    createFunc = lambda docName: timdb.documents.createDocument(docName, getCurrentUserGroup())
+    return createItem(docName, 'document', createFunc)
+
+@app.route("/createFolder", methods=["POST"])
+def createFolder():
+    jsondata = request.get_json()
+    folderName = jsondata['name']
+    ownerId = jsondata['owner']
+    timdb = getTimDb()
+    createFunc = lambda folderName: timdb.folders.createFolder(folderName, ownerId)
+    return createItem(folderName, 'folder', createFunc)
+
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
 def getBlockMd(docId, blockId):
@@ -470,14 +497,13 @@ def saveAnswer(plugintype, task_id):
     
     if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
         saveObject = jsonresp['save']
-        
+        tags = []
+        tim_info = jsonresp.get('tim_info', {})
+        points = tim_info.get('points', None)
+
         #Save the new state
         if isinstance(saveObject, collections.Iterable):
-            points = jsonresp['save']['points'] if 'points' in saveObject else None
             tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
-        else:
-            points = None
-            tags = []
         timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
 
     return jsonResponse({'web':jsonresp['web']})
@@ -534,8 +560,14 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     return None
     
 @app.route("/")
+@app.route("/view/")
 def indexPage():
-    return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
+    timdb = getTimDb()
+    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    return render_template('index.html',
+                           userName=getCurrentUserName(),
+                           userId=getCurrentUserId(),
+                           userGroups=possible_groups)
 
 
 def startApp():

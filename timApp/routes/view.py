@@ -45,6 +45,23 @@ def parse_range(start_index, end_index):
 
     return( int(start_index), int(end_index) )
 
+def try_return_folder(doc_name):
+    timdb = getTimDb()
+    folder_name = doc_name.rstrip('/')
+    block_id = timdb.folders.getFolderId(folder_name)
+
+    if block_id is None:
+        abort(404)
+
+    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    return render_template('index.html',
+                           docID=block_id,
+                           userName=getCurrentUserName(),
+                           userId=getCurrentUserId(),
+                           userGroups=possible_groups,
+                           is_owner=hasOwnership(block_id),
+                           folder=folder_name)
+
 
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
@@ -55,9 +72,11 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         try:
             doc_id = int(doc_name)
             if not timdb.documents.documentExists(doc_id):
-                abort(404)
+                #abort(404)
+                return try_return_folder(doc_name)
         except ValueError:
-            abort(404)
+            return try_return_folder(doc_name)
+            #abort(404)
 
     if teacher:
         verifyOwnership(doc_id)
@@ -113,6 +132,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            custom_css=custom_css,
                            start_index=start_index,
                            teacher_mode=teacher,
+                           is_owner=hasOwnership(doc_id),
                            rights={'editable': hasEditAccess(doc_id),
                                    'can_mark_as_read': hasReadMarkingRight(doc_id),
                                    'can_comment': hasCommentRight(doc_id),

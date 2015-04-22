@@ -19,9 +19,7 @@ def getCurrentUserName():
 
 def getCurrentUserGroup():
     timdb = getTimDb()
-    groups = timdb.users.getUserGroups(getCurrentUserId())
-    assert len(groups) > 0
-    return groups[0]['id']
+    return timdb.users.getPersonalUserGroup(getCurrentUserId())
 
 
 def getTimDb():
@@ -78,6 +76,23 @@ def verifyOwnership(block_id):
 
 def loggedIn():
     return getCurrentUserId() != 0
+
+def canWriteToFolder(folderName):
+    timdb = getTimDb()
+    userFolder = "users/" + getCurrentUserName()
+    folder = folderName
+    while folder != '':
+        if folder == userFolder:
+            return True
+
+        folderId = timdb.folders.getFolderId(folder)
+        if folderId is not None:
+            return hasEditAccess(folderId)
+
+        folder = timdb.folders.getContainingFolderName(folder)
+
+    return timdb.users.isUserInGroup(getCurrentUserName(), 'Administrators')
+
 
 def jsonResponse(jsondata, status_code=200):
     response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
