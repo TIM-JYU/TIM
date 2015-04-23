@@ -219,4 +219,3 @@ class Lectures(TimDbBase):
             return False, -1
 
 
-

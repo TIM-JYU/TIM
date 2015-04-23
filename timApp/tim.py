@@ -38,7 +38,7 @@ from routes.common import *
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
-#Compress(app)
+# Compress(app)
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
@@ -67,7 +67,8 @@ app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
 PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
@@ -160,13 +161,15 @@ def upload_file():
     filename = posixpath.join(folder, secure_filename(doc.filename))
 
     userName = getCurrentUserName()
-    if not timdb.users.userHasAdminAccess(getCurrentUserId()) and not timdb.users.isUserInGroup(userName, "Timppa-projektiryhmä") and re.match('^' + userName + '\/', filename) is None:
+    if not timdb.users.userHasAdminAccess(getCurrentUserId()) and not timdb.users.isUserInGroup(userName,
+                                                                                                "Timppa-projektiryhmä") and re.match(
+                            '^' + userName + '\/', filename) is None:
         return jsonResponse({'message': "You're not authorized to write here."}, 403)
 
     if not allowed_file(doc.filename):
         return jsonResponse({'message': 'The file format is not allowed.'}, 403)
 
-    if(filename.endswith(tuple(DOC_EXTENSIONS))):
+    if (filename.endswith(tuple(DOC_EXTENSIONS))):
         content = UnicodeDammit(doc.read()).unicode_markup
         if not content:
             return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
@@ -177,11 +180,12 @@ def upload_file():
         imgtype = imghdr.what(None, h=content)
         if imgtype is not None:
             img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
-            timdb.users.grantViewAccess(0, img_id) # So far everyone can see all images
+            timdb.users.grantViewAccess(0, img_id)  # So far everyone can see all images
             return jsonResponse({"file": str(img_id) + '/' + img_filename})
         else:
             doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return redirect(url_for('uploaded_file', filename=filename))
+
 
 @app.route('/images/<int:image_id>/<image_filename>')
 def getImage(image_id, image_filename):
@@ -340,14 +344,11 @@ def get_questions():
 
 @app.route('/addQuestion', methods=['POST'])
 def add_question():
-    if not request.args.get('question') or not request.args.get('answer') or not request.args.get(
-            'doc_id') or not request.args.get('par_index'):
-        abort(400, "Wrong parameters")
-
-    doc_id = int(request.args.get('doc_id'))
-    verifyOwnership(doc_id)
+    # TODO: Only lecturers should be able to create questions.
+    # verifyOwnership(doc_id)
     question = request.args.get('question')
     answer = request.args.get('answer')
+    doc_id = int(request.args.get('doc_id'))
     par_index = int(request.args.get('par_index'))
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
@@ -378,7 +379,6 @@ def check_lecture():
     else:
         return get_running_lectures(doc_id)
 
-
 def check_if_lecture_is_running(lecture_id):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -400,7 +400,7 @@ def get_running_lectures(doc_id):
             future_lecture_codes.append(lecture.get("lecture_code"))
     return jsonResponse(
         {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
-         "lectureCode": lecture_code, "isLecture": False})
+         "lectureCode": lecture_code})
 
 
 @app.route('/createLecture', methods=['POST'])
@@ -497,6 +497,7 @@ def leave_lecture():
     return get_running_lectures(doc_id)
 
 
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
@@ -547,8 +548,8 @@ def getDocuments():
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         finalDocs.append(doc)
 
-        
     return jsonResponse(finalDocs)
+
 
 @app.route("/getFolders")
 def getFolders():
@@ -603,7 +604,8 @@ def createItem(itemName, itemType, createFunction):
         return jsonResponse({'message': 'The {} name cannot start or end with /.'.format(itemType)}, 400)
 
     if re.match('^(\d)*$', itemName) is not None:
-        return jsonResponse({'message': 'The {} name can not be a number to avoid confusion with document id.'.format(itemType)}, 400)
+        return jsonResponse(
+            {'message': 'The {} name can not be a number to avoid confusion with document id.'.format(itemType)}, 400)
 
     timdb = getTimDb()
 
@@ -613,10 +615,11 @@ def createItem(itemName, itemType, createFunction):
         return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
 
     if not canWriteToFolder(itemName):
-        return jsonResponse({'message': 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName)}, 403)
+        return jsonResponse(
+            {'message': 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName)}, 403)
 
     itemId = createFunction(itemName)
-    return jsonResponse({'id' : itemId, 'name' : itemName})
+    return jsonResponse({'id': itemId, 'name': itemName})
 
 
 @app.route("/createDocument", methods=["POST"])
@@ -626,6 +629,7 @@ def createDocument():
     timdb = getTimDb()
     createFunc = lambda docName: timdb.documents.createDocument(docName, getCurrentUserGroup())
     return createItem(docName, 'document', createFunc)
+
 
 @app.route("/createFolder", methods=["POST"])
 def createFolder():
@@ -846,11 +850,12 @@ def saveAnswer(plugintype, task_id):
     try:
         jsonresp = json.loads(pluginResponse)
     except ValueError:
-        return jsonResponse({'error': 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
-    
+        return jsonResponse(
+            {'error': 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
+
     if 'web' not in jsonresp:
         return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
-    
+
     if 'save' in jsonresp:
         saveObject = jsonresp['save']
         tags = []
@@ -953,5 +958,5 @@ def indexPage():
 def startApp():
     # TODO: Think if it is truly necessary to have threaded=True here
     app.wsgi_app = ReverseProxied(app.wsgi_app)
-    #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
+
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)

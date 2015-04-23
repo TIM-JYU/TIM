@@ -954,28 +954,36 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.createRowMatrix = function (rowsCount, columnsCount, type) {
 
+        if (scope.rows.length > rowsCount) rowsCount = scope.rows.length;
+
         for (var i = 0; i < rowsCount; i++) {
             var columns = [];
-            for (var j = 0; j < columnsCount; j++) {
+            if (scope.rows[i]) columns = scope.rows[i].columns;
+            if (columnsCount < columns.length) columns.splice(columnsCount, columns.length);
+
+            for (var j = columns.length; j < columnsCount; j++) {
                 columns[j] = {
                     id: j,
                     rowId: i,
-                    text: 'test',
+                    text: '',
                     questionPlaceholder: 'column',
                     type: 'answer',
                     value: 'textfield'
                 }
             }
+
+            var value = '';
+            if (i < scope.rows.length) value = scope.rows[i].value;
+
             scope.rows[i] = {
                 id: i,
                 text: 'test',
                 type: 'question',
-                //TODO get question text
-                value: '',
+                value: value,
                 columns: columns
             }
-
         }
+
     };
 
     scope.createColumnMatrix = function (rowsCount, columnsCount, type) {
@@ -1120,11 +1128,10 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         })
             .success(function (data) {
                 console.log("The question was successfully added to database");
-                scope.clearQuestion();
+                scope.clearQuestion()
             })
             .error(function (data) {
                 console.log("There was some error creating question to database.")
-                scope.clearQuestion();
             });
     };
 }]);

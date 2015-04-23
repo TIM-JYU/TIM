@@ -294,7 +294,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
 
                         if (answer.question) {
-                            createDialog('../../../static/templates/questionAskedStudent.html', {
+                            createDialog('../../../static/templates/question_asked_student.html', {
                                 id: 'questionAskDialog',
                                 title: 'Question',
                                 backdrop: true,
@@ -335,7 +335,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                     $scope.msg = $scope.msg + msg + "\n";
                                 });
                                 $scope.lastID = answer.lastid;
-                                // TODO: Do no use getElementById:tä
+                                // TODO: Do no use getElementById:tÃ¤
                                 var textarea = document.getElementById('wallArea');
                                 var areaHeight = $("#wallArea").height();
                                 if (textarea.scrollHeight - textarea.scrollTop - areaHeight < 200) {
