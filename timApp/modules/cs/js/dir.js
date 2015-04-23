@@ -210,8 +210,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   '</p>' +
                   '<div class="csRunMenuArea">'+
 				  '<p class="csRunMenu" >' +
-				  '<button ng-if="isRun"  ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
-				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
+				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
+				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
@@ -651,6 +651,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		if ( !$scope.autoupdate ) {
             $scope.error = "... running ...";
             $scope.runError = true;
+            $scope.isRunning = true;
         }
 		$scope.resImage = "";
 		$scope.imgURL = "";
@@ -699,6 +700,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			$scope.error = data.web.error;
 			var imgURL = "";
 			$scope.runSuccess = true;
+            $scope.isRunning = false;
+
 			$scope.runError = $scope.error; // !$scope.runSuccess;
 
 			imgURL = data.web.image;
@@ -720,8 +723,9 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			}
 
 		}).error(function(data, status) {
+            $scope.isRunning = false;
 			$scope.errors.push(status);
-            $scope.error = "Ikuinen silmukka?";
+            $scope.error = "Ikuinen silmukka tai jokin muu vika?";
 			// $scope.error = data;
 		});
 	};

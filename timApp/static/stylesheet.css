@@ -81,7 +81,7 @@ body {
 .noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
     background-color: #f8f8f8;
 	color: white;
-	font-size: x-small;
+	font-size: x-small; 
 	text-align:center;
     border-radius: 12px;
 	outline: none;
@@ -111,6 +111,7 @@ input[type="submit"], button, input[type="button"] {
     padding: 5px 10px;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+
 
 
 
@@ -1644,4 +1645,10 @@ pre.sagecell_pyout {
 
 pre.sagecell_stdout {
   border: none;
+}
+
+
+button:disabled {
+    background: #AAA;
+    color: #CCC;
 }

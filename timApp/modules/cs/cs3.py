@@ -223,9 +223,14 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         stdout, stderr = p.communicate(timeout=timeout)
         print(stdout)
         print(stderr)
-        print("Run3 done!")
-        stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read().encode("utf-8")  # luetaan stdin ja err
-        stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("utf-8")
+        print("Run2 done!")
+        try: 
+            stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read().encode("utf-8")  # luetaan stdin ja err
+            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("utf-8")
+        except UnicodeDecodeError:
+            stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read().encode("iso-8859-15")  # luetaan stdin ja err
+            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("iso-8859-15")
+        
         # print(stdout)
         # print(stderr)
         remove(cwd + "/" + stdoutf)
@@ -771,6 +776,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             mkdirs(os.path.dirname(csfname))
             print("Write file: " + csfname)
             codecs.open(csfname, "w", "utf-8").write(s)
+            slines = s
 
         is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         is_input = get_json_param(query.jso, "input", "isInput", None)
@@ -996,12 +1002,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 web["testGreen"] = False
                 web["testRed"] = True
                 lni = out.find(", line ")
-                if lni >= 0:
+                if lni >= 0: #  and not nocode: 
                     lns = out[lni + 7:]
                     lns = lns[0:lns.find("\n")]
                     lnro = int(lns)
-                    lines = codecs.open(csfname, "r", "utf-8").readlines()
-                    # print("Line nr: "+str(lnro))
+                    # lines = codecs.open(csfname, "r", "utf-8").readlines()
+                    lines = slines.split("\n")
+                    # print("Line nr: "+str(lnro)) 
                     # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                     web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
         elif ttype == "jcomtest" or ttype == "ccomtest" or ttype == "junit":
