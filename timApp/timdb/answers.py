@@ -18,6 +18,9 @@ class Answers(TimDbBase):
 
         existing_answers = self.get_common_answers(user_ids, task_id)
         if len(existing_answers) > 0 and existing_answers[0]['content'] == content:
+            cursor.execute("""UPDATE Answer SET points = ? WHERE id = ?""",
+                           [points, existing_answers[0]['id']])
+            self.db.commit()
             return
 
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on) VALUES (?,?,?,CURRENT_TIMESTAMP)',
