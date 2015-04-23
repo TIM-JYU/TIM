@@ -29,6 +29,7 @@
     <script src="{{ url_for('static', filename='scripts/jsDatePick.full.1.3.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/createDialog.js') }}"></script>
 	<script src="{{ url_for('static', filename='scripts/statisticsView/statisticsController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/questionAnswerController.js') }}"></script>
 
     <!-- Script to load question from another file -->
     <script>
@@ -91,7 +92,7 @@
                             <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="chatEnterPressed($event)"
                                    ng-readonly="!polling">
                             <button ng-click="sendMessageEvent(newMsg)">Send</button>
-                            <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button>
+                            <!-- <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button> -->
                         </div>
                     </div>
                 </div>

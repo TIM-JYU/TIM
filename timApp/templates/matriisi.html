@@ -39,7 +39,7 @@
 
                 <th ng-repeat="item in rows[0].columns" ng-if="question.type != 'true-false'">
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20"></textarea>
+                        <textarea form="question-form" rows="1" cols="20" ng-model="columns[$index].text"></textarea>
                         <br/>
 
                     </div>
@@ -64,6 +64,7 @@
                 <th>
                     <div class="cart">
                         <textarea style="margin-left:5px" ng-model="row.value" form="question-form" rows="1" cols="20"></textarea>
+
                         <br/>
 
                     </div>
