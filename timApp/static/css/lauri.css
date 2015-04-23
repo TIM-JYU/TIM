@@ -1,0 +1,106 @@
+/* Laurin tyylitiedosto */
+.content { 
+	max-width: 52em;
+	text-align: left;
+	
+}
+
+body {
+	
+	line-height: 2em;
+	background-color: #F1F1F1
+}
+
+p {
+	text-indent: 2em;
+}
+
+p code {
+	font-size: 0.9em;
+	font-weight: bold;
+}
+
+pre.ng-scope {
+	background-color: white;
+}
+
+
+.material {
+	background-color: #f9f9f9;
+	padding: 0 5em 0em 2.5em;
+}
+
+
+h1 {
+	text-align: center;
+	margin-top: 3cm;
+	/*margin-top: 0cm;*/
+	margin-bottom: 1cm;
+	color: Black;
+	border-top: #3CC 0pt dashed;
+	border-bottom: #3CC 2pt solid;
+	padding-top: 10pt;
+	padding-bottom: 10pt;
+	line-height: 1.3;
+}
+
+h2 { 
+	border-top: #CCC 1pt dashed;
+	padding-top: 1.25em;
+}
+
+h3 { 
+	border-top: #CCC 1pt dashed;
+	padding-top: 1em;
+}
+
+.readline {
+	border-color: #3C3;
+	display: block;
+	margin: 0 -5em 0 0;
+}
+	
+.readline:hover {
+    opacity: 0.5;
+	background: #3C3;
+}
+	
+.readline.read {
+	display: none;
+}
+
+.readline.modified {
+	border-color: #3CC;
+}
+
+.readline.modified:hover {
+	background: #3CC;
+}
+
+
+.noteButton, .addNoteButton, .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
+	background-color: #F4F4F4;
+	color: #CCC;
+	font-size: x-small;
+	text-align: center;
+	border-radius: 12px;
+	outline: none;
+	border: 2px none;
+	line-height: 0.8;
+	width: 5em;
+	height: 3em;
+	margin: 0 0 0 0;
+}
+
+.csRunChanged {
+    background-color: #3C3;
+    width: 0.5em;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: -0.5em;
+    /* margin-bottom: 2em; */
+}
+
+
+

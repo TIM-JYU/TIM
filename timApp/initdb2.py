@@ -20,10 +20,11 @@ if __name__ == "__main__":
     p = ephemeralclient.launch_ephemeral()
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
     timdb.initializeTables()
-    timdb.users.createAnonymousUser()
+    timdb.users.createAnonymousAndLoggedInUserGroups()
     vesa_id = timdb.users.createUser('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
     vesa_group = timdb.users.createUserGroup('vesal')
     timdb.users.addUserToGroup(vesa_group, vesa_id)
+    timdb.users.addUserToAdmins(vesa_id)
     doc_id = timdb.documents.createDocument('Testaus 1', vesa_group)
     doc_id2 = timdb.documents.createDocument('Testaus 2', vesa_group)
 

@@ -1,26 +1,14 @@
-import os
-import shutil
 import unittest
 import random
 
-from hypothesis.testdecorators import given
-import hypothesis.settings as hs
+from hypothesis import given
+from hypothesis import Settings
 
-from timdb.timdb2 import TimDb
-import ephemeralclient
-from timdb.gitclient import GitClient
-from timdb.timdbbase import TimDbException, DocIdentifier
+from timdb.timdbbase import TimDbException
+from timdbtest import TimDbTest
 
 
-hs.default.max_examples = 5
-
-
-def change_permission_and_retry(func, path, exc_info):
-    import stat
-
-    # Change permission of the path so that it is deletable
-    os.chmod(path, stat.S_IWUSR)
-    func(path)
+Settings.default.max_examples = 5
 
 
 def debug_print(name, msg):
@@ -29,30 +17,7 @@ def debug_print(name, msg):
 test_length = 50
 
 
-class DocTest(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        global e
-        global db
-        TEST_FILES_PATH = 'test_files'
-        if os.path.exists(TEST_FILES_PATH):
-            shutil.rmtree(TEST_FILES_PATH, onerror=change_permission_and_retry)
-        TEST_DB_NAME = ':memory:'
-
-        GitClient.initRepo(TEST_FILES_PATH)
-        db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
-        e = ephemeralclient.launch_ephemeral()
-        db.initializeTables("schema2.sql")
-        db.users.createAnonymousUser()
-
-    @classmethod
-    def tearDownClass(cls):
-        e.kill()
-
-    def setUp(self):
-        global db
-        self.db = db
+class DocTest(TimDbTest):
 
     @given(str)
     def test_create_document(self, name):
@@ -357,6 +322,120 @@ class DocTest(unittest.TestCase):
         self.assertEqual(text, 'test')
         text = self.db.documents.getBlock(doc, 0)
         self.assertEqual(text, 'test')
+
+    def test_document_revisions(self):
+        doc = self.db.documents.createDocument('test', 0)
+        self.check_newest_version(doc)
+
+        doc = self.db.documents.updateDocument(doc, 'edit1')
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit2')
+        self.check_newest_version(doc)
+
+    def check_newest_version(self, latest_doc):
+        newest_hash = self.db.documents.getNewestVersionHash(latest_doc.id)
+        self.assertEqual(latest_doc.hash, newest_hash)
+
+        newest = self.db.documents.getNewestVersion(latest_doc.id)
+        self.assertEqual(newest['hash'], newest_hash)
+
+        versions = self.db.documents.getDocumentVersions(latest_doc.id)
+        self.assertEqual(versions[0]['hash'], newest_hash)
+
+    def test_par_mappings(self):
+        doc, _ = self.create_test_document(5)
+        par_index = 3
+
+        result = self.get_mapping(doc, par_index)
+
+        self.assertEqual(len(result), 0)
+
+        self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
+        _, doc2 = self.db.documents.modifyMarkDownBlock(doc, par_index, 'edited')
+
+        result = self.get_mapping(doc, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc2.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        _, doc3 = self.db.documents.modifyMarkDownBlock(doc2, par_index, 'edited2')
+
+        result = self.get_mapping(doc, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc2.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        result = self.get_mapping(doc2, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc3.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        # This should trigger the optimization of mappings
+        readings = self.db.readings.getReadings(0, doc3.id, doc3.hash)
+
+        result = self.get_mapping(doc, par_index)
+
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc3.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        doc4 = self.db.documents.updateDocument(doc3, 'edited2')
+        readings = self.db.readings.getReadings(0, doc4.id, doc4.hash)
+        result = self.get_mapping(doc3, par_index)
+        self.check_list_dict_contents(result, 'new_index', 0)
+        self.check_list_dict_contents(result, 'new_ver', doc4.hash)
+        self.check_list_dict_contents(result, 'modified', 'False')
+
+        doc5 = self.db.documents.updateDocument(doc4, 'öö')
+
+        readings = self.db.readings.getReadings(0, doc5.id, doc5.hash)
+        result = self.get_mapping(doc4, par_index)
+
+        # Document changed so much that there is no mapping for paragraph 3 from version 4 to 5
+        self.assertEqual(len(result), 0)
+
+        # First version mapping is not yet fully optimized:
+        result = self.get_mapping(doc, par_index)
+        self.check_list_dict_contents(result, 'new_index', par_index)
+        self.check_list_dict_contents(result, 'new_ver', doc3.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+        result = self.db.readings.getParMapping(doc.id, doc.hash, doc5.hash, par_index)
+
+        # Should be None because the paragraph got lost at step 4 -> 5
+        self.assertEqual(result, None)
+
+        # But the mapping should be optimized by now (1 -> 4)
+        result = self.get_mapping(doc, par_index)
+        self.check_list_dict_contents(result, 'new_index', 0)
+        self.check_list_dict_contents(result, 'new_ver', doc4.hash)
+        self.check_list_dict_contents(result, 'modified', 'True')
+
+
+    def get_mapping(self, doc, par_index):
+        cursor = self.db.readings.db.cursor()
+        cursor.execute(
+                """
+                select new_ver, new_index, modified, doc_ver
+                from ParMappings
+                where doc_id = ? and doc_ver = ? and par_index = ?
+                and new_ver is not null and new_index is not null
+                """, [doc.id, doc.hash, par_index])
+        return self.db.readings.resultAsDictionary(cursor)
+
+    def test_empty_edit(self):
+        doc = self.db.documents.createDocument('test', 0)
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit 1')
+        self.check_newest_version(doc)
+
+        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit  1')
+        self.check_newest_version(doc)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')

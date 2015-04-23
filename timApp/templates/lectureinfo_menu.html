@@ -1,5 +1,5 @@
 <!--html for upper menu-->
-<link rel="stylesheet" href="../../static/menustyle.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/menustyle.css') }}">
 <div class="menuSection">
     <div id="largeMenu">
         <div class="lectureSection" ng-show="!inLecture">
@@ -12,7 +12,7 @@
 
             <div>
                 <input type="button" ng-click="joinLecture()" value="Join" class="loginSection">
-                <img id="add-icon" src="../../static/images/add-icon3.png" class="icon" ng-show="isLecturer" ng-click="toggleLecture()">
+                <img id="add-icon" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer" ng-click="toggleLecture()">
             </div>
 
         </div>
@@ -25,6 +25,7 @@
 
 
             <input type="button" ng-click="leaveLecture()" value="Leave" ng-show="inLecture">
+            <input type="button" ng-click="endLecture()" value="End" ng-show="canStop">
             <input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
 
 
@@ -43,4 +44,3 @@
 <div id="startLecturedialog" ng-show="showLectureCreation">
     {% include 'start_lecture.html' %}
 </div>
-

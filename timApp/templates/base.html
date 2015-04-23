@@ -7,9 +7,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
         <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/jquery.waypoints.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/shortcuts/inview.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/angular/angular-sanitize.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='ng-file-upload/angular-file-upload-all.js') }}"></script>
         <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -30,15 +34,42 @@
 {% endwith %}
 <div id="header">
     {% block header %}
+        {% if self.title() != "TIM" %}
+            <div class="doctitle">{{ self.title() }}</div>
+        {% endif %}
         {% include 'loginlogout.html' %}
         <a href="/">Main page</a>
         {% if session.user_id %}
+            |
             <a href="/settings">Customize TIM</a>
         {% endif %}
+
+        {% if is_owner %}
+            |
+            <a href="/manage/{{docID}}">Manage</a>
+        {%endif%}
+
+        {% if self.title() != "TIM" and is_owner %}
+            |
+            {% if teacher_mode %}
+               <a href="/view/{{docID}}">Student view</a>
+            {% else %}
+               <a href="/teacher/{{docID}}">Teacher view</a>
+            {% endif %}
+        {% elif objName == "folder" %}
+            |
+            <a href="/view/{{docID}}">View</a>
+        {% elif doc %}
+            |
+            <a href="/view/{{doc.name}}">Student view</a>
+            |
+            <a href="/teacher/{{doc.name}}">Teacher view</a>
+	    {% endif %}
+
     {% endblock %}
 </div>
 <div class="material">
-    <h1>{{ self.title() }}</h1>
+    <!-- <h1>{{ self.title() }}</h1> --> 
     {% block content %}{% endblock %}
 </div>
 <div id="footer">

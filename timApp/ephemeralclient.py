@@ -7,6 +7,8 @@ import os
 import subprocess
 import signal
 from contracts import contract, new_contract
+from htmlSanitize import sanitize_html
+import timdb.docidentifier
 
 EPHEMERAL_URL = 'http://127.0.0.1:8001'
 EPHEMERAL_PATH = os.path.join("..", "Ephemeral", "dist", "build", "Ephemeral")
@@ -259,6 +261,9 @@ class EphemeralClient(object):
         r.encoding = 'utf-8'
         self.__raiseExceptionIf404(r)
         return r.text
+
+    def getDocumentFullHtmlSanitized(self, document_id: 'DocIdentifier') -> 'str':
+        return sanitize_html(self.getDocumentFullHtml(document_id))
 
     @contract
     def getDocumentFullText(self, document_id: 'DocIdentifier') -> 'str':
