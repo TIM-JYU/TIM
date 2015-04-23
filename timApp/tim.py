@@ -471,6 +471,11 @@ def saveAnswer(plugintype, task_id):
         return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
 
+    answer_browser_data = request.get_json().get('abData', {})
+    is_teacher = answer_browser_data.get('teacher', False)
+    if is_teacher:
+        verifyOwnership(doc_id)
+
     # Load old answers
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
@@ -490,23 +495,43 @@ def saveAnswer(plugintype, task_id):
     try:
         jsonresp = json.loads(pluginResponse)
     except ValueError:
-        return jsonResponse({'error' : 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
+        return jsonResponse({'error': 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
     
-    if not 'web' in jsonresp:
-        return jsonResponse({'error' : 'The key "web" is missing in plugin response.'}, 400)
+    if 'web' not in jsonresp:
+        return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
     
-    if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
+    if 'save' in jsonresp:
         saveObject = jsonresp['save']
         tags = []
         tim_info = jsonresp.get('tim_info', {})
         points = tim_info.get('points', None)
 
-        #Save the new state
-        if isinstance(saveObject, collections.Iterable):
-            tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
-        timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
+        # Save the new state
+        try:
+            tags = saveObject['tags']
+        except (TypeError, KeyError):
+            pass
+        if not is_teacher:
+            timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
+        else:
+            if answer_browser_data.get('saveTeacher', False):
+                answer_id = answer_browser_data.get('answer_id', None)
+                if answer_id is None:
+                    return jsonResponse({'error': 'Missing answer_id key'}, 400)
+                expected_task_id = timdb.answers.get_task_id(answer_id)
+                if expected_task_id != task_id:
+                    return jsonResponse({'error': 'Task ids did not match'}, 400)
+                users = timdb.answers.get_users(answer_id)
+                if len(users) == 0:
+                    return jsonResponse({'error': 'No users found for the specified answer'}, 400)
+                if not getCurrentUserId() in users:
+                    users.append(getCurrentUserId())
+                points = answer_browser_data.get('points', points)
+                if points == "":
+                    points = None
+                timdb.answers.saveAnswer(users, task_id, json.dumps(saveObject), points, tags)
 
-    return jsonResponse({'web':jsonresp['web']})
+    return jsonResponse({'web': jsonresp['web']})
 
 @app.route("/answers/<task_id>/<user>")
 def get_answers(task_id, user):

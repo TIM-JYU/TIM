@@ -96,7 +96,7 @@
         {% if teacher_mode %}
             <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed>
             {% if plugin_users %}
-                Users with answers:<br>
+                Users with answers ({{ plugin_users|length }}):<br>
                 {% raw %}
                 <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected" export-csv="csv">
                     <tr ng-repeat="user in $data"
