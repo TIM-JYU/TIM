@@ -9,13 +9,13 @@
             ng-change="changeAnswer()"></select>
     <button ng-click="next()">&rarr;</button>
     {{ answers.length - answers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ answers.length }}</a>
-    </span>
     <br>
     <label ng-show="!changed && $parent.teacherMode">Points:<input ng-model="points" type="text"></label>
     <span ng-show="!changed && !$parent.teacherMode && points !== null">Points: {{ points }}</span>
     <label ng-show="!changed && $parent.teacherMode">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
     </label>
+    </span>
     <div ng-show="selectedAnswer.collaborators.length > 1 && !changed">
         Collaborators:
         <ul>
