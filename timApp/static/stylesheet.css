@@ -1284,7 +1284,8 @@ img.console {
 	padding: 5px;
 	word-wrap:break-word;
 	background-color: #e6e6e6;
-	z-index: 501;
+    text-align: left;
+    z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
         max-height: 90vh;
@@ -1327,8 +1328,8 @@ img.console {
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 1;
-    bottom: 0;
+    z-index: 5;
+    /* bottom: 0; */ /* tämä estää Aja-napin painamisen */
     overflow-y: auto;
 }
 
@@ -1469,12 +1470,12 @@ img.console {
 .ace_editor {
     position: relative;
     overflow: hidden;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
-    font-size: 12px;
-    line-height: normal;
+    font-family: 'Courier','Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-size: 14px;
+    line-height: 1.1;
     direction: ltr;
     width: 98%;
-    margin-left: 2px;
+    margin-left: 3.8em;
 }
 
 .timButton {

@@ -286,7 +286,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"codeover",false);
 			csApp.set(scope,attrs,"open",false);
 			csApp.set(scope,attrs,"rows",1);
-			csApp.set(scope,attrs,"maxrows",-1);
+			csApp.set(scope,attrs,"maxrows",100);
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder","Write your code here");
 			csApp.set(scope,attrs,"inputplaceholder","Write your input here");
@@ -1028,7 +1028,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         var aceEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
         var editorDiv = angular.element(aceEditDiv); 
         editorDiv.html(csApp.compile(html[$scope.editorMode])($scope));
-        //$scope.aceEditor.setFontSize(30);
+        $scope.aceEditor.setFontSize(15);
         $scope.aceEditor.setOptions({
             maxLines: $scope.maxRows
         });
