@@ -60,12 +60,18 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.getTeacherData = function () {
-                    return {
-                        answer_id: $scope.selectedAnswer.id,
-                        saveTeacher: $scope.saveTeacher,
-                        teacher: true,
-                        points: $scope.points
-                    };
+                    if ($scope.answers.length > 0)
+                        return {
+                            answer_id: $scope.selectedAnswer.id,
+                            saveTeacher: $scope.saveTeacher,
+                            teacher: true,
+                            points: $scope.points
+                        };
+                    else
+                        return {
+                            saveTeacher: false,
+                            teacher: true
+                        };
                 };
 
                 $scope.getUserById = function (user_id) {
