@@ -689,59 +689,52 @@ timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
 
     scope.question = {
-        question: ""
+        question: "",
+        answerFieldType: ""
     };
 
 
     scope.questionType = "";
     scope.rows = [];
     scope.columns = [];
+    scope.columnHeaders = [];
     scope.answerDirection = "horizontal";
+    scope.answerFieldTypes = [
+
+        {label: "Text area", value: "textArea"},
+        {label: "Radio button vertical", value: "radiobutton-vertical"},
+        {label: "Radio Button horizontal", value: "radiobutton-horizontal"},
+        {label: "Checkbox", value: "checkbox"}
+    ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
 
-        switch (scope.answerDirection) {
-            case "horizontal":
-                scope.createRowMatrix(rowsCount, columnsCount, type);
-                break;
-            case "vertical":
-                //TODO implement this, or think of some better way
-                scope.createColumnMatrix(rowsCount, columnsCount, type);
-                break;
-            default:
-                console.log("wtf");
-        }
-
-
-    };
-
-    scope.createRowMatrix = function (rowsCount, columnsCount, type) {
-
+ var columnHeaders = [];
         for (var i = 0; i < rowsCount; i++) {
             var columns = [];
+            columnHeaders = [];
             for (var j = 0; j < columnsCount; j++) {
+                columnHeaders.push({type: "header", text: ""})
                 columns[j] = {
                     id: j,
                     rowId: i,
                     text: 'test',
                     questionPlaceholder: 'column',
-                    type: 'answer',
-                    value: 'textfield'
+                    type: "answer",
+                    value: 'scope.question.answerFieldType"'
                 }
             }
             scope.rows[i] = {
                 id: i,
                 text: 'test',
                 type: 'question',
-                //TODO get question text
                 value: '',
                 columns: columns
             }
 
         }
-    };
+        scope.columnHeaders = columnHeaders;
 
-    scope.createColumnMatrix = function (rowsCount, columnsCount, type) {
 
     };
 
@@ -759,13 +752,15 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             location = scope.rows[0].columns.length;
             loc = scope.rows[0].columns.length;
         }
+        scope.columnHeaders.splice(loc, 0, {type: "header", text: ""})
         //add new column to columns
         for (var i = 0; i < scope.rows.length; i++) {
+
             scope.rows[i].columns.splice(loc, 0, {
                 id: location,
                 rowId: i,
                 type: "answer",
-                value: 'textfield'
+                value: scope.question.answerFieldType
             });
         }
 
@@ -780,7 +775,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     id: j,
                     rowId: location,
                     type: "answer",
-                    value: 'textfield'
+                    value: scope.question.answerFieldType
+
                 };
 
             }
@@ -811,8 +807,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.delRow = function (indexToBeDeleted) {
-        if (indexToBeDeleted == -1)
+        if (indexToBeDeleted == -1) {
             scope.rows.splice(-1, 1);
+        }
         else
             scope.rows.splice(indexToBeDeleted, 1);
     };
@@ -824,6 +821,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             else
                 scope.rows[i].columns.splice(indexToBeDeleted, 1);
         }
+        if (indexToBeDeleted == -1)
+            scope.columnHeaders.splice(-1, 1);
+        else
+            scope.columnHeaders.splice(indexToBeDeleted, 1)
+
     };
 
     scope.clearQuestion = function () {
@@ -848,14 +850,31 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var par_index = scope.getParIndex($par);
         //TODO use  JSON.stringify
 
-        var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": { "ROWS": [';
-        for (i = 0; i < scope.rows.length; i++) {
-            questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
-            for (j = 0; j < scope.rows[i].columns.length; j++) {
-                questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
+        var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
+        if (scope.question.type != "radio-vertical" || scope.question.answerFieldType != "radiobutton-vertical") {
+            questionJson += '  "ROWS": [';
+
+            for (i = 0; i < scope.rows.length; i++) {
+                questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
+                for (j = 0; j < scope.rows[i].columns.length; j++) {
+                    questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
+                }
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+                questionJson += ']},';
             }
-            questionJson = questionJson.substring(0, questionJson.length - 1);
-            questionJson += ']},';
+        }
+        else {
+            questionJson += '  "COLUMNS": [';
+
+            for (i = 0; i < scope.columnHeaders.length; i++) {
+                questionJson += '{"Type": "question", "Value": "' + scope.columnHeaders[i].text + '", "ROWS" : [';
+                for (j = 0; j < scope.rows.length; j++) {
+                    questionJson += '{"Type": "' + scope.rows[j].columns[i].type + '" ,"Value": "' + scope.rows[j].columns[i].value + '" },'
+                }
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+                questionJson += ']},';
+
+            }
         }
         questionJson = questionJson.substring(0, questionJson.length - 1);
 

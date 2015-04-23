@@ -2,7 +2,7 @@
     <form id="question-form">
         <fieldset>
             <label>Question:</label><br>
-            <textarea name="kysymys" rows="10" cols="100" ng-model="question.question"></textarea>
+            <textarea name="kysymys" rows="2" cols="100" ng-model="question.question"></textarea>
             <br>
             <label>Question type:</label>
             <select name="tyyppi" ng-model="question.type" ng-dropdown required>
@@ -28,7 +28,7 @@
             <br>
             <br>
             <input type="button" value="Submit" ng-click="createQuestion(question.question, question.type)">
-            <input type="button" value="Cancel" ng-click="close()" style="background: #c12e2a;">
+            <input type="button" value="Cancel" ng-click="close()">
         </fieldset>
     </form>
 </div>
