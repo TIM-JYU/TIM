@@ -1,7 +1,5 @@
 .content { 
-	max-width: 52em;
 	text-align: justify;
-    margin-right: 1em;
 }
 
 .paragraph, .par  {
@@ -9,8 +7,9 @@
 }
 
 body {
-	max-width: 60.2em;
 	text-align: justify;
+	margin: auto;  
+	margin-left: 210px;
 }
 
 .correct {
@@ -75,9 +74,6 @@ body {
 .ansi46 { background-color: #00FFFF; }
 .ansi47 { background-color: #FFFFFF; }
 
-body {
-    margin: 0 260px;
-}
 .noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
     background-color: #f8f8f8;
 	color: white;
@@ -857,6 +853,7 @@ p.stem {
 
 .csRunError {
     white-space: pre-wrap;
+    text-align: left;
 }
 
 .csRunPre {
@@ -982,15 +979,16 @@ p.stem {
 		/* height: 5em; */
 	}
 	.content { 
-		max-width: 45em;
+		/* max-width: 45em; */
 		text-align: justify;
         margin-right: 0.5em;
 	}
 	.paragraph,  .par {
 		position: relative;
-		max-width: 43em;
+		/* max-width: 43em; */
 		margin-left: 0em;
 		margin-top: 1em;
+		margin-right: 1em;
 	}
 	.addNoteButton {
 		position: absolute;
@@ -1029,9 +1027,9 @@ p.stem {
 	
 	
 	body {
-		max-width: 45em;
+		/* max-width: 45em; */
 		margin-left: 5px !important;
-		margin-right: 10px;
+		/*margin-right: 10px; */
 		font-family: Verdana, Arial, sans-serif;
 		font-size: 1em;
 		line-height: 1.2;
@@ -1284,8 +1282,7 @@ img.console {
 	padding: 5px;
 	word-wrap:break-word;
 	background-color: #e6e6e6;
-    text-align: left;
-    z-index: 501;
+	z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
         max-height: 90vh;
@@ -1329,7 +1326,7 @@ img.console {
     top: 0;
     left: 0;
     z-index: 5;
-    /* bottom: 0; */ /* tämä estää Aja-napin painamisen */
+    /* bottom: 0; */
     overflow-y: auto;
 }
 
@@ -1652,4 +1649,10 @@ pre.sagecell_stdout {
 button:disabled {
     background: #AAA;
     color: #CCC;
+}
+
+@media screen and (min-width: 60em) {
+    .body {
+        margin-left: 60em !important;
+    }
 }
