@@ -9,7 +9,6 @@
             ng-change="changeAnswer()"></select>
     <button ng-click="next()">&rarr;</button>
     {{ answers.length - answers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ answers.length }}</a>
-        <span class="firstanswer" ng-show="answers[answers.length - 1].points !== null">1st answer points: {{ answers[answers.length - 1].points }}</span>
     </span>
     <br>
     <label ng-show="!changed && $parent.teacherMode">Points:<input ng-model="points" type="text"></label>
