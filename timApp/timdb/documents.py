@@ -5,7 +5,8 @@ from datetime import datetime
 from contracts import contract
 import ansiconv
 
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes, DocIdentifier
+from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
+from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative
@@ -48,23 +49,6 @@ class Documents(TimDbBase):
         return response['paragraphs'], new_doc
 
     @contract
-    def __insertBlockToDb(self, name: 'str', owner_group_id: 'int', block_type: 'int') -> 'int':
-        """Inserts a block to database.
-        
-        :param name: The name (description) of the block.
-        :param owner_group_id: The owner group of the block.
-        :param block_type: The type of the block.
-        :returns: The id of the block.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
-                       [name, owner_group_id, block_type])
-        block_id = cursor.lastrowid
-        self.db.commit()
-        return block_id
-
-    @contract
     def createDocument(self, name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
         """Creates a new document with the specified name.
         
@@ -76,7 +60,7 @@ class Documents(TimDbBase):
         if '\0' in name:
             raise TimDbException('Document name cannot contain null characters.')
 
-        document_id = self.__insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
+        document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document_path = os.path.join(self.blocks_path, str(document_id))
 
         try:
@@ -100,6 +84,7 @@ class Documents(TimDbBase):
                           WHERE type_id = ? and id = ?""",
                        [blocktypes.DOCUMENT, docId.id])
         self.db.commit()
+        self.updateLatestRevision(docId)
         return docId
 
     @contract
@@ -234,10 +219,10 @@ class Documents(TimDbBase):
         return results
 
     @contract
-    def updateLatestRevision(self, doc_id: 'DocIdentifier'):
+    def updateLatestRevision(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
-        revid = cursor.fetchone()
+        revid = cursor.fetchone()[0]
         if revid is None:
             cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?)",
                 [doc_id.id, doc_id.hash])
@@ -245,9 +230,10 @@ class Documents(TimDbBase):
                 [cursor.lastrowid, blocktypes.DOCUMENT, doc_id.id])
         else:
             cursor.execute("UPDATE ReadRevision SET Hash = ? WHERE revision_id = ?",
-                [doc_id.hash, revid[0]])
+                [doc_id.hash, revid])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def getDocumentsForGroup(self, group_id : 'int', historylimit: 'int'=100) -> 'list(dict)':
@@ -325,7 +311,7 @@ class Documents(TimDbBase):
 
     @contract
     def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
-        return [block for block in self.getDocumentMarkdown(document_id).split('\n') if len(block) > 0 and block[0] == '#']
+        return [block for block in self.getDocumentAsBlocks(document_id) if len(block) > 0 and block[0] == '#']
 
     @contract
     def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
@@ -441,7 +427,7 @@ class Documents(TimDbBase):
         """
 
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
-        doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
+        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         copyfile(document_file, self.getDocumentPath(doc_id.id))
 
         self.git.add(self.getDocumentPathAsRelative(doc_id.id))
@@ -455,7 +441,7 @@ class Documents(TimDbBase):
 
     @contract
     def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
-        doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
+        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         doc_hash = self.__commitDocumentChanges(doc_id, content,
                                                 'Imported document: %s (id = %d)' % (document_name, doc_id.id))
         doc_id = DocIdentifier(doc_id.id, doc_hash)
@@ -504,17 +490,17 @@ class Documents(TimDbBase):
         if commit:
             self.db.commit()
 
-    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0):
+    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0, commit: 'bool'=True):
         for m in self.getParMappings(old_document_id, start_index, end_index):
             par_index = int(m[0])
             new_index = par_index + offset
             #print("{0} par {1} -> {2} par {3}".format(old_document_id.hash[:6], new_index, new_document_id.hash[:6], new_index))
-            self.addParMapping(old_document_id, new_document_id, par_index, new_index)
-
-        self.db.commit()
+            self.addParMapping(old_document_id, new_document_id, par_index, new_index, commit=False)
+        if commit:
+            self.db.commit()
 
     @contract
-    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0):
+    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute(
             """
@@ -576,10 +562,11 @@ class Documents(TimDbBase):
                 """,
                 [old_document_id.id, new_document_id.hash, new_index])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
-    def __updateParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int' = -1):
+    def __updateParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int' = -1, commit: 'bool'=True):
         if new_index == -1:
             new_index = par_index
 
@@ -616,7 +603,8 @@ class Documents(TimDbBase):
             """,
             [old_document_id.id, new_document_id.hash, new_index])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def __deleteParMapping(self, document_id : 'DocIdentifier', par_index : 'int'):
@@ -668,22 +656,23 @@ class Documents(TimDbBase):
 
         new_id = DocIdentifier(new_id.id, version)
         self.updateLatestRevision(new_id)
-        self.__copyParMappings(document_id, new_id, start_index = 0, end_index = mod_index)
+        self.__copyParMappings(document_id, new_id, start_index = 0, end_index = mod_index, commit=False)
 
         if mod_count >= 0:
             # Add or modify
             #print("__handleModifyResponse({0}): adding {1} paragraph(s) to index {2}".format(document_id.id, mod_count, mod_index))
             if message[:3] == 'Add':
                 # No modifications to the paragraph at mod_index
-                self.__updateParMapping(document_id, new_id, mod_index, mod_index + mod_count)
+                self.__updateParMapping(document_id, new_id, mod_index, mod_index + mod_count, commit=False)
             else:
                 # This is a modify request, but there may still be more paragraphs...
-                self.__updateParMapping(document_id, new_id, mod_index)
+                self.__updateParMapping(document_id, new_id, mod_index, commit=False)
 
             self.__copyParMappings(
                 document_id, new_id,
                 start_index = mod_index + 1,
-                offset = mod_count
+                offset = mod_count,
+                commit=False
             )
         else:
             # Remove
@@ -692,10 +681,12 @@ class Documents(TimDbBase):
             self.__copyParMappings(
                 document_id, new_id,
                 start_index = mod_index - mod_count,
-                offset = mod_count
+                offset = mod_count,
+                commit=False
             )
 
-        self.updateDocModified(new_id)
+        self.updateDocModified(new_id, commit=False)
+        self.db.commit()
         return new_id
 
     @contract
@@ -755,8 +746,10 @@ class Documents(TimDbBase):
             return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.updateParMappings(document_id, new_id)
-        self.updateDocModified(new_id)
+        self.updateParMappings(document_id, new_id, commit=False)
+        self.updateDocModified(new_id, commit=False)
+        self.updateLatestRevision(new_id, commit=False)
+        self.db.commit()
         return new_id
 
     def trimDoc(self, text: 'str'):
@@ -768,23 +761,12 @@ class Documents(TimDbBase):
         return text.rstrip().strip('\r\n')
 
     @contract
-    def updateDocModified(self, doc_id: 'DocIdentifier'):
+    def updateDocModified(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute('UPDATE Block SET modified = CURRENT_TIMESTAMP WHERE type_id = ? and id = ?',
                        [blocktypes.DOCUMENT, doc_id.id])
-        self.db.commit()
-
-    @contract
-    def setOwner(self, doc_id: 'int', usergroup_id: 'int'):
-        """Changes the owner group for a document.
-
-        :param doc_id: The id of the document.
-        :param usergroup_id: The id of the new usergroup.
-        """
-        cursor = self.db.cursor()
-        cursor.execute('UPDATE Block SET UserGroup_id = ? WHERE type_id = ? and id = ?',
-                       [usergroup_id, blocktypes.DOCUMENT, doc_id])
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def previewBlock(self, content: 'str') -> 'list(str)':

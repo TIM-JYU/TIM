@@ -7,20 +7,28 @@ import sqlite3
 
 new_contract('row', sqlite3.Row)
 
+ANONYMOUS_GROUP = 2
+LOGGED_IN_GROUP = 0
+KORPPI_GROUP = 3
+ADMIN_GROUP = 4
+
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
 
     @contract
-    def createAnonymousUser(self) -> 'int':
+    def createAnonymousAndLoggedInUserGroups(self) -> 'int':
         """Creates an anonymous user and a usergroup for it.
         The user id and its associated usergroup id is 0.
         """
 
         cursor = self.db.cursor()
         cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [0, 'Anonymous'])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [0, 'all'])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [0, 0])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUP, 'Anonymous users'])
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [0, ANONYMOUS_GROUP])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUP, 'Logged-in users'])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [KORPPI_GROUP, 'Korppi users'])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ADMIN_GROUP, 'Administrators'])
         self.db.commit()
         return 0
 
@@ -85,6 +93,14 @@ class Users(TimDbBase):
         cursor.execute('INSERT INTO UserGroupMember (UserGroup_id, User_id) VALUES (?, ?)', [group_id, user_id])
         if commit:
             self.db.commit()
+
+    @contract
+    def addUserToKorppiGroup(self, user_id: 'int', commit: 'bool'=True):
+        self.addUserToGroup(KORPPI_GROUP, user_id, commit)
+
+    @contract
+    def addUserToAdmins(self, user_id: 'int', commit: 'bool'=True):
+        self.addUserToGroup(self.getUserGroupsByName('Administrators')[0]['id'], user_id, commit)
 
     @contract
     def createPotentialUser(self, email: 'str', password: 'str', commit : 'bool' = True):
@@ -218,6 +234,7 @@ class Users(TimDbBase):
         :returns: The id of the user or None if the user does not exist.
         """
 
+
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM User WHERE name = ?', [name])
         result = cursor.fetchone()
@@ -260,6 +277,22 @@ class Users(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def getPersonalUserGroup(self, user_id: 'int') -> 'int':
+        """Gets the personal user group for the user.
+        """
+        userName = self.getUser(user_id)['name']
+        groups = self.getUserGroupsByName(userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        groups = self.getUserGroupsByName('group of user ' + userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        return self.getUserGroups(user_id)[0]
+
+
+    @contract
     def getUserGroups(self, user_id: 'int') -> 'list(dict)':
         """Gets the user groups of a user.
         
@@ -268,10 +301,46 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
-                          (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)
-                          ORDER BY id ASC""", [user_id])
+        if self.userHasAdminAccess(user_id):
+            # Admin is part of every user group
+            cursor.execute("""SELECT id, name FROM UserGroup ORDER BY id ASC""")
+        else:
+            cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
+                              (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)
+                              ORDER BY id ASC""", [user_id])
+
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUserGroupsPrintable(self, user_id: 'int', max_group_len: 'int' = 32) -> 'list(dict)':
+        """Gets the user groups of a user, truncating the group names.
+
+        :param user_id: The id of the user.
+        :returns: The user groups that the user belongs to.
+        """
+        groups = self.getUserGroups(user_id)
+        for group in groups:
+            if len(group['name']) > max_group_len:
+               group['name'] = group['name'][:max_group_len]
+        return groups
+
+    @contract
+    def isUserInGroup(self, user_name : 'str', usergroup_name : 'str') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
+                          User_id      = (SELECT id from User where name = ?) AND
+                          UserGroup_id = (SELECT id from UserGroup where name = ?)
+                       """, [user_name, usergroup_name])
+        return len(cursor.fetchall()) > 0
+
+    @contract
+    def isUserIdInGroup(self, user_id : 'int', usergroup_name : 'str') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
+                          User_id      = ? AND
+                          UserGroup_id = (SELECT id from UserGroup where name = ?)
+                       """, [user_id, usergroup_name])
+        return len(cursor.fetchall()) > 0
 
     def __grantAccess(self, group_id: 'int', block_id: 'int', access_type: 'str'):
         """Grants access to a group for a block.
@@ -339,6 +408,10 @@ class Users(TimDbBase):
         self.db.commit()
 
     @contract
+    def userHasAdminAccess(self, user_id: 'int') -> 'bool':
+        return self.isUserIdInGroup(user_id, 'Administrators')
+
+    @contract
     def userHasViewAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user has view access to the specified block.
         
@@ -349,18 +422,16 @@ class Users(TimDbBase):
 
         if self.userIsOwner(user_id, block_id):
             return True
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id FROM User WHERE
-                          (id = ? OR id = 0)
-                          AND (User.id IN
+        if self.checkAnonViewAccess(block_id):
+            return True
+        if user_id > 0 and self.checkLoggedInViewAccess(block_id):
+            return True
+        result = self.db.execute("""SELECT id FROM User WHERE
+                          id = ?
+                          AND User.id IN
                               (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
                                   (SELECT UserGroup_id FROM BlockViewAccess WHERE Block_id = ?))
-                              
-                          OR  (User.id IN
-                              (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                              (SELECT UserGroup_id FROM Block WHERE Block.id = ?))
-                              ))""", [user_id, block_id, block_id])
-        result = cursor.fetchall()
+                          """, [user_id, block_id]).fetchall()
         return len(result) > 0
 
     @contract
@@ -374,20 +445,42 @@ class Users(TimDbBase):
 
         if self.userIsOwner(user_id, block_id):
             return True
+        if self.checkAnonEditAccess(block_id):
+            return True
+        if user_id > 0 and self.checkLoggedInEditAccess(block_id):
+            return True
         # TODO: This method is pretty much copy-paste from userHasViewAccess. Should make some common method.
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id FROM User WHERE
-                          (id = ? OR id = 0)
-                          AND (User.id IN
+        result = self.db.execute("""SELECT id FROM User
+                          WHERE id = ?
+                          AND User.id IN
                               (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
                                   (SELECT UserGroup_id FROM BlockEditAccess WHERE Block_id = ?))
-                              
-                          OR  (User.id IN
-                              (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                              (SELECT UserGroup_id FROM Block WHERE Block.id = ?))
-                              ))""", [user_id, block_id, block_id])
-        result = cursor.fetchall()
+                          """, [user_id, block_id]).fetchall()
         return len(result) > 0
+
+    def checkUserGroupEditAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
+        result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess
+                           WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+        return len(result) > 0
+
+    def checkAnonEditAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupEditAccess(block_id, ANONYMOUS_GROUP) or self.userIsOwner(ANONYMOUS_GROUP, block_id)
+
+    def checkLoggedInEditAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupEditAccess(block_id, LOGGED_IN_GROUP) or self.userIsOwner(LOGGED_IN_GROUP, block_id)
+
+    def checkUserGroupViewAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
+        result = self.db.execute("""SELECT UserGroup_id FROM BlockViewAccess
+                           WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+        return len(result) > 0
+
+    def checkAnonViewAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupViewAccess(block_id, ANONYMOUS_GROUP) or self.userIsOwner(ANONYMOUS_GROUP, block_id)
+
+
+    def checkLoggedInViewAccess(self, block_id: 'int') -> 'bool':
+        return self.checkUserGroupViewAccess(block_id, LOGGED_IN_GROUP) or self.userIsOwner(LOGGED_IN_GROUP, block_id)
+
 
     @contract
     def userIsOwner(self, user_id: 'int', block_id: 'int') -> 'bool':
@@ -397,6 +490,9 @@ class Users(TimDbBase):
         :param block_id:
         :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
         """
+        if self.userHasAdminAccess(user_id):
+            return True
+
         cursor = self.db.cursor()
         cursor.execute("""SELECT id FROM User WHERE
                           id = ?

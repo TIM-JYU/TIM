@@ -17,10 +17,29 @@ class QueryClass:
         self.jso = None
 
 
+def check_key(query, key):
+    # return key   
+    key2 = "-" + key;
+    if key in query.query: return key
+    if key2 in query.query: return key2
+    if key in query.get_query: return key
+    if key2 in query.get_query: return key2
+    if not query.jso: return key
+    if "input" in query.jso and "markup" in query.jso["input"]:
+       if key in query.jso["input"]["markup"]: return key
+       if key2 in query.jso["input"]["markup"]: return key2
+    if "markup" not in query.jso: return key
+    if key in query.jso["markup"]: key
+    if key2 in query.jso["markup"]: key2
+    return key
+
+
 def get_param(query, key, default):
+    key = check_key(query,key)
     dvalue = default
     if key in query.query: dvalue = query.query[key][0]
-    if dvalue == 'undefined': dvalue = default
+    if dvalue == 'undefined': 
+        dvalue = default
 
     if key not in query.get_query:
         if query.jso is None: return dvalue
@@ -58,6 +77,7 @@ def get_param_by(query, key, default):
 
 
 def get_param_del(query, key, default):
+    key = check_key(query,key)
     if key not in query.query:
         if query.jso is None: return default
         if "markup" not in query.jso: return default
@@ -187,7 +207,7 @@ def get_url_lines_as_string(url):
     # print(cachename + "\n")
     #print(cache) # chache does not work in forkingMix
     if cachename in cache:
-        print("from cache\n")
+        # print("from cache\n")
         return cache[cachename]
 
     try:
@@ -412,20 +432,22 @@ def get_params(self):
 
 
 def get_file_to_output(query, show_html):
-    p0 = FileParams(query, "", "")
-    # if p0.url == "":
-    s = p0.get_file(show_html)
-    # if not s:
-    # return "Must give file= -parameter"
-    s += p0.get_include(show_html)
-    u = p0.url
-    for i in range(1, 10):
-        p = FileParams(query, "." + str(i), u)
-        s += p.get_file(show_html)
-        s += p.get_include(show_html)
-        if p.url: u = p.url
-    return s
-
+    try:
+        p0 = FileParams(query, "", "")
+        # if p0.url == "":
+        s = p0.get_file(show_html)
+        # if not s:
+        # return "Must give file= -parameter"
+        s += p0.get_include(show_html)
+        u = p0.url
+        for i in range(1, 10):
+            p = FileParams(query, "." + str(i), u)
+            s += p.get_file(show_html)
+            s += p.get_include(show_html)
+            if p.url: u = p.url
+        return s
+    except Exception as e:
+        return str(e)
 
 def get_file_parts_to_output(query, show_html):
     p0 = FileParams(query, "", "")
@@ -577,7 +599,7 @@ def query_params_to_attribute(query, leave_away):
 def query_params_to_map(query):
     result = {}
     for field in query.keys():
-        result[field] = query[field][0]
+        if not field.startswith("-"): result[field] = query[field][0]
 
     return result
 
@@ -764,3 +786,15 @@ import binascii
 def hash_user_dir(user_id):
     dk = hashlib.pbkdf2_hmac('sha256', str.encode(user_id), b"tim", 100)
     return bytes.decode(binascii.hexlify(dk))
+
+
+# Korvataan sisällössä scriptit    
+def replace_scripts(s,scripts,placeholder):
+    sc = ""
+    if scripts != "":
+        scs = scripts.split(",")
+        for s1 in scs:
+            sc += '<script src="'+s1+'"></script>\n'
+    return s.replace(placeholder,sc)    
+    
+    

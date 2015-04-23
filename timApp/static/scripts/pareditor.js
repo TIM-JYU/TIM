@@ -1,3 +1,4 @@
+var angular;
 var timApp = angular.module('timApp');
 
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
@@ -38,7 +39,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                     .append(angular.element("<div>", {class: "parContent"})
                                         .html($compile(data.texts[i].html)($scope))));
                             }
-                            MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
+                            $scope.$parent.processAllMath($previewDiv);
                             $scope.outofdate = false;
                             $scope.parCount = len;
                         }).error(function (data, status, headers, config) {
@@ -96,7 +97,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.deleteClicked = function () {
-                    $http.get($scope.deleteUrl).
+                    if (!$window.confirm("Delete - are you sure?")) {
+                        return;
+                    }
+                    $http.post($scope.deleteUrl, $scope.extraData).
                         success(function (data, status, headers, config) {
                             $scope.afterDelete({
                                 extraData: $scope.extraData,
@@ -112,12 +116,23 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.cancelClicked = function () {
-                    $element.remove();
+                    $element.remove(); 
                     $scope.afterCancel({
                         extraData: $scope.extraData
                     });
                 };
 
+                $scope.releaseClicked = function () {
+                    if ( document.getElementById("previewDiv").style.position ) {
+                        document.getElementById("previewDiv").style.position = "";
+                        document.getElementById("releaseButton").innerHTML = "&#8594;";
+                    } else {
+                        document.getElementById("previewDiv").style.position="absolute";
+                        document.getElementById("releaseButton").innerHTML = "&#8592;";
+                    }
+                };
+                
+                
                 $scope.onFileSelect = function (url, $files) {
                     //$files: an array of files selected, each file has name, size, and type.
                     for (var i = 0; i < $files.length; i++) {

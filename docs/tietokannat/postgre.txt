@@ -1,0 +1,13 @@
+psql -h vdb3.it.jyu.fi -U temp temp
+abc123
+\d
+
+
+~/.pgpass
+vdb3.it.jyu.fi:*:temp:temp:abc123
+
+chmod 0600 ~/.pgpass
+
+
+psql -h vdb3.it.jyu.fi -U temp temp -f a.a -w 
+

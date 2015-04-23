@@ -1,4 +1,4 @@
-.content { 
+.content {
 	max-width: 52em;
 	text-align: justify;
     margin-right: 1em;
@@ -18,7 +18,7 @@ body {
     padding: 0.5em;
 }
 
-.wrong { 
+.wrong {
     background-color: red;
     padding: 0.5em;
 }
@@ -55,7 +55,7 @@ body {
 .ansi_fore { color: #FFFFFF; }
 .ansi_back { background-color: #000000; }
 .ansi1 { font-weight: bold; }
-.ansi3 { font-weight: italic; }
+.ansi3 { font-style: italic; }
 .ansi4 { text-decoration: underline; }
 .ansi9 { text-decoration: line-through; }
 .ansi30 { color: #000000; }
@@ -76,17 +76,17 @@ body {
 .ansi47 { background-color: #FFFFFF; }
 
 body {
-	/* background-color: #d5d5d5; */
     margin: 0 260px;
 }
-.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
+.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton, .addQuestionButton {
     background-color: #f8f8f8;
 	color: white;
 	font-size: x-small;
 	text-align:center;
     border-radius: 12px;
 	outline: none;
-	
+	float: left;
+
     border: 2px none;
 	line-height: 0.8;
 	width: 5em;
@@ -95,31 +95,31 @@ body {
 
 .viewLogin {
     font-size: 0.7em;
-    color: #3CC;
+    color: #3cc;
     text-align: right;
 }
 
-input[type="submit"], button, input[type="button"] { 
+input[type="submit"], button, input[type="button"] {
     background: #3CC;
-    border: 0;
     border: 0;
     border-radius: 3px;
     color: #FFF;
     display: inline-block;
     font-size: 11px;
-    /* font-weight: bold; */
     cursor: pointer;
     line-height: normal;
     padding: 5px 10px;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+
+
 .viewLogin .loginButton:hover {
     width:auto;
-} 
- 
+}
+
 .viewLogin .loginButtonRow {
-} 
+}
 
 .viewLogin .loginButtonDiv {
     width: auto;
@@ -157,10 +157,9 @@ input[type="submit"], button, input[type="button"] {
 .viewLogin .loginFieldStatic {
     width: 120px;
 }
- 
+
 .viewLogin .loginButton {
     background: #3CC;
-    border: 0;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -176,7 +175,7 @@ input[type="submit"], button, input[type="button"] {
 .viewLogin form {
     display: inline;
 }
- 
+
 .material {
 	background-color: white;
 }
@@ -193,14 +192,14 @@ td p {
     margin-left: 0;
 }
 .readline {
-	border-color: red;
+	border-color: #F60; /* rgb(236,103,27); */
 }
-	
+
 .readline:hover {
     opacity: 0.5;
-	background: red;
+	background: #F60; /* rgb(236,103,27); */
 }
-	
+
 .readline.read {
 	display: none;
 }
@@ -224,22 +223,20 @@ td p {
 
 /*=============================================*/
 li p {
-    margin-left: 0; 
+    margin-left: 0;
 }
 
 ul, ol {
-    margin-left: 1.5em;  
+    margin-left: 1.5em;
 }
 
 ul ul, ol ol {
-    margin-left: -1em; 
+    margin-left: -1em;
 }
 
-ul ul  ul, ol ol ol { 
-    margin-left: -1em; 
+ul ul  ul, ol ol ol {
+    margin-left: -1em;
 }
-
-
 
 .note p {
 	margin-left : 0;
@@ -273,7 +270,7 @@ ul ul  ul, ol ol ol {
 
 .material img {
   max-width: 95%;
-  display:block; 
+  display:block;
   margin: 0 auto;
 }
 
@@ -281,8 +278,7 @@ ul ul  ul, ol ol ol {
 	text-align:center;
 }
 
-
-.notes {
+.notes, .speaker {
 	position: absolute;
 	left: 112%;
 	width: 17em;
@@ -290,8 +286,6 @@ ul ul  ul, ol ol ol {
 }
 
 .note {
-	/* border: 1px solid #BBB; */
-	/* border-radius: 7px; */
 	font-size: 0.7em;
 }
 
@@ -312,8 +306,7 @@ ul ul  ul, ol ol ol {
 .actionButtons {
     position: absolute;
     padding: 1em;
-    margin: none;
-    background-color: #f8f8ff;
+    margin: 0;
     z-index: 100;
     top: -1px;
     right: -14em;
@@ -337,11 +330,11 @@ ul ul  ul, ol ol ol {
 }
 
 .previewcontent {
-    border: 2px solid black;
-    border-radius: 15px;
-    padding: 1em;
-    margin: 2px;
-    background-color: #f0f0f8;
+    border: 1px solid black;
+    border-radius: 5px;
+    padding-top: 0.0em;
+    margin-top: 5px;
+    background-color: #f8f8f8;
 }
 
 .timButton {
@@ -357,7 +350,7 @@ ul ul  ul, ol ol ol {
     height: 100%;
     top: 0em;
     border-right: 0.5em solid;
-    border-color: red;
+    border-color: #F60; /* rgb(236,103,27); */
 }
 
 .addNoteButton:hover {
@@ -379,7 +372,7 @@ ul ul  ul, ol ol ol {
 }
 
 .delete:before{
-    content:"Delete"; 
+    content:"Delete";
 }
 
 .delete{
@@ -400,7 +393,6 @@ ul ul  ul, ol ol ol {
 
 
 .deleteButton{
-    /* position: absolute; */
     left:0em;
     z-index: 10;
 	top: 6em;
@@ -410,9 +402,8 @@ ul ul  ul, ol ol ol {
 .deleteButton:hover{
         color:black;
 }
- 
+
 .parSaveButton {
-    /* position: absolute; */
 	top: 0em;
 	left: 0em;
     z-index:10;
@@ -428,7 +419,7 @@ ul ul  ul, ol ol ol {
 }
 
 .cancelButton:hover {
-    background: #999966; 
+    background: #999966;
 	color: black;
 }
 .cancelButton:before{
@@ -436,22 +427,16 @@ ul ul  ul, ol ol ol {
 }
 
 .cancelButton {
-    /* position: absolute; */
     z-index: 10;
-	top: 0em;
 	left: 0em;
 	top: 3em;
-    background: #999966;	
+    background: #999966;
 }
 
 .material {
-	display: inline-block;
 	width: 90%;
-	/* border: 2px solid; */
-	/* border-radius: 25px; */
-	/* box-shadow: 10px 10px 5px #888888; */
-	/* margin-left: 10em; */
 }
+
 #topBar{
     position:fixed;
     top:0;
@@ -464,7 +449,7 @@ ul ul  ul, ol ol ol {
 .navigationBar{
     width: auto;
     background-color: #00CC00;
-    
+
 }
 
 .flashEdit{
@@ -491,7 +476,7 @@ ul ul  ul, ol ol ol {
     padding-top:0.5em;
     position: absolute;
 }
- 
+
 .addParButton:hover{
 	content:"Add new paragraph here";
     display:block;
@@ -503,21 +488,21 @@ ul ul  ul, ol ol ol {
 	left:0em;
 	color: black;
 }
- 
+
 PRE {
     /* border-style: solid; */
-	
+
     /* border-width: 1px; */
-	
+
     /* border-radius: 5px; */
-	
+
     padding: 4px;
-	
+
     margin-left: 2.5em;
 	margin-right: 0.00cm;
 	line-height: 1;
 	font-size: 1em;
-	
+
     /* box-shadow: 10px 10px 5px #888888; */
 }
 
@@ -665,7 +650,6 @@ a {
 
 :visited {
 	color: blue;
-	text-decoration: none;
 }
 
 a:active {
@@ -677,6 +661,14 @@ a:hover {
 	cursor: pointer;
 	color: navy;
 	text-decoration: underline;
+}
+
+answerbrowser a {
+    font-size: inherit;
+}
+
+answerbrowser .firstanswer {
+    float: right;
 }
 
 sub {
@@ -742,7 +734,6 @@ div.header {
 	padding: 0;
 }
 
-
 div.header:hover .anchor {
 	visibility: visible;
 }
@@ -794,9 +785,9 @@ a.anchor:hover {
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
 	width: 45em;
-	border: 2px solid;
+	border: 1px solid;
 	padding: 15px 5px 5px 5px;
-	border-radius: 15px;
+	border-radius: 5px;
 	text-align: left;
     resize: both;
 }
@@ -809,16 +800,18 @@ a.anchor:hover {
     left: 112%;
     min-height:6.5em;
     border-radius: 15px;
-    padding: 0.5em; 
+    padding: 0.5em;
 }
 
 .editButtonArea {
 	float: left;
-    padding: 0.5em;
+
+	padding-right: 1em;
+	margin-bottom: 0em;
 }
-	
+
 video {
-  display:block; 
+  display:block;
   margin: 0 auto;
 }
 
@@ -828,12 +821,12 @@ img.console {
 
 /* csRun-tyylit ================================================== */
 .console {
-  font-family:Courier;
-  color: #ccc;
-  background: #000000;
-  border: 3px double #ccc;
-  padding: 10px;
-  width: 95% !important;  
+    font-family: Courier, serif;
+    color: #ccc;
+    background: #000000;
+    border: 3px double #ccc;
+    padding: 10px;
+    width: 95% !important;
 }
 
 p.stem {
@@ -875,24 +868,24 @@ p.stem {
 
 
 .csRunCode {
-    font-family:Courier;
+    font-family: Courier, serif;
 	margin-left: 2em;
     /* border-style: solid; */
-	
+
     border-width: 1px;
-	
+
     /* border-radius: 5px; */
 	padding: 4px;
 	margin-right: 0em;
 	line-height: 1;
 	font-size: 1em;
-	
+
     /* box-shadow: 10px 10px 5px #888888; */
 	/* width: 98%; */
 }
 
 .csRunArea {
-    font-family:Courier;
+    font-family: Courier, serif;
 	margin-top: 0em;
 	margin-bottom: 0em;
     border-style: none;
@@ -914,8 +907,8 @@ p.stem {
 	display: block;
 	margin: 0 auto;
 }
- 
-.showVideoHolder { 
+
+.showVideoHolder {
 	text-align:center;
 	display: block;
 	margin: 0 auto;
@@ -945,7 +938,7 @@ p.stem {
     border-style: solid;
 	border-width: 1px;
 	border-radius: 5px;
-	width: 100% !important; 
+	width: 100% !important;
 }
 
 .csRunMenu {
@@ -987,7 +980,7 @@ p.stem {
 	.editor {
 		/* height: 5em; */
 	}
-	.content { 
+	.content {
 		max-width: 45em;
 		text-align: justify;
         margin-right: 0.5em;
@@ -1011,7 +1004,7 @@ p.stem {
         margin-left: 0.7em;
 		right: -2em;
 	}
-	.notes {
+	.notes, .speaker {
 		position: absolute;
 		left: 116%;
 		width: 17em;
@@ -1028,12 +1021,12 @@ p.stem {
 		top: 0em;
 		left: 0%;
 	}
-	
+
 	.addParButton{
 		left: 106%;
-    } 
-	
-	
+    }
+
+
 	body {
 		max-width: 45em;
 		margin-left: 5px !important;
@@ -1053,10 +1046,12 @@ p.stem {
 		position: absolute;
 		top: 0em;
 		left: 0em;
-	*/	
+	*/
 	}
+    .sidebar.autohidden {
+        display: none;
+    }
 
-	
 }
 
 /* Kännyköiden erikoistyylit =============================================*/
@@ -1064,10 +1059,10 @@ p.stem {
 	P {
 		margin-top: 0.0em;
 		margin-bottom: 0.0em;
-		margin-left: 1px; 
+		margin-left: 1px;
 		margin-right: 5px;
 	}
-	.content { 
+	.content {
 		text-align: left;
 	}
 	.material {
@@ -1088,7 +1083,7 @@ p.stem {
 		margin-right: 0.00cm;
 	}
     .csRunCode {
-        margin-left: 0.5em;
+        margin-left: 1.1em;
         /*width: 98%;  */
     }
 	.addNoteButton {
@@ -1099,7 +1094,7 @@ p.stem {
 		outline: none;
 	}
 
-	.notes {  
+	.notes, .speaker {
 		position: absolute;
 		left: 115%;
 		width: 17em;
@@ -1112,7 +1107,7 @@ p.stem {
         margin-left: -1.3em;
         border-right: 0.25em solid red;
     }
-	
+
     .huomautus {
         margin-left: 0.1em;
         text-align: left;
@@ -1121,27 +1116,29 @@ p.stem {
         margin-left: 0.2em;
         margin-right: 0.2em;
     }
-    
+
     ul, ol {
       margin-left: 0.1em;
     }
+    .sidebar.autohidden {
+        display: none;
+    }
 }
- 
+
 body {
- 	line-height: 1.4;	
+ 	line-height: 1.4;
 }
 
 task, .csRunDiv {
     border: solid 1px #3CC;
     border-radius: 5px;
-    width: 100%;
     margin-bottom: 0.3em;
     margin-left: 2em;
     margin-right: 2em;
     margin-top: 0.3em;
     padding-bottom: 0.5em;
     width: 96.5%
-} 
+}
 
 .csRunDiv h4  {
     margin-top: 0.0em;
@@ -1153,6 +1150,9 @@ task, .csRunDiv {
     font-family: "Helvetica", Arial, sans-serif;
 
 }
+
+
+
 
 .note {
     border-top: 4px solid;
@@ -1170,9 +1170,9 @@ task, .csRunDiv {
 
 pre {
     font-family: "Courier New", Courier, serif;
-    font-weight: 00;
+    font-weight: normal;
     border-left: 4px solid #3CC;
-    padding: 0.5em 0 0.5em 1em; 
+    padding: 0.5em 0 0.5em 1em;
     /* margin: 0 0 1em 1em; */
     font-size: 0.95em;
 }
@@ -1185,17 +1185,16 @@ pre {
 }
 
 .stem {
-    margin-left: 0.3em;	
+    margin-left: 0.3em;
     margin-right:0.5em;
 }
 
 .csRunMenu {
-    margin-left: 0.3em;	
+    margin-left: 0.3em;
 }
 
 .csRunMenu button {
     background: #3CC;
-    border:0;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -1221,7 +1220,7 @@ img.console {
 	color:  #3CC;
 }
 
-.notes:hover {
+.notes:hover, .speaker:hover {
     background-color: white;
     display: block;
     z-index: 9;
@@ -1239,7 +1238,6 @@ img.console {
 @media only screen and (max-device-width: 500px) {
     .readline {
         z-index: 30;
-        border-color: red;
         border-right: 0.7em solid red;
         margin-left: -10.7em;
     }
@@ -1247,9 +1245,11 @@ img.console {
     task, .csRunDiv {
         margin-left: 0.2em;
         margin-right: 0em;
-    } 
+    }
 
-
+    .csrunEditorDiv  .csEditArea {
+        /* margin-left: 1px;  */
+    }
 }
 
 
@@ -1260,18 +1260,18 @@ img.console {
 		left: 0%;
 	}
 
-	.notes:hover {
+	.notes:hover, .speaker:hover {
         margin-left: -60%;
         width: 200em;
         background-color: white;
 
         display: block;
         z-index: 9;
-        // max-height: 100%;
+        /* max-height: 100%; */
         padding-left: 2em;
     }
 
-	
+
 }
 
 /* Opettajanäkymän käyttäjälistaa varten ================================*/
@@ -1279,37 +1279,70 @@ img.console {
 .userlist {
 	position: fixed;
 	top: 13px;
-	right: 240px;
+	right: 120px;
 	padding: 5px;
-	/*width: 240px;*/
 	word-wrap:break-word;
 	background-color: #e6e6e6;
 	z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
+        max-height: 90vh;
+}
+
+.userlist td, .userlist th {
+    max-width: 50px;
+}
+
+.userlist td {
+    padding: 1px;
+}
+
+.userlist td:first-child, .userlist th:first-child {
+    max-width: 200px;
+}
+
+.userlist .input-filter {
+    width: 95%;
+}
+
+.userlist .sortable.header {
+    cursor: pointer;
+}
+
+.userlist li {
+    list-style-type: none;
+    display: inline;
 }
 
 .userentry {
-     font-family: Verdana;
+     font-family: Verdana, serif;
      font-size: 12px;
      color: #a6b6f6;
 }
 
 /* Sisällysluetteloa varten =============================================*/
 
-.sidebar{
-	position: fixed;
-	top: -1px;
-	left: -240px;
+#contents {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    bottom: 0;
+    overflow-y: auto;
+}
+
+.sidebar {
 	width: 240px;
-	word-wrap:break-word;
-	/* word-break:break-all; */
-	height: 100%;
+	word-wrap: break-word;
 	background-color: #e6e6e6;
 	transition: 200ms all ease-in-out;
 	z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
+}
+
+.sidebar.hidden {
+    display: none;
 }
 
 .sidebar-buttons{
@@ -1346,7 +1379,7 @@ img.console {
 
 .sidebar a {
 	margin: 0 0px 0 -15px;
-	text-align: left;  
+	text-align: left;
 	color: #2bb;
 }
 
@@ -1384,11 +1417,7 @@ img.console {
 	color: #2bb;
 }
 
-.menu{ 
-	left: 0px; 
-	top:0px;
-	width: 60px;
-	position:fixed;
+.menu {
 	background:#e6e6e6;
     width: 45px;
     z-index: 501;
@@ -1430,9 +1459,10 @@ img.console {
     position: absolute;
     width: 102%;
     top: 0em;
-    left: 0;
+    left: -1.5em;
     min-height: 6.5em;
-    border-radius: 9px;
+    border-radius: 5px;
+    background: #e0e0e0;
 }
 
 .ace_editor {
@@ -1447,10 +1477,8 @@ img.console {
 }
 
 .timButton {
-    display: block;
     margin: auto;
     background: #3CC;
-    border: 0;
     border: 0;
     border-radius: 3px;
     color: #FFF;
@@ -1467,26 +1495,31 @@ img.console {
     position: absolute;
     border-radius: 3px;
     padding: 1em;
-    margin: none;
+    margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
     width: 220px;
     min-height: 50px;
     left: 103%;
-}  
+}
 
 .par.selected {
     background-color: #f8f8f8;
 }
 
-.addNote, .editPar, .addPar {
+.addNote, .editPar, .addPar .menuClose {
     width: 220px;
+}
+
+.defaultButton {
+    margin: 0.2em;
+    float: right;
 }
 
 .listVideoRunDiv {
   /* margin-left: 2em; */
   margin-top: -1.5em;
-  margin-bottom: -1.2em; 
+  margin-bottom: -1.2em;
 }
 
 .csArgsArea {
@@ -1512,7 +1545,7 @@ img.console {
   margin-left: 0px;
   float: left;
   font-size: 0.96em;
-  
+
 }
 
 .grconsole {
@@ -1539,10 +1572,6 @@ img.console {
   display: none;
   }
 
-  .unread {
-  display: none;
-  }
-
   .parContent {
   position: static;
   border: 0px;
@@ -1563,14 +1592,56 @@ img.console {
   display: none;
  }
 
-    /* Harmaa varjo dokumentilta pois */ 
+  #contents {
+      display: none;
+  }
+    /* Harmaa varjo dokumentilta pois */
     .material {
         box-shadow: none !important;
             border: none !important;
     }
 }
-    
 
+.speaker {
+  position: absolute;
+  left: 105%;
+  width: 400px;
+}
 
+.doctitle {
+  font-size: 0.7em;
+  color: #3cc;
+  text-align: center;
+  margin-bottom: -1.5em;
+}
 
-} 
+.mcq {
+  padding-left: 2em;
+}
+
+.answerBrowser {
+  padding-left: 2em;
+}
+
+.csRunChanged {
+  background-color: rgb(41, 255, 0) !important;
+  width: 0.2em;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: -0.5em;
+}
+
+.sagecell_editor {
+  line-height: 13px;
+  margin-bottom: 8px;
+  font-size: 10pt;
+}
+
+pre.sagecell_pyout {
+  border: none;
+}
+
+pre.sagecell_stdout {
+  border: none;
+}

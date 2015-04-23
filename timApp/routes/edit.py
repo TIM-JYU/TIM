@@ -5,7 +5,7 @@ import cssutils
 from flask import Blueprint, render_template, request, redirect, url_for
 from .common import *
 import pluginControl
-from timdb.timdbbase import DocIdentifier
+from timdb.docidentifier import DocIdentifier
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -113,7 +113,7 @@ def addBlock():
                          'angularModule': modules,
                          'version': new_doc.hash})
 
-@edit_page.route("/deleteParagraph/<int:doc_id>/<int:blockId>")
+@edit_page.route("/deleteParagraph/<int:doc_id>/<int:blockId>", methods=["POST"])
 def removeBlock(doc_id, blockId):
     timdb = getTimDb()
     verifyEditAccess(doc_id)

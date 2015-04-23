@@ -16,6 +16,7 @@ def view_document_old(doc_name):
     view_range = parse_range(request.args.get('b'), request.args.get('e'))
     return view(doc_name, 'view.html', view_range)
 
+
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")
@@ -26,6 +27,7 @@ def view_document(doc_name):
         abort(400, "Invalid start or end index specified.")
 
     return view(doc_name, 'view_html.html', view_range)
+
 
 @view_page.route("/teacher/<path:doc_name>")
 def teacher_view(doc_name):
@@ -43,31 +45,52 @@ def parse_range(start_index, end_index):
     if start_index is None and end_index is None:
         return None
 
-    return( int(start_index), int(end_index) )
+    return ( int(start_index), int(end_index) )
+
+
+def try_return_folder(doc_name):
+    timdb = getTimDb()
+    folder_name = doc_name.rstrip('/')
+    block_id = timdb.folders.getFolderId(folder_name)
+
+    if block_id is None:
+        abort(404)
+
+    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    return render_template('index.html',
+                           docID=block_id,
+                           userName=getCurrentUserName(),
+                           userId=getCurrentUserId(),
+                           userGroups=possible_groups,
+                           is_owner=hasOwnership(block_id),
+                           folder=folder_name)
 
 
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
-    
+
     if doc_id is None or not timdb.documents.documentExists(doc_id):
         # Backwards compatibility: try to use as document id
         try:
             doc_id = int(doc_name)
             if not timdb.documents.documentExists(doc_id):
-                abort(404)
+                # abort(404)
+                return try_return_folder(doc_name)
         except ValueError:
-            abort(404)
+            return try_return_folder(doc_name)
+            # abort(404)
 
     if teacher:
         verifyOwnership(doc_id)
 
-    if not loggedIn():
-        session['came_from'] = request.url
-        return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
-
     if not hasViewAccess(doc_id):
-        abort(403)
+        if not loggedIn():
+            session['came_from'] = request.url
+            return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'),
+                                   came_from=request.url)
+        else:
+            abort(403)
 
     version = timdb.documents.getNewestVersion(doc_id)
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
@@ -99,9 +122,6 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
-    editable = hasEditAccess(doc_id)
-
-    questions = timdb.questions.get_doc_questions(doc_id)
 
     return render_template(template_name,
                            docID=doc['id'],
@@ -116,5 +136,10 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            custom_css_files=custom_css_files,
                            custom_css=custom_css,
                            start_index=start_index,
-                           editable=editable,
-                           questions=questions)
+                           teacher_mode=teacher,
+                           is_owner=hasOwnership(doc_id),
+                           rights={'editable': hasEditAccess(doc_id),
+                                   'can_mark_as_read': hasReadMarkingRight(doc_id),
+                                   'can_comment': hasCommentRight(doc_id),
+                                   'browse_own_answers': loggedIn()
+                           })

@@ -1,24 +1,14 @@
 """"""
 import os
-from contracts import contract, new_contract
 import collections
 import sqlite3
-from collections import namedtuple
 
-
-# A document identifier consists of the id of the document and the version hash.
-class DocIdentifier(namedtuple("DocIdentifier", "id hash")):
-    __slots__ = ()
-
-    def __str__(self):
-        return str(self.id) + ':' + str(self.hash)
-
+from contracts import contract, new_contract
 
 new_contract('Connection', sqlite3.Connection)
-new_contract('DocIdentifier', DocIdentifier)
 
-BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING'))
-blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5)
+BLOCKTYPES = collections.namedtuple('blocktypes', ('DOCUMENT', 'COMMENT', 'NOTE', 'ANSWER', 'IMAGE', 'READING', 'FOLDER'))
+blocktypes = BLOCKTYPES(0, 1, 2, 3, 4, 5, 6)
 
 
 class TimDbException(Exception):
@@ -48,6 +38,23 @@ class TimDbBase(object):
         self.db = db
 
     @contract
+    def insertBlockToDb(self, name: 'str', owner_group_id: 'int', block_type: 'int') -> 'int':
+        """Inserts a block to database.
+
+        :param name: The name (description) of the block.
+        :param owner_group_id: The owner group of the block.
+        :param block_type: The type of the block.
+        :returns: The id of the block.
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+                       [name, owner_group_id, block_type])
+        block_id = cursor.lastrowid
+        self.db.commit()
+        return block_id
+
+    @contract
     def getBlockPath(self, block_id: 'int') -> 'str':
         """Gets the path of the specified block.
         
@@ -57,7 +64,7 @@ class TimDbBase(object):
         return os.path.join(self.blocks_path, str(block_id))
 
     @contract
-    def blockExists(self, block_id: 'int', block_type: 'int') -> 'bool':
+    def blockExists(self, block_id: 'int', block_type: 'int', check_file: 'bool' = True) -> 'bool':
         """Checks whether the specified block exists.
         
         :param block_id: The id of the block to check.
@@ -70,13 +77,23 @@ class TimDbBase(object):
                        [block_id, block_type])
         result = cursor.fetchone()
         if result[0] == 1:
-            if not os.path.exists(self.getBlockPath(block_id)):
+            if check_file and not os.path.exists(self.getBlockPath(block_id)):
                 print ('blockExists: the block {} was in database but the file was not found'.format(block_id))
                 return False
-            #assert os.path.exists(
-            #    self.getBlockPath(block_id)), 'the block {} was in database but the file was not found'.format(block_id)
             return True
         return False
+
+    @contract
+    def setOwner(self, block_id: 'int', usergroup_id: 'int'):
+        """Changes the owner group for a block.
+
+        :param block_id: The id of the block.
+        :param usergroup_id: The id of the new usergroup.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('UPDATE Block SET UserGroup_id = ? WHERE id = ?',
+                       [usergroup_id, block_id])
+        self.db.commit()
 
     # TODO: contract
     def resultAsDictionary(self, cursor):
@@ -144,6 +161,7 @@ class TimDbBase(object):
         current_par = par_index
         modified = False
         num_links = 0
+        steps = []
         while current_ver != target_ver:
             cursor.execute(
                 """
@@ -154,33 +172,37 @@ class TimDbBase(object):
                 """, [doc_id, current_ver, current_par])
             mappings = self.resultAsDictionary(cursor)
             if len(mappings) == 0:
-                #print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
-                return None
+                # print('Loose end: doc %d %s(%d) -> ???' % (doc_id, current_ver[:6], current_par))
+                # return None
+                break
 
-            #print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
-            #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6], mappings[0]['new_index'], mappings[0]['modified']))
+            # print('Found a mapping: doc %d %s(%d) -> %s(%d), modified: %s' %
+            #      (doc_id, current_ver[:6], current_par, mappings[0]['new_ver'][:6],
+            #       mappings[0]['new_index'], mappings[0]['modified']))
+            steps.append((current_ver, current_par))
             current_ver = mappings[0]['new_ver']
             current_par = mappings[0]['new_index']
             modified |= mappings[0]['modified'] == 'True'
             num_links += 1
 
-        #print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
+        # print('num_links = %d, current_ver = %s, doc_ver = %s, modified = %s' %
         #      (num_links, current_ver[:6], doc_ver[:6], str(modified)))
-        if num_links > 1 and current_ver == doc_ver:
+        if num_links > 1:
             # Flatten mappings to speed up future queries
             # a -> b -> c becomes a -> c
-            print('Mapping can be optimized: %s(%s) -> %s(%s)' %
-                  (read_ver[:6], read_par, current_ver[:6], current_par))
-            #cursor.execute(
-            #    """
-            #    update ParMappings
-            #    set new_ver = ?, new_index = ?, modified = ?
-            #    where doc_id = ? and doc_ver = ? and par_index = ?
-            #    """, [current_ver, current_par, str(modified), doc_id, read_ver, read_par])
-            #if commit:
-            #    self.db.commit()
+            # print('Mapping can be optimized: %s(%s) -> %s(%s)' %
+            #      (doc_ver[:6], par_index, current_ver[:6], current_par))
+            for ver, par in steps:
+                cursor.execute(
+                   """
+                   update ParMappings
+                   set new_ver = ?, new_index = ?, modified = ?
+                   where doc_id = ? and doc_ver = ? and par_index = ?
+                   """, [current_ver, current_par, str(modified), doc_id, ver, par])
+            if commit:
+                self.db.commit()
 
-        return (current_par, modified)
+        return (current_par, modified) if current_ver == target_ver else None
 
     @contract
     def getMappedValues(self, UserGroup_id: 'int|None', doc_id: 'int', doc_ver: 'str', table: 'str',
@@ -251,7 +273,7 @@ class TimDbBase(object):
                                        read_ver,
                                        doc_id
                                        ])
-                        self.addEmptyParMapping(doc_id, doc_ver, par_index_new)
+                        self.addEmptyParMapping(doc_id, doc_ver, par_index_new, commit=False)
                     except sqlite3.IntegrityError:
                         # Already exists
                         cursor.execute("""delete from {}

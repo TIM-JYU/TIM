@@ -5,43 +5,26 @@
 # Stop the script if any error occurs
 set -e
 
-# Stop tim
+# Stop tim and Haskell plugins
 docker stop tim &
-wait
-
-# Stop plugin containers
-docker stop csPlugin &
-docker stop showFile &
-docker stop ChoicePlug &
-docker stop ShortNotePlug &
-docker stop MultiChoicePlug &
-docker stop GraphVizPlug &
+docker stop haskellplugins2 &
 wait
 
 # Remove stopped containers
 docker rm tim &
-docker rm csPlugin &
-docker rm showFile &
-docker rm ChoicePlug &
-docker rm ShortNotePlug &
-docker rm MultiChoicePlug &
-docker rm GraphVizPlug &
+docker rm haskellplugins2 &
 wait
 
-# Start csPlugin
-#docker run --name csPlugin -p 56000:5000 -v /opt/cs:/cs/ -d -t -i cs3 /bin/bash -c 'cd /cs && ./run_cs3 ; /bin/bash'
-
-# Start showFile-plugin
-#docker run --name showFile -p 55000:5000 -v /home/vesal/svn:/svn/ -d -t -i svn /bin/bash -c 'cd /svn && python3 svn3.py ; /bin/bash'
-
 # Start Haskell plugins
-docker run --name ChoicePlug -p 57000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/ChoicesPlugin/ChoicesPlugin -p 5000 ; /bin/bash'
-
-docker run --name MultiChoicePlug -p 58000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/MultipleChoicesPlugin/MultipleChoicesPlugin -p 5000 ; /bin/bash'
-
-docker run --name ShortNotePlug -p 59000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/ShortNotePlugin/ShortNotePlugin -p 5000 ; /bin/bash'
-
-docker run --name GraphVizPlug -p 60000:5000 -d -t -i haskellplugins /bin/bash -c 'cd /Choices && ./dist/build/GraphVizPlugin/GraphVizPlugin -p 5000 ; /bin/bash'
+docker run -d\
+   -v $PWD/timApp/modules/Haskell/.cabal-sandbox/bin/:/hbin\
+   -v $PWD/timApp/modules/Haskell/:/Haskell\
+   -v $PWD/timApp/modules/Haskell/startAll.sh:/startAll.sh\
+   -p 57000:5001\
+   -p 58000:5002\
+   -p 59000:5003\
+   -p 60000:5004\
+   --name "haskellplugins2" haskellrun /startAll.sh
 
 # Start tim
 if [ "$1" = "sshd" ] ; then

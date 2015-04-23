@@ -160,7 +160,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         result_json = {"multihtml": True}
 
         if is_video_reqs:
-            result_json = {"multihtml": True, "js": ["http://tim-beta.it.jyu.fi/svn/video/js/video.js"], "angularModule": ["videoApp"]}
+            result_json = {"multihtml": True, "js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]}
 
         if is_reqs:
             result_str = json.dumps(result_json)

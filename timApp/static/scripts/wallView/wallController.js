@@ -294,7 +294,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
 
                         if (answer.question) {
-                            createDialog('../static/templates/question_asked_student.html', {
+                            createDialog('../../../static/templates/questionAskedStudent.html', {
                                 id: 'questionAskDialog',
                                 title: 'Question',
                                 backdrop: true,
