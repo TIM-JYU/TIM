@@ -97,13 +97,13 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         end_index = min(view_range[1], len(xs))
         xs = xs[start_index:end_index + 1]
 
+    user = getCurrentUserId()
     if teacher:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         users = timdb.answers.getUsersForTasks(task_ids)
-        if user is None:
-            user = getCurrentUserId()
+        if len(users) > 0:
+            user = users[0]['id']
     else:
-        user = getCurrentUserId()
         users = []
     current_user = timdb.users.getUser(user)
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
