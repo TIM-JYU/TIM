@@ -131,7 +131,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 return;
             }
 
-            if (Math.abs($scope.mouseDown - $scope.mouseUp) < 10) {
+            if (Math.abs($scope.mouseDown - $scope.mouseUp) < 2) {
                 $scope.hide();
             }
 
