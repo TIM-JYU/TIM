@@ -494,6 +494,8 @@ timApp.controller("ViewCtrl", [
 
                 if (clickdelta > 10) {
                     // Selecting text
+                    $par.removeClass("selected");
+                    $par.removeClass("lightselect");
                 }
                 else if (clicktime < 500) {
                     // Double click
