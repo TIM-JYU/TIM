@@ -55,7 +55,10 @@ var groups = {{user_groups|tojson|safe}};
     </ul>
     {% endif %} {% endwith %}
         <div class="margin">
-            <a href="/view/{{ '{{doc.name}}' }}">View this {{objName}}</a> <br>
+            <a href="/view/{{ '{{doc.name}}' }}">View this {{objName}}</a>
+	    |
+            <a href="/view/{{ '{{oldFolderName}}' }}">View containing folder</a>
+	    <br>
         </div>
         <div class="margin">
             {{objNameC}} owner: <select ng-model="doc.owner"
