@@ -100,6 +100,45 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
+        $scope.wallRelease = function () {
+            var wall = document.getElementById("wall");
+            var detach = document.getElementById("detachButton")
+            if (wall.style.position == "absolute") {
+                wall.style.position = "";
+                wall.style.bottom = "2em";
+                wall.style.top = "";
+                wall.style.right = "2em";
+                //TODO: Change to url_for or some other way to get correct ulr
+                detach.style.background = "url('../../../static/images/detach.png')"
+
+
+            } else {
+                wall.style.position = "absolute";
+                wall.style.bottom = "auto";
+                detach.style.background = "url('../../../static/images/tach.png')"
+            }
+        };
+
+        $scope.checkDown = function (e) {
+            $scope.mouseDown = e.clientX;
+
+        };
+
+        $scope.checkUp = function (e) {
+            $scope.mouseUp = e.clientX;
+            var id = $(event.target).attr('id');
+            if (id == "detachButton") {
+                return;
+            }
+
+            if (Math.abs($scope.mouseDown - $scope.mouseUp) < 10) {
+                $scope.hide();
+            }
+
+
+        };
+
+
         $scope.toggleLecture = function () {
             $scope.showLectureCreation = !$scope.showLectureCreation;
             console.log("huh?");
@@ -213,9 +252,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.showLectureCreation = true;
         };
 
-        $scope.detach = function () {
-            console.log("Should detach this window");
-        };
 
         $scope.sendMessageEvent = function (message) {
             if (message.trim() == "") {
