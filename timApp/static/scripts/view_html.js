@@ -945,15 +945,6 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-
-<<<<<<< HEAD
- var columnHeaders = [];
-        for (var i = 0; i < rowsCount; i++) {
-            var columns = [];
-            columnHeaders = [];
-            for (var j = 0; j < columnsCount; j++) {
-                columnHeaders.push({type: "header", text: ""})
-=======
         if (scope.rows.length > rowsCount) rowsCount = scope.rows.length;
 
         for (var i = 0; i < rowsCount; i++) {
@@ -962,7 +953,6 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             if (columnsCount < columns.length) columns.splice(columnsCount, columns.length);
 
             for (var j = columns.length; j < columnsCount; j++) {
->>>>>>> e68499cb5a29ee6aadbfc7a4e38200a5a1ecbbf6
                 columns[j] = {
                     id: j,
                     rowId: i,
@@ -980,24 +970,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 id: i,
                 text: 'test',
                 type: 'question',
-<<<<<<< HEAD
-                value: '',
-=======
                 value: value,
->>>>>>> e68499cb5a29ee6aadbfc7a4e38200a5a1ecbbf6
                 columns: columns
             }
         }
-<<<<<<< HEAD
-        scope.columnHeaders = columnHeaders;
-=======
-
     };
->>>>>>> e68499cb5a29ee6aadbfc7a4e38200a5a1ecbbf6
-
-
-    };
-
 
     scope.rowClick = function (index) {
 
