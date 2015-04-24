@@ -320,7 +320,7 @@ class Users(TimDbBase):
         if len(groups) > 0:
             return groups[0]['id']
 
-        return self.getUserGroups(user_id)[0]
+        return self.getUserGroups(user_id)[0]['id']
 
 
     @contract
