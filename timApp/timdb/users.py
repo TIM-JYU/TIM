@@ -305,7 +305,7 @@ class Users(TimDbBase):
             print("DEBUG: Too many named groups: {} ({})".format(group_name, groups))
             return None
 
-        return groups[0]
+        return groups[0][0]
 
     @contract
     def getPersonalUserGroup(self, user_id: 'int') -> 'int':
