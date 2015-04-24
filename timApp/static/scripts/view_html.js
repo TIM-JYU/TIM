@@ -478,17 +478,24 @@ timApp.controller("ViewCtrl", [
             $par.prepend($actionDiv);
         };
 
+        sc.dist = function(coords1, coords2) {
+            return Math.sqrt( Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2) );
+        };
+
         sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
             if (!sc.rights.editable && !sc.rights.can_comment) {
                 return;
             }
             if (toggle2) {
                 // Clicked twice successively
-                var clicktime = new Date().getTime() - sc.lastclick;
-                //console.log(clicktime);
+                var clicktime = new Date().getTime() - sc.lastclicktime;
+                var clickdelta = sc.dist(coords, sc.lastclickplace);
                 $par.addClass("selected");
 
-                if (clicktime < 500) {
+                if (clickdelta > 10) {
+                    // Selecting text
+                }
+                else if (clicktime < 500) {
                     // Double click
                     sc.defaultAction(e, $par, coords);
                 }
@@ -499,7 +506,8 @@ timApp.controller("ViewCtrl", [
             } else if (toggle1) {
                 // Clicked once
                 $par.addClass("lightselect");
-                sc.lastclick = new Date().getTime();
+                sc.lastclicktime = new Date().getTime();
+                sc.lastclickplace = coords;
             } else {
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
