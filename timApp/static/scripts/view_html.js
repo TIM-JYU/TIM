@@ -1084,7 +1084,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     };
 
-    scope.createQuestion = function () {
+  scope.createQuestion = function () {
         var url;
         var doc_id = scope.docId;
         var $par = scope.par;
