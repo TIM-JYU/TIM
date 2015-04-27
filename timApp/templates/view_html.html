@@ -92,8 +92,8 @@
             {% include 'lectureinfo_menu.html' %}
             <div ng-show="!inLecture">
             </div>
-            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed resizable>
-                <div class="wall-base">
+            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false" resizable>
+                <div class="wall-base" id="wallBase">
                     <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)">
                         Wall
                         <input type="button" ng-click="wallRelease($event)" id="detachButton" id="buttonRight">
@@ -105,7 +105,7 @@
                         </div>
                         <div class="wall-buttons">
                             <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="chatEnterPressed($event)">
-                            <button ng-click="sendMessageEvent(newMsg)">Send</button>
+                            <!-- <button ng-click="sendMessageEvent(newMsg)">Send</button> -->
                             <!-- <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button> -->
                         </div>
                     </div>

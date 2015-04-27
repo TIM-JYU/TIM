@@ -8,8 +8,12 @@
     border-radius: 25px;
     padding: 1px 50px 75px 10px;
     top: 0;
-    height: 35px;
+    height: 50px;
     max-width: 810px;
+}
+
+.menuSection p {
+    line-height: 100%;
 }
 
 #smallMenu {

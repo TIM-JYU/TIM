@@ -108,14 +108,18 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 wall.style.bottom = "2em";
                 wall.style.top = "";
                 wall.style.right = "2em";
+                wall.setAttribute("tim-draggable-fixed",false);
                 //TODO: Change to url_for or some other way to get correct ulr
                 detach.style.background = "url('../../../static/images/detach.png')"
+
 
 
             } else {
                 wall.style.position = "absolute";
                 wall.style.bottom = "auto";
                 detach.style.background = "url('../../../static/images/tach.png')"
+                wall.setAttribute("tim-draggable-fixed",true);
+
             }
         };
 
@@ -246,6 +250,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
+            //TODO: Do not use getElementById
+
+            var elemWall = document.getElementById("wall");
+            if (!$scope.showWall) {
+                $scope.wallHeight = elemWall.style.height;
+                elemWall.style.height = "";
+            } else {
+                elemWall.style.height = $scope.wallHeight;
+            }
         };
 
         $scope.modifyLecture = function () {
