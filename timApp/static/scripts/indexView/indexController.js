@@ -29,7 +29,7 @@ function(sc, controller, http, q, $upload) {
         }).success(function(data, status, headers, config) {
             window.location.href = "/view/" + data.name;
         }).error(function(data, status, headers, config) {
-            alert(data.message);
+            alert(data.error);
         });
     };
 
@@ -40,7 +40,7 @@ function(sc, controller, http, q, $upload) {
         }).success(function(data, status, headers, config) {
             window.location.href = "/view/" + data.name;
         }).error(function(data, status, headers, config) {
-            alert(data.message);
+            alert(data.error);
         });
     };
 
@@ -116,7 +116,7 @@ function(sc, controller, http, q, $upload) {
                 sc.getDocs();
                 sc.uploadInProgress = false;
             }).error(function(data, status, headers, config) {
-                sc.progress = 'Error: ' + data.message;
+                sc.progress = 'Error: ' + data.error;
                 sc.uploadInProgress = false;
             });
             // 
