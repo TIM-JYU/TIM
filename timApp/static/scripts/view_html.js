@@ -915,10 +915,14 @@ timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
     function ($scope, json, controller) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
-        var jsonData = JSON.parse(json);
         $scope.jsonRaw = json;
 
-
+        var jsonData = JSON.parse(json);
+        $scope.jsonRaw = {
+            type: jsonData.TYPE,
+            time: jsonData.TIME,
+            rows: jsonData.DATA.ROWS
+            };
     }
 ]);
 

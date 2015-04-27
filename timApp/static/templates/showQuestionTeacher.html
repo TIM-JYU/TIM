@@ -1,6 +1,19 @@
 <div>
-    <h5>Json data</h5>
-    <ul>
-        <li>Raw json : <span ng-bind="jsonRaw"></span></li>
-    </ul>
+    <h5> Question: </h5>
+    Question type: {{ jsonRaw.type }} <br>
+    Time limit: {{ jsonRaw.time }} <br>
+    <table>
+        <tr ng-repeat="row in jsonRaw.rows">
+            <td> {{ row.Value }} </td>
+            <td ng-repeat="col in row.Columns">
+                <input type=col.value disabled >
+            </td>
+        </tr>
+    </table>
+
+
+
+
+
+    <!-- <div>{{ jsonRaw }}</div> -->
 </div>
