@@ -962,7 +962,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     text: 'test',
                     questionPlaceholder: 'column',
                     type: "answer",
-                    value: 'scope.question.answerFieldType"'
+                    value: 'scope.question.answerFieldType'
                 }
             }
             scope.rows[i] = {
@@ -1092,20 +1092,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         //TODO use  JSON.stringify
 
         var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
-        if (scope.question.type != "radio-vertical" || scope.question.answerFieldType != "radiobutton-vertical") {
-            questionJson += '  "ROWS": [';
-
-            for (i = 0; i < scope.rows.length; i++) {
-                questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
-                for (j = 0; j < scope.rows[i].columns.length; j++) {
-                    questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
-                }
-                questionJson = questionJson.substring(0, questionJson.length - 1);
-                questionJson += ']},';
-            }
-        }
-        else {
-            questionJson += '  "COLUMNS": [';
+        if (scope.question.type == "radio-vertical" || scope.question.answerFieldType == "radiobutton-vertical") {
+      questionJson += '  "COLUMNS": [';
 
             for (i = 0; i < scope.columnHeaders.length; i++) {
                 questionJson += '{"Type": "question", "Value": "' + scope.columnHeaders[i].text + '", "ROWS" : [';
@@ -1115,6 +1103,18 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 questionJson = questionJson.substring(0, questionJson.length - 1);
                 questionJson += ']},';
 
+            }
+        }
+        else {
+            questionJson += '  "ROWS": [';
+
+            for (i = 0; i < scope.rows.length; i++) {
+                questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
+                for (j = 0; j < scope.rows[i].columns.length; j++) {
+                    questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
+                }
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+                questionJson += ']},';
             }
         }
         questionJson = questionJson.substring(0, questionJson.length - 1);
