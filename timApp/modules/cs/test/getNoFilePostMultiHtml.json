@@ -1,0 +1,15 @@
+[
+    {
+        "taskID": "113087.helloeka",
+        "state": { "usercode": "       System.out.println(\"Hello World!\");" },
+        "markup": {
+            "replace": "REPLACE",
+            "path": "user",
+            "byCode": "       System.out.println(\"Hello World!\");",
+            "usercode": "       System.out.println(\"Hello World!\");",
+            "user_id": "vesal",
+            "-program": "//\npackage example;\npublic class Hello {\n    public static void main(String[] args) {\n       // REPLACE\n    }\n}\n",
+            "type": "java"
+        }
+    }
+]

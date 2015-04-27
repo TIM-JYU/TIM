@@ -4,11 +4,16 @@ Vuorovaikutteinen TIM
 TIMiin lisätään seuraavat ominaisuudet:
 
 - luennolle liittyminen
-- siirtyminen omassa monisteessa samaan paikaan kuin opettaja
+- siirtyminen omassa monisteessa samaan paikaan kuin opettaja (opettaja voi 
+  pakottaa tai oppilas voi siirtyä kun painaa "Siirry opettajan kohtaan"
+  
 - monipuolisemmat monivalinnat, mm järjestelytehtävät
 - tekstivastaus
+
 - näiden avulla toteutetaan InSitu toiminnallisuus TIMiin
 - opettaja voi kysyä monisteeseen tehtyjä kysymyksiä
 - voidaan tehdä lennosta uusia kysymyksiä yksinkertaisella ja nopealla käyttöliittymällä
 - oppilaalla vastausmahdollisuus osana TIMiä tai erillisessä ikkunassa jos
   ei halua käyttää muuta monisteeseen liittyvää.
+- opettajan liittymä vastausten katsomiseen ja näyttämiseen
+(- opettajan liittymä vastausten analysointiin)  

@@ -1,15 +1,12 @@
 <div>
     <div id="check" ng-if="question.type == 'matriisi'">
         <label>Answer type:</label>
-        <select name="vtyyppi" ng-if="question.type == 'matriisi'" ng-model="question.answerFieldType" ng-dropdown>
+        <select name="answerType" ng-if="question.type == 'matriisi'" ng-model="question.answerFieldType" ng-dropdown
+                ng-options="item.value as item.label for item in answerFieldTypes ">
             <option value="" disabled selected> -- select answer type --</option>
-            <option ng-option value="radiobutton-horizontal">Horizontal radio button</option>
-            <option ng-option value="radiobutton-vertical">Vertical radio button</option>
-            <option ng-option value="textArea">Text area</option>
-            <option ng-option value="checkbox">Checkbox</option>
+
         </select>
     </div>
-    <label>Answers:</label>
     <div>
         <table>
             <thead>
@@ -17,7 +14,7 @@
             <tr style="border: none; background-color: inherit;">
                 <th style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
-                <th ng-repeat="item in rows[0].columns" style="border: none; background-color: inherit"
+                <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit"
                     ng-if="question.type == 'matriisi'">
                     <div style="top:35px; position:relative;">
                         <button ng-click="addCol($index)" style="float:left; margin-left: -20px;">+</button>
@@ -37,9 +34,9 @@
                 <th ng-if="question.type == 'true-false'">True</th>
                 <th ng-if="question.type == 'true-false'">False</th>
 
-                <th ng-repeat="item in rows[0].columns" ng-if="question.type != 'true-false'">
+                <th ng-repeat="item in columnHeaders" ng-if="question.type != 'true-false'">
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20"></textarea>
+                        <textarea form="question-form" rows="1" cols="20" ng-model="rows[0].columns[$index].text"></textarea>
                         <br/>
 
                     </div>
@@ -64,6 +61,7 @@
                 <th>
                     <div class="cart">
                         <textarea style="margin-left:5px" ng-model="row.value" form="question-form" rows="1" cols="20"></textarea>
+
                         <br/>
 
                     </div>
@@ -73,7 +71,7 @@
                     <div ng-if="(question.answerFieldType == 'radiobutton-horizontal' && question.type=='matriisi') || question.type == 'true-false'">
                         <input type="radio"
                                ng-model="row.id"
-                               ng-value="column.rowId"
+                               ng-value="column.id"
                                placeholder="Placeholder"/>
                         <input type="text"
                                ng-show="row.id == column.id"
@@ -84,8 +82,8 @@
                     <div ng-if="question.type != 'true-false'">
                         <div ng-if="(question.answerFieldType == 'radiobutton-vertical' && question.type=='matriisi') || question.type == 'radio-vertical'">
                             <input type="radio"
-                                   ng-model="column.id"
-                                   ng-value="row.id"
+                                   name="column.rowId"
+                                   ng-value="column.id"
                                    placeholder="Placeholder"/>
                             <input type="text"
                                    ng-show="column.id == row.id"

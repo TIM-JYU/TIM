@@ -3,6 +3,7 @@ from ubuntu
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 # Asennetaan python, pip ja flask
+run apt-get update
 run apt-get install -y python
 run apt-get install -y python-pip
 run pip install Flask

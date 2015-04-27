@@ -1,48 +1,124 @@
-var timApp = angular.module('timApp', ['fundoo.services', 'ngSanitize', 'angularFileUpload', 'ui.ace'].concat(modules), function ($locationProvider) {
-    $locationProvider.html5Mode(true);
-    $locationProvider.hashPrefix('!');
+var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode;
 
-});
+var timApp = angular.module('timApp', [
+    'ngSanitize',
+    'angularFileUpload',
+    'fundoo.services',
+    'ui.ace'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
+    var interceptor = [
+        '$q',
+        '$rootScope',
+        function ($q, $rootScope) {
+            var re = /\/[^/]+\/([^/]+)\/answer\/$/;
+            var service = {
+                'request': function (config) {
+                    if (re.test(config.url)) {
+                        var match = re.exec(config.url);
+                        var taskId = match[1];
+                        var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
+                        var browserScope = ab.isolateScope();
+                        if (ab.scope().teacherMode) {
+                            angular.extend(config.data, {abData: browserScope.getTeacherData()});
+                        }
+                        //console.log(config);
+                    }
+                    return config;
+                },
+                'response': function (response) {
 
-timApp.controller("ViewCtrl", ['$scope',
-    'createDialog',
+                    if (re.test(response.config.url)) {
+                        var match = re.exec(response.config.url);
+                        var taskId = match[1];
+                        $rootScope.$broadcast('answerSaved', {taskId: taskId});
+                    }
+                    return response;
+                }
+            };
+            return service;
+        }
+    ];
+
+    $httpProvider.interceptors.push(interceptor);
+}]);
+
+timApp.controller("ViewCtrl", [
+    '$scope',
     '$http',
     '$q',
     '$upload',
     '$injector',
     '$compile',
-    '$location',
+    '$window',
+    '$document',
+    'createDialog',
     '$rootScope',
-    function (sc, createDialog, http, q, $upload, $injector, $compile, $location, $rootScope) {
+    function (sc, http, q, $upload, $injector, $compile, $window, $document, createDialog, $rootScope) {
+        "use strict";
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
-        sc.canEdit = canEdit;
+        sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;
+        sc.teacherMode = teacherMode;
+        sc.sidebarState = 'autohidden';
+        sc.selectedUser = sc.users[0];
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         sc.questionShown = false;
         var NOTE_EDITOR_CLASS = "editorArea";
-        var NOTE_EDITOR_CLASS_DOT = "." + NOTE_EDITOR_CLASS;
-        var NOTE_CANCEL_BUTTON = ".timButton.cancelNote";
-        var NOTE_DELETE_BUTTON = ".timButton.deleteNote";
-        var NOTE_SAVE_BUTTON = ".timButton.saveNote";
+        var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
-
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
-        var PAR_CANCEL_BUTTON = ".timButton.cancelPar";
-        var PAR_DELETE_BUTTON = ".timButton.deletePar";
-        var PAR_SAVE_BUTTON = ".timButton.savePar";
         var PAR_ADD_BUTTON_CLASS = "timButton addPar";
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
         var QUESTION_ADD_BUTTON_CLASS = "timButton addQuestion";
         var QUESTION_ADD_BUTTON = "." + QUESTION_ADD_BUTTON_CLASS.replace(" ", ".");
+        var PAR_CLOSE_BUTTON_CLASS = "timButton menuClose";
+        var PAR_CLOSE_BUTTON = "." + PAR_CLOSE_BUTTON_CLASS.replace(" ", ".");
+
+        sc.processAllMath = function ($elem) {
+            $elem.find('.math').each(function () {
+                sc.processMath(this);
+            });
+        };
+
+        sc.processMath = function (elem) {
+            var $this = $(elem);
+            var math = $this.text();
+            var hasDisplayMode = false;
+            if (math[1] === '[') {
+                hasDisplayMode = true;
+            }
+            else if (math[1] !== '(') {
+                return;
+            }
+            katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
+        };
+
+        sc.toggleSidebar = function () {
+            var visible = angular.element('.sidebar').is(":visible");
+            if (visible) {
+                sc.sidebarState = 'hidden';
+            } else {
+                sc.sidebarState = 'open';
+            }
+        };
+
+        sc.autoHideSidebar = function () {
+            if (sc.sidebarState === 'open') {
+                sc.sidebarState = 'autohidden';
+            }
+        };
+
+        sc.changeUser = function (user) {
+            sc.$broadcast('userChanged', {user: user});
+        };
 
         sc.getParIndex = function ($par) {
             return $par.index() + sc.startIndex;
@@ -120,7 +196,7 @@ timApp.controller("ViewCtrl", ['$scope',
 
             $rootScope.$broadcast('get_lectureId', 'lecture_id');
 
-            createDialog('../static/templates/showQuestionTeacher.html', {
+            createDialog('../../../static/templates/showQuestionTeacher.html', {
                 id: 'simpleDialog',
                 title: 'Question dialog',
                 backdrop: true,
@@ -146,8 +222,11 @@ timApp.controller("ViewCtrl", ['$scope',
         }
 
         sc.toggleNoteEditor = function ($par, options) {
-            var url;
-            var data;
+            if (!sc.rights.can_comment) {
+                return;
+            }
+            var url,
+                data;
             if (options.isNew) {
                 url = '/postNote';
                 data = {
@@ -161,43 +240,44 @@ timApp.controller("ViewCtrl", ['$scope',
                 url = '/editNote';
                 data = options.noteData;
                 if (!data.editable) {
-                    alert('You cannot edit this note.');
+                    $window.alert('You cannot edit this note.');
                     return;
                 }
             }
-            var par_id = sc.getParIndex($par);
-            var attrs = {
-                "save-url": url,
-                "extra-data": JSON.stringify(angular.extend({
-                    docId: sc.docId,
-                    par: par_id
-                }, data)),
-                "options": JSON.stringify({
-                    showDelete: !options.isNew,
-                    showImageUpload: false,
-                    tags: [
-                        {name: 'difficult', desc: 'The text is difficult to understand'},
-                        {name: 'unclear', desc: 'The text is unclear'}
-                    ],
-                    choices: {
-                        desc: [{
-                            desc: 'Show note to:',
-                            name: 'access',
-                            opts: [
-                                {desc: 'Everyone', value: 'everyone'},
-                                {desc: 'Just me', value: 'justme'}
-                            ]
-                        }]
-                    },
-                    destroyAfterSave: true
-                }),
-                "after-save": 'handleNoteSave(saveData, extraData)',
-                "after-cancel": 'handleNoteCancel(extraData)',
-                "after-delete": 'handleNoteDelete(saveData, extraData)',
-                "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteNote',
-                "editor-text": data.content
-            };
+
+            var par_id = sc.getParIndex($par),
+                attrs = {
+                    "save-url": url,
+                    "extra-data": JSON.stringify(angular.extend({
+                        docId: sc.docId,
+                        par: par_id
+                    }, data)),
+                    "options": JSON.stringify({
+                        showDelete: !options.isNew,
+                        showImageUpload: false,
+                        tags: [
+                            {name: 'difficult', desc: 'The text is difficult to understand'},
+                            {name: 'unclear', desc: 'The text is unclear'}
+                        ],
+                        choices: {
+                            desc: [{
+                                desc: 'Show note to:',
+                                name: 'access',
+                                opts: [
+                                    {desc: 'Everyone', value: 'everyone'},
+                                    {desc: 'Just me', value: 'justme'}
+                                ]
+                            }]
+                        },
+                        destroyAfterSave: true
+                    }),
+                    "after-save": 'handleNoteSave(saveData, extraData)',
+                    "after-cancel": 'handleNoteCancel(extraData)',
+                    "after-delete": 'handleNoteDelete(saveData, extraData)',
+                    "preview-url": '/preview/' + sc.docId,
+                    "delete-url": '/deleteNote',
+                    "editor-text": data.content
+                };
             sc.toggleEditor($par, options, attrs);
         };
 
@@ -207,31 +287,54 @@ timApp.controller("ViewCtrl", ['$scope',
 
         // Event handlers
 
-        var ua = navigator.userAgent,
+        var ua = $window.navigator.userAgent,
             eventName = (ua.match(/iPad/i)) ? "touchstart" : "click";
 
         sc.addEvent = function (className, func) {
-            $(document).on(eventName, className, func);
+            $document.on(eventName, className, func);
+        };
+
+        sc.showEditWindow = function (e, $par, coords) {
+            sc.toggleParEditor($par, {showDelete: true});
         };
 
         sc.addEvent(PAR_EDIT_BUTTON, function (e) {
-            var $par = $(e.target).parent().parent();
+            var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
-            sc.toggleActionButtons($par, false, false, null);
-            sc.toggleParEditor($par, {showDelete: true});
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.showEditWindow(e, $par, null)
         });
 
+        sc.addEvent("#defaultEdit", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showEditWindow;
+        });
+
+        sc.showAddParagraphAbove = function (e, $par, coords) {
+            var $newpar = $("<div>", {class: "par new"})
+                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+            $par.before($newpar);
+            sc.toggleParEditor($newpar, {showDelete: false});
+        };
+
+        sc.showAddParagraphBelow = function (e, $par, coords) {
+            var $newpar = $("<div>", {class: "par new"})
+                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+            $par.after($newpar);
+            sc.toggleParEditor($newpar, {showDelete: false});
+        };
+
         sc.addEvent(PAR_ADD_BUTTON, function (e) {
-            var $par = $(e.target).parent().parent();
+            var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
-            sc.toggleActionButtons($par, false, false, null);
+            sc.toggleActionButtons(e, $par, false, false, null);
             var $newpar = $("<div>", {class: "par new"})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
 
             if ($(e.target).hasClass("above")) {
                 $par.before($newpar);
-            }
-            else if ($(e.target).hasClass("below")) {
+            } else if ($(e.target).hasClass("below")) {
                 $par.after($newpar);
             }
 
@@ -241,9 +344,9 @@ timApp.controller("ViewCtrl", ['$scope',
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
         sc.addEvent(QUESTION_ADD_BUTTON, function (e) {
-            var $par = $(e.target).parent().parent();
+            var $par = $(e.target).parent().parent().parent();
             sc.toggleQuestion();
-            sc.toggleActionButtons($par, false, false, null);
+            sc.toggleActionButtons(e, $par, false, false, null);
             sc.par = $par;
             sc.$apply();
         });
@@ -257,6 +360,34 @@ timApp.controller("ViewCtrl", ['$scope',
             console.log("here I am");
             return this.animate({opacity: 'toggle', height: 'toggle'}, 'fast', easing, callback);
         };
+
+        sc.addEvent("#defaultPrepend", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showAddParagraphAbove;
+        });
+
+        sc.addEvent("#defaultAppend", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showAddParagraphBelow;
+        });
+
+        sc.doNothing = function (e, $par, coords) {
+            sc.toggleActionButtons(e, $par, false, false, null);
+        };
+
+        sc.addEvent(PAR_CLOSE_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            $(".par.new").remove();
+            sc.toggleActionButtons(e, $par, false, false, null);
+        });
+
+        sc.addEvent("#defaultClose", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.doNothing;
+        });
 
         sc.handleCancel = function (extraData) {
             var $par = sc.getElementByParIndex(extraData.par);
@@ -274,14 +405,22 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.addSavedParToDom = function (data, extraData) {
-            var $par = sc.getElementByParIndex(extraData.par);
+            var $par = sc.getElementByParIndex(extraData.par),
+                len = data.texts.length;
             http.defaults.headers.common.Version = data.version;
-            var len = data.texts.length;
             for (var i = len - 1; i >= 0; i--) {
-                var $newpar = $("<div>", {class: "par"});
-                $par.after($newpar
-                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i].html)(sc))));
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $newpar[0]]);
+                var $newpar = $("<div>", {class: "par"})
+                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i].html)(sc)));
+                var readClass = "unread";
+                if (i === 0 && !$par.hasClass("new")) {
+                    $par.find(".notes").appendTo($newpar);
+                    if ($par.find(".read, .modified").length > 0) {
+                        readClass = "modified";
+                    }
+                }
+                $par.after($newpar.append($("<div>",
+                    {class: "readline " + readClass, title: "Click to mark this paragraph as read"})));
+                sc.processMath($newpar[0]);
             }
             $par.remove();
             sc.editing = false;
@@ -289,19 +428,31 @@ timApp.controller("ViewCtrl", ['$scope',
 
         sc.addEvent(".readline", function (e) {
             var par_id = sc.getParIndex($(this).parents('.par'));
-            $(this).hide();
-            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + (new Date).getTime())
+            var oldClass = $(this).attr("class");
+            $(this).attr("class", "readline read");
+            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
                 }).error(function (data, status, headers, config) {
-                    alert('Could not save the read marking.');
+                    $window.alert('Could not save the read marking.');
+                    $(this).attr("class", oldClass);
                 });
         });
 
-        sc.addEvent(NOTE_ADD_BUTTON, function (e) {
-            var $par = $(e.target).parent().parent();
-            sc.toggleActionButtons($par, false, false, null);
+        sc.showNoteWindow = function (e, $par, coords) {
             sc.toggleNoteEditor($par, {isNew: true});
+        };
+
+        sc.addEvent(NOTE_ADD_BUTTON, function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.showNoteWindow(e, $par, null);
+        });
+
+        sc.addEvent("#defaultAdd", function (e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.defaultAction = sc.showNoteWindow;
         });
 
         sc.handleNoteCancel = function (extraData) {
@@ -319,14 +470,21 @@ timApp.controller("ViewCtrl", ['$scope',
         };
 
         sc.addEvent('.paragraphs .parContent', function (e) {
-            if (sc.editing)
+            if (sc.editing) {
                 return;
+            }
 
-            var tag = $(e.target).prop("tagName");
+            sc.autoHideSidebar();
+            sc.$apply();
 
-            // Don't show paragraph menu on these specific tags
-            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'A')
+            var $target = $(e.target);
+            var tag = $target.prop("tagName");
+
+            // Don't show paragraph menu on these specific tags or class
+            var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A'];
+            if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
                 return;
+            }
 
             var $par = $(this).parent();
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
@@ -336,7 +494,7 @@ timApp.controller("ViewCtrl", ['$scope',
             $(".par.selected").removeClass("selected");
             $(".par.lightselect").removeClass("lightselect");
             $(".actionButtons").remove();
-            sc.toggleActionButtons($par, toggle1, toggle2, coords);
+            sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
         });
 
         sc.addEvent(".noteContent", function () {
@@ -349,42 +507,109 @@ timApp.controller("ViewCtrl", ['$scope',
 
         // Note-related functions
 
-        sc.toggleActionButtons = function ($par, toggle1, toggle2, coords) {
-            if (toggle2) {
-                // Clicked twice successively
-                $par.addClass("selected");
-                var $actionDiv = $("<div>", {class: 'actionButtons'});
-                var button_width = $par.outerWidth() / 4;
-                $actionDiv.append($("<button>", {
-                    class: NOTE_ADD_BUTTON_CLASS,
-                    text: 'Comment/note',
+        sc.showOptionsWindow = function (e, $par, coords) {
+            var default_width = $par.outerWidth() / 16;
+            var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
+            var $actionDiv = $("<div>", {class: 'actionButtons'});
+            if (sc.rights.can_comment) {
+                var $span = $("<span>");
+                $span.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
+                $span.append($("<button>", {
+                    id: 'defaultAdd',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
+                $actionDiv.append($span);
+            }
+            if (sc.rights.editable) {
+                var $span = $("<span>");
+                $span.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
+                $span.append($("<button>", {
+                    id: 'defaultEdit',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
+                $actionDiv.append($span);
+
+                var $span = $("<span>");
+                $span.append($("<button>", {
+                    class: PAR_ADD_BUTTON_CLASS + ' above',
+                    text: 'Add paragraph above',
                     width: button_width
                 }));
-                if (sc.canEdit) {
-                    $actionDiv.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
-                    $actionDiv.append($("<button>", {
-                        class: PAR_ADD_BUTTON_CLASS + ' above',
-                        text: 'Add paragraph above',
-                        width: button_width
-                    }));
-                    $actionDiv.append($("<button>", {
-                        class: PAR_ADD_BUTTON_CLASS + ' below',
-                        text: 'Add paragraph below',
-                        width: button_width
-                    }));
-                    $actionDiv.append($("<button>", {
-                        class: QUESTION_ADD_BUTTON_CLASS + ' below',
-                        text: 'Add question',
-                        width: button_width
-                    }));
+                $span.append($("<button>", {
+                    id: 'defaultPrepend',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
+                $actionDiv.append($span);
+
+                var $span = $("<span>");
+                $span.append($("<button>", {
+                    class: PAR_ADD_BUTTON_CLASS + ' below',
+                    text: 'Add paragraph below',
+                    width: button_width
+                }));
+                $span.append($("<button>", {
+                    id: 'defaultAppend',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
+                $actionDiv.append($span);
+
+                var $span = $("<span>");
+                $span.append($("<button>", {class: QUESTION_ADD_BUTTON_CLASS, text: 'Create question', width: button_width}));
+                $span.append($("<button>", {
+                    id: 'createQuestion',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
+                $actionDiv.append($span);
+
+                var $span = $("<span>");
+                $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
+                $span.append($("<button>", {
+                    id: 'defaultClose',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
+                $actionDiv.append($span);
+            }
+            $actionDiv.offset(coords);
+            $actionDiv.css('position', 'absolute'); // IE needs this
+            $par.prepend($actionDiv);
+        };
+
+        sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
+            if (!sc.rights.editable && !sc.rights.can_comment) {
+                return;
+            }
+            if (toggle2) {
+                // Clicked twice successively
+                var clicktime = new Date().getTime() - sc.lastclick;
+                //console.log(clicktime);
+                $par.addClass("selected");
+
+                if (clicktime < 500) {
+                    // Double click
+                    sc.defaultAction(e, $par, coords);
                 }
-                $actionDiv.offset(coords);
-                $actionDiv.css('position', 'absolute'); // IE needs this
-                $par.prepend($actionDiv);
+                else {
+                    // Two clicks
+                    sc.showOptionsWindow(e, $par, coords);
+                }
             } else if (toggle1) {
                 // Clicked once
                 $par.addClass("lightselect");
+                sc.lastclick = new Date().getTime();
             } else {
+                console.log("This line is new: " + $par);
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
                 $par.removeClass("lightselect");
@@ -402,13 +627,13 @@ timApp.controller("ViewCtrl", ['$scope',
                 }
                 $noteDiv.append($("<div>", {class: classes.join(" ")})
                     .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
+                    .append($("<div>", {class: 'noteContent', html: notes[i].htmlContent})));
             }
             return $noteDiv;
         };
 
         sc.getQuestionHtml = function (questions) {
-            var questionImage = '../static/images/questionBubble.png';
+            var questionImage = '../../../static/images/questionBubble.png';
             var $questionsDiv = $("<div>", {class: 'questions'});
 
             // TODO: Think better way to get the ID of question.
@@ -453,7 +678,7 @@ timApp.controller("ViewCtrl", ['$scope',
 
 
         sc.getNotes = function () {
-            var rn = "?_=" + (new Date).getTime();
+            var rn = "?_=" + Date.now();
 
             http.get('/notes/' + sc.docId + rn).success(function (data, status, headers, config) {
                 $('.notes').remove();
@@ -475,18 +700,22 @@ timApp.controller("ViewCtrl", ['$scope',
                     var parIndex = index + sc.startIndex;
                     if (parIndex in pars) {
                         var $notediv = sc.getNoteHtml(pars[parIndex].notes);
-                        $(this).append($notediv);
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
+                        var $this = $(this);
+                        $this.append($notediv);
+                        sc.processAllMath($this);
                     }
                 });
 
             }).error(function (data, status, headers, config) {
-                alert("Could not fetch notes.");
+                $window.alert("Could not fetch notes.");
             });
         };
 
         sc.getReadPars = function () {
-            var rn = "?_=" + (new Date).getTime();
+            if (!sc.rights.can_mark_as_read) {
+                return;
+            }
+            var rn = "?_=" + Date.now();
             http.get('/read/' + sc.docId + rn).success(function (data, status, headers, config) {
                 var readCount = data.length;
                 $('.readline').remove();
@@ -509,9 +738,9 @@ timApp.controller("ViewCtrl", ['$scope',
                     }
                     var $div = $("<div>", {class: classes.join(" "), title: "Click to mark this paragraph as read"});
                     $(this).append($div);
-                })
+                });
             }).error(function (data, status, headers, config) {
-                alert("Could not fetch reading info.");
+                $window.alert("Could not fetch reading info.");
             });
         };
 
@@ -542,12 +771,12 @@ timApp.controller("ViewCtrl", ['$scope',
                 var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
-            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/g, "").trim().replace(/ +/g, '-').toLowerCase()
+            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
         };
 
         sc.findIndexLevel = function (str) {
             for (var i = 0; i < str.length; i++) {
-                if (str.charAt(i) != '#') {
+                if (str.charAt(i) !== '#') {
                     return i;
                 }
             }
@@ -562,80 +791,86 @@ timApp.controller("ViewCtrl", ['$scope',
 
                 for (var i = 0; i < data.length; i++) {
                     var lvl = sc.findIndexLevel(data[i]);
-                    if (lvl < 1 || lvl > 3)
+                    if (lvl < 1 || lvl > 3) {
                         continue;
+                    }
 
                     var astyle = "a" + lvl;
                     var txt = data[i].substr(lvl);
                     txt = txt.trim().replace(/\\#/g, "#");
                     var entry = {
                         text: sc.totext(txt),
-                        target: encodeURIComponent($location.path().substring(1)) + sc.tolink(txt),
+                        target: sc.tolink(txt),
                         style: astyle,
                         level: lvl,
                         items: [],
                         state: ""
                     };
 
-                    if (lvl == 1) {
-                        if (parentEntry != null) {
-                            if ("items" in parentEntry && parentEntry.items.length > 0)
+                    if (lvl === 1) {
+                        if (parentEntry !== null) {
+                            if ("items" in parentEntry && parentEntry.items.length > 0) {
                                 parentEntry.state = 'col';
+                            }
                             sc.indexTable.push(parentEntry);
                         }
 
                         parentEntry = entry;
                     }
-                    else if (parentEntry != null) {
+                    else if (parentEntry !== null) {
                         if (!("items" in parentEntry)) {
                             // For IE
-                            parentEntry.items = []
+                            parentEntry.items = [];
                         }
-                        parentEntry.items.push(entry)
+                        parentEntry.items.push(entry);
                     }
 
                 }
 
-                if (parentEntry != null) {
-                    if (parentEntry.items.length > 0)
+                if (parentEntry !== null) {
+                    if (parentEntry.items.length > 0) {
                         parentEntry.state = 'col';
+                    }
                     sc.indexTable.push(parentEntry);
                 }
-
-                //sc.$apply();
             }).error(function (data, status, headers, config) {
-                alert("Could not fetch index entries.");
+                $window.alert("Could not fetch index entries.");
             });
         };
 
         sc.invertState = function (state) {
-            if (state == 'exp')
+            if (state === 'exp') {
                 return 'col';
-            if (state == 'col')
+            }
+            if (state === 'col') {
                 return 'exp';
+            }
             return state;
         };
 
         sc.clearSelection = function () {
-            if (document.selection)
-                document.selection.empty();
-            else if (window.getSelection)
-                window.getSelection().removeAllRanges();
+            if ($document.selection) {
+                $document.selection.empty();
+            }
+            else if ($window.getSelection) {
+                $window.getSelection().removeAllRanges();
+            }
         };
 
         sc.invertStateClearSelection = function (event, state) {
-            if (event.which != 1) {
+            if (event.which !== 1) {
                 // Listen only to the left mouse button
                 return state;
             }
-            if (event.target.className == 'a2' || event.target.className == 'a3') {
+            if (event.target.className === 'a2' || event.target.className === 'a3') {
                 // Do not collapse/expand if a subentry is clicked
                 return state;
             }
 
             var newState = sc.invertState(state);
-            if (newState != state)
+            if (newState !== state) {
                 sc.clearSelection();
+            }
             return newState;
         };
 
@@ -646,6 +881,8 @@ timApp.controller("ViewCtrl", ['$scope',
         sc.getNotes();
         sc.getReadPars();
         sc.getQuestions();
+        sc.processAllMath($('body'));
+        sc.defaultAction = sc.showOptionsWindow;
     }]);
 
 timApp.directive('questionDialog', function factory() {
@@ -678,10 +915,14 @@ timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
     function ($scope, json, controller) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
-        var jsonData = JSON.parse(json);
         $scope.jsonRaw = json;
 
-
+        var jsonData = JSON.parse(json);
+        $scope.jsonRaw = {
+            type: jsonData.TYPE,
+            time: jsonData.TIME,
+            rows: jsonData.DATA.ROWS
+            };
     }
 ]);
 
@@ -689,62 +930,55 @@ timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
 
     scope.question = {
-        question: ""
+        question: "",
+        answerFieldType: ""
     };
 
 
     scope.questionType = "";
     scope.rows = [];
     scope.columns = [];
+    scope.columnHeaders = [];
     scope.answerDirection = "horizontal";
+    scope.answerFieldTypes = [
+
+        {label: "Text area", value: "textArea"},
+        {label: "Radio button vertical", value: "radiobutton-vertical"},
+        {label: "Radio Button horizontal", value: "radiobutton-horizontal"},
+        {label: "Checkbox", value: "checkbox"}
+    ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-
-        switch (scope.answerDirection) {
-            case "horizontal":
-                scope.createRowMatrix(rowsCount, columnsCount, type);
-                break;
-            case "vertical":
-                //TODO implement this, or think of some better way
-                scope.createColumnMatrix(rowsCount, columnsCount, type);
-                break;
-            default:
-                console.log("wtf");
-        }
-
-
-    };
-
-    scope.createRowMatrix = function (rowsCount, columnsCount, type) {
+        if (scope.rows.length > rowsCount) rowsCount = scope.rows.length;
 
         for (var i = 0; i < rowsCount; i++) {
             var columns = [];
-            for (var j = 0; j < columnsCount; j++) {
+            if (scope.rows[i]) columns = scope.rows[i].columns;
+            if (columnsCount < columns.length) columns.splice(columnsCount, columns.length);
+
+            for (var j = columns.length; j < columnsCount; j++) {
                 columns[j] = {
                     id: j,
                     rowId: i,
-                    text: 'test',
+                    text: '',
                     questionPlaceholder: 'column',
-                    type: 'answer',
-                    value: 'textfield'
+                    type: "answer",
+                    value: 'scope.question.answerFieldType"'
                 }
             }
+
+            var value = '';
+            if (i < scope.rows.length) value = scope.rows[i].value;
+
             scope.rows[i] = {
                 id: i,
                 text: 'test',
                 type: 'question',
-                //TODO get question text
-                value: '',
+                value: value,
                 columns: columns
             }
-
         }
     };
-
-    scope.createColumnMatrix = function (rowsCount, columnsCount, type) {
-
-    };
-
 
     scope.rowClick = function (index) {
 
@@ -759,13 +993,15 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             location = scope.rows[0].columns.length;
             loc = scope.rows[0].columns.length;
         }
+        scope.columnHeaders.splice(loc, 0, {type: "header", text: ""})
         //add new column to columns
         for (var i = 0; i < scope.rows.length; i++) {
+
             scope.rows[i].columns.splice(loc, 0, {
                 id: location,
                 rowId: i,
                 type: "answer",
-                value: 'textfield'
+                value: scope.question.answerFieldType
             });
         }
 
@@ -780,7 +1016,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     id: j,
                     rowId: location,
                     type: "answer",
-                    value: 'textfield'
+                    value: scope.question.answerFieldType
+
                 };
 
             }
@@ -811,8 +1048,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.delRow = function (indexToBeDeleted) {
-        if (indexToBeDeleted == -1)
+        if (indexToBeDeleted == -1) {
             scope.rows.splice(-1, 1);
+        }
         else
             scope.rows.splice(indexToBeDeleted, 1);
     };
@@ -824,6 +1062,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             else
                 scope.rows[i].columns.splice(indexToBeDeleted, 1);
         }
+        if (indexToBeDeleted == -1)
+            scope.columnHeaders.splice(-1, 1);
+        else
+            scope.columnHeaders.splice(indexToBeDeleted, 1)
+
     };
 
     scope.clearQuestion = function () {
@@ -848,14 +1091,31 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var par_index = scope.getParIndex($par);
         //TODO use  JSON.stringify
 
-        var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": { "ROWS": [';
-        for (i = 0; i < scope.rows.length; i++) {
-            questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
-            for (j = 0; j < scope.rows[i].columns.length; j++) {
-                questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
+        var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
+        if (scope.question.type != "radio-vertical" || scope.question.answerFieldType != "radiobutton-vertical") {
+            questionJson += '  "ROWS": [';
+
+            for (i = 0; i < scope.rows.length; i++) {
+                questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
+                for (j = 0; j < scope.rows[i].columns.length; j++) {
+                    questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
+                }
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+                questionJson += ']},';
             }
-            questionJson = questionJson.substring(0, questionJson.length - 1);
-            questionJson += ']},';
+        }
+        else {
+            questionJson += '  "COLUMNS": [';
+
+            for (i = 0; i < scope.columnHeaders.length; i++) {
+                questionJson += '{"Type": "question", "Value": "' + scope.columnHeaders[i].text + '", "ROWS" : [';
+                for (j = 0; j < scope.rows.length; j++) {
+                    questionJson += '{"Type": "' + scope.rows[j].columns[i].type + '" ,"Value": "' + scope.rows[j].columns[i].value + '" },'
+                }
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+                questionJson += ']},';
+
+            }
         }
         questionJson = questionJson.substring(0, questionJson.length - 1);
 

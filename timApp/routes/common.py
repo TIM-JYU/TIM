@@ -3,7 +3,7 @@
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response, request
 import json
-from timdb.timdbbase import DocIdentifier
+from timdb.docidentifier import DocIdentifier
 from werkzeug.exceptions import default_exceptions, HTTPException
 from flask import make_response, abort as flask_abort, request
 
@@ -19,13 +19,7 @@ def getCurrentUserName():
 
 def getCurrentUserGroup():
     timdb = getTimDb()
-    groups = timdb.users.getUserGroups(getCurrentUserId())
-    if (len(groups) == 0):
-       print("No group found for user id {} ({})!".format(getCurrentUserId(), getCurrentUserName))
-       return 0
-
-    return groups[0]['id']
-    #return timdb.users.getUserGroups(getCurrentUserId())[0]['id']
+    return timdb.users.getPersonalUserGroup(getCurrentUserId())
 
 
 def getTimDb():
@@ -53,6 +47,20 @@ def hasViewAccess(block_id):
     timdb = getTimDb()
     return timdb.users.userHasViewAccess(getCurrentUserId(), block_id)
 
+def hasCommentRight(doc_id):
+    return hasViewAccess(doc_id) and loggedIn()
+
+def verifyCommentRight(doc_id):
+    if not hasCommentRight(doc_id):
+        abort(403)
+
+def hasReadMarkingRight(doc_id):
+    return hasViewAccess(doc_id) and loggedIn()
+
+def verifyReadMarkingRight(doc_id):
+    if not hasReadMarkingRight(doc_id):
+        abort(403)
+
 def verifyLoggedIn():
     if not loggedIn():
         abort(403, "You have to be logged in to perform this action.")
@@ -68,6 +76,23 @@ def verifyOwnership(block_id):
 
 def loggedIn():
     return getCurrentUserId() != 0
+
+def canWriteToFolder(folderName):
+    timdb = getTimDb()
+    userFolder = "users/" + getCurrentUserName()
+    folder = folderName
+    while folder != '':
+        if folder == userFolder:
+            return True
+
+        folderId = timdb.folders.getFolderId(folder)
+        if folderId is not None:
+            return hasEditAccess(folderId)
+
+        folder = timdb.folders.getContainingFolderName(folder)
+
+    return timdb.users.isUserInGroup(getCurrentUserName(), 'Administrators')
+
 
 def jsonResponse(jsondata, status_code=200):
     response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')

@@ -1,0 +1,24 @@
+{
+    "input": {
+        "usercode": "       System.out.println(\"Hello World!\");",
+        "isInput": false,
+        "markup": {
+            "taskId": "113087.helloeka",
+            "user_id": "vesal",
+            "replace": "REPLACE",
+            "type": "java"
+        },
+        "userinput": "",
+        "userargs": ""
+    },
+    "taskID": "113087.helloeka",
+    "markup": {
+        "replace": "REPLACE",
+        "type": "java",
+        "filename": "example/Hello.java",
+        "-program": "//\npackage example;\npublic class Hello {\n    public static void main(String[] args) {\n       // REPLACE\n    }\n}\n",
+        "byCode": "//\n       System.out.println(\"Hello World!\");\n",
+        "path": "user"
+    },
+    "state": null
+}

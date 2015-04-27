@@ -74,6 +74,10 @@ class GitClient:
     def commit(self, message : 'str', author : 'str' = 'docker', first_commit : 'bool' = False) -> 'str':
         signature = self.author if author == 'docker' else pygit2.Signature(author, author)
         index = self.repo.index
+        if not first_commit:
+            # Check if there actually is anything to commit
+            if self.repo.revparse_single('master').tree.diff_to_index(self.repo.index).patch is None:
+                raise NothingToCommitException
         tree = index.write_tree()
         parent = [] if first_commit else [self.repo.head.target]
         oid = self.repo.create_commit(
