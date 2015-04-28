@@ -325,6 +325,9 @@ def send_message():
 def show_question():
     return render_template('question.html')
 
+@app.route('/question')
+def show_question_without_view():
+    return render_template('question.html')
 
 @app.route('/getQuestion')
 def get_quesition():
