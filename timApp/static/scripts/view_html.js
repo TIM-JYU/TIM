@@ -963,7 +963,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     text: '',
                     questionPlaceholder: 'column',
                     type: "answer",
-                    value: 'scope.question.answerFieldType"'
+                    value: 'scope.question.answerFieldType'
                 }
             }
 

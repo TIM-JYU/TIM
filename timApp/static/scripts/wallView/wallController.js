@@ -108,35 +108,45 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 wall.style.bottom = "2em";
                 wall.style.top = "";
                 wall.style.right = "2em";
-                wall.setAttribute("tim-draggable-fixed",false);
+                wall.setAttribute("tim-draggable-fixed", false);
                 //TODO: Change to url_for or some other way to get correct ulr
                 detach.style.background = "url('../../../static/images/detach.png')"
-
 
 
             } else {
                 wall.style.position = "absolute";
                 wall.style.bottom = "auto";
                 detach.style.background = "url('../../../static/images/tach.png')"
-                wall.setAttribute("tim-draggable-fixed",true);
+                wall.setAttribute("tim-draggable-fixed", true);
 
             }
         };
 
         $scope.checkDown = function (e) {
-            $scope.mouseDown = e.clientX;
+            $scope.mouseDownX = e.clientX;
+            $scope.mouseDownY = e.clientY;
+            var wall = document.getElementById("wall");
+            wall.style.position = "absolute";
+            wall.style.bottom = 'auto';
 
         };
 
         $scope.checkUp = function (e) {
-            $scope.mouseUp = e.clientX;
-            var id = $(event.target).attr('id');
-            if (id == "detachButton") {
+            var mouseUpX = e.clientX;
+            var mouseUpY = e.clientY;
+
+            var wall = document.getElementById("wall");
+            wall.style.position = "fixed";
+
+            if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 2) {
+                $scope.hide();
                 return;
             }
 
-            if (Math.abs($scope.mouseDown - $scope.mouseUp) < 2) {
-                $scope.hide();
+            var id = $(event.target).attr('id');
+
+            if (id == "detachButton") {
+                return;
             }
 
 

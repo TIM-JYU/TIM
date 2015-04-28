@@ -6,7 +6,7 @@
         <form class="createLecture" id="lectureForm">
             <div id="infoFields">
                 <label for="lectureCode" >Lecture code:</label>
-                <input id="lCode" type="text" name="code" size="45" ng-model="lectureCode" not-empty-change="">
+                <input id="lCode" type="text" name="code" size="45" ng-model="lectureCode" not-empty-change="" maxlength="50">
                 <br>
                 <label for="password" >Lecture access code:<br>(Optional)</label>
                 <input type="text" ng-model="password" size="45">
