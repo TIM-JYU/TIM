@@ -344,6 +344,7 @@ timApp.controller("ViewCtrl", [
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
+                    $par.find("answerbrowser").prependTo($newpar);
                     if ($par.find(".read, .modified").length > 0) {
                         readClass = "modified";
                     }
