@@ -132,3 +132,7 @@ def unpack_args(*args, types):
             abort(400, 'Missing required parameter in request: {}'.format(arg))
         result = result + (types[idx](json_params[arg]),)
     return result
+
+
+def hide_names_in_teacher(doc_id):
+    return doc_id in [113154, 113156]

@@ -542,31 +542,38 @@ def saveAnswer(plugintype, task_id):
 
     return jsonResponse({'web': jsonresp['web']})
 
-@app.route("/answers/<task_id>/<user>")
-def get_answers(task_id, user):
+
+@app.route("/answers/<task_id>/<int:user_id>")
+def get_answers(task_id, user_id):
     verifyLoggedIn()
     timdb = getTimDb()
     doc_id, task_id_name = parse_task_id(task_id)
     if not timdb.documents.documentExists(doc_id):
         abort(404, 'No such document')
-    user_id = timdb.users.getUserByName(user)
+    user = timdb.users.getUser(user_id)
     if user_id != getCurrentUserId():
         verifyOwnership(doc_id)
-    if user_id is None:
+    if user is None:
         abort(400, 'Non-existent user')
     answers = timdb.answers.getAnswers(user_id, task_id)
+    if hide_names_in_teacher(doc_id):
+        for answer in answers:
+            for c in answer['collaborators']:
+                if not timdb.users.userIsOwner(c['user_id'], doc_id)\
+                   and c['user_id'] != getCurrentUserId():
+                    c['real_name'] = 'Undisclosed student %d' % c['user_id']
     return jsonResponse(answers)
 
 @app.route("/getState")
 def get_state():
     timdb = getTimDb()
-    doc_id, par_id, user, state = unpack_args('doc_id', 'par_id', 'user', 'state', types=[int, int, str, str])
+    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, int, int, str])
     if not timdb.documents.documentExists(doc_id):
         abort(404, 'No such document')
-    user_id = timdb.users.getUserByName(user)
+    user = timdb.users.getUser(user_id)
     if user_id != getCurrentUserId():
         verifyOwnership(doc_id)
-    if user_id is None:
+    if user is None:
         abort(400, 'Non-existent user')
     if not timdb.documents.documentExists(doc_id):
         abort(404, 'No such document')
@@ -577,7 +584,7 @@ def get_state():
     block = timdb.documents.getBlockAsHtml(DocIdentifier(doc_id, version), par_id)
 
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify([block],
-                                                                user,
+                                                                user['name'],
                                                                 timdb.answers,
                                                                 doc_id,
                                                                 user_id,
