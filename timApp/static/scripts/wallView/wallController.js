@@ -100,6 +100,59 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
+        $scope.wallRelease = function () {
+            var wall = document.getElementById("wall");
+            var detach = document.getElementById("detachButton")
+            if (wall.style.position == "absolute") {
+                wall.style.position = "";
+                wall.style.bottom = "2em";
+                wall.style.top = "";
+                wall.style.right = "2em";
+                wall.setAttribute("tim-draggable-fixed", false);
+                //TODO: Change to url_for or some other way to get correct ulr
+                detach.style.background = "url('../../../static/images/detach.png')"
+
+
+            } else {
+                wall.style.position = "absolute";
+                wall.style.bottom = "auto";
+                detach.style.background = "url('../../../static/images/tach.png')"
+                wall.setAttribute("tim-draggable-fixed", true);
+
+            }
+        };
+
+        $scope.checkDown = function (e) {
+            $scope.mouseDownX = e.clientX;
+            $scope.mouseDownY = e.clientY;
+            var wall = document.getElementById("wall");
+            wall.style.position = "absolute";
+            wall.style.bottom = 'auto';
+
+        };
+
+        $scope.checkUp = function (e) {
+            var mouseUpX = e.clientX;
+            var mouseUpY = e.clientY;
+
+            var wall = document.getElementById("wall");
+            wall.style.position = "fixed";
+
+            if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 2) {
+                $scope.hide();
+                return;
+            }
+
+            var id = $(event.target).attr('id');
+
+            if (id == "detachButton") {
+                return;
+            }
+
+
+        };
+
+
         $scope.toggleLecture = function () {
             $scope.showLectureCreation = !$scope.showLectureCreation;
             console.log("huh?");
@@ -207,15 +260,21 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
+            //TODO: Do not use getElementById
+
+            var elemWall = document.getElementById("wall");
+            if (!$scope.showWall) {
+                $scope.wallHeight = elemWall.style.height;
+                elemWall.style.height = "";
+            } else {
+                elemWall.style.height = $scope.wallHeight;
+            }
         };
 
         $scope.modifyLecture = function () {
             $scope.showLectureCreation = true;
         };
 
-        $scope.detach = function () {
-            console.log("Should detach this window");
-        };
 
         $scope.sendMessageEvent = function (message) {
             if (message.trim() == "") {

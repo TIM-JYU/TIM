@@ -1,40 +1,34 @@
 # -*- coding: utf-8 -*-
 # Modified hajoviin
 import logging
-import json
 import os
 import imghdr
 import io
-import codecs
 import collections
 import re
 import sys
 import time
 import datetime
+from time import mktime
 from datetime import timezone
+import posixpath
 
-from flask import Flask, redirect, url_for, flash, Blueprint
+from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
 from flask import render_template
-from flask import g
-from flask import request
 from flask import send_from_directory
 from flask.ext.compress import Compress
-import requests
 from werkzeug.utils import secure_filename
-from flask import Response
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
-from werkzeug.contrib.profiler import ProfilerMiddleware
-
 from ReverseProxied import ReverseProxied
+
 import containerLink
 from routes.edit import edit_page
 from routes.manage import manage_page
 from routes.view import view_page
 from routes.login import login_page
-from timdb.timdb2 import TimDb
-from timdb.timdbbase import TimDbException, DocIdentifier
+from timdb.timdbbase import TimDbException
 import pluginControl
 from containerLink import PluginException
 from routes.settings import settings_page
@@ -44,7 +38,7 @@ from routes.common import *
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
-Compress(app)
+# Compress(app)
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
@@ -73,7 +67,7 @@ app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
@@ -156,33 +150,44 @@ def downloadDocument(doc_id):
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
+    if request.method != 'POST':
+        return jsonResponse({'message': 'Only POST method is supported.'}, 405)
     if not loggedIn():
         return jsonResponse({'message': 'You have to be logged in to upload a file.'}, 403)
     timdb = getTimDb()
-    if request.method == 'POST':
-        doc = request.files['file']
-        if not allowed_file(doc.filename):
-            return jsonResponse({'message': 'The file format is not allowed.'}, 403)
-        filename = secure_filename(doc.filename)
-        if (filename.endswith(tuple(DOC_EXTENSIONS))):
-            content = UnicodeDammit(doc.read()).unicode_markup
-            if not content:
-                return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-            timdb.documents.importDocument(content, filename, getCurrentUserGroup())
-            return "Successfully uploaded document"
+
+    doc = request.files['file']
+    folder = request.form['folder']
+    filename = posixpath.join(folder, secure_filename(doc.filename))
+
+    userName = getCurrentUserName()
+    if not timdb.users.userHasAdminAccess(getCurrentUserId()) and not timdb.users.isUserInGroup(userName,
+                                                                                                "Timppa-projektiryhmä") and re.match(
+                            '^' + userName + '\/', filename) is None:
+        return jsonResponse({'message': "You're not authorized to write here."}, 403)
+
+    if not allowed_file(doc.filename):
+        return jsonResponse({'message': 'The file format is not allowed.'}, 403)
+
+    if (filename.endswith(tuple(DOC_EXTENSIONS))):
+        content = UnicodeDammit(doc.read()).unicode_markup
+        if not content:
+            return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
+        timdb.documents.importDocument(content, filename, getCurrentUserGroup())
+        return "Successfully uploaded document"
+    else:
+        content = doc.read()
+        imgtype = imghdr.what(None, h=content)
+        if imgtype is not None:
+            img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
+            timdb.users.grantViewAccess(0, img_id)  # So far everyone can see all images
+            return jsonResponse({"file": str(img_id) + '/' + img_filename})
         else:
-            content = doc.read()
-            imgtype = imghdr.what(None, h=content)
-            if imgtype is not None:
-                img_id, img_filename = timdb.images.saveImage(content, doc.filename, getCurrentUserGroup())
-                timdb.users.grantViewAccess(0, img_id)  # So far everyone can see all images
-                return jsonResponse({"file": str(img_id) + '/' + img_filename})
-            else:
-                doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                return redirect(url_for('uploaded_file', filename=filename))
+            doc.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file', filename=filename))
 
 
-@app.route('/images/<int:image_id>/<image_filename>/')
+@app.route('/images/<int:image_id>/<image_filename>')
 def getImage(image_id, image_filename):
     timdb = getTimDb()
     if not timdb.images.imageExists(image_id, image_filename):
@@ -214,13 +219,22 @@ def get_all_messages():
         abort(400, "Bad request, missing lecture id")
     timdb = getTimDb()
     lecture_id = int(request.args.get("lecture_id"))
+
     messages = timdb.messages.get_messages(lecture_id)
     if len(messages) > 0:
         list_of_new_messages = []
         for message in messages:
             user = timdb.users.getUser(message.get('user_id'))
+            time_as_time = datetime.datetime.fromtimestamp(
+                mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
             list_of_new_messages.append(
-                user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
+                user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get('message'))
+            # Prevents previously asked question to be asked from user.
+            current_user = getCurrentUserId()
+            for triple in __question_to_be_asked:
+                if triple[0] == lecture_id and current_user not in triple[2]:
+                    triple[2].append(current_user)
+
         return jsonResponse(
             {"status": "results", "data": list_of_new_messages, "lastid": messages[-1].get('msg_id'),
              "lectureId": lecture_id})
@@ -231,10 +245,10 @@ def get_all_messages():
 @app.route('/getUpdates')
 def get_updates():
     if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
-            "question_id"):
+            'doc_id') or not request.args.get('is_lecturer'):
         abort(400, "Bad requst")
     client_last_id = int(request.args.get('client_message_id'))
-    client_last_question_id = int(request.args.get('question_id'))
+
     helper = request.args.get("lecture_id")
     if len(helper) > 0:
         lecture_id = int(float(helper))
@@ -243,6 +257,15 @@ def get_updates():
 
     timdb = getTimDb()
     step = 0
+
+    doc_id = int(request.args.get('doc_id'))
+
+    if not check_if_lecture_is_running(lecture_id):
+        timdb.lectures.delete_users_from_lecture(lecture_id)
+        for pair in __question_to_be_asked:
+            if pair[0] == lecture_id:
+                __question_to_be_asked.remove(pair)
+        return get_running_lectures(doc_id)
 
     list_of_new_messages = []
     last_message_id = -1
@@ -257,29 +280,34 @@ def get_updates():
 
                 for message in messages:
                     user = timdb.users.getUser(message.get('user_id'))
+                    time_as_time = datetime.datetime.fromtimestamp(
+                        mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
                     list_of_new_messages.append(
-                        user.get('name') + " <" + message.get("timestamp")[11:19] + ">" + ": " + message.get('message'))
+                        user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get(
+                            'message'))
                 last_message_id = messages[-1].get('msg_id')
 
         current_user = getCurrentUserId()
         for pair in __question_to_be_asked:
-            if pair[0] == lecture_id and pair[1] is not client_last_question_id and current_user not in pair[2]:
+            if pair[0] == lecture_id and current_user not in pair[2]:
                 question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
                 pair[2].append(getCurrentUserId())
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                     "lectureId": lecture_id, "question": True, "questionId": pair[1], "questionJson": question_json})
+                     "lectureId": lecture_id, "question": True, "questionJson": question_json,
+                     "isLecture": True})
 
         if len(list_of_new_messages) > 0:
             return jsonResponse(
                 {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                 "lectureId": lecture_id})
+                 "lectureId": lecture_id, "isLecture": True})
 
         time.sleep(1)
         step += 1
 
     return jsonResponse(
-        {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id})
+        {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
+         "isLecture": True})
 
 
 @app.route('/sendMessage', methods=['POST'])
@@ -293,10 +321,13 @@ def send_message():
     return jsonResponse(msg_id)
 
 
-@app.route('/question')
+@app.route('/view/question')
 def show_question():
     return render_template('question.html')
 
+@app.route('/question')
+def show_question_without_view():
+    return render_template('question.html')
 
 @app.route('/getQuestion')
 def get_quesition():
@@ -351,6 +382,11 @@ def check_lecture():
     else:
         return get_running_lectures(doc_id)
 
+def check_if_lecture_is_running(lecture_id):
+    timdb = getTimDb()
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    return timdb.lectures.check_if_lecture_is_running(lecture_id, time_now)
+
 
 def get_running_lectures(doc_id):
     timdb = getTimDb()
@@ -372,6 +408,9 @@ def get_running_lectures(doc_id):
 
 @app.route('/createLecture', methods=['POST'])
 def start_lecture():
+    if not request.args.get("doc_id") or not request.args.get("start_date") or not request.args.get(
+            "end_date") or not request.args.get("lecture_code"):
+        abort(400, "Missing parameters")
     doc_id = int(request.args.get("doc_id"))
     verifyOwnership(doc_id)
     timdb = getTimDb()
@@ -382,6 +421,8 @@ def start_lecture():
     if not password:
         password = ""
     current_user = getCurrentUserId()
+    if not timdb.lectures.check_if_correct_name(doc_id, lecture_code):
+        abort(400, "Can't create lecture with same code to same document")
     lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -390,28 +431,54 @@ def start_lecture():
     return jsonResponse({"lectureId": lecture_id})
 
 
+@app.route('/endLecture', methods=['POST'])
+def end_lecture():
+    if not request.args.get("doc_id") or not request.args.get("lecture_id"):
+        abort(400)
+
+    doc_id = int(request.args.get("doc_id"))
+    lecture_id = int(request.args.get("lecture_id"))
+    verifyOwnership(doc_id)
+    timdb = getTimDb()
+    timdb.lectures.delete_users_from_lecture(lecture_id)
+    for pair in __question_to_be_asked:
+        if pair[0] == lecture_id:
+            __question_to_be_asked.remove(pair)
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    timdb.lectures.set_end_for_lecture(lecture_id, str(now))
+    return jsonResponse("")
+
+
 @app.route('/deleteLecture', methods=['POST'])
-def stop_lecture():
+def delete_lecture():
+    if not request.args.get("doc_id") or not request.args.get("lecture_id"):
+        abort(400)
     doc_id = int(request.args.get("doc_id"))
     verifyOwnership(doc_id)
     lecture_id = int(request.args.get("lecture_id"))
     timdb = getTimDb()
     timdb.messages.delete_messages_from_lecture(lecture_id, True)
     timdb.lectures.delete_users_from_lecture(lecture_id, True)
+    for pair in __question_to_be_asked:
+        if pair[0] == lecture_id:
+            __question_to_be_asked.remove(pair)
     timdb.lectures.delete_lecture(lecture_id, True)
     return get_running_lectures(doc_id)
 
 
 @app.route('/joinLecture', methods=['POST'])
 def join_lecture():
+    if not request.args.get("doc_id") or not request.args.get("lecture_code"):
+        abort(400, "Missing parameters")
     timdb = getTimDb()
+    doc_id = int(request.args.get("doc_id"))
     lecture_code = request.args.get("lecture_code")
     password_quess = request.args.get("password_quess")
-    lecture_id = timdb.lectures.get_lecture_by_code(lecture_code)
+    lecture_id = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     current_user = getCurrentUserId()
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture[0].get("password") != password_quess:
-        return jsonResponse({"correctPassword": False});
+        return jsonResponse({"correctPassword": False})
 
     timdb.lectures.join_lecture(lecture_id, current_user, True)
     if lecture[0].get("lecturer") == current_user:
@@ -433,12 +500,13 @@ def leave_lecture():
     return get_running_lectures(doc_id)
 
 
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-@app.route("/getDocuments/")
+@app.route("/getDocuments")
 def getDocuments():
     versions = 1
     if request.args.get('versions'):
@@ -460,10 +528,6 @@ def getDocuments():
     req_folder = request.args.get('folder')
     if req_folder is not None and len(req_folder) == 0:
         req_folder = None
-
-    # print('req_folder is "{}"'.format(req_folder))
-
-    folders = []
     finalDocs = []
 
     for doc in allowedDocs:
@@ -477,38 +541,32 @@ def getDocuments():
             docname = fullname
 
         if '/' in docname:
-            slash = docname.find('/')
-            foldername = docname[:slash]
-
-            duplicate = False
-            for f in folders:
-                if f['name'] == foldername:
-                    duplicate = True
-                    break
-            if duplicate:
-                continue
-
-            fullfolder = foldername if req_folder is None else req_folder + '/' + foldername
-            folders.append({
-                'isFolder': True,
-                'name': foldername,
-                'fullname': fullfolder,
-                'items': [],
-                'canEdit': False,
-                'isOwner': False,
-                'owner': timdb.users.getOwnerGroup(doc['id'])
-            })
             continue
 
+        uid = getCurrentUserId()
         doc['name'] = docname
         doc['fullname'] = fullname
-        doc['isFolder'] = False
-        doc['canEdit'] = timdb.users.userHasEditAccess(getCurrentUserId(), doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id'])
+        doc['canEdit'] = timdb.users.userHasEditAccess(uid, doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.userHasAdminAccess(uid)
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         finalDocs.append(doc)
 
-    return jsonResponse(folders + finalDocs)
+    return jsonResponse(finalDocs)
+
+
+@app.route("/getFolders")
+def getFolders():
+    root_path = request.args.get('root_path')
+    timdb = getTimDb()
+    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+    allowedFolders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
+    uid = getCurrentUserId()
+
+    for f in allowedFolders:
+        f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.userHasAdminAccess(uid)
+        f['owner'] = timdb.users.getOwnerGroup(f['id'])
+
+    return jsonResponse(allowedFolders)
 
 
 @app.route("/getJSON/<int:doc_id>/")
@@ -541,23 +599,49 @@ def getJSON_HTML(doc_id):
         return "[]"
 
 
-@app.route("/createDocument", methods=["POST"])
-def createDocument():
+def createItem(itemName, itemType, createFunction):
     if not loggedIn():
-        return jsonResponse({'message': 'You have to be logged in to create a document.'}, 403)
-    jsondata = request.get_json()
-    docName = jsondata['doc_name']
+        return jsonResponse({'message': 'You have to be logged in to create a {}.'.format(itemType)}, 403)
 
-    if docName.startswith('/') or docName.endswith('/'):
-        return jsonResponse({'message': 'Document name cannot start or end with /.'}, 400)
+    if itemName.startswith('/') or itemName.endswith('/'):
+        return jsonResponse({'message': 'The {} name cannot start or end with /.'.format(itemType)}, 400)
 
-    if re.match('^(\d)*$', docName) is not None:
-        return jsonResponse({'message': 'Document name can not be a number to avoid confusion with document id.'},
-                            400)
+    if re.match('^(\d)*$', itemName) is not None:
+        return jsonResponse(
+            {'message': 'The {} name can not be a number to avoid confusion with document id.'.format(itemType)}, 400)
 
     timdb = getTimDb()
-    docId = timdb.documents.createDocument(docName, getCurrentUserGroup())
-    return jsonResponse({'id': docId.id, 'name': docName})
+
+    userName = getCurrentUserName()
+
+    if timdb.documents.getDocumentId(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
+        return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+
+    if not canWriteToFolder(itemName):
+        return jsonResponse(
+            {'message': 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName)}, 403)
+
+    itemId = createFunction(itemName)
+    return jsonResponse({'id': itemId, 'name': itemName})
+
+
+@app.route("/createDocument", methods=["POST"])
+def createDocument():
+    jsondata = request.get_json()
+    docName = jsondata['doc_name']
+    timdb = getTimDb()
+    createFunc = lambda docName: timdb.documents.createDocument(docName, getCurrentUserGroup())
+    return createItem(docName, 'document', createFunc)
+
+
+@app.route("/createFolder", methods=["POST"])
+def createFolder():
+    jsondata = request.get_json()
+    folderName = jsondata['name']
+    ownerId = jsondata['owner']
+    timdb = getTimDb()
+    createFunc = lambda folderName: timdb.folders.createFolder(folderName, ownerId)
+    return createItem(folderName, 'folder', createFunc)
 
 
 @app.route("/getBlock/<int:docId>/<int:blockId>")
@@ -595,7 +679,6 @@ def getIndex(docId):
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
-    verifyLoggedIn()
     jsondata = request.get_json()
     noteText = jsondata['text']
     access = jsondata['access']
@@ -607,7 +690,7 @@ def postNote():
     doc_id = jsondata['docId']
     doc_ver = request.headers.get('Version')
     paragraph_id = jsondata['par']
-
+    verifyCommentRight(doc_id)
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
     timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, access, tags)
@@ -646,8 +729,8 @@ def deleteNote():
     verifyLoggedIn()
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
-    doc_id = int(jsondata['doc_id'])
-    paragraph_id = int(jsondata['par_id'])
+    doc_id = int(jsondata['docId'])
+    paragraph_id = int(jsondata['par'])
     note_index = int(jsondata['note_index'])
     timdb = getTimDb()
 
@@ -703,7 +786,7 @@ def getNotes(doc_id):
 
 @app.route("/read/<int:doc_id>", methods=['GET'])
 def getReadParagraphs(doc_id):
-    verifyViewAccess(doc_id)
+    verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
@@ -714,7 +797,7 @@ def getReadParagraphs(doc_id):
 
 @app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
 def setReadParagraph(doc_id, specifier):
-    verifyViewAccess(doc_id)
+    verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
@@ -739,9 +822,15 @@ def saveAnswer(plugintype, task_id):
     timdb = getTimDb()
 
     doc_id, task_id_name = parse_task_id(task_id)
+    verifyViewAccess(doc_id)
     if not 'input' in request.get_json():
         return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
+
+    answer_browser_data = request.get_json().get('abData', {})
+    is_teacher = answer_browser_data.get('teacher', False)
+    if is_teacher:
+        verifyOwnership(doc_id)
 
     # Load old answers
     oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
@@ -767,20 +856,39 @@ def saveAnswer(plugintype, task_id):
         return jsonResponse(
             {'error': 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
 
-    if not 'web' in jsonresp:
+    if 'web' not in jsonresp:
         return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
 
-    if 'save' in jsonresp and not request.headers.get('RefererPath', '').startswith('/teacher/'):
+    if 'save' in jsonresp:
         saveObject = jsonresp['save']
+        tags = []
+        tim_info = jsonresp.get('tim_info', {})
+        points = tim_info.get('points', None)
 
         # Save the new state
-        if isinstance(saveObject, collections.Iterable):
-            points = jsonresp['save']['points'] if 'points' in saveObject else None
-            tags = jsonresp['save']['tags'] if 'tags' in saveObject else []
+        try:
+            tags = saveObject['tags']
+        except (TypeError, KeyError):
+            pass
+        if not is_teacher:
+            timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
         else:
-            points = None
-            tags = []
-        timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
+            if answer_browser_data.get('saveTeacher', False):
+                answer_id = answer_browser_data.get('answer_id', None)
+                if answer_id is None:
+                    return jsonResponse({'error': 'Missing answer_id key'}, 400)
+                expected_task_id = timdb.answers.get_task_id(answer_id)
+                if expected_task_id != task_id:
+                    return jsonResponse({'error': 'Task ids did not match'}, 400)
+                users = timdb.answers.get_users(answer_id)
+                if len(users) == 0:
+                    return jsonResponse({'error': 'No users found for the specified answer'}, 400)
+                if not getCurrentUserId() in users:
+                    users.append(getCurrentUserId())
+                points = answer_browser_data.get('points', points)
+                if points == "":
+                    points = None
+                timdb.answers.saveAnswer(users, task_id, json.dumps(saveObject), points, tags)
 
     return jsonResponse({'web': jsonresp['web']})
 
@@ -840,13 +948,18 @@ def getPluginMarkup(doc_id, plugintype, task_id):
 
 
 @app.route("/")
+@app.route("/view/")
 def indexPage():
-    return render_template('index.html', userName=getCurrentUserName(), userId=getCurrentUserId())
+    timdb = getTimDb()
+    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    return render_template('index.html',
+                           userName=getCurrentUserName(),
+                           userId=getCurrentUserId(),
+                           userGroups=possible_groups)
 
 
 def startApp():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',))
-
     # TODO: Think if it is truly necessary to have threaded=True here
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)

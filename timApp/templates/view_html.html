@@ -92,21 +92,20 @@
             {% include 'lectureinfo_menu.html' %}
             <div ng-show="!inLecture">
             </div>
-            <div class="wall-behind" id="wall" ng-show="inLecture">
-                <div class="wall-topbar">
-                    <div class="wall-topbar-content" ng-click="hide()">
+            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false" resizable>
+                <div class="wall-base" id="wallBase">
+                    <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)">
                         Wall
-                        <div id="rightWall">
-                            <input type="button" ng-click="detach()" id="detachButton" id="buttonRight">
-                        </div>
-                    </div>
-                    <div ng-show="showWall">
-                        <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+                        <!--<input type="button" ng-click="wallRelease($event)" id="detachButton" id="buttonRight"> -->
 
-                        <div class="wallButtons">
-                            <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="chatEnterPressed($event)"
-                                   ng-readonly="!polling">
-                            <button ng-click="sendMessageEvent(newMsg)">Send</button>
+                    </div>
+                    <div ng-show="showWall" class="wall-content">
+                        <div class="wall-message-area">
+                            <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+                        </div>
+                        <div class="wall-buttons">
+                            <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="chatEnterPressed($event)">
+                            <!-- <button ng-click="sendMessageEvent(newMsg)">Send</button> -->
                             <!-- <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button> -->
                         </div>
                     </div>
