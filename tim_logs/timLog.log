@@ -1959,3 +1959,1752 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 64, in get_source
     raise TemplateNotFound(template)
 jinja2.exceptions.TemplateNotFound: question.html
+{"time":2015-04-30 09:21:07,657, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:38,596, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:41,042, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:41,738, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,238, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,270, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,304, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,336, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,369, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,403, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,435, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,470, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,502, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,535, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,568, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,602, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,635, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,667, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,702, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,732, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,767, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,800, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,833, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:42,874, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:43,563, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:44,514, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:44,754, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:44,954, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:45,172, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:46,293, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:46,462, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:46,732, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,232, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,267, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,313, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,335, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,381, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,400, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,432, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,463, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:21:47,495, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:09,534, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:09,994, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,486, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,523, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,554, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,587, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,624, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,654, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,684, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,726, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,755, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:22:10,784, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on / [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 953, in indexPage
+    timdb = getTimDb()
+  File "/service/timApp/routes/common.py", line 29, in getTimDb
+    current_user_name=getCurrentUserName())
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/timdb2.py", line 58, in __init__
+    self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
+  File "<string>", line 2, in __init__
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 27, in __init__
+    self.git = GitClient.connect(files_root_path)
+  File "/service/timApp/timdb/gitclient.py", line 30, in connect
+    return GitClient(pygit2.Repository(repo_path))
+KeyError: 'tim_files/.git'
+{"time":2015-04-30 09:23:20,372, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getFolders [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 561, in getFolders
+    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+  File "/service/timApp/routes/common.py", line 22, in getCurrentUserGroup
+    return timdb.users.getPersonalUserGroup(getCurrentUserId())
+  File "<string>", line 2, in getPersonalUserGroup
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 275, in contracts_checker
+    raise e
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 270, in contracts_checker
+    returns_parsed._check_contract(context, result)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 240, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/extensions.py", line 48, in check_contract
+    self.contract._check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 240, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/separate_context.py", line 14, in check_contract
+    self.contract._check_contract(copy, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 240, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/types_misc.py", line 24, in check_contract
+    value=value, context=context)
+contracts.interface.ContractNotRespected: Breach for return value of Users:getPersonalUserGroup().
+Expected type 'int', got 'dict'.
+checking: Int      for value: Instance of dict: {'name': 'Anonymous users', 'id': 2}   
+checking: $(Int)   for value: Instance of dict: {'name': 'Anonymous users', 'id': 2}   
+checking: int      for value: Instance of dict: {'name': 'Anonymous users', 'id': 2}   
+Variables bound in inner context:
+- args: Instance of tuple: ()
+- kwargs: Instance of dict: {}
+- self: Instance of Users: <timdb.users.Users object at 0x7f757d1d3240>
+{"time":2015-04-30 10:15:34,258, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /view/question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 326, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 27, in <module>
+    {% include 'matrix.html' %}
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 64, in get_source
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: matrix.html
+{"time":2015-04-30 10:16:06,785, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /view/question [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 326, in show_question
+    return render_template('question.html')
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/jinja2/_compat.py", line 36, in reraise
+    raise value.with_traceback(tb)
+  File "/service/timApp/templates/question.html", line 27, in <module>
+    {% include 'matrix.html' %}
+  File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 64, in get_source
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: matrix.html
