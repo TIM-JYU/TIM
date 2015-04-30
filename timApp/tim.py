@@ -601,6 +601,9 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     return None
     
 @app.route("/")
+def startPage():
+    return render_template('start.html')
+
 @app.route("/view/")
 def indexPage():
     timdb = getTimDb()
