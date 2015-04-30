@@ -949,6 +949,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
+
  var columnHeaders = [];
         for (var i = 0; i < rowsCount; i++) {
             var columns = [];
@@ -971,10 +972,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 value: '',
                 columns: columns
             }
+
         }
         scope.columnHeaders = columnHeaders;
 
+
     };
+
 
     scope.rowClick = function (index) {
 

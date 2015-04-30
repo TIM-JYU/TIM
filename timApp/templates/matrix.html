@@ -1,7 +1,7 @@
 <div>
-    <div id="check" ng-if="question.type == 'matriisi'">
+    <div id="check" ng-if="question.type == 'matrix'">
         <label>Answer type:</label>
-        <select name="answerType" ng-if="question.type == 'matriisi'" ng-model="question.answerFieldType" ng-dropdown
+        <select name="answerType" ng-model="question.answerFieldType" ng-dropdown
                 ng-options="item.value as item.label for item in answerFieldTypes ">
             <option value="" disabled selected> -- select answer type --</option>
 
@@ -15,7 +15,7 @@
                 <th style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
                 <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit"
-                    ng-if="question.type == 'matriisi'">
+                    ng-if="question.type == 'matrix'">
                     <div style="top:35px; position:relative;">
                         <button ng-click="addCol($index)" style="float:left; margin-left: -20px;">+</button>
                         <button class="negative" ng-click="delCol($index)" style="margin-left:80px">-</button>
@@ -24,26 +24,22 @@
             </tr>
 
             <!--- ends--->
-            <tr>
+            <tr ng-show="question.type == 'matrix' || question.type == 'true-false'">
                 <th style="border-left: none; border-top: none; border-bottom: none; background-color:inherit;">
-
                 </th>
                 <th>
-
                 </th>
-                <th ng-if="question.type == 'true-false'">True</th>
-                <th ng-if="question.type == 'true-false'">False</th>
 
-                <th ng-repeat="item in columnHeaders" ng-if="question.type != 'true-false'">
+                <th ng-show="question.type == 'true-false'">True</th>
+                <th ng-show="question.type == 'true-false'">False</th>
+
+                <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'">
                     <div class="cart">
                         <textarea form="question-form" rows="1" cols="20" ng-model="rows[0].columns[$index].text"></textarea>
                         <br/>
 
                     </div>
-                </th>
 
-                <th ng-if="question.type == 'matriisi'">
-                    <div>
                         <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
                     </div>
                 </th>
@@ -67,8 +63,8 @@
                     </div>
                 </th>
                 <td ng-repeat="column in row.columns">
-                    <!-- Radiopainike vaakasuoraan-->
-                    <div ng-if="(question.answerFieldType == 'radiobutton-horizontal' && question.type=='matriisi') || question.type == 'true-false'">
+                    <!-- Horizontal radio-button-->
+                    <div ng-if="(question.answerFieldType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
                         <input type="radio"
                                ng-model="row.id"
                                ng-value="column.id"
@@ -78,9 +74,9 @@
                                size="1"
                                placeholder="pts"/>
                     </div>
-                    <!-- Radiopainike pystysuoraan-->
+                    <!-- Vertical radio-button -->
                     <div ng-if="question.type != 'true-false'">
-                        <div ng-if="(question.answerFieldType == 'radiobutton-vertical' && question.type=='matriisi') || question.type == 'radio-vertical'">
+                        <div ng-if="(question.answerFieldType == 'radiobutton-vertical' && question.type=='matrix') || question.type == 'radio-vertical'">
                             <input type="radio"
                                    name="column.rowId"
                                    ng-value="column.id"
@@ -90,20 +86,22 @@
                                    size="1"
                                    placeholder="pts"/>
                         </div>
-                        <!-- Vapaa tekstivastaus-->
+                        <!-- Text area-->
                         <div ng-if="question.type != 'radio-button'">
-                            <textarea ng-if="question.answerFieldType == 'textArea' && question.type=='matriisi'"
+                            <textarea ng-if="question.answerFieldType == 'textArea' && question.type=='matrix'"
                                       type="text"
                                       placeholder="Placeholder"
                                       rows="1"
                                       cols="20"></textarea>
-                            <!-- Checkbox vaakaan-->
-                            <div ng-if="question.answerFieldType == 'checkbox' && question.type=='matriisi'">
+                            <!-- Checkbox-->
+                            <div ng-if="(question.answerFieldType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">
                                 <input type="checkbox"
                                        ng-model="row.id"
-                                       ng-true-value="column.id"
-                                       ng-false-value="-1"
                                         />
+                                <input type="text"
+                                    ng-show="row.id"
+                                    size="1"
+                                    placeholder="pts" />
                             </div>
                         </div>
                     </div>
