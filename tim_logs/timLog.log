@@ -3708,3 +3708,37 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.4/dist-packages/flask/templating.py", line 64, in get_source
     raise TemplateNotFound(template)
 jinja2.exceptions.TemplateNotFound: matrix.html
+{"time":2015-04-30 11:12:57,534, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /postParagraph/ [POST]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/routes/edit.py", line 55, in postParagraph
+    blocks, doc = timdb.documents.modifyMarkDownBlock(identifier, int(parIndex), paragraphText)
+  File "<string>", line 2, in modifyMarkDownBlock
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 712, in modifyMarkDownBlock
+    len(response['paragraphs']) - 1)
+  File "<string>", line 2, in __handleModifyResponse
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/documents.py", line 652, in __handleModifyResponse
+    version = self.__commitDocumentChanges(new_id, new_content, message)
+  File "/service/timApp/timdb/documents.py", line 461, in __commitDocumentChanges
+    return self.git.commit('Document {}: {}'.format(document_id.id, msg), author=self.current_user_name)
+  File "<string>", line 2, in commit
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/gitclient.py", line 79, in commit
+    if self.repo.revparse_single('master').tree.diff_to_index(self.repo.index).patch is None:
+_pygit2.GitError: (No error information given)

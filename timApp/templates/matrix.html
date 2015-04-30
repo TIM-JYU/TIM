@@ -63,7 +63,7 @@
                     </div>
                 </th>
                 <td ng-repeat="column in row.columns">
-                    <!-- Radiopainike vaakasuoraan-->
+                    <!-- Horizontal radio-button-->
                     <div ng-if="(question.answerFieldType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
                         <input type="radio"
                                ng-model="row.id"
@@ -74,7 +74,7 @@
                                size="1"
                                placeholder="pts"/>
                     </div>
-                    <!-- Radiopainike pystysuoraan-->
+                    <!-- Vertical radio-button -->
                     <div ng-if="question.type != 'true-false'">
                         <div ng-if="(question.answerFieldType == 'radiobutton-vertical' && question.type=='matrix') || question.type == 'radio-vertical'">
                             <input type="radio"
@@ -86,20 +86,22 @@
                                    size="1"
                                    placeholder="pts"/>
                         </div>
-                        <!-- Vapaa tekstivastaus-->
+                        <!-- Text area-->
                         <div ng-if="question.type != 'radio-button'">
                             <textarea ng-if="question.answerFieldType == 'textArea' && question.type=='matrix'"
                                       type="text"
                                       placeholder="Placeholder"
                                       rows="1"
                                       cols="20"></textarea>
-                            <!-- Checkbox vaakaan-->
-                            <div ng-if="question.answerFieldType == 'checkbox' && question.type=='matrix'">
+                            <!-- Checkbox-->
+                            <div ng-if="(question.answerFieldType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">
                                 <input type="checkbox"
                                        ng-model="row.id"
-                                       ng-true-value="column.id"
-                                       ng-false-value="-1"
                                         />
+                                <input type="text"
+                                    ng-show="row.id"
+                                    size="1"
+                                    placeholder="pts" />
                             </div>
                         </div>
                     </div>

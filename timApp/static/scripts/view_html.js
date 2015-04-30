@@ -959,7 +959,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 columns[j] = {
                     id: j,
                     rowId: i,
-                    text: 'test',
+                    text: '',
                     questionPlaceholder: 'column',
                     type: "answer",
                     value: 'scope.question.answerFieldType'
