@@ -143,6 +143,7 @@
     function refresh() {
         clearTimeout(pollTimeout);
         $.ajax({
+            cache: false,
             url: '/getslidestatus/{{ docID }}',
             dataType: 'json',
             error: function (xhr, status, err) {
@@ -159,7 +160,6 @@
     }
 
     pollTimeout = setTimeout(refresh, 1000);
-
     function updateSlideStatus(h, v, f) {
         clearTimeout(pollTimeout);
         $.ajax({
