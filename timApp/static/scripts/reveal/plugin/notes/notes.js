@@ -80,7 +80,7 @@ var RevealNotes = (function() {
 		function onConnected() {
 
 			// Monitor events that trigger a change in state
-			Reveal.addEventListener( 'slidechanged', post );
+			Reveal.addEventListener( '', post );
 			Reveal.addEventListener( 'fragmentshown', post );
 			Reveal.addEventListener( 'fragmenthidden', post );
 			Reveal.addEventListener( 'overviewhidden', post );
@@ -97,16 +97,16 @@ var RevealNotes = (function() {
 	}
 
 	if( !/receiver/i.test( window.location.search ) ) {
-
 		// If the there's a 'notes' query set, open directly
 		if( window.location.search.match( /(\?|\&)notes/gi ) !== null ) {
 			openNotes();
 		}
 
+        //OMIA
         var notesButton = document.createElement('div');
         notesButton.setAttribute('class', 'notesnavi enabled');
         document.getElementsByClassName('controls')[0].appendChild(notesButton);
-
+        //OMIA
 
 		// Open the notes when the 's' key is hit
 		document.addEventListener( 'keydown', function( event ) {
@@ -120,8 +120,9 @@ var RevealNotes = (function() {
 			}
 		}, false );
 
+        //OMIA
         notesButton.addEventListener('click', openNotes)
-
+        //OMIA
 	}
 
 	return { open: openNotes };

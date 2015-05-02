@@ -1,20 +1,29 @@
 """Routes for document slide."""
 
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, jsonify
 from .common import *
+import json
 
 import pluginControl
 
+slidestatuses = {}
 
 slide_page = Blueprint('slide_page',
                       __name__,
                       url_prefix='')
 
 
-@slide_page.route("/view_old/<path:doc_name>")
-def view_document_old(doc_name):
-    view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    return slide(doc_name, 'view.html', view_range)
+@slide_page.route("/getslidestatus/<path:doc_name>")
+def getslidestatus(doc_name):
+    status = slidestatuses[doc_name]
+    return jsonify(status)
+
+@slide_page.route("/setslidestatus/<path:doc_name>", methods=['POST'])
+def setslidestatus(doc_name):
+    data = request.json
+    slidestatuses[doc_name] = data
+    return jsonify(data)
+
 
 @slide_page.route("/slide/<path:doc_name>")
 def view_document(doc_name):
