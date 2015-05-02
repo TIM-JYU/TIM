@@ -89,7 +89,7 @@
                 {% if t['html'] == "<div></div>" %}
                     </section><section>
                 {% else %}
-                    {% if t['html'].startswith("<h1") or t['html'].startswith("<h2") %}
+                    {% if t['html'].startswith("<h1") or t['html'].startswith("<h2") or t['html'].startswith("<h3") %}
                         </section><section>
                     {% endif %}
                     {{ t['html']|safe }}
@@ -103,7 +103,6 @@
 <script src="{{ url_for('static', filename='scripts/reveal/js/reveal.min.js') }}"></script>
 
 <script>
-
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
     Reveal.initialize({
@@ -133,11 +132,54 @@
                 src: "{{ url_for('static', filename='scripts/reveal/plugin/notes/notes.js') }}", async: true, condition: function () {
                 return !!document.body.classList;
             }
-            },
+            }
             //          { src: 'reveal.js/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; }, }
             //          { src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
         ]
     });
+
+    var pollTimeout;
+
+    function refresh() {
+        clearTimeout(pollTimeout);
+        $.ajax({
+            url: '/getslidestatus/{{ docID }}',
+            dataType: 'json',
+            error: function (xhr, status, err) {
+                console.log('error');
+                pollTimeout = setTimeout(refresh, 1000);
+            },
+            success: function (data) {
+                console.log('Haettu palvelimelta: ')
+                console.log(data);
+                Reveal.slide(data.indexh, data.indexv, data.indexf, 'remote');
+                pollTimeout = setTimeout(refresh, 1000);
+            }
+        });
+    }
+
+    pollTimeout = setTimeout(refresh, 1000);
+
+    function updateSlideStatus(h, v, f) {
+        clearTimeout(pollTimeout);
+        $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '/setslidestatus/{{ docID }}',
+                data: JSON.stringify({indexh:h, indexv:v, indexf:f}),
+                contentType: "application/json",
+                success: function(data) {
+                    console.log('Viety palvelimelle: ')
+                    console.log(data);
+                    pollTimeout = setTimeout(refresh, 1000);
+                },
+                error: function() {
+                    console.log('error');
+                    pollTimeout = setTimeout(refresh, 1000);
+                }
+            })
+    }
+
 </script>
 <script>
     window.onload = function() {
