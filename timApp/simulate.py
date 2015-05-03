@@ -21,7 +21,7 @@ class TimSimulation:
         self.db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
         self.e = ephemeralclient.launch_ephemeral()
         self.db.initializeTables("schema2.sql")
-        self.db.users.createAnonymousUser()
+        self.db.users.createAnonymousAndLoggedInUserGroups()
         initRepo(TEST_FILES_PATH)
 
         random.seed(0)

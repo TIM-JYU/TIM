@@ -1,6 +1,6 @@
 ﻿"use strict";
 var csApp = angular.module('csApp', ['ngSanitize']);
-csApp.directive('csRunner',['$sanitize', function ($sanitize) {	"use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('console',false); }]);
+csApp.directive('csRunner',['$sanitize','$compile', function ($sanitize,$compile1) {	"use strict"; csApp.sanitize = $sanitize; csApp.compile = $compile1; return csApp.directiveFunction('console',false); }]);
 csApp.directive('csJypeliRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('jypeli',false); }]);
 csApp.directive('csComtestRunner', ['$sanitize', function ($sanitize) { "use strict"; csApp.sanitize = $sanitize; return csApp.directiveFunction('comtest',false); }]);
 csApp.directive('csRunnerInput',['$sanitize', function ($sanitize) { "use strict";	csApp.sanitize = $sanitize; return csApp.directiveFunction('console',true); }]);
@@ -18,7 +18,8 @@ csApp.taunoNr = 0;
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","sql","alloy","text","cs","run"];
+languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","sql","alloy","text","cs","run","md","js"];
+languageTypes.aceModes     = ["csharp","java","java"    ,"ccpp","ccpp","shell","python","fsharp","lisp","javascript","sql","alloy","text","csharp","run","md","javascript"];
 
 // What are known test types (be carefull not to include partial word):
 languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit"];
@@ -36,9 +37,23 @@ languageTypes.whatIsIn = function (types, type, def) {
     return def;
 };
 
+languageTypes.whatIsInAce = function (types, type, def) {
+"use strict";
+    if (!type) return def;
+    type = type.toLowerCase();
+    for (var i=0; i< types.length; i++)
+        if ( type.indexOf(types[i]) >= 0 ) return languageTypes.aceModes[i];
+    return def;
+};
+
 languageTypes.getRunType = function(type,def) {
 "use strict";
     return this.whatIsIn(this.runTypes,type,def);
+};
+
+languageTypes.getAceModeType = function(type,def) {
+"use strict";
+    return this.whatIsInAce(this.runTypes,type,def);
 };
 
 languageTypes.getTestType = function(type,def) {
@@ -155,8 +170,13 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<div class="csRunCode">'+'<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
                   '<div>'+
-				  // '<textarea class="csRunArea" ng-if="!noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+                  
 				  '<textarea class="csRunArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+				  //'<div ng-if="mode" ui-ace="{  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
+                  //  ' style="left:-6em; height:{{rows*1.17}}em;" class="csRunArea csEditArea" ng-hide="noeditor"  ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
+                  
+				  //'<textarea  class="csRunArea csEditArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+                  // '<div class="csRunArea csEditArea" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></div>'+
 				  '<div class="csRunChanged" ng-if="usercode!=byCode"></div>'+
 				  //'<div class="csRunChanged" ng-if="muokattu"></div>'+
                   '</div>'+
@@ -185,7 +205,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<button ng-if="isTest" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">Alusta</a>' +
-				  '<a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">Editor</a>' +
+				  '<a href="" ng-if="toggleEditor" ng-click="hideShowEditor();"> Editor</a>' +
                   '</p>'+
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t === "comtest" || t === "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
@@ -193,16 +213,22 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
-				  '<pre  class="console" ng-if="result">{{result}}</pre>'+
+				  '<pre  class="console" ng-show="result">{{result}}</pre>'+
 				  '<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="svgImageSnippet()"></span></div>'+
+				  //'<div  class="userlist" tim-draggable-fixed style="top: 39px; right: 408px;"><span>Raahattava</span>'+
+				  '<span  class="csrunPreview"></span>'+
+                  //'</div>'+
+                  // '<div class="previewcontent"></div>' +
                   
                   //'<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="htmlresult"></span></div>'+
 				  //'<div  class="htmlresult" ng-if="htmlresult" >{{htmlresult}}</span></div>'+
                   
-				  (t === "jypeli" || true ? '<img  ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' : "") +
+				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' : "") +
 				  //(t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess"  />' : "") +
+                  //  '<div class="userlist" tim-draggable-fixed="" style="top: 39px; right: 408px;">' +
+                  //  'Raahattava' +
+                  //  '</div>' +  
 				  '<p class="footer">Here comes footer</p>'+
-                 
 				  '</div>';
 };
 
@@ -239,7 +265,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"taunotype");
 			csApp.set(scope,attrs,"stem");
 			csApp.set(scope,attrs,"iframe",false);
-			csApp.set(scope,attrs,"usercode","");
+			// csApp.set(scope,attrs,"usercode","");
 			csApp.set(scope,attrs,"codeunder",false);
 			csApp.set(scope,attrs,"codeover",false);
 			csApp.set(scope,attrs,"open",false);
@@ -260,7 +286,11 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"isHtml",false);
             csApp.set(scope,attrs,"autoupdate",false);
             csApp.set(scope,attrs,"button","");
+            csApp.set(scope,attrs,"canvasWidth",700);
+            csApp.set(scope,attrs,"canvasHeight",300);
+            csApp.set(scope,attrs,"button","");
             csApp.set(scope,attrs,"noeditor",false);
+            csApp.set(scope,attrs,"norun",false);
             csApp.set(scope,attrs,"showCodeOn","Näytä koko koodi");
             csApp.set(scope,attrs,"showCodeOff","Piilota muu koodi");
             // csApp.set(scope,attrs,"program");
@@ -268,18 +298,22 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showCodeLink = scope.showCodeOn;
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
+            
+            scope.mode = languageTypes.getAceModeType(scope.type,"");
+			csApp.set(scope,attrs,"usercode","");
 			if ( scope.usercode === "" && scope.byCode )  scope.usercode = scope.byCode;
 			scope.usercode = csApp.commentTrim(scope.usercode);
 			scope.byCode = csApp.commentTrim(scope.byCode);
 			// scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
 			// scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
 
+            
             if ( scope.usercode ) {
                 var rowCount = csApp.countChars(scope.usercode,'\n') + 1;
                 if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
             } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
             
-            scope.isRun = languageTypes.getRunType(scope.type,false) !== false;
+            scope.isRun = languageTypes.getRunType(scope.type,false) !== false && scope.norun == false;
             scope.isTest = languageTypes.getTestType(scope.type,false) !== false;
             
             scope.showInput = (scope.type.indexOf("input") >= 0);
@@ -287,7 +321,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.buttonText = "Aja";
             if ( scope.type.indexOf("text") >= 0 ) {
                 scope.isRun = true;
-                scope.buttonText = "Lähetä";
+                scope.buttonText = "Talleta";
             }            
             if ( scope.button ) scope.buttonText = scope.button;
             
@@ -297,6 +331,7 @@ csApp.directiveFunction = function(t,isInput) {
 
             
 			scope.edit = element.find("textarea")[0]; // angular.element(e); // $("#"+scope.editid);
+			scope.preview = element.find(".csrunPreview")[0]; // angular.element(e); // $("#"+scope.editid);
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,'p class="footer"');
@@ -320,7 +355,15 @@ csApp.directiveFunction = function(t,isInput) {
                 b = b.replace('$charbuttons$' , charButtons);
                 scope.buttons = b.split("\n");
             }
-            if ( scope.attrs.autorun ) scope.runCode();
+            /*
+            var editArea = element[0].getElementsByClassName('csEditArea');
+            var editor = ace.edit(editArea);
+            editor.setTheme("ace/theme/monokai");
+            editor.getSession().setMode("ace/mode/javascript");
+            */
+            //scope.out = element[0].getElementsByClassName('console');
+            scope.element0 = element[0];
+            if ( scope.attrs.autorun ) scope.runCodeLink();
 		},		
 		scope: {},				 
 		controller: csApp.Controller,
@@ -377,7 +420,7 @@ csApp.doVariables = function(v,name) {
 "use strict";
 	if ( !v ) return "";
 	var r = "";
-	var va = v.split(";");
+	var va = v.split(";");  
 	for ( var n in va ) {
         if ( va.hasOwnProperty(n)) {
             var nv = va[n].trim();
@@ -440,14 +483,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	$scope.runSuccess = false;
 	$scope.copyingFromTauno = false;
 
-	$scope.$watch('[usercode]', function() {
+	$scope.$watch('usercode', function() {
 		if ( !$scope.copyingFromTauno && $scope.usercode !== $scope.byCode ) $scope.muokattu = true;
 		$scope.copyingFromTauno = false;
 		if ( $scope.minRows < $scope.maxRows ) 
 			csApp.updateEditSize($scope);
 		if ( $scope.viewCode ) $scope.pushShowCodeNow();
         window.clearInterval($scope.runTimer);
-        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCode,$scope.autoupdate);
+        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 
 		/* // tällä koodilla on se vika, että ei voi pyyhkiä alusta välilyönteä ja yhdistää rivejä
 		if ( $scope.carretPos && $scope.carretPos >= 0 ) {
@@ -458,15 +501,42 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		else $scope.checkIndent(); // ongelmia saada kursori paikalleen
 		*/
 	}, true);
+    
+	$scope.$watch('userargs', function() {
+        window.clearInterval($scope.runTimer);
+        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+	}, true);
+    
+	$scope.$watch('userinput', function() {
+        window.clearInterval($scope.runTimer);
+        if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
+	}, true);
+    
+    $scope.runCodeAuto = function() {
+        window.clearInterval($scope.runTimer);
+		var t = languageTypes.getRunType($scope.type,"cs");  
+        if ( t == "md" ) { $scope.showMD(); return; }
+        if ( t == "js" ) { $scope.showJS(); return; }
+		$scope.doRunCode(t,true);
+	};
+	
+	$scope.runCodeLink = function() {
+		var t = languageTypes.getRunType($scope.type,"cs"); 
+        if ( t == "md" ) { $scope.showMD() ; return; }
+        if ( t == "js" ) { $scope.showJS(); return; }
+		$scope.doRunCode(t,false);
+	};
 	
 	$scope.runCode = function() {
 		var t = languageTypes.getRunType($scope.type,"cs"); 
-		$scope.doRunCode(t);
+        if ( t == "md" ) { $scope.showMD(); } // return; }
+        if ( t == "js" ) { $scope.showJS(); } // return; }
+		$scope.doRunCode(t,false);
 	};
 	
 	$scope.runTest = function() {
 		var t = languageTypes.getTestType($scope.type,"comtest"); 
-		$scope.doRunCode(t);
+		$scope.doRunCode(t,false);
 	};
 	
     
@@ -474,9 +544,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $scope.noeditor = !$scope.noeditor;
     };
     
-	$scope.doRunCode = function(runType) {
+	$scope.doRunCode = function(runType, nosave) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
+        // if ( runType == "md" ) { $scope.showMD(); return; }
 		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
 		$scope.checkIndent();
 		if ( !$scope.autoupdate ) {
@@ -486,7 +557,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		$scope.resImage = "";
 		$scope.imgURL = "";
 		$scope.runSuccess = false;
-		$scope.result = "";
+		if ( runType != "js" ) $scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
         var isInput = false;
@@ -511,6 +582,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 				  }
                   };
 		//		  alert($scope.usercode);
+        if ( nosave ) params.input.nosave = true;
         var url = "/cs/answer";
         // url = "http://tim-beta.it.jyu.fi/cs/answer";
         if ( $scope.plugin ) {
@@ -520,7 +592,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             if ( i > 0 ) url = url.substring(i);
             url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
         }
-		$http({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}}
+		$http({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}, timeout: 20000 }
 		).success(function(data, status, headers, config) {
 			if ( data.web.error && false ) {
 				$scope.error = data.web.error;
@@ -544,15 +616,15 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                     if ( $scope.isHtml )
                         $scope.htmlresult = removeXML(data.web.console);
                     else
-                        $scope.result = data.web.console;
+                        if ( runType != "js" ) $scope.result = data.web.console;
 				else   
-				   $scope.error = data.replace("*** Success!\n","");
+				   $scope.error = data.web.error;
 			}
 
 		}).error(function(data, status) {
 			$scope.errors.push(status);
-			// $scope.error = data;
             $scope.error = "Ikuinen silmukka?";
+			// $scope.error = data;
 		});
 	};
 	
@@ -620,13 +692,26 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	    }
 	};
 
+    // Returns the visible index for next item and the desired size
+    $scope.getVid = function() {
+		csApp.taunoNr++;
+		var vid = 'tauno'+csApp.taunoNr;
+		$scope.taunoId = vid;
+		var w = csApp.ifIs($scope.width,"width","100% ");
+		var h = csApp.ifIs($scope.height,"height",500);
+        return {vid:vid,w:w,h:h};
+    }
+    
+    
 	$scope.showTauno = function () {
-	
+	    /* 
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
 		$scope.taunoId = vid;
 		var w = csApp.ifIs($scope.width,"width",800);
 		var h = csApp.ifIs($scope.height,"height",500);
+        */
+        var v = this.getVid();
 		var p = "";
 		// var tt = "http://users.jyu.fi/~ji/js/tdbg/";
 		// var tt = "http://tim-beta.it.jyu.fi/cs/ptauno/indexi.html";
@@ -649,10 +734,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		if ( $scope.iframe )
 			$scope.taunoHtml.innerHTML = 
 			// '<p class="pluginHide"" ><a ng-click="hideTauno()">hide Tauno</a></p>' + // ng-click ei toimi..
-			'<iframe id="'+vid+'" class="showTauno" src="' + taunoUrl + '" ' + w + h + ' ></iframe>';
+			'<iframe id="'+v.vid+'" class="showTauno" src="' + taunoUrl + '" ' + v.w + v.h + ' ></iframe>';
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
 		else   
-			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+vid+'" />';
+			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+v.vid+'" />';
 		$scope.taunoOn = true;	
 	};
 	
@@ -785,8 +870,156 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			$scope.errors.push(status);
 		});
 	};
+    
+    $scope.lastMD = "";
+    
+	$scope.showMD = function() {
+        if ( !$scope.usercode ) return;
+        var text = $scope.usercode.replace($scope.cursor,"");
+        if ( text == $scope.lastMD ) return;
+        $scope.lastMD = text;
+        $scope.previewUrl="/preview/1" // 12971"
+        $http.post($scope.previewUrl, {
+            "text": text
+        }).success(function (data, status, headers, config) {
+            var len = data.texts.length;
+
+            var $previewDiv = angular.element($scope.preview); 
+            var s  = "";
+            
+            for (var i = 0; i < len; i++) s += data.texts[i].html;
+            $previewDiv.html(csApp.compile(s)($scope));
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
+            //$scope.outofdate = false;
+            //$scope.parCount = len;
+        }).error(function (data, status, headers, config) {
+            $window.alert("Failed to show preview: " + data.error);
+        });
+    };
+    
+    $scope.write = function(s) {
+       $scope.result += s;
+    }    
+      
+    $scope.writeln = function(s) {
+       $scope.write(s+"\n");
+    }    
+    
+    $scope.toggleFixed = function() {
+        if ( $scope.canvas.style["position"] == "fixed" ) {
+            $scope.canvas.style["position"] = ""
+            $scope.irrotaKiinnita = "Irrota";
+        } else {
+            $scope.canvas.style["position"] = "fixed"        
+            $scope.irrotaKiinnita = "Kiinnitä";
+        }
+    }
+    
+   $scope.lastJS = "";
+	$scope.showJS = function() {
+        if ( !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
+        if ( !$scope.canvas ) { // cerate a canvas on first time
+            if ( $scope.iframe ) {
+                var v = $scope.getVid();
+                $scope.irrotaKiinnita = "Irrota";
+                $scope.canvas = angular.element('<div tim-draggable-fixed style="top: 91px; right: 200px;" >'+
+                  '<span class="csRunMenu"><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></span>'+
+                  '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>'+
+                  '</div>');
+                // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
+                $scope.iframeLoadTries = 10;
+            } else {  
+                    $scope.canvas = angular.element(//'<div class="userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;">'+
+              '<canvas id="csCanvas" width="'+$scope.canvasWidth+'" height="'+$scope.canvasHeight+'" class="jsCanvas"></canvas>' +
+              // '<canvas id="csCanvas" width="'+$scope.canvasWidth+'" height="'+$scope.canvasHeight+'" class="jsCanvas userlist" tim-draggable-fixed="" style="top: 91px; right: -375px;"></canvas>' +
+              ''); // '</div>'); 
+            }
+            var $previewDiv = angular.element($scope.preview);
+            //$previewDiv.html($scope.canvas);
+            $previewDiv.html($scope.previewIFrame = csApp.compile($scope.canvas)($scope));
+            //$scope.canvas = $scope.preview.find(".csCanvas")[0];
+            $scope.canvas = $scope.canvas[0];
+            if ( $scope.attrs.program ) {
+                $scope.localcode = $scope.attrs.program;
+                $scope.showCodeLocal();
+            }
+        }
+        var text = $scope.usercode.replace($scope.cursor,"");
+        if ( text == $scope.lastJS && $scope.userargs == $scope.lastUserargs && $scope.userinput == $scope.lastUserinput ) return;
+        $scope.lastJS = text;
+        $scope.lastUserargs = $scope.userargs;
+        $scope.lastUserinput = $scope.userinput;
+        if ( $scope.precode ) {
+        	text = $scope.precode + "\n" + text + "\n" + $scope.postcode;
+        }
+        if ( $scope.iframe ) { // in case of iframe, the text is send to iframe
+            var f =  document.getElementById($scope.taunoId); // but on first time it might be not loaded yet
+            // var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
+            if ( !f || !f.contentWindow || !f.contentWindow.runJavaScript ) {
+               $scope.lastJS = ""; 
+               $scope.lastUserargs = "";
+               $scope.lastUserinput = "";
+               $scope.iframeLoadTries--;
+               if ( $scope.iframeLoadTries <= 0 ) return;
+               setTimeout($scope.showJS, 300);
+               console.log("Odotetaan 300 ms");
+               return;
+            }
+            var s = f.contentWindow.runJavaScript(text,$scope.userargs,$scope.userinput);
+            return;
+        }
+        $scope.error = "";
+        $scope.runError = false;
+        try {
+            var ctx = $scope.canvas.getContext("2d");
+            ctx.save();
+            $scope.result = "";
+            var paint = new Function("return ("+text+")")(); 
+            if ( !$scope.out ) {
+               $scope.out = $scope.element0.getElementsByClassName('console')[0]; 
+               $scope.out.write = $scope.write;
+               $scope.out.writeln = $scope.writeln;
+            }   
+            paint(ctx,$scope.out,$scope.userargs,$scope.userinput);
+            ctx.restore();
+       } catch (exc) {
+          var rivi ='';
+          var sarake = '';
+          if (exc.column) sarake = ' Col '+exc.column.toString()+': ';
+          if (exc.line) rivi = 'Row '+exc.line+': ';                  // FF has line
+          else if (exc.lineNumber) rivi = 'Row '+exc.lineNumber+': '; // Safari has lineNUmber
+          $scope.error = rivi+sarake+exc.toString();
+          $scope.runError = $scope.error;
+       }
+       $scope.safeApply();
+    };
+    
+    $scope.safeApply = function(fn) {
+        var phase = this.$root.$$phase;
+        if(phase == '$apply' || phase == '$digest') {
+        if(fn && (typeof(fn) === 'function')) {
+          fn();
+        }
+        } else {
+        this.$apply(fn);
+    }
+    
+      
+
 };
 
+};
+
+     /* Heh, lisätäänpä fillCircle kontekstiin :) */
+     Object.getPrototypeOf(document.createElement('canvas').getContext('2d')).fillCircle =
+       function (x,y,r) {
+         this.beginPath();
+         this.arc(x, y, r, 0, Math.PI*2, false);
+         this.closePath();
+         this.fill();
+         this.stroke();
+       };
 
 var csConsoleApp = angular.module('csConsoleApp', ['ngSanitize']);
 // csApp.directive('csRunner', ['$sanitize', function ($sanitize) { csApp.sanitize = $sanitize; return csApp.directiveFunction('console', false); }]);
@@ -985,3 +1218,4 @@ csConsoleApp.directiveTemplateCS = function (t, isInput) {
      '        ng-model="currentInput" />'+
      '</div>';
 };
+ 
