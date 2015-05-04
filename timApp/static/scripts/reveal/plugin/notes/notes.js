@@ -48,7 +48,7 @@ var RevealNotes = (function() {
 		function post() {
 
 			var slideElement = Reveal.getCurrentSlide(),
-				notesElement = slideElement.querySelector( 'div.speaker' );
+				notesElement = slideElement.querySelector( 'div.speaker' ); //OMIA!!!
 
 			var messageData = {
 				namespace: 'reveal-notes',
@@ -80,7 +80,7 @@ var RevealNotes = (function() {
 		function onConnected() {
 
 			// Monitor events that trigger a change in state
-			Reveal.addEventListener( '', post );
+			Reveal.addEventListener( 'slidechanged', post );
 			Reveal.addEventListener( 'fragmentshown', post );
 			Reveal.addEventListener( 'fragmenthidden', post );
 			Reveal.addEventListener( 'overviewhidden', post );

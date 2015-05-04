@@ -138,6 +138,18 @@
         ]
     });
 
+
+    function GetURLParameter(sParam) {
+        var sPageURL = window.location.search.substring(1);
+        var sURLVariables = sPageURL.split('&');
+        for (var i = 0; i < sURLVariables.length; i++) {
+            var sParameterName = sURLVariables[i].split('=');
+            if (sParameterName[0] == sParam) {
+                return sParameterName[1];
+            }
+        }
+    }
+
     var pollTimeout;
 
     function refresh() {
@@ -151,7 +163,7 @@
                 pollTimeout = setTimeout(refresh, 1000);
             },
             success: function (data) {
-                console.log('Haettu palvelimelta: ')
+                console.log('Haettu palvelimelta: ');
                 console.log(data);
                 Reveal.slide(data.indexh, data.indexv, data.indexf, 'remote');
                 pollTimeout = setTimeout(refresh, 1000);
@@ -159,8 +171,10 @@
         });
     }
 
-    pollTimeout = setTimeout(refresh, 1000);
+    if (GetURLParameter('controls') === undefined) pollTimeout = setTimeout(refresh, 1000);
+
     function updateSlideStatus(h, v, f) {
+        if (GetURLParameter('controls') !== undefined) return;
         clearTimeout(pollTimeout);
         $.ajax({
                 type: 'POST',
@@ -169,7 +183,7 @@
                 data: JSON.stringify({indexh:h, indexv:v, indexf:f}),
                 contentType: "application/json",
                 success: function(data) {
-                    console.log('Viety palvelimelle: ')
+                    console.log('Viety palvelimelle: ');
                     console.log(data);
                     pollTimeout = setTimeout(refresh, 1000);
                 },
