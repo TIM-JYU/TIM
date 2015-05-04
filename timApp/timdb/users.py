@@ -7,11 +7,11 @@ import sqlite3
 
 new_contract('row', sqlite3.Row)
 
-ANONYMOUS_GROUP = 2
-LOGGED_IN_GROUP = 0
-KORPPI_GROUP = 3
-ADMIN_GROUP = 4
-
+ANONYMOUS_USERNAME = "Anonymous"
+ANONYMOUS_GROUPNAME = "Anonymous users"
+KORPPI_GROUPNAME = "Korppi users"
+LOGGED_IN_GROUPNAME = "Logged-in users"
+ADMIN_GROUPNAME = "Administrators"
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
@@ -22,13 +22,21 @@ class Users(TimDbBase):
         The user id and its associated usergroup id is 0.
         """
 
+        # Please keep these local and refer to the groups with their names instead.
+        # They may differ depending on the script version they were created with.
+        ANONYMOUS_USERID = 0
+        ANONYMOUS_GROUPID = 2
+        LOGGED_IN_GROUPID = 0
+        KORPPI_GROUPID = 3
+        ADMIN_GROUPID = 4
+
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [0, 'Anonymous'])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUP, 'Anonymous users'])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [0, ANONYMOUS_GROUP])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUP, 'Logged-in users'])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [KORPPI_GROUP, 'Korppi users'])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ADMIN_GROUP, 'Administrators'])
+        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [0, ANONYMOUS_USERNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [ANONYMOUS_USERID, ANONYMOUS_GROUPID])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [KORPPI_GROUPID, KORPPI_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ADMIN_GROUPID, ADMIN_GROUPNAME])
         self.db.commit()
         return 0
 
@@ -95,12 +103,20 @@ class Users(TimDbBase):
             self.db.commit()
 
     @contract
+    def addUserToNamedGroup(self, group_name: 'str', user_id: 'int', commit : 'bool' = True):
+        group_id = self.getUserGroupByName(group_name)
+        if group_id is not None:
+            self.addUserToGroup(group_id, user_id, commit)
+        else:
+            print("Could not add user {} to group {}".format(user_id, group_name))
+
+    @contract
     def addUserToKorppiGroup(self, user_id: 'int', commit: 'bool'=True):
-        self.addUserToGroup(KORPPI_GROUP, user_id, commit)
+        self.addUserToNamedGroup(KORPPI_GROUPNAME, user_id, commit)
 
     @contract
     def addUserToAdmins(self, user_id: 'int', commit: 'bool'=True):
-        self.addUserToGroup(self.getUserGroupsByName('Administrators')[0]['id'], user_id, commit)
+        self.addUserToNamedGroup(ADMIN_GROUPNAME, user_id, commit)
 
     @contract
     def createPotentialUser(self, email: 'str', password: 'str', commit : 'bool' = True):
@@ -267,7 +283,7 @@ class Users(TimDbBase):
 
     @contract
     def getUserGroupsByName(self, name: 'str'):
-        """Gets the usergroup that has the specified name.
+        """Gets the usergroups that have the specified name.
         
         :param name: The name of the usergroup to be retrieved.
         """
@@ -275,6 +291,21 @@ class Users(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [name])
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUserGroupByName(self, name: 'str') -> 'int|None':
+        cursor = self.db.cursor()
+        cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [name])
+        groups = cursor.fetchall()
+
+        if groups is None or len(groups) == 0:
+            print("DEBUG: No such named group: " + group_name)
+            return None
+        elif len(groups) > 1:
+            print("DEBUG: Too many named groups: {} ({})".format(group_name, groups))
+            return None
+
+        return groups[0][0]
 
     @contract
     def getPersonalUserGroup(self, user_id: 'int') -> 'int':
@@ -289,7 +320,7 @@ class Users(TimDbBase):
         if len(groups) > 0:
             return groups[0]['id']
 
-        return self.getUserGroups(user_id)[0]
+        return self.getUserGroups(user_id)[0]['id']
 
 
     @contract
@@ -458,28 +489,33 @@ class Users(TimDbBase):
                           """, [user_id, block_id]).fetchall()
         return len(result) > 0
 
-    def checkUserGroupEditAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
-        result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess
+    def checkUserGroupAccess(self, block_id: 'int', usergroup_id: 'int|None', edit_access: 'bool') -> 'bool':
+        if usergroup_id is None:
+            return False
+        if self.userIsOwner(usergroup_id, block_id):
+            return True
+
+        if edit_access:
+            result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess
+                               WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+        else:
+            result = self.db.execute("""SELECT UserGroup_id FROM BlockViewAccess
                            WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+
         return len(result) > 0
 
     def checkAnonEditAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupEditAccess(block_id, ANONYMOUS_GROUP) or self.userIsOwner(ANONYMOUS_GROUP, block_id)
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(ANONYMOUS_GROUPNAME), True)
 
     def checkLoggedInEditAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupEditAccess(block_id, LOGGED_IN_GROUP) or self.userIsOwner(LOGGED_IN_GROUP, block_id)
-
-    def checkUserGroupViewAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
-        result = self.db.execute("""SELECT UserGroup_id FROM BlockViewAccess
-                           WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
-        return len(result) > 0
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(LOGGED_IN_GROUPNAME), True)
 
     def checkAnonViewAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupViewAccess(block_id, ANONYMOUS_GROUP) or self.userIsOwner(ANONYMOUS_GROUP, block_id)
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(ANONYMOUS_GROUPNAME), False)
 
 
     def checkLoggedInViewAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupViewAccess(block_id, LOGGED_IN_GROUP) or self.userIsOwner(LOGGED_IN_GROUP, block_id)
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(LOGGED_IN_GROUPNAME), False)
 
 
     @contract

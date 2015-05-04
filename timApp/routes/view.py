@@ -111,6 +111,18 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                                                 timdb.answers,
                                                                 doc_id,
                                                                 current_user['id'])
+    if hide_names_in_teacher(doc_id):
+        pass
+        if not timdb.users.userIsOwner(current_user['id'], doc_id)\
+           and current_user['id'] != getCurrentUserId():
+            current_user['name'] = '-'
+            current_user['real_name'] = 'Undisclosed student'
+        for user in users:
+            if not timdb.users.userIsOwner(user['id'], doc_id)\
+               and user['id'] != getCurrentUserId():
+                user['name'] = '-'
+                user['real_name'] = 'Undisclosed student %d' % user['id']
+
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
