@@ -145,12 +145,6 @@ body {
 	text-decoration: none;
 }
 
-
-.footer {
-    margin-top: 20px;
-    padding-top: 16px;
-}
-
 .footer p {
     float: left;
     margin-left: 10px;
@@ -178,4 +172,10 @@ body {
 	border: 1px solid black;
 	border-radius: 3px;
 	padding: 0.5em;
+}
+
+.errormsg {
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 30px;
 }

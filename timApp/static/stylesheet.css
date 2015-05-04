@@ -577,16 +577,12 @@ p.kannentiedotoikea-western {
 	margin-bottom: 0.1cm;
 }
 
-.caption, .footer {
+.caption {
 	text-align: center;
 	font-style: italic;
 	margin-top: 1em;
     margin-left: 5em;
     margin-right: 5em;
-}
-
-#footer {
-    height: 10em;
 }
 
 h1 {
