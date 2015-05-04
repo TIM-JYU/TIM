@@ -400,7 +400,7 @@ def get_running_lectures(doc_id):
         if lecture.get("start_time") < time_now:
             current_lecture_codes.append(lecture.get("lecture_code"))
         else:
-            future_lecture_codes.append(lecture.get("lecture_code"))
+            future_lecture_codes.append(lecture.get("lecture_code") + " ["+lecture.get("start_time") + "]")
     return jsonResponse(
         {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
          "lectureCode": lecture_code})

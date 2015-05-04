@@ -42,7 +42,8 @@
     <script src="{{ url_for('static', filename='scripts/jsDatePick.full.1.3.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/createDialog.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/statisticsView/statisticsController.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/questionAnswerController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/controllers/questionAnswerController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/popUpDialog.js') }}"></script>
 
     <!-- Script to load question from another file -->
     <script>
@@ -53,6 +54,8 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/popUp.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/windowstyle.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/progressbarstyle.css') }}">
 
 
     {% if teacher_mode %}
@@ -111,6 +114,11 @@
                     </div>
                 </div>
             </div>
+            <pop-up-dialog show="showAnswerDummy">
+                <div ng-controller="QuestionAnswerController">
+                    <ng-include src="'../../../static/templates/questionAskedStudent.html'"></ng-include>
+                </div>
+            </pop-up-dialog>
         </div>
 
 
@@ -189,11 +197,12 @@
         </div>
 
         <!-- Adding question to view. Hidden until creation of question -->
-        <question-dialog show='questionShown'>
+        <pop-up-dialog show='questionShown'>
             <div ng-controller="QuestionController">
                 <ng-include src="'../../question'"></ng-include>
             </div>
-        </question-dialog>
+        </pop-up-dialog>
+
     </div>
 
 {% endblock %}

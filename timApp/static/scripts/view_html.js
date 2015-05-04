@@ -180,7 +180,6 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-
         sc.showQuestion = function ($par, $question) {
             var json = "No data";
             var qId = -1;
@@ -190,7 +189,7 @@ timApp.controller("ViewCtrl", [
             }
 
             var lectureId = "";
-            sc.$on('test', function (event, response) {
+            sc.$on('getLectureId', function (event, response) {
                 lectureId = response;
             });
 
@@ -885,32 +884,6 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.directive('questionDialog', function factory() {
-    return {
-        restrict: 'E',
-        template: "<div class='question' ng-show='show'> " +
-        "<div class='question-overlay'></div> " +
-        "<div class='question-dialog'>" +
-        "<div class='question-dialog-content' ng-transclude></div>" +
-        "</div>" +
-        "</div>",
-
-        scope: {
-            show: '='
-        },
-        replace: true,
-        transclude: true,
-
-        link: function (scope, element, attrs) {
-            scope.dialogStyle = {};
-            scope.hideQuestion = function () {
-                scope.show = false;
-
-            };
-        }
-    };
-});
-
 timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
     function ($scope, json, controller) {
         //TODO parse json and set values from rows and columns to scope variables
@@ -1143,7 +1116,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         })
             .success(function (data) {
                 console.log("The question was successfully added to database");
-                scope.clearQuestion()
+                scope.clearQuestion();
             })
             .error(function (data) {
                 console.log("There was some error creating question to database.")
