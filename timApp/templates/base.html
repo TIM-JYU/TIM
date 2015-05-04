@@ -63,8 +63,6 @@
         {% endif %}
     {% endwith %}
 
-
-<!--
     <div id="header">
         {% block header %}
             {% if self.title() != "TIM" %}
@@ -101,12 +99,15 @@
 
         {% endblock %}
     </div>
--->
+
+    {% block beforecontent %}{% endblock %}
 
     <div class="material">
         <!-- <h1>{{ self.title() }}</h1> -->
         {% block content %}{% endblock %}
     </div>
+
+    {% block aftercontent %}{% endblock %}
 
     <footer class="footer">
         {% block footer %}
@@ -117,6 +118,9 @@
         </ul>
     </footer>
 </div>
+
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
 
 </body>
 </html>
