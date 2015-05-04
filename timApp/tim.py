@@ -602,7 +602,10 @@ def getPluginMarkup(doc_id, plugintype, task_id):
     
 @app.route("/")
 def startPage():
-    return render_template('start.html')
+    if not loggedIn() and not 'altlogin' in session:
+        return render_template('start.html')
+
+    return indexPage();
 
 @app.route("/view/")
 def indexPage():
