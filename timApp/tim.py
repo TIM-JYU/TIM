@@ -400,7 +400,7 @@ def get_running_lectures(doc_id):
         if lecture.get("start_time") < time_now:
             current_lecture_codes.append(lecture.get("lecture_code"))
         else:
-            future_lecture_codes.append(lecture.get("lecture_code"))
+            future_lecture_codes.append(lecture.get("lecture_code") + " ["+lecture.get("start_time") + "]")
     return jsonResponse(
         {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
          "lectureCode": lecture_code})
@@ -962,4 +962,8 @@ def startApp():
     # TODO: Think if it is truly necessary to have threaded=True here
     app.wsgi_app = ReverseProxied(app.wsgi_app)
 
+<<<<<<< HEAD
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
+=======
+    app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
+>>>>>>> 17978960f210975d05f2218ffd04ed1591c9a3aa

@@ -1,20 +1,11 @@
-<fieldset class="popUpWindow">
-	<div>
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/windowstyle.css')}}">
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/progressbarstyle.css')}}">
-		<h1>Question: </h1>
-	</div>
-	<div class="questionAskedWindow">
-		<progress max="100" value="60">
-			<strong>Time left: 60s</strong>
-		</progress>
-		<span class="progresslabel">40s</span>
-		<div>
-			<label>Question?</label>
-			<label>Options for answering</label>
-		</div>
-		<div class="buttons">
-			<button type="button">Send</button>
-		</div>
-	</div>
-</fieldset>
+<div class="questionAskedWindow">
+    <h1> Here you will answer to questions</h1>
+    <!--
+    <progress max="100" value="60">
+        <strong>Time left: 60s</strong>
+    </progress>
+    <span class="progresslabel">40s</span>
+    -->
+    <dynamic-answer-sheet control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+    <input type="button" ng-click="answer()" value="Answer">
+</div>

@@ -1,4 +1,4 @@
-.question-overlay {
+.pop-up-overlay {
     position: fixed;
     z-index: 5;
     top: 0;
@@ -9,7 +9,7 @@
     opacity: 0.2;
 }
 
-.question-dialog {
+.pop-up-dialog {
     max-height: calc(100% - 100px);
     max-width: calc(100% - 100px);
     overflow: auto;
@@ -23,20 +23,7 @@
     box-shadow: 4px 4px 80px #000;
 }
 
-.question-dialog-content {
+.pop-up-dialog-content {
     padding: 10px;
     text-align: center;
-}
-
-.question-close {
-    position: fixed;
-    z-index: 6;
-    top: 3px;
-    right: 5px;
-    padding: 5px;
-    cursor: pointer;
-    font-size: 120%;
-    display: inline-block;
-    font-weight: bold;
-    font-family: 'arial', 'sans-serif';
 }
