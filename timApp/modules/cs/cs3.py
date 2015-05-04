@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-  
+#-*- coding: utf-8 -*-  
 import threading
 import time
 
@@ -168,9 +168,14 @@ def run3(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         return -2, '', ('IO Error ' + str(e)).encode()
     return 0, stdout, stderr
 
-
+    
+def tquote(s):
+    if s.startswith("$"): return s
+    return shlex.quote(s)
+    
+    
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra=""):
+         extra="", ulimit=None):
     """
     Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed
     to fullfill the run inside docker.
@@ -187,6 +192,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :return: error code, stdout text, stderr text
     """
     s_in = ""
+    if not ulimit: ulimit = "ulimit -f 100 -t 3 -s 100 " # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")
@@ -195,9 +201,9 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     stdoutf = urndname + ".in"
     stderrf = urndname + ".err"
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
-    cmnds = ' '.join(shlex.quote(arg) for arg in args)  # otetaan args listan jonot yhteen
+    cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
     # tehdään komentojono jossa suuntaukset
-    cmnds = "#!/bin/bash\n" + extra + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     print("============")
     print(cwd)
     print(stdoutf)
@@ -221,9 +227,17 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
         stdout, stderr = p.communicate(timeout=timeout)
-        print(stdout)
-        print(stderr)
+        print("stdout: ",stdout[:100])
+        print("stderr: ",stderr)
         print("Run2 done!")
+        
+        if ( stderr ):
+            remove(cwd + "/" + stdoutf)
+            remove(cwd + "/" + stderrf)
+            err = str(stderr)
+            if "File size limit" in err: err = "File size limit exceeded"
+            if "Killed" in err: err = "Timeout. Too long loop?"
+            return -3, '', ("Run error: " + err).encode()
         try: 
             stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read().encode("utf-8")  # luetaan stdin ja err
             stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("utf-8")
@@ -231,15 +245,19 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read().encode("iso-8859-15")  # luetaan stdin ja err
             stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("iso-8859-15")
         
-        # print(stdout)
-        # print(stderr)
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
+        # print(stdout)
+        # print(stderr)
     except subprocess.TimeoutExpired:
         # p.kill()
+        remove(cwd + "/" + stdoutf)
+        remove(cwd + "/" + stderrf)
         os.system("docker rm -f " + tmpname)
         return -9, '', ''
     except IOError as e:
+        remove(cwd + "/" + stdoutf)
+        remove(cwd + "/" + stderrf)
         return -2, '', ("IO Error" + str(e)).encode()
     return 0, stdout, stderr
 
@@ -630,6 +648,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         print("ttype: ",ttype)
         
+        before_code = get_param(query, "beforeCode", "")
+        
         # if ttype == "console":
         # Console program
         if ttype == "cc":
@@ -669,8 +689,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             csfname = "/tmp/%s/%s.js" % (basename, filename)
             exename = csfname
             pure_exename = u"./{0:s}.js".format(filename)
+            if before_code == "": # Jos ei ole vamista koodia, niin tehdään konsoli johon voi tulostaa
+                before_code = ('var console={};'
+                'console.log = function(s) {'  
+                '    var res = "", sep = "";'  
+                '    for (var i=0; i<arguments.length; i++) { res += sep + arguments[i]; sep = " "; } ' 
+                '    print(res);' 
+                '};') 
+        print(before_code)
 
-        if ttype == "sql":
+        if ttype == "sql" or ttype == "psql":
             csfname = "/tmp/%s/%s.sql" % (basename, filename)
             exename = csfname
             pure_exename = u"{0:s}.sql".format(filename)
@@ -740,7 +768,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         usercode = get_json_param(query.jso, "input", "usercode", None)
         if usercode: save["usercode"] = usercode
         userinput = get_json_param(query.jso, "input", "userinput", None)
-        if userinput: save["userinput"] = userinput
+        if userinput: 
+            save["userinput"] = userinput
+            if userinput[-1:] != "\n": userinput += "\n" 
         userargs = get_json_param(query.jso, "input", "userargs", None)
         if userargs: save["userargs"] = userargs
         nosave = get_json_param(query.jso, "input", "nosave", None)
@@ -775,7 +805,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             print(os.path.dirname(csfname))
             mkdirs(os.path.dirname(csfname))
             print("Write file: " + csfname)
-            codecs.open(csfname, "w", "utf-8").write(s)
+            codecs.open(csfname, "w", "utf-8").write(before_code + s)
             slines = s
 
         is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
@@ -828,6 +858,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "jjs":
                 cmdline = ""
             elif ttype == "sql":
+                cmdline = ""
+            elif ttype == "psql":
                 cmdline = ""
             elif ttype == "alloy":
                 cmdline = ""
@@ -901,18 +933,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         stdin = get_param(query, "stdin", None)
         # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
         # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
-        if ttype == "sql": stdin = pure_exename
+        if ttype == "sql" or ttype == "psql" : stdin = pure_exename
 
         if ttype == "jypeli":
             # code, out, err = run(["mono", exename, pure_bmpname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
             code, out, err = run2(["mono", pure_exename, pure_bmpname], cwd="/tmp/cs", timeout=10, env=env, stdin=stdin,
-                                  uargs=userargs)
+                                  uargs=userargs, ulimit = "ulimit -f 80000")
             if type('') != type(out): out = out.decode()
             if type('') != type(err): err = err.decode()
             err = re.sub("^ALSA.*\n", "", err, flags=re.M)
             print(err)
             # err = ""
             wait_file(bmpname)
+            #statinfo = os.stat(bmpname)
+            #print("bmpsize: ", statinfo.st_size)
             run(["convert", "-flip", bmpname, pngname], cwd=prgpath, timeout=20)
             # print(bmpname, pngname)
             remove(bmpname)
@@ -1113,6 +1147,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "sql":
                 print("sql: ", exename)
                 code, out, err = run2(["sqlite3", dbname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                                      uargs=userargs)
+            elif ttype == "psql":
+                print("psql: ", exename)
+                code, out, err = run2(["psql", "-h", dbname, "-U", "$psqluser"], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                       uargs=userargs)
                 # code, out, err = run2(["sqlite3",dbname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs, code='iso-8859-1')
             elif ttype == "cc":

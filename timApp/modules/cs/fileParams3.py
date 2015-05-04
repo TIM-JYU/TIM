@@ -239,8 +239,8 @@ def get_url_lines_as_string(url):
 
 
 class FileParams:
-    def __init__(self, query, nr, url):
-        self.url = get_param(query, "file" + nr, "")
+    def __init__(self, query, nr, url, **defs):
+        self.url = get_param(query, "file" + nr, "")  # defs.get('file',""))
         self.start = do_matcher(get_param(query, "start" + nr, "").replace("\\\\", "\\"))
         self.start_scan_dir, self.start_scan = get_scan_value(get_param(query, "startscan" + nr, ""))
         self.startcnt = int(get_param(query, "startcnt" + nr, "1"))

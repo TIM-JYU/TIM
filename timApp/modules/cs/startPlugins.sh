@@ -11,7 +11,7 @@ sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
 
 chmod 777 /tmp
 mkdir /tmp/uhome
-chmod 777 /tmp/uhome
+chmod 777 /tmp/uhome 
 mkdir /tmp/uhome/cs
 chmod 775 /tmp/uhome/cs
 mkdir /tmp/uhome/run
