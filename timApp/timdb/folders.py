@@ -3,7 +3,6 @@ from shutil import copyfile
 from datetime import datetime
 
 from contracts import contract
-import ansiconv
 import posixpath
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
