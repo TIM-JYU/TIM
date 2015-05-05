@@ -928,14 +928,14 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             var columns = [];
             columnHeaders = [];
             for (var j = 0; j < columnsCount; j++) {
-                columnHeaders.push({type: "header", text: ""})
+                columnHeaders.push({type: "header", text: ""});
                 columns[j] = {
                     id: j,
                     rowId: i,
                     text: 'test',
                     questionPlaceholder: 'column',
                     type: "answer",
-                    value: 'scope.question.answerFieldType'
+                    value: scope.question.answerFieldType
                 }
             }
             scope.rows[i] = {
@@ -979,7 +979,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
 
 
-    }
+    };
     scope.addRow = function (loc) {
 
         scope.CreateColumnsForRow = function (location) {
@@ -1092,7 +1092,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
         questionJson = questionJson.substring(0, questionJson.length - 1);
 
-        questionJson += ']}}'
+        questionJson += ']}}';
 
 
         //'{"questionJson":{"time":"20","data":{"rows":[{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 123-1?"}],"columns":[{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"}]}}}';

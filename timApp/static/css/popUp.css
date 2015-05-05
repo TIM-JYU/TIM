@@ -14,13 +14,13 @@
     max-width: calc(100% - 100px);
     overflow: auto;
     z-index: 6;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: fixed;
+    top: 25%;
+    right: 25%;
 
     background-color: #fff;
     box-shadow: 4px 4px 80px #000;
+    overflow-y: hidden;
 }
 
 .pop-up-dialog-content {

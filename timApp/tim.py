@@ -294,7 +294,7 @@ def get_updates():
                 pair[2].append(getCurrentUserId())
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                     "lectureId": lecture_id, "question": True, "questionJson": question_json,
+                     "lectureId": lecture_id, "question": True, "questionId": pair[1], "questionJson": question_json,
                      "isLecture": True})
 
         if len(list_of_new_messages) > 0:
@@ -325,9 +325,11 @@ def send_message():
 def show_question():
     return render_template('question.html')
 
+
 @app.route('/question')
 def show_question_without_view():
     return render_template('question.html')
+
 
 @app.route('/getQuestion')
 def get_quesition():
@@ -382,6 +384,7 @@ def check_lecture():
     else:
         return get_running_lectures(doc_id)
 
+
 def check_if_lecture_is_running(lecture_id):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -400,7 +403,7 @@ def get_running_lectures(doc_id):
         if lecture.get("start_time") < time_now:
             current_lecture_codes.append(lecture.get("lecture_code"))
         else:
-            future_lecture_codes.append(lecture.get("lecture_code") + " ["+lecture.get("start_time") + "]")
+            future_lecture_codes.append(lecture.get("lecture_code") + " [" + lecture.get("start_time") + "]")
     return jsonResponse(
         {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
          "lectureCode": lecture_code})
@@ -498,7 +501,6 @@ def leave_lecture():
     doc_id = int(request.args.get("doc_id"))
     timdb.lectures.leave_lecture(lecture_id, getCurrentUserId(), True)
     return get_running_lectures(doc_id)
-
 
 
 @app.route('/uploads/<filename>')
@@ -764,7 +766,15 @@ def ask_question():
     verifyOwnership(int(doc_id))
     __question_to_be_asked.append((lecture_id, question_id, []))
 
-    return jsonResponse("Wololoo")
+    return jsonResponse("")
+
+
+@app.route("/answerToQuestion", methods=['POST'])
+def answer_to_question():
+    if not request.args.get("question_id") or not request.args.get('answers'):
+        abort(400, "Bad request")
+
+    return jsonResponse("")
 
 
 @app.route("/notes/<int:doc_id>")

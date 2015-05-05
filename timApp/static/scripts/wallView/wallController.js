@@ -1,9 +1,8 @@
 /**
  * Created by hajoviin on 24.2.2015.
  */
-
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog','$rootScope',
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope',
 
     function ($scope, controller, http, $window, createDialog, $rootScope) {
 
@@ -66,8 +65,23 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.$emit('getLectureId', $scope.lectureId);
         });
 
-        $scope.$on("closeAnswer", function() {
-           $scope.showAnswerDummy = false;
+        $scope.$on("closeAnswer", function (event, answer) {
+            $scope.showAnswerDummy = false;
+            console.log(answer.answer);
+            http({
+                url: '/answerToQuestion',
+                method: 'POST',
+                params: {
+                    'question_id': answer.questionId,
+                    'answers': answer.answer
+                }
+            })
+                .success(function () {
+                    console.log("Succesfully answered to question");
+                })
+                .error(function () {
+                    console.log("Failed to answer to question"); //TODO: BETTER
+                })
         });
 
 
@@ -106,29 +120,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
-        /*
-         $scope.wallRelease = function () {
-         var wall = document.getElementById("wall");
-         var detach = document.getElementById("detachButton")
-         if (wall.style.position == "absolute") {
-         wall.style.position = "";
-         wall.style.bottom = "2em";
-         wall.style.top = "";
-         wall.style.right = "2em";
-         wall.setAttribute("tim-draggable-fixed", false);
-         //TODO: Change to url_for or some other way to get correct ulr
-         detach.style.background = "url('../../../static/images/detach.png')"
-
-
-         } else {
-         wall.style.position = "absolute";
-         wall.style.bottom = "auto";
-         detach.style.background = "url('../../../static/images/tach.png')"
-         wall.setAttribute("tim-draggable-fixed", true);
-
-         }
-         };
-         */
         $scope.checkDown = function (e) {
             $scope.mouseDownX = e.clientX;
             $scope.mouseDownY = e.clientY;
@@ -371,7 +362,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                                 $scope.askedQuestionJson = questionJson;
 
-                                $rootScope.$broadcast("setQuestionJson", questionJson);
+                                $rootScope.$broadcast("setQuestionJson", {
+                                    questionJson: questionJson,
+                                    questionId: answer.questionId
+                                });
 
 
                                 $scope.showAnswerDummy = true;
