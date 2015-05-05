@@ -70,7 +70,28 @@
 
             <!-- Tab panes -->
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane active" id="login">
+                <div role="tabpanel" class="tab-pane tab-padding active" id="login">
+                    <small>
+                        Login with:
+                    </small>
+
+                    <div class="openidbutton">
+                        <div class="openidcontent">
+                           <a href="/korppiLogin?came_from=/view/"
+                              data-confirm="null" id="">
+                               <img src="{{ url_for('static', filename='images/korppi.png') }}"/>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class='grid-row'>
+                        <div class="grid-col-12 grid-col--align-center grid-col--center grid-col--no-padding js-oauth-title">
+                            <small>
+                                or email:
+                            </small>
+                        </div>
+                    </div>
+
                     <form accept-charset="UTF-8" action="/altlogin" class="new_user"
                               id="new-session" method="post">
                         <div class="textfield">
@@ -97,26 +118,9 @@
                         <div class="loginbutton">
                             <input type="submit" value="Login"/>
                         </div>
-
-                        <div class='grid-row'>
-                            <div class="grid-col-12 grid-col--align-center grid-col--center grid-col--no-padding js-oauth-title">
-                                <small>
-                                    Or login with:
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="openidbutton">
-                            <div class="openidcontent">
-                                <a href="/korppiLogin?came_from=/view/"
-                                   data-confirm="null" id="">
-                                   <img src="{{ url_for('static', filename='images/korppi.png') }}"/>
-                                </a>
-                            </div>
-                        </div>
                     </form>
                 </div>
-                <div role="tabpanel" class="tab-pane" id="signup">
+                <div role="tabpanel" class="tab-pane tab-padding" id="signup">
                     <form accept-charset="UTF-8" action="/altsignup" autocomplete="off"
                       class="new_user" id="new-user" method="post">
                         <div class="textfield">
