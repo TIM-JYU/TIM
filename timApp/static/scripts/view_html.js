@@ -169,6 +169,7 @@ timApp.controller("ViewCtrl", [
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
                     $compile($div[0])(sc);
                     $par.append($div);
+                    $div.draggable();
                     sc.editing = true;
                 };
 
@@ -488,6 +489,8 @@ timApp.controller("ViewCtrl", [
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
             $par.prepend($actionDiv);
+
+            $actionDiv.draggable();
         };
 
         sc.dist = function(coords1, coords2) {
