@@ -26,7 +26,7 @@ run pip3 install hypothesis
 run pip3 install gitpylib
 run pip3 install lxml
 run pip3 install pyaml
-run pip3 install ansiconv
+run pip3 install ansi2html
 run pip3 install cssutils
 
 # Install pygit2 and dependencies
