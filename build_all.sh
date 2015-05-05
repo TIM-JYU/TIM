@@ -1,6 +1,6 @@
 #!/bin/sh
 
-docker build --tag="tim" timApp
+docker build --no-cache --tag="tim" timApp
 cd Ephemeral
 ./install.sh
 cd -
