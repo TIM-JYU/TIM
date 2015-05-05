@@ -87,6 +87,20 @@
     line-height: 1.5;
 }
 
+.lectureArea input{
+    width: 50%;
+    max-width: 50%;
+    margin-bottom: 0.15em;
+    display: block;
+}
+
+.lectureArea select{
+    width: 50%;
+    max-width: 50%;
+    margin-bottom: 0.15em;
+    display: block;
+}
+
 input[type="submit"] {
     background: #E6E6E6;
     border: 0;

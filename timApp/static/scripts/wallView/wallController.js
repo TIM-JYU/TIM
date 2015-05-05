@@ -3,9 +3,9 @@
  */
 
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog',
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog','$rootScope',
 
-    function ($scope, controller, http, $window, createDialog) {
+    function ($scope, controller, http, $window, createDialog, $rootScope) {
 
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
@@ -32,6 +32,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.durationMin = "";
         $scope.isLecturer = false;
         $scope.lectureId = null;
+        $scope.showAnswerDummy = false;
+
 
         var date = new Date();
 
@@ -61,7 +63,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.$on('get_lectureId', function () {
-            $scope.$emit('test', $scope.lectureId);
+            $scope.$emit('getLectureId', $scope.lectureId);
+        });
+
+        $scope.$on("closeAnswer", function() {
+           $scope.showAnswerDummy = false;
         });
 
 
@@ -69,7 +75,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.joinLecture = function () {
             if ($scope.chosenLecture == "") {
-                console.log("Choose lecture to join");
+                $window.alert("Choose lecture to join");
                 return;
             }
 
@@ -100,28 +106,29 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
-        $scope.wallRelease = function () {
-            var wall = document.getElementById("wall");
-            var detach = document.getElementById("detachButton")
-            if (wall.style.position == "absolute") {
-                wall.style.position = "";
-                wall.style.bottom = "2em";
-                wall.style.top = "";
-                wall.style.right = "2em";
-                wall.setAttribute("tim-draggable-fixed", false);
-                //TODO: Change to url_for or some other way to get correct ulr
-                detach.style.background = "url('../../../static/images/detach.png')"
+        /*
+         $scope.wallRelease = function () {
+         var wall = document.getElementById("wall");
+         var detach = document.getElementById("detachButton")
+         if (wall.style.position == "absolute") {
+         wall.style.position = "";
+         wall.style.bottom = "2em";
+         wall.style.top = "";
+         wall.style.right = "2em";
+         wall.setAttribute("tim-draggable-fixed", false);
+         //TODO: Change to url_for or some other way to get correct ulr
+         detach.style.background = "url('../../../static/images/detach.png')"
 
 
-            } else {
-                wall.style.position = "absolute";
-                wall.style.bottom = "auto";
-                detach.style.background = "url('../../../static/images/tach.png')"
-                wall.setAttribute("tim-draggable-fixed", true);
+         } else {
+         wall.style.position = "absolute";
+         wall.style.bottom = "auto";
+         detach.style.background = "url('../../../static/images/tach.png')"
+         wall.setAttribute("tim-draggable-fixed", true);
 
-            }
-        };
-
+         }
+         };
+         */
         $scope.checkDown = function (e) {
             $scope.mouseDownX = e.clientX;
             $scope.mouseDownY = e.clientY;
@@ -144,18 +151,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             }
 
             var id = $(event.target).attr('id');
-
-            if (id == "detachButton") {
-                return;
-            }
-
-
         };
 
 
         $scope.toggleLecture = function () {
             $scope.showLectureCreation = !$scope.showLectureCreation;
-            console.log("huh?");
             if ($scope.showLectureCreation) {
                 $scope.setCurrentTime();
                 document.getElementById("startMonth").value = $scope.startMonth;
@@ -201,7 +201,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             });
 
             angular.forEach(answer.futureLectures, function (lecture) {
-                console.log(lecture);
+                // TODO: Might be problematic in future, because needs to parse out the time before can do anyhting
+                // with this. Dummy version.
                 if ($scope.futureLectures.indexOf(lecture) == -1) {
                     $scope.futureLectures.push(lecture);
                 }
@@ -309,15 +310,17 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     angular.forEach(answer.data, function (msg) {
                         $scope.msg = $scope.msg + msg + "\n";
                     });
-                    $scope.lastID = answer.lastid;
+
                     var textarea = document.getElementById('wallArea');
                     textarea.scrollTop = textarea.scrollHeight;
+                    $scope.lastID = answer.lastid;
                     $scope.requestDocId = $scope.lectureId;
 
                     if ($scope.pollingLectures.indexOf(answer.lectureId) == -1) {
                         $scope.startLongPolling($scope.lastID);
                         $scope.pollingLectures.push(answer.lectureId);
                     }
+
 
                 })
         };
@@ -352,34 +355,57 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             return;
                         }
 
-                        if (answer.question) {
-                            createDialog('../../../static/templates/question_asked_student.html', {
-                                id: 'questionAskDialog',
-                                title: 'Question',
-                                backdrop: true,
-                                success: {
-                                    label: 'Answer', fn: function () {
-                                        http({
-                                            url: '/answerQuestion',
-                                            method: 'POST',
-                                            params: {}
-                                        })
-                                            .success(function () {
-                                                console.log("Answered to the question");
-                                            })
-                                            .error(function (error) {
-                                                console.log(error);
-                                            });
-                                    }
-                                },
-                                controller: 'QuestionAnswerController'
-                            });
+                        if (answer.questionJson) {
+                            var questionJson = JSON.parse(answer.questionJson);
                         }
-                        /* Correct version where the lecturer is not shown the question, but something else
-                         if (answer.question && $scope.isLecturer == false) {
-                         alert("This would be question that is asked from you!\n" + answer.questionJson);
-                         }
-                         */
+                        if (answer.question) {
+                            if (!$scope.isLecturer) {
+                                createDialog('../../../static/templates/answersFromStudents.html', {
+                                    id: 'answerBowser',
+                                    title: 'Answers',
+                                    backdrop: true,
+                                    controller: 'QuestionAnswerController'
+                                });
+                            }
+                            else {
+
+                                $scope.askedQuestionJson = questionJson;
+
+                                $rootScope.$broadcast("setQuestionJson", questionJson);
+
+
+                                $scope.showAnswerDummy = true;
+
+                                /*
+                                 createDialog('../../../static/templates/questionAskedStudent.html', {
+                                 id: 'questionAskDialog',
+                                 title: 'Question',
+                                 backdrop: true,
+                                 success: {
+                                 label: 'Answer', fn: function () {
+
+                                 http({
+                                 url: '/answerQuestion',
+                                 method: 'POST',
+                                 params: {}
+                                 })
+                                 .success(function () {
+                                 console.log("Answered to the question");
+                                 })
+                                 .error(function (error) {
+                                 console.log(error);
+                                 });
+                                 }
+                                 },
+                                 controller: 'QuestionAnswerController'
+                                 },{
+                                 questionJson:questionJson
+                                 });
+
+                                 */
+
+                            }
+                        }
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
                         if ($scope.polling) {
@@ -394,10 +420,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                     $scope.msg = $scope.msg + msg + "\n";
                                 });
                                 $scope.lastID = answer.lastid;
-                                // TODO: Do no use getElementById:tÃ¤
+                                // TODO: Do no use getElementById. Doens't work well enough
                                 var textarea = document.getElementById('wallArea');
-                                var areaHeight = $("#wallArea").height();
-                                if (textarea.scrollHeight - textarea.scrollTop - areaHeight < 200) {
+                                var scrollHeight = textarea.scrollTop;
+                                var position = textarea.scrollHeight - textarea.clientHeight;
+                                if (scrollHeight / position < 0.9) {
                                     textarea.scrollTop = textarea.scrollHeight;
                                 }
 

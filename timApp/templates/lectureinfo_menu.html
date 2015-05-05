@@ -3,24 +3,32 @@
 <div class="menuSection">
     <div id="largeMenu">
         <div class="lectureSection" ng-show="!inLecture">
-            <h1>Now:</h1>
-            <select ng-model="chosenLecture" ng-options="lecture as lecture for lecture in lectures">
-                <pre>{{ "{{ availableLectures || json }}" }}</pre>
-            </select>
-            <input id="passwordInput" ng-model="passwordQuess" placeholder="access code"
-                   ng-keypress="passEnterPressed($event)" size="7">
+            <img id="add-icon" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer"
+                 ng-click="toggleLecture()">
 
-            <div>
-                <input type="button" ng-click="joinLecture()" value="Join" class="loginSection">
-                <img id="add-icon" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer" ng-click="toggleLecture()">
+            <h1>Now:</h1>
+
+            <div ng-show="lectures.length > 0" class="lectureArea">
+                <select ng-model="chosenLecture" ng-options="lecture as lecture for lecture in lectures">
+                </select>
+                <input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
+                       ng-keypress="passEnterPressed($event)" size="7">
+
+                <div>
+                    <input type="button" ng-click="joinLecture()" value="Join" class="loginSection">
+
+                </div>
             </div>
+            <p ng-show="lectures.length <= 0">No running lectures</p>
 
         </div>
         <div class="lectureSection" ng-show="inLecture">
             <h1>Currently:</h1>
 
             <p ng-bind="lectureName"></p>
+
             <p ng-bind="lectureStartTime"></p>
+
             <p ng-bind="lectureEndTime"></p>
 
 
@@ -30,11 +38,14 @@
 
 
         </div>
-        <div class="lectureSection" ng-show="!inLecture">
+        <div class="lectureSection" ng-show="!inLecture" class="lectureArea">
             <h1>Next:</h1>
-            <select ng-model="futureLecture" ng-options="lecture as lecture for lecture in futureLectures">
-                <pre>{{ "{{ futureLectures || json }}" }}</pre>
-            </select>
+
+            <div ng-show="futureLectures.length > 0" class="lectureArea">
+                <select ng-model="futureLecture" ng-options="lecture as lecture for lecture in futureLectures">
+                </select>
+            </div>
+            <p ng-show="futureLectures.length <= 0">No upcoming lectures</p>
         </div>
         <div class="loginSection">
             {% include 'loginlogout.html' %}
