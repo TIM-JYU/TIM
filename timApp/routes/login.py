@@ -48,8 +48,7 @@ def logout():
     session.pop('appcookie', None)
     session.pop('altlogin', None)
     session['user_name'] = 'Anonymous'
-    flash('You were successfully logged out.', 'loginmsg')
-    return redirect(url_for('indexPage'))
+    return redirect(url_for('startPage'))
 
 @login_page.route("/login")
 def login():
@@ -276,7 +275,6 @@ def finishLogin(ready=True):
         anchor = "#" + anchor
     came_from = session.get('came_from', '/')
     if ready:
-        flash('You were successfully logged in.', 'loginmsg')
         session.pop('anchor', '')
         session.pop('came_from', '/')
     return redirect(came_from + anchor)
