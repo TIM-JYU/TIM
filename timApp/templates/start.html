@@ -74,6 +74,38 @@
                     <input type="submit" value="Log out">
                 </div>
             </form>
+{% elif session.altlogin == "signup2" %}
+        <form method="POST" action="/altsignup2">
+            <div class="loginwelcome">
+                <p>
+                    Welcome to TIM! We need just a few more details to get you started.
+                </p>
+            </div>
+            <input type="hidden" name="token" value="{{ session.token }}">
+            <div class="textfield indented">
+                <label for="username">User name</p> 
+                <p id="username">{{ session.user_name }}</p>
+            </div>
+            <div class="textfield indented">
+                <label for="realname">Real name</label>
+                <input id="realname" name="realname" type="text" value="{{ session.real_name }}">
+            </div>
+            <div class="textfield indented">
+                <label for="email">Email</p> 
+                <p id="realname">{{ session.email }}</p>
+            </div>
+            <div class="textfield indented">
+                <label for="password">New password</label> 
+                <input id="password" name="password" type="password">
+            </div>
+            <div class="textfield indented">
+                <label for="passconfirm">Repeat new password</label> 
+                <input id="passconfirm" name="passconfirm" type="password">
+            </div>
+            <div class="loginbutton">
+                <input type="submit" value="Create account">
+            </div>
+        </form>
 {% else %}
             <!-- Nav tabs -->
             <ul id="loginTab" class="nav nav-tabs" role="tablist">
@@ -107,10 +139,10 @@
 
                     <form accept-charset="UTF-8" action="/altlogin" class="new_user"
                               id="new-session" method="post">
-                        <div class="textfield">
+                        <div class="textfield indented">
                             <input id="user_login" name="email"
                                    placeholder="Email or username" required="required"
-                                   tabindex="1" type="text"/>
+                                   tabindex="1" type="text" value="{{session.email}}"/>
                             <input id="user_password" name="password" class="textfield"
                                    placeholder="Password" required="required" size="30"
                                    tabindex="2" type="password"/>

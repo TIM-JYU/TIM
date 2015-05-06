@@ -276,7 +276,7 @@ def finishLogin(ready=True):
     came_from = session.get('came_from', '/')
     if ready:
         session.pop('anchor', '')
-        session.pop('came_from', '/view/')
+        session['came_from'] = '/view/'
     return redirect(came_from + anchor)
 
 
