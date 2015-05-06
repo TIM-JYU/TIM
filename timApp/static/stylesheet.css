@@ -1658,7 +1658,11 @@ button:disabled {
 }
 
 .breadcrumb {
-	font-size: 1.0em;
+    font-size: 1.0em;
+}
+
+.breadcrumb.ol {
+    background-color: #fff;
 }
 
 .breadcrumb a {
