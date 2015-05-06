@@ -462,6 +462,9 @@ def setReadParagraph(doc_id, specifier):
 
     
 @app.route("/")
+def startPage():
+    return render_template('start.html')
+
 @app.route("/view/")
 def indexPage():
     timdb = getTimDb()

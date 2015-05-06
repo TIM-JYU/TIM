@@ -60,7 +60,7 @@ def try_return_folder(doc_name):
                            userId=getCurrentUserId(),
                            userGroups=possible_groups,
                            is_owner=hasOwnership(block_id),
-                           folder=folder_name)
+                           docName=folder_name)
 
 
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
