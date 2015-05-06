@@ -14,6 +14,16 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
             },
             link: function ($scope, $element, $attrs) {
+                $scope.$watch("taskId", function (newValue, oldValue) {
+                    if (newValue === oldValue) {
+                        return;
+                    }
+                    if ($scope.$parent.teacherMode) {
+                        $scope.getAvailableUsers();
+                    }
+                    $scope.getAvailableAnswers();
+                });
+
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
                     $scope.points = $scope.selectedAnswer.points;

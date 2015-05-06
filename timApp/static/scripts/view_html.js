@@ -19,7 +19,6 @@ var timApp = angular.module('timApp', [
                         if (ab.scope().teacherMode) {
                             angular.extend(config.data, {abData: browserScope.getTeacherData()});
                         }
-                        //console.log(config);
                     }
                     return config;
                 },
@@ -345,6 +344,12 @@ timApp.controller("ViewCtrl", [
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
                     $par.find("answerbrowser").prependTo($newpar);
+                    var taskId = $newpar.find('.parContent').children().first().attr('id');
+                    var ab = $newpar.find('answerbrowser');
+                    ab.attr('task-id', taskId);
+                    if (ab.length > 0) {
+                        ab.isolateScope().taskId = taskId;
+                    }
                     if ($par.find(".read, .modified").length > 0) {
                         readClass = "modified";
                     }
