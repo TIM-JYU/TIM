@@ -55,6 +55,7 @@ timApp.controller("ViewCtrl", [
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
+        sc.crumbs = crumbs;
         sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;

@@ -6,7 +6,10 @@
 <script src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
 <script>
     var groups = {{userGroups|tojson|safe}};
-    var folder = "{{folder}}";
+    var folder = "{{docName}}";
+    var crumbs = getBreadcrumbs(folder);
+    
+    {% include 'breadcrumbs.js' %}
 </script>
 
 <style type="text/css">
@@ -36,14 +39,16 @@ table td {
 </style>
 {% endblock %}
 {% block content %}
-<div ng-app="indexApp" ng-controller="IndexCtrl">
+    <div ng-app="indexApp" ng-controller="IndexCtrl">
+        {% include 'breadcrumbs.html' %}
+
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
         <div ng-show="displayIndex == 2">
             <table ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
                 <thead>
                     <tr>
-                    	<td></td>
+                        <td></td>
                         <td>Document name</td>
                         <td></td>
                         <td>Last modified</td>

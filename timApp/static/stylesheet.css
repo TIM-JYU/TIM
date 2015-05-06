@@ -1652,3 +1652,23 @@ button:disabled {
         margin-left: 60em !important;
     }
 }
+
+.breadcrumb-div {
+    margin-top: 10px;
+}
+
+.breadcrumb {
+	font-size: 1.0em;
+}
+
+.breadcrumb a {
+    /* Overrides the default TIM style for links */
+    font-size: 1.0em;
+	padding: 8px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.breadcrumb active {
+	text-decoration: bold;
+}
