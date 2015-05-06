@@ -1008,9 +1008,4 @@ def indexPage():
 def startApp():
     # TODO: Think if it is truly necessary to have threaded=True here
     app.wsgi_app = ReverseProxied(app.wsgi_app)
-
-<<<<<<< HEAD
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
-=======
-    app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
->>>>>>> 17978960f210975d05f2218ffd04ed1591c9a3aa
