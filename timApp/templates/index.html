@@ -58,12 +58,10 @@ table td {
                 </thead>
                 <tr ng-show="parentfolder != null">
                     <td>
-                	    <!--<a href="?folder={{ '{{ parentfolder | escape }}' }}">-->
                         <a href="/view/{{ '{{ parentfolder | escape }}' }}">
                 	        <img src="{{url_for('static', filename='images/folder.png')}}"/>
                 	    </a>
                 	</td>
-                	<!--<td><a href="?folder={{ '{{ parentfolder | escape }}' }}">..</a></td>-->
                     <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">..</a></td>
                 	<td></td>
                 	<td></td>
@@ -72,7 +70,9 @@ table td {
                 </tr>
                 <tr ng-repeat="doc in folderList">
                     <td>
-                        <img src="{{url_for('static', filename='images/folder.png')}}"/>
+                    	<a href="/view/{{ '{{ doc.fullname | escape }}' }}">
+                            <img src="{{url_for('static', filename='images/folder.png')}}"/>
+                        </a>
                 	</td>
                     <td>
                     	<a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
