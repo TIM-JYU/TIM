@@ -23,7 +23,7 @@ class LectureAnswers(TimDbBase):
         cursor.execute("""
             SELECT answer
             FROM LectureAnswer
-            WHERE question_id = ? AND answered_on >= ?
+            WHERE question_id = ? AND answered_on > ?
         """, [question_id, timestamp])
 
         return self.resultAsDictionary(cursor)
