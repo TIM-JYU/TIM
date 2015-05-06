@@ -1322,30 +1322,43 @@ img.console {
 
 /* Sisällysluetteloa varten =============================================*/
 
-#contents {
-    position: fixed;
+.contents {
+	position: fixed;
     top: 0;
+	bottom: 0;
     left: 0;
     z-index: 1;
-    bottom: 0;
     overflow-y: auto;
 }
 
-.sidebar {
-	width: 240px;
+.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar{
+	position: fixed;
+    top: 0;
+    left: 45px;
+    z-index: 1;
+    overflow-y: auto;
+	width: 215px;
 	word-wrap: break-word;
 	background-color: #e6e6e6;
-	transition: 200ms all ease-in-out;
+	/*-webkit-transition: 200ms all ease-in-out;
+	-moz-transition: 200ms all ease-in-out;
+	-o-transition: 200ms all ease-in-out;
+	transition: 200ms all ease-in-out;*/
 	z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
 }
 
-.sidebar.hidden {
+.index-sidebar.hidden , .index-sidebar.autohidden, .lectures-sidebar.hidden, .lectures-sidebar.autohidden,
+.questions-sidebar.hidden, .people-sidebar.hidden, .questions-sidebar.autohidden, .people-sidebar.autohidden,
+.settings-sidebar.hidden, .settings-sidebar.autohidden{
+	width: 0;
+	height: 0;
     display: none;
 }
 
-.sidebar-buttons{
+.index-sidebar-buttons, .lectures-sidebar-buttons, .questions-sidebar-buttons, .people-sidebar-buttons
+.settings-sidebar-buttons {
 	width: 100%;
 	padding: 20px;
 	padding-top: 50px;
@@ -1355,73 +1368,80 @@ img.console {
 	border-bottom: solid 4px #CCC;
 }
 
-.sidebar ul {
+.index-sidebar ul, .lectures-sidebar ul , .questions-sidebar ul, .people-sidebar ul, .settings-sidebar ul{
     padding-left: 20px;
 	text-align: left;
 	font-family:"Helvetica", Arial, sans-serif;
 	font-size: 0.85em;
 }
 
-.sidebar li {
+.index-sidebar li, .lectures-sidebar li , .questions-sidebar li, .people-sidebar li, .settings-sidebar li{
     padding-left: 15px;
     list-style:none;
 }
 
-.sidebar li.exp {
+.index-sidebar li.exp, .lectures-sidebar li.exp , .questions-sidebar li.exp, .people-sidebar li.exp{
     list-style-image:url("/static/images/minus.png");
     list-style-type:square;
 }
 
-.sidebar li.col {
+.index-sidebar li.col, .lectures-sidebar li.col, .questions-sidebar li.col, .people-sidebar li.col, .settings-sidebar li.col {
     list-style-image:url("/static/images/plus.png");
     list-style-type:square;
 }
 
-.sidebar a {
+.index-sidebar a , .lectures-sidebar a, .questions-sidebar a, .people-sidebar a, .settings-sidebar a{
 	margin: 0 0px 0 -15px;
 	text-align: left;
 	color: #2bb;
 }
 
-.sidebar a:hover {
+.index-sidebar a:hover, .lectures-sidebar a:hover , .questions-sidebar a:hover, .people-sidebar a:hover,
+.settings-sidebar a:hover {
 	color: #3cc;
 	text-decoration: none;
 }
 
-.sidebar a.a1 {
+.index-sidebar a.a1 , .lectures-sidebar a.a1, .questions-sidebar a.a1, .people-sidebar a.a1, 
+.settings-sidebar a.a1 {
 	font-size: 110%;
 }
 
-.sidebar a.a2 {
+.index-sidebar a.a2, .lectures-sidebar a.a2, .questions-sidebar a.a2, .people-sidebar a.a2,
+.settings-sidebar a.a2 {
 	font-size: 100%;
 }
 
-.sidebar a.a3 {
+.index-sidebar a.a3 , .lectures-sidebar a.a3, .questions-sidebar a.a3, .people-sidebar a.a3,
+.settings-sidebar a.a3 {
 	font-size: 100%;
     padding-left: 5pt;
 }
 
-.sidebar h1 {
+.index-sidebar h1, .lectures-sidebar h1, .questions-sidebar h1, .people-sidebar h1, .settings-sidebar h1{
 	font-size: 120%;
-	margin-top: 1cm;
-	margin-bottom: 0.5cm;
+	background-color: #3cc;
+	color: white;
+	margin-top: 0;
+	margin-bottom: 0;
 	border-top: none;
 	border-bottom: none;
 	padding-top: 10pt;
 	padding-bottom: 10pt;
+	padding-left: 10pt;
 	line-height: 1.3;
 
     margin-left: 20px;
     margin-right: 20px;
 	text-align: left;
-	color: #2bb;
 }
 
-.menu {
+.menu{
 	background:#e6e6e6;
     width: 45px;
     z-index: 501;
 }
+
 .menu-icon{
     z-index: 501;
 	cursor:pointer;
@@ -1429,6 +1449,7 @@ img.console {
 	-webkit-filter: brightness(1);
 	-moz-filter: brightness(1);
 }
+
 .menu-icon:hover{
     z-index: 501;
 	filter: brightness(1);
