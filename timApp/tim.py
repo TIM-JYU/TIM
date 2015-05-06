@@ -12,6 +12,7 @@ import datetime
 from time import mktime
 from datetime import timezone
 import posixpath
+import threading
 
 from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
@@ -83,6 +84,8 @@ LOG_LEVELS = {"CRITICAL": app.logger.critical,
               "DEBUG": app.logger.debug}
 
 __question_to_be_asked = []
+
+__pull_answer = {}
 
 # Logger call
 @app.route("/log/", methods=["POST"])
@@ -400,7 +403,7 @@ def get_running_lectures(doc_id):
     future_lecture_codes = []
     is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
-        if lecture.get("start_time") < time_now:
+        if lecture.get("start_time") <= time_now:
             current_lecture_codes.append(lecture.get("lecture_code"))
         else:
             future_lecture_codes.append(lecture.get("lecture_code") + " [" + lecture.get("start_time") + "]")
@@ -769,10 +772,44 @@ def ask_question():
     return jsonResponse("")
 
 
+@app.route("/getLectureAnswers", methods=['GET'])
+def get_lecture_answers():
+
+    if not request.args.get('question_id') or not request.args.get('doc_id'):
+        abort(400, "Bad request")
+
+    verifyOwnership(int(request.args.get('doc_id')))
+    question_id = int(request.args.get('question_id'))
+
+    __pull_answer[question_id] = threading.Event()
+
+    if not request.args.get("time"):
+        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    else:
+        time_now = request.args.get('time')
+
+    __pull_answer[question_id].wait()
+
+    timdb = getTimDb()
+    answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
+
+    return jsonResponse({"answers": answers})
+
+
 @app.route("/answerToQuestion", methods=['POST'])
 def answer_to_question():
     if not request.args.get("question_id") or not request.args.get('answers'):
         abort(400, "Bad request")
+
+    timdb = getTimDb()
+
+    question_id = int(request.args.get("question_id"))
+    answer = request.args.get("answers")
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    timdb.lecture_answers.add_answer(getCurrentUserId(), question_id, answer, time_now, 0.0)
+    # TODO: POINTS
+
+    __pull_answer[question_id].set()
 
     return jsonResponse("")
 

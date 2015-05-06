@@ -43,7 +43,11 @@
     <script src="{{ url_for('static', filename='scripts/createDialog.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/statisticsView/statisticsController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionAnswerController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/controllers/questionShowAnswersController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/popUpDialog.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/angular-charts.min.js') }}"></script>
+
 
     <!-- Script to load question from another file -->
     <script>
@@ -116,7 +120,13 @@
             </div>
             <pop-up-dialog show="showAnswerDummy">
                 <div ng-controller="QuestionAnswerController">
+                    <!--TODO: Learn how to use url_for here, or find url some other better way(This won't work) -->
                     <ng-include src="'../../../static/templates/questionAskedStudent.html'"></ng-include>
+                </div>
+            </pop-up-dialog>
+            <pop-up-dialog show="showStudentAnswers">
+                <div ng-controller="QuestionShowAnswerController">
+                    <ng-include src="'../../../static/templates/answersFromStudents.html'"></ng-include>
                 </div>
             </pop-up-dialog>
         </div>

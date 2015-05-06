@@ -38,7 +38,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 //if ($scope.json.TIME == "undefined") {
                 htmlSheet += "<progress value='0' max='10' id='progressBar'>";
                 htmlSheet += "</progress>";
-                htmlSheet += "<span id='progressLabel'>10</span>"
+                htmlSheet += "<span id='progressLabel'>10</span>";
                 //}
 
                 htmlSheet += "<table>";
@@ -81,6 +81,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             };
 
             $scope.internalControl.updateBar = function () {
+                //TODO: Problem with inactive tab.
                 $scope.progressElem.attr("value", (parseFloat($scope.progressElem.attr("value")) + $scope.valChange));
 
                 $scope.progressText.text((parseFloat($scope.progressText.text()) - $scope.valChange).toFixed(1));
