@@ -7,6 +7,13 @@ from timdb.gitclient import GitClient
 import ephemeralclient
 import sys
 
+def createAdmin(timdb, name, real_name, email):
+    user_id = timdb.users.createUser(name, real_name, email)
+    user_group = timdb.users.createUserGroup(name)
+    timdb.users.addUserToGroup(user_group, user_id)
+    timdb.users.addUserToAdmins(user_id)
+    return (user_id, user_group)
+
 if __name__ == "__main__":
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
@@ -21,11 +28,11 @@ if __name__ == "__main__":
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
     timdb.initializeTables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
-    vesa_id = timdb.users.createUser('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
-    vesa_group = timdb.users.createUserGroup('vesal')
-    timdb.users.addUserToGroup(vesa_group, vesa_id)
+    (vesa_id, vesa_group) = createAdmin(timdb, 'vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
     doc_id = timdb.documents.createDocument('Testaus 1', vesa_group)
     doc_id2 = timdb.documents.createDocument('Testaus 2', vesa_group)
+
+    createAdmin(timdb, 'tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi')
 
     # Grant access to anonymous users
     timdb.users.grantViewAccess(0, doc_id.id)

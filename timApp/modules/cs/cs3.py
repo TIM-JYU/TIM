@@ -223,9 +223,14 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         stdout, stderr = p.communicate(timeout=timeout)
         print(stdout)
         print(stderr)
-        print("Run3 done!")
-        stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read().encode("utf-8")  # luetaan stdin ja err
-        stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("utf-8")
+        print("Run2 done!")
+        try: 
+            stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read().encode("utf-8")  # luetaan stdin ja err
+            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("utf-8")
+        except UnicodeDecodeError:
+            stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read().encode("iso-8859-15")  # luetaan stdin ja err
+            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("iso-8859-15")
+        
         # print(stdout)
         # print(stderr)
         remove(cwd + "/" + stdoutf)
@@ -301,7 +306,7 @@ def removedir(dirname):
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
-    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for user\'s who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
     
     js = query_params_to_map_check_parts(query)
     print(js)
@@ -316,6 +321,7 @@ def get_html(ttype, query):
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
+    if "sage" in ttype: runner = 'cs-sage-runner'
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
@@ -506,9 +512,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         content_type = 'text/plain'
         if is_reqs or is_answer: content_type = "application/json"
+        if is_js: content_type = 'application/javascript'
         if is_fullhtml or is_gethtml or is_html or is_ptauno or is_tauno: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
-        if is_js: content_type = 'application/javascript'
         do_headers(self, content_type)
 
         if self.path.find("refresh") >= 0:
@@ -517,9 +523,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
         if is_gethtml:    
+            scripts = get_param(query, "scripts", "")
             p = self.path.split("?")
-            print(p)
-            self.wout(file_to_string(p[0]))
+            print(p,scripts)
+            self.wout(replace_scripts(file_to_string(p[0]),scripts,"%INCLUDESCRIPTS%"))
             return
             
         if is_ptauno:
@@ -530,6 +537,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Get the template type
         ttype = get_param(query, "type", "cs").lower()
+        
+
         if is_tauno and not is_answer: ttype = 'tauno'  # answer is newer tauno
 
 
@@ -539,7 +548,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # result_json = {"js": ["/cs/js/dir.js"], "angularModule": ["csApp","csConsoleApp"],
             # result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
-            result_json = {"js": ["/cs/js/dir.js"],
+            # result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
+            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
@@ -568,10 +578,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_css:
             return self.wout(file_to_string('cs.css'))
 
+
         if is_js:
             if self.path.find('rikki') >= 0:
                 return self.wout(file_to_string('js/dirRikki.js'))
-            return self.wout(file_to_string('js/dir.js'))
+            # return self.wout(file_to_string('js/dir.js'))
+            return self.wout(file_to_string(self.path))
 
         if is_html and not is_iframe:
             # print("HTML:==============")
@@ -585,7 +597,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(file_to_string('end.html'))
             return
 
-        if is_iframe and not print_file:
+            
+        if is_iframe and not print_file and not ttype == "js":
             s = string_to_string_replace_url(
                 '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                 'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
@@ -595,6 +608,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # Check if user name or temp name
         rndname = generate_filename()
         delete_tmp = True
+        opt = get_param(query, "opt", "") 
         if get_param(query, "path", "") == "user" and self.user_id:
             basename = "user/" + hash_user_dir(self.user_id)
             delete_tmp = False
@@ -614,6 +628,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         prgpath = "/tmp/%s" % basename
         filepath = prgpath
 
+        print("ttype: ",ttype)
+        
         # if ttype == "console":
         # Console program
         if ttype == "cc":
@@ -733,6 +749,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if "java" in ttype or "jcomtest" in ttype or "junit" in ttype or "graphics" in ttype:
             # java
+            classpath = get_param(query, "-cp", ".") +":$CLASSPATH"
+            print("classpath=" ,classpath)
             package, classname = find_java_package(s)
             javaclassname = classname
             if not classname: classname = "Prg"
@@ -758,6 +776,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             mkdirs(os.path.dirname(csfname))
             print("Write file: " + csfname)
             codecs.open(csfname, "w", "utf-8").write(s)
+            slines = s
 
         is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         is_input = get_json_param(query.jso, "input", "isInput", None)
@@ -791,11 +810,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "junit":
                 cmdline = "javac %s" % javaname
             elif ttype == "java" or ttype == "graphics":
-                cmdline = "javac -Xlint:all %s" % javaname
+                cmdline = "javac -Xlint:all -cp %s %s" % (classpath, javaname)
             elif ttype == "cc":
                 cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
             elif ttype == "c++":
-                cmdline = "g++ -std=c++11 -Wall %s -o %s" % (csfname, exename)
+                cmdline = "g++ -std=c++11 -Wall %s %s -o %s" % (opt, csfname, exename)
             elif ttype == "py":
                 cmdline = ""
             elif ttype == "clisp":
@@ -817,6 +836,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "md":
                 cmdline = ""
             elif ttype == "js":
+                cmdline = ""
+            elif ttype == "sage":
                 cmdline = ""
             elif ttype == "fs":
                 cmdline = "fsharpc --out:%s %s" % (exename, csfname)
@@ -981,12 +1002,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 web["testGreen"] = False
                 web["testRed"] = True
                 lni = out.find(", line ")
-                if lni >= 0:
+                if lni >= 0: #  and not nocode: 
                     lns = out[lni + 7:]
                     lns = lns[0:lns.find("\n")]
                     lnro = int(lns)
-                    lines = codecs.open(csfname, "r", "utf-8").readlines()
-                    # print("Line nr: "+str(lnro))
+                    # lines = codecs.open(csfname, "r", "utf-8").readlines()
+                    lines = slines.split("\n")
+                    # print("Line nr: "+str(lnro)) 
                     # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                     web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
         elif ttype == "jcomtest" or ttype == "ccomtest" or ttype == "junit":
@@ -1048,7 +1070,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if ttype == "java":
                 print("java: ", javaclassname)
                 # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
-                code, out, err = run2(["java", javaclassname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                code, out, err = run2(["java", "-cp", classpath , javaclassname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                       uargs=userargs)
             elif ttype == "shell":
                 print("shell: ", pure_exename)
@@ -1123,6 +1145,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             elif ttype == "md":
                 code, out, err = (0, "".encode(), "".encode())
             elif ttype == "js":
+                code, out, err = (0, "".encode(), "".encode())
+            elif ttype == "sage":
                 code, out, err = (0, "".encode(), "".encode())
             elif ttype == "cs":
                 print("Exe: ", exename)

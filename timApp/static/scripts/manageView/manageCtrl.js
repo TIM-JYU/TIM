@@ -21,13 +21,15 @@ PermApp.controller("PermCtrl", [
     '$http',
     '$upload',
     function (sc, $http, $upload) {
-        sc.editors = editors;
-        sc.viewers = viewers;
-        sc.userGroups = groups;
-        sc.doc = doc;
-        sc.newName = doc.name;
-        doc.fulltext = doc.fulltext.trim();
-        sc.fulltext = doc.fulltext;
+        sc.getJustDocName = function(fullName) {
+            i = fullName.lastIndexOf('/');
+            return i < 0 ? fullName : fullName.substr(i + 1);
+        };
+
+        sc.getFolderName = function(fullName) {
+            i = fullName.lastIndexOf('/');
+            return i < 0 ? '' : doc.name.substring(0, doc.name.lastIndexOf('/'));
+        };
 
         sc.changeOwner = function() {
             sc.ownerUpdating = true;
@@ -78,11 +80,23 @@ PermApp.controller("PermCtrl", [
 
         sc.renameDocument = function (newName) {
             $http.put('/rename/' + sc.doc.id, {
-                'new_name': newName
+                'new_name': sc.oldFolderName + '/' + newName
             }).success(function (data, status, headers, config) {
-                sc.doc.name = newName;
+                sc.doc.name = sc.oldFolderName + '/' + newName;
+                sc.oldName = newName;
             }).error(function (data, status, headers, config) {
-                alert(data.error);
+                alert(data.message);
+            });
+        };
+
+        sc.moveDocument = function (newLocation) {
+            $http.put('/rename/' + sc.doc.id, {
+                'new_name': newLocation + '/' + sc.oldName
+            }).success(function (data, status, headers, config) {
+                sc.doc.name = newLocation + '/' + sc.oldName;
+                sc.oldFolderName = newLocation;
+            }).error(function (data, status, headers, config) {
+                alert(data.message);
             });
         };
 
@@ -92,7 +106,18 @@ PermApp.controller("PermCtrl", [
                     .success(function (data, status, headers, config) {
                         location.replace('/');
                     }).error(function (data, status, headers, config) {
-                        alert(data.error);
+                        alert(data.message);
+                    });
+            }
+        };
+
+        sc.deleteFolder = function (folder) {
+            if (confirm('Are you sure you want to delete this folder?')) {
+                $http.delete('/folders/' + folder)
+                    .success(function (data, status, headers, config) {
+                        location.replace('/');
+                    }).error(function (data, status, headers, config) {
+                        alert(data.message);
                     });
             }
         };
@@ -141,5 +166,18 @@ PermApp.controller("PermCtrl", [
                     sc.saving = false;
                 });
         };
+
+        sc.editors = editors;
+        sc.viewers = viewers;
+        sc.userGroups = groups;
+        sc.doc = doc;
+        sc.crumbs = crumbs;
+        sc.isFolder = isFolder;
+        sc.newName = sc.getJustDocName(doc.name);
+        sc.newFolderName = sc.getFolderName(doc.name);
+        sc.oldName = sc.newName;
+        sc.oldFolderName = sc.newFolderName;
+        doc.fulltext = doc.fulltext.trim();
+        sc.fulltext = doc.fulltext;
 
     }]);

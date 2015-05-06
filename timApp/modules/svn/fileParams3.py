@@ -786,3 +786,15 @@ import binascii
 def hash_user_dir(user_id):
     dk = hashlib.pbkdf2_hmac('sha256', str.encode(user_id), b"tim", 100)
     return bytes.decode(binascii.hexlify(dk))
+
+
+# Korvataan sisällössä scriptit    
+def replace_scripts(s,scripts,placeholder):
+    sc = ""
+    if scripts != "":
+        scs = scripts.split(",")
+        for s1 in scs:
+            sc += '<script src="'+s1+'"></script>\n'
+    return s.replace(placeholder,sc)    
+    
+    

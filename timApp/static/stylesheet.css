@@ -98,6 +98,19 @@ body {
     text-align: right;
 }
 
+.viewLogin a {
+    font-size: 1.0em;
+    color: #3cc;
+    text-align: right;
+}
+
+.viewLogin a:hover {
+    font-size: 1.0em;
+    color: #4dd;
+    text-align: right;
+    text-decoration: none;
+}
+
 input[type="submit"], button, input[type="button"] { 
     background: #3CC;
     border: 0;
@@ -1472,6 +1485,11 @@ img.console {
     width: 220px;
 }
 
+.defaultButton {
+    margin: 0.2em;
+    float: right;
+}
+
 .listVideoRunDiv {
   /* margin-left: 2em; */
   margin-top: -1.5em;
@@ -1557,4 +1575,28 @@ img.console {
         box-shadow: none !important;
             border: none !important;
     }
+}
+
+.breadcrumb-div {
+    margin-top: 10px;
+}
+
+.breadcrumb {
+    font-size: 1.0em;
+}
+
+.breadcrumb.ol {
+    background-color: #fff;
+}
+
+.breadcrumb a {
+    /* Overrides the default TIM style for links */
+    font-size: 1.0em;
+	padding: 8px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.breadcrumb active {
+	text-decoration: bold;
 }

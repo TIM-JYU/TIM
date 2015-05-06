@@ -103,6 +103,7 @@ videoApp.set = function(scope,attrs,name,def) {
     scope[name] = def;
     if ( attrs && attrs[name] ) scope[name] = attrs[name];
     if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
+    if ( scope[name] == "None" ) scope[name] = "";
     return scope[name];
 }
 
@@ -195,7 +196,7 @@ videoApp.Controller = function($scope,$http,$transclude) {
 		    if ( moniviestin ) t = "#position="+$scope.start;
 		    else t = "?start="+$scope.start+"&end="+$scope.end;
 		if ( $scope.iframe )
-			$scope.videoHtml.innerHTML = '<iframe class="showVideo" src="' + $scope.file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
+			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + $scope.file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
 			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
 		else   

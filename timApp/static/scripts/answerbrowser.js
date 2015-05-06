@@ -16,6 +16,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             link: function ($scope, $element, $attrs) {
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
+                    $scope.points = $scope.selectedAnswer.points;
                     var $par = $element.parents('.par');
                     var par_id = $scope.$parent.getParIndex($par);
                     $scope.loading++;
@@ -23,7 +24,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         params: {
                             doc_id: $scope.$parent.docId,
                             par_id: par_id,
-                            user: $scope.user.name,
+                            user_id: $scope.user.id,
                             state: $scope.selectedAnswer.content
                         }
                     }).success(function (data, status, headers, config) {
@@ -58,18 +59,42 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.changeAnswer();
                 };
 
+                $scope.getTeacherData = function () {
+                    if ($scope.answers.length > 0)
+                        return {
+                            answer_id: $scope.selectedAnswer.id,
+                            saveTeacher: $scope.saveTeacher,
+                            teacher: true,
+                            points: $scope.points
+                        };
+                    else
+                        return {
+                            saveTeacher: false,
+                            teacher: true
+                        };
+                };
+
+                $scope.getUserById = function (user_id) {
+                    for (var i = 0; i < $scope.$parent.users.length; i++) {
+                        if ($scope.$parent.users[i].id === user_id) {
+                            return $scope.$parent.users[i];
+                        }
+                    }
+                    return null;
+                };
+
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
                     if (!$scope.$parent.rights.browse_own_answers) {
                         return;
                     }
                     $scope.loading++;
-                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.name)
+                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id)
                         .success(function (data, status, headers, config) {
                             $scope.answers = data;
                             if ($scope.answers.length > 0) {
                                 $scope.selectedAnswer = $scope.answers[0];
-
+                                $scope.points = $scope.selectedAnswer.points;
                                 if (updateHtml) {
                                     $scope.changeAnswer();
                                 }
@@ -82,45 +107,32 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.$on('answerSaved', function (event, args) {
-                    if (!$scope.$parent.teacherMode && args.taskId === $scope.taskId) {
+                    if (args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
                     }
                 });
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
-                    if ($scope.isVisible) {
-                        $scope.getAvailableAnswers();
-                    } else {
-                        $scope.changed = true;
-                    }
+                    $scope.changed = true;
+                    $scope.shouldUpdateHtml = true;
                 });
 
                 $scope.loadIfChanged = function () {
                     if ($scope.changed) {
-                        $scope.getAvailableAnswers();
+                        $scope.getAvailableAnswers($scope.shouldUpdateHtml);
                         $scope.changed = false;
-                    }
-                    else if (typeof $scope.answers === 'undefined') {
-                        $scope.getAvailableAnswers(false);
+                        $scope.shouldUpdateHtml = false;
                     }
                 };
 
-                // The element is not visible in DOM at the time the link function runs, so we set
-                // 200 ms timeout to make sure the waypoint 'sees' it.
-                $window.setTimeout(function () {
-                    $scope.user = $scope.$parent.users[0];
-                    $scope.waypoint = new Waypoint.Inview({
-                        enter: function (direction) {
-                            $scope.isVisible = true;
-                            $scope.loadIfChanged();
-                        },
-                        exited: function (direction) {
-                            $scope.isVisible = false;
-                        },
-                        element: $element[0]
-                    })[0];
-                }, 200);
+                $scope.user = $scope.$parent.users[0];
+                $element.parent().on('mouseenter touchstart', function () {
+                    $scope.loadIfChanged();
+                });
+                $scope.changed = true;
+                $scope.shouldUpdateHtml = false;
+                $scope.saveTeacher = false;
             }
         };
     }]);
