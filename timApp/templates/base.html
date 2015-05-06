@@ -69,14 +69,7 @@
                 <div class="doctitle">{{ self.title() }}</div>
             {% endif %}
             {% include 'loginlogout.html' %}
-            <a href="/">Main page</a>
-            {% if session.user_id %}
-                |
-                <a href="/settings">Customize TIM</a>
-            {% endif %}
-
             {% if is_owner %}
-                |
                 <a href="/manage/{{docID}}">Manage</a>
             {%endif%}
 

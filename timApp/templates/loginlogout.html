@@ -1,9 +1,6 @@
 <div class="viewLogin">
 {% if session.user_id %}
-        <span>Logged in as: {{ session.real_name }} ({{ session.user_name }})</span>
-        <form method="POST" action="/logout">
-            <input type="submit" value="Logout">
-        </form>
+    <a class="loggedintext" href="/">Logged in as: {{ session.real_name }} ({{ session.user_name }})</a>
     {% else %}
         {% if session.altlogin == "signup" %}
         <form method="POST" action="/altsignup">

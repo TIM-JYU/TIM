@@ -95,6 +95,19 @@ body {
     text-align: right;
 }
 
+.viewLogin a {
+    font-size: 1.0em;
+    color: #3cc;
+    text-align: right;
+}
+
+.viewLogin a:hover {
+    font-size: 1.0em;
+    color: #4dd;
+    text-align: right;
+    text-decoration: none;
+}
+
 input[type="submit"], button, input[type="button"] { 
     background: #3CC;
     border: 0;

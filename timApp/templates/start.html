@@ -62,6 +62,19 @@
         </div>
 
         <div class="col-md-4">
+{% if session.user_id %}
+            <p>You're logged in as {{session.real_name}} ({{session.user_name}}).<p>
+            <ul>
+                <li><a href="/settings/">Customize TIM</li>
+                <li><a href="/view/">Back to index</a></li>
+            </ul>
+            
+            <form method="POST" action="/logout">
+                <div class="loginbutton">
+                    <input type="submit" value="Log out">
+                </div>
+            </form>
+{% else %}
             <!-- Nav tabs -->
             <ul id="loginTab" class="nav nav-tabs" role="tablist">
                 <li role="presentation" class="active"><a href="#login" aria-controls="login" role="tab" data-toggle="tab">Log in</a></li>
@@ -146,6 +159,7 @@
                     </form>
                 </div>
             </div>
+	{% endif %}
         </div>
     </div>
 
