@@ -108,6 +108,14 @@ def saveAnswer(plugintype, task_id):
     return jsonResponse({'web': jsonresp['web']})
 
 
+def get_hidden_name(user_id):
+    return 'Undisclosed student %d' % user_id
+
+
+def should_hide_name(doc_id, user_id):
+    return not getTimDb().users.userIsOwner(user_id, doc_id) and user_id != getCurrentUserId()
+
+
 @answers.route("/answers/<task_id>/<int:user_id>")
 def get_answers(task_id, user_id):
     verifyLoggedIn()
@@ -124,9 +132,8 @@ def get_answers(task_id, user_id):
     if hide_names_in_teacher(doc_id):
         for answer in user_answers:
             for c in answer['collaborators']:
-                if not timdb.users.userIsOwner(c['user_id'], doc_id)\
-                   and c['user_id'] != getCurrentUserId():
-                    c['real_name'] = 'Undisclosed student %d' % c['user_id']
+                if should_hide_name(doc_id, c['user_id']):
+                    c['real_name'] = get_hidden_name(c['user_id'])
     return jsonResponse(user_answers)
 
 
@@ -156,3 +163,16 @@ def get_state():
                                                                   user_id,
                                                                   custom_state=state)
     return jsonResponse(texts[0])
+
+
+@answers.route("/getTaskUsers/<task_id>")
+def get_task_users(task_id):
+    doc_id, task_id_name = parse_task_id(task_id)
+    verifyOwnership(doc_id)
+    users = getTimDb().answers.get_users_by_taskid(task_id)
+    if hide_names_in_teacher(doc_id):
+        for user in users:
+            if should_hide_name(doc_id, user['id']):
+                user['name'] = '-'
+                user['real_name'] = get_hidden_name(user['id'])
+    return jsonResponse(users)
