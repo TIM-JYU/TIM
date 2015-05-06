@@ -297,3 +297,8 @@ td.selected {
 .answerSheet tr {
     background-color: #3cc;
 }
+
+.show-answer h2{
+    margin-top: 0;
+    text-align: center;
+}
