@@ -14,6 +14,16 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
             },
             link: function ($scope, $element, $attrs) {
+                $scope.$watch("taskId", function (newValue, oldValue) {
+                    if (newValue === oldValue) {
+                        return;
+                    }
+                    if ($scope.$parent.teacherMode) {
+                        $scope.getAvailableUsers();
+                    }
+                    $scope.getAvailableAnswers();
+                });
+
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
                     $scope.points = $scope.selectedAnswer.points;
@@ -74,13 +84,16 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         };
                 };
 
-                $scope.getUserById = function (user_id) {
-                    for (var i = 0; i < $scope.$parent.users.length; i++) {
-                        if ($scope.$parent.users[i].id === user_id) {
-                            return $scope.$parent.users[i];
-                        }
-                    }
-                    return null;
+                $scope.getAvailableUsers = function () {
+                    $scope.loading++;
+                    $http.get('/getTaskUsers/' + $scope.taskId)
+                        .success(function (data, status, headers, config) {
+                            $scope.users = data;
+                        }).error(function (data, status, headers, config) {
+                            $window.alert('Error getting users: ' + data.error);
+                        }).finally(function () {
+                            $scope.loading--;
+                        });
                 };
 
                 $scope.getAvailableAnswers = function (updateHtml) {
@@ -129,10 +142,15 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.user = $scope.$parent.users[0];
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.loadIfChanged();
+                    if ($scope.$parent.teacherMode && $scope.users === null) {
+                        $scope.users = [];
+                        $scope.getAvailableUsers();
+                    }
                 });
                 $scope.changed = true;
                 $scope.shouldUpdateHtml = false;
                 $scope.saveTeacher = false;
+                $scope.users = null;
             }
         };
     }]);

@@ -171,6 +171,7 @@ PermApp.controller("PermCtrl", [
         sc.viewers = viewers;
         sc.userGroups = groups;
         sc.doc = doc;
+        sc.crumbs = crumbs;
         sc.isFolder = isFolder;
         sc.newName = sc.getJustDocName(doc.name);
         sc.newFolderName = sc.getFolderName(doc.name);

@@ -22,7 +22,7 @@ function(sc, controller, http, q, $upload) {
 
         return sc.folder + '/' + name;
     };
-
+    
     sc.createDocument = function(name) {
         http.post('/createDocument', {
             "doc_name" : sc.getAbsolutePath(name)
@@ -84,6 +84,7 @@ function(sc, controller, http, q, $upload) {
         });
     };
 
+    sc.crumbs = crumbs;
     sc.userGroups = groups;
 	sc.parentfolder = "";
     sc.initFolderVars();

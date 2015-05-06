@@ -3,13 +3,13 @@ from shutil import copyfile
 from datetime import datetime
 
 from contracts import contract
-import ansiconv
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative
+from ansi2html import Ansi2HTMLConverter
 
 
 class Documents(TimDbBase):
@@ -354,13 +354,14 @@ class Documents(TimDbBase):
     @contract
     def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
         try:
-            out, _ = self.git.command('diff --color --unified=5 {}^! {}'.format(document_id.hash,
+            out, _ = self.git.command('diff --word-diff=color --unified=5 {}^! {}'.format(document_id.hash,
                                                                                 self.getDocumentPathAsRelative(
                                                                                     document_id.id)))
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
-        html = ansiconv.to_html(out)
+        conv = Ansi2HTMLConverter(inline=True, dark_bg=False)
+        html = conv.convert(out, full=False)
         return html
 
     @contract

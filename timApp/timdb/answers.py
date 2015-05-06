@@ -147,3 +147,12 @@ class Answers(TimDbBase):
                  self.db.execute("""SELECT task_id FROM Answer
                                     WHERE id = ?""", [answer_id]))
         return result[0]['task_id'] if len(result) > 0 else None
+
+    def get_users_by_taskid(self, task_id: 'str'):
+        result = self.resultAsDictionary(self.db.execute("""SELECT DISTINCT User.id, name, real_name
+                           FROM User
+                           JOIN UserAnswer ON UserAnswer.user_id = User.id
+                           JOIN Answer on Answer.id = UserAnswer.answer_id
+                           WHERE task_id = ?
+                           ORDER BY real_name ASC""", [task_id]))
+        return result
