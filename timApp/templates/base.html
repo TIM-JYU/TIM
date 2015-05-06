@@ -4,10 +4,20 @@
     {% block head %}
         <base href="{{ request.path }}">
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <meta name="description" content="TIM - The Interactive Material."/>
+        <meta name="keywords" content="tim,interactive,material"/>
+        <link href="{{url_for('static', filename='images/favicon.ico')}}" rel="shortcut icon" type="image/x-icon"/>
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
+
+        <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
         <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='waypoints/lib/jquery.waypoints.js') }}"></script>
@@ -15,66 +25,95 @@
         <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='ng-file-upload/angular-file-upload-all.js') }}"></script>
+
+        <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
-        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
+
+        <!-- Bootstrap core JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
 </head>
 <body>
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul class="flashes">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
-<div id="header">
-    {% block header %}
-        {% if self.title() != "TIM" %}
-            <div class="doctitle">{{ self.title() }}</div>
-        {% endif %}
-        {% include 'loginlogout.html' %}
-        <a href="/">Main page</a>
-        {% if session.user_id %}
-            |
-            <a href="/settings">Customize TIM</a>
-        {% endif %}
 
-        {% if is_owner %}
-            |
-            <a href="/manage/{{docID}}">Manage</a>
-        {%endif%}
+<div class="container">
+    <div class="header clearfix">
+        <a href="/">
+            <img alt="TIM - The Interactive Material." class="pull-left"
+                 src="{{url_for('static', filename='images/tim-logo_42height.png')}}"/>
+        </a>
+        <a href="https://www.jyu.fi">
+            <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                 src="{{url_for('static', filename='images/jyulogo.png')}}"/>
+        </a>
+    </div>
 
-        {% if self.title() != "TIM" and is_owner %}
-            |
-            {% if teacher_mode %}
-               <a href="/view/{{docID}}">Student view</a>
-            {% else %}
-               <a href="/teacher/{{docID}}">Teacher view</a>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div id="header">
+        {% block header %}
+            {% if self.title() != "TIM" %}
+                <div class="doctitle">{{ self.title() }}</div>
             {% endif %}
-        {% elif objName == "folder" %}
-            |
-            <a href="/view/{{docID}}">View</a>
-        {% elif doc %}
-            |
-            <a href="/view/{{doc.name}}">Student view</a>
-            |
-            <a href="/teacher/{{doc.name}}">Teacher view</a>
-	    {% endif %}
+            {% include 'loginlogout.html' %}
+            {% if is_owner %}
+                <a href="/manage/{{docID}}">Manage</a>
+            {%endif%}
 
-    {% endblock %}
+            {% if self.title() != "TIM" and is_owner %}
+                |
+                {% if teacher_mode %}
+                   <a href="/view/{{docID}}">Student view</a>
+                {% else %}
+                   <a href="/teacher/{{docID}}">Teacher view</a>
+                {% endif %}
+            {% elif objName == "folder" %}
+                |
+                <a href="/view/{{docID}}">View</a>
+            {% elif doc %}
+                |
+                <a href="/view/{{doc.name}}">Student view</a>
+                |
+                <a href="/teacher/{{doc.name}}">Teacher view</a>
+            {% endif %}
+
+        {% endblock %}
+    </div>
+
+    {% block beforecontent %}{% endblock %}
+
+    <div class="material">
+        <!-- <h1>{{ self.title() }}</h1> -->
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block aftercontent %}{% endblock %}
+
+    <footer class="footer">
+        {% block footer %}
+        {% endblock %}
+        <p>&copy; Jyväskylän yliopisto</p>
+        <ul>
+            <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</li>
+        </ul>
+    </footer>
 </div>
-<div class="material">
-    <!-- <h1>{{ self.title() }}</h1> --> 
-    {% block content %}{% endblock %}
-</div>
-<div id="footer">
-    {% block footer %}
-    {% endblock %}
-</div>
+
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+
 </body>
 </html>

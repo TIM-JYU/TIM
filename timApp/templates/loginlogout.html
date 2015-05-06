@@ -1,29 +1,7 @@
 <div class="viewLogin">
 {% if session.user_id %}
-        <span>Logged in as: {{ session.real_name }} ({{ session.user_name }})</span>
-        <form method="POST" action="/logout">
-            <input type="submit" value="Logout">
-        </form>
+    <a class="loggedintext" href="/">Logged in as: {{ session.real_name }} ({{ session.user_name }})</a>
     {% else %}
-        <form method="GET" action="/login">
-            <div class="loginButtonRow">
-                <input name="korppiLogin"
-                       type="submit"
-                       value="Login using Korppi"
-                       class="loginButton">
-                <input name="emailLogin"
-                       type="submit"
-                       value="Login using email"
-                       class="loginButton">
-                <input name="emailSignup"
-                       type="submit"
-                       value="Sign up using email"
-                       class="loginButton">
-                <input type="hidden"
-                       name="came_from"
-                       value="{{ request.path|urlencode }}">
-            </div>
-        </form>
         {% if session.altlogin == "signup" %}
         <form method="POST" action="/altsignup">
             <p class="loginwelcome">

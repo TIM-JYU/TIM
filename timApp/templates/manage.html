@@ -44,6 +44,10 @@ var doc = {{doc|tojson|safe}};
 var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
 var groups = {{user_groups|tojson|safe}};
+
+var crumbs = getBreadcrumbs(doc.name);
+{% include 'breadcrumbs.js' %}
+
 </script>
 {% endblock %}
 {% block content %}
@@ -54,12 +58,16 @@ var groups = {{user_groups|tojson|safe}};
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-        <div class="margin">
-            <a href="/view/{{ '{{doc.name}}' }}">View this {{objName}}</a>
-	    |
-            <a href="/view/{{ '{{oldFolderName}}' }}">View containing folder</a>
-	    <br>
-        </div>
+    
+    <div ng-show="crumbs" class="breadcrumb-div">
+        <ol id="docpath" class="breadcrumb">
+            <li ng-repeat="c in crumbs" ng-class="$last?'active':''">
+                <a href="/view/{{ '{{ c.fullname }}' }}">{{ '{{ c.name }}' }}</a>
+            </li>
+        </ol>
+    </div>
+
+    
         <div class="margin">
             {{objNameC}} owner: <select ng-model="doc.owner"
                                   ng-options="group.name for group in userGroups track by group.id"
