@@ -49,13 +49,14 @@ td.selected {
     width: 20em;
     z-index: 6;
     position: fixed;
-    top: 2em;
-    right: 2em;
+    top: 5%;
+    right: 5%;
     border-style: outset;
     min-width: 20em;
     background-color: #cccccc;
 }
-.wall-base{
+
+.wall-base {
     width: 100%;
     height: 100%;
     position: relative;
@@ -68,11 +69,11 @@ td.selected {
     height: 1.75em;
 }
 
-.wall-content{
+.wall-content {
     height: 100%;
 }
 
-.wall-message-area{
+.wall-message-area {
     height: 100%;
     padding-bottom: 2.5em;
 }
@@ -90,7 +91,6 @@ td.selected {
 .wall-buttons input {
     width: 90%;
 }
-
 
 .wall-buttons {
     position: absolute;
@@ -110,7 +110,6 @@ td.selected {
     background: url("../images/detach.png") no-repeat;
 
 }
-
 
 .modal-open {
     overflow: hidden
@@ -258,13 +257,43 @@ td.selected {
     }
 }
 
-.questionAskedWindow{
+.questionAskedWindow {
     z-index: 10;
     background-color: snow;
     width: auto;
     height: auto;
 }
 
-.questionAskedWindow h1{
+.questionAskedWindow h1 {
     margin-top: 0px;
+}
+
+.answerSheet {
+    min-width: 10em;
+    max-width: 100%;
+}
+
+.answerSheet table {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    font-size: large;
+}
+
+.answerSheet label {
+    width: 100%;
+    height: 100%;
+}
+
+.answerSheet h2 {
+    text-align: center;
+}
+
+#progressLabel {
+    text-align: center;
+}
+
+.answerSheet th,
+.answerSheet td,
+.answerSheet tr {
+    background-color: #3cc;
 }

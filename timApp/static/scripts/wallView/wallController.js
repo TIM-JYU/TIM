@@ -1,9 +1,8 @@
 /**
  * Created by hajoviin on 24.2.2015.
  */
-
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog','$rootScope',
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope',
 
     function ($scope, controller, http, $window, createDialog, $rootScope) {
 
@@ -33,6 +32,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.isLecturer = false;
         $scope.lectureId = null;
         $scope.showAnswerDummy = false;
+        $scope.showStudentAnswers = false;
 
         $scope.checkIfInLecture = function () {
             http({
@@ -53,8 +53,34 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.$emit('getLectureId', $scope.lectureId);
         });
 
-        $scope.$on("closeAnswer", function() {
-           $scope.showAnswerDummy = false;
+        $scope.$on("closeAnswer", function (event, answer) {
+            $scope.showAnswerDummy = false;
+            console.log(answer.answer);
+            var mark = "";
+            var answerString = "";
+            angular.forEach(answer.answer, function(singleAnswer){
+                answerString += mark + singleAnswer;
+                mark = "|"
+            });
+            console.log(answerString);
+            http({
+                url: '/answerToQuestion',
+                method: 'POST',
+                params: {
+                    'question_id': answer.questionId,
+                    'answers': answerString
+                }
+            })
+                .success(function () {
+                    console.log("Succesfully answered to question");
+                })
+                .error(function () {
+                    console.log("Failed to answer to question");
+                })
+        });
+
+        $scope.$on("closeAnswerShow", function () {
+            $scope.showStudentAnswers = false;
         });
 
 
@@ -93,29 +119,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
-        /*
-         $scope.wallRelease = function () {
-         var wall = document.getElementById("wall");
-         var detach = document.getElementById("detachButton")
-         if (wall.style.position == "absolute") {
-         wall.style.position = "";
-         wall.style.bottom = "2em";
-         wall.style.top = "";
-         wall.style.right = "2em";
-         wall.setAttribute("tim-draggable-fixed", false);
-         //TODO: Change to url_for or some other way to get correct ulr
-         detach.style.background = "url('../../../static/images/detach.png')"
-
-
-         } else {
-         wall.style.position = "absolute";
-         wall.style.bottom = "auto";
-         detach.style.background = "url('../../../static/images/tach.png')"
-         wall.setAttribute("tim-draggable-fixed", true);
-
-         }
-         };
-         */
         $scope.checkDown = function (e) {
             $scope.mouseDownX = e.clientX;
             $scope.mouseDownY = e.clientY;
@@ -164,6 +167,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.inLecture = true;
             $scope.lectureId = answer.lectureId;
             $scope.polling = true;
+            $scope.msg = "";
             $scope.showWall = true;
 
             $scope.getAllMessages();
@@ -183,6 +187,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.inLecture = false;
             $scope.lectureId = -1;
             $scope.lectureName = "Not running";
+            $scope.showStudentAnswers = false;
+            $scope.showAnswerDummy = false;
 
             angular.forEach(answer.lectures, function (lecture) {
                 if ($scope.lectures.indexOf(lecture) == -1) {
@@ -349,52 +355,63 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             var questionJson = JSON.parse(answer.questionJson);
                         }
                         if (answer.question) {
-                            if (!$scope.isLecturer) {
-                                createDialog('../../../static/templates/answersFromStudents.html', {
-                                    id: 'answerBowser',
-                                    title: 'Answers',
-                                    backdrop: true,
-                                    controller: 'QuestionAnswerController'
-                                });
+                            if ($scope.isLecturer) {
+                                $scope.showStudentAnswers = true;
+                                http({
+                                    url: '/getLectureAnswers',
+                                    type: 'GET',
+                                    params: {'question_id': answer.questionId, 'doc_id': $scope.docId}
+                                })
+                                    .success(function(answer) {
+                                        console.log(answer.answers);
+                                        $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
+
+                                    })
+                                    .error(function() {
+                                        console.log("Couldn't get answers");
+                                    })
                             }
-                            else {
+                            //else {
 
-                                $scope.askedQuestionJson = questionJson;
+                            $scope.askedQuestionJson = questionJson;
 
-                                $rootScope.$broadcast("setQuestionJson", questionJson);
+                            $rootScope.$broadcast("setQuestionJson", {
+                                questionJson: questionJson,
+                                questionId: answer.questionId
+                            });
 
 
-                                $scope.showAnswerDummy = true;
+                            $scope.showAnswerDummy = true;
 
-                                /*
-                                 createDialog('../../../static/templates/questionAskedStudent.html', {
-                                 id: 'questionAskDialog',
-                                 title: 'Question',
-                                 backdrop: true,
-                                 success: {
-                                 label: 'Answer', fn: function () {
+                            /*
+                             createDialog('../../../static/templates/questionAskedStudent.html', {
+                             id: 'questionAskDialog',
+                             title: 'Question',
+                             backdrop: true,
+                             success: {
+                             label: 'Answer', fn: function () {
 
-                                 http({
-                                 url: '/answerQuestion',
-                                 method: 'POST',
-                                 params: {}
-                                 })
-                                 .success(function () {
-                                 console.log("Answered to the question");
-                                 })
-                                 .error(function (error) {
-                                 console.log(error);
-                                 });
-                                 }
-                                 },
-                                 controller: 'QuestionAnswerController'
-                                 },{
-                                 questionJson:questionJson
-                                 });
+                             http({
+                             url: '/answerQuestion',
+                             method: 'POST',
+                             params: {}
+                             })
+                             .success(function () {
+                             console.log("Answered to the question");
+                             })
+                             .error(function (error) {
+                             console.log(error);
+                             });
+                             }
+                             },
+                             controller: 'QuestionAnswerController'
+                             },{
+                             questionJson:questionJson
+                             });
 
-                                 */
+                             */
 
-                            }
+                            //}
                         }
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
