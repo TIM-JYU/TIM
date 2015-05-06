@@ -58,7 +58,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             console.log(answer.answer);
             var mark = "";
             var answerString = "";
-            angular.forEach(answer.answer, function(singleAnswer){
+            angular.forEach(answer.answer, function (singleAnswer) {
                 answerString += mark + singleAnswer;
                 mark = "|"
             });
@@ -145,18 +145,20 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
 
         $scope.toggleLecture = function () {
-			createDialog('../../../static/templates/start_lecture.html', {
-                id: 'createL',
-                title: '',
-				controller: 'CreateLectureCtrl'/*,
-				footerTemplate: 
-				'<div class="buttons">' + 
-					'<button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>' + 
-					'<button type="button" ng-click="cancelCreation()">Cancel</button>' + 
-					'</div>'*/
+            createDialog('../../../static/templates/start_lecture.html', {
+                    id: 'createL',
+                    title: '',
+                    controller: 'CreateLectureCtrl'/*,
+                     footerTemplate:
+                     '<div class="buttons">' +
+                     '<button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>' +
+                     '<button type="button" ng-click="cancelCreation()">Cancel</button>' +
+                     '</div>'*/
                 },
-			{docIdParam: $scope.docId,
-			anotherScope: $scope});
+                {
+                    docIdParam: $scope.docId,
+                    anotherScope: $scope
+                });
         };
 
         $scope.showLectureView = function (answer) {
@@ -321,6 +323,23 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
+        $scope.getLectureAnswers = function (answer) {
+            http({
+                url: '/getLectureAnswers',
+                type: 'GET',
+                params: {'question_id': answer.questionId, 'doc_id': $scope.docId}
+            })
+                .success(function (answer) {
+                    $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
+                    $scope.getLectureAnswers(answer);
+                    //TODO: Lopeta joskus
+
+                })
+                .error(function () {
+                    console.log("Couldn't get answers");
+                })
+        };
+
         $scope.startLongPolling = function (lastID) {
             function message_longPolling(lastID) {
                 var timeout;
@@ -356,20 +375,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
                         if (answer.question) {
                             if ($scope.isLecturer) {
+                                $scope.getLectureAnswers(answer);
                                 $scope.showStudentAnswers = true;
-                                http({
-                                    url: '/getLectureAnswers',
-                                    type: 'GET',
-                                    params: {'question_id': answer.questionId, 'doc_id': $scope.docId}
-                                })
-                                    .success(function(answer) {
-                                        console.log(answer.answers);
-                                        $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
-
-                                    })
-                                    .error(function() {
-                                        console.log("Couldn't get answers");
-                                    })
                             }
                             //else {
 
