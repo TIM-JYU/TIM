@@ -261,11 +261,11 @@ CREATE TABLE ReadParagraphs (
 );
 
 CREATE TABLE Question (
-  question_id INTEGER NOT NULL PRIMARY KEY,
-  doc_id      INTEGER NOT NULL,
-  par_index   INTEGER NOT NULL,
-  question    TEXT    NOT NULL,
-  answer      TEXT,
+  question_id  INTEGER NOT NULL PRIMARY KEY,
+  doc_id       INTEGER NOT NULL,
+  par_index    INTEGER NOT NULL,
+  question     TEXT    NOT NULL,
+  answer       TEXT,
   questionJson TEXT
 );
 
@@ -308,4 +308,14 @@ CREATE TABLE `Message` (
   FOREIGN KEY (user_id)
   REFERENCES User (user_id)
   ON DELETE CASCADE
+);
+
+CREATE TABLE LectureAnswer (
+  answer_id   INTEGER,
+  user_id     INTEGER NOT NULL,
+  question_id INTEGER NOT NULL,
+  answer      TEXT    NOT NULL,
+  answered_on TEXT    NOT NULL,
+  points      REAL,
+  PRIMARY KEY (answer_id)
 );
