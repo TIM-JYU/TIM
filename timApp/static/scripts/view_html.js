@@ -459,7 +459,6 @@ timApp.controller("ViewCtrl", [
                 return;
             }
 
-            sc.autoHideSidebar();
             sc.$apply();
 
             var $target = $(e.target);
@@ -756,7 +755,7 @@ timApp.controller("ViewCtrl", [
                 var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
-            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
+            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wÃ¥Ã¤Ã¶\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
         };
 
         sc.findIndexLevel = function (str) {
@@ -914,14 +913,14 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             var columns = [];
             columnHeaders = [];
             for (var j = 0; j < columnsCount; j++) {
-                columnHeaders.push({type: "header", text: ""});
+                columnHeaders.push({type: "header", text: ""})
                 columns[j] = {
                     id: j,
                     rowId: i,
                     text: 'test',
                     questionPlaceholder: 'column',
                     type: "answer",
-                    value: scope.question.answerFieldType
+                    value: 'scope.question.answerFieldType'
                 }
             }
             scope.rows[i] = {
@@ -965,7 +964,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
 
 
-    };
+    }
     scope.addRow = function (loc) {
 
         scope.CreateColumnsForRow = function (location) {
