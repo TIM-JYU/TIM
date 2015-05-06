@@ -1,7 +1,7 @@
 <fieldset class="popUpWindow">
     <h1>Create Lecture</h1>
-    <link rel="stylesheet" href="../../static/windowstyle.css">
-    <link rel="stylesheet" type="text/css" media="all" href="../../static/jsDatePick_ltr.min.css"/>
+    <link rel="stylesheet" href="../../../static/windowstyle.css">
+    <link rel="stylesheet" type="text/css" media="all" href="../../../static/jsDatePick_ltr.min.css"/>
     <div>
         <form class="createLecture" id="lectureForm" name="form" ng-init="setFormScope(this)">
             <div id="infoFields">
@@ -42,44 +42,45 @@
                 <br>
 
                 <div id="endInfo">
-                    <input type="radio" id="dateChosen2" name="dateStop" ng-click="enableDate2()" ng-model="dateChosen">
+                    <input type="radio" id="dateChosen2" name="dateStop" ng-click="enableDate2()" 
+						ng-model="dateChosen" ng-checked="dateCheck">
                     <label for="useDate">Use date:</label>
 
                     <div>
                         <label for="endDate">Date:</label>
-                        <input type="text" name="stopD" id="stopDay" maxlength="2" size="2" placeholder="dd" disabled
+                        <input type="text" name="stopD" id="stopDay" maxlength="2" size="2" placeholder="dd" 
                                is-valid-change="" ng-model="endDay" ng-disabled="!useDate">
                         <label>.</label>
-                        <input type="text" name="stopM" id="stopMonth" maxlength="2" size="2" placeholder="mm" disabled
+                        <input type="text" name="stopM" id="stopMonth" maxlength="2" size="2" placeholder="mm" 
                                is-valid-change="" ng-model="endMonth" ng-disabled="!useDate">
                         <label>.</label>
-                        <input type="text" name="stopY" id="stopYear" maxlength="4" size="4" placeholder="yyyy" disabled
+                        <input type="text" name="stopY" id="stopYear" maxlength="4" size="4" placeholder="yyyy" 
                                is-valid-change="" ng-model="endYear" ng-disabled="!useDate">
                         <input type="button" id="calendarStop" value="..." disabled>
                         <label for="startDate">Time:</label>
-                        <input type="text" id="stopHour" name="stopHh" maxlength="2" size="2" placeholder="hh" disabled
+                        <input type="text" id="stopHour" name="stopHh" maxlength="2" size="2" placeholder="hh"
                                is-valid-change="" ng-model="endHour" ng-disabled="!useDate">
                         <label>:</label>
-                        <input type="text" id="stopMin" name="stopMm" maxlength="2" size="2" placeholder="mm" disabled
+                        <input type="text" id="stopMin" name="stopMm" maxlength="2" size="2" placeholder="mm" 
                                is-valid-change="" ng-model="endMin" ng-disabled="!useDate">
                     </div>
                     <br>
-                    <input type="radio" id="durationChosen" name="dueStop" ng-click="enableDue2()" ng-model="durationChosen">
+                    <input type="radio" id="durationChosen" name="dueStop" ng-click="enableDue2()" ng-model="durationChosen" ng-checked="dueCheck">
                     <label for="useTime">Duration:</label>
 
                     <div>
                         <label for="hours">Hours:</label>
                         <input id="hours2" type="text" name="endHh" maxlength="2" size="2"
-                               is-positive="" ng-model="durationHour" ng-disabled="!useDuration">
+                               is-positive="" ng-model="durationHour" ng-disabled="!useDuration" >
                         <label for="mins">Min:</label>
                         <input id="mins2" type="text" name="endMm" maxlength="3" size="3"
-                               is-positive="" ng-model="durationMin" ng-disabled="!useDuration">
+                               is-positive="" ng-model="durationMin" ng-disabled="!useDuration" >
                     </div>
                     <br>
                 </div>
             </div>
             <div>
-                <p id="errorMessage"></p>
+                <p id="errorMessage" name="emessage"></p>
             </div>
             <div class="buttons">
                 <button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>
