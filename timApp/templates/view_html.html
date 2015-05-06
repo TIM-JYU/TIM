@@ -36,18 +36,18 @@
     <script src="{{ url_for('static', filename='scripts/resizable.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('bower.static', filename='katex-build/katex.min.css') }}">
-    <script src="{{ url_for('static', filename='scripts/notesView/contents.js') }}"></script>
     <script src="{{ url_for('bower.static', filename='katex-build/katex.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/wallView/wallController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/jsDatePick.full.1.3.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/createDialog.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/statisticsView/statisticsController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionAnswerController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionShowAnswersController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/popUpDialog.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/d3.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/angular-charts.min.js') }}"></script>
-
+	<script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
 
     <!-- Script to load question from another file -->
     <script>
@@ -131,32 +131,60 @@
             </pop-up-dialog>
         </div>
 
-
-        <div id="contents" ng-show="indexTable.length > 0">
-            <div class="menu">
-                <img ng-click="toggleSidebar()" class="menu-icon"
-                     src="{{ url_for('static', filename='images/contents.png') }}" width="50"
-                     height="50"/>
-            </div>
-            <div ng-class="['sidebar', sidebarState]">
-                {% raw %}
-                <ul>
-                    <li ng-repeat="entry in indexTable"
-                        ng-class="entry.state"
-                        ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                        <a class="indexentry" ng-class="entry.style" ng-click=""
-                           href="{{entry.target}}">{{entry.text}}</a>
-                        <ul ng-show="entry.state == 'exp'">
-                            <li ng-repeat="subentry in entry.items">
-                                <a ng-class="subentry.style" ng-click=""
-                                   href="{{subentry.target}}">{{subentry.text}}</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-                {% endraw %}
-            </div>
-        </div>
+		<div ng-controller="SidebarMenuCtrl">
+			<div ng-class="['contents']">
+				<div ng-class="['menu']">
+					<img ng-click="toggleIndex()" ng-class="['menu-icon']" ng-show="indexTable.length > 0"
+						 src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+						 height="50"/>
+					<img ng-click="toggleLectures()" ng-class="['menu-icon']"
+						 src="{{ url_for('static', filename='images/lectures-icon.png') }}" width="50"
+						 height="50"/>
+					<img ng-click="toggleQuestions()" ng-class="['menu-icon']"
+						 src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
+						 height="50"/>
+					<img ng-click="togglePeople()" ng-class="['menu-icon']"
+						 src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
+						 height="50"/>
+					<img ng-click="toggleSettings()" ng-class="['menu-icon']"
+						 src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
+						 height="50"/>
+				</div>
+				<div ng-class="['index-sidebar', indexSidebarState]">
+					<h1>Index</h1>
+					{% raw %}
+					<ul>
+						<li ng-repeat="entry in indexTable"
+							ng-class="entry.state"
+							ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+							<a class="indexentry" ng-class="entry.style" ng-click=""
+							   href="{{entry.target}}">{{entry.text}}</a>
+							<ul ng-show="entry.state == 'exp'">
+								<li ng-repeat="subentry in entry.items">
+									<a ng-class="subentry.style" ng-click=""
+									   href="{{subentry.target}}">{{subentry.text}}</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+					{% endraw %}
+				</div> 
+					
+				<div  ng-class="['lectures-sidebar', lecturesSidebarState]">
+					<h1>Lectures</h1>
+				</div>
+				<div  ng-class="['questions-sidebar', questionSidebarState]">
+					<h1>Questions</h1>
+				</div>
+				<div  ng-class="['people-sidebar', peopleSidebarState]">
+					<h1>People</h1>
+				</div>
+				<div  ng-class="['settings-sidebar', settingsSidebarState]">
+					<h1>Settings</h1>
+				</div>
+				</div>
+			</div>
+		</div>
         {% if teacher_mode %}
             <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed>
                 {% if plugin_users %}

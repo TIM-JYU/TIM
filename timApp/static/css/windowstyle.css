@@ -111,3 +111,7 @@
 .sectionDetails {
 	border: 1px solid #E4E4E4;
 }
+
+.modal-footer {
+	display:none;
+}
