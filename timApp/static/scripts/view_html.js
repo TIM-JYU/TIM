@@ -62,7 +62,6 @@ timApp.controller("ViewCtrl", [
         sc.startIndex = startIndex;
         sc.users = users;
         sc.teacherMode = teacherMode;
-        sc.sidebarState = 'autohidden';
         sc.selectedUser = sc.users[0];
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
@@ -101,20 +100,7 @@ timApp.controller("ViewCtrl", [
             katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
         };
 
-        sc.toggleSidebar = function () {
-            var visible = angular.element('.sidebar').is(":visible");
-            if (visible) {
-                sc.sidebarState = 'hidden';
-            } else {
-                sc.sidebarState = 'open';
-            }
-        };
 
-        sc.autoHideSidebar = function () {
-            if (sc.sidebarState === 'open') {
-                sc.sidebarState = 'autohidden';
-            }
-        };
 
         sc.changeUser = function (user) {
             sc.$broadcast('userChanged', {user: user});
