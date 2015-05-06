@@ -792,8 +792,9 @@ def get_lecture_answers():
 
     timdb = getTimDb()
     answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
+    latest_answer = answers[-1].get("answered_on")
 
-    return jsonResponse({"answers": answers, "questionId": question_id})
+    return jsonResponse({"answers": answers, "questionId": question_id, "latestAnswer": latest_answer})
 
 
 @app.route("/answerToQuestion", methods=['POST'])

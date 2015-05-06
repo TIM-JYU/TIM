@@ -327,9 +327,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/getLectureAnswers',
                 type: 'GET',
-                params: {'question_id': answer.questionId, 'doc_id': $scope.docId}
+                params: {'question_id': answer.questionId, 'doc_id': $scope.docId, 'time': answer.latestAnswer}
             })
                 .success(function (answer) {
+                    console.log(answer);
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
                     $scope.getLectureAnswers(answer);
                     //TODO: Lopeta joskus
