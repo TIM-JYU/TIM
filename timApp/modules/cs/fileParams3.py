@@ -732,7 +732,7 @@ def get_surrounding_headers(query, inside):
     stem = allow(get_param(query, "stem", None))
     if stem: result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
-    result += get_heading(query, "footer", 'p class="footer"')
+    result += get_heading(query, "footer", 'p class="plgfooter"')
     return result
 
 

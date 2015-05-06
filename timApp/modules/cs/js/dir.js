@@ -178,7 +178,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   '<div>'+
 
                   '<div  class="csrunEditorDiv">'+
-				  '<textarea class="csRunArea csEditArea no-popup-menu" ng-hide="noeditor && !viewCode" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>'+
+				  '<textarea class="csRunArea csEditArea no-popup-menu" ng-hide="noeditor && !viewCode" rows="{{rows}}" ng-model="usercode" ng-trim="false" ng-attr-placeholder="{{placeholder}}"></textarea>'+
                   '</div>'+
                   // (t=="sage" ? '</div>' : '') +
 
@@ -241,7 +241,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   //  '<div class="userlist" tim-draggable-fixed="" style="top: 39px; right: 408px;">' +
                   //  'Raahattava' +
                   //  '</div>' +  
-				  '<p class="footer">Here comes footer</p>'+
+				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
 };
 

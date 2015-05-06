@@ -2,8 +2,8 @@
 	text-align: justify;
 }
 
-.paragraph, .par  {
-	max-width: 52em;
+.paragraph, .par, .header, .viewLogin {
+	max-width: 52em; 
 }
 
 body {
@@ -93,6 +93,19 @@ body {
     font-size: 0.7em;
     color: #3cc;
     text-align: right;
+}
+
+.viewLogin a {
+    font-size: 1.0em;
+    color: #3cc;
+    text-align: right;
+}
+
+.viewLogin a:hover {
+    font-size: 1.0em;
+    color: #4dd;
+    text-align: right;
+    text-decoration: none;
 }
 
 input[type="submit"], button, input[type="button"] { 
@@ -577,16 +590,12 @@ p.kannentiedotoikea-western {
 	margin-bottom: 0.1cm;
 }
 
-.caption, .footer {
+.caption {
 	text-align: center;
 	font-style: italic;
 	margin-top: 1em;
     margin-left: 5em;
     margin-right: 5em;
-}
-
-#footer {
-    height: 10em;
 }
 
 h1 {
@@ -1655,4 +1664,63 @@ button:disabled {
     .body {
         margin-left: 60em !important;
     }
+}
+
+.breadcrumb>li+li:before {
+  padding: 0 0px  !important;
+  color: #ccc  !important;
+  content: "/"  !important;
+}
+.breadcrumb-div {
+    margin-top: 3px !important;
+    background-color: #fff !important;
+}
+
+.breadcrumb {
+    font-size: 1.0em;
+    background-color: #fff !important;
+}
+
+.breadcrumb.ol {
+    background-color: #fff; 
+}
+
+.breadcrumb a {
+    /* Overrides the default TIM style for links */
+    /*background-color: #fff;  */
+    font-size: 1.0em;
+	padding: 0px 0px !important;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.breadcrumb active {
+	text-decoration: bold;
+}
+
+.breadcrumb>li {
+  display: inline-block;
+}
+
+
+code {
+  padding: 0px 0px !important;
+  font-size: 90% !important; 
+  color: #000 !important;
+  background-color: #f9f2f4 !important;
+  /* border-radius: 4px; */
+}
+
+.plgfooter {
+  text-align: center;
+}
+
+
+.pull-right {
+  float: right!important;
+}
+
+.header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e5e5;
 }

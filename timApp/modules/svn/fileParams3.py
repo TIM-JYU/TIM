@@ -239,8 +239,8 @@ def get_url_lines_as_string(url):
 
 
 class FileParams:
-    def __init__(self, query, nr, url):
-        self.url = get_param(query, "file" + nr, "")
+    def __init__(self, query, nr, url, **defs):
+        self.url = get_param(query, "file" + nr, "")  # defs.get('file',""))
         self.start = do_matcher(get_param(query, "start" + nr, "").replace("\\\\", "\\"))
         self.start_scan_dir, self.start_scan = get_scan_value(get_param(query, "startscan" + nr, ""))
         self.startcnt = int(get_param(query, "startcnt" + nr, "1"))
@@ -732,7 +732,7 @@ def get_surrounding_headers(query, inside):
     stem = allow(get_param(query, "stem", None))
     if stem: result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
-    result += get_heading(query, "footer", 'p class="footer"')
+    result += get_heading(query, "footer", 'p class="plgfooter"')
     return result
 
 
