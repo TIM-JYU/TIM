@@ -70,11 +70,11 @@
         var crumbs = getBreadcrumbs(docName);
         {% include 'breadcrumbs.js' %}
     </script>
-{% endblock %}
+{% endblock %} 
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
-        
         {% include 'breadcrumbs.html' %}
+        
 
         <div id="contents" ng-show="indexTable.length > 0">
             <div class="menu">

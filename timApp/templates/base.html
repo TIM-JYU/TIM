@@ -11,12 +11,13 @@
         <meta name="keywords" content="tim,interactive,material"/>
         <link href="{{url_for('static', filename='images/favicon.ico')}}" rel="shortcut icon" type="image/x-icon"/>
 
-        <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
+        <!-- Bootstrap core CSS -->
+        <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"> -->
+
+        <!-- <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}"> -->
         <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
 
-        <!-- Bootstrap core CSS -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
         <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.js') }}"></script>
@@ -66,7 +67,7 @@
     <div id="header">
         {% block header %}
             {% if self.title() != "TIM" %}
-                <div class="doctitle">{{ self.title() }}</div>
+                <!-- <div class="doctitle">{{ self.title() }}</div> -->
             {% endif %}
             {% include 'loginlogout.html' %}
             {% if is_owner %}
