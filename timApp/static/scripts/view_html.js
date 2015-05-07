@@ -882,7 +882,8 @@ timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
         $scope.jsonRaw = {
             type: jsonData.TYPE,
             time: jsonData.TIME,
-            rows: jsonData.DATA.ROWS
+            rows: jsonData.DATA.ROWS,
+            headers: jsonData.DATA.HEADERS
         };
     }
 ]);
@@ -910,6 +911,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
+        //scope.question.type = type;
 
 
         if (scope.rows.length > 0) {
@@ -933,7 +935,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 var columns = [];
                 columnHeaders = [];
                 for (var j = 0; j < columnsCount; j++) {
-                    columnHeaders.push({type: "header", text: ""});
+                    columnHeaders.push({type: "header", id: j, text: ""});
                     columns[j] = {
                         id: j,
                         rowId: i,
@@ -1071,38 +1073,46 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var par_index = scope.getParIndex($par);
         //TODO use  JSON.stringify
 
-        var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
-        if (scope.question.type == "radio-vertical" || scope.question.answerFieldType == "radiobutton-vertical") {
-            questionJson += '  "COLUMNS": [';
+        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
 
-            for (i = 0; i < scope.columnHeaders.length; i++) {
-                questionJson += '{"Type": "question", "Value": "' + scope.columnHeaders[i].text + '", "ROWS" : [';
-                for (j = 0; j < scope.rows.length; j++) {
-                    questionJson += '{"Type": "' + scope.rows[j].columns[i].type + '" ,"Value": "' + scope.rows[j].columns[i].value + '" },'
-                }
-                questionJson = questionJson.substring(0, questionJson.length - 1);
-                questionJson += ']},';
-
+        questionJson += '"HEADERS" : [';
+        if (scope.question.type == "matrix") {
+            for (var i = 0; i < scope.columnHeaders.length; i++) {
+                questionJson += '{';
+                questionJson += '"type":"' + scope.columnHeaders[i].type + '",';
+                questionJson += '"id":"' + scope.columnHeaders[i].id + '",';
+                questionJson += '"text":"' + scope.columnHeaders[i].text + '"';
+                questionJson += '},'
             }
+            if (i > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
+            questionJson += ']';
+            questionJson += ',';
         }
-        else {
-            questionJson += '  "ROWS": [';
 
-            for (i = 0; i < scope.rows.length; i++) {
-                questionJson += '{"Type": "' + scope.rows[i].type + '" ,"Value": "' + scope.rows[i].value + '", "Columns" : [';
-                for (j = 0; j < scope.rows[i].columns.length; j++) {
-                    questionJson += '{"Type": "' + scope.rows[i].columns[j].type + '" ,"Value": "' + scope.rows[i].columns[j].value + '" },'
-                }
-                questionJson = questionJson.substring(0, questionJson.length - 1);
-                questionJson += ']},';
+        questionJson += '"ROWS": [';
+        for (i = 0; i < scope.rows.length; i++) {
+            questionJson += '{';
+            questionJson += '"id":"' + scope.rows[i].id + '",';
+            questionJson += '"type":"' + scope.rows[i].type + '",';
+            questionJson += '"text":"' + scope.rows[i].text + '",';
+            questionJson += '"COLUMNS": [';
+            for (var j = 0; j < scope.rows[i].columns.length; j++) {
+                questionJson += '{';
+                questionJson += '"id":"' + scope.rows[i].columns[j].id + '",';
+                questionJson += '"rowId":"' + scope.rows[i].columns[j].rowId + '",';
+                questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
+                questionJson += '"value":"' + scope.rows[i].columns[j].value + '"';
+                questionJson += '},'
             }
+
+            if (j > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
+            questionJson += ']';
+            questionJson += '},';
+
         }
-        questionJson = questionJson.substring(0, questionJson.length - 1);
-
-        questionJson += ']}}';
-
-
-        //'{"questionJson":{"time":"20","data":{"rows":[{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 1+1?"},{"Type":"Question","Value":"Paljonko on 123-1?"}],"columns":[{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"},{"Type":"Answer","Value":"Textfield"}]}}}';
+        if (i > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
+        questionJson += ']';
+        questionJson += '}}';
 
         if (scope.question.question == undefined || scope.question.question.trim().length == 0) {
             console.log("Can't save empty questions");
