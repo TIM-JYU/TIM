@@ -2,9 +2,9 @@
  * Created by hajoviin on 24.2.2015.
  */
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope',
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope','$timeout',
 
-    function ($scope, controller, http, $window, createDialog, $rootScope) {
+    function ($scope, controller, http, $window, createDialog, $rootScope,$timeout) {
 
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
@@ -55,14 +55,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.$on("closeAnswer", function (event, answer) {
             $scope.showAnswerDummy = false;
-            console.log(answer.answer);
             var mark = "";
             var answerString = "";
             angular.forEach(answer.answer, function (singleAnswer) {
                 answerString += mark + singleAnswer;
                 mark = "|"
             });
-            console.log(answerString);
             http({
                 url: '/answerToQuestion',
                 method: 'POST',
@@ -110,7 +108,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         document.getElementById("passwordInput").style.border = "1px solid black";
                         document.getElementById("passwordInput").placeholder = "Access code";
                         if (answer.inLecture) {
-                            console.log(answer);
                             $scope.showLectureView(answer);
                         } else {
                             $scope.showBasicView(answer);
@@ -330,7 +327,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 params: {'question_id': answer.questionId, 'doc_id': $scope.docId, 'time': answer.latestAnswer}
             })
                 .success(function (answer) {
-                    console.log(answer);
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
                     $scope.getLectureAnswers(answer);
                     //TODO: Lopeta joskus
@@ -375,13 +371,19 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             var questionJson = JSON.parse(answer.questionJson);
                         }
                         if (answer.question) {
+                            $scope.askedQuestionJson = questionJson;
+
                             if ($scope.isLecturer) {
-                                $scope.getLectureAnswers(answer);
                                 $scope.showStudentAnswers = true;
+
+                                //TODO: A bit confusing that waiting 1ms helps drawing the chart
+                                $timeout(function () {
+                                    $rootScope.$broadcast("createChart", questionJson);
+                                }, 1);
+                                $scope.getLectureAnswers(answer);
                             }
                             //else {
 
-                            $scope.askedQuestionJson = questionJson;
 
                             $rootScope.$broadcast("setQuestionJson", {
                                 questionJson: questionJson,
