@@ -101,7 +101,6 @@ timApp.controller("ViewCtrl", [
         };
 
 
-
         sc.changeUser = function (user) {
             sc.$broadcast('userChanged', {user: user});
         };
@@ -546,7 +545,11 @@ timApp.controller("ViewCtrl", [
                 $actionDiv.append($span);
 
                 var $span = $("<span>");
-                $span.append($("<button>", {class: QUESTION_ADD_BUTTON_CLASS, text: 'Create question', width: button_width}));
+                $span.append($("<button>", {
+                    class: QUESTION_ADD_BUTTON_CLASS,
+                    text: 'Create question',
+                    width: button_width
+                }));
                 $span.append($("<button>", {
                     id: 'createQuestion',
                     class: DEFAULT_BUTTON_CLASS,
@@ -880,7 +883,7 @@ timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
             type: jsonData.TYPE,
             time: jsonData.TIME,
             rows: jsonData.DATA.ROWS
-            };
+        };
     }
 ]);
 
@@ -908,32 +911,51 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
 
- var columnHeaders = [];
-        for (var i = 0; i < rowsCount; i++) {
-            var columns = [];
-            columnHeaders = [];
-            for (var j = 0; j < columnsCount; j++) {
-                columnHeaders.push({type: "header", text: ""})
-                columns[j] = {
-                    id: j,
-                    rowId: i,
-                    text: 'test',
-                    questionPlaceholder: 'column',
-                    type: "answer",
-                    value: 'scope.question.answerFieldType'
+
+        if (scope.rows.length > 0) {
+            for (var i = 0; i < scope.rows.length; i++) {
+
+                if (scope.rows[i].columns.length > columnsCount) {
+                    scope.rows[i].columns.splice(columnsCount, scope.rows[i].columns.length);
                 }
+
+                if (scope.rows[i].columns.length < columnsCount) {
+                    for (var j = scope.rows[i].columns.length; j < columnsCount; j++) {
+                        scope.addCol(j);
+                    }
+                }
+
             }
-            scope.rows[i] = {
-                id: i,
-                text: 'test',
-                type: 'question',
-                value: '',
-                columns: columns
+        } else {
+
+            var columnHeaders = [];
+            for (var i = 0; i < rowsCount; i++) {
+                var columns = [];
+                columnHeaders = [];
+                for (var j = 0; j < columnsCount; j++) {
+                    columnHeaders.push({type: "header", text: ""});
+                    columns[j] = {
+                        id: j,
+                        rowId: i,
+                        text: 'test',
+                        questionPlaceholder: 'column',
+                        type: "answer",
+                        value: 'scope.question.answerFieldType'
+                    }
+                }
+                scope.rows[i] = {
+                    id: i,
+                    text: 'test',
+                    type: 'question',
+                    value: '',
+                    columns: columns
+                }
+
             }
+            scope.columnHeaders = columnHeaders;
 
         }
-        scope.columnHeaders = columnHeaders;
-
+        scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
 
     };
 
@@ -1042,7 +1064,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     };
 
-  scope.createQuestion = function () {
+    scope.createQuestion = function () {
         var url;
         var doc_id = scope.docId;
         var $par = scope.par;
@@ -1051,7 +1073,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
         var questionJson = '{"TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
         if (scope.question.type == "radio-vertical" || scope.question.answerFieldType == "radiobutton-vertical") {
-      questionJson += '  "COLUMNS": [';
+            questionJson += '  "COLUMNS": [';
 
             for (i = 0; i < scope.columnHeaders.length; i++) {
                 questionJson += '{"Type": "question", "Value": "' + scope.columnHeaders[i].text + '", "ROWS" : [';
