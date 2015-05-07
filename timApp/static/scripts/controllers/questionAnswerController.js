@@ -13,7 +13,6 @@ timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($sco
         $scope.dynamicAnswerSheetControl.createAnswer()
     });
 
-
     $scope.answer = function () {
         $scope.dynamicAnswerSheetControl.answerToQuestion()
     };
@@ -34,7 +33,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             $scope.internalControl.createAnswer = function () {
                 $scope.json = $scope.$parent.askedQuestionJson;
                 var htmlSheet = "<div class = 'answerSheet'>";
-                htmlSheet += "<h2> Fake Title <h2>";
+                if ($scope.json.TYPE == "radio-vertical") {
+                    htmlSheet += "<h2>" + $scope.json.TYPE + "<h2>"; //TODO: fix when get correct json
+                }
                 //if ($scope.json.TIME == "undefined") {
                 htmlSheet += "<progress value='0' max='10' id='progressBar'>";
                 htmlSheet += "</progress>";
@@ -42,28 +43,56 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 //}
 
                 htmlSheet += "<table>";
-                htmlSheet += "<tr>";
+
                 if ($scope.json.TYPE == "true-false") {
+                    htmlSheet += "<tr>";
                     htmlSheet += "<th> </th>";
                     htmlSheet += "<th>True</th>";
                     htmlSheet += "<th>False</th>";
-                }
-                htmlSheet += "</tr>";
-                var nextBoolean = true;
-                angular.forEach($scope.json.DATA.ROWS, function (row) {
-                    htmlSheet += "<tr>";
-                    htmlSheet += "<th>" + row.Value + "</th>";
-                    //TODO: Needs correct JSON to be made better way
-                    angular.forEach(row.Columns, function () {
-                        htmlSheet += "<th><label> <input type='radio' name='group" +
-                        row.Value.replace(/ /g, '') + "'" +
-                        " value='" + nextBoolean + "'" +
-                        "></label></th>";
-                        nextBoolean = !nextBoolean;
-                    });
                     htmlSheet += "</tr>";
+                }
+                var nextBoolean = true;
+                if (angular.isDefined($scope.json.DATA.ROWS)) {
+                    angular.forEach($scope.json.DATA.ROWS, function (row) {
+                        htmlSheet += "<tr>";
+                        htmlSheet += "<th>" + row.Value + "</th>";
+                        //TODO: Needs correct JSON to be made better way
+                        angular.forEach(row.Columns, function () {
+                            htmlSheet += "<td><label> <input type='radio' name='group" +
+                            row.Value.replace(/ /g, '') + "'" +
+                            " value='" + nextBoolean + "'" +
+                            "></label></td>";
+                            nextBoolean = !nextBoolean;
+                        });
+                        htmlSheet += "</tr>";
+                    });
+                }
 
-                });
+                if (angular.isDefined($scope.json.DATA.COLUMNS)) {
+                    var faker = 0;
+                    angular.forEach($scope.json.DATA.COLUMNS, function (column) {
+                        if (column.Value == "") {
+                            column.Value = "Fake value";
+                        }
+
+                        // htmlSheet += "<th>" + column.Value + "</th>";
+                        //TODO: Needs correct JSON to be made better way
+                        //TODO: Should be able to answer by pressign the answer tab
+                        angular.forEach(column.ROWS, function (row) {
+                            row.Value = row.Type + faker; //TODO: Remove with real data
+                            htmlSheet += "<tr>";
+                            htmlSheet += "<td>" + row.Type + faker + "</td>";
+                            htmlSheet += "<td><label> <input type='radio' name='group" +
+                            column.Value.replace(/ /g, '') + "'" +
+                            " value='" + row.Type + faker + "'" +
+                            "></td></label>";
+                            faker++;
+                            htmlSheet += "</tr>";
+                        });
+                    });
+                }
+
+
                 htmlSheet += "</div>";
                 $element.append(htmlSheet);
                 $compile($scope);
@@ -86,7 +115,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
                 $scope.progressText.text((parseFloat($scope.progressText.text()) - $scope.valChange).toFixed(1));
                 if (Math.abs($scope.progressElem.attr("value") - $scope.progressElem.attr("max")) < 0.02) {
-                    $scope.internalControl.answerToQuestion();
+                    //$scope.internalControl.answerToQuestion();
                 }
 
             };
@@ -94,10 +123,20 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             $scope.internalControl.answerToQuestion = function () {
                 var answers = [];
                 $interval.cancel(promise);
-                angular.forEach($scope.json.DATA.ROWS, function (row) {
-                    var groupName = "group" + row.Value.replace(/ /g, '');
-                    answers.push($('input[name=' + groupName + ']:checked').val());
-                });
+                if (angular.isDefined($scope.json.DATA.ROWS)) {
+                    angular.forEach($scope.json.DATA.ROWS, function (row) {
+                        var groupName = "group" + row.Value.replace(/ /g, '');
+                        answers.push($('input[name=' + groupName + ']:checked').val());
+                    });
+                }
+
+                if (angular.isDefined($scope.json.DATA.COLUMNS)) {
+                    angular.forEach($scope.json.DATA.COLUMNS, function (column) {
+                        var groupName = "group" + column.Value.replace(/ /g, '');
+                        answers.push($('input[name=' + groupName + ']:checked').val());
+                    });
+                }
+
                 $element.empty();
                 $scope.$emit('closeAnswer', {answer: answers, questionId: $scope.$parent.questionId});
             };
