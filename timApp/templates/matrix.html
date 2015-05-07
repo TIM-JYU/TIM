@@ -36,9 +36,12 @@
                 <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'">
                     <div class="cart">
                         <textarea form="question-form" rows="1" cols="20"
-                                  ng-model="rows[0].columns[$index].text"></textarea>
+                                  ng-model="columnHeaders[$index].text"></textarea>
                         <br/>
                     </div>
+                </th>
+                <th ng-if="question.type == 'matrix'">
+                    <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
                 </th>
 
             </tr>
