@@ -278,7 +278,7 @@ def get_updates():
     students = []
 
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
-    __user_activity[getCurrentUserId(),lecture_id] = time_now
+    __user_activity[getCurrentUserId(), lecture_id] = time_now
 
     while step <= 10:
         last_message = timdb.messages.get_last_message(lecture_id)
@@ -392,6 +392,8 @@ def check_lecture():
     current_user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_lecture(doc_id, current_user)
     lecture = timdb.lectures.get_lecture(lecture_id)
+    lecturers = []
+    students = []
     if lecture:
         lecture_code = lecture[0].get("lecture_code")
         if lecture[0].get("lecturer") == current_user:
@@ -422,12 +424,19 @@ def get_lecture_users(timdb, lecture_id):
 
     for user in users:
         if lecture[0].get("lecturer") == user.get("user_id"):
-            lecturer = {"name": timdb.users.getUser(user.get('user_id')).get("name"),
-                        "active": __user_activity[user.get("user_id"), lecture_id]}
+            if (user.get("user_id"), lecture_id) in __user_activity:
+                lecturer = {"name": timdb.users.getUser(user.get('user_id')).get("name"),
+                            "active": __user_activity[user.get("user_id"), lecture_id]}
+            else:
+                lecturer = {"name": timdb.users.getUser(user.get('user_id')).get("name"), "active": ""}
             lecturers.append(lecturer)
+
         else:
-            student = {"name": timdb.users.getUser(user.get('user_id')).get("name"),
-                       "active": __user_activity[user.get("user_id"),lecture_id]}
+            if (user.get("user_id"), lecture_id) in __user_activity:
+                student = {"name": timdb.users.getUser(user.get('user_id')).get("name"),
+                           "active": __user_activity[user.get("user_id"), lecture_id]}
+            else:
+                student = {"name": timdb.users.getUser(user.get('user_id')).get("name"), "active": ""}
             students.append(student)
 
     return lecturers, students
