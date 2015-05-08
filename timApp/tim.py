@@ -4,13 +4,10 @@ import logging
 import os
 import imghdr
 import io
-import collections
 import re
-import sys
 import time
 import datetime
 from time import mktime
-from datetime import timezone
 import posixpath
 import threading
 
@@ -18,7 +15,6 @@ from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import send_from_directory
-from flask.ext.compress import Compress
 from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
@@ -356,7 +352,7 @@ def get_quesition():
     doc_id = request.args.get('doc_id')
     par_index = request.args.get('par_index')
     timdb = getTimDb()
-    question = timdb.questions.get_paragraphs_question(doc_id, par_index);
+    question = timdb.questions.get_paragraphs_question(doc_id, par_index)
     return jsonResponse(question)
 
 
@@ -542,6 +538,9 @@ def join_lecture():
     timdb.lectures.join_lecture(lecture_id, current_user, True)
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
     __user_activity[getCurrentUserId(), lecture_id] = time_now
+
+    lecturers = []
+    students = []
     if lecture[0].get("lecturer") == current_user:
         is_lecturer = True
         lecturers, students = get_lecture_users(timdb, lecture_id)
