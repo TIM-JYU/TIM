@@ -203,7 +203,7 @@ timApp.controller("ViewCtrl", [
             }, {
                 json: json
             });
-        }
+        };
 
         sc.toggleNoteEditor = function ($par, options) {
             if (!sc.rights.can_comment) {
@@ -1087,6 +1087,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             if (i > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
             questionJson += ']';
             questionJson += ',';
+        } else{
+            questionJson += "],"
         }
 
         questionJson += '"ROWS": [';

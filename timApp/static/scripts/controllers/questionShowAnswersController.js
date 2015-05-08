@@ -35,15 +35,11 @@ timApp.directive('dynamicShowAnswerSheet', ['$interval', '$compile', function ($
 
             $scope.internalControl.createChart = function (question) {
                 var labels = [];
+                var emptyData  = [];
                 if (angular.isDefined(question.DATA.ROWS)) {
                     angular.forEach(question.DATA.ROWS, function (row) {
-                        angular.forEach(row.Columns, function (column) {
-                            if (column.Value != "") {
-                                labels.push(column.Value);
-                            } else {
-                                labels.push("faking");
-                            }
-                        });
+                        labels.push(row.text);
+                        emptyData.push(0);
                     })
                 }
 
@@ -51,11 +47,15 @@ timApp.directive('dynamicShowAnswerSheet', ['$interval', '$compile', function ($
                     angular.forEach(question.DATA.COLUMNS, function (column) {
                         angular.forEach(column.ROWS, function (row) {
                             labels.push(row.Value);
+                            emptyData.push(0);
                         });
                     })
                 }
 
-                $scope.ctx = $("#myChart").get(0).getContext("2d");
+                labels.push("No answer");
+                emptyData.push(0);
+
+                $scope.ctx = $("#answerChart").get(0).getContext("2d");
                 var data = {
                     labels: labels,
                     datasets: [
@@ -67,7 +67,7 @@ timApp.directive('dynamicShowAnswerSheet', ['$interval', '$compile', function ($
                             pointStrokeColor: "#fff",
                             pointHighlightFill: "#fff",
                             pointHighlightStroke: "rgba(220,220,220,1)",
-                            data: [0, 0, 0]
+                            data: emptyData
                         }
                     ]
                 };
@@ -81,18 +81,21 @@ timApp.directive('dynamicShowAnswerSheet', ['$interval', '$compile', function ($
 
                 angular.forEach(answer, function (onePersonsAnswers) {
                     var answers = onePersonsAnswers.answer.split("|");
-
-                    //TODO: Optimize
-
                     angular.forEach(answers, function (singleAnswer) {
                         var i = 0;
                         angular.forEach($scope.answerChart.datasets[0].bars, function (bar) {
                             if (bar.label == singleAnswer) {
                                 $scope.answerChart.datasets[0].bars[i].value += 1;
                             }
+
                             i++;
-                        })
-                    })
+                        });
+                        if (singleAnswer == "undefined") {
+                            var helperBars = $scope.answerChart.datasets[0].bars;
+                            helperBars[helperBars.length-1].value += 1;
+                        }
+                    });
+
                 });
                 $scope.answerChart.update();
 

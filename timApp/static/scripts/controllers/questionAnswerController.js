@@ -33,8 +33,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             $scope.internalControl.createAnswer = function () {
                 $scope.json = $scope.$parent.askedQuestionJson;
                 var htmlSheet = "<div class = 'answerSheet'>";
-                if ($scope.json.TYPE == "radio-vertical") {
-                    htmlSheet += "<h2>" + $scope.json.TYPE + "<h2>"; //TODO: fix when get correct json
+                if ($scope.json.TYPE != "true-false") {
+                    htmlSheet += "<h2>" + $scope.json.QUESTION + "<h2>";
                 }
                 //if ($scope.json.TIME == "undefined") {
                 htmlSheet += "<progress value='0' max='10' id='progressBar'>";
@@ -52,15 +52,25 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                     htmlSheet += "</tr>";
                 }
                 var nextBoolean = true;
+
+                if ($scope.json.DATA.HEADERS.length > 0) {
+                    htmlSheet += "<tr>";
+                    htmlSheet += "<th></th>";
+                    angular.forEach($scope.json.DATA.HEADERS, function (header) {
+                        htmlSheet += "<th>" + header.text + "</th>";
+                    });
+                    htmlSheet += "</tr>";
+                }
+
                 if (angular.isDefined($scope.json.DATA.ROWS)) {
                     angular.forEach($scope.json.DATA.ROWS, function (row) {
                         htmlSheet += "<tr>";
-                        htmlSheet += "<th>" + row.Value + "</th>";
+                        htmlSheet += "<td>" + row.text + "</td>";
                         //TODO: Needs correct JSON to be made better way
-                        angular.forEach(row.Columns, function () {
+                        angular.forEach(row.COLUMNS, function () {
                             htmlSheet += "<td><label> <input type='radio' name='group" +
-                            row.Value.replace(/ /g, '') + "'" +
-                            " value='" + nextBoolean + "'" +
+                            row.type.replace(/ /g, '') + "'" +
+                            " value='" + row.text + "'" +
                             "></label></td>";
                             nextBoolean = !nextBoolean;
                         });
@@ -124,10 +134,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 var answers = [];
                 $interval.cancel(promise);
                 if (angular.isDefined($scope.json.DATA.ROWS)) {
-                    angular.forEach($scope.json.DATA.ROWS, function (row) {
-                        var groupName = "group" + row.Value.replace(/ /g, '');
-                        answers.push($('input[name=' + groupName + ']:checked').val());
-                    });
+                    var groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/ /g, '');
+                    answers.push($('input[name=' + groupName + ']:checked').val());
+
                 }
 
                 if (angular.isDefined($scope.json.DATA.COLUMNS)) {

@@ -2,15 +2,19 @@
  * Created by hajoviin on 24.2.2015.
  */
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope','$timeout',
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope', '$timeout',
 
-    function ($scope, controller, http, $window, createDialog, $rootScope,$timeout) {
+    function ($scope, controller, http, $window, createDialog, $rootScope, $timeout) {
 
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
         $scope.msg = "";
         $scope.newMsg = "";
+        $scope.wallName = "Wall";
+        $scope.messageInfo = true;
+        $scope.newMessagesAmount = 0;
+        $scope.newMessagesAmountText = "";
         $scope.showPoll = true;
         $scope.polling = true;
         $scope.requestOnTheWay = false;
@@ -80,6 +84,21 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.$on("closeAnswerShow", function () {
             $scope.showStudentAnswers = false;
         });
+
+        $scope.showInfo = function () {
+            if (!$scope.messageInfo) {
+                $scope.messagesWithInfo = $scope.msg;
+                var lines = $scope.msg.split(/\r\n|\r|\n/g);
+                var modifiedMessages = "";
+                for (var i = 0; i < lines.length - 1; i++) {
+                    var endInfo = lines[i].indexOf(">:");
+                    modifiedMessages += ">" + lines[i].substring(endInfo + 2) + "\r\n";
+                }
+                $scope.msg = modifiedMessages;
+            } else {
+                $scope.msg = $scope.messagesWithInfo;
+            }
+        };
 
 
         $scope.checkIfInLecture();
@@ -161,6 +180,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
             $scope.lectureName = answer.lectureCode;
+            $scope.wallName = "Wall - " + answer.lectureCode;
             $scope.lectureStartTime = "Started: " + answer.startTime;
             $scope.lectureEndTime = "Ends: " + answer.endTime;
             $scope.inLecture = true;
@@ -262,8 +282,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             if (!$scope.showWall) {
                 $scope.wallHeight = elemWall.style.height;
                 elemWall.style.height = "";
+                $scope.newMessagesAmount = 0;
+                $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
             } else {
                 elemWall.style.height = $scope.wallHeight;
+
             }
         };
 
@@ -306,8 +329,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         $scope.msg = $scope.msg + msg + "\n";
                     });
 
-                    var textarea = document.getElementById('wallArea');
-                    textarea.scrollTop = textarea.scrollHeight;
+                    //TODO: Fix this to scroll bottom without cheating.
+                    var wallArea = $('#wallArea');
+                    wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
+
                     $scope.lastID = answer.lastid;
                     $scope.requestDocId = $scope.lectureId;
 
@@ -434,18 +459,22 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                             if (answer.status == 'results') {
                                 angular.forEach(answer.data, function (msg) {
-                                    $scope.msg = $scope.msg + msg + "\n";
+                                    if ($scope.messageInfo) {
+                                        $scope.msg += msg + "\r\n";
+                                    } else {
+                                        var endInfo = msg.indexOf(">:");
+                                        $scope.msg += ">" + msg.substring(endInfo + 2) + "\r\n";
+                                        $scope.messagesWithInfo += msg + "\r\n";
+                                    }
+
+                                    if (!$scope.showWall) {
+                                        $scope.newMessagesAmount++;
+                                        $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
+                                    }
                                 });
                                 $scope.lastID = answer.lastid;
-                                // TODO: Do no use getElementById. Doens't work well enough
-                                var textarea = document.getElementById('wallArea');
-                                var scrollHeight = textarea.scrollTop;
-                                var position = textarea.scrollHeight - textarea.clientHeight;
-                                if (scrollHeight / position < 0.9) {
-                                    textarea.scrollTop = textarea.scrollHeight;
-                                }
-
-
+                                var wallArea = $('#wallArea');
+                                wallArea.scrollTop(wallArea[0].scrollHeight);
                             } else {
                                 console.log("Sending new poll.");
 
