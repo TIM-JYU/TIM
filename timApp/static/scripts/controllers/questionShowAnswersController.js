@@ -103,7 +103,9 @@ timApp.directive('dynamicShowAnswerSheet', ['$interval', '$compile', function ($
             };
 
             $scope.internalControl.close = function () {
+                $scope.answerChart.destroy();
                 $element.empty();
+
             }
 
         }

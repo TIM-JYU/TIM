@@ -37,7 +37,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.lectureId = null;
         $scope.showAnswerDummy = false;
         $scope.showStudentAnswers = false;
-
+        $scope.studentTable = [];
+        $scope.lecturerTable = [];
         $scope.checkIfInLecture = function () {
             http({
                 url: '/checkLecture',
@@ -99,7 +100,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 $scope.msg = $scope.messagesWithInfo;
             }
         };
-
 
         $scope.checkIfInLecture();
 
@@ -193,7 +193,25 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
             if (answer.isLecturer) {
                 $scope.canStop = true;
+                for (var i = 0; i < answer.students.length; i++) {
+                    var student = {
+                        name: answer.students[i].name,
+                        active: answer.students[i].active
+                    };
+                    $scope.studentTable.push(student);
+                }
+
+                for (i = 0; i < answer.lecturers.length; i++) {
+                    var lecturer = {
+                        name: answer.lecturers[i].name,
+                        active: answer.lecturers[i].active
+                    };
+                    $scope.lecturerTable.push(lecturer);
+                }
             }
+
+            $scope.testailua = "Kana";
+
         };
 
         $scope.showBasicView = function (answer) {
@@ -208,6 +226,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.lectureName = "Not running";
             $scope.showStudentAnswers = false;
             $scope.showAnswerDummy = false;
+            $scope.lecturerTable = [];
+            $scope.studentTable = [];
 
             angular.forEach(answer.lectures, function (lecture) {
                 if ($scope.lectures.indexOf(lecture) == -1) {
@@ -392,6 +412,44 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             return;
                         }
 
+                        var oldUser = false;
+                        for (var i = 0; i < answer.students.length; i++) {
+                            for (var index = 0; index < $scope.studentTable.length; i++) {
+                                if ($scope.studentTable[index].name == answer.students[i].name) {
+                                    oldUser = true;
+                                    $scope.studentTable[index].active = answer.students[i].active;
+                                    break;
+                                }
+                            }
+
+                            if (!oldUser) {
+                                var student = {
+                                    name: answer.students[i].name,
+                                    active: answer.students[i].active
+                                };
+                                $scope.studentTable.push(student);
+                            }
+                        }
+
+                        oldUser = false;
+                        for (i = 0; i < answer.lecturers.length; i++) {
+                            for (index = 0; index < $scope.lecturerTable.length; i++) {
+                                if ($scope.lecturerTable[index].name == answer.lecturers[i].name) {
+                                    oldUser = true;
+                                    $scope.lecturerTable[index].active = answer.lecturers[i].active;
+                                    break;
+                                }
+                            }
+
+                            if (!oldUser) {
+                                var lecturer = {
+                                    name: answer.lecturers[i].name,
+                                    active: answer.lecturers[i].active
+                                };
+                                $scope.lecturerTable.push(student);
+                            }
+                        }
+
                         if (answer.questionJson) {
                             var questionJson = JSON.parse(answer.questionJson);
                         }
@@ -407,7 +465,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                 }, 1);
                                 $scope.getLectureAnswers(answer);
                             }
-                            //else {
 
 
                             $rootScope.$broadcast("setQuestionJson", {
@@ -417,36 +474,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
 
                             $scope.showAnswerDummy = true;
-
-                            /*
-                             createDialog('../../../static/templates/questionAskedStudent.html', {
-                             id: 'questionAskDialog',
-                             title: 'Question',
-                             backdrop: true,
-                             success: {
-                             label: 'Answer', fn: function () {
-
-                             http({
-                             url: '/answerQuestion',
-                             method: 'POST',
-                             params: {}
-                             })
-                             .success(function () {
-                             console.log("Answered to the question");
-                             })
-                             .error(function (error) {
-                             console.log(error);
-                             });
-                             }
-                             },
-                             controller: 'QuestionAnswerController'
-                             },{
-                             questionJson:questionJson
-                             });
-
-                             */
-
-                            //}
                         }
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);

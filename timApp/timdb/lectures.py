@@ -175,7 +175,6 @@ class Lectures(TimDbBase):
 
         return True
 
-
     @contract
     def check_if_in_lecture(self, doc_id: "int", user_id: "int") -> "tuple":
         """
@@ -218,4 +217,14 @@ class Lectures(TimDbBase):
         else:
             return False, -1
 
+    @contract
+    def get_users_from_leture(self, lecture_id: "int") -> "list(dict)":
+        cursor = self.db.cursor()
 
+        cursor.execute("""
+                            SELECT user_id
+                            FROM LectureUsers
+                            WHERE lecture_id = ?
+                      """, [lecture_id])
+
+        return self.resultAsDictionary(cursor)
