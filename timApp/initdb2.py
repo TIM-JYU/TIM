@@ -7,6 +7,7 @@ from timdb.gitclient import GitClient
 import ephemeralclient
 import sys
 
+
 def createAdmin(timdb, name, real_name, email):
     user_id = timdb.users.createUser(name, real_name, email)
     user_group = timdb.users.createUserGroup(name)
@@ -14,17 +15,19 @@ def createAdmin(timdb, name, real_name, email):
     timdb.users.addUserToAdmins(user_id)
     return (user_id, user_group)
 
-if __name__ == "__main__":
+
+def initialize_database(launch_ephemeral=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     FILES_ROOT_PATH = 'tim_files'
     if os.path.exists(FILES_ROOT_PATH):
         print('tim_files already exists, no need to initialize')
-        sys.exit()
+        return
     print('initializing tim_files')
     git = GitClient.initRepo(FILES_ROOT_PATH)
-    p = ephemeralclient.launch_ephemeral()
+    if launch_ephemeral:
+        p = ephemeralclient.launch_ephemeral()
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
     timdb.initializeTables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
@@ -49,5 +52,8 @@ if __name__ == "__main__":
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.""", 'everyone', [])
+    if launch_ephemeral:
+        p.kill()
 
-    p.kill()
+if __name__ == "__main__":
+    initialize_database()

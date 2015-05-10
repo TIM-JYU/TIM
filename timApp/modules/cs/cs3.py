@@ -192,7 +192,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :return: error code, stdout text, stderr text
     """
     s_in = ""
-    if not ulimit: ulimit = "ulimit -f 100 -t 3 -s 100 " # -v 2000 -s 100 -u 10
+    if not ulimit: ulimit = "ulimit -f 100 -t 4 -s 100 " # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")

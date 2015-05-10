@@ -25,13 +25,13 @@ sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/tmp
 
 cd /opt/cs/java
 rm comtest*.jar*
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
+wget --no-check-certificate https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
+wget --no-check-certificate https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
 
 rm Graphics.jar*
-wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
+wget --no-check-certificate https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
 rm Ali*.jar
-wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
+wget --no-check-certificate https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
 
 # Copy Jypeli dll's to temp directory
 sudo cp /opt/cs/jypeli/* /tmp/uhome/cs

@@ -1,5 +1,6 @@
 import os
 import shutil
+import initdb2
 import tim
 import ephemeralclient
 import sys
@@ -35,6 +36,7 @@ if __name__ == '__main__':
         if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
             p = ephemeralclient.launch_ephemeral(ignore_signals='pudb' in sys.modules)
             ephemeral_started = True
+        initdb2.initialize_database(launch_ephemeral=False)
         tim.startApp()
     finally:
         if ephemeral_started:
