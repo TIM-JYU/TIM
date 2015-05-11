@@ -6,15 +6,34 @@
     background-color: #3cc;
     border: 1px solid #3cc;
     border-radius: 25px;
-    padding: 1px 50px 75px 10px;
+    padding: 1px 10px 10px 10px;
     top: 0;
-    height: 50px;
+    height: auto;
     max-width: 810px;
+	display: flex;
+}
+
+#largeMenu div {
+	display: block;
 }
 
 .menuSection p {
     line-height: 100%;
+	display: block;
+	width: 100%
 }
+
+.iconSection .icon{
+	display: inline;
+	width: 35px;
+	height: 35px;
+	cursor: pointer;
+}
+
+.iconSection {
+	display:inline-block;
+}
+
 
 #smallMenu {
     font-size: 90%;
@@ -41,20 +60,16 @@
 .lectureSection {
     line-height: 70%;
     width: 250px;
-    float: left;
+    display: inline-block;
 }
 
-#add-icon {
-    width: 40px;
-    height: 40px;
-    padding-right: 50px;
-    cursor: pointer;
-    float: right;
+.loginSection {
+	display:inline-block;
 }
 
 .menuSection .lectureSection h1 {
     font-family: verdana;
-    padding-right: 100px;
+    padding-right: 10px;
     padding-left: 10px;
     color: white;
     text-align: left;
