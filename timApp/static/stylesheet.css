@@ -1442,7 +1442,7 @@ img.console {
     z-index: 501;
 }
 
-.menu-icon{
+.menu-icon {
     z-index: 501;
 	cursor:pointer;
 	filter: brightness(1);
