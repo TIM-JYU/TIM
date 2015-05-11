@@ -22,7 +22,7 @@
             <li ng-repeat="c in selectedAnswer.collaborators">{{ c.real_name }}</li>
         </ul>
     </div>
-    <span ng-show="$parent.teacherMode && changed">(hover/click to update)</span>
+    <span ng-show="$parent.teacherMode && changed && !firstLoad">(hover/click to update)</span>
     <span ng-show="!changed && answers.length == 0 && $parent.teacherMode">(no answers)</span>
     <img style="display: inline" src="/static/images/loading.gif" ng-show="loading">
 </div>

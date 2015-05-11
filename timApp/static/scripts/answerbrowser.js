@@ -101,6 +101,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     if (!$scope.$parent.rights.browse_own_answers) {
                         return;
                     }
+                    if ($scope.user === null) {
+                        return;
+                    }
                     $scope.loading++;
                     $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id)
                         .success(function (data, status, headers, config) {
@@ -128,6 +131,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
                     $scope.changed = true;
+                    $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
                 });
 
@@ -135,19 +139,28 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     if ($scope.changed) {
                         $scope.getAvailableAnswers($scope.shouldUpdateHtml);
                         $scope.changed = false;
+                        $scope.firstLoad = false;
                         $scope.shouldUpdateHtml = false;
                     }
                 };
 
-                $scope.user = $scope.$parent.users[0];
+                if ($scope.$parent.users.length > 0) {
+                    $scope.user = $scope.$parent.users[0];
+                } else {
+                    $scope.user = null;
+                }
+
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.loadIfChanged();
                     if ($scope.$parent.teacherMode && $scope.users === null) {
                         $scope.users = [];
-                        $scope.getAvailableUsers();
+                        if ($scope.$parent.users.length > 0) {
+                            $scope.getAvailableUsers();
+                        }
                     }
                 });
                 $scope.changed = true;
+                $scope.firstLoad = true;
                 $scope.shouldUpdateHtml = false;
                 $scope.saveTeacher = false;
                 $scope.users = null;
