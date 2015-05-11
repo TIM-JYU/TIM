@@ -35,13 +35,13 @@
 
                 <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'">
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20" ng-model="rows[0].columns[$index].text"></textarea>
+                        <textarea form="question-form" rows="1" cols="20"
+                                  ng-model="columnHeaders[$index].text"></textarea>
                         <br/>
-
                     </div>
-
-                        <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
-                    </div>
+                </th>
+                <th ng-if="question.type == 'matrix'">
+                    <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
                 </th>
 
             </tr>
@@ -56,7 +56,8 @@
                 </th>
                 <th>
                     <div class="cart">
-                        <textarea style="margin-left:5px" ng-model="row.value" form="question-form" rows="1" cols="20"></textarea>
+                        <textarea style="margin-left:5px" ng-model="row.text" form="question-form" rows="1"
+                                  cols="20"></textarea>
 
                         <br/>
 
@@ -99,9 +100,9 @@
                                        ng-model="row.id"
                                         />
                                 <input type="text"
-                                    ng-show="row.id"
-                                    size="1"
-                                    placeholder="pts" />
+                                       ng-show="row.id"
+                                       size="1"
+                                       placeholder="pts"/>
                             </div>
                         </div>
                     </div>

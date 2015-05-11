@@ -4,13 +4,10 @@ import logging
 import os
 import imghdr
 import io
-import collections
 import re
-import sys
 import time
 import datetime
 from time import mktime
-from datetime import timezone
 import posixpath
 import threading
 
@@ -18,7 +15,6 @@ from flask import Flask, redirect, url_for, Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import send_from_directory
-from flask.ext.compress import Compress
 from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
@@ -86,6 +82,7 @@ LOG_LEVELS = {"CRITICAL": app.logger.critical,
 __question_to_be_asked = []
 
 __pull_answer = {}
+__user_activity = {}
 
 # Logger call
 @app.route("/log/", methods=["POST"])
@@ -273,6 +270,12 @@ def get_updates():
     list_of_new_messages = []
     last_message_id = -1
 
+    lecturers = []
+    students = []
+
+    time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
+    __user_activity[getCurrentUserId(), lecture_id] = time_now
+
     while step <= 10:
         last_message = timdb.messages.get_last_message(lecture_id)
         if last_message:
@@ -291,6 +294,16 @@ def get_updates():
                 last_message_id = messages[-1].get('msg_id')
 
         current_user = getCurrentUserId()
+
+        lecture = timdb.lectures.get_lecture(lecture_id)
+        if lecture[0].get("lecturer") == current_user:
+            is_lecturer = True
+        else:
+            is_lecturer = False
+
+        if is_lecturer:
+            lecturers, students = get_lecture_users(timdb, lecture_id)
+
         for pair in __question_to_be_asked:
             if pair[0] == lecture_id and current_user not in pair[2]:
                 question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
@@ -298,19 +311,19 @@ def get_updates():
                 return jsonResponse(
                     {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                      "lectureId": lecture_id, "question": True, "questionId": pair[1], "questionJson": question_json,
-                     "isLecture": True})
+                     "isLecture": True, "lecturers": lecturers, "students": students})
 
         if len(list_of_new_messages) > 0:
             return jsonResponse(
                 {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                 "lectureId": lecture_id, "isLecture": True})
+                 "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers, "students": students})
 
         time.sleep(1)
         step += 1
 
     return jsonResponse(
         {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
-         "isLecture": True})
+         "isLecture": True, "lecturers": lecturers, "students": students})
 
 
 @app.route('/sendMessage', methods=['POST'])
@@ -339,7 +352,7 @@ def get_quesition():
     doc_id = request.args.get('doc_id')
     par_index = request.args.get('par_index')
     timdb = getTimDb()
-    question = timdb.questions.get_paragraphs_question(doc_id, par_index);
+    question = timdb.questions.get_paragraphs_question(doc_id, par_index)
     return jsonResponse(question)
 
 
@@ -375,17 +388,54 @@ def check_lecture():
     current_user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_lecture(doc_id, current_user)
     lecture = timdb.lectures.get_lecture(lecture_id)
+    lecturers = []
+    students = []
     if lecture:
         lecture_code = lecture[0].get("lecture_code")
         if lecture[0].get("lecturer") == current_user:
             is_lecturer = True
+            lecturers, students = get_lecture_users(timdb, lecture_id)
         else:
             is_lecturer = False
+
         return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
                              "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
-                             "endTime": lecture[0].get("end_time")})
+                             "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
     else:
         return get_running_lectures(doc_id)
+
+
+# Gets users from specific lecture
+# returns 2 lists of dictionaries.
+# TODO: Think if it would be better to return only one
+def get_lecture_users(timdb, lecture_id):
+    lecture = timdb.lectures.get_lecture(lecture_id)
+    lecturers = []
+    students = []
+    users = timdb.lectures.get_users_from_leture(lecture_id)
+
+    if len(__user_activity) <= 0:
+        for user in users:
+            __user_activity[user.get("user_id"), lecture_id] = ""
+
+    for user in users:
+        if lecture[0].get("lecturer") == user.get("user_id"):
+            if (user.get("user_id"), lecture_id) in __user_activity:
+                lecturer = {"name": timdb.users.getUser(user.get('user_id')).get("name"),
+                            "active": __user_activity[user.get("user_id"), lecture_id]}
+            else:
+                lecturer = {"name": timdb.users.getUser(user.get('user_id')).get("name"), "active": ""}
+            lecturers.append(lecturer)
+
+        else:
+            if (user.get("user_id"), lecture_id) in __user_activity:
+                student = {"name": timdb.users.getUser(user.get('user_id')).get("name"),
+                           "active": __user_activity[user.get("user_id"), lecture_id]}
+            else:
+                student = {"name": timdb.users.getUser(user.get('user_id')).get("name"), "active": ""}
+            students.append(student)
+
+    return lecturers, students
 
 
 def check_if_lecture_is_running(lecture_id):
@@ -485,16 +535,21 @@ def join_lecture():
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture[0].get("password") != password_quess:
         return jsonResponse({"correctPassword": False})
-
     timdb.lectures.join_lecture(lecture_id, current_user, True)
+    time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
+    __user_activity[getCurrentUserId(), lecture_id] = time_now
+
+    lecturers = []
+    students = []
     if lecture[0].get("lecturer") == current_user:
         is_lecturer = True
+        lecturers, students = get_lecture_users(timdb, lecture_id)
     else:
         is_lecturer = False
     return jsonResponse(
         {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
          "lectureCode": lecture_code, "startTime": lecture[0].get("start_time"),
-         "endTime": lecture[0].get("end_time")})
+         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
 
 
 @app.route('/leaveLecture', methods=['POST'])
@@ -503,6 +558,7 @@ def leave_lecture():
     lecture_id = int(request.args.get("lecture_id"))
     doc_id = int(request.args.get("doc_id"))
     timdb.lectures.leave_lecture(lecture_id, getCurrentUserId(), True)
+    del __user_activity[getCurrentUserId(), lecture_id]
     return get_running_lectures(doc_id)
 
 
@@ -774,7 +830,6 @@ def ask_question():
 
 @app.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
-
     if not request.args.get('question_id') or not request.args.get('doc_id'):
         abort(400, "Bad request")
 
@@ -792,8 +847,9 @@ def get_lecture_answers():
 
     timdb = getTimDb()
     answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
+    latest_answer = answers[-1].get("answered_on")
 
-    return jsonResponse({"answers": answers})
+    return jsonResponse({"answers": answers, "questionId": question_id, "latestAnswer": latest_answer})
 
 
 @app.route("/answerToQuestion", methods=['POST'])
@@ -1008,5 +1064,4 @@ def indexPage():
 def startApp():
     # TODO: Think if it is truly necessary to have threaded=True here
     app.wsgi_app = ReverseProxied(app.wsgi_app)
-
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)

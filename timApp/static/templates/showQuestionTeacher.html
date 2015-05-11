@@ -2,18 +2,18 @@
     <h5> Question: </h5>
     Question type: {{ jsonRaw.type }} <br>
     Time limit: {{ jsonRaw.time }} <br>
+
     <table>
-        <tr ng-repeat="row in jsonRaw.rows">
-            <td> {{ row.Value }} </td>
-            <td ng-repeat="col in row.Columns">
-                <input type=col.value disabled >
+        <tr>
+            <td></td>
+            <td ng-repeat="header in jsonRaw.headers">
+                <p>{{ header.text }}</p>
             </td>
+        </tr>
+        <tr ng-repeat="row in jsonRaw.rows">
+            <td> {{ row.text }} </td>
+            <td ng-repeat="header in jsonRaw.headers"> <input type="checkbox" disabled> </td>
         </tr>
     </table>
 
-
-
-
-
-    <!-- <div>{{ jsonRaw }}</div> -->
 </div>

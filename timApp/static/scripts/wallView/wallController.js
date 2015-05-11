@@ -2,15 +2,19 @@
  * Created by hajoviin on 24.2.2015.
  */
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope',
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope', '$timeout',
 
-    function ($scope, controller, http, $window, createDialog, $rootScope) {
+    function ($scope, controller, http, $window, createDialog, $rootScope, $timeout) {
 
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
         $scope.msg = "";
         $scope.newMsg = "";
+        $scope.wallName = "Wall";
+        $scope.messageInfo = true;
+        $scope.newMessagesAmount = 0;
+        $scope.newMessagesAmountText = "";
         $scope.showPoll = true;
         $scope.polling = true;
         $scope.requestOnTheWay = false;
@@ -33,7 +37,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.lectureId = null;
         $scope.showAnswerDummy = false;
         $scope.showStudentAnswers = false;
-
+        $scope.studentTable = [];
+        $scope.lecturerTable = [];
         $scope.checkIfInLecture = function () {
             http({
                 url: '/checkLecture',
@@ -55,14 +60,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.$on("closeAnswer", function (event, answer) {
             $scope.showAnswerDummy = false;
-            console.log(answer.answer);
             var mark = "";
             var answerString = "";
-            angular.forEach(answer.answer, function(singleAnswer){
+            angular.forEach(answer.answer, function (singleAnswer) {
                 answerString += mark + singleAnswer;
                 mark = "|"
             });
-            console.log(answerString);
             http({
                 url: '/answerToQuestion',
                 method: 'POST',
@@ -83,6 +86,20 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.showStudentAnswers = false;
         });
 
+        $scope.showInfo = function () {
+            if (!$scope.messageInfo) {
+                $scope.messagesWithInfo = $scope.msg;
+                var lines = $scope.msg.split(/\r\n|\r|\n/g);
+                var modifiedMessages = "";
+                for (var i = 0; i < lines.length - 1; i++) {
+                    var endInfo = lines[i].indexOf(">:");
+                    modifiedMessages += ">" + lines[i].substring(endInfo + 2) + "\r\n";
+                }
+                $scope.msg = modifiedMessages;
+            } else {
+                $scope.msg = $scope.messagesWithInfo;
+            }
+        };
 
         $scope.checkIfInLecture();
 
@@ -110,7 +127,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         document.getElementById("passwordInput").style.border = "1px solid black";
                         document.getElementById("passwordInput").placeholder = "Access code";
                         if (answer.inLecture) {
-                            console.log(answer);
                             $scope.showLectureView(answer);
                         } else {
                             $scope.showBasicView(answer);
@@ -145,23 +161,26 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
 
         $scope.toggleLecture = function () {
-			createDialog('../../../static/templates/start_lecture.html', {
-                id: 'createL',
-                title: '',
-				controller: 'CreateLectureCtrl'/*,
-				footerTemplate: 
-				'<div class="buttons">' + 
-					'<button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>' + 
-					'<button type="button" ng-click="cancelCreation()">Cancel</button>' + 
-					'</div>'*/
+            createDialog('../../../static/templates/start_lecture.html', {
+                    id: 'createL',
+                    title: '',
+                    controller: 'CreateLectureCtrl'/*,
+                     footerTemplate:
+                     '<div class="buttons">' +
+                     '<button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>' +
+                     '<button type="button" ng-click="cancelCreation()">Cancel</button>' +
+                     '</div>'*/
                 },
-			{docIdParam: $scope.docId,
-			anotherScope: $scope});
+                {
+                    docIdParam: $scope.docId,
+                    anotherScope: $scope
+                });
         };
 
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
             $scope.lectureName = answer.lectureCode;
+            $scope.wallName = "Wall - " + answer.lectureCode;
             $scope.lectureStartTime = "Started: " + answer.startTime;
             $scope.lectureEndTime = "Ends: " + answer.endTime;
             $scope.inLecture = true;
@@ -174,7 +193,25 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
             if (answer.isLecturer) {
                 $scope.canStop = true;
+                for (var i = 0; i < answer.students.length; i++) {
+                    var student = {
+                        name: answer.students[i].name,
+                        active: answer.students[i].active
+                    };
+                    $scope.studentTable.push(student);
+                }
+
+                for (i = 0; i < answer.lecturers.length; i++) {
+                    var lecturer = {
+                        name: answer.lecturers[i].name,
+                        active: answer.lecturers[i].active
+                    };
+                    $scope.lecturerTable.push(lecturer);
+                }
             }
+
+            $scope.testailua = "Kana";
+
         };
 
         $scope.showBasicView = function (answer) {
@@ -189,6 +226,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.lectureName = "Not running";
             $scope.showStudentAnswers = false;
             $scope.showAnswerDummy = false;
+            $scope.lecturerTable = [];
+            $scope.studentTable = [];
 
             angular.forEach(answer.lectures, function (lecture) {
                 if ($scope.lectures.indexOf(lecture) == -1) {
@@ -263,8 +302,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             if (!$scope.showWall) {
                 $scope.wallHeight = elemWall.style.height;
                 elemWall.style.height = "";
+                $scope.newMessagesAmount = 0;
+                $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
             } else {
                 elemWall.style.height = $scope.wallHeight;
+
             }
         };
 
@@ -307,8 +349,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         $scope.msg = $scope.msg + msg + "\n";
                     });
 
-                    var textarea = document.getElementById('wallArea');
-                    textarea.scrollTop = textarea.scrollHeight;
+                    //TODO: Fix this to scroll bottom without cheating.
+                    var wallArea = $('#wallArea');
+                    wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
+
                     $scope.lastID = answer.lastid;
                     $scope.requestDocId = $scope.lectureId;
 
@@ -318,6 +362,23 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     }
 
 
+                })
+        };
+
+        $scope.getLectureAnswers = function (answer) {
+            http({
+                url: '/getLectureAnswers',
+                type: 'GET',
+                params: {'question_id': answer.questionId, 'doc_id': $scope.docId, 'time': answer.latestAnswer}
+            })
+                .success(function (answer) {
+                    $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
+                    $scope.getLectureAnswers(answer);
+                    //TODO: Lopeta joskus
+
+                })
+                .error(function () {
+                    console.log("Couldn't get answers");
                 })
         };
 
@@ -351,29 +412,60 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             return;
                         }
 
+                        var oldUser = false;
+                        for (var i = 0; i < answer.students.length; i++) {
+                            for (var index = 0; index < $scope.studentTable.length; i++) {
+                                if ($scope.studentTable[index].name == answer.students[i].name) {
+                                    oldUser = true;
+                                    $scope.studentTable[index].active = answer.students[i].active;
+                                    break;
+                                }
+                            }
+
+                            if (!oldUser) {
+                                var student = {
+                                    name: answer.students[i].name,
+                                    active: answer.students[i].active
+                                };
+                                $scope.studentTable.push(student);
+                            }
+                        }
+
+                        oldUser = false;
+                        for (i = 0; i < answer.lecturers.length; i++) {
+                            for (index = 0; index < $scope.lecturerTable.length; i++) {
+                                if ($scope.lecturerTable[index].name == answer.lecturers[i].name) {
+                                    oldUser = true;
+                                    $scope.lecturerTable[index].active = answer.lecturers[i].active;
+                                    break;
+                                }
+                            }
+
+                            if (!oldUser) {
+                                var lecturer = {
+                                    name: answer.lecturers[i].name,
+                                    active: answer.lecturers[i].active
+                                };
+                                $scope.lecturerTable.push(student);
+                            }
+                        }
+
                         if (answer.questionJson) {
                             var questionJson = JSON.parse(answer.questionJson);
                         }
                         if (answer.question) {
+                            $scope.askedQuestionJson = questionJson;
+
                             if ($scope.isLecturer) {
                                 $scope.showStudentAnswers = true;
-                                http({
-                                    url: '/getLectureAnswers',
-                                    type: 'GET',
-                                    params: {'question_id': answer.questionId, 'doc_id': $scope.docId}
-                                })
-                                    .success(function(answer) {
-                                        console.log(answer.answers);
-                                        $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
 
-                                    })
-                                    .error(function() {
-                                        console.log("Couldn't get answers");
-                                    })
+                                //TODO: A bit confusing that waiting 1ms helps drawing the chart
+                                $timeout(function () {
+                                    $rootScope.$broadcast("createChart", questionJson);
+                                }, 1);
+                                $scope.getLectureAnswers(answer);
                             }
-                            //else {
 
-                            $scope.askedQuestionJson = questionJson;
 
                             $rootScope.$broadcast("setQuestionJson", {
                                 questionJson: questionJson,
@@ -382,36 +474,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
 
                             $scope.showAnswerDummy = true;
-
-                            /*
-                             createDialog('../../../static/templates/questionAskedStudent.html', {
-                             id: 'questionAskDialog',
-                             title: 'Question',
-                             backdrop: true,
-                             success: {
-                             label: 'Answer', fn: function () {
-
-                             http({
-                             url: '/answerQuestion',
-                             method: 'POST',
-                             params: {}
-                             })
-                             .success(function () {
-                             console.log("Answered to the question");
-                             })
-                             .error(function (error) {
-                             console.log(error);
-                             });
-                             }
-                             },
-                             controller: 'QuestionAnswerController'
-                             },{
-                             questionJson:questionJson
-                             });
-
-                             */
-
-                            //}
                         }
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
@@ -424,18 +486,22 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                             if (answer.status == 'results') {
                                 angular.forEach(answer.data, function (msg) {
-                                    $scope.msg = $scope.msg + msg + "\n";
+                                    if ($scope.messageInfo) {
+                                        $scope.msg += msg + "\r\n";
+                                    } else {
+                                        var endInfo = msg.indexOf(">:");
+                                        $scope.msg += ">" + msg.substring(endInfo + 2) + "\r\n";
+                                        $scope.messagesWithInfo += msg + "\r\n";
+                                    }
+
+                                    if (!$scope.showWall) {
+                                        $scope.newMessagesAmount++;
+                                        $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
+                                    }
                                 });
                                 $scope.lastID = answer.lastid;
-                                // TODO: Do no use getElementById. Doens't work well enough
-                                var textarea = document.getElementById('wallArea');
-                                var scrollHeight = textarea.scrollTop;
-                                var position = textarea.scrollHeight - textarea.clientHeight;
-                                if (scrollHeight / position < 0.9) {
-                                    textarea.scrollTop = textarea.scrollHeight;
-                                }
-
-
+                                var wallArea = $('#wallArea');
+                                wallArea.scrollTop(wallArea[0].scrollHeight);
                             } else {
                                 console.log("Sending new poll.");
 
