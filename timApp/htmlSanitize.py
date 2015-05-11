@@ -62,11 +62,12 @@ TIM_SAFE_ATTRS = ['class',
                   'href',
                   'target']
 
+c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False)
+
 
 # NOTE: lxml cleaner is a LOT faster than bleach.
 def sanitize_html(html_string):
     try:
-        c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False)
         return c.clean_html(html_string)
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
         return ""

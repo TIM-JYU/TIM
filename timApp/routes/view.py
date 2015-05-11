@@ -88,7 +88,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         else:
             abort(403)
 
-    version = timdb.documents.getNewestVersion(doc_id)
+    version = {'hash': timdb.documents.getNewestVersionHash(doc_id)}
     xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
     doc = timdb.documents.getDocument(doc_id)
     start_index = 0
