@@ -52,8 +52,8 @@
 				<div ng-show="futureLectures.length > 0">
 					<select ng-model="futureLecture" ng-options="lecture as lecture for lecture in futureLectures">
 					</select>
-				</div ng-show="futureLectures.length > 0">
-				<div class="iconSection">
+				</div>
+				<div class="iconSection" ng-show="futureLectures.length > 0">
 					<img id="start-icon" src="../../../static/images/play-icon3.png" class="icon"
 						title="Start lecture now">
 					<img id="edit-icon2" src="../../../static/images/edit-icon3.png" class="icon"
