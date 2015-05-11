@@ -519,6 +519,8 @@ def delete_lecture():
         if pair[0] == lecture_id:
             __question_to_be_asked.remove(pair)
     timdb.lectures.delete_lecture(lecture_id, True)
+
+    del __user_activity[getCurrentUserId(), lecture_id]
     return get_running_lectures(doc_id)
 
 
@@ -536,6 +538,7 @@ def join_lecture():
     if lecture[0].get("password") != password_quess:
         return jsonResponse({"correctPassword": False})
     timdb.lectures.join_lecture(lecture_id, current_user, True)
+
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
     __user_activity[getCurrentUserId(), lecture_id] = time_now
 
