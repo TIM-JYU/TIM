@@ -76,7 +76,7 @@
         {% include 'breadcrumbs.html' %}
         
 
-        <div id="contents" ng-show="indexTable.length > 0">
+        <div id="contents" ng-show="indexTable.length > 0" class="ng-cloak">
             <div class="menu">
                 <img ng-click="toggleSidebar()" class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                      height="50"/>
