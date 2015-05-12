@@ -1,45 +1,5 @@
 var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode;
 
-var timApp = angular.module('timApp', [
-    'ngSanitize',
-    'angularFileUpload',
-    'fundoo.services',
-    'ui.ace'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
-    var interceptor = [
-        '$q',
-        '$rootScope',
-        function ($q, $rootScope) {
-            var re = /\/[^/]+\/([^/]+)\/answer\/$/;
-            var service = {
-                'request': function (config) {
-                    if (re.test(config.url)) {
-                        var match = re.exec(config.url);
-                        var taskId = match[1];
-                        var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
-                        var browserScope = ab.isolateScope();
-                        if (ab.scope().teacherMode) {
-                            angular.extend(config.data, {abData: browserScope.getTeacherData()});
-                        }
-                        //console.log(config);
-                    }
-                    return config;
-                },
-                'response': function (response) {
-
-                    if (re.test(response.config.url)) {
-                        var match = re.exec(response.config.url);
-                        var taskId = match[1];
-                        $rootScope.$broadcast('answerSaved', {taskId: taskId});
-                    }
-                    return response;
-                }
-            };
-            return service;
-        }
-    ];
-
-    $httpProvider.interceptors.push(interceptor);
-}]);
 
 timApp.controller("ViewCtrl", [
     '$scope',
@@ -620,12 +580,12 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getQuestionHtml = function (questions) {
-            var questionImage = '../../../static/images/questionBubble.png';
+            var questionImage = '../../../static/images/show-question-icon.png';
             var $questionsDiv = $("<div>", {class: 'questions'});
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
-                var img = new Image();
+                var img = new Image(30,30);
                 img.src = questionImage;
                 var $questionDiv = $("<div>", {
                     class: 'questionAdded', html: img, json: questions[i].questionJson, id: questions[i].question_id
