@@ -135,7 +135,7 @@ timApp.controller("ViewCtrl", [
             var json = "No data";
             var qId = -1;
             if (question[0].hasAttribute('json')) {
-                json = question[0].getAttribute('json');
+                json = JSON.parse(question[0].getAttribute('json'));
                 qId = question[0].getAttribute('id');
 
             }
@@ -145,11 +145,12 @@ timApp.controller("ViewCtrl", [
                 lectureId = response;
             });
 
-            $rootScope.$broadcast('get_lectureId', 'lecture_id');
+            var header = json.QUESTION;
 
+            $rootScope.$broadcast('get_lectureId', 'lecture_id');
             createDialog('../../../static/templates/showQuestionTeacher.html', {
                 id: 'simpleDialog',
-                title: 'Question dialog',
+                title: "",
                 backdrop: true,
                 footerTemplate: "<button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>" +
                 "<button ng-click='close()' class='timButton questionButton'>Close</button>" +
@@ -839,17 +840,15 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
         $scope.qId = qId;
         $scope.lectureId = lectureId;
 
-        var jsonData = JSON.parse(json);
+        var jsonData = json;
         $scope.jsonRaw = {
+            question: jsonData.QUESTION,
             type: jsonData.TYPE,
             time: jsonData.TIME,
             rows: jsonData.DATA.ROWS,
             headers: jsonData.DATA.HEADERS
         };
         $scope.ask = function () {
-            console.log($scope.docId);
-            console.log($scope.qId);
-            console.log($scope.lectureId);
             http({
                 url: '/askQuestion',
                 method: 'GET',
@@ -857,7 +856,6 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
             })
                 .success(function () {
                     $scope.$modalClose();
-                    console.log("Added question to be asked");
                 })
                 .error(function (error) {
                     $scope.$modalClose();

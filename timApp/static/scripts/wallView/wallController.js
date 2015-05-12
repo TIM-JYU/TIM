@@ -24,6 +24,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.showLectureCreation = false;
         $scope.lectures = [];
         $scope.futureLectures = [];
+        $scope.futureLecture = "";
         $scope.chosenLecture = "";
         $scope.passwordQuess = "";
         $scope.pollingLectures = [];
@@ -75,7 +76,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 }
             })
                 .success(function () {
-                    console.log("Succesfully answered to question");
                 })
                 .error(function () {
                     console.log("Failed to answer to question");
@@ -178,6 +178,17 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 });
         };
 
+        $scope.startFutureLecture = function () {
+            http({
+                url: '/startFutureLecture',
+                method: 'POST',
+                params: {'doc_id': $scope.docId, 'lecture_code': $scope.futureLecture.lecture_code}
+            })
+                .success(function (answer) {
+                    $scope.showLectureView(answer);
+                })
+        };
+
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
             $scope.lectureName = answer.lectureCode;
@@ -210,9 +221,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     $scope.lecturerTable.push(lecturer);
                 }
             }
-
-            $scope.testailua = "Kana";
-
         };
 
         $scope.showBasicView = function (answer) {
@@ -237,9 +245,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             });
 
             angular.forEach(answer.futureLectures, function (lecture) {
-                // TODO: Might be problematic in future, because needs to parse out the time before can do anyhting
-                // with this. Dummy version.
-                if ($scope.futureLectures.indexOf(lecture) == -1) {
+                console.log(lecture);
+                if ($scope.futureLectures.indexOf(lecture.lecture_code) == -1) {
                     $scope.futureLectures.push(lecture);
                 }
             });

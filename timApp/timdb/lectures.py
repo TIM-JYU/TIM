@@ -229,3 +229,24 @@ class Lectures(TimDbBase):
                       """, [lecture_id])
 
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def update_lecture_starting_time(self, lecture_id: "int", start_time: "string", commit: "bool"=True) -> "dict":
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+                        UPDATE Lecture
+                        SET start_time = ?
+                        WHERE lecture_id = ?
+        """, [start_time, lecture_id])
+
+        if commit:
+            self.db.commit()
+
+        cursor.execute("""
+                      SELECT *
+                      FROM Lecture
+                      WHERE lecture_id = ?
+        """, [lecture_id])
+
+        return self.resultAsDictionary(cursor)[0]

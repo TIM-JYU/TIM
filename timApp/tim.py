@@ -7,6 +7,7 @@ import io
 import re
 import time
 import datetime
+import copy
 from time import mktime
 import posixpath
 import threading
@@ -404,6 +405,25 @@ def check_lecture():
         return get_running_lectures(doc_id)
 
 
+@app.route("/startFutureLecture", methods=['POST'])
+def start_future_lecture():
+    if not request.args.get('lecture_code') or not request.args.get("doc_id"):
+        abort(400)
+
+    timdb = getTimDb()
+    lecture_code = request.args.get('lecture_code')
+    doc_id = int(request.args.get("doc_id"))
+    verifyOwnership(doc_id)
+    lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    lecture = timdb.lectures.update_lecture_starting_time(lecture, time_now)
+    students, lecturers = get_lecture_users(timdb, lecture.get("lecture_id"))
+    return jsonResponse({"isLecturer": True, "lectureName": lecture_code, "startTime": lecture.get("start_time"),
+                         "endTime": lecture.get("end_time"), "lectureId": lecture.get("lecture_id"),
+                         "students": students,
+                         "lecturers": lecturers})
+
+
 @app.route('/getAllLecturesFromDocument', methods=['GET'])
 def get_all_lectures():
     if not request.args.get('doc_id'):
@@ -420,9 +440,9 @@ def get_all_lectures():
     for lecture in lectures:
         lecture_info = {"lecture_id": lecture.get("lecture_id"), "lecture_code": lecture.get('lecture_code'),
                         "target": "/showLectureInfo/" + str(lecture.get("lecture_id"))}
-        if lecture.get("start_time") < time_now <= lecture.get("end_time"):
+        if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lectures.append(lecture_info)
-        elif lecture.get("end_time") < time_now:
+        elif lecture.get("start_time") < lecture.get("end_time") < time_now:
             past_lectures.append(lecture_info)
         else:
             future_lectures.append(lecture_info)
@@ -492,15 +512,16 @@ def get_running_lectures(doc_id):
     lecture_code = "Not running"
     list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
     current_lecture_codes = []
-    future_lecture_codes = []
+    future_lectures = []
     is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
         if lecture.get("start_time") <= time_now:
             current_lecture_codes.append(lecture.get("lecture_code"))
         else:
-            future_lecture_codes.append(lecture.get("lecture_code") + " [" + lecture.get("start_time") + "]")
+            future_lectures.append(
+                {"lecture_code": lecture.get("lecture_code"), "lecture_start": lecture.get("start_time")})
     return jsonResponse(
-        {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lecture_codes,
+        {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lectures,
          "lectureCode": lecture_code})
 
 
@@ -545,9 +566,15 @@ def end_lecture():
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     timdb.lectures.set_end_for_lecture(lecture_id, str(now))
 
-    # TODO: remove all activities from the current lecture
+    entries_to_remove = []
+    for actitivty in __user_activity:
+        if actitivty[1] == lecture_id:
+            entries_to_remove.append(actitivty)
 
-    return jsonResponse("")
+    for actitivty in entries_to_remove:
+            del __user_activity[actitivty]
+
+    return get_running_lectures(doc_id)
 
 
 @app.route('/deleteLecture', methods=['POST'])
@@ -565,7 +592,14 @@ def delete_lecture():
             __question_to_be_asked.remove(pair)
     timdb.lectures.delete_lecture(lecture_id, True)
 
-    # TODO: remove all activities from the current lecture
+    entries_to_remove = []
+    for actitivty in __user_activity:
+        if actitivty[1] == lecture_id:
+            entries_to_remove.append(actitivty)
+
+    for actitivty in entries_to_remove:
+            del __user_activity[actitivty]
+
     return get_running_lectures(doc_id)
 
 
@@ -875,9 +909,10 @@ def ask_question():
 
     return jsonResponse("")
 
+
 @app.route("/deleteQuestion", methods=['POST'])
 def delete_question():
-    if not request.args.get("question_id") or  not request.args.get('doc_id'):
+    if not request.args.get("question_id") or not request.args.get('doc_id'):
         abort("400")
 
     doc_id = int(request.args.get('doc_id'))
@@ -888,6 +923,7 @@ def delete_question():
     timdb.questions.delete_question(question_id)
 
     return jsonResponse("")
+
 
 @app.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
