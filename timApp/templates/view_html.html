@@ -98,7 +98,7 @@
             {% include 'lectureinfo_menu.html' %}
             <div ng-show="!inLecture">
             </div>
-            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false" resizable>
+            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false"  resizable>
                 <div class="wall-base" id="wallBase">
                     <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)">
                         <span ng-bind="wallName">Wall</span>
