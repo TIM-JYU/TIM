@@ -580,12 +580,12 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getQuestionHtml = function (questions) {
-            var questionImage = '../../../static/images/questionBubble.png';
+            var questionImage = '../../../static/images/show-question-icon.png';
             var $questionsDiv = $("<div>", {class: 'questions'});
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
-                var img = new Image();
+                var img = new Image(30,30);
                 img.src = questionImage;
                 var $questionDiv = $("<div>", {
                     class: 'questionAdded', html: img, json: questions[i].questionJson, id: questions[i].question_id

@@ -3,9 +3,6 @@
 <div class="menuSection">
     <div id="largeMenu">
         <div class="lectureSection" ng-show="!inLecture">
-            <img id="add-icon" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer"
-                 ng-click="toggleLecture()" title="Add new lecture">
-
             <h1>Now:</h1>
 
             <div ng-show="lectures.length > 0" class="lectureArea">
@@ -13,14 +10,21 @@
                 </select>
                 <input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
                        ng-keypress="passEnterPressed($event)" size="7">
-
-                <div>
-                    <input type="button" ng-click="joinLecture()" value="Join" class="loginSection">
-
-                </div>
+				<div class="iconSection" ng-show="lectures.length > 0">
+						<img id="join-icon" src="../../../static/images/join-icon3.png" class="icon"
+							ng-click="joinLecture()" title="Join the lecture">
+						<img id="add-icon1" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer"
+							ng-click="toggleLecture()" title="Add new lecture">
+				</div>
+                
             </div>
-            <p ng-show="lectures.length <= 0">No running lectures</p>
-
+			<div ng-show="lectures.length <= 0">
+				<p>No running lectures</p>
+				<div class="iconSection">
+					<img id="add-icon2" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer"
+						ng-click="toggleLecture()" title="Add new lecture">
+				</div>
+			</div>
         </div>
         <div class="lectureSection" ng-show="inLecture">
             <h1>Currently:</h1>
@@ -30,22 +34,32 @@
             <p ng-bind="lectureStartTime"></p>
 
             <p ng-bind="lectureEndTime"></p>
-
-
-            <input type="button" ng-click="leaveLecture()" value="Leave" ng-show="inLecture">
-            <input type="button" ng-click="endLecture()" value="End" ng-show="canStop">
             <input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
-
-
+			<div class="iconSection">
+				<img id="leave-icon" src="../../../static/images/leave-icon3.png" class="icon"
+					ng-click="leaveLecture()" title="Leave this lecture" ng-show="inLecture">
+				<img id="stop-icon" src="../../../static/images/stop-icon3.png" class="icon"
+					ng-click="endLecture()" title="End this lecture" ng-show="canStop">
+				<img id="edit-icon" src="../../../static/images/edit-icon3.png" class="icon"
+					title="Edit this lecture" ng-show="canStop">	
+			</div>	
         </div>
-        <div class="lectureSection" ng-show="!inLecture" class="lectureArea">
-            <h1>Next:</h1>
 
-            <div ng-show="futureLectures.length > 0" class="lectureArea">
-                <select ng-model="futureLecture" ng-options="lecture as lecture for lecture in futureLectures">
-                </select>
-            </div>
-            <p ng-show="futureLectures.length <= 0">No upcoming lectures</p>
+        <div class="lectureSection" ng-show="!inLecture">
+            <h1>Next:</h1>
+			<div class="lectureArea">
+				<p ng-show="futureLectures.length <= 0">No upcoming lectures</p>
+				<div ng-show="futureLectures.length > 0">
+					<select ng-model="futureLecture" ng-options="lecture as lecture for lecture in futureLectures">
+					</select>
+				</div>
+				<div class="iconSection" ng-show="futureLectures.length > 0">
+					<img id="start-icon" src="../../../static/images/play-icon3.png" class="icon"
+						title="Start lecture now">
+					<img id="edit-icon2" src="../../../static/images/edit-icon3.png" class="icon"
+						title="Edit this lecture">	
+				</div>
+			</div>
         </div>
         <div class="loginSection">
             {% include 'loginlogout.html' %}
