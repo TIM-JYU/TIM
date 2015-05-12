@@ -12,3 +12,4 @@ bower_components/
 /timApp/modules/cs/images/html
 /docs/YPJ-palkat_1.8.2014_ja_1.8.2015.xlsx
 /converters/demopisteet/*.csv
+tim_secret.py
