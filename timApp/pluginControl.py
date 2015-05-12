@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
-from bs4 import BeautifulSoup
-from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
-from containerLink import plugin_reqs
-from containerLink import get_plugin_tim_url
 from collections import OrderedDict
+import json
+import html
+import re
+
+from bs4 import BeautifulSoup
 import yaml
 from yaml import CLoader
 import yaml.parser
 import yaml.scanner
+
+from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
+from containerLink import plugin_reqs
+from containerLink import get_plugin_tim_url
 from htmlSanitize import sanitize_html
-import json
-import html
-import re
+
 
 def correct_yaml(text):
     """
@@ -186,11 +189,12 @@ def try_load_json(json_str):
         return json_str
 
 
-def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
+def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True):
     """ "Pluginifies" or sanitizes the specified HTML blocks by inspecting each block
-    for plugin markers, calling the corresponding plugin route if such is found. Sanitizes HTML
-    for each non-plugin block.
+    for plugin markers, calling the corresponding plugin route if such is found. The input
+    HTML is assumed to be sanitized.
 
+    :param sanitize: Whether the blocks should be sanitized before processing.
     :param blocks: A list of HTML blocks to be processed.
     :param user: The current user's username.
     :param answer_db: A reference to the answer database.
@@ -208,6 +212,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
     plugins = {}
     state_map = {}
     for idx, block in enumerate(blocks):
+        if sanitize:
+            block = sanitize_html(block)
         found_plugins = find_plugins(block)
         if len(found_plugins) > 0:
             assert len(found_plugins) == 1
@@ -237,7 +243,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
             final_html_blocks.append({'html': '',  # This will be filled later
                                       'task_id': task_id})
         else:
-            final_html_blocks.append({'html': sanitize_html(block)})
+            final_html_blocks.append({'html': block})
 
     if custom_state is None and user_id != 0:
         answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))

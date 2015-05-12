@@ -32,7 +32,6 @@ PLUGINS = {
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None):
-    print("Calling plugin {} {} route with data: {}".format(plugin, route, data))
     plug = get_plugin(plugin)
     try:
         request = requests.request(method, plug['host'] + route + "/", data=data, timeout=5, headers=headers)

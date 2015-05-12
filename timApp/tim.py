@@ -16,6 +16,7 @@ from bs4 import UnicodeDammit
 
 from ReverseProxied import ReverseProxied
 import containerLink
+from routes.cache import cache
 from routes.answer import answers
 from routes.edit import edit_page
 from routes.manage import manage_page
@@ -36,6 +37,8 @@ if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
 else:
     assert default_secret != app.config['SECRET_KEY']
 #Compress(app)
+
+cache.init_app(app)
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)

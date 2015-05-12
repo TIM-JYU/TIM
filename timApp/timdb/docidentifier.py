@@ -7,6 +7,9 @@ class DocIdentifier(namedtuple("DocIdentifier", "id hash")):
     """A document identifier consists of the id of the document and the version hash."""
     __slots__ = ()
 
+    def __repr__(self):
+        return self.__str__()
+
     def __str__(self):
         return str(self.id) + ':' + str(self.hash)
 

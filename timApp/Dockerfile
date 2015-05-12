@@ -20,6 +20,7 @@ run apt-get install -y libyaml-dev # C-parser for PyYAML
 
 run pip3 install flask
 run pip3 install flask-compress
+run pip3 install flask-cache
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
 run pip3 install hypothesis

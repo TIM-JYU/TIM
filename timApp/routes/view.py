@@ -2,6 +2,7 @@
 
 from flask import Blueprint, render_template, redirect, url_for
 from .common import *
+from .cache import cache
 
 import pluginControl
 
@@ -63,6 +64,11 @@ def try_return_folder(doc_name):
                            docName=folder_name)
 
 
+@cache.memoize(3600)
+def get_document(document_id):
+    return getTimDb().documents.getDocumentAsHtmlBlocksSanitized(document_id)
+
+
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
@@ -89,7 +95,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
             abort(403)
 
     version = {'hash': timdb.documents.getNewestVersionHash(doc_id)}
-    xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
+    xs = get_document(DocIdentifier(doc_id, version['hash']))
     doc = timdb.documents.getDocument(doc_id)
     start_index = 0
     if view_range is not None:
@@ -110,7 +116,8 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                                                 current_user['name'],
                                                                 timdb.answers,
                                                                 doc_id,
-                                                                current_user['id'])
+                                                                current_user['id'],
+                                                                sanitize=False)
     if hide_names_in_teacher(doc_id):
         pass
         if not timdb.users.userIsOwner(current_user['id'], doc_id)\
