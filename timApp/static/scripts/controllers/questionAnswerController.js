@@ -68,8 +68,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         htmlSheet += "<td>" + row.text + "</td>";
                         //TODO: Needs correct JSON to be made better way
                         angular.forEach(row.COLUMNS, function () {
-                            htmlSheet += "<td><label> <input type='radio' name='group" +
-                            row.type.replace(/ /g, '') + "'" +
+                            var group;
+                            if ($scope.json.TYPE == "matrix") {
+                                group = "group" + row.text.replace(/[^a-zA-Z]/g, "")
+                            } else {
+                                group = "group" + row.type.replace(/[^a-zA-Z]/g, "")
+                            }
+                            htmlSheet += "<td><label> <input type='radio' name='" + group + "'" +
                             " value='" + row.text + "'" +
                             "></label></td>";
                             nextBoolean = !nextBoolean;
@@ -134,9 +139,18 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 var answers = [];
                 $interval.cancel(promise);
                 if (angular.isDefined($scope.json.DATA.ROWS)) {
-                    var groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/ /g, '');
-                    answers.push($('input[name=' + groupName + ']:checked').val());
+                    if ($scope.json.TYPE == "matrix") {
+                        for (var i = 0; i < $scope.json.DATA.ROWS.length; i++) {
+                            var groupName;
+                            groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z]/g, '')
 
+                            answers.push($('input[name=' + groupName + ']:checked').val());
+                        }
+                    }
+                    else {
+                        groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/[^a-zA-Z]/g, '')
+                        answers.push($('input[name=' + groupName + ']:checked').val());
+                    }
                 }
 
                 if (angular.isDefined($scope.json.DATA.COLUMNS)) {

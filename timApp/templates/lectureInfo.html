@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Info{% endblock %}
+{% block head %}
+    {{ super() }}
+
+    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
+    <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
+
+    <script>
+
+        var modules = checkModules([
+            {% for dep in jsMods %}
+                "{{ dep|safe}}",
+            {% endfor %}
+        ]);
+
+    </script>
+    <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/createDialog.js') }}"></script>
+
+    <script>
+        var docId = {{docId|tojson|safe}};
+        var lectureId = {{lectureId|tojson|safe}};
+        var lectureCode = {{lectureCode|tojson|safe}};
+        var lectureStartTime = {{lectureStartTime|tojson|safe}};
+        var lectureEndTime = {{lectureEndTime|tojson|safe}};
+    </script>
+
+{% endblock %}
+{% block content %}
+    <div ng-app="timApp" ng-controller="LectureInfoController">
+        <h1 ng-bind="lectureCode"></h1>
+
+        <div>
+            <p>Start time: </p>
+
+            <p ng-bind="lectureStartTime"></p>
+
+            <p>End time:</p>
+
+            <p ng-bind="lectureEndTime"></p>
+        </div>
+
+        <p>Lecture wall messages:</p>
+        <textarea ng-model="msg" readonly></textarea>
+
+        <div>
+            <input type="button" ng-click="deleteLecture()" value="Delete lecture">
+        </div>
+    </div>
+{% endblock %}
+

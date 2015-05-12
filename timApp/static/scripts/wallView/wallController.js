@@ -328,9 +328,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             })
                 .success(function () {
                     $scope.newMsg = "";
-                    // TODO: Find way to do this without getElementById
-                    var textarea = document.getElementById('wallArea');
-                    textarea.scrollTop = textarea.scrollHeight;
+                    //TODO: Fix this to scroll bottom without cheating.
+                    var wallArea = $('#wallArea');
+                    wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
+
                 })
                 .error(function () {
                     console.log("Can't send message or something");
@@ -374,7 +375,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 .success(function (answer) {
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
                     $scope.getLectureAnswers(answer);
-                    //TODO: Lopeta joskus
 
                 })
                 .error(function () {
