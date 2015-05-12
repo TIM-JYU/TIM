@@ -15,3 +15,4 @@ PROFILE            = False
 SECRET_KEY         = '85db8764yhfZz7-U.-y968buyn89b54y8y45tg'
 UPLOAD_FOLDER      = "./media/images/"
 USERNAME           = 'admin'
+SECRET_FILE_PATH   = '/opt/tim_secret.py'

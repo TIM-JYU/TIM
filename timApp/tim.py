@@ -30,6 +30,11 @@ from routes.common import *
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
+default_secret = app.config['SECRET_KEY']
+if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
+    print('WARNING: secret file not found, using default values - do not run in production!')
+else:
+    assert default_secret != app.config['SECRET_KEY']
 #Compress(app)
 
 app.register_blueprint(settings_page)
