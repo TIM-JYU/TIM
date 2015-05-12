@@ -898,6 +898,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.question = {
         question: "",
+        matrixType: "",
         answerFieldType: ""
     };
 
@@ -916,23 +917,25 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-        //scope.question.type = type;
+        if (type == 'radio' || type == 'checkbox') scope.question.answerFieldType = type;
+        if (type == 'true-false') scope.question.answerFieldType = 'radio';
+        if (type == 'matriisi') {
+            if (scope.question.matrixType == "radiobutton-horizontal" || scope.question.matrixType == "radiobutton-vertical") scope.question.answerFieldType = "radio";
+            if (scope.question.matrixType == "textArea") scope.question.answerFieldType = "textArea";
+            if (scope.question.matrixType == "checkbox") scope.question.answerFieldType = "checkbox";
+        }
 
 
         if (scope.rows.length > 0) {
+            scope.columnHeaders.splice(0, scope.columnHeaders.length);
             for (var i = 0; i < scope.rows.length; i++) {
-
-                if (scope.rows[i].columns.length > columnsCount) {
-                    scope.rows[i].columns.splice(columnsCount, scope.rows[i].columns.length);
-                }
-
-                if (scope.rows[i].columns.length < columnsCount) {
-                    for (var j = scope.rows[i].columns.length; j < columnsCount; j++) {
-                        scope.addCol(j);
-                    }
-                }
-
+                scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
             }
+
+            for (var i = 0; i < columnsCount; i++) {
+                scope.addCol(i);
+            }
+
         } else {
 
             var columnHeaders = [];
@@ -947,7 +950,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                         text: 'test',
                         questionPlaceholder: 'column',
                         type: "answer",
-                        value: 'scope.question.answerFieldType'
+                        answerFiledType: scope.question.answerFieldType
                     }
                 }
                 scope.rows[i] = {
@@ -988,7 +991,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 id: location,
                 rowId: i,
                 type: "answer",
-                value: scope.question.answerFieldType
+                value: '',
+                answerFiledType: scope.question.answerFieldType
             });
         }
 
@@ -1003,8 +1007,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     id: j,
                     rowId: location,
                     type: "answer",
-                    value: scope.question.answerFieldType
-
+                    value: '',
+                    answerFiledType: scope.question.answerFieldType
                 };
 
             }
@@ -1108,7 +1112,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 questionJson += '"id":"' + scope.rows[i].columns[j].id + '",';
                 questionJson += '"rowId":"' + scope.rows[i].columns[j].rowId + '",';
                 questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
-                questionJson += '"value":"' + scope.rows[i].columns[j].value + '"';
+//                questionJson += '"value":"' + scope.rows[i].columns[j].value + '",';
+                questionJson += '"answerFieldType":"' + scope.rows[i].columns[j].answerFiledType + '"';
                 questionJson += '},'
             }
 
