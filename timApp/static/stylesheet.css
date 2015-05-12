@@ -2,7 +2,7 @@
 	text-align: justify;
 }
 
-.paragraph, .par, .header, .viewLogin {
+.paragraph, .par, .header, .viewLogin , .footer{
 	max-width: 52em; 
 }
 
@@ -1662,7 +1662,7 @@ button:disabled {
 
 @media screen and (min-width: 60em) {
     .body {
-        margin-left: 60em !important;
+    /*    margin-left: 60em !important; */
     }
 }
 
@@ -1723,4 +1723,32 @@ code {
 .header {
   padding-bottom: 20px;
   border-bottom: 1px solid #e5e5e5;
+}
+
+/* Custom page footer */
+.footer {
+  padding-top: 19px;
+  color: #777;
+  border-top: 1px solid #e5e5e5;
+}
+
+footer p {
+  float: left; 
+  margin-left: 0px;
+  display: inline;
+}
+
+.footer a {
+  color: #3cc;
+}
+
+.footer ul {
+  float: right;
+  margin-right: 0px;
+  display: inline;
+  list-style-type: none;
+}
+
+.footer>li {
+  display: inline-block;
 }
