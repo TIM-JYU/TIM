@@ -433,7 +433,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                         oldUser = false;
                         for (i = 0; i < answer.lecturers.length; i++) {
-                            for (index = 0; index < $scope.lecturerTable.length; i++) {
+                            var loopLenght = $scope.lecturerTable.length;
+                            if (answer.lecturers.length < $scope.lecturerTable.length){
+                                loopLenght = answer.lecturers.length;
+                            }
+                            for (index = 0; index < loopLenght; i++) {
                                 if ($scope.lecturerTable[index].name == answer.lecturers[i].name) {
                                     oldUser = true;
                                     $scope.lecturerTable[index].active = answer.lecturers[i].active;
