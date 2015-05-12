@@ -125,14 +125,21 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-        sc.showQuestion = function ($par, $question) {
+        sc.showQuestionById = function (questionId) {
+            var question = $("#" + questionId);
+            sc.showQuestion(question);
+
+        };
+
+        sc.showQuestion = function (question) {
             var json = "No data";
             var qId = -1;
-            if ($question[0].hasAttribute('json')) {
-                json = $question[0].getAttribute('json');
-                qId = $question[0].getAttribute('id');
-            }
+            if (question[0].hasAttribute('json')) {
+                json = question[0].getAttribute('json');
+                qId = question[0].getAttribute('id');
 
+            }
+            var docId = sc.docId;
             var lectureId = "";
             sc.$on('getLectureId', function (event, response) {
                 lectureId = response;
@@ -144,24 +151,15 @@ timApp.controller("ViewCtrl", [
                 id: 'simpleDialog',
                 title: 'Question dialog',
                 backdrop: true,
-                success: {
-                    label: 'Ask', fn: function () {
-                        http({
-                            url: '/askQuestion',
-                            method: 'GET',
-                            params: {lecture_id: lectureId, question_id: qId, doc_id: sc.docId}
-                        })
-                            .success(function () {
-                                console.log("Added question to be asked");
-                            })
-                            .error(function (error) {
-                                console.log(error);
-                            });
-                    }
-                },
-                controller: 'ComplexModalController'
+                footerTemplate: "<button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>" +
+                "<button ng-click='close()' class='timButton questionButton'>Close</button>" +
+                "<button ng-click='ask()' class='timButton questionButton'>Ask</button>",
+                controller: 'ShowQuestionController'
             }, {
-                json: json
+                json: json,
+                lectureId: lectureId,
+                qId: qId,
+                docId: docId
             });
         };
 
@@ -445,7 +443,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.addEvent(".questionAdded", function () {
-            sc.showQuestion($(this).parent().parent().parent(), $(this))
+            sc.showQuestion($(this))
         });
 
         // Note-related functions
@@ -585,11 +583,11 @@ timApp.controller("ViewCtrl", [
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
-                var img = new Image(30,30);
+                var img = new Image(30, 30);
                 img.src = questionImage;
                 var $questionDiv = $("<div>", {
                     class: 'questionAdded', html: img, json: questions[i].questionJson, id: questions[i].question_id
-                })
+                });
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
@@ -832,11 +830,14 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
-    function ($scope, json, controller) {
+timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', '$http',
+    function ($scope, json, lectureId, qId, docId, http) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
         $scope.jsonRaw = json;
+        $scope.docId = docId;
+        $scope.qId = qId;
+        $scope.lectureId = lectureId;
 
         var jsonData = JSON.parse(json);
         $scope.jsonRaw = {
@@ -845,6 +846,50 @@ timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
             rows: jsonData.DATA.ROWS,
             headers: jsonData.DATA.HEADERS
         };
+        $scope.ask = function () {
+            console.log($scope.docId);
+            console.log($scope.qId);
+            console.log($scope.lectureId);
+            http({
+                url: '/askQuestion',
+                method: 'GET',
+                params: {lecture_id: $scope.lectureId, question_id: $scope.qId, doc_id: $scope.docId}
+            })
+                .success(function () {
+                    $scope.$modalClose();
+                    console.log("Added question to be asked");
+                })
+                .error(function (error) {
+                    $scope.$modalClose();
+                    console.log(error);
+                });
+        };
+
+        $scope.close = function () {
+            $scope.$modalClose();
+        };
+
+        $scope.deleteQuestion = function () {
+            var confirmDi = confirm("Are you sure you want to delete this question?");
+            if (confirmDi) {
+                http({
+                    url: '/deleteQuestion',
+                    method: 'POST',
+                    params: {question_id: $scope.qId, doc_id: $scope.docId}
+                })
+                    .success(function () {
+                        $scope.$modalClose();
+                        console.log("Deleted question");
+                    })
+                    .error(function (error) {
+                        $scope.$modalClose();
+                        console.log(error);
+                    });
+
+            }
+        }
+
+
     }
 ]);
 
@@ -1047,7 +1092,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             if (i > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
             questionJson += ']';
             questionJson += ',';
-        } else{
+        } else {
             questionJson += "],"
         }
 

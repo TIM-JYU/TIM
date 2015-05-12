@@ -875,6 +875,19 @@ def ask_question():
 
     return jsonResponse("")
 
+@app.route("/deleteQuestion", methods=['POST'])
+def delete_question():
+    if not request.args.get("question_id") or  not request.args.get('doc_id'):
+        abort("400")
+
+    doc_id = int(request.args.get('doc_id'))
+    question_id = int(request.args.get('question_id'))
+
+    verifyOwnership(doc_id)
+    timdb = getTimDb()
+    timdb.questions.delete_question(question_id)
+
+    return jsonResponse("")
 
 @app.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():

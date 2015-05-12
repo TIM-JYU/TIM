@@ -164,6 +164,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             createDialog('../../../static/templates/start_lecture.html', {
                     id: 'createL',
                     title: '',
+                    footerTemplate: " ",
                     controller: 'CreateLectureCtrl'/*,
                      footerTemplate:
                      '<div class="buttons">' +
