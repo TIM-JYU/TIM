@@ -413,8 +413,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
 
                         var oldUser = false;
-                        console.log(answer.students);
-                        console.log($scope.studentTable);
                         for (var i = 0; i < answer.students.length; i++) {
                             for (var index = 0; index < $scope.studentTable.length; index++) {
                                 if ($scope.studentTable[index].name == answer.students[i].name) {
@@ -435,11 +433,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                         oldUser = false;
                         for (i = 0; i < answer.lecturers.length; i++) {
-                            var loopLenght = $scope.lecturerTable.length;
-                            if (answer.lecturers.length < $scope.lecturerTable.length) {
-                                loopLenght = answer.lecturers.length;
-                            }
-                            for (index = 0; index < loopLenght; index++) {
+                            for (index = 0; index < $scope.lecturerTable.length; index++) {
                                 if ($scope.lecturerTable[index].name == answer.lecturers[i].name) {
                                     oldUser = true;
                                     $scope.lecturerTable[index].active = answer.lecturers[i].active;
