@@ -218,7 +218,7 @@
                         <ul>
                             <h4>Lecture questions</h4>
                             <li ng-repeat="question in lectureQuestions">
-                                <a>{{ question.question }}</a>
+                                <a ng-click="showQuestionById(question.question_id)">{{ question.question }}</a>
                             </li>
                             <h4>Material questions</h4>
                             <li ng-repeat="question in materialQuestion">

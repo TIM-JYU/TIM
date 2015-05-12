@@ -60,23 +60,31 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         htmlSheet += "<th>" + header.text + "</th>";
                     });
                     htmlSheet += "</tr>";
+
+
                 }
 
                 if (angular.isDefined($scope.json.DATA.ROWS)) {
                     angular.forEach($scope.json.DATA.ROWS, function (row) {
                         htmlSheet += "<tr>";
                         htmlSheet += "<td>" + row.text + "</td>";
+                        var header = 0;
                         //TODO: Needs correct JSON to be made better way
-                        angular.forEach(row.COLUMNS, function () {
+                        angular.forEach(row.COLUMNS, function (column) {
                             var group;
+
                             if ($scope.json.TYPE == "matrix") {
                                 group = "group" + row.text.replace(/[^a-zA-Z]/g, "")
+                                htmlSheet += "<td><label> <input type='radio' name='" + group + "'" +
+                                " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
+                                "></label></td>";
+                                header++;
                             } else {
                                 group = "group" + row.type.replace(/[^a-zA-Z]/g, "")
+                                htmlSheet += "<td><label> <input type='radio' name='" + group + "'" +
+                                " value='" + row.text + "'" +
+                                "></label></td>";
                             }
-                            htmlSheet += "<td><label> <input type='radio' name='" + group + "'" +
-                            " value='" + row.text + "'" +
-                            "></label></td>";
                             nextBoolean = !nextBoolean;
                         });
                         htmlSheet += "</tr>";
