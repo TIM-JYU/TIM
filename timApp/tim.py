@@ -296,7 +296,7 @@ def get_updates():
         current_user = getCurrentUserId()
 
         lecture = timdb.lectures.get_lecture(lecture_id)
-        if lecture[0].get("lecturer") == current_user:
+        if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
             is_lecturer = True
         else:
             is_lecturer = False
@@ -379,11 +379,10 @@ def add_question():
 
 @app.route('/checkLecture', methods=['GET'])
 def check_lecture():
-    arg_id = request.args.get('doc_id')
-    if not arg_id:
-        return abort(400)
+    if not request.args.get('doc_id'):
+        abort(400)
 
-    doc_id = int(arg_id)
+    doc_id = int(request.args.get('doc_id'))
     timdb = getTimDb()
     current_user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_lecture(doc_id, current_user)
@@ -403,6 +402,49 @@ def check_lecture():
                              "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
     else:
         return get_running_lectures(doc_id)
+
+
+@app.route('/getAllLecturesFromDocument', methods=['GET'])
+def get_all_lectures():
+    if not request.args.get('doc_id'):
+        abort(400)
+
+    doc_id = int(request.args.get('doc_id'))
+    timdb = getTimDb()
+
+    lectures = timdb.lectures.get_all_lectures_from_document(doc_id)
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    current_lectures = []
+    past_lectures = []
+    future_lectures = []
+    for lecture in lectures:
+        lecture_info = {"lecture_id": lecture.get("lecture_id"), "lecture_code": lecture.get('lecture_code'),
+                        "target": "/showLectureInfo/" + str(lecture.get("lecture_id"))}
+        if lecture.get("start_time") < time_now <= lecture.get("end_time"):
+            current_lectures.append(lecture_info)
+        elif lecture.get("end_time") < time_now:
+            past_lectures.append(lecture_info)
+        else:
+            future_lectures.append(lecture_info)
+
+    return jsonResponse(
+        {"currentLectures": current_lectures, "futureLectures": future_lectures, "pastLectures": past_lectures})
+
+
+@app.route('/showLectureInfo/<int:lecture_id>', methods=['GET'])
+def show_lecture_info(lecture_id):
+    timdb = getTimDb()
+    lecture = timdb.lectures.get_lecture(lecture_id)
+    if len(lecture) <= 0:
+        abort(400)
+
+    lecture = lecture[0]
+    return render_template("lectureInfo.html",
+                           docId=lecture.get("doc_id"),
+                           lectureId=lecture_id,
+                           lectureCode=lecture.get("lecture_code"),
+                           lectureStartTime=lecture.get("start_time"),
+                           lectureEndTime=lecture.get("end_time"))
 
 
 # Gets users from specific lecture
@@ -502,6 +544,9 @@ def end_lecture():
             __question_to_be_asked.remove(pair)
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     timdb.lectures.set_end_for_lecture(lecture_id, str(now))
+
+    # TODO: remove all activities from the current lecture
+
     return jsonResponse("")
 
 
@@ -520,7 +565,7 @@ def delete_lecture():
             __question_to_be_asked.remove(pair)
     timdb.lectures.delete_lecture(lecture_id, True)
 
-    del __user_activity[getCurrentUserId(), lecture_id]
+    # TODO: remove all activities from the current lecture
     return get_running_lectures(doc_id)
 
 

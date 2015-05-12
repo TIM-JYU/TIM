@@ -65,14 +65,15 @@ class Lectures(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def get_all_lecture(self) -> 'list(dict)':
+    def get_all_lectures_from_document(self, document_id:"int") -> 'list(dict)':
         cursor = self.db.cursor()
 
         cursor.execute(
             """
             SELECT *
             FROM Lecture
-            """
+            WHERE doc_id = ?
+            """, [document_id]
         )
 
         return self.resultAsDictionary(cursor)
