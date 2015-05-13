@@ -109,18 +109,30 @@
 		</div>
 		<div class="lecturesList">
 			<div id="currentList">
+				{% raw %}
 				<ul>
-					<li> <p> Lecture <input type="submit" value="Join"> <input type="submit" value="Edit"></p> </li>
-					<li> <p> Another lecture  <input type="submit" value="Join"> <input type="submit" value="Edit"></p></li>
-					<li> <p> Add new lecture </p></li>
+					<li ng-repeat="lecture in currentLecturesList">
+                        <p>{{ lecture.lecture_code }}<input type="submit" value="Join"> <input type="submit" value="Edit"></p>
+                    </li>
+					<li ng-show="currentLecturesList.length == 0">
+                        <p>No lectures</p>
+                    </li>
+					<li> <p ng-click="toggleLecture()" id="addLecture1"> Add new lecture </p></li>
 				</ul>
+				{% endraw %}
 			</div>
 			<div id="futureList">
+				{% raw %}
 				<ul>
-					<li> <p> FutureLecture  <input type="submit" value="Start"> <input type="submit" value="Edit"></p></li>
-					<li> <p> Another Futurelecture  <input type="submit" value="Start"> <input type="submit" value="Edit"></p></li>
-					<li> <p> Add new lecture </p></li>
+					<li ng-repeat="lecture in futureLecturesList"> 
+						<p> {{ lecture.lecture_code }}<input type="submit" value="Start"> <input type="submit" value="Edit"></p>
+					</li>
+					<li ng-show="futureLecturesList.length == 0">
+                        <p>No lectures</p>
+                    </li>
+					<li> <p ng-click="toggleLecture()" id="addLecture2"> Add new lecture </p></li>
 				</ul>
+				{% endraw %}
 			</div>
 		</div>
 	</div>

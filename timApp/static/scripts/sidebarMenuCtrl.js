@@ -14,6 +14,8 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 		
 		$scope.showSidebar = function() {
 			$('.menu').slideToggle();
+			$('#futureList').hide();
+			$('#currentList').hide();
 			$scope.indexSidebarState = 'hidden';
             $scope.lecturesSidebarState = 'hidden';
             $scope.questionSidebarState = 'hidden';

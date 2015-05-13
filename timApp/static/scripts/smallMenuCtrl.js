@@ -1,5 +1,7 @@
-timApp.controller("SmallMenuCtrl", ['$scope', '$window',
-    function ($scope, $window) {
+timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
+    function ($scope, $window, $http) {
+		$scope.currentLecturesList = [];
+        $scope.futureLecturesList = [];
 		
 		var ready = function() {
 			$('#currentList').hide();
@@ -9,11 +11,40 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window',
 		$scope.openCurrentLectureMenu = function() {
 			$('#currentList').slideToggle();
 			$('#futureList').hide();
+			$('.menu').hide();
+			
+			 $http({
+                    url: '/getAllLecturesFromDocument',
+                    method: 'GET',
+                    params: {'doc_id': $scope.docId}
+                })
+                    .success(function (lectures) {
+                        $scope.currentLecturesList = lectures.currentLectures;
+
+                    })
+                    .error(function () {
+                        console.log("Couldn't fetch the lectures");
+                    })
+			
 		};
 		
 		$scope.openFutureLectureMenu = function() {
 			$('#futureList').slideToggle();
 			$('#currentList').hide();
+			$('.menu').hide();
+			
+			 $http({
+                    url: '/getAllLecturesFromDocument',
+                    method: 'GET',
+                    params: {'doc_id': $scope.docId}
+                })
+                    .success(function (lectures) {
+                        $scope.futureLecturesList = lectures.futureLectures;
+                    })
+                    .error(function () {
+                        console.log("Couldn't fetch the lectures");
+                    })
+			
 		};
 		
 		var w = angular.element($window);

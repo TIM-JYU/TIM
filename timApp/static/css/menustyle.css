@@ -221,6 +221,10 @@ input[type="button"] {
 		width: 80%;
 	}
 	
+	.lecturesList img {
+		
+	}
+	
 	.lecturesList div ul {
 		display: block;
 	}
@@ -238,6 +242,7 @@ input[type="button"] {
 		background:#3cc;
 		text-decoration:none;
 		color: white;
+		width: 90%;
     }
 	
 	#smallLogin input[type="submit"] {
@@ -261,6 +266,10 @@ input[type="button"] {
 		font-family: verdana;
 		font-size: 20px;
 		margin: 0;
+	}
+	
+	#addLecture1, #addLecture2 {
+		cursor: pointer;
 	}
 	
 	.smallIconSection img{
