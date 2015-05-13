@@ -1420,7 +1420,7 @@ img.console {
 	margin: 0;
 }
 
-.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar{
+.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
 	position: fixed;
     top: 0;
     left: 45px;
@@ -1471,7 +1471,7 @@ img.console {
 
 .people-sidebar li {
 	list-style:none;
-
+}
 
 .index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
     list-style-image: url("/static/images/minus.png");
