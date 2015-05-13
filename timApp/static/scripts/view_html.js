@@ -125,43 +125,42 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-        sc.showQuestion = function ($par, $question) {
+        sc.showQuestionById = function (questionId) {
+            var question = $("#" + questionId);
+            sc.showQuestion(question);
+
+        };
+
+        sc.showQuestion = function (question) {
             var json = "No data";
             var qId = -1;
-            if ($question[0].hasAttribute('json')) {
-                json = $question[0].getAttribute('json');
-                qId = $question[0].getAttribute('id');
-            }
+            if (question[0].hasAttribute('json')) {
+                json = JSON.parse(question[0].getAttribute('json'));
+                qId = question[0].getAttribute('id');
 
+            }
+            var docId = sc.docId;
             var lectureId = "";
             sc.$on('getLectureId', function (event, response) {
                 lectureId = response;
             });
 
-            $rootScope.$broadcast('get_lectureId', 'lecture_id');
+            var header = json.QUESTION;
 
+            $rootScope.$broadcast('get_lectureId', 'lecture_id');
             createDialog('../../../static/templates/showQuestionTeacher.html', {
                 id: 'simpleDialog',
-                title: 'Question dialog',
+                title: "",
                 backdrop: true,
-                success: {
-                    label: 'Ask', fn: function () {
-                        http({
-                            url: '/askQuestion',
-                            method: 'GET',
-                            params: {lecture_id: lectureId, question_id: qId, doc_id: sc.docId}
-                        })
-                            .success(function () {
-                                console.log("Added question to be asked");
-                            })
-                            .error(function (error) {
-                                console.log(error);
-                            });
-                    }
-                },
-                controller: 'ComplexModalController'
+                footerTemplate: "<button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>" +
+                "<button ng-click='close()' class='timButton questionButton'>Close</button>" +
+                "<button ng-click='ask()' class='timButton questionButton'>Ask</button>",
+                controller: 'ShowQuestionController'
             }, {
-                json: json
+                json: json,
+                lectureId: lectureId,
+                qId: qId,
+                docId: docId
             });
         };
 
@@ -445,7 +444,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.addEvent(".questionAdded", function () {
-            sc.showQuestion($(this).parent().parent().parent(), $(this))
+            sc.showQuestion($(this))
         });
 
         // Note-related functions
@@ -585,11 +584,11 @@ timApp.controller("ViewCtrl", [
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
-                var img = new Image(30,30);
+                var img = new Image(30, 30);
                 img.src = questionImage;
                 var $questionDiv = $("<div>", {
                     class: 'questionAdded', html: img, json: questions[i].questionJson, id: questions[i].question_id
-                })
+                });
                 $questionsDiv.append($questionDiv);
             }
             return $questionsDiv;
@@ -832,19 +831,65 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller('ComplexModalController', ['$scope', 'json', '$controller',
-    function ($scope, json, controller) {
+timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', '$http',
+    function ($scope, json, lectureId, qId, docId, http) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
         $scope.jsonRaw = json;
+        $scope.docId = docId;
+        $scope.qId = qId;
+        $scope.lectureId = lectureId;
 
-        var jsonData = JSON.parse(json);
+        var jsonData = json;
         $scope.jsonRaw = {
+            question: jsonData.QUESTION,
             type: jsonData.TYPE,
+            question: jsonData.QUESTION,
             time: jsonData.TIME,
             rows: jsonData.DATA.ROWS,
             headers: jsonData.DATA.HEADERS
+
         };
+        $scope.ask = function () {
+            http({
+                url: '/askQuestion',
+                method: 'GET',
+                params: {lecture_id: $scope.lectureId, question_id: $scope.qId, doc_id: $scope.docId}
+            })
+                .success(function () {
+                    $scope.$modalClose();
+                })
+                .error(function (error) {
+                    $scope.$modalClose();
+                    console.log(error);
+                });
+        };
+
+        $scope.close = function () {
+            $scope.$modalClose();
+        };
+
+        $scope.deleteQuestion = function () {
+            var confirmDi = confirm("Are you sure you want to delete this question?");
+            if (confirmDi) {
+                http({
+                    url: '/deleteQuestion',
+                    method: 'POST',
+                    params: {question_id: $scope.qId, doc_id: $scope.docId}
+                })
+                    .success(function () {
+                        $scope.$modalClose();
+                        console.log("Deleted question");
+                    })
+                    .error(function (error) {
+                        $scope.$modalClose();
+                        console.log(error);
+                    });
+
+            }
+        }
+
+
     }
 ]);
 
@@ -853,6 +898,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.question = {
         question: "",
+        matrixType: "",
         answerFieldType: ""
     };
 
@@ -871,23 +917,20 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-        //scope.question.type = type;
-
+        if (type == 'radio' || type == 'checkbox') scope.question.answerFieldType = type;
+        if (type == 'true-false') scope.question.answerFieldType = 'radio';
+        if (type == 'matriisi') scope.question.answerFieldType = 'matriisi';
 
         if (scope.rows.length > 0) {
+            scope.columnHeaders.splice(0, scope.columnHeaders.length);
             for (var i = 0; i < scope.rows.length; i++) {
-
-                if (scope.rows[i].columns.length > columnsCount) {
-                    scope.rows[i].columns.splice(columnsCount, scope.rows[i].columns.length);
-                }
-
-                if (scope.rows[i].columns.length < columnsCount) {
-                    for (var j = scope.rows[i].columns.length; j < columnsCount; j++) {
-                        scope.addCol(j);
-                    }
-                }
-
+                scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
             }
+
+            for (var i = 0; i < columnsCount; i++) {
+                scope.addCol(i);
+            }
+
         } else {
 
             var columnHeaders = [];
@@ -902,7 +945,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                         text: 'test',
                         questionPlaceholder: 'column',
                         type: "answer",
-                        value: 'scope.question.answerFieldType'
+                        answerFiledType: scope.question.answerFieldType
                     }
                 }
                 scope.rows[i] = {
@@ -943,7 +986,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 id: location,
                 rowId: i,
                 type: "answer",
-                value: scope.question.answerFieldType
+                value: '',
+                answerFiledType: scope.question.answerFieldType
             });
         }
 
@@ -958,8 +1002,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     id: j,
                     rowId: location,
                     type: "answer",
-                    value: scope.question.answerFieldType
-
+                    value: '',
+                    answerFiledType: scope.question.answerFieldType
                 };
 
             }
@@ -1027,6 +1071,14 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.createQuestion = function () {
+        if (scope.question.answerFieldType == 'matriisi') {
+            if (scope.question.matrixType == "radiobutton-horizontal" || scope.question.matrixType == "radiobutton-vertical") scope.question.answerFieldType = "radio";
+            if (scope.question.matrixType == "textArea") scope.question.answerFieldType = "text";
+            if (scope.question.matrixType == "checkbox") scope.question.answerFieldType = "checkbox";
+        }
+
+
+
         var url;
         var doc_id = scope.docId;
         var $par = scope.par;
@@ -1047,7 +1099,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             if (i > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
             questionJson += ']';
             questionJson += ',';
-        } else{
+        } else {
             questionJson += "],"
         }
 
@@ -1063,7 +1115,8 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 questionJson += '"id":"' + scope.rows[i].columns[j].id + '",';
                 questionJson += '"rowId":"' + scope.rows[i].columns[j].rowId + '",';
                 questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
-                questionJson += '"value":"' + scope.rows[i].columns[j].value + '"';
+//                questionJson += '"value":"' + scope.rows[i].columns[j].value + '",';
+                questionJson += '"answerFieldType":"' + scope.question.answerFieldType + '"';
                 questionJson += '},'
             }
 

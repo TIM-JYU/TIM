@@ -1,16 +1,16 @@
 .content {
-	max-width: 52em;
-	text-align: justify;
+    max-width: 52em;
+    text-align: justify;
     margin-right: 1em;
 }
 
-.paragraph, .par  {
-	max-width: 52em;
+.paragraph, .par {
+    max-width: 52em;
 }
 
 body {
-	max-width: 60.2em;
-	text-align: justify;
+    max-width: 60.2em;
+    text-align: justify;
 }
 
 .correct {
@@ -25,10 +25,10 @@ body {
 
 .mcq table p {
     margin-left: 0;
-	text-align: left;
+    text-align: left;
 }
 
-.mcq table  {
+.mcq table {
     left: 2em;
 }
 
@@ -43,54 +43,120 @@ body {
 }
 
 .flashes li {
-	list-style-type: none;
-	border: 1px solid black;
-	border-radius: 3px;
-	padding: 0.5em;
+    list-style-type: none;
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 0.5em;
 }
 
 /*=============================================*/
 /* Gather all colors here                      */
 /*=============================================*/
-.ansi_fore { color: #FFFFFF; }
-.ansi_back { background-color: #000000; }
-.ansi1 { font-weight: bold; }
-.ansi3 { font-style: italic; }
-.ansi4 { text-decoration: underline; }
-.ansi9 { text-decoration: line-through; }
-.ansi30 { color: #000000; }
-.ansi31 { color: #FF0000; }
-.ansi32 { color: #00FF00; }
-.ansi33 { color: #FFFF00; }
-.ansi34 { color: #0000FF; }
-.ansi35 { color: #FF00FF; }
-.ansi36 { color: #00FFFF; }
-.ansi37 { color: #FFFFFF; }
-.ansi40 { background-color: #000000; }
-.ansi41 { background-color: #FF0000; }
-.ansi42 { background-color: #00FF00; }
-.ansi43 { background-color: #FFFF00; }
-.ansi44 { background-color: #0000FF; }
-.ansi45 { background-color: #FF00FF; }
-.ansi46 { background-color: #00FFFF; }
-.ansi47 { background-color: #FFFFFF; }
+.ansi_fore {
+    color: #FFFFFF;
+}
+
+.ansi_back {
+    background-color: #000000;
+}
+
+.ansi1 {
+    font-weight: bold;
+}
+
+.ansi3 {
+    font-style: italic;
+}
+
+.ansi4 {
+    text-decoration: underline;
+}
+
+.ansi9 {
+    text-decoration: line-through;
+}
+
+.ansi30 {
+    color: #000000;
+}
+
+.ansi31 {
+    color: #FF0000;
+}
+
+.ansi32 {
+    color: #00FF00;
+}
+
+.ansi33 {
+    color: #FFFF00;
+}
+
+.ansi34 {
+    color: #0000FF;
+}
+
+.ansi35 {
+    color: #FF00FF;
+}
+
+.ansi36 {
+    color: #00FFFF;
+}
+
+.ansi37 {
+    color: #FFFFFF;
+}
+
+.ansi40 {
+    background-color: #000000;
+}
+
+.ansi41 {
+    background-color: #FF0000;
+}
+
+.ansi42 {
+    background-color: #00FF00;
+}
+
+.ansi43 {
+    background-color: #FFFF00;
+}
+
+.ansi44 {
+    background-color: #0000FF;
+}
+
+.ansi45 {
+    background-color: #FF00FF;
+}
+
+.ansi46 {
+    background-color: #00FFFF;
+}
+
+.ansi47 {
+    background-color: #FFFFFF;
+}
 
 body {
     margin: 0 260px;
 }
-.noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton, .addQuestionButton {
+
+.noteButton, .addNoteButton, .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton, .addQuestionButton {
     background-color: #f8f8f8;
-	color: white;
-	font-size: x-small;
-	text-align:center;
+    color: white;
+    font-size: x-small;
+    text-align: center;
     border-radius: 12px;
-	outline: none;
-	float: left;
+    outline: none;
+    float: left;
 
     border: 2px none;
-	line-height: 0.8;
-	width: 5em;
-	height: 3em;
+    line-height: 0.8;
+    width: 5em;
+    height: 3em;
 }
 
 .viewLogin {
@@ -112,10 +178,8 @@ input[type="submit"], button, input[type="button"] {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-
-
 .viewLogin .loginButton:hover {
-    width:auto;
+    width: auto;
 }
 
 .viewLogin .loginButtonRow {
@@ -177,7 +241,7 @@ input[type="submit"], button, input[type="button"] {
 }
 
 .material {
-	background-color: white;
+    background-color: white;
 }
 
 .editorArea {
@@ -185,31 +249,32 @@ input[type="submit"], button, input[type="button"] {
 }
 
 table th {
-	background-color: #dedede;
+    background-color: #dedede;
 }
 
 td p {
     margin-left: 0;
 }
+
 .readline {
-	border-color: #F60; /* rgb(236,103,27); */
+    border-color: #F60; /* rgb(236,103,27); */
 }
 
 .readline:hover {
     opacity: 0.5;
-	background: #F60; /* rgb(236,103,27); */
+    background: #F60; /* rgb(236,103,27); */
 }
 
 .readline.read {
-	display: none;
+    display: none;
 }
 
 .readline.modified {
-	border-color: yellow;
+    border-color: yellow;
 }
 
 .readline.modified:hover {
-	background: yellow;
+    background: yellow;
 }
 
 .pluginError {
@@ -234,24 +299,24 @@ ul ul, ol ol {
     margin-left: -1em;
 }
 
-ul ul  ul, ol ol ol {
+ul ul ul, ol ol ol {
     margin-left: -1em;
 }
 
 .note p {
-	margin-left : 0;
-	margin-top: 0;
-	margin-bottom: 5px;
+    margin-left: 0;
+    margin-top: 0;
+    margin-bottom: 5px;
 }
 
 .note p:last-child {
-	margin-bottom : 0;
+    margin-bottom: 0;
 }
 
 .paragraph, .par {
-	position: relative;
-	margin-left: 1em;
-	padding-top: 0.25em;
+    position: relative;
+    margin-left: 1em;
+    padding-top: 0.25em;
     padding-bottom: 0.25em;
     margin-top: 0.25em;
     margin-bottom: 0.25em;
@@ -269,36 +334,36 @@ ul ul  ul, ol ol ol {
 }
 
 .material img {
-  max-width: 95%;
-  display:block;
-  margin: 0 auto;
+    max-width: 95%;
+    display: block;
+    margin: 0 auto;
 }
 
 .figure {
-	text-align:center;
+    text-align: center;
 }
 
 .notes, .speaker {
-	position: absolute;
-	left: 112%;
-	width: 17em;
-	top: 0em;
+    position: absolute;
+    left: 112%;
+    width: 17em;
+    top: 0em;
 }
 
 .note {
-	font-size: 0.7em;
+    font-size: 0.7em;
 }
 
 .noteButton {
-	z-index: 3;
+    z-index: 3;
     height: 1.8em;
     top: 0em;
-	float: left;
+    float: left;
 }
 
 .addNoteButton {
     position: absolute;
-    right:-8.2em;
+    right: -8.2em;
     z-index: 3;
     top: 0em;
 }
@@ -363,130 +428,131 @@ ul ul  ul, ol ol ol {
     color: black;
 }
 
-.edit{
+.edit {
     top: 0em;
 }
 
-.edit:before{
-    content:"Edit";
+.edit:before {
+    content: "Edit";
 }
 
-.delete:before{
-    content:"Delete";
+.delete:before {
+    content: "Delete";
 }
 
-.delete{
+.delete {
     top: 3em;
 }
 
 .editButton {
     z-index: 3;
-	position: absolute;
-	right:-8.2em;
+    position: absolute;
+    right: -8.2em;
 }
 
 .editButton:hover {
-	visibility: visible;
-	background: #C0C0C0;
-	color: black;
+    visibility: visible;
+    background: #C0C0C0;
+    color: black;
 }
 
-
-.deleteButton{
-    left:0em;
+.deleteButton {
+    left: 0em;
     z-index: 10;
-	top: 6em;
-	background: #FF0000;
+    top: 6em;
+    background: #FF0000;
 }
 
-.deleteButton:hover{
-        color:black;
+.deleteButton:hover {
+    color: black;
 }
 
 .parSaveButton {
-	top: 0em;
-	left: 0em;
-    z-index:10;
-	background: #19D119;
+    top: 0em;
+    left: 0em;
+    z-index: 10;
+    background: #19D119;
 }
 
-.parSaveButton:hover{
-    color:black;
+.parSaveButton:hover {
+    color: black;
 }
 
-.parSaveButton:before{
-    content:"Save";
+.parSaveButton:before {
+    content: "Save";
 }
 
 .cancelButton:hover {
     background: #999966;
-	color: black;
+    color: black;
 }
-.cancelButton:before{
-        content:"Cancel";
+
+.cancelButton:before {
+    content: "Cancel";
 }
 
 .cancelButton {
     z-index: 10;
-	left: 0em;
-	top: 3em;
+    left: 0em;
+    top: 3em;
     background: #999966;
 }
 
 .material {
-	width: 90%;
+    width: 90%;
 }
 
-#topBar{
-    position:fixed;
-    top:0;
-    left:0;
-    right:0;
-    height:50px;
+#topBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
     z-index: 100;
 
 }
-.navigationBar{
+
+.navigationBar {
     width: auto;
     background-color: #00CC00;
 
 }
 
-.flashEdit{
-    position:absolute;
+.flashEdit {
+    position: absolute;
     background-color: #FF1919;
-    left:45em;
-    height:10em;
-    width:40em;
+    left: 45em;
+    height: 10em;
+    width: 40em;
 }
 
-.addParButton:before{
-    content:"Add";
+.addParButton:before {
+    content: "Add";
 }
 
 .addParButton:hover:before {
-    content:"Add new paragraph here";
+    content: "Add new paragraph here";
 }
 
-.addParButton{
+.addParButton {
     z-index: 2;
-	right:-8.2em;
-	bottom:-1.5em;
-    height:1.5em;
-    padding-top:0.5em;
+    right: -8.2em;
+    bottom: -1.5em;
+    height: 1.5em;
+    padding-top: 0.5em;
     position: absolute;
 }
 
-.addParButton:hover{
-	content:"Add new paragraph here";
-    display:block;
-    background-color:#C0C0C0;
+.addParButton:hover {
+    content: "Add new paragraph here";
+    display: block;
+    background-color: #C0C0C0;
     border: 1px dotted #338533;
-    border-radius:25px;
+    border-radius: 25px;
     opacity: 1;
-	width:110%;
-	left:0em;
-	color: black;
+    width: 110%;
+    left: 0em;
+    color: black;
 }
 
 PRE {
@@ -499,16 +565,16 @@ PRE {
     padding: 4px;
 
     margin-left: 2.5em;
-	margin-right: 0.00cm;
-	line-height: 1;
-	font-size: 1em;
+    margin-right: 0.00cm;
+    line-height: 1;
+    font-size: 1em;
 
     /* box-shadow: 10px 10px 5px #888888; */
 }
 
 .leveaPre {
     width: 100em;
-    background-color:white;
+    background-color: white;
 }
 
 p code {
@@ -516,28 +582,28 @@ p code {
 }
 
 pre code {
-	margin-right: 0.00cm;
-	line-height: 1;
-	font-size: 1em;
+    margin-right: 0.00cm;
+    line-height: 1;
+    font-size: 1em;
 }
 
 PRE.esimerkki-western {
-	font-size: 1em;
+    font-size: 1em;
 }
 
 PRE.huonoesimerkki-western {
-	font-size: 1em;
+    font-size: 1em;
 }
 
 table {
-	font-family: verdana,arial,sans-serif;
-	font-size:0.8em;
-	color:#333333;
-	border-width: 1px;
-	border-color: #666666;
-	border-collapse: collapse;
-	margin-left: auto;
-	margin-right: auto;
+    font-family: verdana, arial, sans-serif;
+    font-size: 0.8em;
+    color: #333333;
+    border-width: 1px;
+    border-color: #666666;
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 table code {
@@ -545,45 +611,45 @@ table code {
 }
 
 table th {
-	border-width: 1px;
-	padding: 8px;
-	border-style: solid;
-	border-color: #666666;
+    border-width: 1px;
+    padding: 8px;
+    border-style: solid;
+    border-color: #666666;
 }
 
 table td {
-	border-width: 1px;
-	padding: 8px;
-	border-style: solid;
-	border-color: #666666;
+    border-width: 1px;
+    padding: 8px;
+    border-style: solid;
+    border-color: #666666;
 }
 
 P {
-	margin-top: 0em;
-	margin-bottom: 0.0cm;
-	margin-left: 2em;
+    margin-top: 0em;
+    margin-bottom: 0.0cm;
+    margin-left: 2em;
 }
 
 P.sananselitys-western {
-	padding: 0.4cm;
-	margin-left: 0;
-	margin-right: 0;
+    padding: 0.4cm;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 p.kannentiedot-western {
-	margin-top: 0.1cm;
-	margin-bottom: 0.1cm;
+    margin-top: 0.1cm;
+    margin-bottom: 0.1cm;
 }
 
 p.kannentiedotoikea-western {
-	margin-top: 0.1cm;
-	margin-bottom: 0.1cm;
+    margin-top: 0.1cm;
+    margin-bottom: 0.1cm;
 }
 
 .caption, .footer {
-	text-align: center;
-	font-style: italic;
-	margin-top: 1em;
+    text-align: center;
+    font-style: italic;
+    margin-top: 1em;
     margin-left: 5em;
     margin-right: 5em;
 }
@@ -593,74 +659,75 @@ p.kannentiedotoikea-western {
 }
 
 h1 {
-	text-align: center;
-	margin-top: 3cm;
-	/*margin-top: 0cm;*/
-	margin-bottom: 1cm;
-	color: navy;
-	border-top: navy 2pt solid;
-	border-bottom: navy 2pt solid;
-	padding-top: 10pt;
-	padding-bottom: 10pt;
-	line-height: 1.3;
+    text-align: center;
+    margin-top: 3cm;
+    /*margin-top: 0cm;*/
+    margin-bottom: 1cm;
+    color: navy;
+    border-top: navy 2pt solid;
+    border-bottom: navy 2pt solid;
+    padding-top: 10pt;
+    padding-bottom: 10pt;
+    line-height: 1.3;
 }
 
 h2 {
-	text-align: left;
-	margin-top: 1.5cm;
-	/*margin-top: 0cm;*/
-	line-height: 1.2;
+    text-align: left;
+    margin-top: 1.5cm;
+    /*margin-top: 0cm;*/
+    line-height: 1.2;
 }
 
 h3 {
-	text-align: left;
-	margin-top: 1cm;
-	/*margin-top: 0cm;*/
-	margin-bottom: 0.5cm;
+    text-align: left;
+    margin-top: 1cm;
+    /*margin-top: 0cm;*/
+    margin-bottom: 0.5cm;
 }
 
 h4 {
-	text-align: left;
-	margin-top: 2em;
-	margin-bottom: 0.5cm;
+    text-align: left;
+    margin-top: 2em;
+    margin-bottom: 0.5cm;
 }
 
 blockquote {
-	margin-left: 1.5cm;
-	margin-right: 1.5cm;
+    margin-left: 1.5cm;
+    margin-right: 1.5cm;
 }
+
 /*Georgia, - huonot numerot pystysuunnassa*/
 body {
-/*	margin-left: 0.7cm; */
-/*	margin-right: 0.7cm; */
-	font-family: Verdana, Arial, sans-serif;
-	font-size: 1em;
-	line-height: 1.2;
+    /*	margin-left: 0.7cm; */
+    /*	margin-right: 0.7cm; */
+    font-family: Verdana, Arial, sans-serif;
+    font-size: 1em;
+    line-height: 1.2;
 }
 
 a {
-	text-decoration: none;
+    text-decoration: none;
 }
 
 :link, a {
-	color: navy;
-	text-decoration: none;
-	font-size: 0.8em;
+    color: navy;
+    text-decoration: none;
+    font-size: 0.8em;
 }
 
 :visited {
-	color: blue;
+    color: blue;
 }
 
 a:active {
-	color: navy;
-	text-decoration: none;
+    color: navy;
+    text-decoration: none;
 }
 
 a:hover {
-	cursor: pointer;
-	color: navy;
-	text-decoration: underline;
+    cursor: pointer;
+    color: navy;
+    text-decoration: underline;
 }
 
 answerbrowser a {
@@ -672,91 +739,91 @@ answerbrowser .firstanswer {
 }
 
 sub {
-	font-size: 0.8em;
-	/* gecko-pohjaisilla selaimilla sub nakyy liian ylhaalla, ellei fonttia pienenna */
+    font-size: 0.8em;
+    /* gecko-pohjaisilla selaimilla sub nakyy liian ylhaalla, ellei fonttia pienenna */
 }
 
 br {
-	margin: 0;
-	padding: 0;
-	line-height: 0.4; /* pienempi vali monisteen kansia varten */
+    margin: 0;
+    padding: 0;
+    line-height: 0.4; /* pienempi vali monisteen kansia varten */
 }
 
 /* lukujen #-linkit */
 a.placeholder {
-	font-size: 0.7em;
-	color: #ccccff;
-	text-decoration: none;
+    font-size: 0.7em;
+    color: #ccccff;
+    text-decoration: none;
 }
 
 a.placeholder:visited {
-	font-size: 0.7em;
-	color: #ccccff;
-	text-decoration: none;
+    font-size: 0.7em;
+    color: #ccccff;
+    text-decoration: none;
 }
 
 a.placeholder:hover {
-	font-size: 0.7em;
-	color: #aaaaff;
-	text-decoration: none;
+    font-size: 0.7em;
+    color: #aaaaff;
+    text-decoration: none;
 }
 
 p.links_h1 {
-	float: right;
-	margin-bottom: 0;
-	padding-bottom: 0;
-	margin-top: 0;
-	padding-top: 1.55em;
-	font-size: 1em;
+    float: right;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    padding-top: 1.55em;
+    font-size: 1em;
 }
 
 p.links_h2 {
-	float: right;
-	margin-bottom: 0;
-	padding-bottom: 0;
-	margin-top: 0;
-	padding-top: 0;
-	font-size: 0.9em;
+    float: right;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    padding-top: 0;
+    font-size: 0.9em;
 }
 
 p.links {
-	float: right;
-	margin-bottom: 0;
-	padding-bottom: 0;
-	margin-top: 0;
-	padding-top: 0;
-	font-size: 0.8em;
+    float: right;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    padding-top: 0;
+    font-size: 0.8em;
 }
 
 div.header {
-	margin: 0;
-	/*padding: 1em 0 0.4em 0;*/
-	padding: 0;
+    margin: 0;
+    /*padding: 1em 0 0.4em 0;*/
+    padding: 0;
 }
 
 div.header:hover .anchor {
-	visibility: visible;
+    visibility: visible;
 }
 
 /* uusi ankkurityyli, korvaa placeholderit.
 influenced by trac anchors */
 a.anchor:hover {
-	border: none;
-	font-weight: bold;
-	color: #7777ff;
-	text-decoration: none;
-	vertical-align: text-bottom;
+    border: none;
+    font-weight: bold;
+    color: #7777ff;
+    text-decoration: none;
+    vertical-align: text-bottom;
 }
 
-.anchor:link,.anchor:visited {
-	border: none;
-	color: #aaaaff;
-	text-decoration: none;
-	vertical-align: text-bottom;
+.anchor:link, .anchor:visited {
+    border: none;
+    color: #aaaaff;
+    text-decoration: none;
+    vertical-align: text-bottom;
 }
 
-*>.anchor:link,*>.anchor:visited {
-	visibility: hidden;
+* > .anchor:link, * > .anchor:visited {
+    visibility: hidden;
 }
 
 .kaava {
@@ -767,13 +834,13 @@ a.anchor:hover {
 }
 
 .huomautus {
-	margin-left: 3em;
-	margin-top: 0.4cm;
-	background: #e6e6e6;
-	border: 1.00pt solid #000000;
-	padding: 0.25cm;
-	font-family: Verdana, Arial, sans-serif;
-	text-align: left;
+    margin-left: 3em;
+    margin-top: 0.4cm;
+    background: #e6e6e6;
+    border: 1.00pt solid #000000;
+    padding: 0.25cm;
+    font-family: Verdana, Arial, sans-serif;
+    text-align: left;
 }
 
 /* pre-blokit, joissa sub/sup - spanit ymp�rill�, v�hennet��n paddingia */
@@ -784,11 +851,11 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	width: 45em;
-	border: 1px solid;
-	padding: 15px 5px 5px 5px;
-	border-radius: 5px;
-	text-align: left;
+    width: 45em;
+    border: 1px solid;
+    padding: 15px 5px 5px 5px;
+    border-radius: 5px;
+    text-align: left;
     resize: both;
 }
 
@@ -798,25 +865,25 @@ a.anchor:hover {
     width: 100%;
     top: 0em;
     left: 112%;
-    min-height:6.5em;
+    min-height: 6.5em;
     border-radius: 15px;
     padding: 0.5em;
 }
 
 .editButtonArea {
-	float: left;
+    float: left;
 
-	padding-right: 1em;
-	margin-bottom: 0em;
+    padding-right: 1em;
+    margin-bottom: 0em;
 }
 
 video {
-  display:block;
-  margin: 0 auto;
+    display: block;
+    margin: 0 auto;
 }
 
 img.console {
-  margin-left: 2em;
+    margin-left: 2em;
 }
 
 /* csRun-tyylit ================================================== */
@@ -830,7 +897,7 @@ img.console {
 }
 
 p.stem {
-  margin-bottom: 1em;
+    margin-bottom: 1em;
 }
 
 .csRunChanged {
@@ -844,13 +911,13 @@ p.stem {
 }
 
 .csRunPre, .csRunPost {
-	margin-left: 0em;
+    margin-left: 0em;
     border-style: none;
-	box-shadow: none;
-	padding: 0px;
-	margin-bottom: 0em;
-	margin-top: 0em;
-	line-height: 1.1;
+    box-shadow: none;
+    padding: 0px;
+    margin-bottom: 0em;
+    margin-top: 0em;
+    line-height: 1.1;
 
 }
 
@@ -859,59 +926,58 @@ p.stem {
 }
 
 .csRunPre {
-	margin-bottom: 0em;
+    margin-bottom: 0em;
 }
 
 .csRunPost {
-	margin-top: 0em;
+    margin-top: 0em;
 }
-
 
 .csRunCode {
     font-family: Courier, serif;
-	margin-left: 2em;
+    margin-left: 2em;
     /* border-style: solid; */
 
     border-width: 1px;
 
     /* border-radius: 5px; */
-	padding: 4px;
-	margin-right: 0em;
-	line-height: 1;
-	font-size: 1em;
+    padding: 4px;
+    margin-right: 0em;
+    line-height: 1;
+    font-size: 1em;
 
     /* box-shadow: 10px 10px 5px #888888; */
-	/* width: 98%; */
+    /* width: 98%; */
 }
 
 .csRunArea {
     font-family: Courier, serif;
-	margin-top: 0em;
-	margin-bottom: 0em;
+    margin-top: 0em;
+    margin-bottom: 0em;
     border-style: none;
-	border-width: 0px;
-	border-radius: 0px;
-	padding: 1px;
-	margin-left: 0em;
-	margin-right: 0em;
-	line-height: 1.1;
-	font-size: 0.96em;
-	box-shadow: none;
-	width: 100% !important;
-	min-width: 600px !important;
-	white-space: pre;
-	border-left: thin solid #0066FF;
+    border-width: 0px;
+    border-radius: 0px;
+    padding: 1px;
+    margin-left: 0em;
+    margin-right: 0em;
+    line-height: 1.1;
+    font-size: 0.96em;
+    box-shadow: none;
+    width: 100% !important;
+    min-width: 600px !important;
+    white-space: pre;
+    border-left: thin solid #0066FF;
 }
 
 .showVideo {
-	display: block;
-	margin: 0 auto;
+    display: block;
+    margin: 0 auto;
 }
 
 .showVideoHolder {
-	text-align:center;
-	display: block;
-	margin: 0 auto;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
 }
 
 .listVideoRunDiv {
@@ -930,29 +996,28 @@ p.stem {
 }
 
 .taunoOhje {
-	font-size: 0.7em;
-	margin-bottom: 1em;
+    font-size: 0.7em;
+    margin-bottom: 1em;
 }
 
 .csRunArea:focus {
     border-style: solid;
-	border-width: 1px;
-	border-radius: 5px;
-	width: 100% !important;
+    border-width: 1px;
+    border-radius: 5px;
+    width: 100% !important;
 }
 
 .csRunMenu {
-	margin-top: 0.9em;
+    margin-top: 0.9em;
 }
 
 .pluginHide {
-	text-align: right;
+    text-align: right;
 }
 
 .pluginShow {
-	text-align: right;
+    text-align: right;
 }
-
 
 .unitTestGreen {
     background: #00FF00;
@@ -962,9 +1027,9 @@ p.stem {
 }
 
 .unitTestRed {
-  background: #FF7777;
-  /* width: 30%; */
-  /* height: 1em; */
+    background: #FF7777;
+    /* width: 30%; */
+    /* height: 1em; */
 }
 
 .smalllink {
@@ -977,77 +1042,86 @@ p.stem {
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 1200px) {
-	.editor {
-		/* height: 5em; */
-	}
-	.content {
-		max-width: 45em;
-		text-align: justify;
-        margin-right: 0.5em;
-	}
-	.paragraph,  .par {
-		position: relative;
-		max-width: 43em;
-		margin-left: 0em;
-		margin-top: 1em;
-	}
-	.addNoteButton {
-		position: absolute;
-		top: 0em;
-		left: 106%;
-		outline: none;
-	}
-	.readline {
-		position: absolute;
-		top: 0em;
-		/*left: 100%; */
-        margin-left: 0.7em;
-		right: -2em;
-	}
-	.notes, .speaker {
-		position: absolute;
-		left: 116%;
-		width: 17em;
-		top: 0em;
-	}
-	.editButton {
-		position: absolute;
-		top: 0em;
-		left: 106%;
-		outline: none;
-	}
-	.editorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
-
-	.addParButton{
-		left: 106%;
+    .editor {
+        /* height: 5em; */
     }
 
+    .content {
+        max-width: 45em;
+        text-align: justify;
+        margin-right: 0.5em;
+    }
 
-	body {
-		max-width: 45em;
-		margin-left: 5px !important;
-		margin-right: 10px;
-		font-family: Verdana, Arial, sans-serif;
-		font-size: 1em;
-		line-height: 1.2;
-	}
-	.material {
-		background-color: white;
-		display: inline-block;
-		width: 100%;
+    .paragraph, .par {
+        position: relative;
+        max-width: 43em;
         margin-left: 0em;
-	}
-	.noteeditor {
-	/*
-		position: absolute;
-		top: 0em;
-		left: 0em;
-	*/
-	}
+        margin-top: 1em;
+    }
+
+    .addNoteButton {
+        position: absolute;
+        top: 0em;
+        left: 106%;
+        outline: none;
+    }
+
+    .readline {
+        position: absolute;
+        top: 0em;
+        /*left: 100%; */
+        margin-left: 0.7em;
+        right: -2em;
+    }
+
+    .notes, .speaker {
+        position: absolute;
+        left: 116%;
+        width: 17em;
+        top: 0em;
+    }
+
+    .editButton {
+        position: absolute;
+        top: 0em;
+        left: 106%;
+        outline: none;
+    }
+
+    .editorArea {
+        position: relative;
+        top: 0em;
+        left: 0%;
+    }
+
+    .addParButton {
+        left: 106%;
+    }
+
+    body {
+        max-width: 45em;
+        margin-left: 5px !important;
+        margin-right: 10px;
+        font-family: Verdana, Arial, sans-serif;
+        font-size: 1em;
+        line-height: 1.2;
+    }
+
+    .material {
+        background-color: white;
+        display: inline-block;
+        width: 100%;
+        margin-left: 0em;
+    }
+
+    .noteeditor {
+        /*
+            position: absolute;
+            top: 0em;
+            left: 0em;
+        */
+    }
+
     .sidebar.autohidden {
         display: none;
     }
@@ -1057,53 +1131,60 @@ p.stem {
 /* Kännyköiden erikoistyylit =============================================*/
 
 @media only screen and (max-device-width: 500px) {
-	P {
-		margin-top: 0.0em;
-		margin-bottom: 0.0em;
-		margin-left: 1px;
-		margin-right: 5px;
-	}
-	.content {
-		text-align: left;
-	}
-	.material {
-		display: inline-block;
-		width: 100%;
-	}
-	body {
-		text-align: left;
-		max-width: 50em;
-		margin-left: 0.0cm !important;
-		margin-right: 0.0cm;
-		font-family: Verdana, Arial, sans-serif;
-		font-size: 1em;
-		line-height: 1.2;
-	}
-	PRE {
-		margin-left: 0.5em;
-		margin-right: 0.00cm;
-	}
+    P {
+        margin-top: 0.0em;
+        margin-bottom: 0.0em;
+        margin-left: 1px;
+        margin-right: 5px;
+    }
+
+    .content {
+        text-align: left;
+    }
+
+    .material {
+        display: inline-block;
+        width: 100%;
+    }
+
+    body {
+        text-align: left;
+        max-width: 50em;
+        margin-left: 0.0cm !important;
+        margin-right: 0.0cm;
+        font-family: Verdana, Arial, sans-serif;
+        font-size: 1em;
+        line-height: 1.2;
+    }
+
+    PRE {
+        margin-left: 0.5em;
+        margin-right: 0.00cm;
+    }
+
     .csRunCode {
         margin-left: 1.1em;
         /*width: 98%;  */
     }
-	.addNoteButton {
-		position: absolute;
-		line-height:0.8;
-		top: 0em;
-		left: 101%;
-		outline: none;
-	}
 
-	.notes, .speaker {
-		position: absolute;
-		left: 115%;
-		width: 17em;
-		top: 0em;
-	}
+    .addNoteButton {
+        position: absolute;
+        line-height: 0.8;
+        top: 0em;
+        left: 101%;
+        outline: none;
+    }
+
+    .notes, .speaker {
+        position: absolute;
+        left: 115%;
+        width: 17em;
+        top: 0em;
+    }
+
     .readline {
-		position: absolute;
-		top: 0em;
+        position: absolute;
+        top: 0em;
         right: 0em;
         margin-left: -1.3em;
         border-right: 0.25em solid red;
@@ -1113,21 +1194,23 @@ p.stem {
         margin-left: 0.1em;
         text-align: left;
     }
+
     blockquote {
         margin-left: 0.2em;
         margin-right: 0.2em;
     }
 
     ul, ol {
-      margin-left: 0.1em;
+        margin-left: 0.1em;
     }
+
     .sidebar.autohidden {
         display: none;
     }
 }
 
 body {
- 	line-height: 1.4;
+    line-height: 1.4;
 }
 
 task, .csRunDiv {
@@ -1141,7 +1224,7 @@ task, .csRunDiv {
     width: 96.5%
 }
 
-.csRunDiv h4  {
+.csRunDiv h4 {
     margin-top: 0.0em;
     padding-top: 1em;
     padding-left: 1em;
@@ -1151,9 +1234,6 @@ task, .csRunDiv {
     font-family: "Helvetica", Arial, sans-serif;
 
 }
-
-
-
 
 .note {
     border-top: 4px solid;
@@ -1168,7 +1248,6 @@ task, .csRunDiv {
     border-color: #3CC;
 }
 
-
 pre {
     font-family: "Courier New", Courier, serif;
     font-weight: normal;
@@ -1178,7 +1257,6 @@ pre {
     font-size: 0.95em;
 }
 
-
 .csRunPre, .csRunPost, .csRunArea {
     margin-left: -1.5em;
     box-shadow: none;
@@ -1187,7 +1265,7 @@ pre {
 
 .stem {
     margin-left: 0.3em;
-    margin-right:0.5em;
+    margin-right: 0.5em;
 }
 
 .csRunMenu {
@@ -1209,16 +1287,16 @@ pre {
 }
 
 .console {
-	margin-left: 0.2em;
-	/* max-width: 60em; */
+    margin-left: 0.2em;
+    /* max-width: 60em; */
 }
 
 img.console {
     margin-left: 0.2em;
 }
 
-.csRunMenu link,.csRunMenu :visited {
-	color:  #3CC;
+.csRunMenu link, .csRunMenu :visited {
+    color: #3CC;
 }
 
 .notes:hover, .speaker:hover {
@@ -1226,7 +1304,6 @@ img.console {
     display: block;
     z-index: 9;
 }
-
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 1200px) {
@@ -1248,20 +1325,19 @@ img.console {
         margin-right: 0em;
     }
 
-    .csrunEditorDiv  .csEditArea {
+    .csrunEditorDiv .csEditArea {
         /* margin-left: 1px;  */
     }
 }
 
-
 @media only screen and (max-width: 1600px) {
-	.editorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
+    .editorArea {
+        position: relative;
+        top: 0em;
+        left: 0%;
+    }
 
-	.notes:hover, .speaker:hover {
+    .notes:hover, .speaker:hover {
         margin-left: -60%;
         width: 200em;
         background-color: white;
@@ -1272,22 +1348,21 @@ img.console {
         padding-left: 2em;
     }
 
-
 }
 
 /* Opettajanäkymän käyttäjälistaa varten ================================*/
 
 .userlist {
-	position: fixed;
-	top: 13px;
-	right: 120px;
-	padding: 5px;
-	word-wrap:break-word;
-	background-color: #e6e6e6;
-	z-index: 501;
-	overflow: auto;
-	overflow-x: hidden;
-        max-height: 90vh;
+    position: fixed;
+    top: 13px;
+    right: 120px;
+    padding: 5px;
+    word-wrap: break-word;
+    background-color: #e6e6e6;
+    z-index: 501;
+    overflow: auto;
+    overflow-x: hidden;
+    max-height: 90vh;
 }
 
 .userlist td, .userlist th {
@@ -1316,9 +1391,9 @@ img.console {
 }
 
 .userentry {
-     font-family: Verdana, serif;
-     font-size: 12px;
-     color: #a6b6f6;
+    font-family: Verdana, serif;
+    font-size: 12px;
+    color: #a6b6f6;
 }
 
 /* Sisällysluetteloa varten =============================================*/
@@ -1327,9 +1402,9 @@ img.console {
 }
 
 .contents {
-	position: fixed;
+    position: fixed;
     top: 0;
-	bottom: 0;
+    bottom: 0;
     left: 0;
     z-index: 1;
     overflow-y: auto;
@@ -1351,42 +1426,42 @@ img.console {
     left: 45px;
     z-index: 1;
     overflow-y: auto;
-	width: 215px;
-	word-wrap: break-word;
-	background-color: #e6e6e6;
-	/*-webkit-transition: 200ms all ease-in-out;
-	-moz-transition: 200ms all ease-in-out;
-	-o-transition: 200ms all ease-in-out;
-	transition: 200ms all ease-in-out;*/
-	z-index: 501;
-	overflow: auto;
-	overflow-x: hidden;
+    width: 215px;
+    word-wrap: break-word;
+    background-color: #e6e6e6;
+    /*-webkit-transition: 200ms all ease-in-out;
+    -moz-transition: 200ms all ease-in-out;
+    -o-transition: 200ms all ease-in-out;
+    transition: 200ms all ease-in-out;*/
+    z-index: 501;
+    overflow: auto;
+    overflow-x: hidden;
 }
 
-.index-sidebar.hidden , .index-sidebar.autohidden, .lectures-sidebar.hidden, .lectures-sidebar.autohidden,
+.index-sidebar.hidden, .index-sidebar.autohidden, .lectures-sidebar.hidden, .lectures-sidebar.autohidden,
 .questions-sidebar.hidden, .people-sidebar.hidden, .questions-sidebar.autohidden, .people-sidebar.autohidden,
-.settings-sidebar.hidden, .settings-sidebar.autohidden{
-	width: 0;
-	height: 0;
+.settings-sidebar.hidden, .settings-sidebar.autohidden {
+    width: 0;
+    height: 0;
     display: none;
 }
 
 .index-sidebar-buttons, .lectures-sidebar-buttons, .questions-sidebar-buttons, .people-sidebar-buttons
 .settings-sidebar-buttons {
-	width: 100%;
-	padding: 20px;
-	padding-top: 50px;
-	background: #e6e6e6;
-	z-index: 502;
-	position:fixed;
-	border-bottom: solid 4px #CCC;
+    width: 100%;
+    padding: 20px;
+    padding-top: 50px;
+    background: #e6e6e6;
+    z-index: 502;
+    position: fixed;
+    border-bottom: solid 4px #CCC;
 }
 
-.index-sidebar ul, .lectures-sidebar ul , .questions-sidebar ul, .people-sidebar ul, .settings-sidebar ul{
+.index-sidebar ul, .lectures-sidebar ul, .questions-sidebar ul, .people-sidebar ul, .settings-sidebar ul {
     padding-left: 20px;
-	text-align: left;
-	font-family:"Helvetica", Arial, sans-serif;
-	font-size: 0.85em;
+    text-align: left;
+    font-family: "Helvetica", Arial, sans-serif;
+    font-size: 0.85em;
 }
 
 .index-sidebar li, .lectures-sidebar li , .questions-sidebar li, .settings-sidebar li{
@@ -1396,16 +1471,16 @@ img.console {
 
 .people-sidebar li {
 	list-style:none;
-}
 
-.index-sidebar li.exp, .lectures-sidebar li.exp , .questions-sidebar li.exp, .people-sidebar li.exp{
-    list-style-image:url("/static/images/minus.png");
-    list-style-type:square;
+
+.index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
+    list-style-image: url("/static/images/minus.png");
+    list-style-type: square;
 }
 
 .index-sidebar li.col, .lectures-sidebar li.col, .questions-sidebar li.col, .people-sidebar li.col, .settings-sidebar li.col {
-    list-style-image:url("/static/images/plus.png");
-    list-style-type:square;
+    list-style-image: url("/static/images/plus.png");
+    list-style-type: square;
 }
 
 .index-sidebar a {
@@ -1422,42 +1497,42 @@ img.console {
 
 .index-sidebar a:hover, .lectures-sidebar a:hover , .questions-sidebar a:hover, .people-sidebar a:hover,
 .settings-sidebar a:hover {
-	color: #3cc;
-	text-decoration: none;
+    color: #3cc;
+    text-decoration: none;
 }
 
-.index-sidebar a.a1 , .lectures-sidebar a.a1, .questions-sidebar a.a1, .people-sidebar a.a1, 
+.index-sidebar a.a1, .lectures-sidebar a.a1, .questions-sidebar a.a1, .people-sidebar a.a1,
 .settings-sidebar a.a1 {
-	font-size: 110%;
+    font-size: 110%;
 }
 
 .index-sidebar a.a2, .lectures-sidebar a.a2, .questions-sidebar a.a2, .people-sidebar a.a2,
 .settings-sidebar a.a2 {
-	font-size: 100%;
+    font-size: 100%;
 }
 
-.index-sidebar a.a3 , .lectures-sidebar a.a3, .questions-sidebar a.a3, .people-sidebar a.a3,
+.index-sidebar a.a3, .lectures-sidebar a.a3, .questions-sidebar a.a3, .people-sidebar a.a3,
 .settings-sidebar a.a3 {
-	font-size: 100%;
+    font-size: 100%;
     padding-left: 5pt;
 }
 
-.index-sidebar h1, .lectures-sidebar h1, .questions-sidebar h1, .people-sidebar h1, .settings-sidebar h1{
-	font-size: 120%;
-	background-color: #3cc;
-	color: white;
-	margin-top: 0;
-	margin-bottom: 0;
-	border-top: none;
-	border-bottom: none;
-	padding-top: 10pt;
-	padding-bottom: 10pt;
-	padding-left: 10pt;
-	line-height: 1.3;
+.index-sidebar h1, .lectures-sidebar h1, .questions-sidebar h1, .people-sidebar h1, .settings-sidebar h1 {
+    font-size: 120%;
+    background-color: #3cc;
+    color: white;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-top: none;
+    border-bottom: none;
+    padding-top: 10pt;
+    padding-bottom: 10pt;
+    padding-left: 10pt;
+    line-height: 1.3;
 
     margin-left: 20px;
     margin-right: 20px;
-	text-align: left;
+    text-align: left;
 }
 
 .menu{
@@ -1469,21 +1544,22 @@ img.console {
 
 .menu-icon {
     z-index: 501;
-	cursor:pointer;
-	filter: brightness(1);
-	-webkit-filter: brightness(1);
-	-moz-filter: brightness(1);
+    cursor: pointer;
+    filter: brightness(1);
+    -webkit-filter: brightness(1);
+    -moz-filter: brightness(1);
 }
 
-.menu-icon:hover{
+.menu-icon:hover {
     z-index: 501;
-	filter: brightness(1);
-	-webkit-filter: brightness(1);
-	-moz-filter: brightness(1);
+    filter: brightness(1);
+    -webkit-filter: brightness(1);
+    -moz-filter: brightness(1);
 }
-.close{
-	float: right;
-	position:relative;
+
+.close {
+    float: right;
+    position: relative;
 }
 
 .runo {
@@ -1581,6 +1657,7 @@ img.console {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
     margin-bottom: 5px;
 }
+
 .actionButtons {
     position: absolute;
     border-radius: 3px;
@@ -1606,132 +1683,137 @@ img.console {
     float: right;
 }
 
+.questionButton {
+    margin: 0.2em;
+}
+
 .listVideoRunDiv {
-  /* margin-left: 2em; */
-  margin-top: -1.5em;
-  margin-bottom: -1.2em;
+    /* margin-left: 2em; */
+    margin-top: -1.5em;
+    margin-bottom: -1.2em;
 }
 
 .csArgsArea {
-  width: 90%;
-  margin-top: 0em;
-  margin-bottom: 0em;
-  border-style: none;
-  border-width: 0px;
-  border-left: thin solid #0066FF;
+    width: 90%;
+    margin-top: 0em;
+    margin-bottom: 0em;
+    border-style: none;
+    border-width: 0px;
+    border-left: thin solid #0066FF;
 }
 
 .csArgsDiv {
-  width: 100%;
+    width: 100%;
 }
 
 .csArgsDiv span {
-  display: block;
-  overflow: hidden;
-  padding: 0 5px;
+    display: block;
+    overflow: hidden;
+    padding: 0 5px;
 }
 
 .csArgsDiv label {
-  margin-left: 0px;
-  float: left;
-  font-size: 0.96em;
+    margin-left: 0px;
+    float: left;
+    font-size: 0.96em;
 
 }
 
 .grconsole {
-  margin-top: 0.8em !important;
-  border: 1px double black;
+    margin-top: 0.8em !important;
+    border: 1px double black;
 }
 
 @media print {
-  p {
-  font-size: 12pt;
-  page-break-inside: avoid;
-  }
+    p {
+        font-size: 12pt;
+        page-break-inside: avoid;
+    }
 
-  body {
-  margin: 0px;
-  max-width: 100%;
-  }
+    body {
+        margin: 0px;
+        max-width: 100%;
+    }
 
-  .material {
-  width: 100%;
-  }
+    .material {
+        width: 100%;
+    }
 
-  .readline {
-  display: none;
-  }
+    .readline {
+        display: none;
+    }
 
-  .parContent {
-  position: static;
-  border: 0px;
-  max-width: 100%;
-  }
+    .parContent {
+        position: static;
+        border: 0px;
+        max-width: 100%;
+    }
 
-  .par {
-  position: static;
-  border: 0px;
-  max-width: 100%;
-  }
+    .par {
+        position: static;
+        border: 0px;
+        max-width: 100%;
+    }
 
-  .headerlink {
-  display: none;
-  }
+    .headerlink {
+        display: none;
+    }
 
-  #header {
-  display: none;
- }
+    #header {
+        display: none;
+    }
 
-  #contents {
-      display: none;
-  }
+    #contents {
+        display: none;
+    }
+
     /* Harmaa varjo dokumentilta pois */
     .material {
         box-shadow: none !important;
-            border: none !important;
+        border: none !important;
     }
 }
 
 .speaker {
-  position: absolute;
-  left: 105%;
-  width: 400px;
+    position: absolute;
+    left: 105%;
+    width: 400px;
 }
 
 .doctitle {
-  font-size: 0.7em;
-  color: #3cc;
-  text-align: center;
-  margin-bottom: -1.5em;
+    font-size: 0.7em;
+    color: #3cc;
+    text-align: center;
+    margin-bottom: -1.5em;
 }
 
 .mcq {
-  padding-left: 2em;
+    padding-left: 2em;
 }
 
 .answerBrowser {
-  padding-left: 2em;
+    padding-left: 2em;
 }
 
 .csRunChanged {
-  background-color: rgb(41, 255, 0) !important;
-  width: 0.2em;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: -0.5em;
+    background-color: rgb(41, 255, 0) !important;
+    width: 0.2em;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: -0.5em;
 }
 
 .sagecell_editor {
-  line-height: 13px;
-  margin-bottom: 8px;
-  font-size: 10pt;
+    line-height: 13px;
+    margin-bottom: 8px;
+    font-size: 10pt;
 }
 
 pre.sagecell_pyout {
-  border: none;
+    border: none;
 }
 
 pre.sagecell_stdout {
-  border: none;
+    border: none;
 }

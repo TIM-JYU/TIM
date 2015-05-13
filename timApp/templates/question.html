@@ -3,7 +3,7 @@
         <fieldset>
             <label>
                 Question title:
-                <input name="question.title" type="text" cols="100" ng.model="question.title"/>
+                <input name="question.title" type="text" cols="100" ng-model="question.title"/>
             </label>
             <br />
 
@@ -26,7 +26,7 @@
             <div ng-if="question.type == 'checkbox-vertical'" ng-init="createMatrix(2, 1,'checkbox')">
                 {% include 'matrix.html' %}
             </div>
-            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio-button')">
+            <div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio')">
                 {% include 'matrix.html' %}
             </div>
             <div ng-if="question.type == 'true-false'" ng-init="createMatrix(2, 2, 'true-false')">

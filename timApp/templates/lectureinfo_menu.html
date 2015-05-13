@@ -11,9 +11,9 @@
                 <input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
                        ng-keypress="passEnterPressed($event)" size="7">
 				<div class="iconSection" ng-show="lectures.length > 0">
-						<img id="join-icon" src="../../../static/images/join-icon3.png" class="icon"
+						<img id="join-icon" src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
 							ng-click="joinLecture()" title="Join the lecture">
-						<img id="add-icon1" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer"
+						<img id="add-icon1" src="{{ url_for('static', filename='images/add-icon3.png') }}" class="icon" ng-show="isLecturer"
 							ng-click="toggleLecture()" title="Add new lecture">
 				</div>
                 
@@ -21,7 +21,7 @@
 			<div ng-show="lectures.length <= 0">
 				<p>No running lectures</p>
 				<div class="iconSection">
-					<img id="add-icon2" src="../../../static/images/add-icon3.png" class="icon" ng-show="isLecturer"
+					<img id="add-icon2" src="{{ url_for('static', filename='images/add-icon3.png') }}" class="icon" ng-show="isLecturer"
 						ng-click="toggleLecture()" title="Add new lecture">
 				</div>
 			</div>
@@ -36,11 +36,11 @@
 			<p ng-bind="lectureEndTime"></p>
 			<input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
 			<div class="iconSection">
-				<img id="leave-icon" src="../../../static/images/leave-icon3.png" class="icon"
+				<img id="leave-icon" src="{{ url_for('static', filename='images/leave-icon3.png') }}" class="icon"
 					ng-click="leaveLecture()" title="Leave this lecture" ng-show="inLecture">
-				<img id="stop-icon" src="../../../static/images/stop-icon3.png" class="icon"
+				<img id="stop-icon" src="{{ url_for('static', filename='images/stop-icon3.png') }}" class="icon"
 					ng-click="endLecture()" title="End this lecture" ng-show="canStop">
-				<img id="edit-icon" src="../../../static/images/edit-icon3.png" class="icon"
+				<img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
 					title="Edit this lecture" ng-show="canStop">	
 			</div>	
         </div>
@@ -50,13 +50,13 @@
 			<div class="lectureArea">
 				<p ng-show="futureLectures.length <= 0">No upcoming lectures</p>
 				<div ng-show="futureLectures.length > 0">
-					<select ng-model="futureLecture" ng-options="lecture as lecture for lecture in futureLectures">
+					<select ng-model="futureLecture" ng-options="lecture.lecture_code + ' ' + lecture.lecture_start for lecture in futureLectures">
 					</select>
 				</div>
 				<div class="iconSection" ng-show="futureLectures.length > 0">
-					<img id="start-icon" src="../../../static/images/play-icon3.png" class="icon"
-						title="Start lecture now">
-					<img id="edit-icon2" src="../../../static/images/edit-icon3.png" class="icon"
+					<img id="start-icon" src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
+						title="Start lecture now" ng-click="startFutureLecture()">
+					<img id="edit-icon2" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
 						title="Edit this lecture">	
 				</div>
 			</div>
