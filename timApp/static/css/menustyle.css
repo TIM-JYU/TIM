@@ -2,6 +2,22 @@
 	display: none;
 }
 
+.smallMenu{
+	display: none;
+}
+
+.lecturesList {
+	display: block;
+}
+
+#currentList {
+	display:none;
+}
+
+#futureList {
+	display:none;
+}
+
 .menuSection #largeMenu {
     background-color: #3cc;
     border: 1px solid #3cc;
@@ -13,7 +29,7 @@
 	display: flex;
 }
 
-#largeMenu div {
+#largeMenu .lectureSection, .loginSection{
 	display: block;
 }
 
@@ -32,6 +48,7 @@
 
 .iconSection {
 	display:inline-block;
+	clear:both;
 }
 
 
@@ -59,12 +76,14 @@
 
 .lectureSection {
     line-height: 70%;
-    width: 250px;
+    width: 100%;
     display: inline-block;
 }
 
 .loginSection {
 	display:inline-block;
+	width: 100%;
+	float: right;
 }
 
 .menuSection .lectureSection h1 {
@@ -93,6 +112,7 @@
     float: left;
     padding-left: 10px;
     margin-left: 0;
+	text-align: left;
 }
 
 .viewLogin {
@@ -142,4 +162,114 @@ input[type="button"] {
     line-height: normal;
     padding: 5px 10px;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/*Pienet näytöt*/
+@media only screen and (max-width: 500px) {
+	.menuSection #largeMenu {
+		display: none;
+	}
+	
+	.lecturesList {
+		display: block;
+	}
+		
+	.smallMenu {
+		border: 1px solid #3cc;
+		border-radius: 15px;
+		background-color: #3cc;
+		display: flex;
+		color: white;
+		font-size: 0.7em;
+		padding-right: 10px;
+		padding-left: 10px;
+		margin-left: 70px;
+		min-width: 230px;
+		margin-top: auto;
+	}
+
+	.smallMenu p{
+		font-size: 0.9em;
+		color: black;
+	}
+
+    .smallMenu h1 {
+		color: white;
+		border: 2px groove;
+		padding: 0;
+		font-size: 1.5em;
+		text-align: center;
+		font-weight: normal;
+		margin: 0px;
+		max-width: 100px;
+		min-width: 65px;
+	}
+	
+	.smallMenu h1:hover {
+		cursor: pointer;
+	}
+	
+	.smallMenu div{
+		display: inline-block;
+		width: 100%;
+		overflow: hidden;
+	}
+	
+	.lecturesList div {
+		margin-left: auto;
+		margin-right: auto;
+		width: 80%;
+	}
+	
+	.lecturesList div ul {
+		display: block;
+	}
+	
+	.lecturesList div ul li{
+        display:block;
+    }
+	
+	.lecturesList div ul li p{
+		font-family: verdana;
+		font-size: 0.8em;
+		padding: 5px;
+		display: block;
+		margin: 5px;
+		background:#3cc;
+		text-decoration:none;
+		color: white;
+    }
+	
+	#smallLogin input[type="submit"] {
+		width: 60px;
+		height: 30px;
+	}
+	
+	#smallLogin span, #smallLogin form{
+		display: inline-block;
+	}	
+	
+	.currently  p{
+		color: black;
+		font-family: verdana;
+		font-size: 15px;
+		margin: 0;
+	}
+	
+	.currently  h2{
+		color: white;
+		font-family: verdana;
+		font-size: 20px;
+		margin: 0;
+	}
+	
+	.smallIconSection img{
+		display: inline;
+	}
+}
+
+@media only screen and (max-width: 1200px) {
+	#largeMenu {
+		margin-left: 55px;
+	}
 }
