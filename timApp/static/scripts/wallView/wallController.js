@@ -36,10 +36,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.durationMin = "";
         $scope.isLecturer = false;
         $scope.lectureId = null;
-        $scope.showAnswerDummy = false;
+        $scope.showAnswerWindow = false;
         $scope.showStudentAnswers = false;
         $scope.studentTable = [];
         $scope.lecturerTable = [];
+        $scope.gettingAnswersArray = [];
         $scope.checkIfInLecture = function () {
             http({
                 url: '/checkLecture',
@@ -59,8 +60,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.$emit('getLectureId', $scope.lectureId);
         });
 
-        $scope.$on("closeAnswer", function (event, answer) {
-            $scope.showAnswerDummy = false;
+        $scope.$on("answerToQuestion", function (event, answer) {
+            $scope.showAnswerWindow = false;
             var mark = "";
             var answerString = "";
             angular.forEach(answer.answer, function (singleAnswer) {
@@ -72,6 +73,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 method: 'POST',
                 params: {
                     'question_id': answer.questionId,
+                    'lecture_id': $scope.lectureId,
                     'answers': answerString
                 }
             })
@@ -84,6 +86,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.$on("closeAnswerShow", function () {
             $scope.showStudentAnswers = false;
+            $scope.gettingAnswersArray = [];
         });
 
         $scope.showInfo = function () {
@@ -234,7 +237,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.lectureId = -1;
             $scope.lectureName = "Not running";
             $scope.showStudentAnswers = false;
-            $scope.showAnswerDummy = false;
+            $scope.showAnswerWindow = false;
             $scope.lecturerTable = [];
             $scope.studentTable = [];
 
@@ -369,12 +372,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         $scope.startLongPolling($scope.lastID);
                         $scope.pollingLectures.push(answer.lectureId);
                     }
-
-
                 })
         };
 
         $scope.getLectureAnswers = function (answer) {
+            $scope.gettingAnswersArray.push(answer.questionId);
             http({
                 url: '/getLectureAnswers',
                 type: 'GET',
@@ -382,7 +384,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             })
                 .success(function (answer) {
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
-                    $scope.getLectureAnswers(answer);
+                    if ($scope.gettingAnswersArray.indexOf(answer.question_id) != -1) {
+                        $scope.getLectureAnswers(answer);
+                    }
 
                 })
                 .error(function () {
@@ -481,7 +485,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             });
 
 
-                            $scope.showAnswerDummy = true;
+                            $scope.showAnswerWindow = true;
                         }
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);

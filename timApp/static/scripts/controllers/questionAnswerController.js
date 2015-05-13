@@ -45,11 +45,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 htmlSheet += "<table>";
 
                 if ($scope.json.TYPE == "true-false") {
-                    htmlSheet += "<tr>";
-                    htmlSheet += "<th> </th>";
-                    htmlSheet += "<th>True</th>";
-                    htmlSheet += "<th>False</th>";
-                    htmlSheet += "</tr>";
+                    $scope.json.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
+                    $scope.json.DATA.HEADERS[1] = {"type": "header", "id": 1, "text": "False"};
                 }
                 var nextBoolean = true;
 
@@ -73,15 +70,15 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         angular.forEach(row.COLUMNS, function (column) {
                             var group;
 
-                            if ($scope.json.TYPE == "matrix") {
-                                group = "group" + row.text.replace(/[^a-zA-Z]/g, "")
-                                htmlSheet += "<td><label> <input type='radio' name='" + group + "'" +
+                            if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
+                                group = "group" + row.text.replace(/[^a-zA-Z]/g, "");
+                                htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
                                 " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
                                 "></label></td>";
                                 header++;
                             } else {
-                                group = "group" + row.type.replace(/[^a-zA-Z]/g, "")
-                                htmlSheet += "<td><label> <input type='radio' name='" + group + "'" +
+                                group = "group" + row.type.replace(/[^a-zA-Z]/g, "");
+                                htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
                                 " value='" + row.text + "'" +
                                 "></label></td>";
                             }
@@ -147,17 +144,32 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 var answers = [];
                 $interval.cancel(promise);
                 if (angular.isDefined($scope.json.DATA.ROWS)) {
-                    if ($scope.json.TYPE == "matrix") {
+                    if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
                         for (var i = 0; i < $scope.json.DATA.ROWS.length; i++) {
                             var groupName;
-                            groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z]/g, '')
-
-                            answers.push($('input[name=' + groupName + ']:checked').val());
+                            groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z]/g, '');
+                            var answer = [];
+                            //noinspection JSJQueryEfficiency
+                            var matrixInputs = $('input[name=' + groupName + ']:checked');
+                            for (var k = 0; k < matrixInputs.length; k++) {
+                                answer.push(matrixInputs[k].value);
+                            }
+                            if (matrixInputs.length <= 0) {
+                                answer.push("undefined")
+                            }
+                            answers.push(answer);
                         }
                     }
                     else {
-                        groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/[^a-zA-Z]/g, '')
-                        answers.push($('input[name=' + groupName + ']:checked').val());
+                        groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/[^a-zA-Z]/g, '');
+                        var checkedInputs = $('input[name=' + groupName + ']:checked');
+                        for (var j = 0; j < checkedInputs.length; j++) {
+                            answers.push(checkedInputs[j].value);
+                        }
+
+                        if (checkedInputs.length <= 0) {
+                            answers.push("undefined")
+                        }
                     }
                 }
 
@@ -169,7 +181,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 }
 
                 $element.empty();
-                $scope.$emit('closeAnswer', {answer: answers, questionId: $scope.$parent.questionId});
+                $scope.$emit('answerToQuestion', {answer: answers, questionId: $scope.$parent.questionId});
             };
         }
     }

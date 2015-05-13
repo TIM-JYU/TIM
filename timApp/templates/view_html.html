@@ -48,6 +48,7 @@
     <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/Chart.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionShowAnswersController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/showChartDirective.js') }}"></script>
 
     <!-- Script to load question from another file -->
     <script>
@@ -112,10 +113,15 @@
                     </div>
                     <div ng-show="showWall" class="wall-content">
                         <div class="wall-message-area">
-                            <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+                            <label>
+                                <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+                            </label>
                         </div>
                         <div class="wall-buttons">
-                            <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="chatEnterPressed($event)">
+                            <label>
+                                <input id="messagebox" ng-model="newMsg" width="200"
+                                       ng-keypress="chatEnterPressed($event)">
+                            </label>
                             <label title="Shows name of the sender and sending time">
                                 <input type="checkbox" ng-change="showInfo()" ng-model="messageInfo"
                                         />Info
@@ -128,13 +134,14 @@
             </div>
             <pop-up-dialog show="showStudentAnswers">
                 <div ng-controller="QuestionShowAnswerController">
-                    <ng-include src="'{{ url_for('static', filename='templates/answersFromStudents.html')}}'"></ng-include>
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/answersFromStudents.html') }}'"></ng-include>
                 </div>
             </pop-up-dialog>
-            <pop-up-dialog show="showAnswerDummy">
+            <pop-up-dialog show="showAnswerWindow">
                 <div ng-controller="QuestionAnswerController">
-                    <!--TODO: Learn how to use url_for here, or find url some other better way(This won't work) -->
-                    <ng-include src="'{{ url_for('static', filename='templates/questionAskedStudent.html')}}'"></ng-include>
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/questionAskedStudent.html') }}'"></ng-include>
                 </div>
             </pop-up-dialog>
 

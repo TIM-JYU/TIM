@@ -314,6 +314,7 @@ CREATE TABLE LectureAnswer (
   answer_id   INTEGER,
   user_id     INTEGER NOT NULL,
   question_id INTEGER NOT NULL,
+  lecture_id  INTEGER NOT NULL,
   answer      TEXT    NOT NULL,
   answered_on TEXT    NOT NULL,
   points      REAL,

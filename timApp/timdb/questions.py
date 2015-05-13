@@ -104,3 +104,17 @@ class Questions(TimDbBase):
                       """, [doc_id])
 
         return self.resultAsDictionary(cursor)
+
+    def get_multiple_questions(self, question_ids: 'int[]') -> 'list(dict)':
+
+        cursor = self.db.cursor()
+        for_db = str(question_ids)
+        for_db = for_db.replace("[", "")
+        for_db = for_db.replace("]", "")
+        cursor.execute("""
+                      SELECT *
+                      FROM Question
+                      WHERE question_id IN (""" + for_db + """)
+                      """)
+
+        return self.resultAsDictionary(cursor)
