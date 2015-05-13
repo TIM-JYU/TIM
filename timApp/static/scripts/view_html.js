@@ -844,9 +844,11 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
         $scope.jsonRaw = {
             question: jsonData.QUESTION,
             type: jsonData.TYPE,
+            question: jsonData.QUESTION,
             time: jsonData.TIME,
             rows: jsonData.DATA.ROWS,
             headers: jsonData.DATA.HEADERS
+
         };
         $scope.ask = function () {
             http({
@@ -917,12 +919,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     scope.createMatrix = function (rowsCount, columnsCount, type) {
         if (type == 'radio' || type == 'checkbox') scope.question.answerFieldType = type;
         if (type == 'true-false') scope.question.answerFieldType = 'radio';
-        if (type == 'matriisi') {
-            if (scope.question.matrixType == "radiobutton-horizontal" || scope.question.matrixType == "radiobutton-vertical") scope.question.answerFieldType = "radio";
-            if (scope.question.matrixType == "textArea") scope.question.answerFieldType = "textArea";
-            if (scope.question.matrixType == "checkbox") scope.question.answerFieldType = "checkbox";
-        }
-
+        if (type == 'matriisi') scope.question.answerFieldType = 'matriisi';
 
         if (scope.rows.length > 0) {
             scope.columnHeaders.splice(0, scope.columnHeaders.length);
@@ -1074,6 +1071,14 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.createQuestion = function () {
+        if (scope.question.answerFieldType == 'matriisi') {
+            if (scope.question.matrixType == "radiobutton-horizontal" || scope.question.matrixType == "radiobutton-vertical") scope.question.answerFieldType = "radio";
+            if (scope.question.matrixType == "textArea") scope.question.answerFieldType = "text";
+            if (scope.question.matrixType == "checkbox") scope.question.answerFieldType = "checkbox";
+        }
+
+
+
         var url;
         var doc_id = scope.docId;
         var $par = scope.par;
@@ -1111,7 +1116,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 questionJson += '"rowId":"' + scope.rows[i].columns[j].rowId + '",';
                 questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
 //                questionJson += '"value":"' + scope.rows[i].columns[j].value + '",';
-                questionJson += '"answerFieldType":"' + scope.rows[i].columns[j].answerFiledType + '"';
+                questionJson += '"answerFieldType":"' + scope.question.answerFieldType + '"';
                 questionJson += '},'
             }
 
