@@ -352,6 +352,10 @@ ul ul  ul, ol ol ol {
     margin: auto;
 }
 
+.draghandle {
+    background-color: #000;
+}
+
 .readline {
     position: absolute;
     right: -1.2em;
