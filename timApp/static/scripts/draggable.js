@@ -18,9 +18,13 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
 
             return {X: e.pageX, Y: e.pageY};
         }
+
+        function getPixels(s) {
+            s2 = s.replace(/px$/, '');
+            return Number(s2) || 0;
+        }
         
         handle.on('mousedown touchstart', function(e) {
-            console.log("klik");
             lastPos = getPageXY(e);
 
             // Rules for what we should set in CSS
@@ -39,17 +43,18 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             setTop     = (!topSet & !botSet) | topSet;
             setBottom  = botSet;
 
-            prevTop    = Number(element.css('top'))    || 0;
-            prevLeft   = Number(element.css('left'))   || 0;
-            prevBottom = Number(element.css('bottom')) || 0;
-            prevRight  = Number(element.css('right'))  || 0;
+            console.log(element.css('top'));
+
+            prevTop    = getPixels(element.css('top'));
+            prevLeft   = getPixels(element.css('left'));
+            prevBottom = getPixels(element.css('bottom'));
+            prevRight  = getPixels(element.css('right'));
 
             $document.on('mouseup touchend', release);
             $document.on('mousemove touchmove', move);
         });
 
         function release(e) {
-            console.log("klak");
             $document.off('mouseup touchend', release);
             $document.off('mousemove touchmove', move);
         }
@@ -57,6 +62,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
         function move(e) {
             pos = getPageXY(e);
             delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
+            console.log(prevTop);
 
             if ( setTop )
                 element.css( 'top', prevTop + delta.Y );
