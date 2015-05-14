@@ -145,6 +145,10 @@
                             src="'{{ url_for('static', filename='templates/questionAskedStudent.html') }}'"></ng-include>
                 </div>
             </pop-up-dialog>
+            <pop-up-dialog show="showLectureEnding">
+                <ng-include
+                            src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
+            </pop-up-dialog>
 
             <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
                 <div ng-class="['contents']">

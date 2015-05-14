@@ -41,6 +41,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.studentTable = [];
         $scope.lecturerTable = [];
         $scope.gettingAnswersArray = [];
+        $scope.answeredToLectureEnding = false;
+        $scope.showLectureEnding = false;
+        $scope.extendTime = "15";
+        $scope.lectureEnded = false;
+
         $scope.checkIfInLecture = function () {
             http({
                 url: '/checkLecture',
@@ -164,8 +169,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
 
         $scope.toggleLecture = function () {
-			$('#currentList').hide();
-			$('#futureList').hide();
+            $('#currentList').hide();
+            $('#futureList').hide();
             createDialog('../../../static/templates/start_lecture.html', {
                     id: 'createL',
                     title: '',
@@ -258,7 +263,86 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         };
 
+        //Extends the lecture based on the time selected in pop-up to extend lecture
+        $scope.extendLecture = function () {
+            var dateTime = $scope.lectureEndTime.split(" ");
+            var YearMonthDay = dateTime[1].split("-");
+            var endYear = parseInt(YearMonthDay[0]);
+            var endMonth = parseInt(YearMonthDay[1]);
+            var endDay = parseInt(YearMonthDay[2]);
+
+            var hoursMins = dateTime[2].split(":");
+            var endHour = parseInt(hoursMins[0]);
+            var endMinutes = parseInt(hoursMins[1]);
+
+
+            endMinutes += parseInt($scope.extendTime);
+
+            if (endMinutes >= 60) {
+                endHour += 1;
+                endMinutes -= 60;
+                if (endHour >= 24) {
+                    endDay += 1;
+                    endHour -= 24;
+                    switch (endMonth) {
+                        case 1:
+                        case 3:
+                        case 5:
+                        case 7:
+                        case 8:
+                        case 10:
+                        case 12:
+                            if (endDay > 31) {
+                                endDay = 1;
+                                endMonth += 1
+                            }
+                            break;
+                        case 2:
+                            if (endDay > 28) {
+                                endDay = 1;
+                                endMonth += 1;
+                            }
+                            break;
+                        default:
+                            if (endDay > 30) {
+                                endDay = 1;
+                                endMonth += 1;
+                            }
+                    }
+                    if (endMonth > 12) {
+                        endMonth = 1;
+                        endYear += 1;
+                    }
+                }
+            }
+
+
+            var endTimeDate = endYear + "-" + $scope.leftPadder(endMonth, 2) + "-" + $scope.leftPadder(endDay, 2) + " " +
+                $scope.leftPadder(endHour, 2) + ":" + $scope.leftPadder(endMinutes, 2);
+            $scope.lectureEndTime = "Ends: " + endTimeDate;
+            $scope.showLectureEnding = false;
+            $scope.lectureEnded = false;
+
+            http({
+                url: '/extendLecture',
+                method: 'POST',
+                params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId, new_end_time: endTimeDate}
+            })
+                .success(function () {
+                    console.log("Lecture extended");
+                })
+                .error(function () {
+                    console.log("Failed to delete the lecture");
+                })
+        };
+
+        $scope.continueLecture = function () {
+            $scope.answeredToLectureEnding = true;
+            $scope.showLectureEnding = false;
+        };
+
         $scope.endLecture = function () {
+            $scope.showLectureEnding = false;
             http({
                 url: '/endLecture',
                 method: 'POST',
@@ -382,7 +466,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/getLectureAnswers',
                 type: 'GET',
-                params: {'question_id': answer.questionId, 'doc_id': $scope.docId, 'time': answer.latestAnswer}
+                params: {
+                    'question_id': answer.questionId,
+                    'doc_id': $scope.docId,
+                    'lecture_id': $scope.lectureId,
+                    'time': answer.latestAnswer
+                }
             })
                 .success(function (answer) {
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
@@ -426,6 +515,16 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             return;
                         }
 
+                        if (answer.lectureEnding != 100) {
+                            if(answer.lectureEnding == 1 && !$scope.lectureEnded) {
+                                $scope.showLectureEnding = true;
+                                $scope.lectureEnded = true;
+                            }
+                            if (!$scope.answeredToLectureEnding) {
+                                $scope.showLectureEnding = true;
+                            }
+                        }
+
                         var oldUser = false;
                         for (var i = 0; i < answer.students.length; i++) {
                             for (var index = 0; index < $scope.studentTable.length; index++) {
@@ -460,7 +559,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                     name: answer.lecturers[i].name,
                                     active: answer.lecturers[i].active
                                 };
-                                $scope.lecturerTable.push(student);
+                                $scope.lecturerTable.push(lecturer);
                             }
                         }
 
