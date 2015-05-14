@@ -1,10 +1,10 @@
 #!/bin/bash
-# Restart showFile
+# Restart pali 
 
 docker stop pali 
 docker rm pali 
 
-# Start showFile-plugin
+# Start pali-plugin
 docker run --name pali\
            -p 61000:5000\
            -v /opt/tim/timApp/modules/pali:/pali/:ro\
