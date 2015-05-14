@@ -1,6 +1,6 @@
-timApp.controller("SidebarMenuCtrl", ['$scope', "$http",
+timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 
-    function ($scope, $http) {
+    function ($scope, $http, $window) {
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
         $scope.pastLecturesList = [];
@@ -11,6 +11,26 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http",
         $scope.questionSidebarState = 'autohidden';
         $scope.peopleSidebarState = 'autohidden';
         $scope.settingsSidebarState = 'autohidden';
+		
+		$scope.showSidebar = function() {
+			$('.menu').slideToggle();
+			$('#futureList').hide();
+			$('#currentList').hide();
+			$scope.indexSidebarState = 'hidden';
+            $scope.lecturesSidebarState = 'hidden';
+            $scope.questionSidebarState = 'hidden';
+            $scope.peopleSidebarState = 'hidden';
+            $scope.settingsSidebarState = 'hidden';
+		}
+		
+		var w = angular.element($window);
+		w.bind('resize', function () {
+			$scope.indexSidebarState = 'hidden';
+            $scope.lecturesSidebarState = 'hidden';
+            $scope.questionSidebarState = 'hidden';
+            $scope.peopleSidebarState = 'hidden';
+            $scope.settingsSidebarState = 'hidden';
+		});
 
         $scope.toggleIndex = function () {
             var visible = angular.element('.index-sidebar').is(":visible");

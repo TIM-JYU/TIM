@@ -46,6 +46,7 @@
     <script src="{{ url_for('static', filename='scripts/controllers/questionAnswerController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/popUpDialog.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
+	<script src="{{ url_for('static', filename='scripts/smallMenuCtrl.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/Chart.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionShowAnswersController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
@@ -104,7 +105,7 @@
             {% include 'lectureinfo_menu.html' %}
             <div ng-show="!inLecture">
             </div>
-            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false" resizable>
+            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false"  resizable>
                 <div class="wall-base" id="wallBase">
                     <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)">
                         <span ng-bind="wallName">Wall</span>
@@ -136,18 +137,23 @@
             </pop-up-dialog>
             <pop-up-dialog show="showStudentAnswers">
                 <div ng-controller="QuestionShowAnswerController">
-                    <ng-include src="'../../../static/templates/answersFromStudents.html'"></ng-include>
+                    <ng-include src="'{{ url_for('static', filename='templates/answersFromStudents.html')}}'"></ng-include>
                 </div>
             </pop-up-dialog>
             <pop-up-dialog show="showAnswerDummy">
                 <div ng-controller="QuestionAnswerController">
                     <!--TODO: Learn how to use url_for here, or find url some other better way(This won't work) -->
-                    <ng-include src="'../../../static/templates/questionAskedStudent.html'"></ng-include>
+                    <ng-include src="'{{ url_for('static', filename='templates/questionAskedStudent.html')}}'"></ng-include>
                 </div>
             </pop-up-dialog>
 
-            <div ng-controller="SidebarMenuCtrl">
+            <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
                 <div ng-class="['contents']">
+					<div id="sidebarMenuButton" ng-click="showSidebar()" title="Show menu">
+						<div></div>
+						<div></div>
+						<div></div>
+					</div>
                     <div ng-class="['menu']">
                         <img ng-click="toggleIndex()" ng-class="['menu-icon']" ng-show="indexTable.length > 0"
                              src="{{ url_for('static', filename='images/contents.png') }}" width="50"
@@ -185,22 +191,6 @@
                         {% endraw %}
                     </div>
 
-                    <div ng-class="['people-sidebar', peopleSidebarState]">
-                        <h1>People</h1>
-                        {% raw %}
-                        <ul>
-                            <h4>Lecturer</h4>
-                            <li ng-repeat="lecturer in lecturerTable">
-                                {{ lecturer.name }} > {{ lecturer.active }}
-                            </li>
-                            <h4>Students</h4>
-                            <li ng-repeat="person in studentTable">
-                                {{ person.name }} > {{ person.active }}
-                            </li>
-                        </ul>
-                        {% endraw %}
-                    </div>
-
                     <div ng-class="['lectures-sidebar', lecturesSidebarState]">
                         <h1>Lectures</h1>
                         {% raw %}
@@ -209,14 +199,17 @@
                             <li ng-repeat="lecture in currentLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
+							<p ng-show="currentLecturesList.length == 0">-</p>
                             <h4>Coming Lectures</h4>
                             <li ng-repeat="lecture in futureLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
+							<p ng-show="futureLecturesList.length == 0">-</p>
                             <h4>Past Lectures</h4>
                             <li ng-repeat="lecture in pastLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
+							<p ng-show="pastLecturesList.length == 0">-</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -226,17 +219,33 @@
                         <ul>
                             <h4>Lecture questions</h4>
                             <li ng-repeat="question in lectureQuestions">
-                                <a>{{ question.question }}</a>
+                                <a ng-click="showQuestionById(question.question_id)">{{ question.question }}</a>
                             </li>
+							<p ng-show="lectureQuestions.length == 0">-</p>
                             <h4>Material questions</h4>
-                            <li ng-repeat="question in materialQuestion">
+                            <li ng-repeat="question in materialQuestions">
                                 <a>{{ question.question }}</a>
                             </li>
+							<p ng-show="materialQuestions.length == 0">-</p>
                         </ul>
                         {% endraw %}
                     </div>
                     <div ng-class="['people-sidebar', peopleSidebarState]">
                         <h1>People</h1>
+                        {% raw %}
+                        <ul>
+                            <h4>Lecturer</h4>
+                            <li ng-repeat="lecturer in lecturerTable">
+                                {{ lecturer.name }} > {{ lecturer.active }}
+                            </li>
+							<p ng-show="lecturerTable.length == 0">-</p>
+                            <h4>Students</h4>
+                            <li ng-repeat="person in studentTable">
+                                {{ person.name }} > {{ person.active }}
+                            </li>
+							<p ng-show="studentTable.length == 0">-</p>
+                        </ul>
+                        {% endraw %}
                     </div>
                     <div ng-class="['settings-sidebar', settingsSidebarState]">
                         <h1>Settings</h1>

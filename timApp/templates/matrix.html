@@ -1,12 +1,13 @@
 <div>
     <div id="check" ng-if="question.type == 'matrix'">
         <label>Answer type:</label>
-        <select name="answerType" ng-model="question.answerFieldType" ng-dropdown
+        <select name="answerType" ng-model="question.matrixType" ng-dropdown
                 ng-options="item.value as item.label for item in answerFieldTypes ">
             <option value="" disabled selected> -- select answer type --</option>
 
         </select>
     </div>
+
     <div>
         <table>
             <thead>
@@ -65,7 +66,7 @@
                 </th>
                 <td ng-repeat="column in row.columns">
                     <!-- Horizontal radio-button-->
-                    <div ng-if="(question.answerFieldType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
+                    <div ng-if="(question.matrixType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
                         <input type="radio"
                                ng-model="row.id"
                                ng-value="column.id"
@@ -77,7 +78,7 @@
                     </div>
                     <!-- Vertical radio-button -->
                     <div ng-if="question.type != 'true-false'">
-                        <div ng-if="(question.answerFieldType == 'radiobutton-vertical' && question.type=='matrix') || question.type == 'radio-vertical'">
+                        <div ng-if="(question.matrixType == 'radiobutton-vertical' && question.type=='matrix') || question.type == 'radio-vertical'">
                             <input type="radio"
                                    name="column.rowId"
                                    ng-value="column.id"
@@ -89,13 +90,13 @@
                         </div>
                         <!-- Text area-->
                         <div ng-if="question.type != 'radio-button'">
-                            <textarea ng-if="question.answerFieldType == 'textArea' && question.type=='matrix'"
+                            <textarea ng-if="question.matrixType == 'textArea' && question.type=='matrix'"
                                       type="text"
                                       placeholder="Placeholder"
                                       rows="1"
                                       cols="20"></textarea>
                             <!-- Checkbox-->
-                            <div ng-if="(question.answerFieldType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">
+                            <div ng-if="(question.matrixType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">
                                 <input type="checkbox"
                                        ng-model="row.id"
                                         />

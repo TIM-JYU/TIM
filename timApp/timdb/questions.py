@@ -15,14 +15,14 @@ class Questions(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                          SELECT id, question, answer
+                          SELECT question_id, question, answer
                           FROM Question
                           WHERE doc_id = ? AND par_index = ?
                        """, [doc_id, par_index])
         return self.resultAsDictionary(cursor)
 
     @contract
-    def delete_question(self, question_id: 'int'):
+    def delete_question(self, question_id: 'int', commit:'bool'=True):
         """
         Deletes the question from database
         :param question_id: question to delete
@@ -36,7 +36,8 @@ class Questions(TimDbBase):
                 WHERE question_id = ?
             """, [question_id])
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     @contract
     def get_question(self, question_id) -> 'list(dict)':
