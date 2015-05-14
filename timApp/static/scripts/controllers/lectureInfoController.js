@@ -2,7 +2,7 @@ var docId, lectureId, lectureCode, lectureStartTime, lectureEndTime;
 /**
  * Created by hajoviin on 11.5.2015.
  */
-timApp.controller('LectureInfoController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
+timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope, $http) {
 
     $scope.docId = docId;
     $scope.lectureId = lectureId;

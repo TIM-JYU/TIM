@@ -1,6 +1,6 @@
 timApp.controller("CreateLectureCtrl", ['$scope', "$http",
 
-    function ($scope, http) {
+    function ($scope, $http) {
 
         $scope.showLectureCreation = false;
         $scope.useDate = false;
@@ -10,28 +10,29 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
         $scope.durationHour = "";
         $scope.durationMin = "";
         $scope.lectureId = null;
-		$scope.dateCheck = false;
-		$scope.dueCheck = false;
+        $scope.dateCheck = false;
+        $scope.dueCheck = false;
         $scope.error_message = "";
+        $scope.lectureCode = "";
 
 
         var date = new Date();
 
         $scope.setCurrentTime = function () {
-           $scope.startDay = date.getDate();
+            $scope.startDay = date.getDate();
             $scope.startMonth = date.getMonth() + 1;
             $scope.startYear = date.getFullYear();
             $scope.startHour = date.getHours();
-            $scope.startMin = (date.getMinutes()<10?'0':'') + date.getMinutes();
+            $scope.startMin = (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
         };
-		
-		$scope.setCurrentTime();
+
+        $scope.setCurrentTime();
         var errors = 0;
 
         $scope.enableDate2 = function () {
-			
-			$scope.dateCheck = true;
-			$scope.dueCheck = false;
+
+            $scope.dateCheck = true;
+            $scope.dueCheck = false;
             $scope.endDate = lectureForm.form.startDate.value.split("-");
             $scope.endDay = $scope.endDate[0];
             $scope.endMonth = $scope.endDate[1];
@@ -49,8 +50,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
 
         /*Function for enabling fields and buttons for "Duration" and disabling them for "Use date".*/
         $scope.enableDue2 = function () {
-			$scope.dateCheck = false;
-			$scope.dueCheck = true;
+            $scope.dateCheck = false;
+            $scope.dueCheck = true;
             $scope.useDuration = true;
             $scope.useDate = false;
             $scope.endDay = "";
@@ -83,8 +84,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
 
         /*Function for showing the error message.*/
         $scope.showErrorMessage = function () {
-			//alert("Errors");
-			//document.getElementById("errorMessage").innerHTML = "Errors in the form. Please, correct the fields marked with red to continue.";
+            //alert("Errors");
+            //document.getElementById("errorMessage").innerHTML = "Errors in the form. Please, correct the fields marked with red to continue.";
         };
 
         /*Function for checking that input is a number.*/
@@ -133,13 +134,12 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
                 element.title = "Number has to be positive.";
             }
         };
-		$scope.setFormScope= function(scope){
-			this.formScope = scope;
-		}
+        $scope.setFormScope = function (scope) {
+            this.formScope = scope;
+        };
         /*Function for creating a new lecture and error checking.*/
 
         $scope.submitLecture = function () {
-
             var elements = [
                 lectureForm.form.startDay,
                 lectureForm.form.startMonth,
@@ -192,8 +192,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
                 $scope.endDay = $scope.startDay;
                 $scope.endMonth = $scope.startMonth;
                 $scope.endYear = $scope.startYear;
-				$scope.durationMin = this.formScope.form.endMm.$viewValue;
-				$scope.durationHour = this.formScope.form.endHh.$viewValue;
+                $scope.durationMin = this.formScope.form.endMm.$viewValue;
+                $scope.durationHour = this.formScope.form.endHh.$viewValue;
 
                 if ($scope.durationMin == "") {
                     $scope.durationMin = 0;
@@ -243,38 +243,41 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
                 }
 
             }
-			
-			if ($scope.useDate) {
-				var endDate = "" + $scope.leftPadder(this.formScope.form.stopY.$viewValue, 4) + "-"
-					+ $scope.leftPadder(this.formScope.form.stopM.$viewValue, 2) + "-"
-					+ $scope.leftPadder(this.formScope.form.stopD.$viewValue, 2) + " "
-					+ $scope.leftPadder(this.formScope.form.stopHh.$viewValue, 2) + ":"
-					+ $scope.leftPadder(this.formScope.form.stopMm.$viewValue, 2);
-			}
-			
-			if ($scope.useDuration) {
-				var endDate = "" + $scope.leftPadder($scope.endYear, 4) + "-"
-					+ $scope.leftPadder($scope.endMonth, 2) + "-"
-					+ $scope.leftPadder($scope.endDay, 2) + " "
-					+ $scope.leftPadder($scope.endHour, 2) + ":"
-					+ $scope.leftPadder($scope.endMin, 2);
-					
-				console.log(endDate);
-			}
+
+            if ($scope.useDate) {
+                var endDate = "" + $scope.leftPadder(this.formScope.form.stopY.$viewValue, 4) + "-"
+                    + $scope.leftPadder(this.formScope.form.stopM.$viewValue, 2) + "-"
+                    + $scope.leftPadder(this.formScope.form.stopD.$viewValue, 2) + " "
+                    + $scope.leftPadder(this.formScope.form.stopHh.$viewValue, 2) + ":"
+                    + $scope.leftPadder(this.formScope.form.stopMm.$viewValue, 2);
+            }
+
+            if ($scope.useDuration) {
+                var endDate = "" + $scope.leftPadder($scope.endYear, 4) + "-"
+                    + $scope.leftPadder($scope.endMonth, 2) + "-"
+                    + $scope.leftPadder($scope.endDay, 2) + " "
+                    + $scope.leftPadder($scope.endHour, 2) + ":"
+                    + $scope.leftPadder($scope.endMin, 2);
+
+                console.log(endDate);
+            }
 
 
-            http({
+            $http({
                 url: '/createLecture',
                 method: 'POST',
                 params: {
-                    'doc_id': docIdParam, 'lecture_code': this.formScope.form.code.$viewValue, 'password': this.formScope.form.password.$viewValue,
-                    'start_date': startDate, 'end_date': endDate
+                    'doc_id': docIdParam,
+                    'lecture_code': this.formScope.form.code.$viewValue,
+                    'password': this.formScope.form.password.$viewValue,
+                    'start_date': startDate,
+                    'end_date': endDate
                 }
             })
                 .success(function (answer) {
                     anotherScope.checkIfInLecture();
                     console.log("Lecture created: " + answer.lectureId);
-					$scope.$modalClose();
+                    $scope.$modalClose();
                 })
                 .error(function () {
                     console.log("Failed to start a lecture");
@@ -293,6 +296,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
 
         /*Function for cancelling the lecture creation.*/
         $scope.cancelCreation = function () {
+
+
+            $scope.$emit("closeLectureForm");
             var elementsToClear = [lectureForm.form.startDay,
                 lectureForm.form.startMonth,
                 lectureForm.form.startYear,
@@ -307,7 +313,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
                 lectureForm.form.durationMin];
             var i;
             for (i = 7; i < elementsToClear.length; i++) {
-                if(elementsToClear[i] != undefined)
+                if (elementsToClear[i] != undefined)
                     elementsToClear[i].value = "";
             }
             $scope.showLectureCreation = false;
@@ -317,8 +323,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
             $scope.useDuration = false;
             $scope.dateChosen = false;
             $scope.durationChosen = false;
-            console.log($rootScope);
-			myService.setLectureForm(false);
+
         };
 
     }

@@ -45,6 +45,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.showLectureEnding = false;
         $scope.extendTime = "15";
         $scope.lectureEnded = false;
+        $scope.showLectureForm = false;
 
         $scope.checkIfInLecture = function () {
             http({
@@ -63,6 +64,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.$on('get_lectureId', function () {
             $scope.$emit('getLectureId', $scope.lectureId);
+        });
+
+        $scope.$on('closeLectureForm', function(){
+           $scope.showLectureForm = false;
         });
 
         $scope.$on("answerToQuestion", function (event, answer) {
@@ -171,21 +176,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.toggleLecture = function () {
             $('#currentList').hide();
             $('#futureList').hide();
-            createDialog('../../../static/templates/start_lecture.html', {
-                    id: 'createL',
-                    title: '',
-                    footerTemplate: " ",
-                    controller: 'CreateLectureCtrl'/*,
-                     footerTemplate:
-                     '<div class="buttons">' +
-                     '<button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>' +
-                     '<button type="button" ng-click="cancelCreation()">Cancel</button>' +
-                     '</div>'*/
-                },
-                {
-                    docIdParam: $scope.docId,
-                    anotherScope: $scope
-                });
+            $scope.showLectureForm = true;
         };
 
         $scope.startFutureLecture = function () {
@@ -668,45 +659,3 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
     }
 ])
 ;
-
-timApp.directive('notEmptyChange', function () {
-    return {
-        scrope: false,
-        link: function (scope, element) {
-            element.bind('change', function () {
-                scope.isValid(element.context);
-            });
-            element.bind('blur', function () {
-                scope.notEmpty(element.context);
-            });
-        }
-    }
-});
-
-timApp.directive('isValidChange', function () {
-    return {
-        scrope: false,
-        link: function (scope, element) {
-            element.bind('blur', function () {
-                scope.isValid(element.context);
-            });
-            element.bind('change', function () {
-                scope.isValid(element.context);
-            });
-        }
-    }
-});
-
-timApp.directive('isPositive', function () {
-    return {
-        scrope: false,
-        link: function (scope, element) {
-            element.bind('blur', function () {
-                scope.isPositiveNumber(element.context);
-            });
-            element.bind('change', function () {
-                scope.isPositiveNumber(element.context);
-            });
-        }
-    }
-});

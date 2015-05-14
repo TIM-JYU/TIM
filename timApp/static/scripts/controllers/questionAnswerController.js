@@ -15,6 +15,7 @@ timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($sco
 
     $scope.answer = function () {
         $scope.dynamicAnswerSheetControl.answerToQuestion()
+
     };
 }]);
 

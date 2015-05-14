@@ -65,7 +65,7 @@
         </label>
 
         <div>
-            <h3>Find answers by <span ng-bind="userName"></span></h3>
+            <h3>Find answers <span ng-show="!isLecturer" ng-bind="userName"></span></h3>
             <label ng-show="isLecturer">UserName
                 <select ng-model="userName" ng-options="user for user in answerers">
                 </select>
