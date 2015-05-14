@@ -48,6 +48,8 @@
     <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/Chart.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionShowAnswersController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/myService.js') }}"></script>
 
     <!-- Script to load question from another file -->
     <script>
@@ -60,6 +62,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/windowstyle.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/progressbarstyle.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jsDatePick_ltr.min.css') }}">
 
 
 
@@ -126,6 +129,11 @@
                     </div>
                 </div>
             </div>
+            <pop-up-dialog show="showLectureForm">
+                <div ng-controller="CreateLectureCtrl">
+                    <ng-include src="'../../../static/templates/start_lecture.html'"></ng-include>
+                </div>
+            </pop-up-dialog>
             <pop-up-dialog show="showStudentAnswers">
                 <div ng-controller="QuestionShowAnswerController">
                     <ng-include src="'../../../static/templates/answersFromStudents.html'"></ng-include>
