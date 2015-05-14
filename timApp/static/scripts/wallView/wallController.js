@@ -164,6 +164,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
 
         $scope.toggleLecture = function () {
+			$('#currentList').hide();
+			$('#futureList').hide();
             createDialog('../../../static/templates/start_lecture.html', {
                     id: 'createL',
                     title: '',

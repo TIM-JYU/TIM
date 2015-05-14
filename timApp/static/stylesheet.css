@@ -1129,6 +1129,7 @@ p.stem {
 }
 
 /* Kännyköiden erikoistyylit =============================================*/
+
 @media only screen and (max-device-width: 500px) {
     P {
         margin-top: 0.0em;
@@ -1396,6 +1397,9 @@ img.console {
 }
 
 /* Sisällysluetteloa varten =============================================*/
+#sidebarMenuButton {
+	display: none;
+}
 
 .contents {
     position: fixed;
@@ -1406,8 +1410,18 @@ img.console {
     overflow-y: auto;
 }
 
+.sidebarMenu h4{
+	margin: 0;
+	margin-top: 15px;
+	color: #3cc;
+}
+
+.sidebarMenu p{
+	margin: 0;
+}
+
 .index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
-    position: fixed;
+	position: fixed;
     top: 0;
     left: 45px;
     z-index: 1;
@@ -1450,9 +1464,13 @@ img.console {
     font-size: 0.85em;
 }
 
-.index-sidebar li, .lectures-sidebar li, .questions-sidebar li, .people-sidebar li, .settings-sidebar li {
+.index-sidebar li, .lectures-sidebar li , .questions-sidebar li, .settings-sidebar li{
     padding-left: 15px;
     list-style: none;
+}
+
+.people-sidebar li {
+	list-style:none;
 }
 
 .index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
@@ -1465,13 +1483,19 @@ img.console {
     list-style-type: square;
 }
 
-.index-sidebar a, .lectures-sidebar a, .questions-sidebar a, .people-sidebar a, .settings-sidebar a {
-    margin: 0 0px 0 -15px;
-    text-align: left;
-    color: #2bb;
+.index-sidebar a {
+	margin: 0 0px 0 -15px;
+	text-align: left;
+	color: #2bb;
 }
 
-.index-sidebar a:hover, .lectures-sidebar a:hover, .questions-sidebar a:hover, .people-sidebar a:hover,
+.lectures-sidebar a, .questions-sidebar a, .people-sidebar a, .settings-sidebar a{
+	margin: 0 0px 0 -15px;
+	text-align: left;
+	color: black;
+}
+
+.index-sidebar a:hover, .lectures-sidebar a:hover , .questions-sidebar a:hover, .people-sidebar a:hover,
 .settings-sidebar a:hover {
     color: #3cc;
     text-decoration: none;
@@ -1511,8 +1535,9 @@ img.console {
     text-align: left;
 }
 
-.menu {
-    background: #e6e6e6;
+.menu{
+	display: block;
+	background:#e6e6e6;
     width: 45px;
     z-index: 501;
 }
@@ -1548,6 +1573,50 @@ img.console {
     margin-left: 2em;
     font-size: 0.9em;
 }
+
+@media only screen and (max-width: 500px) {
+	#sidebarMenuButton {
+		padding: 10px;
+		background-color: #3cc;
+		border: 1px solid #3cc;
+		border-radius: 5px;
+		width: 30px;
+		height: 50px;
+		display: block;	
+		position: fixed;
+		z-index: 502;
+		line-height: 0.4;
+	}
+	
+	#sidebarMenuButton div {
+		display: inline-block;
+		width: 100%;
+		height: 5px;
+		margin: 5px 0px;
+		background-color: white;
+	}
+	
+	#sidebarMenuButton:hover {
+		cursor: pointer;
+	}
+	
+	.menu {
+		display: none;
+		margin-top: 80px;
+	}
+	
+	.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar{
+		top: 80px;
+	}
+	
+}
+
+@media only screen and (min-width: 500px) {
+	.menu {
+		display: block!important;
+	}
+}
+
 
 /* =============================== Vesan lisäyksiä ==================================*/
 
