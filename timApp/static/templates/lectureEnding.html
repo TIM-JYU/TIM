@@ -1,0 +1,21 @@
+<div class="lectureEnding">
+    <h3 ng-show="!lectureEnded">Lecture ends in 5 minutes</h3>
+
+    <h3 ng-show="lectureEnded">Lecture ends</h3>
+    <label> Extend by
+        <select ng-model="extendTime">
+            <option value="5">5</option>
+            <option value="15" selected>15</option>
+            <option value="30">30</option>
+            <option value="45">45</option>
+            <option value="60">60</option>
+        </select>
+        min
+    </label>
+
+    <div>
+        <button autofocus ng-click="extendLecture()">Extend</button>
+        <button ng-show="lectureEnded" ng-click="endLecture()">End</button>
+        <button ng-show="!lectureEnded" ng-click="continueLecture()">Cancel</button>
+    </div>
+</div>
