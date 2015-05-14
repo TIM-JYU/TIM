@@ -1,6 +1,6 @@
-timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', '$controller', "$http", "$window",
+timApp.controller("CreateLectureCtrl", ['$scope', "$http",
 
-    function ($scope, docIdParam, anotherScope, controller, http, $window) {
+    function ($scope, http) {
 
         $scope.showLectureCreation = false;
         $scope.useDate = false;
@@ -12,6 +12,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', 
         $scope.lectureId = null;
 		$scope.dateCheck = false;
 		$scope.dueCheck = false;
+        $scope.error_message = "";
+
 
         var date = new Date();
 
@@ -20,49 +22,33 @@ timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', 
             $scope.startMonth = date.getMonth() + 1;
             $scope.startYear = date.getFullYear();
             $scope.startHour = date.getHours();
-            $scope.startMin = date.getMinutes();
+            $scope.startMin = (date.getMinutes()<10?'0':'') + date.getMinutes();
         };
 		
 		$scope.setCurrentTime();
-		/*this.formScope.form.startHh.$viewValue = $scope.leftPadder($scope.startHour, 2);
-		this.formScope.form.startMm.$viewValue = $scope.leftPadder($scope.startMin, 2);
-		document.getElementById("startMonth").value = $scope.startMonth;
-		document.getElementById("startYear").value = $scope.startYear;
-		document.getElementById("startDay").value = $scope.startDay;*/
-
         var errors = 0;
 
         $scope.enableDate2 = function () {
 			
 			$scope.dateCheck = true;
 			$scope.dueCheck = false;
-            $scope.endDay = this.formScope.form.startD.$viewValue;
-            $scope.endMonth = this.formScope.form.startM.$viewValue;
-            $scope.endYear = this.formScope.form.startY.$viewValue;
-            $scope.endHour = parseInt(this.formScope.form.startHh.$viewValue) + 2;
-            $scope.endMin = this.formScope.form.startMm.$viewValue;
+            $scope.endDate = lectureForm.form.startDate.value.split("-");
+            $scope.endDay = $scope.endDate[0];
+            $scope.endMonth = $scope.endDate[1];
+            $scope.endYear = $scope.endDate[2];
+            $scope.endHour = $scope.startHour + 2;
+            $scope.endMin = $scope.startMin;
 
-            /*document.getElementById("stopDay").value = $scope.endDay;
-            document.getElementById("stopMonth").value = $scope.endMonth;
-            document.getElementById("stopYear").value = $scope.endYear;
-            document.getElementById("stopHour").value = $scope.endHour;
-            document.getElementById("stopMin").value = $scope.endMin;*/
-
-
-            document.getElementById("calendarStop").disabled = false;
             $scope.useDate = true;
             $scope.useDuration = false;
-            document.getElementById("hours2").value = "";
-            document.getElementById("mins2").value = "";
+            lectureForm.form.durationHour.value = "";
+            lectureForm.form.durationMin.value = "";
             $scope.defInputStyle(document.getElementById("hours2"));
             $scope.defInputStyle(document.getElementById("mins2"));
-			
-            $scope.defInputStyle(document.getElementById("lbend"));
         };
 
         /*Function for enabling fields and buttons for "Duration" and disabling them for "Use date".*/
         $scope.enableDue2 = function () {
-
 			$scope.dateCheck = false;
 			$scope.dueCheck = true;
             $scope.useDuration = true;
@@ -72,15 +58,14 @@ timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', 
             $scope.endYear = "";
             $scope.endHour = "";
             $scope.endMin = "";
+            $scope.durationHour = "02";
+            $scope.durationMin = "00";
 
-            document.getElementById("calendarStop").disabled = true;
             $scope.defInputStyle(document.getElementById("stopDay"));
             $scope.defInputStyle(document.getElementById("stopMonth"));
             $scope.defInputStyle(document.getElementById("stopYear"));
             $scope.defInputStyle(document.getElementById("stopHour"));
             $scope.defInputStyle(document.getElementById("stopMin"));
-
-            $scope.defInputStyle(document.getElementById("lbend"));
         };
 
         /*Function for checking that elements value isn't empty.*/
@@ -98,13 +83,13 @@ timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', 
 
         /*Function for showing the error message.*/
         $scope.showErrorMessage = function () {
-			alert("Errors");
-			document.getElementById("errorMessage").innerHTML = "Errors in the form. Please, correct the fields marked with red to continue.";
+			//alert("Errors");
+			//document.getElementById("errorMessage").innerHTML = "Errors in the form. Please, correct the fields marked with red to continue.";
         };
 
         /*Function for checking that input is a number.*/
         $scope.isValid = function (element) {
-            if (isNaN(element.value) == true) {
+            if (isNaN(element.value) === true) {
                 element.style.border = "1px solid red";
                 element.title = "Use a number.";
             }
@@ -152,42 +137,33 @@ timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', 
 			this.formScope = scope;
 		}
         /*Function for creating a new lecture and error checking.*/
+
         $scope.submitLecture = function () {
-            var elements = [document.getElementById("startDay"),
-                document.getElementById("startMonth"),
-                document.getElementById("startYear"),
-                document.getElementById("startHour"),
-                document.getElementById("startMin"),
-                document.getElementById("stopDay"),
-                document.getElementById("stopMonth"),
-                document.getElementById("stopYear"),
-                document.getElementById("stopHour"),
-                document.getElementById("stopMin"),
-                document.getElementById("hours2"),
-                document.getElementById("mins2")];
 
-            var i;
-            /*Checks if there are errors in input.*/
-            for (i = 0; i < elements.length; i++) {
-                if (elements[i].style.border == "1px solid red") {
-                    $scope.showErrorMessage();
-                }
-                else document.getElementById("errorMessage").innerHTML = "";
-            }
-
+            var elements = [
+                lectureForm.form.startDay,
+                lectureForm.form.startMonth,
+                lectureForm.form.startYear,
+                lectureForm.form.startHour,
+                lectureForm.form.startMin,
+                lectureForm.form.stopDay,
+                lectureForm.form.stopMonth,
+                lectureForm.form.stopYear,
+                lectureForm.form.stopHour,
+                lectureForm.form.stopMin,
+                lectureForm.form.durationHour,
+                lectureForm.form.durationMin];
 
             /*This checks that "lecture code"-field is not empty.*/
-            if (this.formScope.form.code.$viewValue == "" || this.formScope.form.code.$viewValue == undefined) {
+            if (lectureForm.form.code.value == undefined || lectureForm.form.code.value == "") {
                 document.getElementById("lCode").style.border = "1px solid red";
-                document.getElementById("lCode").title = "You must type in something.";
-                $scope.showErrorMessage();
+                $scope.error_message += "Lecture code must be entered!<br/>";
             } else  $scope.defInputStyle(document.getElementById("lCode"));
 
             /*This checks that either "Use date" or "Duration" is chosen for ending time.*/
             if ($scope.dateCheck == false && $scope.dueCheck == false) {
-                document.getElementById("lbend").style.border = "1px solid red";
-                document.getElementById("lbend").title = "You must select something.";
-                $scope.showErrorMessage();
+                document.getElementById("endInfo").style.border = "1px solid red";
+                $scope.error_message += "A date or duration must be chosen.<br />";
             } else  $scope.defInputStyle(document.getElementById("lbend"));
             /*Checks that hours in starting and ending time are between 0 and 23.
              Checks that minutes in starting and ending time are between 0 and 59*/
@@ -204,29 +180,12 @@ timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', 
 
                 $scope.isPositiveNumber(elements[10]);
                 $scope.isPositiveNumber(elements[11]);
-				console.log(this.formScope.form.endHh.$viewValue.length);
-                if (this.formScope.form.endHh.$viewValue.length <= 0 && this.formScope.form.endMm.$viewValue.length <= 0) {
-                    elements[10].style.border = "1px solid red";
-                    elements[11].style.border = "1px solid red";
-                    elements[10].title = "Please give positive number.";
-                    elements[11].title = "Please give positive number.";
-                    $scope.showErrorMessage()
+                if (lectureForm.form.durationHour.value.length <= 0 && lectureForm.form.durationMin.value.length <= 0) {
+                    document.getElementById("durationHour").style.border = "1px solid red";
+                    document.getElementById("durationMin").style.border = "1px solid red";
+                    $scope.error_message += "Please give positive number.<br>";
                 }
             }
-
-            /*g_globalObject.closeCalendar();
-            g_globalObject2.closeCalendar();/*/
-
-            // TODO: Make better way to check errors.
-            if (document.getElementById("errorMessage").innerHTML.length > 0) {
-                return;
-            }
-
-            var startDate = "" + $scope.leftPadder(this.formScope.form.startY.$viewValue, 4) + "-"
-                + $scope.leftPadder(this.formScope.form.startM.$viewValue, 2) + "-"
-                + $scope.leftPadder(this.formScope.form.startD.$viewValue, 2) + " "
-                + $scope.leftPadder(this.formScope.form.startHh.$viewValue, 2) + ":"
-                + $scope.leftPadder(this.formScope.form.startMm.$viewValue, 2);
 
             if ($scope.useDuration) {
 
@@ -330,91 +289,38 @@ timApp.controller("CreateLectureCtrl", ['$scope', 'docIdParam', 'anotherScope', 
                 len++;
             }
             return paddedNumber;
-
         };
 
         /*Function for cancelling the lecture creation.*/
         $scope.cancelCreation = function () {
-            var elementsToClear = [document.getElementById("lCode"),
-                document.getElementById("lbend"),
-                document.getElementById("startDay"),
-                document.getElementById("startMonth"),
-                document.getElementById("startYear"),
-                document.getElementById("startHour"),
-                document.getElementById("startMin"),
-                document.getElementById("stopDay"),
-                document.getElementById("stopMonth"),
-                document.getElementById("stopYear"),
-                document.getElementById("stopHour"),
-                document.getElementById("stopMin"),
-                document.getElementById("hours2"),
-                document.getElementById("mins2")];
+            var elementsToClear = [lectureForm.form.startDay,
+                lectureForm.form.startMonth,
+                lectureForm.form.startYear,
+                lectureForm.form.startHour,
+                lectureForm.form.startMin,
+                lectureForm.form.stopDay,
+                lectureForm.form.stopMonth,
+                lectureForm.form.stopYear,
+                lectureForm.form.stopHour,
+                lectureForm.form.stopMin,
+                lectureForm.form.durationHour,
+                lectureForm.form.durationMin];
             var i;
-            for (i = 0; i < elementsToClear.length; i++) {
-                $scope.defInputStyle(elementsToClear[i]);
-            }
             for (i = 7; i < elementsToClear.length; i++) {
-                elementsToClear[i].value = "";
+                if(elementsToClear[i] != undefined)
+                    elementsToClear[i].value = "";
             }
             $scope.showLectureCreation = false;
-            document.getElementById("errorMessage").innerHTML = "";
+            $scope.error_message = "";
             document.getElementById("lectureForm").reset();
             $scope.useDate = false;
             $scope.useDuration = false;
             $scope.dateChosen = false;
             $scope.durationChosen = false;
-			$scope.$modalClose();
-            /*g_globalObject.closeCalendar();
-            g_globalObject2.closeCalendar();*/
+            console.log($rootScope);
+			myService.setLectureForm(false);
         };
 
-        /*$scope.prepareCalender = function () {
-            g_globalObject = new JsDatePick({
-                useMode: 2,
-                target: "calendarStart",
-                dateFormat: "%d-%M-%Y",
-                yearsRange: [2010, 2020]
-            });
-
-            g_globalObject.setOnSelectedDelegate(function () {
-                var obj = g_globalObject.getSelectedDay();
-                $scope.startDay = obj.day;
-                $scope.startMonth = obj.month;
-                $scope.startYear = obj.year;
-                // TODO: This if necessary or if there is other way
-                $scope.$apply();
-                g_globalObject.closeCalendar();
-            });
-
-            g_globalObject2 = new JsDatePick({
-                useMode: 2,
-                target: "calendarStop",
-                dateFormat: "%d-%M-%Y"
-                /*selectedDate:{				This is an example of what the full configuration offers.
-                 day:5,						For full documentation about these settings please see the full version of the code.
-                 month:9,
-                 year:2006
-                 },
-                 yearsRange:[1978,2020],
-                 limitToToday:false,
-                 cellColorScheme:"beige",
-                 dateFormat:"%m-%d-%Y",
-                 imgPath:"img/",
-                 weekStartDay:1*//*
-            });
-
-            g_globalObject2.setOnSelectedDelegate(function () {
-                var obj = g_globalObject2.getSelectedDay();
-                $scope.endDay = obj.day;
-                $scope.endMonth = obj.month;
-                $scope.endYear = obj.year;
-                // TODO: This if necessary or if there is other way
-                $scope.$apply();
-                g_globalObject2.closeCalendar();
-            });
-        };
-        $scope.prepareCalender();
-	*/
     }
 ])
 ;
