@@ -32,6 +32,7 @@ run pip3 install cssutils
 
 # Install pygit2 and dependencies
 run apt-get install -y wget
+run apt-get update
 run apt-get install -y cmake
 run wget https://github.com/libgit2/libgit2/archive/v0.22.0.tar.gz && tar xzf v0.22.0.tar.gz
 run cd libgit2-0.22.0/ && cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 . && make install
