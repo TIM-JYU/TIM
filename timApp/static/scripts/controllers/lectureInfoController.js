@@ -11,10 +11,12 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$timeout', funct
     $scope.lectureEndTime = lectureEndTime;
     $scope.msg = "";
     $scope.answers = "";
-    $scope.userName = "hajoviin";//TODO: MUISTA VAIHTAA ""
+    $scope.userName = "";
     $scope.dynamicAnswerShowControls = [];
     $scope.dynamicAnswerShowControl = {};
     $scope.index = 0;
+    $scope.isLecturer = false;
+    $scope.answerers = [];
 
     $scope.getLectureInfo = function () {
         $http({
@@ -31,10 +33,11 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$timeout', funct
                 for (var i = 0; i < answer.questions.length; i++) {
                     $scope.dynamicAnswerShowControls.push({});
                 }
+
                 $scope.questions = answer.questions;
-                console.log(answer);
-
-
+                $scope.isLecturer = answer.isLecturer;
+                $scope.answerers = answer.answerers;
+                $scope.userName = answer.userName;
             })
             .error(function () {
                 console.log("fail")
@@ -61,8 +64,14 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$timeout', funct
         }
     };
 
-    $scope.drawCharts = function () {
-
+    $scope.drawCharts = function (userName) {
+        var user;
+        if (typeof userName === 'undefined') {
+            user = ""
+        } else {
+            user = userName;
+        }
+        console.log("user: " + user);
         var questionIndexes = [];
         for (var i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
             $scope.dynamicAnswerShowControls[i].createChart(JSON.parse($scope.questions[i].questionJson));
@@ -72,10 +81,16 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$timeout', funct
         console.log(questionIndexes);
 
         for (var j = 0; j < $scope.answers.length; j++) {
-            $scope.dynamicAnswerShowControls[questionIndexes.indexOf($scope.answers[j].question_id)]
-                .addAnswer([{"answer": $scope.answers[j].answer}]);
+            if (($scope.isLecturer && user == "") || $scope.answers[j].user_name == user) {
+                $scope.dynamicAnswerShowControls[questionIndexes.indexOf($scope.answers[j].question_id)]
+                    .addAnswer([{"answer": $scope.answers[j].answer}]);
+            }
         }
 
+        if ($scope.answers.length <= 0) {
+            var elem = $("#infoBox");
+            elem.empty();
+            elem.append("No answers from this lecture");
+        }
     }
-
 }]);

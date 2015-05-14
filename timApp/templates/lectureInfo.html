@@ -37,38 +37,57 @@
     <div ng-app="timApp" ng-controller="LectureInfoController">
         <h1 ng-bind="lectureCode"></h1>
 
+        <h3>Lecture info</h3>
+
         <div>
-            <p>Start time: </p>
+            <strong>Start time:</strong>
 
             <p ng-bind="lectureStartTime"></p>
 
-            <p>End time:</p>
+            <strong>End time:</strong>
 
             <p ng-bind="lectureEndTime"></p>
+
+            <div ng-show="isLecturer">
+                <!--TODO: Preview questios. Needs directive from the question preview and then júst use it.-->
+                <strong>Questions asked:</strong>
+                <ul>
+                    <li ng-repeat="question in questions">
+                        <p>{{ "{{ question.question }}" }}</p>
+                    </li>
+                </ul>
+            </div>
         </div>
 
-        <p>Lecture wall messages:</p>
+        <h3>Lecture wall</h3>
         <label>
             <textarea data-ng-model="msg" readonly id="lectureInfoWall"></textarea>
         </label>
 
-        <h3>Find answers</h3>
-        <label>UserName
-            <input type="text" ng-model="userName">
-        </label>
-
-        <input type="button" ng-click="drawCharts()" value="Show answers">
-
         <div>
-            <div ng-repeat="question in questions">
-                <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
-                                      control='dynamicAnswerShowControls[$index]' class="chart"></show-chart-directive>
-                <canvas id='answerChart{{ "{{question.question_id }}" }}' width='400' height='300'></canvas>
+            <h3>Find answers by <span ng-bind="userName"></span></h3>
+            <label ng-show="isLecturer">UserName
+                <select ng-model="userName" ng-options="user for user in answerers">
+                </select>
+            </label>
+
+            <input type="button" ng-click="drawCharts(userName)" value="Show answers">
+            <input ng-show="isLecturer" type="button" ng-click="drawCharts()" value="Show all">
+
+            <div>
+                <div ng-repeat="question in questions">
+                    <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
+                                          control='dynamicAnswerShowControls[$index]'
+                                          class="chart"></show-chart-directive>
+                    <canvas id='answerChart{{ "{{question.question_id }}" }}' width='400' height='300'></canvas>
+                </div>
+            </div>
+
+            <div id="answersDiv">
+                <p id="infoBox"></p>
             </div>
         </div>
-
-        <div id="answersDiv"></div>
-        <div style="margin-top: 10em">
+        <div style="margin-top: 10em" ng-show="isLecturer">
             <h3>Delete lecture</h3>
             <input type="button" ng-click="deleteLecture()" value="Delete lecture">
         </div>
