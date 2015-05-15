@@ -250,3 +250,17 @@ class Lectures(TimDbBase):
         """, [lecture_id])
 
         return self.resultAsDictionary(cursor)[0]
+
+    @contract
+    def extend_lecture(self, lecture_id: "int", new_end_time: "string", commit: "bool"=True):
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+                        UPDATE Lecture
+                        SET end_time = ?
+                        WHERE lecture_id = ?
+        """,[new_end_time, lecture_id])
+
+        if commit:
+            self.db.commit()
+

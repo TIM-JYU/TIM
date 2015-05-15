@@ -39,16 +39,18 @@
     <link rel="stylesheet" href="{{ url_for('bower.static', filename='katex-build/katex.min.css') }}">
     <script src="{{ url_for('bower.static', filename='katex-build/katex.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/wallView/wallController.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/jsDatePick.full.1.3.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/jsDatePick.min.1.3.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/createDialog.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/statisticsView/statisticsController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionAnswerController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/popUpDialog.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
-	<script src="{{ url_for('static', filename='scripts/smallMenuCtrl.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/smallMenuCtrl.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/Chart.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/questionShowAnswersController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/showChartDirective.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
 
     <!-- Script to load question from another file -->
     <script>
@@ -61,6 +63,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/windowstyle.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/progressbarstyle.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jsDatePick_ltr.min.css') }}">
 
 
 
@@ -102,7 +105,7 @@
             {% include 'lectureinfo_menu.html' %}
             <div ng-show="!inLecture">
             </div>
-            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false"  resizable>
+            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false" resizable>
                 <div class="wall-base" id="wallBase">
                     <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)">
                         <span ng-bind="wallName">Wall</span>
@@ -113,13 +116,17 @@
                     </div>
                     <div ng-show="showWall" class="wall-content">
                         <div class="wall-message-area">
-                            <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+                            <label>
+                                <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
+                            </label>
                         </div>
                         <div class="wall-buttons">
-                            <input id="messagebox" ng-model="newMsg" width="200" ng-keypress="chatEnterPressed($event)">
+                            <label>
+                                <input id="messagebox" ng-model="newMsg" width="200"
+                                       ng-keypress="chatEnterPressed($event)">
+                            </label>
                             <label title="Shows name of the sender and sending time">
-                                <input type="checkbox" ng-change="showInfo()" ng-model="messageInfo"
-                                        />Info
+                                <input type="checkbox" ng-change="showInfo()" ng-model="messageInfo"/>Info
                             </label>
                             <!-- <button ng-click="sendMessageEvent(newMsg)">Send</button> -->
                             <!-- <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button> -->
@@ -127,25 +134,33 @@
                     </div>
                 </div>
             </div>
-            <pop-up-dialog show="showStudentAnswers">
-                <div ng-controller="QuestionShowAnswerController">
-                    <ng-include src="'{{ url_for('static', filename='templates/answersFromStudents.html')}}'"></ng-include>
-                </div>
+
+            <pop-up-dialog show="showLectureForm">
+                <ng-include src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
             </pop-up-dialog>
-            <pop-up-dialog show="showAnswerDummy">
-                <div ng-controller="QuestionAnswerController">
-                    <!--TODO: Learn how to use url_for here, or find url some other better way(This won't work) -->
-                    <ng-include src="'{{ url_for('static', filename='templates/questionAskedStudent.html')}}'"></ng-include>
-                </div>
+
+            <pop-up-dialog show="showStudentAnswers">
+                <ng-include
+                        src="'{{ url_for('static', filename='templates/answersFromStudents.html') }}'"></ng-include>
+            </pop-up-dialog>
+
+            <pop-up-dialog show="showAnswerWindow">
+                <ng-include
+                        src="'{{ url_for('static', filename='templates/questionAskedStudent.html') }}'"></ng-include>
+            </pop-up-dialog>
+
+            <pop-up-dialog show="showLectureEnding">
+                <ng-include
+                        src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
             </pop-up-dialog>
 
             <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
                 <div ng-class="['contents']">
-					<div id="sidebarMenuButton" ng-click="showSidebar()" title="Show menu">
-						<div></div>
-						<div></div>
-						<div></div>
-					</div>
+                    <div id="sidebarMenuButton" ng-click="showSidebar()" title="Show menu">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
                     <div ng-class="['menu']">
                         <img ng-click="toggleIndex()" ng-class="['menu-icon']" ng-show="indexTable.length > 0"
                              src="{{ url_for('static', filename='images/contents.png') }}" width="50"
@@ -191,17 +206,17 @@
                             <li ng-repeat="lecture in currentLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-							<p ng-show="currentLecturesList.length == 0">-</p>
+                            <p ng-show="currentLecturesList.length == 0">-</p>
                             <h4>Coming Lectures</h4>
                             <li ng-repeat="lecture in futureLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-							<p ng-show="futureLecturesList.length == 0">-</p>
+                            <p ng-show="futureLecturesList.length == 0">-</p>
                             <h4>Past Lectures</h4>
                             <li ng-repeat="lecture in pastLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-							<p ng-show="pastLecturesList.length == 0">-</p>
+                            <p ng-show="pastLecturesList.length == 0">-</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -213,12 +228,12 @@
                             <li ng-repeat="question in lectureQuestions">
                                 <a ng-click="showQuestionById(question.question_id)">{{ question.question }}</a>
                             </li>
-							<p ng-show="lectureQuestions.length == 0">-</p>
+                            <p ng-show="lectureQuestions.length == 0">-</p>
                             <h4>Material questions</h4>
                             <li ng-repeat="question in materialQuestions">
                                 <a>{{ question.question }}</a>
                             </li>
-							<p ng-show="materialQuestions.length == 0">-</p>
+                            <p ng-show="materialQuestions.length == 0">-</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -230,12 +245,12 @@
                             <li ng-repeat="lecturer in lecturerTable">
                                 {{ lecturer.name }} > {{ lecturer.active }}
                             </li>
-							<p ng-show="lecturerTable.length == 0">-</p>
+                            <p ng-show="lecturerTable.length == 0">-</p>
                             <h4>Students</h4>
                             <li ng-repeat="person in studentTable">
                                 {{ person.name }} > {{ person.active }}
                             </li>
-							<p ng-show="studentTable.length == 0">-</p>
+                            <p ng-show="studentTable.length == 0">-</p>
                         </ul>
                         {% endraw %}
                     </div>

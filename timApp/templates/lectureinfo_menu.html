@@ -34,7 +34,6 @@
 			<p ng-bind="lectureStartTime"></p>
 
 			<p ng-bind="lectureEndTime"></p>
-			<input type="button" ng-click="deleteLecture()" value="Delete" ng-show="canStop">
 			<div class="iconSection">
 				<img id="leave-icon" src="{{ url_for('static', filename='images/leave-icon3.png') }}" class="icon"
 					ng-click="leaveLecture()" title="Leave this lecture" ng-show="inLecture">
@@ -57,7 +56,7 @@
 					<img id="start-icon" src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
 						title="Start lecture now" ng-click="startFutureLecture()">
 					<img id="edit-icon2" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-						title="Edit this lecture">	
+						title="Edit this lecture">
 				</div>
 			</div>
         </div>
@@ -140,7 +139,4 @@
 			</div>
 		</div>
 	</div>
-</div>
-<div id="startLecturedialog" ng-show="showLectureCreation">
-    {% include 'start_lecture.html' %}
 </div>
