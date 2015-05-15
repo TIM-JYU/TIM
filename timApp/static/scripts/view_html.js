@@ -895,7 +895,9 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
 
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
-
+    $(function() {
+            $('#calendarStart').datepicker({ dateFormat: 'dd.m.yy' });
+    });
     scope.question = {
         question: "",
         matrixType: "",
@@ -942,15 +944,15 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     columns[j] = {
                         id: j,
                         rowId: i,
-                        text: 'test',
-                        questionPlaceholder: 'column',
+                        text: '',
+                        points: '',
                         type: "answer",
                         answerFiledType: scope.question.answerFieldType
                     }
                 }
                 scope.rows[i] = {
                     id: i,
-                    text: 'test',
+                    text: '',
                     type: 'question',
                     value: '',
                     columns: columns
@@ -985,8 +987,9 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             scope.rows[i].columns.splice(loc, 0, {
                 id: location,
                 rowId: i,
+                text: '',
+                points: '',
                 type: "answer",
-                value: '',
                 answerFiledType: scope.question.answerFieldType
             });
         }
@@ -1115,7 +1118,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 questionJson += '"id":"' + scope.rows[i].columns[j].id + '",';
                 questionJson += '"rowId":"' + scope.rows[i].columns[j].rowId + '",';
                 questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
-//                questionJson += '"value":"' + scope.rows[i].columns[j].value + '",';
+                questionJson += '"points":"' + scope.rows[i].columns[j].points + '",';
                 questionJson += '"answerFieldType":"' + scope.question.answerFieldType + '"';
                 questionJson += '},'
             }
