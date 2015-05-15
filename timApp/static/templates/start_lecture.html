@@ -3,7 +3,7 @@
     <form class="createLecture" id="lectureForm" name="form" ng-init="setFormScope(this)">
         <div id="infoFields">
             <label for="code">Lecture code:</label>
-            <input id="lCode" type="text" name="code" size="45" ng-model="lectureCode" required>
+            <input id="lCode" type="text" name="code" size="45" ng-model="lectureCode">
             <br>
             <label for="password" >Lecture access code:<br>(Optional)</label>
             <input type="text" name="password" ng-model="password" size="45">
@@ -16,10 +16,10 @@
                 <input id="startDate" name="startDate" ng-model="startDate" type="text" /></label>
                 <label>Time:
                 <input type="text" name="startHh" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
-                       is-valid-change="" ng-model="startHour">
+                       ng-model="startHour">
                 :
                 <input type="text" name="startMm" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
-                       is-valid-change="" ng-model="startMin">
+                       ng-model="startMin">
                 </label>
             </div>
         </div>
@@ -29,29 +29,29 @@
                     <input type="radio" id="dateChosen2" name="dateStop" ng-click="enableDate2()"
                            ng-model="dateChosen" ng-checked="dateCheck">
                     <label for="useDate">Use date:
-                        <div>
+                        <div id="endDateDiv">
                             <label>Date:
                                 <input type="text" id="endDate" ng-model="endDate" ng-disabled="!dateCheck"/>
                             </label>
                             <label>Time:
                                 <input type="text" id="endHour" name="endHour" maxlength="2" size="2" placeholder="hh"
-                                       is-valid-change="" ng-model="endHour" ng-disabled="!dateCheck">
+                                       ng-model="endHour" ng-disabled="!dateCheck">
                                 :
                                 <input type="text" id="endMin" name="endMin" maxlength="2" size="2" placeholder="mm"
-                                       is-valid-change="" ng-model="endMin" ng-disabled="!dateCheck">
+                                       ng-model="endMin" ng-disabled="!dateCheck">
                             </label>
                         </div>
                     </label>
 
                     <input type="radio" id="durationChosen" name="dueStop" ng-click="enableDue2()" ng-model="durationChosen" ng-checked="dueCheck">
                     <label>Duration:
-                        <div>
+                        <div id="durationDiv">
                             <label>Hours:
                                 <input id="durationHour" type="text" name="durationHour" maxlength="2" size="2"
-                                       is-positive="" ng-model="durationHour" ng-disabled="!useDuration" ></label>
+                                       ng-model="durationHour" ng-disabled="!useDuration" ></label>
                             <label>Min:
                                 <input id="durationMin" type="text" name="durationMin" maxlength="3" size="3"
-                                       is-positive="" ng-model="durationMin" ng-disabled="!useDuration" ></label>
+                                       ng-model="durationMin" ng-disabled="!useDuration" ></label>
                         </div>
                     </label>
                 </div>
