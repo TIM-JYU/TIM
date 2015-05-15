@@ -4,15 +4,25 @@
     Time limit: {{ jsonRaw.time }} <br>
 
     <table>
-        <tr>
-            <td></td>
-            <td ng-repeat="header in jsonRaw.headers">
-                <p>{{ header.text }}</p>
-            </td>
-        </tr>
+        <div>
+            <tr ng-if="(jsonRaw.type == 'true-false')">
+                <td style="visibility:hidden;"></td>
+                <td>True</td>
+                <td>False</td>
+            </tr>
+            <tr ng-if="jsonRaw.type == 'matrix'">
+                <td style="visibility:hidden;"></td>
+                <td ng-repeat="header in jsonRaw.headers"><p>{{ header.text }}</p></td>
+            </tr>
+        </div>
+
         <tr ng-repeat="row in jsonRaw.rows">
             <td> {{ row.text }} </td>
-            <td ng-repeat="header in jsonRaw.headers"> <input type="checkbox" disabled> </td>
+            <td ng-repeat="column in row.COLUMNS">
+                <div ng-if="(column.answerFieldType == 'radio')"><input type="radio" disabled></div>
+                <div ng-if="(column.answerFieldType == 'checkbox')"><input type="checkbox" disabled></div>
+                <div ng-if="(column.answerFieldType == 'text')"><input type="text" disabled></div>
+            </td>
         </tr>
     </table>
 

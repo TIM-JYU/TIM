@@ -6,6 +6,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
     function ($scope, controller, http, $window, createDialog, $rootScope, $timeout) {
 
+
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
@@ -40,7 +41,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.showStudentAnswers = false;
         $scope.studentTable = [];
         $scope.lecturerTable = [];
-        $scope.gettingAnswersArray = [];
+        $scope.gettingAnswers = false;
         $scope.answeredToLectureEnding = false;
         $scope.showLectureEnding = false;
         $scope.extendTime = "15";
@@ -51,7 +52,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/checkLecture',
                 method: 'GET',
-                params: {'doc_id': $scope.docId}
+                params: {'doc_id': $scope.docId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     if (answer.isInLecture) {
@@ -66,8 +67,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.$emit('getLectureId', $scope.lectureId);
         });
 
-        $scope.$on('closeLectureForm', function(){
-           $scope.showLectureForm = false;
+        $scope.$on('closeLectureForm', function () {
+            $scope.showLectureForm = false;
             $scope.checkIfInLecture();
         });
 
@@ -79,25 +80,27 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 answerString += mark + singleAnswer;
                 mark = "|"
             });
+
             http({
                 url: '/answerToQuestion',
                 method: 'POST',
                 params: {
                     'question_id': answer.questionId,
                     'lecture_id': $scope.lectureId,
-                    'answers': answerString
+                    'answers': answerString,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function () {
                 })
                 .error(function () {
-                    console.log("Failed to answer to question");
+                    //console.log("Failed to answer to question");
                 })
         });
 
         $scope.$on("closeAnswerShow", function () {
             $scope.showStudentAnswers = false;
-            $scope.gettingAnswersArray = [];
+            $scope.gettingAnswers = false;
         });
 
         $scope.showInfo = function () {
@@ -193,6 +196,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
+
             $scope.lectureName = answer.lectureCode;
             $scope.wallName = "Wall - " + answer.lectureCode;
             $scope.lectureStartTime = "Started: " + answer.startTime;
@@ -432,7 +436,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/getAllMessages',
                 type: 'GET',
-                params: {lecture_id: $scope.lectureId}
+                params: {lecture_id: $scope.lectureId,'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     angular.forEach(answer.data, function (msg) {
@@ -454,7 +458,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.getLectureAnswers = function (answer) {
-            $scope.gettingAnswersArray.push(answer.questionId);
+            $scope.gettingAnswers = true;
             http({
                 url: '/getLectureAnswers',
                 type: 'GET',
@@ -462,12 +466,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     'question_id': answer.questionId,
                     'doc_id': $scope.docId,
                     'lecture_id': $scope.lectureId,
-                    'time': answer.latestAnswer
+                    'time': answer.latestAnswer, 'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
-                    if ($scope.gettingAnswersArray.indexOf(answer.question_id) != -1) {
+                    if ($scope.gettingAnswers) {
                         $scope.getLectureAnswers(answer);
                     }
 
@@ -493,7 +497,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         'client_message_id': lastID,
                         'lecture_id': $scope.lectureId,
                         'doc_id': $scope.docId,
-                        'is_lecturer': $scope.isLecturer
+                        'is_lecturer': $scope.isLecturer, 'buster': new Date().getTime()
+
                     }
                 })
                     .success(function (answer) {
@@ -508,7 +513,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
 
                         if (answer.lectureEnding != 100) {
-                            if(answer.lectureEnding == 1 && !$scope.lectureEnded) {
+                            if (answer.lectureEnding == 1 && !$scope.lectureEnded) {
                                 $scope.showLectureEnding = true;
                                 $scope.lectureEnded = true;
                             }
