@@ -1146,11 +1146,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 'questionJson': questionJson
             }
         })
-            .success(function (data) {
+            .success(function()  {
                 console.log("The question was successfully added to database");
                 scope.clearQuestion();
+                //TODO: This can be optimized to get only the new question
+                scope.$parent.getQuestions();
             })
-            .error(function (data) {
+            .error(function()  {
                 console.log("There was some error creating question to database.")
             });
     };

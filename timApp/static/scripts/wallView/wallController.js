@@ -192,6 +192,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
+
             $scope.lectureName = answer.lectureCode;
             $scope.wallName = "Wall - " + answer.lectureCode;
             $scope.lectureStartTime = "Started: " + answer.startTime;

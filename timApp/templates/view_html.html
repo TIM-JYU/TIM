@@ -168,10 +168,10 @@
                         <img ng-click="toggleLectures()" ng-class="['menu-icon']"
                              src="{{ url_for('static', filename='images/lectures-icon.png') }}" width="50"
                              height="50" title="Lectures-menu"/>
-                        <img ng-click="toggleQuestions()" ng-class="['menu-icon']"
+                        <img ng-show="isLecturer" ng-click="toggleQuestions()" ng-class="['menu-icon']"
                              src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
                              height="50" title="Questions-menu"/>
-                        <img ng-click="togglePeople()" ng-class="['menu-icon']"
+                        <img ng-show="isLecturer" ng-click="togglePeople()" ng-class="['menu-icon']"
                              src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
                              height="50" title="People logged-in"/>
                         <img ng-click="toggleSettings()" ng-class="['menu-icon']"
