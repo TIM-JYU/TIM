@@ -40,7 +40,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.showStudentAnswers = false;
         $scope.studentTable = [];
         $scope.lecturerTable = [];
-        $scope.gettingAnswersArray = [];
+        $scope.gettingAnswers = false;
         $scope.answeredToLectureEnding = false;
         $scope.showLectureEnding = false;
         $scope.extendTime = "15";
@@ -66,8 +66,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.$emit('getLectureId', $scope.lectureId);
         });
 
-        $scope.$on('closeLectureForm', function(){
-           $scope.showLectureForm = false;
+        $scope.$on('closeLectureForm', function () {
+            $scope.showLectureForm = false;
             $scope.checkIfInLecture();
         });
 
@@ -97,7 +97,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.$on("closeAnswerShow", function () {
             $scope.showStudentAnswers = false;
-            $scope.gettingAnswersArray = [];
+            $scope.gettingAnswers = false;
         });
 
         $scope.showInfo = function () {
@@ -455,7 +455,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.getLectureAnswers = function (answer) {
-            $scope.gettingAnswersArray.push(answer.questionId);
+            $scope.gettingAnswers = true;
             http({
                 url: '/getLectureAnswers',
                 type: 'GET',
@@ -468,7 +468,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             })
                 .success(function (answer) {
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
-                    if ($scope.gettingAnswersArray.indexOf(answer.question_id) != -1) {
+                    if ($scope.gettingAnswers) {
                         $scope.getLectureAnswers(answer);
                     }
 
@@ -509,7 +509,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
 
                         if (answer.lectureEnding != 100) {
-                            if(answer.lectureEnding == 1 && !$scope.lectureEnded) {
+                            if (answer.lectureEnding == 1 && !$scope.lectureEnded) {
                                 $scope.showLectureEnding = true;
                                 $scope.lectureEnded = true;
                             }
