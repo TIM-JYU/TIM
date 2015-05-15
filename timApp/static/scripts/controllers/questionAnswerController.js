@@ -3,7 +3,7 @@
  */
 
 timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($scope) {
-    
+
     $scope.questionHeaders = [];
     $scope.answerTypes = [];
     $scope.dynamicAnswerSheetControl = {};

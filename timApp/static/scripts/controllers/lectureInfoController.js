@@ -78,7 +78,8 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
             questionIndexes.push($scope.questions[i].question_id);
         }
 
-        console.log(questionIndexes);
+        console.log($scope.dynamicAnswerShowControls);
+         console.log($scope.answers);
 
         for (var j = 0; j < $scope.answers.length; j++) {
             if (($scope.isLecturer && user == "") || $scope.answers[j].user_name == user) {

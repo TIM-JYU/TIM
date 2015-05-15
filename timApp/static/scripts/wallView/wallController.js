@@ -80,6 +80,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 answerString += mark + singleAnswer;
                 mark = "|"
             });
+
             http({
                 url: '/answerToQuestion',
                 method: 'POST',

@@ -990,6 +990,7 @@ def delete_question():
     verifyOwnership(doc_id)
     timdb = getTimDb()
     timdb.questions.delete_question(question_id)
+    timdb.lecture_answers.delete_answers_to_questions(question_id)
 
     return jsonResponse("")
 
@@ -1028,10 +1029,43 @@ def answer_to_question():
 
     question_id = int(request.args.get("question_id"))
     answer = request.args.get("answers")
+    whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    timdb.lecture_answers.add_answer(getCurrentUserId(), question_id, lecture_id, answer, time_now, 0.0)
-    # TODO: POINTS
+    single_answers = []
+    answers = answer.split('|')
+    for answer in answers:
+        single_answers.append(answer.split(','))
+
+    question_json = json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))
+
+    points = 0.0
+    for oneAnswer in single_answers:
+        question_number = 0
+        for oneLine in oneAnswer:
+            header_number = 0
+            if question_json['TYPE'] == "matrix" or question_json['TYPE'] == "true-false":
+                for header in question_json['DATA']['HEADERS']:
+                    if header['text'] == oneLine:
+                        try:
+                            points += float(question_json['DATA']['ROWS'][question_number]['COLUMNS'][header_number]['points'])
+                            break
+                        except ValueError:
+                            points += 0
+                    header_number += 1
+                header_number = 0
+            else:
+                for row in question_json['DATA']['ROWS']:
+                    if row['text'] == oneLine:
+                        try:
+                            points += float(row['COLUMNS'][0]['points'])
+                            break
+                        except ValueError:
+                            points += 0
+
+        question_number += 1
+
+    timdb.lecture_answers.add_answer(getCurrentUserId(), question_id, lecture_id, whole_answer, time_now, points)
 
     __pull_answer[question_id, lecture_id].set()
 
