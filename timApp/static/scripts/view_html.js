@@ -854,7 +854,7 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
             http({
                 url: '/askQuestion',
                 method: 'GET',
-                params: {lecture_id: $scope.lectureId, question_id: $scope.qId, doc_id: $scope.docId}
+                params: {lecture_id: $scope.lectureId, question_id: $scope.qId, doc_id: $scope.docId, 'buster': new Date().getTime()}
             })
                 .success(function () {
                     $scope.$modalClose();
@@ -1149,7 +1149,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             .success(function()  {
                 console.log("The question was successfully added to database");
                 scope.clearQuestion();
-                //TODO: This can be optimized to get only the new question
+                //TODO: This can be optimized to get only the ne
                 scope.$parent.getQuestions();
             })
             .error(function()  {

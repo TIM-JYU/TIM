@@ -6,6 +6,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
     function ($scope, controller, http, $window, createDialog, $rootScope, $timeout) {
 
+
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
@@ -51,7 +52,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/checkLecture',
                 method: 'GET',
-                params: {'doc_id': $scope.docId}
+                params: {'doc_id': $scope.docId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     if (answer.isInLecture) {
@@ -85,13 +86,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 params: {
                     'question_id': answer.questionId,
                     'lecture_id': $scope.lectureId,
-                    'answers': answerString
+                    'answers': answerString,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function () {
                 })
                 .error(function () {
-                    console.log("Failed to answer to question");
+                    //console.log("Failed to answer to question");
                 })
         });
 
@@ -433,7 +435,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/getAllMessages',
                 type: 'GET',
-                params: {lecture_id: $scope.lectureId}
+                params: {lecture_id: $scope.lectureId,'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     angular.forEach(answer.data, function (msg) {
@@ -463,7 +465,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     'question_id': answer.questionId,
                     'doc_id': $scope.docId,
                     'lecture_id': $scope.lectureId,
-                    'time': answer.latestAnswer
+                    'time': answer.latestAnswer, 'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
@@ -494,7 +496,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         'client_message_id': lastID,
                         'lecture_id': $scope.lectureId,
                         'doc_id': $scope.docId,
-                        'is_lecturer': $scope.isLecturer
+                        'is_lecturer': $scope.isLecturer, 'buster': new Date().getTime()
+
                     }
                 })
                     .success(function (answer) {
