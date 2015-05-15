@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build --tag="tim" .
+docker build --tag=tim:$(../get_latest_date.sh) .

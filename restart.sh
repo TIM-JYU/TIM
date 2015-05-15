@@ -60,17 +60,17 @@ fi
 
 if param timdev ; then
 # Start timdev
-docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
 fi
 
 if param timbeta ; then
 # Start timbeta
-docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
 fi
 
 if param tim ; then
 # Start tim
-docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && source initenv.py ; python3 launch.py ; /bin/bash'
+docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.py ; python3 launch.py ; /bin/bash'
 fi
 
 #trap '' 0
