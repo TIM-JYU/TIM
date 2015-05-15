@@ -1,4 +1,4 @@
-<h1>Create Lecture</h1>
+<h1 style="margin-top:0.5em; margin-bottom:0.5em;">Create Lecture</h1>
 <div ng-controller="CreateLectureCtrl">
     <form class="createLecture" id="lectureForm" name="form" ng-init="setFormScope(this)">
         <div id="infoFields">
@@ -13,12 +13,7 @@
             <label for="startTime">Starting time:</label>
             <div id="startInfo">
                 <label>Date:
-                <input id="startDate" name="startDate" type="text" /></label>
-                <script type="text/javascript">
-                    $(function() {
-                        $('#startDate').datepicker();
-                    });
-                </script>
+                <input id="startDate" name="startDate" ng-model="startDate" type="text" /></label>
                 <label>Time:
                 <input type="text" name="startHh" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
                        is-valid-change="" ng-model="startHour">
@@ -36,13 +31,7 @@
                     <label for="useDate">Use date:
                         <div>
                             <label>Date:
-                                <input type="text" id="endDate" ng-disabled="!dateCheck"/>
-                                <script>
-                                    $(function() {
-                                        $('#endDate').datepicker({ dateFormat: 'dd.mm.yy' });
-                                        $('#endDate').datepicker('setDate', new Date());
-                                    });
-                                </script>
+                                <input type="text" id="endDate" ng-model="endDate" ng-disabled="!dateCheck"/>
                             </label>
                             <label>Time:
                                 <input type="text" id="endHour" name="endHour" maxlength="2" size="2" placeholder="hh"

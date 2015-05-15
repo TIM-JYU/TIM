@@ -68,6 +68,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.$on('closeLectureForm', function(){
            $scope.showLectureForm = false;
+            $scope.checkIfInLecture();
         });
 
         $scope.$on("answerToQuestion", function (event, answer) {
