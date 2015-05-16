@@ -3,6 +3,7 @@
 __author__ = 'vesal'
 
 import json
+import codecs
 from urllib.parse import urlparse, parse_qs
 
 class QueryClass:
@@ -97,6 +98,28 @@ def get_json_param(jso, key1, key2, default):
         return default
 
 
+def query_params_to_map(query):
+    """
+    Returns query as a flattened map wehre alla params string by - is removed
+    :param query (QueryClass): get or post params
+    :return: flattened map of params
+    """
+    result = {}
+    for field in query.keys():
+        if not field.startswith("-"): result[field] = query[field][0]
+
+    return result
+
+
+def query_params_to_json(query):
+    """
+    Reyurns flattened json object from all params without those starting by -
+    :param query (QueryClass):
+    :return: params as flattened json object
+    """
+    result = json.dumps(query_params_to_map(query))
+    return result
+
 
 def get_params(self):
     result = QueryClass()
@@ -131,3 +154,15 @@ def post_params(self):
     for f in result.get_query:
         result.query[f] = [result.get_query[f][0]]
     return result
+
+
+def file_to_string(name):
+    fr = codecs.open(name, encoding="utf-8-sig")
+    lines = fr.readlines()
+    result = ""
+    for i in range(0, len(lines)):
+        line = lines[i]
+        result += line
+    fr.close()
+    return result
+
