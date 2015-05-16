@@ -187,7 +187,7 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         # if userinput: query.query["userinput"] = [userinput]
 
         userword = get_json_param(query.jso, "input", "userword", None)
-        if userword: save["usercode"] = userword
+        if userword: save["userword"] = userword
 
         nosave = get_json_param(query.jso, "input", "nosave", None)
         if not nosave: result["save"] = save

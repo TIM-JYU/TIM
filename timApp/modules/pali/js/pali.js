@@ -31,11 +31,15 @@ paliApp.getHeading = function(a,key,$scope,defElem) {
 
 paliApp.directiveTemplatePali = function () {
     if ( PALITESTWITHOUTPLUGINS ) return '';
-	return  '<div class="paliRunDiv no-popup-menu">' +
+	return  '<div class="csRunDiv no-popup-menu">' +
 				  '<p>Here comes header</p>' +
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-				  '<div></div><label>{{inputstem}} </label><span><input type ="text" class="paliInput" ng-model="userword" ng-trim="false" placeholder="{{inputplaceholder}}"></span></div>'+
-				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
+				  '<div><label>{{inputstem}} </label><span><input type ="text" class="paliInput" ng-model="userword" ng-trim="false" placeholder="{{inputplaceholder}}" size="{{cols}}"></span>' +
+				  ' <span class="unitTestGreen"  ng-show="runTestGreen" >&nbsp;ok&nbsp;</span>' +
+				  ' <span class="unitTestRed"  ng-show="!runTestGreen">&nbsp;not&nbsp;</span>' +
+                  '</div>'+
+				  '<button ng-if="button"  ng-disabled="isRunning" ng-click="runCode();">{{button}}</button>&nbsp&nbsp'+
+				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
 				  '<pre  class="console" ng-show="result">{{result}}</pre>'+
     		      '<p class="plgfooter">Here comes footer</p>'+
@@ -62,13 +66,18 @@ paliApp.directiveFunction = function() {
             scope.taskId  = element.parent().attr("id");
 
             paliApp.set(scope,attrs,"stem");
+            paliApp.set(scope,attrs,"inputstem");
             paliApp.set(scope,attrs,"inputplaceholder","Write your input here");
             paliApp.set(scope,attrs,"user_id");
+            paliApp.set(scope,attrs,"initword");
+            paliApp.set(scope,attrs,"userword",scope.initword);
             paliApp.set(scope,attrs,"button","Save");
             paliApp.set(scope,attrs,"resetText","Reset");
+            paliApp.set(scope,attrs,"cols",10);
+            paliApp.set(scope,attrs,"autoupdate",500);
             element[0].childNodes[0].outerHTML = paliApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
-			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,'p class="footer"');
+			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = paliApp.getHeading(attrs,"footer",scope,'p class="footer"');
 		},
 		scope: {},
 		controller: paliApp.Controller,
@@ -97,15 +106,17 @@ paliApp.Hex2Str = function(s) {
 };
 
 
-paliApp.Controller = function($scope,$http,$transclude,$sce) {
+function isPalindrome(s) {
+    var sc = s.toLowerCase();
+    sc = sc.replace(/[^a-z,åöä]/g,'');
+    for (var i1 = 0, i2 = sc.length-1; i1< i2; i1++,i2--)
+        if ( sc[i1] != sc[i2] ) return false;
+    return true;
+}
+
+paliApp.Controller = function($scope,$http,$transclude,$interval) {
     "use strict";
-    $scope.byCode = "";
     $scope.attrs = {};
-    $scope.svgImageSnippet = function () {
-        var s = $sce.trustAsHtml($scope.htmlresult);
-        return s;
-        // return $scope.htmlresult;
-    };
 
     $transclude(function (clone, scope) {
         if (PALITESTWITHOUTPLUGINS) return;
@@ -120,26 +131,48 @@ paliApp.Controller = function($scope,$http,$transclude,$sce) {
             return;
         }
         if (cjson) s = s.substring(markJSON.length);
-        if (chex) s = csApp.Hex2Str(s.substring(markHex.length));
+        if (chex) s = paliApp.Hex2Str(s.substring(markHex.length));
         $scope.attrs = JSON.parse(s);
         $scope.byCode = $scope.attrs.by || $scope.attrs.byCode;
     });
 
     $scope.errors = [];
+	$scope.muokattu = false;
     $scope.result = "";
-    $scope.htmlresult = "";
-    $scope.resImage = "";
-    $scope.imgURL = "";
-    $scope.viewCode = false;
     $scope.runSuccess = false;
 
-    $scope.$watch('userinput', function () {
-        window.clearInterval($scope.runTimer);
-        if ($scope.autoupdate) $scope.runTimer = setInterval($scope.runCodeAuto, $scope.autoupdate);
+    $scope.$watch('userword', function () {
+        //window.clearInterval($scope.runTimer); // perustimerin tapahtumalla ei päivit
+        //if ($scope.autoupdate) $scope.runTimer = window.setInterval($scope.runCodeAuto, $scope.autoupdate);
+        $interval.cancel($scope.runTimer);
+        $scope.runTimer = $interval($scope.runCodeAuto, $scope.autoupdate);
+        $scope.muokattu = ( $scope.initword !== $scope.userword );
+        //$scope.runCodeAuto();
     }, true);
 
+    
+    $scope.runCodeAuto = function() {
+        // window.clearInterval($scope.runTimer);
+        $interval.cancel($scope.runTimer);
+        var pali = isPalindrome($scope.userword);
+        $scope.runTestGreen = pali;
+	};
+	
+    
+	$scope.initCode = function() {
+		$scope.muokattu = false;
+		$scope.userword = $scope.initword;
+		$scope.runSuccess = false;
+		$scope.runError = false;
+		$scope.result = "";
+	};
 
-    $scope.doRunCode = function (runType, nosave) {
+
+    $scope.runCode = function() {
+        $scope.doRunCode(false);
+    }
+    
+    $scope.doRunCode = function (nosave) {
         // $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
         // alert("moi");
@@ -150,12 +183,10 @@ paliApp.Controller = function($scope,$http,$transclude,$sce) {
 
         $scope.runSuccess = false;
         $scope.result = "";
-        $scope.runTestGreen = false;
-        $scope.runTestRed = false;
 
         var uword = "";
 
-        if ($scope.userword) uword = $scope.userinput;
+        if ($scope.userword) uword = $scope.userword;
 
         var params = {
             'input': {
