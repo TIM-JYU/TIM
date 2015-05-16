@@ -100,8 +100,10 @@ def get_json_param(jso, key1, key2, default):
 
 def query_params_to_map(query):
     """
-    Returns query as a flattened map wehre alla params string by - is removed
-    :param query (QueryClass): get or post params
+    Returns query as a flattened map where all params string by - is removed
+    :type query: Dict
+    :rtype: Dict
+    :param query: get params
     :return: flattened map of params
     """
     result = {}
@@ -113,8 +115,9 @@ def query_params_to_map(query):
 
 def query_params_to_json(query):
     """
-    Reyurns flattened json object from all params without those starting by -
-    :param query (QueryClass):
+    Returns flattened json object from all params without those starting by -
+    :type query: Dict
+    :param query: get params
     :return: params as flattened json object
     """
     result = json.dumps(query_params_to_map(query))

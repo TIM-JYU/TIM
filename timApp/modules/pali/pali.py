@@ -45,7 +45,7 @@ def get_html(query):
     # print("UserId:", user_id)
     if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
 
-    jso = query_params_to_json(query)
+    jso = query_params_to_json(query.query)
     # print(jso)
     runner = 'pali-runner'
     r = runner
@@ -114,7 +114,8 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         Write s to servers output stream as UTF8
         :rtype : object
         :type self: PaliServer
-        :param s (str): string to write
+        :type s: str
+        :param s: string to write
         :return: nothing
         """
         self.wfile.write(s.encode("UTF-8"))
