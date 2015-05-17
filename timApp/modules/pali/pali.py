@@ -146,7 +146,7 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         """
         do_headers(self, "application/json")
         result_json = {"js": ["js/pali.js"], "angularModule": ["paliApp"],
-                       "css": ["css/pali.css"]}
+                       "css": ["css/pali.css"],  "multihtml": True}
         result_str = json.dumps(result_json)
         return self.wout(result_str)
 
