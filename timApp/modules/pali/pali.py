@@ -10,65 +10,63 @@ import socketserver
 from http_params import *
 import datetime
 import binascii
+import os
 import re
 
 PORT = 5000
-
-def log(self):
-    """
-     Write notice to log-file.
-    :return: nothing
-    """
-    t = datetime.datetime.now()
-    agent = " :AG: " + self.headers["User-Agent"]
-    if agent.find("ython") >= 0: agent = ""
-    logfile = "/opt/tim/timApp/modules/pali/log/log.txt"
-    try:
-        open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path + agent + " u:" + self.user_id + "\n")
-    except Exception as e:
-        print(e)
+PROGDIR = "."
 
 
-def get_html(query):
+def get_html(query: QueryParams) -> str:
     """
     Return the html for this query. Params are dumbed as hexstring to avoid problems
     with html input and so on.
-    :type query: QueryClass
+    :type query: QueryParams
     :rtype : str
     :param query: get or put params
     :return : html string for this markup
     """
-    userword = get_json_param(query.jso, "state", "userword", None)
-    if userword: query.query["userword"] = [userword]
 
-    user_id = get_param(query, "user_id", "--")
+    user_id = query.get_param("user_id", "--")
     # print("UserId:", user_id)
-    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    # do the next if Anonymoys is not allowed to use plugins
+    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + query.get_param("initword", "") + '</pre>'
 
-    jso = query_params_to_json(query.query)
+    jso = query.to_json(accept_nonhyphen)
     # print(jso)
     runner = 'pali-runner'
     r = runner
-    hx = binascii.hexlify(jso.encode("UTF8"))
+    # js = jso.encode("UTF8")
+    js = json.dumps(jso)
+    print(js)
+    hx = binascii.hexlify(js.encode("UTF8"))
     s = '<' + r + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>'
     return s
 
 
 class PaliServer(http.server.BaseHTTPRequestHandler):
     """
-
+    Class for palindrome server that cna handle the TIM routes
     """
     def __init__(self, request, client_address, _server):
         super().__init__(request, client_address, _server)
         self.user_id = "--"
 
     def do_OPTIONS(self):
+        """
+        Do needed things for OPTIONS request
+        :return: nothing
+        """
         print("do_OPTIONS ==============================================")
         do_headers(self, "text/plain")
         print(self.path)
         print(self.headers)
 
     def do_GET(self):
+        """
+        Do needed things for GET request
+        :return: nothing
+        """
         # print("do_GET ==================================================")
         if self.path.find('/reqs') >= 0: return self.do_reqs();
         if self.path.find('/favicon.ico') >= 0: return self.send_response(404)
@@ -79,6 +77,11 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         return self.do_all(get_params(self))
 
     def do_POST(self):
+        """
+        Do needed things for POST request
+        This may be a f.ex a request single html-plugin or multiple plugins
+        :return: nothing
+        """
         # print("do_POST =================================================")
         if self.path.find('/multihtml') < 0: return self.do_all(post_params(self))
 
@@ -86,7 +89,7 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         querys = multi_post_params(self)
         do_headers(self, "application/json")
         htmls = []
-        self.user_id = get_param(querys[0], "user_id", "--")
+        self.user_id = querys[0].get_param("user_id", "--")
         print("UserId:", self.user_id)
         log(self)
         # print(querys)
@@ -105,28 +108,27 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
 
 
     def do_PUT(self):
+        """
+        Do needed things for PUT request
+        :return: nothing
+        """
         # print("do_PUT =================================================")
         self.do_all(post_params(self))
 
 
-    def wout(self, s):
+    def wout(self, s:str):
         """
         Write s to servers output stream as UTF8
         :rtype : object
-        :type self: PaliServer
-        :type s: str
         :param s: string to write
         :return: nothing
         """
         self.wfile.write(s.encode("UTF-8"))
 
 
-    def send_text_file(self, name, ftype, content_type):
+    def send_text_file(self, name:str, ftype:str, content_type:str):
         """
         Sends a file to server from directory ftype with contect_type
-        :type name: str
-        :type ftype: str
-        :type content_type: str
         :param name: files name part, possible extra directories
         :param ftype: files type (js, html, css), specifies also the directory where to get the file
         :param content_type: files_content type
@@ -149,10 +151,9 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         return self.wout(result_str)
 
 
-    def do_all(self, query):
+    def do_all(self, query:QueryParams):
         """
         Do all other routes
-        :type query: QueryClass
         :param query: post and get params
         :return: nothing
         """
@@ -168,10 +169,10 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         return self.wout("Unknow query: " + self.path)
 
 
-    def do_answer(self,query):
+    def do_answer(self,query:QueryParams):
         """
         Do answer route
-        :type query: QueryClass
+        :type query: QueryParams
         :param query: post and get params
         :return: nothing
         """
@@ -181,7 +182,6 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         web = {}
         result["web"] = web
         err = ""
-        out = ""
 
         # userinput = get_json_param(query.jso, "state", "userinput", None)
         # if userinput: query.query["userinput"] = [userinput]
@@ -203,8 +203,20 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
         print(sresult)
 
 
-
-
+def log(request: PaliServer):
+    """
+    Log the time and user
+    :param request:
+    :return: Nothing
+    """
+    t = datetime.datetime.now()
+    agent = " :AG: " + request.headers["User-Agent"]
+    if agent.find("ython") >= 0: agent = ""
+    logfile = CURRENTDIR + "/log/log.txt"
+    try:
+        open(logfile, 'a').write(t.isoformat(' ') + ": " + request.path + agent + " u:" + request.user_id + "\n")
+    except Exception as e:
+        print(e)
 
 
 
@@ -213,9 +225,9 @@ class PaliServer(http.server.BaseHTTPRequestHandler):
 # Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
 
 # if __debug__:
-if True:
-    class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-        """Handle requests in a separate thread."""
+#if True:
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    """Handle requests in a separate thread."""
 
     print("Debug mode/ThreadingMixIn")
 # else:
@@ -225,6 +237,9 @@ if True:
 
 
 if __name__ == '__main__':
+    if not os.path.exists("log"):
+        os.makedirs("log")
+    CURRENTDIR = os.getcwd()
     server = ThreadedHTTPServer(('', PORT), PaliServer)
     print('Starting server, use <Ctrl-C> to stop')
     server.serve_forever()

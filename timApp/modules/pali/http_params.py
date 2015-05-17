@@ -2,86 +2,91 @@
 
 __author__ = 'vesal'
 
+import http.server
 import json
 import codecs
 from urllib.parse import urlparse, parse_qs
 
-class QueryClass:
-    def __init__(self):
+class QueryParams:
+    def __init__(self, jso: dict = None):
         self.get_query = {}
-        self.query = {}
-        self.jso = None
+        self.jso = jso
+        if not self.jso: self.jso = {}
+
+    def to_json(self,f) -> dict:
+        """
+        Returns json object from all params without keys passing predicate f
+        :param self: get params
+        :param f: function to return true if param is copied
+        :return: params as json object
+        """
+        result = copy_jso(self.jso,f)
+        return result
 
 
-def do_headers(self, content_type):
-    self.send_response(200)
-    self.send_header('Access-Control-Allow-Origin', '*')
-    self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
-    self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
-    self.send_header('Content-type', content_type)
-    self.end_headers()
+    def check_key(self, key : str) -> str:
+        """
+        Check if either "key" ot "-key" exists and return the one that works
+        :param self: query parmas where to find
+        :param key: key to find
+        :return: key or -key
+        """
+        key2 = "-" + key
+        if key in self.get_query: return key
+        if key2 in self.get_query: return key2
+        if not self.jso: return key
+        if "input" in self.jso and "markup" in self.jso["input"]:
+           if key in self.jso["input"]["markup"]: return key
+           if key2 in self.jso["input"]["markup"]: return key2
+        if "markup" not in self.jso: return key
+        if key in self.jso["markup"]: return key
+        if key2 in self.jso["markup"]: return key2
+        return key
 
 
-def check_key(query, key):
-    key2 = "-" + key
-    if key in query.query: return key
-    if key2 in query.query: return key2
-    if key in query.get_query: return key
-    if key2 in query.get_query: return key2
-    if not query.jso: return key
-    if "input" in query.jso and "markup" in query.jso["input"]:
-       if key in query.jso["input"]["markup"]: return key
-       if key2 in query.jso["input"]["markup"]: return key2
-    if "markup" not in query.jso: return key
-    if key in query.jso["markup"]: return key
-    if key2 in query.jso["markup"]: return key2
-    return key
-
-
-
-def get_param(query, key, default):
-    key = check_key(query,key)
-    dvalue = default
-    if key in query.query: dvalue = query.query[key][0]
-    if dvalue == 'undefined':
+    def get_param(self, key: str, default: object) -> object:
+        """
+        Get param value from query params that match to key.  If no match, then return default
+        input is prefered over markup
+        :param self: query params where to find the key
+        :param key: key to find
+        :param default: value to return if key not found
+        :return:
+        """
+        key = self.check_key(key)
         dvalue = default
+        if dvalue == 'undefined':
+            dvalue = default
 
-    if key not in query.get_query:
-        if query.jso is None: return dvalue
-        if "input" in query.jso and "markup" in query.jso["input"] and key in query.jso["input"]["markup"]:
-            value = query.jso["input"]["markup"][key]
-            if value != 'undefined': return value
+        if key not in self.get_query:
+            if self.jso is None: return dvalue
+            if "input" in self.jso and "markup" in self.jso["input"] and key in self.jso["input"]["markup"]:
+                value = self.jso["input"]["markup"][key]
+                if value != 'undefined': return value
 
-        if "markup" not in query.jso: return dvalue
-        if key in query.jso["markup"]: return query.jso["markup"][key]
-        return dvalue
-    value = query.get_query[key][0]
-    if value == 'undefined': return dvalue
-    return value
-
-
-def multi_post_params(self):
-    content_length = int(self.headers['Content-Length'])
-    f = self.rfile.read(content_length)
-    u = f.decode("UTF8")
-    jsons = json.loads(u)
-    results = []
-    for jso in jsons:
-        results.append(get_query_from_json(jso))
-    return results
+            if "markup" not in self.jso: return dvalue
+            if key in self.jso["markup"]: return self.jso["markup"][key]
+            return dvalue
+        value = self.get_query[key][0]
+        if value == 'undefined': return dvalue
+        return value
 
 
-def get_query_from_json(jso):
-    result = QueryClass()
-    result.jso = jso
-    for field in list(result.jso.keys()):
-        if field == "markup":
-            for f in list(result.jso[field].keys()):
-                result.query[f] = [str(result.jso[field][f])]
-        else:
-            if field != "state" and field != "input": result.query[field] = [str(result.jso[field])]
-    # print(jso)
-    return result
+
+
+def do_headers(response:http.server.BaseHTTPRequestHandler, content_type:str):
+    """
+    Make headers for this response
+    :param response: http_response to send
+    :param content_type: content type for this response
+    :return: nothing
+    """
+    response.send_response(200)
+    response.send_header('Access-Control-Allow-Origin', '*')
+    response.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
+    response.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
+    response.send_header('Content-type', content_type)
+    response.end_headers()
 
 
 def get_json_param(jso, key1, key2, default):
@@ -98,68 +103,100 @@ def get_json_param(jso, key1, key2, default):
         return default
 
 
-def query_params_to_map(query):
+def copy_jso(jso: dict,f) -> dict:
     """
-    Returns query as a flattened map where all params string by - is removed
-    :type query: Dict
-    :rtype: Dict
-    :param query: get params
-    :return: flattened map of params
+    Copies recursive all fields form jso to result if field matches to f
+    :param jso: params to copy
+    :param f: function to return true if param should be copied
+    :return: new dict with all fileds matching to predicate f
     """
     result = {}
-    for field in query.keys():
-        if not field.startswith("-"): result[field] = query[field][0]
-
+    keys = jso.keys()
+    for field in keys:
+        if f(field):
+            if isinstance(jso[field],dict):
+                result[field] = copy_jso(jso[field],f)
+            else:
+                result[field] = jso[field]
     return result
 
 
-def query_params_to_json(query):
+
+def accept_nonhyphen(s: str) -> bool:
     """
-    Returns flattened json object from all params without those starting by -
-    :type query: Dict
-    :param query: get params
-    :return: params as flattened json object
+    Return true if s does not start with hyphen
+    :param s: string to check
+    :return: true if s does not start with hyphen
     """
-    result = json.dumps(query_params_to_map(query))
+    return not s.startswith("-")
+
+
+
+
+def get_params(request: http.server.BaseHTTPRequestHandler) -> QueryParams:
+    """
+    get get params from the request
+    :param request: request to parse
+    :return: query params
+    """
+    result = QueryParams()
+    result.get_query = parse_qs(urlparse(request.path).query, keep_blank_values=True)
     return result
 
 
-def get_params(self):
-    result = QueryClass()
-    result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
-    result.query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
-    return result
-
-
-def post_params(self):
-    content_length = int(self.headers['Content-Length'])
+def post_params(request: http.server.BaseHTTPRequestHandler) -> QueryParams:
+    """
+    get post params and get params from the request
+    :param request: request to parse
+    :return: query params
+    """
+    content_length = int(request.headers['Content-Length'])
     content_type = "application/json"
-    if 'Content-Type' in self.headers: content_type = self.headers['Content-Type']
-    if 'content-type' in self.headers: content_type = self.headers['content-type']
+    if 'Content-Type' in request.headers: content_type = request.headers['Content-Type']
+    if 'content-type' in request.headers: content_type = request.headers['content-type']
 
-    f = self.rfile.read(content_length)
+    f = request.rfile.read(content_length)
     print(f)
     u = f.decode("UTF8")
 
-    result = QueryClass()
-    result.query = {}
+    result = QueryParams()
 
     if len(u) == 0: return result
     if content_type.find("json") < 0:  # ei JSON
         q = parse_qs(urlparse('k/?' + u).query, keep_blank_values=True)
         for field in list(q.keys()):
-            result.query[field] = [q[field][0]]
+            result.jso[field] = q[field][0]
     else:
         jso = json.loads(u)
-        result = get_query_from_json(jso)
+        result = QueryParams(jso)
 
-    result.get_query = parse_qs(urlparse(self.path).query, keep_blank_values=True)
-    for f in result.get_query:
-        result.query[f] = [result.get_query[f][0]]
+    result.get_query = parse_qs(urlparse(request.path).query, keep_blank_values=True)
     return result
 
 
-def file_to_string(name):
+def multi_post_params(request: http.server.BaseHTTPRequestHandler) -> [QueryParams]:
+    """
+    get all post params from the request, they must be and array of JSON params
+    :param request: request to parse
+    :return: query params
+    :rtype:
+    """
+    content_length = int(request.headers['Content-Length'])
+    f = request.rfile.read(content_length)
+    u = f.decode("UTF8")
+    jsons = json.loads(u)
+    results = []
+    for jso in jsons:
+        results.append(QueryParams(jso))
+    return results
+
+
+def file_to_string(name: str) -> str:
+    """
+    Returns the fila as a string
+    :param name: name of teh file
+    :return: file contents as a string
+    """
     fr = codecs.open(name, encoding="utf-8-sig")
     lines = fr.readlines()
     result = ""
