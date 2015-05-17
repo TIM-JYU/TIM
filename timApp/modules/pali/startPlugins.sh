@@ -4,6 +4,9 @@
 docker stop pali 
 docker rm pali 
 
+sudo mkdir log
+sudo chmod 777 log
+
 # Start pali-plugin
 docker run --name pali\
            -p 61000:5000\
