@@ -47,13 +47,45 @@ paliApp.directiveTemplatePali = function () {
 };
 
 
+paliApp.get = function(jso,keys) {
+"use strict";
+    if ( !jso ) return undefined;
+    var val = jso;
+    for (var k in keys ) {
+        if ( val === null ) return undefined;
+        if ( !keys[k] ) continue;
+        val = val[keys[k]];
+        if ( val === undefined ) return undefined
+    }
+    return val;
+}
+
+paliApp.setk = function(scope,sname,attrs,keys,def) {
+"use strict";
+    scope[sname] = def;
+    var val = paliApp.get(attrs,keys);
+    if ( val != undefined ) scope[sname] = val;
+    val = paliApp.get(scope.attrs,keys);
+    if ( val != undefined ) scope[sname] = val;
+    if ( scope[sname] == "None" ) scope[sname] = "";
+    return scope[sname];
+};
+
+
+paliApp.setn = function(scope,sname,attrs,name,def) {
+"use strict";
+    if ( name.indexOf(".") < 0 ) name = "markup."+name;
+    var keys = name.split(".");
+    return paliApp.setk(scope,sname,attrs,keys,def);
+};
+
+
 paliApp.set = function(scope,attrs,name,def) {
 "use strict";
-    scope[name] = def;
-    if ( attrs && attrs[name] ) scope[name] = attrs[name];
-    if ( scope.attrs && scope.attrs[name] ) scope[name] = scope.attrs[name];
-    if ( scope[name] == "None" ) scope[name] = "";
-    return scope[name];
+    if ( name.indexOf(".") < 0 ) name = "markup."+name;
+    var keys = name.split(".");
+    var sname = keys[keys.length-1];
+    return paliApp.setk(scope,sname,attrs,keys,def);
 };
 
 
@@ -69,12 +101,13 @@ paliApp.directiveFunction = function() {
             paliApp.set(scope,attrs,"inputstem");
             paliApp.set(scope,attrs,"inputplaceholder","Write your input here");
             paliApp.set(scope,attrs,"user_id");
-            paliApp.set(scope,attrs,"initword");
-            paliApp.set(scope,attrs,"userword",scope.initword);
+            paliApp.set(scope,attrs,"initword","");
+            paliApp.set(scope,attrs,"state.userword",scope.initword);
             paliApp.set(scope,attrs,"button","Save");
             paliApp.set(scope,attrs,"resetText","Reset");
-            paliApp.set(scope,attrs,"cols",10);
+            paliApp.set(scope,attrs,"cols",20);
             paliApp.set(scope,attrs,"autoupdate",500);
+            paliApp.setn(scope,"tid",attrs,".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
             element[0].childNodes[0].outerHTML = paliApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = paliApp.getHeading(attrs,"footer",scope,'p class="footer"');
