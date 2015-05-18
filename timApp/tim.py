@@ -287,6 +287,20 @@ def get_updates():
         abort(400, "Bad requst")
     client_last_id = int(request.args.get('client_message_id'))
 
+    use_wall = False
+    use_quesitions = False
+    if request.args.get('get_messages') == "true":
+        session['use_wall'] = True
+        use_wall = True
+    else:
+        session['use_wall'] = False
+
+    if request.args.get('get_questions') == "true":
+        session['use_questions'] = True
+        use_quesitions = True
+    else:
+        session['use_questions'] = False
+
     helper = request.args.get("lecture_id")
     if len(helper) > 0:
         lecture_id = int(float(helper))
@@ -295,6 +309,8 @@ def get_updates():
 
     timdb = getTimDb()
     step = 0
+
+    session.get('user_id')
 
     doc_id = int(request.args.get('doc_id'))
 
@@ -314,21 +330,23 @@ def get_updates():
     __user_activity[getCurrentUserId(), lecture_id] = time_now
 
     while step <= 10:
-        last_message = timdb.messages.get_last_message(lecture_id)
-        if last_message:
-            last_message_id = last_message[-1].get('msg_id')
-            if last_message_id != client_last_id:
-                messages = timdb.messages.get_new_messages(lecture_id, client_last_id)
-                messages.reverse()
 
-                for message in messages:
-                    user = timdb.users.getUser(message.get('user_id'))
-                    time_as_time = datetime.datetime.fromtimestamp(
-                        mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
-                    list_of_new_messages.append(
-                        user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get(
-                            'message'))
-                last_message_id = messages[-1].get('msg_id')
+        if use_wall:
+            last_message = timdb.messages.get_last_message(lecture_id)
+            if last_message:
+                last_message_id = last_message[-1].get('msg_id')
+                if last_message_id != client_last_id:
+                    messages = timdb.messages.get_new_messages(lecture_id, client_last_id)
+                    messages.reverse()
+
+                    for message in messages:
+                        user = timdb.users.getUser(message.get('user_id'))
+                        time_as_time = datetime.datetime.fromtimestamp(
+                            mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
+                        list_of_new_messages.append(
+                            user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get(
+                                'message'))
+                    last_message_id = messages[-1].get('msg_id')
 
         current_user = getCurrentUserId()
 
@@ -353,14 +371,17 @@ def get_updates():
             else:
                 lecture_ending = 100
 
-        for pair in __question_to_be_asked:
-            if pair[0] == lecture_id and current_user not in pair[2]:
-                question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
-                pair[2].append(getCurrentUserId())
-                return jsonResponse(
-                    {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                     "lectureId": lecture_id, "question": True, "questionId": pair[1], "questionJson": question_json,
-                     "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
+        if use_quesitions:
+            for pair in __question_to_be_asked:
+                if pair[0] == lecture_id and current_user not in pair[2]:
+                    question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
+                    pair[2].append(getCurrentUserId())
+                    return jsonResponse(
+                        {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
+                         "lectureId": lecture_id, "question": True, "questionId": pair[1],
+                         "questionJson": question_json,
+                         "isLecture": True, "lecturers": lecturers, "students": students,
+                         "lectureEnding": lecture_ending})
 
         if len(list_of_new_messages) > 0:
             return jsonResponse(
@@ -447,9 +468,20 @@ def check_lecture():
         else:
             is_lecturer = False
 
+        if "use_wall" in session:
+            use_wall = session['use_wall']
+        else:
+            use_wall = False
+
+        if "use_questions" in session:
+            use_question = session['use_wall']
+        else:
+            use_question = False
+
         return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
                              "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
-                             "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
+                             "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
+                             "useWall": use_wall, "useQuestions": use_question})
     else:
         return get_running_lectures(doc_id)
 
@@ -565,10 +597,12 @@ def get_running_lectures(doc_id):
     is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
         if lecture.get("start_time") <= time_now:
-            current_lecture_codes.append(lecture.get("lecture_code"))
+            current_lecture_codes.append({"lecture_code": lecture.get("lecture_code"),
+                                          "is_access_code": not (lecture.get("password") == "")})
         else:
             future_lectures.append(
-                {"lecture_code": lecture.get("lecture_code"), "lecture_start": lecture.get("start_time")})
+                {"lecture_code": lecture.get("lecture_code"),
+                 "lecture_start": lecture.get("start_time")})
     return jsonResponse(
         {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lectures,
          "lectureCode": lecture_code})
@@ -1006,6 +1040,11 @@ def get_lecture_answers():
 
     __pull_answer[question_id, lecture_id] = threading.Event()
 
+    for pull in __pull_answer:
+        question, lecture = pull
+        if lecture == lecture_id and question != question_id:
+            __pull_answer[pull].set()
+
     if not request.args.get("time"):
         time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     else:
@@ -1015,6 +1054,9 @@ def get_lecture_answers():
 
     timdb = getTimDb()
     answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
+    if len(answers) < 0:
+        return jsonResponse("")
+
     latest_answer = answers[-1].get("answered_on")
 
     return jsonResponse({"answers": answers, "questionId": question_id, "latestAnswer": latest_answer})
@@ -1048,7 +1090,8 @@ def answer_to_question():
                 for header in question_json['DATA']['HEADERS']:
                     if header['text'] == oneLine:
                         try:
-                            points += float(question_json['DATA']['ROWS'][question_number]['COLUMNS'][header_number]['points'])
+                            points += float(
+                                question_json['DATA']['ROWS'][question_number]['COLUMNS'][header_number]['points'])
                             break
                         except ValueError:
                             points += 0

@@ -292,10 +292,11 @@ td.selected {
     background-color: snow;
     width: auto;
     height: auto;
+    min-width: 300px;
 }
 
 .questionAskedWindow h1 {
-    margin-top: 0px;
+    margin-top: 0;
 }
 
 .answerSheet {
@@ -352,4 +353,12 @@ td.selected {
 .lectureEnding button{
     margin-top: 1em;
     width: 75px;
+}
+
+.errorBorder{
+    border: 1px solid red;
+}
+.lectureOptions{
+    display: block;
+    min-width: 150px;
 }

@@ -47,6 +47,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.extendTime = "15";
         $scope.lectureEnded = false;
         $scope.showLectureForm = false;
+        $scope.showLectureOptions = false;
+        $scope.useQuestions = true;
+        $scope.useWall = true;
+        $scope.useAnswers = true;
 
         $scope.checkIfInLecture = function () {
             http({
@@ -71,6 +75,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.showLectureForm = false;
             $scope.checkIfInLecture();
         });
+
+        $scope.$on('closeQuestion', function () {
+            $scope.showAnswerWindow = false;
+            $scope.gettingAnswers = false;
+        });
+
 
         $scope.$on("answerToQuestion", function (event, answer) {
             $scope.showAnswerWindow = false;
@@ -120,6 +130,27 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         $scope.checkIfInLecture();
 
+        $scope.clearChange = function () {
+            var input = $("#passwordInput");
+            input.attr("placeholder", "Access code");
+            input.removeClass('errorBorder');
+        };
+
+        $scope.useOptions = function (useQuestions, useWall) {
+            $scope.showLectureView($scope.lectureAnswer);
+            $scope.useWall = useWall;
+            $scope.useQuestions = useQuestions;
+            $scope.showLectureOptions = false;
+
+        };
+
+        $scope.lectureOptions = function () {
+            if (!$scope.isLecturer) {
+                $scope.showLectureOptions = true;
+            }
+            $scope.joinLecture();
+        };
+
         $scope.joinLecture = function () {
             if ($scope.chosenLecture == "") {
                 $window.alert("Choose lecture to join");
@@ -131,22 +162,26 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 method: 'POST',
                 params: {
                     'doc_id': $scope.docId,
-                    'lecture_code': $scope.chosenLecture,
+                    'lecture_code': $scope.chosenLecture.lecture_code,
                     'password_quess': $scope.passwordQuess
                 }
             })
                 .success(function (answer) {
                     $scope.passwordQuess = "";
+                    var input = $("#passwordInput");
                     if (!answer.correctPassword) {
-                        document.getElementById("passwordInput").style.border = "1px solid red";
-                        document.getElementById("passwordInput").placeholder = "Wrong password";
+                        input.addClass('errorBorder');
+                        input.attr("placeholder", "Wrong access code");
                     } else {
-                        document.getElementById("passwordInput").style.border = "1px solid black";
-                        document.getElementById("passwordInput").placeholder = "Access code";
-                        if (answer.inLecture) {
+                        input.removeClass('errorBorder');
+                        input.attr("placeholder", "Access code");
+                        if ($scope.isLecturer) {
                             $scope.showLectureView(answer);
+                            $scope.useWall = true;
+                            $scope.useQuestions = true;
                         } else {
-                            $scope.showBasicView(answer);
+                            $scope.showLectureOptions = true;
+                            $scope.lectureAnswer = answer;
                         }
                     }
                 })
@@ -194,6 +229,18 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
+        $scope.changeUsingWall = function (wallUsage) {
+            $scope.useWall = wallUsage;
+        };
+
+        $scope.changeUsingQuestions = function (questionUsage) {
+            $scope.useQuestions = questionUsage;
+        };
+
+         $scope.changeUsingAnswers = function (answerUsage) {
+            $scope.useAnswers = answerUsage;
+        };
+
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
 
@@ -206,8 +253,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.polling = true;
             $scope.msg = "";
             $scope.showWall = true;
+            $scope.useWall = answer.useWall;
+            $scope.useQuestions = answer.useQuestions;
 
             $scope.getAllMessages();
+
 
             if (answer.isLecturer) {
                 $scope.canStop = true;
@@ -235,6 +285,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 $scope.canStart = true;
                 $scope.canStop = false;
             }
+            $scope.useWall = false;
             $scope.polling = false;
             $scope.inLecture = false;
             $scope.lectureId = -1;
@@ -244,22 +295,33 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.lecturerTable = [];
             $scope.studentTable = [];
 
+            var addLecture = true;
             angular.forEach(answer.lectures, function (lecture) {
-                if ($scope.lectures.indexOf(lecture) == -1) {
+                for (var i = 0; i < $scope.lectures.length; i++) {
+                    if ($scope.lectures[i].lecture_code == lecture.lecture_code) {
+                        addLecture = false;
+                        break;
+                    }
+                }
+                if (addLecture) {
                     $scope.lectures.push(lecture);
                 }
             });
 
-            angular.forEach(answer.futureLectures, function (lecture) {
-                console.log(lecture);
-                if ($scope.futureLectures.indexOf(lecture.lecture_code) == -1) {
+            angular.forEach(answer.futureLecture, function (lecture) {
+                for (var i = 0; i < $scope.futureLectures.length; i++) {
+                    if ($scope.futureLectures[i].lecture_code == lecture.lecture_code) {
+                        addLecture = false;
+                        break;
+                    }
+                }
+                if (addLecture) {
                     $scope.futureLectures.push(lecture);
                 }
             });
-
         };
 
-        //Extends the lecture based on the time selected in pop-up to extend lecture
+//Extends the lecture based on the time selected in pop-up to extend lecture
         $scope.extendLecture = function () {
             var dateTime = $scope.lectureEndTime.split(" ");
             var YearMonthDay = dateTime[1].split("-");
@@ -436,7 +498,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             http({
                 url: '/getAllMessages',
                 type: 'GET',
-                params: {lecture_id: $scope.lectureId,'buster': new Date().getTime()}
+                params: {lecture_id: $scope.lectureId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     angular.forEach(answer.data, function (msg) {
@@ -497,8 +559,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         'client_message_id': lastID,
                         'lecture_id': $scope.lectureId,
                         'doc_id': $scope.docId,
-                        'is_lecturer': $scope.isLecturer, 'buster': new Date().getTime()
-
+                        'is_lecturer': $scope.isLecturer,
+                        'get_messages': $scope.useWall,
+                        'get_questions': $scope.useQuestions,
+                        'buster': new Date().getTime()
                     }
                 })
                     .success(function (answer) {
@@ -560,16 +624,13 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             }
                         }
 
-                        if (answer.questionJson) {
-                            var questionJson = JSON.parse(answer.questionJson);
-                        }
                         if (answer.question) {
+                            var questionJson = JSON.parse(answer.questionJson);
                             $scope.askedQuestionJson = questionJson;
 
-                            if ($scope.isLecturer) {
+                            if ($scope.isLecturer && $scope.useAnswers) {
                                 $scope.showStudentAnswers = true;
-
-                                //TODO: A bit confusing that waiting 1ms helps drawing the chart
+                                // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
                                 $timeout(function () {
                                     $rootScope.$broadcast("createChart", questionJson);
                                 }, 1);
@@ -579,7 +640,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                             $rootScope.$broadcast("setQuestionJson", {
                                 questionJson: questionJson,
-                                questionId: answer.questionId
+                                questionId: answer.questionId,
+                                isLecturer: $scope.isLecturer
                             });
 
 
