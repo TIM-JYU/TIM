@@ -4,11 +4,13 @@ IFS=$'\n\t'
 
 # This is used to (re)start all Haskell plugins. Note that the ports used here must match tim registry
 
-docker stop haskellplugins2
-docker rm haskellplugins2
+docker stop haskellplugins2 &
+wait
+docker rm haskellplugins2 &
+wait
 
  docker run \
-   -d
+   -d \
    -v /opt/tim/timApp/modules/Haskell/.cabal-sandbox/bin/:/hbin\
    -v /opt/tim/timApp/modules/Haskell/:/Haskell\
    -v /opt/tim/timApp/modules/Haskell/startAll.sh:/startAll.sh\

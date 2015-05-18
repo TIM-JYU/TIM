@@ -3,6 +3,7 @@ from shutil import copyfile
 from datetime import datetime
 
 from contracts import contract
+from htmlSanitize import sanitize_html
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
@@ -13,6 +14,11 @@ from ansi2html import Ansi2HTMLConverter
 
 
 class Documents(TimDbBase):
+    def __repr__(self):
+        """For caching - we consider two Documents collections to be the same if their
+        files_root_paths are equal."""
+        return self.files_root_path
+
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -308,6 +314,14 @@ class Documents(TimDbBase):
         """
 
         return self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
+
+    def getDocumentAsHtmlBlocksSanitized(self, document_id: 'DocIdentifier') -> 'list(str)':
+        """Gets the specified document in HTML form sanitized.
+
+        :param document_id: The id of the document.
+        :returns: The document contents as a list of sanitized HTML blocks.
+        """
+        return [sanitize_html(block) for block in self.getDocumentAsHtmlBlocks(document_id)]
 
     @contract
     def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':

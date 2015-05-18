@@ -6,6 +6,8 @@ import os
 from timdb.gitclient import GitClient
 import ephemeralclient
 import sys
+from timdb.users import ANONYMOUS_GROUPNAME
+
 
 def createAdmin(timdb, name, real_name, email):
     user_id = timdb.users.createUser(name, real_name, email)
@@ -14,40 +16,53 @@ def createAdmin(timdb, name, real_name, email):
     timdb.users.addUserToAdmins(user_id)
     return (user_id, user_group)
 
-if __name__ == "__main__":
+
+def initialize_database(launch_ephemeral=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     FILES_ROOT_PATH = 'tim_files'
     if os.path.exists(FILES_ROOT_PATH):
         print('tim_files already exists, no need to initialize')
-        sys.exit()
+        return
     print('initializing tim_files')
     git = GitClient.initRepo(FILES_ROOT_PATH)
-    p = ephemeralclient.launch_ephemeral()
+    if launch_ephemeral:
+        p = ephemeralclient.launch_ephemeral()
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
     timdb.initializeTables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
+    anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
     (vesa_id, vesa_group) = createAdmin(timdb, 'vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
-    doc_id = timdb.documents.createDocument('Testaus 1', vesa_group)
-    doc_id2 = timdb.documents.createDocument('Testaus 2', vesa_group)
+    doc_id = timdb.documents.createDocument('Testaus 1', anon_group)
+    timdb.documents.createDocument('Testaus 2', anon_group)
+    timdb.documents.importDocumentFromFile('example_docs/programming_examples.md',
+                                                     'Programming examples',
+                                                     anon_group)
+    timdb.documents.importDocumentFromFile('example_docs/mmcq_example.md',
+                                                     'Multiple choice plugin example',
+                                                     anon_group)
 
     createAdmin(timdb, 'tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi')
 
+    anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
     # Grant access to anonymous users
-    timdb.users.grantViewAccess(0, doc_id.id)
-    timdb.users.grantViewAccess(0, doc_id2.id)
+    #timdb.users.grantViewAccess(anon_group, doc_id.id)
+    #timdb.users.grantViewAccess(anon_group, doc_id2.id)
     
-    timdb.users.grantEditAccess(0, doc_id2.id)
+    #timdb.users.grantEditAccess(anon_group, doc_id2.id)
     
-    timdb.notes.addNote(1, doc_id.id, doc_id.hash, 0, 'Tämä on testimuistiinpano.', 'everyone', [])
-    timdb.notes.addNote(1, doc_id.id, doc_id.hash, 0, 'Tämä on toinen testimuistiinpano samassa kappaleessa.', 'everyone', [])
-    timdb.notes.addNote(1, doc_id.id, doc_id.hash, 0,
+    timdb.notes.addNote(anon_group, doc_id.id, doc_id.hash, 0, 'Tämä on testimuistiinpano.', 'everyone', [])
+    timdb.notes.addNote(anon_group, doc_id.id, doc_id.hash, 0, 'Tämä on toinen testimuistiinpano samassa kappaleessa.', 'everyone', [])
+    timdb.notes.addNote(anon_group, doc_id.id, doc_id.hash, 0,
                      """Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.
                         Vielä kolmas muistiinpano, jossa on pitkä teksti.""", 'everyone', [])
+    if launch_ephemeral:
+        p.kill()
 
-    p.kill()
+if __name__ == "__main__":
+    initialize_database()

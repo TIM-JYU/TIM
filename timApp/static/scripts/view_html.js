@@ -1,4 +1,4 @@
-var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode;
+var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, crumbs;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
@@ -60,7 +60,12 @@ timApp.controller("ViewCtrl", [
         sc.users = users;
         sc.teacherMode = teacherMode;
         sc.sidebarState = 'autohidden';
-        sc.selectedUser = sc.users[0];
+        if (sc.users.length > 0) {
+            sc.selectedUser = sc.users[0];
+        } else {
+            sc.selectedUser = null;
+        }
+
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
@@ -164,6 +169,7 @@ timApp.controller("ViewCtrl", [
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
                     $compile($div[0])(sc);
                     $par.append($div);
+                    $div.draggable();
                     sc.editing = true;
                 };
 
@@ -483,6 +489,8 @@ timApp.controller("ViewCtrl", [
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
             $par.prepend($actionDiv);
+
+            $actionDiv.draggable();
         };
 
         sc.dist = function(coords1, coords2) {

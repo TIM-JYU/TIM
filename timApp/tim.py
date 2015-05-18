@@ -16,6 +16,7 @@ from bs4 import UnicodeDammit
 
 from ReverseProxied import ReverseProxied
 import containerLink
+from routes.cache import cache
 from routes.answer import answers
 from routes.edit import edit_page
 from routes.manage import manage_page
@@ -30,7 +31,14 @@ from routes.common import *
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
+default_secret = app.config['SECRET_KEY']
+if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
+    print('WARNING: secret file not found, using default values - do not run in production!')
+else:
+    assert default_secret != app.config['SECRET_KEY']
 #Compress(app)
+
+cache.init_app(app)
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)

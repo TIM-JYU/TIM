@@ -1,10 +1,13 @@
 #!/bin/bash
-# Restart showFile
+# Restart pali 
 
 docker stop pali 
 docker rm pali 
 
-# Start showFile-plugin
+sudo mkdir log
+sudo chmod 777 log
+
+# Start pali-plugin
 docker run --name pali\
            -p 61000:5000\
            -v /opt/tim/timApp/modules/pali:/pali/:ro\
