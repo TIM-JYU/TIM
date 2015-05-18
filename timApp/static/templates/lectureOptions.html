@@ -1,0 +1,16 @@
+<div>
+    <div>
+        <strong>Which features you want to use with this browser</strong>
+    </div>
+    <div>
+        <label class="lectureOptions"> Lecture questions
+            <input type="checkbox" ng-model="useQuestions" checked>
+        </label>
+        <label class="lectureOptions"> Lecture wall
+            <input type="checkbox" ng-model="useWall" checked>
+        </label>
+        <label class="lectureOptions">
+            <input type="button" ng-click="useOptions(useQuestions,useWall)" value="Submit">
+        </label>
+    </div>
+</div>

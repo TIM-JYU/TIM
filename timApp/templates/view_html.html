@@ -106,7 +106,7 @@
             {% include 'lectureinfo_menu.html' %}
             <div ng-show="!inLecture">
             </div>
-            <div class="wall-behind" id="wall" ng-show="inLecture" tim-draggable-fixed="false" resizable>
+            <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed="false" resizable>
                 <div class="wall-base" id="wallBase">
                     <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)">
                         <span ng-bind="wallName">Wall</span>
@@ -135,6 +135,10 @@
                     </div>
                 </div>
             </div>
+
+            <pop-up-dialog show="showLectureOptions">
+                <ng-include src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
+            </pop-up-dialog>
 
             <pop-up-dialog show="showLectureForm">
                 <ng-include src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
@@ -257,6 +261,30 @@
                     </div>
                     <div ng-class="['settings-sidebar', settingsSidebarState]">
                         <h1>Settings</h1>
+                        {% raw %}
+                        <ul ng-show="inLecture">
+                            <h4>Lecture settings</h4>
+                            <li>
+                                <label> Show wall
+                                    <input type="checkbox" ng-model="useWall"
+                                           ng-change="changeUsingWall(useWall)">
+                                </label>
+                            </li>
+                            <li ng-show="!isLecturer">
+                                <label> Show questions
+                                    <input type="checkbox" ng-model="useQuestions"
+                                           ng-change="changeUsingQuestions(useQuestions)">
+                                </label>
+                            </li>
+                             <li ng-show="isLecturer">
+                                <label> Show answers
+                                    <input type="checkbox" ng-model="useAnswers"
+                                           ng-change="changeUsingAnswers(useAswers)">
+                                </label>
+                            </li>
+                        </ul>
+                        {% endraw %}
+
                     </div>
                 </div>
             </div>

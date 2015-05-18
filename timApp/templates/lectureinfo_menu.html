@@ -5,10 +5,10 @@
             <h1>Now:</h1>
 
             <div ng-show="lectures.length > 0" class="lectureArea">
-                <select ng-model="chosenLecture" ng-options="lecture as lecture for lecture in lectures">
+                <select ng-change="clearChange()" ng-model="chosenLecture" ng-options="lecture.lecture_code for lecture in lectures">
                 </select>
                 <input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
-                       ng-keypress="passEnterPressed($event)" size="7">
+                       ng-keypress="passEnterPressed($event)" size="7" ng-disabled="!chosenLecture.is_access_code">
 				<div class="iconSection" ng-show="lectures.length > 0">
 						<img id="join-icon" src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
 							ng-click="joinLecture()" title="Join the lecture">

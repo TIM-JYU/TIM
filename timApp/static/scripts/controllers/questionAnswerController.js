@@ -7,16 +7,22 @@ timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($sco
     $scope.questionHeaders = [];
     $scope.answerTypes = [];
     $scope.dynamicAnswerSheetControl = {};
+    $scope.isLecturer = false;
 
     $scope.$on("setQuestionJson", function (event, args) {
         $scope.questionId = args.questionId;
-        $scope.dynamicAnswerSheetControl.createAnswer()
+        $scope.isLecturer = args.isLecturer;
+        $scope.dynamicAnswerSheetControl.createAnswer();
     });
 
     $scope.answer = function () {
         $scope.dynamicAnswerSheetControl.answerToQuestion()
 
     };
+
+    $scope.close = function () {
+        $scope.dynamicAnswerSheetControl.closeQuestion();
+    }
 }]);
 
 
@@ -30,6 +36,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
         transclude: true,
         link: function ($scope, $element) {
             var promise;
+            var timeLeft;
+            var barFilled;
             $scope.internalControl = $scope.control || {};
             $scope.internalControl.createAnswer = function () {
                 $scope.json = $scope.$parent.askedQuestionJson;
@@ -38,9 +46,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                     htmlSheet += "<h2>" + $scope.json.QUESTION + "<h2>";
                 }
                 //if ($scope.json.TIME == "undefined") {
-                htmlSheet += "<progress value='0' max='10' id='progressBar'>";
-                htmlSheet += "</progress>";
-                htmlSheet += "<span id='progressLabel'>10</span>";
+                if (!$scope.$parent.isLecturer) {
+                    htmlSheet += "<progress value='0' max='10' id='progressBar'>";
+                    htmlSheet += "</progress>";
+                    htmlSheet += "<span id='progressLabel'>10</span>";
+                }
                 //}
 
                 htmlSheet += "<table>";
@@ -62,81 +72,61 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
                 }
 
-                if (angular.isDefined($scope.json.DATA.ROWS)) {
-                    angular.forEach($scope.json.DATA.ROWS, function (row) {
-                        htmlSheet += "<tr>";
-                        htmlSheet += "<td>" + row.text + "</td>";
-                        var header = 0;
-                        //TODO: Needs correct JSON to be made better way
-                        angular.forEach(row.COLUMNS, function (column) {
-                            var group;
+                angular.forEach($scope.json.DATA.ROWS, function (row) {
+                    htmlSheet += "<tr>";
+                    htmlSheet += "<td>" + row.text + "</td>";
+                    var header = 0;
+                    //TODO: Needs correct JSON to be made better way
+                    angular.forEach(row.COLUMNS, function (column) {
+                        var group;
 
-                            if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
-                                group = "group" + row.text.replace(/[^a-zA-Z]/g, "");
-                                htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
-                                " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
-                                "></label></td>";
-                                header++;
-                            } else {
-                                group = "group" + row.type.replace(/[^a-zA-Z]/g, "");
-                                htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
-                                " value='" + row.text + "'" +
-                                "></label></td>";
-                            }
-                            nextBoolean = !nextBoolean;
-                        });
-                        htmlSheet += "</tr>";
-                    });
-                }
-
-                if (angular.isDefined($scope.json.DATA.COLUMNS)) {
-                    var faker = 0;
-                    angular.forEach($scope.json.DATA.COLUMNS, function (column) {
-                        if (column.Value == "") {
-                            column.Value = "Fake value";
+                        if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
+                            group = "group" + row.text.replace(/[^a-zA-Z]/g, "");
+                            htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
+                            " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
+                            "></label></td>";
+                            header++;
+                        } else {
+                            group = "group" + row.type.replace(/[^a-zA-Z]/g, "");
+                            htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
+                            " value='" + row.text + "'" +
+                            "></label></td>";
                         }
-
-                        // htmlSheet += "<th>" + column.Value + "</th>";
-                        //TODO: Needs correct JSON to be made better way
-                        //TODO: Should be able to answer by pressign the answer tab
-                        angular.forEach(column.ROWS, function (row) {
-                            row.Value = row.Type + faker; //TODO: Remove with real data
-                            htmlSheet += "<tr>";
-                            htmlSheet += "<td>" + row.Type + faker + "</td>";
-                            htmlSheet += "<td><label> <input type='radio' name='group" +
-                            column.Value.replace(/ /g, '') + "'" +
-                            " value='" + row.Type + faker + "'" +
-                            "></td></label>";
-                            faker++;
-                            htmlSheet += "</tr>";
-                        });
+                        nextBoolean = !nextBoolean;
                     });
-                }
+                    htmlSheet += "</tr>";
+                });
 
 
                 htmlSheet += "</div>";
                 $element.append(htmlSheet);
                 $compile($scope);
                 // var maxTime = $scope.json.TIME * 1000; if seconds
-                var fakeTime = 10 * 1000;
-                var timeBetween = 100;
-                var intervalTimes = fakeTime / timeBetween;
-                $scope.valChange = fakeTime / 1000 / intervalTimes;
-                $scope.progressElem = $("#progressBar");
-                $scope.progressText = $("#progressLabel");
-                $scope.start = function () {
-                    promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
-                };
-                $scope.start();
+                if (!$scope.$parent.isLecturer) {
+                    var fakeTime = 10 * 1000;
+                    timeLeft = 10;
+                    barFilled = 0;
+                    var timeBetween = 100;
+                    var intervalTimes = fakeTime / timeBetween;
+                    $scope.valChange = fakeTime / 1000 / intervalTimes;
+                    $scope.progressElem = $("#progressBar");
+                    $scope.progressText = $("#progressLabel");
+                    $scope.start = function () {
+                        promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
+                    };
+                    $scope.start();
+                }
             };
 
             $scope.internalControl.updateBar = function () {
                 //TODO: Problem with inactive tab.
-                $scope.progressElem.attr("value", (parseFloat($scope.progressElem.attr("value")) + $scope.valChange));
+                timeLeft -= $scope.valChange;
+                barFilled += $scope.valChange;
+                $scope.progressElem.attr("value", (barFilled));
 
-                $scope.progressText.text((parseFloat($scope.progressText.text()) - $scope.valChange).toFixed(1));
-                if (Math.abs($scope.progressElem.attr("value") - $scope.progressElem.attr("max")) < 0.02) {
-                    //$scope.internalControl.answerToQuestion();
+                $scope.progressText.text(timeLeft.toFixed(0) + " s");
+                if (Math.abs(barFilled - $scope.progressElem.attr("max")) < 0.02) {
+                    $scope.internalControl.answerToQuestion();
                 }
 
             };
@@ -184,7 +174,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 $element.empty();
                 $scope.$emit('answerToQuestion', {answer: answers, questionId: $scope.$parent.questionId});
             };
+
+            $scope.internalControl.closeQuestion = function () {
+                $element.empty();
+                $scope.$emit('closeQuestion');
+            };
         }
+
     }
 }])
 ;

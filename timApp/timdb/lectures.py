@@ -107,7 +107,7 @@ class Lectures(TimDbBase):
         cursor = self.db.cursor()
 
         cursor.execute("""
-                        SELECT lecture_code, start_time
+                        SELECT lecture_code, start_time, password
                         FROM Lecture
                         WHERE doc_id = ? AND end_time > ?
                         ORDER BY lecture_code
