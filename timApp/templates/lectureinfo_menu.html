@@ -111,9 +111,9 @@
 				{% raw %}
 				<ul>
 					<li ng-repeat="lecture in currentLecturesList">
-                        <p>{{ lecture.lecture_code }}<input type="submit" value="Join"> <input type="submit" value="Edit"></p>
+                        <p>{{ lecture.lecture_code }}<input type="submit" value="Join" ng-click="joinLecture(lecture.lecture_code)"> <input type="submit" value="Edit"></p>
                     </li>
-					<li ng-show="currentLecturesList.length == 0">
+					<li ng-show="currentLecturesList.length == 0 && isLecturer">
                         <p>No lectures</p>
                     </li>
 					<li> <p ng-click="toggleLecture()" id="addLecture1"> Add new lecture </p></li>

@@ -6,7 +6,7 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
 		var ready = function() {
 			$('#currentList').hide();
 			$('#futureList').hide();
-		}
+		};
 		
 		$scope.openCurrentLectureMenu = function() {
 			$('#currentList').slideToggle();

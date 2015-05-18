@@ -159,10 +159,19 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.joinLecture();
         };
 
-        $scope.joinLecture = function () {
-            if ($scope.chosenLecture == "") {
+        $scope.joinLecture = function (name) {
+
+            if ($scope.chosenLecture == "" && name == "") {
                 $window.alert("Choose lecture to join");
                 return;
+            }
+
+            $('#currentList').slideToggle();
+            var lectureName = "";
+            if (name != "") {
+                lectureName = name;
+            } else {
+                lectureName = $scope.chosenLecture.lecture_code
             }
 
             http({
@@ -170,7 +179,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 method: 'POST',
                 params: {
                     'doc_id': $scope.docId,
-                    'lecture_code': $scope.chosenLecture.lecture_code,
+                    'lecture_code': lectureName,
                     'password_quess': $scope.passwordQuess
                 }
             })
