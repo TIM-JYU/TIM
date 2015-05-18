@@ -166,10 +166,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 return;
             }
 
-            $('#currentList').slideToggle();
+
             var lectureName = "";
-            if (name != "") {
+            if (angular.isDefined(name)) {
                 lectureName = name;
+                 $('#currentList').slideToggle();
             } else {
                 lectureName = $scope.chosenLecture.lecture_code
             }
@@ -220,7 +221,6 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             var wall = document.getElementById("wall");
             wall.style.position = "fixed";
 
-            console.log(Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))));
             if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
                 $scope.hide();
                 return;
