@@ -461,6 +461,8 @@ def getReadParagraphs(doc_id):
 def setReadParagraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     if len(blocks) <= specifier:
