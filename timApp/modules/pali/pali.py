@@ -90,4 +90,4 @@ class PaliServer(tim_server.TimServer):
 
 
 if __name__ == '__main__':
-    tim_server.start_server(PaliServer)
+    tim_server.start_server(PaliServer,'pali')
