@@ -11,5 +11,6 @@ sudo chmod 777 log
 docker run --name pali\
            -p 61000:5000\
            -v /opt/tim/timApp/modules/pali:/pali/:ro\
+           -v /opt/tim/timApp/modules/py:/py/:ro\
            -d -t -i pali \
            /bin/bash -c 'cd /pali && python3 pali.py ; /bin/bash'

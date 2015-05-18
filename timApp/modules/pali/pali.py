@@ -7,7 +7,7 @@ Serving from local port 5000
 
 import binascii
 import sys
-sys.path.insert(0, '../py')
+sys.path.insert(0, '/py')
 
 
 from http_params import *
