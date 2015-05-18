@@ -1054,7 +1054,7 @@ def get_lecture_answers():
 
     timdb = getTimDb()
     answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
-    if len(answers) < 0:
+    if len(answers) <= 0:
         return jsonResponse("")
 
     latest_answer = answers[-1].get("answered_on")

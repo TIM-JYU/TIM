@@ -26,6 +26,7 @@ timApp.controller("ViewCtrl", [
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         sc.questionShown = false;
+        sc.firstTimeQuestions = true;
         var NOTE_EDITOR_CLASS = "editorArea";
         var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
@@ -828,7 +829,10 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.$on("getQuestions", function () {
-            sc.getQuestions();
+            if (sc.firstTimeQuestions) {
+                sc.getQuestions();
+                sc.firstTimeQuestions = false;
+            }
         });
 
         // Load index, notes and read markings
@@ -980,15 +984,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
         }
         scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
-
     };
 
 
     scope.rowClick = function (index) {
-
         scope.addRow(index);
-
-
     };
 
     scope.addCol = function (loc) {
@@ -1012,7 +1012,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
 
 
-    }
+    };
     scope.addRow = function (loc) {
 
         scope.CreateColumnsForRow = function (location) {
@@ -1168,7 +1168,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             .success(function () {
                 console.log("The question was successfully added to database");
                 scope.clearQuestion();
-                //TODO: This can be optimized to get only the ne
+                //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
             })
             .error(function () {
