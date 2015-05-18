@@ -124,6 +124,8 @@ var crumbs = getBreadcrumbs(doc.name);
             </label>
             <input type="submit" value="Update" ng-disabled="newFolderName === oldFolderName">
         </form>
+        <button ng-show="!isFolder" ng-click="markAllAsRead()">Mark document as read</button>
+        <span ng-show="readUpdating">Loading...</span>
         <form class="uploadForm margin" ng-show="!isFolder">
             Upload a new version for this {{objName}}
             <div>
