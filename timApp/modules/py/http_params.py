@@ -22,6 +22,12 @@ class QueryParams:
         self.__jso = jso
         if not self.__jso: self.__jso = {}
 
+    def __repr__(self) -> str:
+        """
+        :return: QueryParams as string
+        """
+        return str(self.__get_query) + " " + str(self.__jso)
+
     def to_json(self, f) -> dict:
         """
         Returns json object from all params without keys passing predicate f
@@ -122,7 +128,7 @@ class QueryParams:
         :param default: value to return if key not found
         :return: param from key or default
         """
-        s = self.get_param(key, default)
+        s = str(self.get_param(key, default))
         return sanitize_all(s)
 
 
@@ -192,7 +198,7 @@ def post_params(request: http.server.BaseHTTPRequestHandler) -> QueryParams:
     if 'content-type' in request.headers: content_type = request.headers['content-type']
 
     f = request.rfile.read(content_length)
-    print(f)
+    # print(f)
     u = f.decode("UTF8")
 
     result = QueryParams()
