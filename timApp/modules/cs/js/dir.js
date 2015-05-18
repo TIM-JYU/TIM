@@ -312,6 +312,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"showCodeOn","Näytä koko koodi");
             csApp.set(scope,attrs,"showCodeOff","Piilota muu koodi");
             csApp.set(scope,attrs,"resetText","Alusta");
+            csApp.set(scope,attrs,"blind",false);
             // csApp.set(scope,attrs,"program");
 
             scope.showCodeLink = scope.showCodeOn;
@@ -326,7 +327,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"usercode","");
 			if ( scope.usercode === "" && scope.byCode )  scope.usercode = scope.byCode;
 			scope.usercode = csApp.commentTrim(scope.usercode);
-			scope.usercode = scope.usercode.replace(/@author.*/,"@author XXXX"); // blind
+			if (scope.blind) scope.usercode = scope.usercode.replace(/@author.*/,"@author XXXX"); // blind
 			scope.byCode = csApp.commentTrim(scope.byCode);
 			// scope.usercode = csApp.commentTrim(decodeURIComponent(escape(scope.usercode)));
 			// scope.byCode = csApp.commentTrim(decodeURIComponent(escape(scope.byCode)));
@@ -727,6 +728,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.isRunning = false;
 			$scope.errors.push(status);
             $scope.error = "Ikuinen silmukka tai jokin muu vika?";
+            // $scope.error = "TIMIssä ongelmia, odota vikaa tutkitaan...";
 			// $scope.error = data;
 		});
 	};

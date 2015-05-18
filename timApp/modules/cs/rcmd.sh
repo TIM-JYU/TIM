@@ -14,6 +14,7 @@ fi
 # cp /cs/jypeli/* /tmp/
 
 export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar
+export MONO_PATH=/cs/jypeli
 
 #if ! [ -f ".bashrc" ]; then
 #    cp /cs/bash/.bashrc ".bashrc"

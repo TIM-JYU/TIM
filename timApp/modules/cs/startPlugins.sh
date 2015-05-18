@@ -9,19 +9,25 @@ pkill csdaemon
 
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
 
-chmod 777 /tmp
-mkdir /tmp/uhome
-chmod 777 /tmp/uhome 
-mkdir /tmp/uhome/cs
-chmod 775 /tmp/uhome/cs
-mkdir /tmp/uhome/run
-chmod 777 /tmp/uhome/run
-mkdir /tmp/uhome/tmp
-chmod 777 /tmp/uhome/tmp
+sudo chmod 777 /tmp
+sudo mkdir /tmp/uhome
+sudo chmod 777 /tmp/uhome 
+# sudo mkdir /tmp/uhome/cs
+# sudo chmod 777 /tmp/uhome/cs
+sudo mkdir /tmp/uhome/run
+sudo chmod 777 /tmp/uhome/run
+sudo mkdir /tmp/uhome/tmp
+sudo chmod 777 /tmp/uhome/tmp
+sudo mkdir /tmp/uhome/user
+sudo chmod 777 /tmp/uhome/user
 
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome
-sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/cs
+# sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/cs
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/tmp
+sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/user
+
+# Oikeudet käyttää dockeria niin saadaan docker in docker
+sudo chmod 766 /var/run/docker.sock
 
 cd /opt/cs/java
 rm comtest*.jar*
@@ -34,7 +40,7 @@ rm Ali*.jar
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
 
 # Copy Jypeli dll's to temp directory
-sudo cp /opt/cs/jypeli/* /tmp/uhome/cs
+# sudo cp /opt/cs/jypeli/* /tmp/uhome/cs
 
 cd /opt/cs
 
