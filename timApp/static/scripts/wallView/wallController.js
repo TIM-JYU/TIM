@@ -220,7 +220,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             var wall = document.getElementById("wall");
             wall.style.position = "fixed";
 
-            if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 2) {
+            console.log(Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))));
+            if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
                 $scope.hide();
                 return;
             }
