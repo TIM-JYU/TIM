@@ -11,7 +11,7 @@
 	width: 50em;
 } 
 
-@import url(http://fonts.googleapis.com/css?family=Droid+Sans+Mono);
+/* @import url('http://fonts.googleapis.com/css?family=Droid+Sans+Mono'); */
 
 .web-console {
     border: 1px solid black;
@@ -34,14 +34,14 @@
     display: inline;
     border: none;
 
-    // border-bottom: 1px dashed black;
+    /* border-bottom: 1px dashed black; */
     border-radius: 3px 3px 3px;
     background-color:#CCC;
     font-family: 'Droid Sans Mono', 'Courier', monospace !important;
     font-size:90%;
     outline-color:#0A0;
-    //color:#0F0;
-    //background-color:black;
+    /* color:#0F0;             */
+    /* background-color:black; */
 }
 
 .web-console .console-output{
@@ -89,7 +89,7 @@ content:"▲";
 .console-output-elem{
 margin-bottom:3px;
 font-family: 'Droid Sans Mono', 'Courier', monospace !important;
-//font-size:normal;
+/*font-size:normal; */
 }
 
 .console-userInput {

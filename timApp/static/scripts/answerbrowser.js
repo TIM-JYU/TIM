@@ -14,8 +14,19 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
             },
             link: function ($scope, $element, $attrs) {
+                $scope.$watch("taskId", function (newValue, oldValue) {
+                    if (newValue === oldValue) {
+                        return;
+                    }
+                    if ($scope.$parent.teacherMode) {
+                        $scope.getAvailableUsers();
+                    }
+                    $scope.getAvailableAnswers();
+                });
+
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
+                    $scope.points = $scope.selectedAnswer.points;
                     var $par = $element.parents('.par');
                     var par_id = $scope.$parent.getParIndex($par);
                     $scope.loading++;
@@ -23,7 +34,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         params: {
                             doc_id: $scope.$parent.docId,
                             par_id: par_id,
-                            user: $scope.user.name,
+                            user_id: $scope.user.id,
                             state: $scope.selectedAnswer.content
                         }
                     }).success(function (data, status, headers, config) {
@@ -58,18 +69,48 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.changeAnswer();
                 };
 
+                $scope.getTeacherData = function () {
+                    if ($scope.answers.length > 0)
+                        return {
+                            answer_id: $scope.selectedAnswer.id,
+                            saveTeacher: $scope.saveTeacher,
+                            teacher: true,
+                            points: $scope.points
+                        };
+                    else
+                        return {
+                            saveTeacher: false,
+                            teacher: true
+                        };
+                };
+
+                $scope.getAvailableUsers = function () {
+                    $scope.loading++;
+                    $http.get('/getTaskUsers/' + $scope.taskId)
+                        .success(function (data, status, headers, config) {
+                            $scope.users = data;
+                        }).error(function (data, status, headers, config) {
+                            $window.alert('Error getting users: ' + data.error);
+                        }).finally(function () {
+                            $scope.loading--;
+                        });
+                };
+
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
                     if (!$scope.$parent.rights.browse_own_answers) {
                         return;
                     }
+                    if ($scope.user === null) {
+                        return;
+                    }
                     $scope.loading++;
-                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.name)
+                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id)
                         .success(function (data, status, headers, config) {
                             $scope.answers = data;
                             if ($scope.answers.length > 0) {
                                 $scope.selectedAnswer = $scope.answers[0];
-
+                                $scope.points = $scope.selectedAnswer.points;
                                 if (updateHtml) {
                                     $scope.changeAnswer();
                                 }
@@ -82,7 +123,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.$on('answerSaved', function (event, args) {
-                    if (!$scope.$parent.teacherMode && args.taskId === $scope.taskId) {
+                    if (args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
                     }
                 });
@@ -90,23 +131,39 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
                     $scope.changed = true;
+                    $scope.firstLoad = false;
+                    $scope.shouldUpdateHtml = true;
                 });
 
                 $scope.loadIfChanged = function () {
                     if ($scope.changed) {
-                        $scope.getAvailableAnswers();
+                        $scope.getAvailableAnswers($scope.shouldUpdateHtml);
                         $scope.changed = false;
-                    }
-                    else if (typeof $scope.answers === 'undefined') {
-                        $scope.getAvailableAnswers(false);
+                        $scope.firstLoad = false;
+                        $scope.shouldUpdateHtml = false;
                     }
                 };
 
-                $scope.user = $scope.$parent.users[0];
+                if ($scope.$parent.users.length > 0) {
+                    $scope.user = $scope.$parent.users[0];
+                } else {
+                    $scope.user = null;
+                }
+
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.loadIfChanged();
+                    if ($scope.$parent.teacherMode && $scope.users === null) {
+                        $scope.users = [];
+                        if ($scope.$parent.users.length > 0) {
+                            $scope.getAvailableUsers();
+                        }
+                    }
                 });
                 $scope.changed = true;
+                $scope.firstLoad = true;
+                $scope.shouldUpdateHtml = false;
+                $scope.saveTeacher = false;
+                $scope.users = null;
             }
         };
     }]);

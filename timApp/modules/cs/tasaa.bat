@@ -1,3 +1,4 @@
+@xcopy t:\tim\timApp\static\stylesheet.css e:\kurssit\tim\timApp\static\ /d /Y
 @pushd E:\kurssit\tim\timApp\modules\cs
 @cd t:\cs
 @t:

@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
-from bs4 import BeautifulSoup
-from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
-from containerLink import plugin_reqs
-from containerLink import get_plugin_tim_url
 from collections import OrderedDict
+import json
+import html
+import re
+
+from bs4 import BeautifulSoup
 import yaml
 from yaml import CLoader
 import yaml.parser
 import yaml.scanner
+
+from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
+from containerLink import plugin_reqs
+from containerLink import get_plugin_tim_url
 from htmlSanitize import sanitize_html
-import json
-import html
-import re
+
 
 def correct_yaml(text):
     """
@@ -178,11 +181,20 @@ def find_task_ids(blocks, doc_id):
     return task_ids
 
 
-def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
-    """ "Pluginifies" or sanitizes the specified HTML blocks by inspecting each block
-    for plugin markers, calling the corresponding plugin route if such is found. Sanitizes HTML
-    for each non-plugin block.
+def try_load_json(json_str):
+    try:
+        if json_str is not None:
+            return json.loads(json_str)
+    except ValueError:
+        return json_str
 
+
+def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True):
+    """ "Pluginifies" or sanitizes the specified HTML blocks by inspecting each block
+    for plugin markers, calling the corresponding plugin route if such is found. The input
+    HTML is assumed to be sanitized.
+
+    :param sanitize: Whether the blocks should be sanitized before processing.
     :param blocks: A list of HTML blocks to be processed.
     :param user: The current user's username.
     :param answer_db: A reference to the answer database.
@@ -198,7 +210,10 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
             raise PluginException('len(blocks) must be 1 if custom state is specified')
     final_html_blocks = []
     plugins = {}
+    state_map = {}
     for idx, block in enumerate(blocks):
+        if sanitize:
+            block = sanitize_html(block)
         found_plugins = find_plugins(block)
         if len(found_plugins) > 0:
             assert len(found_plugins) == 1
@@ -217,24 +232,25 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None):
                 plugins[plugin_name] = OrderedDict()
             vals['markup']["user_id"] = user
             task_id = "{}.{}".format(doc_id, vals['taskId'])
-            states = answer_db.getAnswers(user_id, task_id)
 
             if custom_state is not None:
-                state = custom_state
+                state = try_load_json(custom_state)
             else:
-                # Don't show state for anonymous users.
-                state = None if user_id == 0 or len(states) == 0 else states[0]['content']
-            try:
-                if state is not None:
-                    state = json.loads(state)
-            except ValueError:
-                pass
+                state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
+                state = None
             plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
 
             final_html_blocks.append({'html': '',  # This will be filled later
                                       'task_id': task_id})
         else:
-            final_html_blocks.append({'html': sanitize_html(block)})
+            final_html_blocks.append({'html': block})
+
+    if custom_state is None and user_id != 0:
+        answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
+        for answer in answers:
+            state = try_load_json(answer['content'])
+            map_entry = state_map[answer['task_id']]
+            plugins[map_entry['plugin_name']][map_entry['idx']]['state'] = state
 
     js_paths = []
     css_paths = []

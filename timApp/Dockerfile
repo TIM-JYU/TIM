@@ -20,17 +20,19 @@ run apt-get install -y libyaml-dev # C-parser for PyYAML
 
 run pip3 install flask
 run pip3 install flask-compress
+run pip3 install flask-cache
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
 run pip3 install hypothesis
 run pip3 install gitpylib
 run pip3 install lxml
 run pip3 install pyaml
-run pip3 install ansiconv
+run pip3 install ansi2html
 run pip3 install cssutils
 
 # Install pygit2 and dependencies
 run apt-get install -y wget
+run apt-get update
 run apt-get install -y cmake
 run wget https://github.com/libgit2/libgit2/archive/v0.22.0.tar.gz && tar xzf v0.22.0.tar.gz
 run cd libgit2-0.22.0/ && cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 . && make install
@@ -77,6 +79,8 @@ run bower --allow-root install bootstrap#~3.3
 run bower --allow-root install waypoints#~3.1
 run bower --allow-root install jquery-ui#~1.11
 run bower --allow-root install katex-build#~0.2
+run bower --allow-root install ng-table#~0.5
+run bower --allow-root install ng-table-export
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js

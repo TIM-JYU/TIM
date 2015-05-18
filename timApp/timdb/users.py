@@ -7,10 +7,11 @@ import sqlite3
 
 new_contract('row', sqlite3.Row)
 
-ANONYMOUS_GROUP = 2
-LOGGED_IN_GROUP = 0
-KORPPI_GROUP = 3
-
+ANONYMOUS_USERNAME = "Anonymous"
+ANONYMOUS_GROUPNAME = "Anonymous users"
+KORPPI_GROUPNAME = "Korppi users"
+LOGGED_IN_GROUPNAME = "Logged-in users"
+ADMIN_GROUPNAME = "Administrators"
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
@@ -21,11 +22,21 @@ class Users(TimDbBase):
         The user id and its associated usergroup id is 0.
         """
 
+        # Please keep these local and refer to the groups with their names instead.
+        # They may differ depending on the script version they were created with.
+        ANONYMOUS_USERID = 0
+        ANONYMOUS_GROUPID = 2
+        LOGGED_IN_GROUPID = 0
+        KORPPI_GROUPID = 3
+        ADMIN_GROUPID = 4
+
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [0, 'Anonymous'])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUP, 'Anonymous users'])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [0, ANONYMOUS_GROUP])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUP, 'Logged-in users'])
+        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [0, ANONYMOUS_USERNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)', [ANONYMOUS_USERID, ANONYMOUS_GROUPID])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [KORPPI_GROUPID, KORPPI_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ADMIN_GROUPID, ADMIN_GROUPNAME])
         self.db.commit()
         return 0
 
@@ -92,8 +103,20 @@ class Users(TimDbBase):
             self.db.commit()
 
     @contract
+    def addUserToNamedGroup(self, group_name: 'str', user_id: 'int', commit : 'bool' = True):
+        group_id = self.getUserGroupByName(group_name)
+        if group_id is not None:
+            self.addUserToGroup(group_id, user_id, commit)
+        else:
+            print("Could not add user {} to group {}".format(user_id, group_name))
+
+    @contract
     def addUserToKorppiGroup(self, user_id: 'int', commit: 'bool'=True):
-        self.addUserToGroup(KORPPI_GROUP, user_id, commit)
+        self.addUserToNamedGroup(KORPPI_GROUPNAME, user_id, commit)
+
+    @contract
+    def addUserToAdmins(self, user_id: 'int', commit: 'bool'=True):
+        self.addUserToNamedGroup(ADMIN_GROUPNAME, user_id, commit)
 
     @contract
     def createPotentialUser(self, email: 'str', password: 'str', commit : 'bool' = True):
@@ -227,6 +250,7 @@ class Users(TimDbBase):
         :returns: The id of the user or None if the user does not exist.
         """
 
+
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM User WHERE name = ?', [name])
         result = cursor.fetchone()
@@ -259,7 +283,7 @@ class Users(TimDbBase):
 
     @contract
     def getUserGroupsByName(self, name: 'str'):
-        """Gets the usergroup that has the specified name.
+        """Gets the usergroups that have the specified name.
         
         :param name: The name of the usergroup to be retrieved.
         """
@@ -267,6 +291,37 @@ class Users(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [name])
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUserGroupByName(self, name: 'str') -> 'int|None':
+        cursor = self.db.cursor()
+        cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [name])
+        groups = cursor.fetchall()
+
+        if groups is None or len(groups) == 0:
+            print("DEBUG: No such named group: " + group_name)
+            return None
+        elif len(groups) > 1:
+            print("DEBUG: Too many named groups: {} ({})".format(group_name, groups))
+            return None
+
+        return groups[0][0]
+
+    @contract
+    def getPersonalUserGroup(self, user_id: 'int') -> 'int':
+        """Gets the personal user group for the user.
+        """
+        userName = self.getUser(user_id)['name']
+        groups = self.getUserGroupsByName(userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        groups = self.getUserGroupsByName('group of user ' + userName)
+        if len(groups) > 0:
+            return groups[0]['id']
+
+        return self.getUserGroups(user_id)[0]['id']
+
 
     @contract
     def getUserGroups(self, user_id: 'int') -> 'list(dict)':
@@ -277,10 +332,46 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
-                          (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)
-                          ORDER BY id ASC""", [user_id])
+        if self.userHasAdminAccess(user_id):
+            # Admin is part of every user group
+            cursor.execute("""SELECT id, name FROM UserGroup ORDER BY id ASC""")
+        else:
+            cursor.execute("""SELECT id, name FROM UserGroup WHERE id IN
+                              (SELECT UserGroup_id FROM UserGroupMember WHERE User_id = ?)
+                              ORDER BY id ASC""", [user_id])
+
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def getUserGroupsPrintable(self, user_id: 'int', max_group_len: 'int' = 32) -> 'list(dict)':
+        """Gets the user groups of a user, truncating the group names.
+
+        :param user_id: The id of the user.
+        :returns: The user groups that the user belongs to.
+        """
+        groups = self.getUserGroups(user_id)
+        for group in groups:
+            if len(group['name']) > max_group_len:
+               group['name'] = group['name'][:max_group_len]
+        return groups
+
+    @contract
+    def isUserInGroup(self, user_name : 'str', usergroup_name : 'str') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
+                          User_id      = (SELECT id from User where name = ?) AND
+                          UserGroup_id = (SELECT id from UserGroup where name = ?)
+                       """, [user_name, usergroup_name])
+        return len(cursor.fetchall()) > 0
+
+    @contract
+    def isUserIdInGroup(self, user_id : 'int', usergroup_name : 'str') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
+                          User_id      = ? AND
+                          UserGroup_id = (SELECT id from UserGroup where name = ?)
+                       """, [user_id, usergroup_name])
+        return len(cursor.fetchall()) > 0
 
     def __grantAccess(self, group_id: 'int', block_id: 'int', access_type: 'str'):
         """Grants access to a group for a block.
@@ -348,6 +439,10 @@ class Users(TimDbBase):
         self.db.commit()
 
     @contract
+    def userHasAdminAccess(self, user_id: 'int') -> 'bool':
+        return self.isUserIdInGroup(user_id, 'Administrators')
+
+    @contract
     def userHasViewAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user has view access to the specified block.
         
@@ -394,27 +489,34 @@ class Users(TimDbBase):
                           """, [user_id, block_id]).fetchall()
         return len(result) > 0
 
-    def checkUserGroupEditAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
-        result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess
+    def checkUserGroupAccess(self, block_id: 'int', usergroup_id: 'int|None', edit_access: 'bool') -> 'bool':
+        if usergroup_id is None:
+            return False
+        if self.userIsOwner(usergroup_id, block_id):
+            return True
+
+        if edit_access:
+            result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess
+                               WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+        else:
+            result = self.db.execute("""SELECT UserGroup_id FROM BlockViewAccess
                            WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
+
         return len(result) > 0
 
     def checkAnonEditAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupEditAccess(block_id, ANONYMOUS_GROUP)
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(ANONYMOUS_GROUPNAME), True)
 
     def checkLoggedInEditAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupEditAccess(block_id, LOGGED_IN_GROUP)
-
-    def checkUserGroupViewAccess(self, block_id: 'int', usergroup_id: 'int') -> 'bool':
-        result = self.db.execute("""SELECT UserGroup_id FROM BlockViewAccess
-                           WHERE Block_id = ? AND UserGroup_id = ?""", [block_id, usergroup_id]).fetchall()
-        return len(result) > 0
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(LOGGED_IN_GROUPNAME), True)
 
     def checkAnonViewAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupViewAccess(block_id, ANONYMOUS_GROUP)
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(ANONYMOUS_GROUPNAME), False)
+
 
     def checkLoggedInViewAccess(self, block_id: 'int') -> 'bool':
-        return self.checkUserGroupViewAccess(block_id, LOGGED_IN_GROUP)
+        return self.checkUserGroupAccess(block_id, self.getUserGroupByName(LOGGED_IN_GROUPNAME), False)
+
 
     @contract
     def userIsOwner(self, user_id: 'int', block_id: 'int') -> 'bool':
@@ -424,6 +526,9 @@ class Users(TimDbBase):
         :param block_id:
         :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
         """
+        if self.userHasAdminAccess(user_id):
+            return True
+
         cursor = self.db.cursor()
         cursor.execute("""SELECT id FROM User WHERE
                           id = ?

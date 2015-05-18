@@ -39,10 +39,15 @@ table td {
 }
 </style>
 <script>
+var isFolder = {{isFolder}};
 var doc = {{doc|tojson|safe}};
 var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
 var groups = {{user_groups|tojson|safe}};
+
+var crumbs = getBreadcrumbs(doc.name);
+{% include 'breadcrumbs.js' %}
+
 </script>
 {% endblock %}
 {% block content %}
@@ -53,11 +58,18 @@ var groups = {{user_groups|tojson|safe}};
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
+    
+    <div ng-show="crumbs" class="breadcrumb-div">
+        <ol id="docpath" class="breadcrumb">
+            <li ng-repeat="c in crumbs" ng-class="$last?'active':''">
+                <a href="/view/{{ '{{ c.fullname }}' }}">{{ '{{ c.name }}' }}</a>
+            </li>
+        </ol>
+    </div>
+
+    
         <div class="margin">
-            <a href="/view/{{ '{{doc.name}}' }}">View this document</a> <br>
-        </div>
-        <div class="margin">
-            Document owner: <select ng-model="doc.owner"
+            {{objNameC}} owner: <select ng-model="doc.owner"
                                   ng-options="group.name for group in userGroups track by group.id"
                 ng-change="changeOwner()">
 
@@ -66,7 +78,7 @@ var groups = {{user_groups|tojson|safe}};
         </div>
         <div class="margin">
             Editors:
-            <p ng-show="editors.length == 0">This document doesn't have editors.</p>
+            <p ng-show="editors.length == 0">This {{objName}} doesn't have editors.</p>
             <ul>
                 <li ng-repeat="editor in editors">{{ '{{editor.name}}' }} (<a ng-click="removeConfirm(editor, 'edit')">remove</a>)
                 </li>
@@ -85,7 +97,7 @@ var groups = {{user_groups|tojson|safe}};
         </div>
         <div class="margin">
             Viewers:
-            <p ng-show="viewers.length == 0">This document doesn't have viewers.</p>
+            <p ng-show="viewers.length == 0">This {{objName}} doesn't have viewers.</p>
             <ul>
                 <li ng-repeat="viewer in viewers">{{ '{{viewer.name}}' }} (<a ng-click="removeConfirm(viewer, 'view')">remove</a>)
                 </li>
@@ -103,19 +115,24 @@ var groups = {{user_groups|tojson|safe}};
             </div>
         </div>
         <form ng-submit="renameDocument(newName)">
-            <label>Document name: <input type="text" ng-model="newName">
+            <label>{{objNameC}} name: <input type="text" ng-model="newName">
             </label>
-            <input type="submit" value="Update" ng-disabled="newName === doc.name">
+            <input type="submit" value="Update" ng-disabled="newName === oldName">
         </form>
-        <form class="uploadForm margin">
-            Upload a new version for this document
+        <form ng-submit="moveDocument(newFolderName)">
+            <label>Location: <input type="text" ng-model="newFolderName">
+            </label>
+            <input type="submit" value="Update" ng-disabled="newFolderName === oldFolderName">
+        </form>
+        <form class="uploadForm margin" ng-show="!isFolder">
+            Upload a new version for this {{objName}}
             <div>
                 <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
                 <span ng-bind="progress"></span>
                 <button id="reset" type="reset" value="Reset">Clear</button>
             </div>
         </form>
-        <form class="uploadForm">
+        <form class="uploadForm" ng-show="!isFolder">
             Edit the full document
             <div>
                 <textarea class="docEditor" ng-model="fulltext"></textarea>
@@ -123,25 +140,32 @@ var groups = {{user_groups|tojson|safe}};
                 <span ng-show="saving">Saving...</span>
             </div>
         </form>
-        <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
-        <div class="margin">
+        <div ng-show="!isFolder">
+            <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
+        </div>
+        <div class="margin" ng-show="!isFolder">
             <button ng-click="deleteDocument(doc.id)">Delete document</button>
         </div>
-        <p>Document version history</p>
-        <table>
-            <thead>
-                <tr>
-                    <td>Time</td>
-                    <td>User</td>
-                    <td>Difference</td>
+        <div class="margin" ng-show="isFolder">
+            <button ng-click="deleteFolder(doc.id)">Delete folder</button>
+        </div>
+        <div ng-show="!isFolder">
+            <p>Document version history</p>
+            <table>
+                <thead>
+                    <tr>
+                        <td>Time</td>
+                        <td>User</td>
+                        <td>Difference</td>
+                    </tr>
+                </thead>
+                <tr ng-repeat="version in doc.versions">
+                    <td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
+                    <td>{{ '{{ version.user }}' }}</td>
+                    <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>
                 </tr>
-            </thead>
-            <tr ng-repeat="version in doc.versions">
-                <td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
-                <td>{{ '{{ version.user }}' }}</td>
-                <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>
-            </tr>
-        </table>
+            </table>
+        </div>
         <a href="{{url_for('indexPage')}}">Return to the index page</a>
     </div>
 {% endblock %}

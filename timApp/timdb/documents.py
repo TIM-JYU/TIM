@@ -3,16 +3,22 @@ from shutil import copyfile
 from datetime import datetime
 
 from contracts import contract
-import ansiconv
+from htmlSanitize import sanitize_html
 
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative
+from ansi2html import Ansi2HTMLConverter
 
 
 class Documents(TimDbBase):
+    def __repr__(self):
+        """For caching - we consider two Documents collections to be the same if their
+        files_root_paths are equal."""
+        return self.files_root_path
+
     @contract
     def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
@@ -49,23 +55,6 @@ class Documents(TimDbBase):
         return response['paragraphs'], new_doc
 
     @contract
-    def __insertBlockToDb(self, name: 'str', owner_group_id: 'int', block_type: 'int') -> 'int':
-        """Inserts a block to database.
-        
-        :param name: The name (description) of the block.
-        :param owner_group_id: The owner group of the block.
-        :param block_type: The type of the block.
-        :returns: The id of the block.
-        """
-
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
-                       [name, owner_group_id, block_type])
-        block_id = cursor.lastrowid
-        self.db.commit()
-        return block_id
-
-    @contract
     def createDocument(self, name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
         """Creates a new document with the specified name.
         
@@ -77,7 +66,7 @@ class Documents(TimDbBase):
         if '\0' in name:
             raise TimDbException('Document name cannot contain null characters.')
 
-        document_id = self.__insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
+        document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document_path = os.path.join(self.blocks_path, str(document_id))
 
         try:
@@ -326,6 +315,14 @@ class Documents(TimDbBase):
 
         return self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
 
+    def getDocumentAsHtmlBlocksSanitized(self, document_id: 'DocIdentifier') -> 'list(str)':
+        """Gets the specified document in HTML form sanitized.
+
+        :param document_id: The id of the document.
+        :returns: The document contents as a list of sanitized HTML blocks.
+        """
+        return [sanitize_html(block) for block in self.getDocumentAsHtmlBlocks(document_id)]
+
     @contract
     def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
         return [block for block in self.getDocumentAsBlocks(document_id) if len(block) > 0 and block[0] == '#']
@@ -371,13 +368,14 @@ class Documents(TimDbBase):
     @contract
     def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
         try:
-            out, _ = self.git.command('diff --color --unified=5 {}^! {}'.format(document_id.hash,
+            out, _ = self.git.command('diff --word-diff=color --unified=5 {}^! {}'.format(document_id.hash,
                                                                                 self.getDocumentPathAsRelative(
                                                                                     document_id.id)))
         except TimDbException as e:
             e.message = 'The requested revision was not found.'
             raise
-        html = ansiconv.to_html(out)
+        conv = Ansi2HTMLConverter(inline=True, dark_bg=False)
+        html = conv.convert(out, full=False)
         return html
 
     @contract
@@ -444,7 +442,7 @@ class Documents(TimDbBase):
         """
 
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
-        doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
+        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         copyfile(document_file, self.getDocumentPath(doc_id.id))
 
         self.git.add(self.getDocumentPathAsRelative(doc_id.id))
@@ -458,7 +456,7 @@ class Documents(TimDbBase):
 
     @contract
     def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
-        doc_id = DocIdentifier(self.__insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
+        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
         doc_hash = self.__commitDocumentChanges(doc_id, content,
                                                 'Imported document: %s (id = %d)' % (document_name, doc_id.id))
         doc_id = DocIdentifier(doc_id.id, doc_hash)
@@ -784,18 +782,6 @@ class Documents(TimDbBase):
                        [blocktypes.DOCUMENT, doc_id.id])
         if commit:
             self.db.commit()
-
-    @contract
-    def setOwner(self, doc_id: 'int', usergroup_id: 'int'):
-        """Changes the owner group for a document.
-
-        :param doc_id: The id of the document.
-        :param usergroup_id: The id of the new usergroup.
-        """
-        cursor = self.db.cursor()
-        cursor.execute('UPDATE Block SET UserGroup_id = ? WHERE type_id = ? and id = ?',
-                       [usergroup_id, blocktypes.DOCUMENT, doc_id])
-        self.db.commit()
 
     @contract
     def previewBlock(self, content: 'str') -> 'list(str)':

@@ -4,6 +4,12 @@
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
 
+    {% if teacher_mode %}
+        <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>
+{#        <link rel="stylesheet" href="{{ url_for('bower.static', filename='ng-table/dist/ng-table.css') }}">#}
+    {% endif %}
+
     {% for script in js %}
         <script src=" {{ script }}"></script>
     {% endfor %}
@@ -14,6 +20,9 @@
             {% for dep in jsMods %}
                 "{{ dep|safe}}",
             {% endfor %}
+            {% if teacher_mode %}
+                "ngTable", "ngTableExport"
+            {% endif %}
         ]);
 
     </script>
@@ -28,6 +37,10 @@
     <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('bower.static', filename='katex-build/katex.min.css') }}">
     <script src="{{ url_for('bower.static', filename='katex-build/katex.min.js') }}"></script>
+
+    {% if teacher_mode %}
+        <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
+    {% endif %}
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
@@ -53,11 +66,17 @@
         {% else %}
             var users = [{{current_user|tojson}}];
         {% endif %}
+        
+        var crumbs = getBreadcrumbs(docName);
+        {% include 'breadcrumbs.js' %}
     </script>
-{% endblock %}
+{% endblock %} 
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
-        <div id="contents" ng-show="indexTable.length > 0">
+        {% include 'breadcrumbs.html' %}
+        
+
+        <div id="contents" ng-show="indexTable.length > 0" class="ng-cloak">
             <div class="menu">
                 <img ng-click="toggleSidebar()" class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                      height="50"/>
@@ -81,13 +100,30 @@
         </div>
 
         {% if teacher_mode %}
-            <div id="users" class="userlist" tim-draggable-fixed>
+            <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed>
             {% if plugin_users %}
-                Users with answers:<br>
-                <select resizable ng-model="selectedUser"
-                        ng-options="(user.real_name + ' (' + user.name + '), ' + user.task_count) for user in users track by user.id"
-                        ng-change="changeUser(selectedUser)"
-                        size="20"></select>
+                Users with answers ({{ plugin_users|length }}):<br>
+                {% raw %}
+                <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected" export-csv="csv">
+                    <tr ng-repeat="user in $data"
+                        ng-click="user.$selected = !user.$selected; changeUser(user)"
+                        ng-class="{'active': user.$selected}">
+                        <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
+                            {{user.real_name}}
+                        </td>
+                        <td data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
+                            {{user.name}}
+                        </td>
+                        <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
+                            {{user.task_count}}
+                        </td>
+                        <td data-title="'Total points'" sortable="'total_points'" filter="{ 'total_points': 'text' }">
+                            {{user.total_points}}
+                        </td>
+                    </tr>
+                </table>
+                <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ docId }}.csv">Export to CSV</a>
+                {% endraw %}
             {% else %}
                 No answerers.
             {% endif %}
