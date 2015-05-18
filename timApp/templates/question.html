@@ -1,4 +1,4 @@
-<div class="ng-scope" style="text-align:left">
+<div class="ng-scope" style="text-align:left" ng-controller="QuestionController">
     <form id="question-form">
         <fieldset>
             <label>
@@ -42,16 +42,7 @@
                 Start time:
                 <input type="checkbox" ng-model="question.startTimeSelected" />
                 <span ng-show="question.startTimeSelected">
-                    <label>Date:
-                    <input type="text" id="startDay" maxlength="2" size="2" placeholder="dd" is-valid-change=""
-                           ng-model="question.startDay">
-                    .
-                    <input type="text" id="startMonth" maxlength="2" size="2" placeholder="mm" is-valid-change=""
-                           ng-model="question.startMonth">
-                    .
-                    <input type="text" id="startYear" maxlength="4" size="4" placeholder="yyyy" is-valid-change=""
-                           ng-model="question.startYear">
-                    <input type="button" id="calendarStart" value="...">
+                    <label>Date:<input type="text" id="calendarStart">
                     </label>
                     <label>Time:
                     <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"

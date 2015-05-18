@@ -67,14 +67,15 @@
                 <td ng-repeat="column in row.columns">
                     <!-- Horizontal radio-button-->
                     <div ng-if="(question.matrixType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
+                        <!-- ng-model="row.id" -->
                         <input type="radio"
-                               ng-model="row.id"
                                ng-value="column.id"
-                               placeholder="Placeholder"/>
+                               placeholder=""
+                               disabled/>
                         <input type="text"
-                               ng-show="row.id == column.id"
                                size="1"
-                               placeholder="pts"/>
+                               placeholder="pts"
+                               ng-model="column.points" />
                     </div>
                     <!-- Vertical radio-button -->
                     <div ng-if="question.type != 'true-false'">
@@ -82,28 +83,30 @@
                             <input type="radio"
                                    name="column.rowId"
                                    ng-value="column.id"
-                                   placeholder="Placeholder"/>
+                                   placeholder=""
+                                    disabled/>
                             <input type="text"
-                                   ng-show="column.id == row.id"
                                    size="1"
-                                   placeholder="pts"/>
+                                   placeholder="pts"
+                                   ng-model="column.points"/>
                         </div>
                         <!-- Text area-->
                         <div ng-if="question.type != 'radio-button'">
                             <textarea ng-if="question.matrixType == 'textArea' && question.type=='matrix'"
                                       type="text"
-                                      placeholder="Placeholder"
+                                      placeholder=""
                                       rows="1"
-                                      cols="20"></textarea>
+                                      cols="20"
+                                    disabled></textarea>
                             <!-- Checkbox-->
                             <div ng-if="(question.matrixType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">
                                 <input type="checkbox"
                                        ng-model="row.id"
-                                        />
+                                        disabled/>
                                 <input type="text"
-                                       ng-show="row.id"
                                        size="1"
-                                       placeholder="pts"/>
+                                       placeholder="pts"
+                                       ng-model="column.points"/>
                             </div>
                         </div>
                     </div>

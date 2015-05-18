@@ -41,3 +41,15 @@ class LectureAnswers(TimDbBase):
         """, [lecture_id])
 
         return self.resultAsDictionary(cursor)
+
+    @contract
+    def delete_answers_from_question(self, question_id: "int", commit:"bool"=True):
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+                    DELETE FROM LectureAnswer
+                    WHERE question_id = ?
+        """, [question_id])
+
+        if commit:
+            self.db.commit()

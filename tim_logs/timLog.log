@@ -7216,3 +7216,377 @@ Variables bound in inner context:
 - args: Instance of tuple: ()
 - kwargs: Instance of dict: {}
 - self: Instance of Users: <timdb.users.Users object at 0x7f5b97fd5550>
+{"time":2015-05-14 15:42:21,508, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getFolders [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 704, in getFolders
+    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+  File "/service/timApp/routes/common.py", line 22, in getCurrentUserGroup
+    return timdb.users.getPersonalUserGroup(getCurrentUserId())
+  File "<string>", line 2, in getPersonalUserGroup
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 275, in contracts_checker
+    raise e
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 270, in contracts_checker
+    returns_parsed._check_contract(context, result)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/extensions.py", line 48, in check_contract
+    self.contract._check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/separate_context.py", line 14, in check_contract
+    self.contract._check_contract(copy, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/types_misc.py", line 24, in check_contract
+    value=value, context=context)
+contracts.interface.ContractNotRespected: Breach for return value of Users:getPersonalUserGroup().
+Expected type 'int', got 'dict'.
+checking: Int      for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+checking: $(Int)   for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+checking: int      for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+Variables bound in inner context:
+- args: Instance of tuple: ()
+- kwargs: Instance of dict: {}
+- self: Instance of Users: <timdb.users.Users object at 0x7f740c2d5978>
+{"time":2015-05-15 11:18:43,826, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getFolders [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 773, in getFolders
+    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+  File "/service/timApp/routes/common.py", line 22, in getCurrentUserGroup
+    return timdb.users.getPersonalUserGroup(getCurrentUserId())
+  File "<string>", line 2, in getPersonalUserGroup
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 275, in contracts_checker
+    raise e
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 270, in contracts_checker
+    returns_parsed._check_contract(context, result)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/extensions.py", line 48, in check_contract
+    self.contract._check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/separate_context.py", line 14, in check_contract
+    self.contract._check_contract(copy, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/types_misc.py", line 24, in check_contract
+    value=value, context=context)
+contracts.interface.ContractNotRespected: Breach for return value of Users:getPersonalUserGroup().
+Expected type 'int', got 'dict'.
+checking: Int      for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+checking: $(Int)   for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+checking: int      for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+Variables bound in inner context:
+- args: Instance of tuple: ()
+- kwargs: Instance of dict: {}
+- self: Instance of Users: <timdb.users.Users object at 0x7fa22702db38>
+{"time":2015-05-15 11:38:31,436, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 11:38:54,976, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 11:39:13,747, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 11:40:02,760, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 13:19:54,167, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 13:47:33,099, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 13:47:42,107, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 13:47:55,007, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 13:49:12,206, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 13:49:24,448, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getLectureInfo [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 217, in get_lecture_info
+    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+  File "<string>", line 2, in get_answers_to_questions_from_lecture
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 41, in get_answers_to_questions_from_lecture
+    """, [lecture_id])
+sqlite3.OperationalError: no such column: lecture_id
+{"time":2015-05-15 13:49:54,006, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /answerToQuestion [POST]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 1033, in answer_to_question
+    timdb.lecture_answers.add_answer(getCurrentUserId(), question_id, lecture_id, answer, time_now, 0.0)
+  File "<string>", line 2, in add_answer
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 266, in contracts_checker
+    result = function_(*args, **kwargs)
+  File "/service/timApp/timdb/lectureanswers.py", line 16, in add_answer
+    """, [user_id, question_id, lecture_id, answer, answered_on, points])
+sqlite3.OperationalError: table LectureAnswer has no column named lecture_id
+{"time":2015-05-15 14:24:40,354, "file": /usr/local/lib/python3.4/dist-packages/flask/app.py, "line" :1423, "messageLevel":  ERROR, "message": Exception on /getFolders [GET]}
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python3.4/dist-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.4/dist-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/service/timApp/tim.py", line 773, in getFolders
+    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+  File "/service/timApp/routes/common.py", line 22, in getCurrentUserGroup
+    return timdb.users.getPersonalUserGroup(getCurrentUserId())
+  File "<string>", line 2, in getPersonalUserGroup
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 275, in contracts_checker
+    raise e
+  File "/usr/local/lib/python3.4/dist-packages/contracts/main.py", line 270, in contracts_checker
+    returns_parsed._check_contract(context, result)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/extensions.py", line 48, in check_contract
+    self.contract._check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/separate_context.py", line 14, in check_contract
+    self.contract._check_contract(copy, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/interface.py", line 239, in _check_contract
+    self.check_contract(context, value)
+  File "/usr/local/lib/python3.4/dist-packages/contracts/library/types_misc.py", line 24, in check_contract
+    value=value, context=context)
+contracts.interface.ContractNotRespected: Breach for return value of Users:getPersonalUserGroup().
+Expected type 'int', got 'dict'.
+checking: Int      for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+checking: $(Int)   for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+checking: int      for value: Instance of dict: {'id': 2, 'name': 'Anonymous users'}   
+Variables bound in inner context:
+- args: Instance of tuple: ()
+- kwargs: Instance of dict: {}
+- self: Instance of Users: <timdb.users.Users object at 0x7f67d29c2198>

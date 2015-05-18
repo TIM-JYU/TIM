@@ -14,38 +14,38 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
         $scope.dueCheck = false;
         $scope.error_message = "";
         $scope.lectureCode = "";
-
-
+        $scope.password = "";
         var date = new Date();
+        $scope.startDate = date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear();
 
-        $scope.setCurrentTime = function () {
-            $scope.startDay = date.getDate();
-            $scope.startMonth = date.getMonth() + 1;
-            $scope.startYear = date.getFullYear();
-            $scope.startHour = date.getHours();
-            $scope.startMin = (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+        // Sets the calendars in the form to the current date and date-format dd.m.yyyy
+        $(function() {
+            $('#startDate').datepicker({ dateFormat: 'dd.m.yy' });
+            $('#endDate').datepicker({ dateFormat: 'dd.m.yy' });
+        });
+
+        $scope.setCurrentTimeAndDate = function () {
+            $scope.startDay = $scope.leftPadder(date.getDate(),2);
+            $scope.startMonth = $scope.leftPadder(date.getMonth()+1,2);
+            $scope.startYear = $scope.leftPadder(date.getFullYear(),4);
+            $scope.startHour = $scope.leftPadder(date.getHours(),2);
+            $scope.startMin =  $scope.leftPadder(date.getMinutes(),2);
         };
 
-        $scope.setCurrentTime();
-        var errors = 0;
+        $scope.setCurrentTimeAndDate();
 
         $scope.enableDate2 = function () {
-
+            console.log($scope.startDate);
             $scope.dateCheck = true;
             $scope.dueCheck = false;
-            $scope.endDate = lectureForm.form.startDate.value.split("-");
-            $scope.endDay = $scope.endDate[0];
-            $scope.endMonth = $scope.endDate[1];
-            $scope.endYear = $scope.endDate[2];
-            $scope.endHour = $scope.startHour + 2;
-            $scope.endMin = $scope.startMin;
+            $scope.endDate = $scope.startDate;
+            $scope.endHour = $scope.leftPadder(parseInt($scope.startHour) + 2,2);
+            $scope.endMin = $scope.leftPadder($scope.startMin,2);
 
             $scope.useDate = true;
             $scope.useDuration = false;
-            lectureForm.form.durationHour.value = "";
-            lectureForm.form.durationMin.value = "";
-            $scope.defInputStyle(document.getElementById("hours2"));
-            $scope.defInputStyle(document.getElementById("mins2"));
+            $scope.durationHour = "";
+            $scope.durationMin = "";
         };
 
         /*Function for enabling fields and buttons for "Duration" and disabling them for "Use date".*/
@@ -61,38 +61,21 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
             $scope.endMin = "";
             $scope.durationHour = "02";
             $scope.durationMin = "00";
-
-            $scope.defInputStyle(document.getElementById("stopDay"));
-            $scope.defInputStyle(document.getElementById("stopMonth"));
-            $scope.defInputStyle(document.getElementById("stopYear"));
-            $scope.defInputStyle(document.getElementById("stopHour"));
-            $scope.defInputStyle(document.getElementById("stopMin"));
         };
 
         /*Function for checking that elements value isn't empty.*/
-        $scope.notEmpty = function (element) {
-            if (element.value == "") {
-                element.style.border = "1px solid red";
-                element.title = "This field can't be empty.";
-                errors++;
+        $scope.notEmpty = function (element,val) {
+            if (element.value === "") {
+                $scope.errorize(val, "This field can't be empty.");
             } else {
-
-                $scope.defInputStyle(element);
+                $scope.defInputStyle(val);
             }
-
-        };
-
-        /*Function for showing the error message.*/
-        $scope.showErrorMessage = function () {
-            //alert("Errors");
-            //document.getElementById("errorMessage").innerHTML = "Errors in the form. Please, correct the fields marked with red to continue.";
         };
 
         /*Function for checking that input is a number.*/
-        $scope.isValid = function (element) {
+        $scope.isValid = function (element,val) {
             if (isNaN(element.value) === true) {
-                element.style.border = "1px solid red";
-                element.title = "Use a number.";
+                $scope.errorize(val, "Use a number.");
             }
             else {
                 $scope.notEmpty(element);
@@ -101,189 +84,184 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
 
         /*Removes error style from element (red border around field).*/
         $scope.defInputStyle = function (element) {
-            element.style.border = "";
-            element.style.title = "";
+            if(element !== null || !element.isDefined){
+                document.getElementById(element).style.border = "";
+            }
         };
 
         /*Function for checking that hours are correct (between 0 and 23).*/
-        $scope.isHour = function (element) {
-            if (element.value > 23 || element.value < 0) {
-                element.style.border = "1px solid red";
-                element.title = "Hour has to be between 0 and 23.";
-                $scope.showErrorMessage();
+        $scope.isHour = function (element, val) {
+            if (element > 23 || element < 0) {
+                $scope.errorize(val, "Hour has to be between 0 and 23.");
             }
         };
 
         /*Function for checking that minutes are correct (between 0 and 59).*/
-        $scope.isMinute = function (element) {
-            if (element.value > 59 || element.value < 0) {
-                element.style.border = "1px solid red";
-                element.title = "Minutes has to be between 0 and 59.";
-                $scope.showErrorMessage();
+        $scope.isMinute = function (element,val) {
+            if (element > 59 || element < 0) {
+                $scope.errorize(val, "Minutes has to be between 0 and 59.");
             }
         };
 
         /*Function for checking that number is positive.*/
-        $scope.isPositiveNumber = function (element) {
-            if (isNaN(element.value) || element.value < 0) {
-                element.style.border = "1px solid red";
-                element.title = "Number has to be positive.";
-                $scope.showErrorMessage();
-            } else {
-                element.style.border = "";
-                element.title = "Number has to be positive.";
+        $scope.isPositiveNumber = function (element,val) {
+            if (isNaN(element) || element < 0) {
+                $scope.errorize(val, "Number has to be positive.");
             }
         };
-        $scope.setFormScope = function (scope) {
-            this.formScope = scope;
-        };
-        /*Function for creating a new lecture and error checking.*/
 
+        /*Creates a new date object with the specified date and time*/
+        $scope.translateToDateObject = function(date_to_be_validated, time_hours, time_mins){
+            var parms = date_to_be_validated.split(".");
+            var dd = parseInt(parms[0]);
+            var mm = parseInt(parms[1]);
+            var yyyy = parseInt(parms[2]);
+            var hours = parseInt(time_hours);
+            var mins = parseInt(time_mins);
+            return new Date(yyyy,mm-1,dd,hours,mins,0);
+        };
+
+        /*Function for creating a new lecture and error checking.*/
         $scope.submitLecture = function () {
-            var elements = [
-                lectureForm.form.startDay,
-                lectureForm.form.startMonth,
-                lectureForm.form.startYear,
-                lectureForm.form.startHour,
-                lectureForm.form.startMin,
-                lectureForm.form.stopDay,
-                lectureForm.form.stopMonth,
-                lectureForm.form.stopYear,
-                lectureForm.form.stopHour,
-                lectureForm.form.stopMin,
-                lectureForm.form.durationHour,
-                lectureForm.form.durationMin];
+            $scope.removeErrors();
+            $scope.start_date = $scope.translateToDateObject($scope.startDate, $scope.startHour, $scope.startMin);
+            if($scope.endDate !== undefined){
+                $scope.end_date = $scope.translateToDateObject($scope.endDate, $scope.endHour, $scope.endMin);
+            } else {
+                $scope.end_date = "";
+            }
 
             /*This checks that "lecture code"-field is not empty.*/
-            if (lectureForm.form.code.value == undefined || lectureForm.form.code.value == "") {
-                document.getElementById("lCode").style.border = "1px solid red";
-                $scope.error_message += "Lecture code must be entered!<br/>";
-            } else  $scope.defInputStyle(document.getElementById("lCode"));
+            if ($scope.lectureCode === "") {
+                $scope.errorize("lCode", "Lecture code must be entered!");
+            }
 
             /*This checks that either "Use date" or "Duration" is chosen for ending time.*/
-            if ($scope.dateCheck == false && $scope.dueCheck == false) {
-                document.getElementById("endInfo").style.border = "1px solid red";
-                $scope.error_message += "A date or duration must be chosen.<br />";
-            } else  $scope.defInputStyle(document.getElementById("lbend"));
+            if ($scope.dateCheck === false && $scope.dueCheck === false) {
+                $scope.errorize("endInfo","A date or duration must be chosen.");
+            }
             /*Checks that hours in starting and ending time are between 0 and 23.
              Checks that minutes in starting and ending time are between 0 and 59*/
-            $scope.isHour(elements[3]);
-            $scope.isMinute(elements[4]);
+            $scope.isHour($scope.startHour,"startHour");
+            $scope.isMinute($scope.startMin,"startMin");
 
             if ($scope.useDate) {
-                $scope.isHour(elements[8]);
-                $scope.isMinute(elements[9]);
-            }
-
-
-            if ($scope.useDuration) {
-
-                $scope.isPositiveNumber(elements[10]);
-                $scope.isPositiveNumber(elements[11]);
-                if (lectureForm.form.durationHour.value.length <= 0 && lectureForm.form.durationMin.value.length <= 0) {
-                    document.getElementById("durationHour").style.border = "1px solid red";
-                    document.getElementById("durationMin").style.border = "1px solid red";
-                    $scope.error_message += "Please give positive number.<br>";
+                $scope.isHour($scope.stopHour, "stopHour");
+                $scope.isMinute($scope.stopMin, "stopMin");
+                if($scope.end_date-$scope.start_date <= 0) {
+                    $scope.errorize("endDateDiv", "Lecture has to last at least a minute.");
                 }
             }
 
             if ($scope.useDuration) {
-
-                $scope.endDay = $scope.startDay;
-                $scope.endMonth = $scope.startMonth;
-                $scope.endYear = $scope.startYear;
-                $scope.durationMin = this.formScope.form.endMm.$viewValue;
-                $scope.durationHour = this.formScope.form.endHh.$viewValue;
-
-                if ($scope.durationMin == "") {
-                    $scope.durationMin = 0;
+                $scope.isPositiveNumber($scope.durationHour,"durationHour");
+                $scope.isPositiveNumber($scope.durationMin,"durationMin");
+                if ($scope.durationHour.length <= 0 && $scope.durationMin.length <= 0) {
+                    $scope.errorize("durationDiv", "Please give a duration.");
                 }
-
-                if ($scope.durationHour == "") {
-                    $scope.durationHour = 0;
-                }
-
-                var hoursFromMins = parseInt($scope.durationMin) / 60 >> 0;
-                $scope.endMin = parseInt(this.formScope.form.startMm.$viewValue) + parseInt($scope.durationMin) % 60;
-                $scope.endHour = parseInt(this.formScope.form.startHh.$viewValue) + parseInt($scope.durationHour) + hoursFromMins;
-                if ($scope.endHour >= 24) {
-                    var extraDays = parseInt($scope.endHour) / 24 >> 0;
-                    $scope.endHour = $scope.endHour % 24;
-                    $scope.endDay = $scope.endDay + extraDays;
-                    switch ($scope.endMonth) {
-                        case 1:
-                        case 3:
-                        case 5:
-                        case 7:
-                        case 8:
-                        case 10:
-                        case 12:
-                            if ($scope.endDay > 31) {
-                                $scope.endMonth += 1;
-                                $scope.endDay = 1;
-                            }
-                            break;
-                        case 2:
-                            if ($scope.endDay > 28) {
-                                $scope.endMonth += 1;
-                                $scope.endDay = 1;
-                            }
-                            break;
-                        default :
-                            if ($scope.endDay > 30) {
-                                $scope.endMonth += 1;
-                                $scope.endDay = 1;
-                            }
-                    }
-
-                    if ($scope.endMonth > 12) {
-                        $scope.endMonth = 1;
-                        $scope.endYear += 1;
-                    }
-                }
-
             }
 
             if ($scope.useDate) {
-                var endDate = "" + $scope.leftPadder(this.formScope.form.stopY.$viewValue, 4) + "-"
-                    + $scope.leftPadder(this.formScope.form.stopM.$viewValue, 2) + "-"
-                    + $scope.leftPadder(this.formScope.form.stopD.$viewValue, 2) + " "
-                    + $scope.leftPadder(this.formScope.form.stopHh.$viewValue, 2) + ":"
-                    + $scope.leftPadder(this.formScope.form.stopMm.$viewValue, 2);
+                $scope.endDateForDB = "" + $scope.leftPadder($scope.end_date.getFullYear(), 4) + "-"
+                    + $scope.leftPadder($scope.end_date.getMonth()+1, 2) + "-"
+                    + $scope.leftPadder($scope.end_date.getDate(), 2) + " "
+                    + $scope.leftPadder($scope.end_date.getHours(), 2) + ":"
+                    + $scope.leftPadder($scope.end_date.getMinutes(), 2);
             }
 
             if ($scope.useDuration) {
-                var endDate = "" + $scope.leftPadder($scope.endYear, 4) + "-"
-                    + $scope.leftPadder($scope.endMonth, 2) + "-"
-                    + $scope.leftPadder($scope.endDay, 2) + " "
-                    + $scope.leftPadder($scope.endHour, 2) + ":"
-                    + $scope.leftPadder($scope.endMin, 2);
-
-                console.log(endDate);
-            }
-
-
-            $http({
-                url: '/createLecture',
-                method: 'POST',
-                params: {
-                    'doc_id': docIdParam,
-                    'lecture_code': this.formScope.form.code.$viewValue,
-                    'password': this.formScope.form.password.$viewValue,
-                    'start_date': startDate,
-                    'end_date': endDate
+                $scope.end_date = new Date($scope.start_date.getTime());
+                $scope.end_date.setHours($scope.start_date.getHours()+parseInt($scope.durationHour));
+                $scope.end_date.setMinutes($scope.start_date.getMinutes()+parseInt($scope.durationMin));
+                if($scope.end_date-$scope.start_date <= 0) {
+                    $scope.errorize("durationDiv", "Lecture has to last at least a minute.");
                 }
-            })
-                .success(function (answer) {
-                    anotherScope.checkIfInLecture();
-                    console.log("Lecture created: " + answer.lectureId);
-                    $scope.$modalClose();
+                $scope.endDateForDB = "" + $scope.leftPadder($scope.end_date.getFullYear(), 4) + "-"
+                    + $scope.leftPadder($scope.end_date.getMonth()+1, 2) + "-"
+                    + $scope.leftPadder($scope.end_date.getDate(), 2) + " "
+                    + $scope.leftPadder($scope.end_date.getHours(), 2) + ":"
+                    + $scope.leftPadder($scope.end_date.getMinutes(), 2);
+            }
+            if($scope.error_message<=0) {
+                $scope.startDateForDB = $scope.leftPadder($scope.start_date.getFullYear(), 4) + "-" + $scope.leftPadder($scope.start_date.getMonth()+1,2) + "-" + $scope.leftPadder($scope.start_date.getDate(),2) + " " + $scope.leftPadder($scope.start_date.getHours(),2) + ":" + $scope.leftPadder($scope.start_date.getMinutes(),2);
+                $http({
+                    url: '/createLecture',
+                    method: 'POST',
+                    params: {
+                        'doc_id': $scope.docId,
+                        'lecture_code': $scope.lectureCode,
+                        'password': $scope.password,
+                        'start_date': $scope.startDateForDB,
+                        'end_date': $scope.endDateForDB
+                    }
                 })
-                .error(function () {
-                    console.log("Failed to start a lecture");
-                })
+                    .success(function (answer) {
+                        console.log("Lecture created: " + answer.lectureId);
+                        $scope.clearForm();
+                    })
+                    .error(function (answer) {
+                        $scope.error_message += answer.error;
+                        console.log(answer);
+                    });
+            }
         };
 
+        /* Changes the border of the element to red*/
+        $scope.errorize = function(div_val,error_text) {
+            document.getElementById(div_val).style.border = "1px solid red";
+            if(error_text.length > 0) {$scope.error_message += error_text + "<br />";}
+        };
+
+        $scope.removeErrors = function () {
+            $scope.error_message = "";
+            var elementsToRemoveErrorsFrom = [
+                "lCode",
+                "startDate",
+                "startHour",
+                "startMin",
+                "endInfo",
+                "endDateDiv",
+                "durationDiv"
+            ]
+            for(var i = 0; i < elementsToRemoveErrorsFrom.length; i++){
+                if (elementsToRemoveErrorsFrom[i] !== undefined) {
+                    $scope.defInputStyle(elementsToRemoveErrorsFrom[i]);
+                }
+            }
+        };
+
+        /* Clears the form of all values */
+        $scope.clearForm = function () {
+            $scope.$emit("closeLectureForm");
+            var elementsToClear = [
+            $scope.lectureCode,
+            $scope.password,
+            $scope.startDate,
+            $scope.endDate,
+            $scope.startHour,
+            $scope.startMin,
+            $scope.durationMin,
+            $scope.durationHour,
+            $scope.endHour,
+            $scope.endMin
+            ];
+            for (var i = 0; i < elementsToClear.length; i++) {
+                if (elementsToClear[i] !== undefined) {
+                    elementsToClear[i] = "";
+                }
+            }
+            $scope.showLectureCreation = false;
+            $scope.removeErrors();
+            document.getElementById("lectureForm").reset();
+            $scope.useDate = false;
+            $scope.useDuration = false;
+            $scope.dateChosen = false;
+            $scope.durationChosen = false;
+            $scope.dateCheck = false;
+
+        };
+
+        /* Adds size number of 0's at the start of the number*/
         $scope.leftPadder = function (number, size) {
             var paddedNumber = "" + number;
             var len = paddedNumber.length;
@@ -296,78 +274,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
 
         /*Function for cancelling the lecture creation.*/
         $scope.cancelCreation = function () {
-
-
-            $scope.$emit("closeLectureForm");
-            var elementsToClear = [lectureForm.form.startDay,
-                lectureForm.form.startMonth,
-                lectureForm.form.startYear,
-                lectureForm.form.startHour,
-                lectureForm.form.startMin,
-                lectureForm.form.stopDay,
-                lectureForm.form.stopMonth,
-                lectureForm.form.stopYear,
-                lectureForm.form.stopHour,
-                lectureForm.form.stopMin,
-                lectureForm.form.durationHour,
-                lectureForm.form.durationMin];
-            var i;
-            for (i = 7; i < elementsToClear.length; i++) {
-                if (elementsToClear[i] != undefined)
-                    elementsToClear[i].value = "";
-            }
-            $scope.showLectureCreation = false;
-            $scope.error_message = "";
-            document.getElementById("lectureForm").reset();
-            $scope.useDate = false;
-            $scope.useDuration = false;
-            $scope.dateChosen = false;
-            $scope.durationChosen = false;
-
+            $scope.clearForm();
         };
-
     }
-])
-;
-
-timApp.directive('notEmptyChange', function () {
-    return {
-        scrope: false,
-        link: function (scope, element) {
-            element.bind('change', function () {
-                scope.isValid(element.context);
-            });
-            element.bind('blur', function () {
-                scope.notEmpty(element.context);
-            });
-        }
-    }
-});
-
-timApp.directive('isValidChange', function () {
-    return {
-        scrope: false,
-        link: function (scope, element) {
-            element.bind('blur', function () {
-                scope.isValid(element.context);
-            });
-            element.bind('change', function () {
-                scope.isValid(element.context);
-            });
-        }
-    }
-});
-
-timApp.directive('isPositive', function () {
-    return {
-        scrope: false,
-        link: function (scope, element) {
-            element.bind('blur', function () {
-                scope.isPositiveNumber(element.context);
-            });
-            element.bind('change', function () {
-                scope.isPositiveNumber(element.context);
-            });
-        }
-    }
-});
+]);
