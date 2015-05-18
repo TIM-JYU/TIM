@@ -191,11 +191,11 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 #    print("Normal mode/ForkingMixIn")
 
 
-def start_server(http_server):
-    if not os.path.exists("log"):
-        os.makedirs("log")
+def start_server(http_server: TimServer, logname: str):
+    if not os.path.exists("/var/log"):
+        os.makedirs("/var/log")
     CURRENTDIR = os.getcwd()
-    logging.basicConfig(filename=CURRENTDIR+'/log/log.txt', level=logging.INFO, format='%(asctime)s %(message)s')
+    logging.basicConfig(filename='/var/log/'+logname+'.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
     server = ThreadedHTTPServer(('', PORT), http_server)
     print('Starting server, use <Ctrl-C> to stop')
