@@ -461,6 +461,8 @@ def getReadParagraphs(doc_id):
 def setReadParagraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     if len(blocks) <= specifier:
@@ -468,7 +470,19 @@ def setReadParagraph(doc_id, specifier):
     timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
     return "Success"
 
-    
+
+@app.route("/read/<int:doc_id>", methods=['PUT'])
+def setAllAsRead(doc_id):
+    verifyReadMarkingRight(doc_id)
+    timdb = getTimDb()
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
+    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    timdb.readings.setAllAsRead(getCurrentUserGroup(), doc_id, doc_ver, len(blocks))
+    return "Success"
+
+
 @app.route("/")
 def startPage():
     return render_template('start.html')

@@ -615,6 +615,15 @@ timApp.controller("ViewCtrl", [
             });
         };
 
+        sc.markAllAsRead = function() {
+            http.put('/read/' + sc.docId + '?_=' + Date.now())
+                .success(function (data, status, headers, config) {
+                    $('.readline').attr("class", "readline read");
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not mark the document as read.');
+                });
+        };
+
         sc.setHeaderLinks = function () {
             $(".par h1, .par h2, .par h3, .par h4, .par h5, .par h6").each(function () {
                 var $par = $(this).parent();

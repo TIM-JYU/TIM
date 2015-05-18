@@ -20,7 +20,12 @@ PermApp.controller("PermCtrl", [
     '$scope',
     '$http',
     '$upload',
-    function (sc, $http, $upload) {
+    '$window',
+    function (sc, $http, $upload, $window) {
+        $http.defaults.headers.common.Version = function() {
+            return sc.doc.versions[0].hash;
+        };
+
         sc.getJustDocName = function(fullName) {
             i = fullName.lastIndexOf('/');
             return i < 0 ? fullName : fullName.substr(i + 1);
@@ -164,6 +169,18 @@ PermApp.controller("PermCtrl", [
                     alert(data.error);
                 }).then(function () {
                     sc.saving = false;
+                });
+        };
+
+        sc.markAllAsRead = function() {
+            sc.readUpdating = true;
+            $http.put('/read/' + sc.doc.id + '?_=' + Date.now())
+                .success(function (data, status, headers, config) {
+
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not mark the document as read.');
+                }).finally(function (data, status, headers, config) {
+                    sc.readUpdating = false;
                 });
         };
 
