@@ -1,14 +1,15 @@
-.createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture {
+.createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion {
     margin-left: auto;
     margin-right: auto;
     width: auto;
     height: auto;
     background: #F0F0F0;
     padding: 15px 15px 25px 10px;
-    font: 12px Georgia, "Times New Roman", Times, serif;
+    font: 12px arial;
     color: #505050;
     text-shadow: 1px 1px 1px #FFF;
     border: 1px solid #E4E4E4;
+	text-align: left;
 }
 
 #infoFields label {
@@ -52,17 +53,16 @@
 }
 
 .popUpWindow{
-    width: 95%;
+    width: 100%;
     max-width: 810px;
 }
 
-.createLecture input[type="text"], .createLecture input[type="date"], .createLecture select {
+.createLecture input[type="text"], .createLecture input[type="date"], .createLecture select , .createQuestion input,
+.createQuestion textarea, .createQuestion select {
     border: 1px solid #3cc;
     color: #505050;
     height: 20px;
-    margin-bottom: 16px;
-    margin-right: 6px;
-    margin-top: 2px;
+	margin: 2px 6px 10px 2px;
     outline: 0 none;
     padding: 3px 3px 3px 5px;
     font-size: 12px;
@@ -71,14 +71,24 @@
     -moz-box-shadow: inset 0px 1px 4px #ECECEC;
     -webkit-box-shadow: inset 0px 1px 4px #ECECEC;
 }
+.questionStartTime, .questionTimer {
+	display: block;
+}
 
-.createLecture.buttons {
-    background: #33cccc;
+.createQuestion input[type="checkbox"] {
+	margin: 0px 5px;
+	vertical-align: middle;
+}
+
+.createQuestion textarea {
+	width: 95%;
+	resize: vertical;
+}
+
+.buttons {
     border: none;
-	margin: 10px;
-    padding: 10px 25px 10px 25px;
-    color: #FFF;
-    box-shadow: 1px 1px 5px #B6B6B6;
+	margin: 5px;
+    color: #FFF;   
     border-radius: 3px;
     text-shadow: 1px 1px 1px #9E3F3F;
     cursor: pointer;
@@ -86,6 +96,34 @@
     font-size: 11px;
     line-height: normal;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; 
+	float: right;
+}
+
+.popUpWindow button, .popUpWindow input[type="button"] {
+	box-shadow: 1px 1px 5px #B6B6B6;
+	background: #3CC;
+	border: 0;
+	border-radius: 3px;
+	color: #FFF;
+	display: inline-block;
+	font-size: 11px;
+	cursor: pointer;
+	line-height: normal;
+	padding: 5px 10px;
+	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.buttons button {
+  background: #3CC;
+  border: 0;
+  border-radius: 3px;
+  color: #FFF;
+  display: inline-block;
+  font-size: 11px;
+  cursor: pointer;
+  line-height: normal;
+  padding: 5px 10px;
+  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .createLecture button:disabled, .createLecture input[type="button"]:disabled {
@@ -115,5 +153,16 @@
 	border: 1px solid #E4E4E4;
 }
 
-.modal-footer {
+.createQuestion td {
+	background: white;
 }
+
+.createQuestion table{
+	background: #F0F0F0;
+}
+
+.createQuestion #emptyBlock{
+	border: none;
+	background: #F0F0F0
+}
+
