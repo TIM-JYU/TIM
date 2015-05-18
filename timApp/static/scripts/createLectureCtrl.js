@@ -39,8 +39,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
             $scope.dateCheck = true;
             $scope.dueCheck = false;
             $scope.endDate = $scope.startDate;
-            $scope.endHour = parseInt($scope.startHour) + 2;
-            $scope.endMin = $scope.startMin;
+            $scope.endHour = $scope.leftPadder(parseInt($scope.startHour) + 2,2);
+            $scope.endMin = $scope.leftPadder($scope.startMin,2);
 
             $scope.useDate = true;
             $scope.useDuration = false;
@@ -183,7 +183,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
                     + $scope.leftPadder($scope.end_date.getMinutes(), 2);
             }
             if($scope.error_message<=0) {
-                $scope.startDateForDB = $scope.start_date.getFullYear() + "-" + $scope.leftPadder($scope.start_date.getMonth()+1,2) + "-" + $scope.start_date.getDate() + " " + $scope.start_date.getHours() + ":" + $scope.start_date.getMinutes();
+                $scope.startDateForDB = $scope.leftPadder($scope.start_date.getFullYear(), 4) + "-" + $scope.leftPadder($scope.start_date.getMonth()+1,2) + "-" + $scope.leftPadder($scope.start_date.getDate(),2) + " " + $scope.leftPadder($scope.start_date.getHours(),2) + ":" + $scope.leftPadder($scope.start_date.getMinutes(),2);
                 $http({
                     url: '/createLecture',
                     method: 'POST',
