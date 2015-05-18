@@ -5,11 +5,19 @@ __author__ = 'vesal'
 import http.server
 import json
 import codecs
+import bleach
 from urllib.parse import urlparse, parse_qs
 
 
 class QueryParams:
+    """
+    Class for holding GET params and possible POST params as a json-object
+    """
     def __init__(self, jso: dict=None):
+        """
+        Luodaan QueryParams olio
+        :rtype : QueryParams
+        """
         self.__get_query = {}
         self.__jso = jso
         if not self.__jso: self.__jso = {}
@@ -50,7 +58,7 @@ class QueryParams:
         :param self: query params where to find the key
         :param key: key to find
         :param default: value to return if key not found
-        :return:
+        :return: param from key or default
         """
         key = self.__check_key(key)
         dvalue = default
@@ -79,9 +87,20 @@ class QueryParams:
             self.__jso[field] = q[field][0]
 
     def set_get_params(self, get_p: dict):
+        """
+        set new value for GET params
+        :param get_p: new value to set
+        """
         self.__get_query = get_p
 
     def get_json_param(self, key1: str, key2: str, default):
+        """
+        Get param only from json part and from key1.key2
+        :param key1: first key
+        :param key2: second key
+        :param default: value if not found
+        :return: param from key1.key2 or default
+        """
         jso = self.__jso
         try:
             if jso is None: return default
@@ -94,6 +113,17 @@ class QueryParams:
             # print("JSO XXXXXXXXXXXXX", jso)
             print(e, "KEY1=", key1, "KEY2=", key2)
             return default
+
+    def get_sanitized_param(self, key: str, default: str) -> str:
+        """
+        get totally sanitized parameter where all html tags are removed
+        :param self: query params where to find the key
+        :param key: key to find
+        :param default: value to return if key not found
+        :return: param from key or default
+        """
+        s = self.get_param(key, default)
+        return sanitize_all(s)
 
 
 def do_headers(response: http.server.BaseHTTPRequestHandler, content_type: str):
@@ -216,3 +246,39 @@ def file_to_string(name: str) -> str:
         result += line
     fr.close()
     return result
+
+
+def allow(s: str) -> str:
+    """
+    Return strinf where few tags are allowed. Others a escaped
+    :param s: string to allow tags
+    :return: string where allowed tags a on place.
+    """
+    tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd']
+    attrs = {
+        'a': ['href']
+    }
+    return bleach.clean(s, tags, attrs)
+
+
+def sanitize_all(s: str) -> str:
+    """
+    Return string with all html tags are removed
+    :param s: string that may have tags
+    :return: string without any tags
+    """
+    tags = []
+    attrs = {
+    }
+    return bleach.clean(s, tags, attrs, strip=True)
+
+
+def clean(s: str) -> str:
+    """
+    Return string with all html tags are escaped
+    :param s: string that may have tags
+    :return: string with all tags escaped tags
+    """
+    s = str(s)
+    s = s.replace('"', '')  # kannattaako, tällä poistetaam katkaisun mahdollisuus?
+    return bleach.clean(s)

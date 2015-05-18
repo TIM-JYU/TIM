@@ -11,7 +11,7 @@ from http_params import *
 import datetime
 import binascii
 import os
-import re
+import logging
 
 PORT = 5000
 PROGDIR = "."
@@ -31,9 +31,9 @@ def get_html(query: QueryParams) -> str:
     # print("UserId:", user_id)
     # do the next if Anonymoys is not allowed to use plugins
     if user_id == "Anonymous":
-        # SANITOI
+        # SANITOIDAAN markupista tuleva syöte
         return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' \
-               + query.get_param("initword", "") + '</pre>'
+               + query.get_sanitized_param("initword", "") + '</pre>'
 
     jso = query.to_json(accept_nonhyphen)
     # print(jso)
@@ -209,11 +209,14 @@ def log(request: PaliServer):
     t = datetime.datetime.now()
     agent = " :AG: " + request.headers["User-Agent"]
     if agent.find("ython") >= 0: agent = ""
-    logfile = CURRENTDIR + "/log/log.txt"
+    logging.info(request.path + agent + " u:" + request.user_id)
+    """
     try:
         open(logfile, 'a').write(t.isoformat(' ') + ": " + request.path + agent + " u:" + request.user_id + "\n")
     except Exception as e:
         print(e)
+    """
+
 
 
 # Kun debuggaa Windowsissa, pitää vaihtaa ThreadingMixIn
@@ -233,10 +236,17 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 #    print("Normal mode/ForkingMixIn")
 
 
-if __name__ == '__main__':
+def start_server(http_server):
     if not os.path.exists("log"):
         os.makedirs("log")
     CURRENTDIR = os.getcwd()
-    server = ThreadedHTTPServer(('', PORT), PaliServer)
+    logging.basicConfig(filename=CURRENTDIR+'/log/log.txt', level=logging.INFO, format='%(asctime)s %(message)s')
+
+    server = ThreadedHTTPServer(('', PORT), http_server)
     print('Starting server, use <Ctrl-C> to stop')
+    logging.info('Starting server')
     server.serve_forever()
+
+
+if __name__ == '__main__':
+    start_server(PaliServer)
