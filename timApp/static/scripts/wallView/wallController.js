@@ -2,9 +2,9 @@
  * Created by hajoviin on 24.2.2015.
  */
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", 'createDialog', '$rootScope', '$timeout',
+timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout',
 
-    function ($scope, controller, http, $window, createDialog, $rootScope, $timeout) {
+    function ($scope, controller, http, $window, $rootScope, $timeout) {
 
 
         $scope.lectureStartTime = "";
@@ -67,8 +67,16 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
-        $scope.$on('get_lectureId', function () {
-            $scope.$emit('getLectureId', $scope.lectureId);
+        $scope.$on('getLectureId', function () {
+            $scope.$emit('postLectureId', $scope.lectureId);
+        });
+
+        $scope.$on('getInLecture', function () {
+            $scope.$emit('postInLecture', $scope.inLecture);
+        });
+
+        $scope.$on('getIsLecturer', function () {
+            $scope.$emit('postIsLecturer', $scope.isLecturer)
         });
 
         $scope.$on('closeLectureForm', function () {
@@ -237,7 +245,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.useQuestions = questionUsage;
         };
 
-         $scope.changeUsingAnswers = function (answerUsage) {
+        $scope.changeUsingAnswers = function (answerUsage) {
             $scope.useAnswers = answerUsage;
         };
 
@@ -259,7 +267,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.getAllMessages();
 
 
-            if (answer.isLecturer) {
+            if ($scope.isLecturer) {
+                $rootScope.$broadcast("getQuestions");
                 $scope.canStop = true;
                 for (var i = 0; i < answer.students.length; i++) {
                     var student = {
@@ -280,8 +289,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
         $scope.showBasicView = function (answer) {
+
             $scope.isLecturer = answer.isLecturer;
             if ($scope.isLecturer) {
+                $rootScope.$broadcast("getQuestions");
                 $scope.canStart = true;
                 $scope.canStop = false;
             }

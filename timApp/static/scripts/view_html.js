@@ -141,26 +141,33 @@ timApp.controller("ViewCtrl", [
             }
             var docId = sc.docId;
             var lectureId = "";
-            sc.$on('getLectureId', function (event, response) {
+            var inLecture = false;
+            sc.$on('postLectureId', function (event, response) {
                 lectureId = response;
+            });
+
+            sc.$on('postInLecture', function (event, response) {
+                inLecture = response;
             });
 
             var header = json.QUESTION;
 
-            $rootScope.$broadcast('get_lectureId', 'lecture_id');
+            $rootScope.$broadcast('getLectureId');
+            $rootScope.$broadcast('getInLecture');
             createDialog('../../../static/templates/showQuestionTeacher.html', {
                 id: 'simpleDialog',
                 title: "",
                 backdrop: true,
                 footerTemplate: "<button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>" +
                 "<button ng-click='close()' class='timButton questionButton'>Close</button>" +
-                "<button ng-click='ask()' class='timButton questionButton'>Ask</button>",
+                "<button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>",
                 controller: 'ShowQuestionController'
             }, {
                 json: json,
                 lectureId: lectureId,
                 qId: qId,
-                docId: docId
+                docId: docId,
+                inLecture: inLecture
             });
         };
 
@@ -820,25 +827,30 @@ timApp.controller("ViewCtrl", [
             return newState;
         };
 
+        sc.$on("getQuestions", function () {
+            sc.getQuestions();
+        });
+
         // Load index, notes and read markings
         sc.setHeaderLinks();
         sc.indexTable = [];
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
-        sc.getQuestions();
         sc.processAllMath($('body'));
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', '$http',
-    function ($scope, json, lectureId, qId, docId, http) {
+timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http',
+    function ($scope, json, lectureId, qId, docId, inLecture, http) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
         $scope.jsonRaw = json;
         $scope.docId = docId;
         $scope.qId = qId;
         $scope.lectureId = lectureId;
+        $scope.inLecture = inLecture;
+
 
         var jsonData = json;
         $scope.jsonRaw = {
@@ -854,7 +866,12 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
             http({
                 url: '/askQuestion',
                 method: 'GET',
-                params: {lecture_id: $scope.lectureId, question_id: $scope.qId, doc_id: $scope.docId, 'buster': new Date().getTime()}
+                params: {
+                    lecture_id: $scope.lectureId,
+                    question_id: $scope.qId,
+                    doc_id: $scope.docId,
+                    'buster': new Date().getTime()
+                }
             })
                 .success(function () {
                     $scope.$modalClose();
@@ -895,8 +912,8 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
 
 
 timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
-    $(function() {
-            $('#calendarStart').datepicker({ dateFormat: 'dd.m.yy' });
+    $(function () {
+        $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
     scope.question = {
         question: "",
@@ -1081,7 +1098,6 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
 
 
-
         var url;
         var doc_id = scope.docId;
         var $par = scope.par;
@@ -1149,13 +1165,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 'questionJson': questionJson
             }
         })
-            .success(function()  {
+            .success(function () {
                 console.log("The question was successfully added to database");
                 scope.clearQuestion();
                 //TODO: This can be optimized to get only the ne
                 scope.$parent.getQuestions();
             })
-            .error(function()  {
+            .error(function () {
                 console.log("There was some error creating question to database.")
             });
     };
