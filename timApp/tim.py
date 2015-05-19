@@ -1031,7 +1031,7 @@ def delete_question():
 
 @app.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
-    if not request.args.get('question_id') or not request.args.get('doc_id') or not request.args.get('doc_id'):
+    if not request.args.get('question_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
     verifyOwnership(int(request.args.get('doc_id')))
@@ -1055,7 +1055,7 @@ def get_lecture_answers():
     timdb = getTimDb()
     answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
     if len(answers) <= 0:
-        return jsonResponse("")
+        return jsonResponse({"noAnswer": True})
 
     latest_answer = answers[-1].get("answered_on")
 
