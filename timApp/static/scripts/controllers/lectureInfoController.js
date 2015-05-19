@@ -17,6 +17,8 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
     $scope.index = 0;
     $scope.isLecturer = false;
     $scope.answerers = [];
+    $scope.showPoints = false;
+    $scope.points = [];
 
     $scope.getLectureInfo = function () {
         $http({
@@ -32,8 +34,12 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
                 $scope.answers = answer.answers;
                 for (var i = 0; i < answer.questions.length; i++) {
                     $scope.dynamicAnswerShowControls.push({});
+                    $scope.points.push(0);
                 }
 
+
+                console.log(answer);
+                console.log($scope.points);
                 $scope.questions = answer.questions;
                 $scope.isLecturer = answer.isLecturer;
                 $scope.answerers = answer.answerers;
@@ -65,28 +71,31 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
     };
 
     $scope.drawCharts = function (userName) {
+        for(var p = 0; p < $scope.points.length; p++){
+            $scope.points[p] = 0
+        }
+        $scope.showPoints = true;
         var user;
         if (typeof userName === 'undefined') {
             user = ""
         } else {
             user = userName;
         }
-        console.log("user: " + user);
         var questionIndexes = [];
         for (var i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
             $scope.dynamicAnswerShowControls[i].createChart(JSON.parse($scope.questions[i].questionJson));
             questionIndexes.push($scope.questions[i].question_id);
         }
 
-        console.log($scope.dynamicAnswerShowControls);
-         console.log($scope.answers);
-
         for (var j = 0; j < $scope.answers.length; j++) {
             if (($scope.isLecturer && user == "") || $scope.answers[j].user_name == user) {
                 $scope.dynamicAnswerShowControls[questionIndexes.indexOf($scope.answers[j].question_id)]
                     .addAnswer([{"answer": $scope.answers[j].answer}]);
+                $scope.points[questionIndexes.indexOf($scope.answers[j].question_id)] +=  $scope.answers[j].points;
             }
+
         }
+
 
         if ($scope.answers.length <= 0) {
             var elem = $("#infoBox");

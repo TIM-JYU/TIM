@@ -329,6 +329,29 @@ def get_updates():
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
     __user_activity[getCurrentUserId(), lecture_id] = time_now
 
+    lecture = timdb.lectures.get_lecture(lecture_id)
+
+    current_user = getCurrentUserId()
+    if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+        lecturers, students = get_lecture_users(timdb, lecture_id)
+
+        time_now = datetime.datetime.now()
+        ending_time = datetime.datetime.fromtimestamp(
+            mktime(time.strptime(lecture[0].get("end_time"), "%Y-%m-%d %H:%M")))
+        time_left = str(ending_time - time_now)
+        splitted_time = time_left.split(",")
+        if len(splitted_time) == 1:
+            h, m, s = splitted_time[0].split(":")
+            hours_as_min = int(h) * 60
+            if hours_as_min + int(m) < 1:
+                lecture_ending = 1
+            elif hours_as_min + int(m) < 5:
+                lecture_ending = 5
+            else:
+                lecture_ending = 100
+        else:
+            lecture_ending = 100
+
     while step <= 10:
 
         if use_wall:
@@ -347,29 +370,6 @@ def get_updates():
                             user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get(
                                 'message'))
                     last_message_id = messages[-1].get('msg_id')
-
-        current_user = getCurrentUserId()
-
-        lecture = timdb.lectures.get_lecture(lecture_id)
-        if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
-            lecturers, students = get_lecture_users(timdb, lecture_id)
-
-            time_now = datetime.datetime.now()
-            ending_time = datetime.datetime.fromtimestamp(
-                mktime(time.strptime(lecture[0].get("end_time"), "%Y-%m-%d %H:%M")))
-            time_left = str(ending_time - time_now)
-            splitted_time = time_left.split(",")
-            if len(splitted_time) == 1:
-                h, m, s = splitted_time[0].split(":")
-                hours_as_min = int(h) * 60
-                if hours_as_min + int(m) < 1:
-                    lecture_ending = 1
-                elif hours_as_min + int(m) < 5:
-                    lecture_ending = 5
-                else:
-                    lecture_ending = 100
-            else:
-                lecture_ending = 100
 
         if use_quesitions:
             for pair in __question_to_be_asked:

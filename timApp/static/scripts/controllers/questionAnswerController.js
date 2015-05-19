@@ -12,6 +12,7 @@ timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($sco
     $scope.$on("setQuestionJson", function (event, args) {
         $scope.questionId = args.questionId;
         $scope.isLecturer = args.isLecturer;
+
         $scope.dynamicAnswerSheetControl.createAnswer();
     });
 
@@ -74,7 +75,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
                 angular.forEach($scope.json.DATA.ROWS, function (row) {
                     htmlSheet += "<tr>";
-                    htmlSheet += "<td>" + row.text + "</td>";
+                    if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
+                        htmlSheet += "<td>" + row.text  +"</td>";
+                    }
                     var header = 0;
                     //TODO: Needs correct JSON to be made better way
                     angular.forEach(row.COLUMNS, function (column) {
@@ -90,7 +93,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                             group = "group" + row.type.replace(/[^a-zA-Z]/g, "");
                             htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
                             " value='" + row.text + "'" +
-                            "></label></td>";
+                            ">"+ row.text +"</label></td>";
                         }
                         nextBoolean = !nextBoolean;
                     });

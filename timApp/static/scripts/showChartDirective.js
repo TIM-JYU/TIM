@@ -139,7 +139,6 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             };
 
             $scope.internalControl.addAnswer = function (answers) {
-                console.log(answers);
                 for (var answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
                     var onePersonAnswers = answers[answerersIndex].answer.split("|");
                     var datasets = $scope.answerChart.datasets;
