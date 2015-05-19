@@ -671,7 +671,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
 
 
-                        if (answer.question && $scope.isLecturer) {
+                        if (answer.question && !$scope.isLecturer) {
                             $scope.showAnswerWindow = true;
                             $rootScope.$broadcast("setQuestionJson", {
                                 questionJson: JSON.parse(answer.questionJson),
