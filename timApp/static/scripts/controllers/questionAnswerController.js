@@ -12,6 +12,7 @@ timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($sco
     $scope.$on("setQuestionJson", function (event, args) {
         $scope.questionId = args.questionId;
         $scope.isLecturer = args.isLecturer;
+        $scope.questionJson = args.questionJson;
 
         $scope.dynamicAnswerSheetControl.createAnswer();
     });
@@ -41,7 +42,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             var barFilled;
             $scope.internalControl = $scope.control || {};
             $scope.internalControl.createAnswer = function () {
-                $scope.json = $scope.$parent.askedQuestionJson;
+                $scope.json = $scope.$parent.questionJson;
                 var htmlSheet = "<div class = 'answerSheet'>";
                 if ($scope.json.TYPE != "true-false") {
                     htmlSheet += "<h2>" + $scope.json.QUESTION + "<h2>";

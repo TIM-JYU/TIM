@@ -67,6 +67,28 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
+        $scope.$on("askQuestion", function (event, data) {
+
+            if ($scope.useAnswers) {
+                $scope.showStudentAnswers = true;
+                // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
+                $timeout(function () {
+                    $rootScope.$broadcast("createChart", data.json);
+                }, 1);
+
+                var answer = {"questionId": data.questionId};
+                $scope.getLectureAnswers(answer);
+
+            }
+
+            $rootScope.$broadcast("setQuestionJson", {
+                questionJson: data.json,
+                questionId: data.questionId,
+                isLecturer: $scope.isLecturer
+            });
+            $scope.showAnswerWindow = true;
+        });
+
         $scope.$on('getLectureId', function () {
             $scope.$emit('postLectureId', $scope.lectureId);
         });
@@ -170,7 +192,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             var lectureName = "";
             if (angular.isDefined(name)) {
                 lectureName = name;
-                 $('#currentList').slideToggle();
+                $('#currentList').slideToggle();
             } else {
                 lectureName = $scope.chosenLecture.lecture_code
             }
@@ -549,7 +571,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     'question_id': answer.questionId,
                     'doc_id': $scope.docId,
                     'lecture_id': $scope.lectureId,
-                    'time': answer.latestAnswer, 'buster': new Date().getTime()
+                    'time': answer.latestAnswer,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
@@ -645,29 +668,17 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             }
                         }
 
-                        if (answer.question) {
+                        if (answer.question && !$scope.isLecturer) {
                             var questionJson = JSON.parse(answer.questionJson);
                             $scope.askedQuestionJson = questionJson;
 
-                            if ($scope.isLecturer && $scope.useAnswers) {
-                                $scope.showStudentAnswers = true;
-                                // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
-                                $timeout(function () {
-                                    $rootScope.$broadcast("createChart", questionJson);
-                                }, 1);
-                                $scope.getLectureAnswers(answer);
-                            }
-
-
                             $rootScope.$broadcast("setQuestionJson", {
-                                questionJson: questionJson,
+                                questionJson: answer.questionJson,
                                 questionId: answer.questionId,
                                 isLecturer: $scope.isLecturer
                             });
-
-
-                            $scope.showAnswerWindow = true;
                         }
+
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
                         if ($scope.polling) {

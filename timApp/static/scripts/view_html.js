@@ -845,8 +845,8 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http',
-    function ($scope, json, lectureId, qId, docId, inLecture, http) {
+timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http', '$rootScope',
+    function ($scope, json, lectureId, qId, docId, inLecture, http, $rootScope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
         $scope.jsonRaw = json;
@@ -874,10 +874,11 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
                     lecture_id: $scope.lectureId,
                     question_id: $scope.qId,
                     doc_id: $scope.docId,
-                    'buster': new Date().getTime()
+                    buster: new Date().getTime()
                 }
             })
                 .success(function () {
+                    $rootScope.$broadcast('askQuestion', {"json": jsonData, "questionId": $scope.qId});
                     $scope.$modalClose();
                 })
                 .error(function (error) {
