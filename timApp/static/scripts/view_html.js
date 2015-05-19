@@ -246,15 +246,15 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick = function (className, func) {
             $document.on('touchstart click', className, function (e) {
-                e.stopPropagation();
-                e.preventDefault();
-
                 if ( !('pageX' in e) || (e.pageX == 0 && e.pageY == 0) ) {
                     e.pageX = e.originalEvent.touches[0].pageX;
                     e.pageY = e.originalEvent.touches[0].pageY;
                 }
 
-                func($(this), e);
+                if ( func($(this), e) ) {
+                    e.stopPropagation();
+                    e.preventDefault();
+		        }
             });
         };
 
@@ -267,12 +267,14 @@ timApp.controller("ViewCtrl", [
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.showEditWindow(e, $par, null)
+            return true;
         });
 
         sc.onClick("#defaultEdit", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showEditWindow;
+            return true;
         });
 
         sc.showAddParagraphAbove = function(e, $par, coords) {
@@ -303,18 +305,21 @@ timApp.controller("ViewCtrl", [
             }
 
             sc.toggleParEditor($newpar, {showDelete: false});
+            return true;
         });
 
         sc.onClick("#defaultPrepend", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showAddParagraphAbove;
+            return true;
         });
 
         sc.onClick("#defaultAppend", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showAddParagraphBelow;
+            return true;
         });
 
         sc.doNothing = function (e, $par, coords) {
@@ -325,12 +330,14 @@ timApp.controller("ViewCtrl", [
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
+            return true;
         });
 
         sc.onClick("#defaultClose", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.doNothing;
+            return true;
         });
 
         sc.handleCancel = function (extraData) {
@@ -388,6 +395,7 @@ timApp.controller("ViewCtrl", [
                     $window.alert('Could not save the read marking.');
                     $this.attr("class", oldClass);
                 });
+            return true;
         });
 
         sc.showNoteWindow = function (e, $par, coords) {
@@ -398,12 +406,14 @@ timApp.controller("ViewCtrl", [
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.showNoteWindow(e, $par, null);
+            return true;
         });
 
         sc.onClick("#defaultAdd", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showNoteWindow;
+            return true;
         });
 
         sc.handleNoteCancel = function (extraData) {
@@ -422,7 +432,7 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick('.paragraphs .parContent', function ($this, e) {
             if (sc.editing) {
-                return;
+                return false;
             }
 
             sc.autoHideSidebar();
@@ -434,7 +444,7 @@ timApp.controller("ViewCtrl", [
             // Don't show paragraph menu on these specific tags or class
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A'];
             if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
-                return;
+                return false;
             }
 
             var $par = $this.parent();
@@ -446,10 +456,12 @@ timApp.controller("ViewCtrl", [
             $(".par.lightselect").removeClass("lightselect");
             $(".actionButtons").remove();
             sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
+            return true;
         });
 
         sc.onClick(".noteContent", function ($this, e) {
             sc.toggleNoteEditor($this.parent().parent().parent(), {isNew: false, noteData: $this.parent().data()});
+            return true;
         });
 
 
