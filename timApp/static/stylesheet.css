@@ -9,7 +9,7 @@
 body {
 	text-align: justify;
 	margin: auto;  
-	margin-left: 210px;
+	margin-left: 245px;
 }
 
 .correct {
@@ -1715,10 +1715,12 @@ button:disabled {
 
 
 code {
+/*
   padding: 0px 0px !important;
   font-size: 90% !important; 
   color: #000 !important;
   background-color: #f9f2f4 !important;
+*/   
   /* border-radius: 4px; */
 }
 

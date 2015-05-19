@@ -123,11 +123,16 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.releaseClicked = function () {
-                    if ( document.getElementById("previewDiv").style.position ) {
-                        document.getElementById("previewDiv").style.position = "";
+                    var div = $("#previewDiv");
+                    
+                    if (div.css("position") == "absolute") {
+                        div.css("position", "static");
+                        div.find(".draghandle").css("visibility", "hidden");
                         document.getElementById("releaseButton").innerHTML = "&#8594;";
-                    } else {
-                        document.getElementById("previewDiv").style.position="absolute";
+                    }
+                    else {
+                        div.css("position", "absolute");
+                        div.find(".draghandle").css("visibility", "visible");
                         document.getElementById("releaseButton").innerHTML = "&#8592;";
                     }
                 };

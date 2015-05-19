@@ -3,10 +3,20 @@ var timApp = angular.module('timApp');
 
 timApp.directive('timDraggableFixed', ['$document', '$window', function ($document, $window) {
     return function (scope, element, attr) {
-        
-        var handle = $("<div>", {class: "draghandle"});
+
+        handle = $("<div>", {class: "draghandle"});
         handle.height(13);
         element.prepend(handle);
+        updateHandle(element, handle);
+
+        function updateHandle(e, h) {
+            // TODO: find an efficient way to call this whenever
+            // position is changed between static and absolute
+            position = e.css("position");
+            movable = position != 'static' && position != 'fixed';
+            h.css("visibility", movable ? "visible" : "hidden");
+        }
+
 
         function getPageXY(e) {
             if ( !('pageX' in e) || (e.pageX == 0 && e.pageY == 0) ) {
@@ -23,7 +33,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             s2 = s.replace(/px$/, '');
             return Number(s2) || 0;
         }
-        
+
         handle.on('mousedown touchstart', function(e) {
             lastPos = getPageXY(e);
 
