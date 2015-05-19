@@ -1046,7 +1046,7 @@ def get_lecture_answers():
             __pull_answer[pull].set()
 
     if not request.args.get("time"):
-        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
     else:
         time_now = request.args.get('time')
 
@@ -1073,7 +1073,7 @@ def answer_to_question():
     answer = request.args.get("answers")
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
-    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
     single_answers = []
     answers = answer.split('|')
     for answer in answers:
