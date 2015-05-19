@@ -1759,3 +1759,8 @@ footer p {
 .footer>li {
   display: inline-block;
 }
+
+.csRunSnippets button { 
+  margin-right: 4pt;
+}
+ 
