@@ -81,6 +81,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
             }
 
+            console.log(data.json);
+
             $rootScope.$broadcast("setQuestionJson", {
                 questionJson: data.json,
                 questionId: data.questionId,
@@ -668,12 +670,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             }
                         }
 
+
                         if (answer.question && !$scope.isLecturer) {
                             var questionJson = JSON.parse(answer.questionJson);
-                            $scope.askedQuestionJson = questionJson;
 
                             $rootScope.$broadcast("setQuestionJson", {
-                                questionJson: answer.questionJson,
+                                questionJson: questionJson,
                                 questionId: answer.questionId,
                                 isLecturer: $scope.isLecturer
                             });
