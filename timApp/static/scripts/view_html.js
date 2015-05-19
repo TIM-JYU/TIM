@@ -916,9 +916,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
     scope.question = {
+        title: "",
         question: "",
         matrixType: "",
-        answerFieldType: ""
+        answerFieldType: "",
+        timeLimit: {hours: "", minutes: "", seconds: ""}
     };
 
 
@@ -1102,9 +1104,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
+        var timeLimit = 0;
+        if (scope.question.timeLimit.hours) {
+            (scope.question.timeLimit.hours * 60 + scope.question.timeLimit.minutes) * 60 + scope.question.timeLimit.seconds;
+        }
         //TODO use  JSON.stringify
 
-        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
+        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
         if (scope.question.type == "matrix") {
