@@ -81,14 +81,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
             }
 
-            console.log(data.json);
-
-            $rootScope.$broadcast("setQuestionJson", {
-                questionJson: data.json,
-                questionId: data.questionId,
-                isLecturer: $scope.isLecturer
-            });
-            $scope.showAnswerWindow = true;
+            /*
+             $rootScope.$broadcast("setQuestionJson", {
+             questionJson: data.json,
+             questionId: data.questionId,
+             isLecturer: $scope.isLecturer
+             });
+             $scope.showAnswerWindow = true;
+             */
         });
 
         $scope.$on('getLectureId', function () {
@@ -671,11 +671,10 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         }
 
 
-                        if (answer.question && !$scope.isLecturer) {
-                            var questionJson = JSON.parse(answer.questionJson);
-
+                        if (answer.question && $scope.isLecturer) {
+                            $scope.showAnswerWindow = true;
                             $rootScope.$broadcast("setQuestionJson", {
-                                questionJson: questionJson,
+                                questionJson: JSON.parse(answer.questionJson),
                                 questionId: answer.questionId,
                                 isLecturer: $scope.isLecturer
                             });
