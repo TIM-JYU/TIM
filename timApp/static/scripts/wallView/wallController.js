@@ -81,14 +81,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
             }
 
-            /*
-             $rootScope.$broadcast("setQuestionJson", {
-             questionJson: data.json,
-             questionId: data.questionId,
-             isLecturer: $scope.isLecturer
-             });
-             $scope.showAnswerWindow = true;
-             */
+
+            $rootScope.$broadcast("setQuestionJson", {
+                questionJson: data.json,
+                questionId: data.questionId,
+                isLecturer: $scope.isLecturer
+            });
+            $scope.showAnswerWindow = true;
+
         });
 
         $scope.$on('getLectureId', function () {
