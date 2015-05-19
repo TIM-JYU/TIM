@@ -554,7 +554,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             })
                 .success(function (answer) {
                     $rootScope.$broadcast("putAnswers", {"answers": answer.answers});
-                    if ($scope.gettingAnswers) {
+                    if ($scope.gettingAnswers && !angular.isDefined(answer.noAnswer)) {
                         $scope.getLectureAnswers(answer);
                     }
 

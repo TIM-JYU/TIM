@@ -329,6 +329,29 @@ def get_updates():
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
     __user_activity[getCurrentUserId(), lecture_id] = time_now
 
+    lecture = timdb.lectures.get_lecture(lecture_id)
+
+    current_user = getCurrentUserId()
+    if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+        lecturers, students = get_lecture_users(timdb, lecture_id)
+
+        time_now = datetime.datetime.now()
+        ending_time = datetime.datetime.fromtimestamp(
+            mktime(time.strptime(lecture[0].get("end_time"), "%Y-%m-%d %H:%M")))
+        time_left = str(ending_time - time_now)
+        splitted_time = time_left.split(",")
+        if len(splitted_time) == 1:
+            h, m, s = splitted_time[0].split(":")
+            hours_as_min = int(h) * 60
+            if hours_as_min + int(m) < 1:
+                lecture_ending = 1
+            elif hours_as_min + int(m) < 5:
+                lecture_ending = 5
+            else:
+                lecture_ending = 100
+        else:
+            lecture_ending = 100
+
     while step <= 10:
 
         if use_wall:
@@ -347,29 +370,6 @@ def get_updates():
                             user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get(
                                 'message'))
                     last_message_id = messages[-1].get('msg_id')
-
-        current_user = getCurrentUserId()
-
-        lecture = timdb.lectures.get_lecture(lecture_id)
-        if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
-            lecturers, students = get_lecture_users(timdb, lecture_id)
-
-            time_now = datetime.datetime.now()
-            ending_time = datetime.datetime.fromtimestamp(
-                mktime(time.strptime(lecture[0].get("end_time"), "%Y-%m-%d %H:%M")))
-            time_left = str(ending_time - time_now)
-            splitted_time = time_left.split(",")
-            if len(splitted_time) == 1:
-                h, m, s = splitted_time[0].split(":")
-                hours_as_min = int(h) * 60
-                if hours_as_min + int(m) < 1:
-                    lecture_ending = 1
-                elif hours_as_min + int(m) < 5:
-                    lecture_ending = 5
-                else:
-                    lecture_ending = 100
-            else:
-                lecture_ending = 100
 
         if use_quesitions:
             for pair in __question_to_be_asked:
@@ -1031,7 +1031,7 @@ def delete_question():
 
 @app.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
-    if not request.args.get('question_id') or not request.args.get('doc_id') or not request.args.get('doc_id'):
+    if not request.args.get('question_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
     verifyOwnership(int(request.args.get('doc_id')))
@@ -1046,7 +1046,7 @@ def get_lecture_answers():
             __pull_answer[pull].set()
 
     if not request.args.get("time"):
-        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
     else:
         time_now = request.args.get('time')
 
@@ -1054,8 +1054,8 @@ def get_lecture_answers():
 
     timdb = getTimDb()
     answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
-    if len(answers) < 0:
-        return jsonResponse("")
+    if len(answers) <= 0:
+        return jsonResponse({"noAnswer": True})
 
     latest_answer = answers[-1].get("answered_on")
 
@@ -1073,7 +1073,7 @@ def answer_to_question():
     answer = request.args.get("answers")
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
-    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
     single_answers = []
     answers = answer.split('|')
     for answer in answers:

@@ -75,11 +75,13 @@
             <input ng-show="isLecturer" type="button" ng-click="drawCharts()" value="Show all">
 
             <div>
-                <div ng-repeat="question in questions">
+                <div ng-repeat="question in questions" style="margin-bottom: 2em">
+                    <p class="bold" ng-show="showPoints">{{ "{{question.question}}" }}</p>
                     <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
                                           control='dynamicAnswerShowControls[$index]'
                                           class="chart"></show-chart-directive>
                     <canvas id='answerChart{{ "{{question.question_id }}" }}' width='400' height='300'></canvas>
+                    <p ng-show="showPoints">Points: <span ng-bind="points[$index]"> </span></p>
                 </div>
             </div>
 

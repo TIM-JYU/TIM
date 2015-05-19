@@ -323,11 +323,17 @@ td.selected {
     text-align: center;
 }
 
-.answerSheet th,
 .answerSheet td,
 .answerSheet tr {
-    background-color: #3cc;
+    border: none;
+    text-align: left;
 }
+
+.answerSheet th {
+    background-color: #3cc;
+    border: none;
+}
+
 
 .show-answer h2 {
     margin-top: 0;
