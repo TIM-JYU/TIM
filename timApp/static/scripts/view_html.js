@@ -1105,9 +1105,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
-        var timeLimit = 0;
+        var timeLimit = scope.question.timeLimit.seconds;
         if (scope.question.timeLimit.hours) {
-            (scope.question.timeLimit.hours * 60 + scope.question.timeLimit.minutes) * 60 + scope.question.timeLimit.seconds;
+            timeLimit += (scope.question.timeLimit.hours * 60 * 60)
+        }
+
+        if (scope.question.timeLimit.minutes) {
+            timeLimit +=  scope.question.timeLimit.minutes * 60
         }
         //TODO use  JSON.stringify
 
