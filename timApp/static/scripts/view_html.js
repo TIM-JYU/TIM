@@ -169,7 +169,8 @@ timApp.controller("ViewCtrl", [
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
                     $compile($div[0])(sc);
                     $par.append($div);
-                    $div.draggable();
+                    $div.attr('tim-draggable-fixed', '');
+                    $div = $compile($div)(sc);
                     sc.editing = true;
                 };
 
@@ -243,28 +244,37 @@ timApp.controller("ViewCtrl", [
 
         // Event handlers
 
-        var ua = $window.navigator.userAgent,
-            eventName = (ua.match(/iPad/i)) ? "touchstart" : "click";
+        sc.onClick = function (className, func) {
+            $document.on('touchstart click', className, function (e) {
+                if ( !('pageX' in e) || (e.pageX == 0 && e.pageY == 0) ) {
+                    e.pageX = e.originalEvent.touches[0].pageX;
+                    e.pageY = e.originalEvent.touches[0].pageY;
+                }
 
-        sc.addEvent = function (className, func) {
-            $document.on(eventName, className, func);
+                if ( func($(this), e) ) {
+                    e.stopPropagation();
+                    e.preventDefault();
+		        }
+            });
         };
 
         sc.showEditWindow = function (e, $par, coords) {
             sc.toggleParEditor($par, {showDelete: true});
         };
 
-        sc.addEvent(PAR_EDIT_BUTTON, function (e) {
+        sc.onClick(PAR_EDIT_BUTTON, function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.showEditWindow(e, $par, null)
+            return true;
         });
 
-        sc.addEvent("#defaultEdit", function (e) {
+        sc.onClick("#defaultEdit", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showEditWindow;
+            return true;
         });
 
         sc.showAddParagraphAbove = function(e, $par, coords) {
@@ -281,7 +291,7 @@ timApp.controller("ViewCtrl", [
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
-        sc.addEvent(PAR_ADD_BUTTON, function (e) {
+        sc.onClick(PAR_ADD_BUTTON, function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
@@ -295,34 +305,39 @@ timApp.controller("ViewCtrl", [
             }
 
             sc.toggleParEditor($newpar, {showDelete: false});
+            return true;
         });
 
-        sc.addEvent("#defaultPrepend", function (e) {
+        sc.onClick("#defaultPrepend", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showAddParagraphAbove;
+            return true;
         });
 
-        sc.addEvent("#defaultAppend", function (e) {
+        sc.onClick("#defaultAppend", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showAddParagraphBelow;
+            return true;
         });
 
         sc.doNothing = function (e, $par, coords) {
             sc.toggleActionButtons(e, $par, false, false, null);
         };
 
-        sc.addEvent(PAR_CLOSE_BUTTON, function (e) {
+        sc.onClick(PAR_CLOSE_BUTTON, function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
+            return true;
         });
 
-        sc.addEvent("#defaultClose", function (e) {
+        sc.onClick("#defaultClose", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.doNothing;
+            return true;
         });
 
         sc.handleCancel = function (extraData) {
@@ -369,33 +384,36 @@ timApp.controller("ViewCtrl", [
             sc.editing = false;
         };
 
-        sc.addEvent(".readline", function (e) {
-            var par_id = sc.getParIndex($(this).parents('.par'));
-            var oldClass = $(this).attr("class");
-            $(this).attr("class", "readline read");
+        sc.onClick(".readline", function ($this, e) {
+            var par_id = sc.getParIndex($this.parents('.par'));
+            var oldClass = $this.attr("class");
+            $this.attr("class", "readline read");
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
                 }).error(function (data, status, headers, config) {
                     $window.alert('Could not save the read marking.');
-                    $(this).attr("class", oldClass);
+                    $this.attr("class", oldClass);
                 });
+            return true;
         });
 
         sc.showNoteWindow = function (e, $par, coords) {
             sc.toggleNoteEditor($par, {isNew: true});
         };
 
-        sc.addEvent(NOTE_ADD_BUTTON, function (e) {
+        sc.onClick(NOTE_ADD_BUTTON, function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.showNoteWindow(e, $par, null);
+            return true;
         });
 
-        sc.addEvent("#defaultAdd", function (e) {
+        sc.onClick("#defaultAdd", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
             sc.defaultAction = sc.showNoteWindow;
+            return true;
         });
 
         sc.handleNoteCancel = function (extraData) {
@@ -412,9 +430,9 @@ timApp.controller("ViewCtrl", [
             sc.editing = false;
         };
 
-        sc.addEvent('.paragraphs .parContent', function (e) {
+        sc.onClick('.paragraphs .parContent', function ($this, e) {
             if (sc.editing) {
-                return;
+                return false;
             }
 
             sc.autoHideSidebar();
@@ -426,10 +444,10 @@ timApp.controller("ViewCtrl", [
             // Don't show paragraph menu on these specific tags or class
             var ignoredTags = ['BUTTON', 'INPUT', 'TEXTAREA', 'A'];
             if (ignoredTags.indexOf(tag) > -1 || $target.parents('.no-popup-menu').length > 0) {
-                return;
+                return false;
             }
 
-            var $par = $(this).parent();
+            var $par = $this.parent();
             var coords = { left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top };
             var toggle1 = $par.find(".actionButtons").length === 0;
             var toggle2 = $par.hasClass("lightselect");
@@ -438,10 +456,12 @@ timApp.controller("ViewCtrl", [
             $(".par.lightselect").removeClass("lightselect");
             $(".actionButtons").remove();
             sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
+            return true;
         });
 
-        sc.addEvent(".noteContent", function () {
-            sc.toggleNoteEditor($(this).parent().parent().parent(), {isNew: false, noteData: $(this).parent().data()});
+        sc.onClick(".noteContent", function ($this, e) {
+            sc.toggleNoteEditor($this.parent().parent().parent(), {isNew: false, noteData: $this.parent().data()});
+            return true;
         });
 
 
@@ -488,9 +508,9 @@ timApp.controller("ViewCtrl", [
             }
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
+            $actionDiv.attr('tim-draggable-fixed', '');
+            $actionDiv = $compile($actionDiv)(sc);
             $par.prepend($actionDiv);
-
-            $actionDiv.draggable();
         };
 
         sc.dist = function(coords1, coords2) {
