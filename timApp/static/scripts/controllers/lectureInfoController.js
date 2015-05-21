@@ -29,7 +29,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
             .success(function (answer) {
 
                 angular.forEach(answer.messages, function (msg) {
-                    $scope.msg = $scope.msg + msg + "\n";
+                    $scope.msg = $scope.msg + msg.sender + " <" + msg.time + ">: " + msg.message +  "\n";
                 });
                 $scope.answers = answer.answers;
                 for (var i = 0; i < answer.questions.length; i++) {
