@@ -310,8 +310,6 @@ def get_updates():
     timdb = getTimDb()
     step = 0
 
-    session.get('user_id')
-
     doc_id = int(request.args.get('doc_id'))
 
     if not check_if_lecture_is_running(lecture_id):
@@ -523,7 +521,7 @@ def get_all_lectures():
                         "target": "/showLectureInfo/" + str(lecture.get("lecture_id"))}
         if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lectures.append(lecture_info)
-        elif lecture.get("end_time") < time_now:
+        elif lecture.get("end_time") <= time_now:
             past_lectures.append(lecture_info)
         else:
             future_lectures.append(lecture_info)
@@ -1024,7 +1022,7 @@ def delete_question():
     verifyOwnership(doc_id)
     timdb = getTimDb()
     timdb.questions.delete_question(question_id)
-    timdb.lecture_answers.delete_answers_to_questions(question_id)
+    timdb.lecture_answers.delete_answers_from_question(question_id)
 
     return jsonResponse("")
 

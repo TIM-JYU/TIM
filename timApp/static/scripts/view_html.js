@@ -835,6 +835,10 @@ timApp.controller("ViewCtrl", [
             }
         });
 
+        sc.$on("forceGetQuestions", function () {
+            sc.getQuestions();
+        });
+
         // Load index, notes and read markings
         sc.setHeaderLinks();
         sc.indexTable = [];
@@ -845,8 +849,8 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http',
-    function ($scope, json, lectureId, qId, docId, inLecture, http) {
+timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http', '$rootScope',
+    function ($scope, json, lectureId, qId, docId, inLecture, http, $rootScope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
         $scope.jsonRaw = json;
@@ -874,10 +878,11 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
                     lecture_id: $scope.lectureId,
                     question_id: $scope.qId,
                     doc_id: $scope.docId,
-                    'buster': new Date().getTime()
+                    buster: new Date().getTime()
                 }
             })
                 .success(function () {
+                    $rootScope.$broadcast('askQuestion', {"json": jsonData, "questionId": $scope.qId});
                     $scope.$modalClose();
                 })
                 .error(function (error) {
@@ -900,6 +905,7 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
                 })
                     .success(function () {
                         $scope.$modalClose();
+                        $rootScope.$broadcast('forceGetQuestions');
                         console.log("Deleted question");
                     })
                     .error(function (error) {
@@ -1104,9 +1110,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
-        var timeLimit = 0;
+        var timeLimit = scope.question.timeLimit.seconds;
         if (scope.question.timeLimit.hours) {
-            (scope.question.timeLimit.hours * 60 + scope.question.timeLimit.minutes) * 60 + scope.question.timeLimit.seconds;
+            timeLimit += (scope.question.timeLimit.hours * 60 * 60)
+        }
+
+        if (scope.question.timeLimit.minutes) {
+            timeLimit += scope.question.timeLimit.minutes * 60
         }
         //TODO use  JSON.stringify
 

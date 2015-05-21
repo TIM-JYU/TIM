@@ -21,7 +21,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             $scope.questionSidebarState = 'hidden';
             $scope.peopleSidebarState = 'hidden';
             $scope.settingsSidebarState = 'hidden';
-        }
+        };
 
         var w = angular.element($window);
         w.bind('resize', function () {
@@ -76,6 +76,8 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 
         $scope.toggleQuestions = function () {
             var visible = angular.element('.questions-sidebar').is(":visible");
+
+            $scope.lectureQuestions = [];
             if (visible) {
                 $scope.questionSidebarState = 'hidden';
             } else {
@@ -90,7 +92,13 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
                     method: 'GET'
                 })
                     .success(function (questions) {
-                        $scope.lectureQuestions = questions
+                        for (var i = 0; i < questions.length; i++) {
+                            var question = {
+                                "questionId": questions[i].question_id,
+                                "questionTitle": (JSON.parse(questions[i].questionJson)).TITLE
+                            };
+                            $scope.lectureQuestions.push(question);
+                        }
                     })
                     .error(function () {
                         console.log("Couldn't fetch the questions");

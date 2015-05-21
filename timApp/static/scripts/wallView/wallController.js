@@ -67,6 +67,30 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 })
         };
 
+        $scope.$on("askQuestion", function (event, data) {
+
+            if ($scope.useAnswers) {
+                $scope.showStudentAnswers = true;
+                // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
+                $timeout(function () {
+                    $rootScope.$broadcast("createChart", data.json);
+                }, 1);
+
+                var answer = {"questionId": data.questionId};
+                $scope.getLectureAnswers(answer);
+
+            }
+
+
+            $rootScope.$broadcast("setQuestionJson", {
+                questionJson: data.json,
+                questionId: data.questionId,
+                isLecturer: $scope.isLecturer
+            });
+            $scope.showAnswerWindow = true;
+
+        });
+
         $scope.$on('getLectureId', function () {
             $scope.$emit('postLectureId', $scope.lectureId);
         });
@@ -170,7 +194,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             var lectureName = "";
             if (angular.isDefined(name)) {
                 lectureName = name;
-                 $('#currentList').slideToggle();
+                $('#currentList').slideToggle();
             } else {
                 lectureName = $scope.chosenLecture.lecture_code
             }
@@ -211,6 +235,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             var wall = document.getElementById("wall");
             wall.style.position = "absolute";
             wall.style.bottom = 'auto';
+            $scope.wallMoved = true;
 
         };
 
@@ -222,11 +247,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             wall.style.position = "fixed";
 
             if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
+               $scope.wallMoved = false;
+            }
+        };
+
+        $scope.hideWall = function () {
+            if (!$scope.wallMoved) {
                 $scope.hide();
-                return;
             }
 
-            var id = $(event.target).attr('id');
         };
 
 
@@ -280,20 +309,29 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             if ($scope.isLecturer) {
                 $rootScope.$broadcast("getQuestions");
                 $scope.canStop = true;
-                for (var i = 0; i < answer.students.length; i++) {
-                    var student = {
-                        name: answer.students[i].name,
-                        active: answer.students[i].active
-                    };
-                    $scope.studentTable.push(student);
+                $scope.addPeopleToList(answer.students, $scope.studentTable);
+                $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
+            }
+        };
+
+
+        $scope.addPeopleToList = function (people, peopleList) {
+            var oldUser = false;
+            for (var i = 0; i < people.length; i++) {
+                for (var index = 0; index < peopleList.length; index++) {
+                    if (peopleList[index].name == people[i].name) {
+                        oldUser = true;
+                        peopleList[index].active = people[i].active;
+                        break;
+                    }
                 }
 
-                for (i = 0; i < answer.lecturers.length; i++) {
-                    var lecturer = {
-                        name: answer.lecturers[i].name,
-                        active: answer.lecturers[i].active
+                if (!oldUser) {
+                    var student = {
+                        name: people[i].name,
+                        active: people[i].active
                     };
-                    $scope.lecturerTable.push(lecturer);
+                    peopleList.push(student);
                 }
             }
         };
@@ -306,6 +344,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 $scope.canStart = true;
                 $scope.canStop = false;
             }
+
             $scope.useWall = false;
             $scope.polling = false;
             $scope.inLecture = false;
@@ -318,6 +357,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
             var addLecture = true;
             angular.forEach(answer.lectures, function (lecture) {
+                addLecture = true;
                 for (var i = 0; i < $scope.lectures.length; i++) {
                     if ($scope.lectures[i].lecture_code == lecture.lecture_code) {
                         addLecture = false;
@@ -329,7 +369,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 }
             });
 
-            angular.forEach(answer.futureLecture, function (lecture) {
+            angular.forEach(answer.futureLectures, function (lecture) {
+                addLecture = true;
                 for (var i = 0; i < $scope.futureLectures.length; i++) {
                     if ($scope.futureLectures[i].lecture_code == lecture.lecture_code) {
                         addLecture = false;
@@ -340,6 +381,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     $scope.futureLectures.push(lecture);
                 }
             });
+
+            if ($scope.lectures.length > 0) {
+                $scope.chosenLecture = $scope.lectures[0]
+            }
+
+            if ($scope.futureLectures.length > 0) {
+                $scope.futureLecture = $scope.futureLectures[0]
+            }
         };
 
 //Extends the lecture based on the time selected in pop-up to extend lecture
@@ -549,7 +598,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     'question_id': answer.questionId,
                     'doc_id': $scope.docId,
                     'lecture_id': $scope.lectureId,
-                    'time': answer.latestAnswer, 'buster': new Date().getTime()
+                    'time': answer.latestAnswer,
+                    'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
@@ -607,67 +657,19 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             }
                         }
 
-                        var oldUser = false;
-                        for (var i = 0; i < answer.students.length; i++) {
-                            for (var index = 0; index < $scope.studentTable.length; index++) {
-                                if ($scope.studentTable[index].name == answer.students[i].name) {
-                                    oldUser = true;
-                                    $scope.studentTable[index].active = answer.students[i].active;
-                                    break;
-                                }
-                            }
-
-                            if (!oldUser) {
-                                var student = {
-                                    name: answer.students[i].name,
-                                    active: answer.students[i].active
-                                };
-                                $scope.studentTable.push(student);
-                            }
-                        }
-
-                        oldUser = false;
-                        for (i = 0; i < answer.lecturers.length; i++) {
-                            for (index = 0; index < $scope.lecturerTable.length; index++) {
-                                if ($scope.lecturerTable[index].name == answer.lecturers[i].name) {
-                                    oldUser = true;
-                                    $scope.lecturerTable[index].active = answer.lecturers[i].active;
-                                    break;
-                                }
-                            }
-
-                            if (!oldUser) {
-                                var lecturer = {
-                                    name: answer.lecturers[i].name,
-                                    active: answer.lecturers[i].active
-                                };
-                                $scope.lecturerTable.push(lecturer);
-                            }
-                        }
-
-                        if (answer.question) {
-                            var questionJson = JSON.parse(answer.questionJson);
-                            $scope.askedQuestionJson = questionJson;
-
-                            if ($scope.isLecturer && $scope.useAnswers) {
-                                $scope.showStudentAnswers = true;
-                                // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
-                                $timeout(function () {
-                                    $rootScope.$broadcast("createChart", questionJson);
-                                }, 1);
-                                $scope.getLectureAnswers(answer);
-                            }
+                        $scope.addPeopleToList(answer.students, $scope.studentTable);
+                        $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
 
+                        if (answer.question && !$scope.isLecturer) {
+                            $scope.showAnswerWindow = true;
                             $rootScope.$broadcast("setQuestionJson", {
-                                questionJson: questionJson,
+                                questionJson: JSON.parse(answer.questionJson),
                                 questionId: answer.questionId,
                                 isLecturer: $scope.isLecturer
                             });
-
-
-                            $scope.showAnswerWindow = true;
                         }
+
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
                         if ($scope.polling) {

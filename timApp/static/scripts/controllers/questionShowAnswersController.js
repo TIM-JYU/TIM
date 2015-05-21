@@ -18,7 +18,6 @@ timApp.controller('QuestionShowAnswerController', ['$scope', '$http', function (
     });
 
     $scope.$on("createChart", function (event, question) {
-        console.log(question);
         $scope.dynamicAnswerShowControl.createChart(question);
         $scope.questionTitle = question.QUESTION;
     });

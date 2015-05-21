@@ -107,7 +107,7 @@
             </div>
             <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed="false" resizable>
                 <div class="wall-base" id="wallBase">
-                    <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)">
+                    <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)" ng-click="hideWall()">
                         <span ng-bind="wallName">Wall</span>
                         <span ng-show="!showWall && newMessagesAmount > 0" ng-bind="newMessagesAmountText"></span>
 
@@ -230,7 +230,7 @@
                         <ul>
                             <h4>Lecture questions</h4>
                             <li ng-repeat="question in lectureQuestions">
-                                <a ng-click="showQuestionById(question.question_id)">{{ question.question }}</a>
+                                <a ng-click="showQuestionById(question.questionId)">{{ question.questionTitle }}</a>
                             </li>
                             <p ng-show="lectureQuestions.length == 0">-</p>
                             <h4>Material questions</h4>
