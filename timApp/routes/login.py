@@ -274,9 +274,9 @@ def finishLogin(ready=True):
     if anchor != "":
         anchor = "#" + anchor
     came_from = session.get('came_from', '/')
-    if ready:
-        session.pop('anchor', '')
-        session['came_from'] = '/view/'
+    #if ready:
+    #    session.pop('anchor', '')
+    #    session['came_from'] = '/view/'
     return redirect(came_from + anchor)
 
 

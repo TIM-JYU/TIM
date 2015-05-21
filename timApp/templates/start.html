@@ -53,7 +53,9 @@
 
     <div class="row">
         <div class="col-md-8 largeimage">
-            <img src="{{url_for('static', filename='images/responsive.jpg')}}"/>
+            <a href="/view/tim/TIM-esittely">
+                <img src="{{url_for('static', filename='images/responsive.jpg')}}"/>
+            </a>
             <!--<div class="jumbotron">
                 <h1>The Interactive Material.</h1>
                 <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
@@ -66,7 +68,7 @@
             <p>You're logged in as {{session.real_name}} ({{session.user_name}}).<p>
             <ul>
                 <li><a href="/settings/">Customize TIM</li>
-                <li><a href="/view/">Back to index</a></li>
+                <li><a href="/view/">Document index</a></li>
             </ul>
             
             <form method="POST" action="/logout">
@@ -108,7 +110,7 @@
         </form>
 {% else %}
             <ul>
-                <li><a href="/view/">To TIM-index</a></li>
+                <li><a href="/view/">Document index</a></li>
             </ul>
             <!-- Nav tabs -->
             <ul id="loginTab" class="nav nav-tabs" role="tablist">
@@ -204,17 +206,22 @@
             <h5>TIM</h5>
             <ul>
                 <li><a href="/view/tim/TIM-esittely">Esittely</a></li> 
-                <li><a href="/view/tim/TIM-ohjeet">Ohjeet</a></li>
+                <li><a href="/view/tim/TIM-ohjeet">Ohjeet <sup>(*)</sup></a></li>
             </ul>
         </div>
         <div class="col-md-6">
-            <h5>Esimerkkejä</h5>
+            <h5>Esimerkkejä <sup>(*)</sup></h5>
             <ul>
                 <li><a href="/view/tim/Esimerkkejä TIMin mahdollisuuksista">TIMin mahdollisuuksia</a></li>
                 <li><a href="/view/tim/Eri%20ohjelmointikieli%C3%A4">Eri ohjelmointikieliä</a></li>
                 <li><a href="/view/tim/muita%20esimerkkeja">Käyttö eri oppiaineissa</a></li>
             </ul>
         </div>
+    </div>
+    <div class="row marketing">
+        <div class="col-md-6 text-muted">
+            <sup>(*)</sup> vaatii kirjautumisen
+	    </div>
     </div>
 
     <footer class="footer">
