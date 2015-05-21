@@ -835,6 +835,10 @@ timApp.controller("ViewCtrl", [
             }
         });
 
+        sc.$on("forceGetQuestions", function () {
+            sc.getQuestions();
+        });
+
         // Load index, notes and read markings
         sc.setHeaderLinks();
         sc.indexTable = [];
@@ -901,6 +905,7 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
                 })
                     .success(function () {
                         $scope.$modalClose();
+                        $rootScope.$broadcast('forceGetQuestions');
                         console.log("Deleted question");
                     })
                     .error(function (error) {
@@ -1111,7 +1116,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
 
         if (scope.question.timeLimit.minutes) {
-            timeLimit +=  scope.question.timeLimit.minutes * 60
+            timeLimit += scope.question.timeLimit.minutes * 60
         }
         //TODO use  JSON.stringify
 
