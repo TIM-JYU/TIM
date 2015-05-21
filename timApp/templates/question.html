@@ -2,7 +2,6 @@
 	<div class="popUpWindow">
 	<h1>Create question</h1>
 		<form class="createQuestion" id="question-form">
-			<fieldset>
 				<label>
 					Question title:
 					<input name="question.title" type="text" cols="100" ng-model="question.title"/>
@@ -41,37 +40,30 @@
 				</div>
 				<br />
 				<br />
-
-				<label>
-					Start time:
-					<input type="checkbox" ng-model="question.startTimeSelected" />
-					<div class="questionStartTime">
-						<span ng-show="question.startTimeSelected">
-							<label>Date:<input type="text" id="calendarStart">
-							</label>
-							<label>Time:
-							<input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
-								   is-valid-change="" ng-model="question.startHour">
-							<label>:</label>
-							<input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
-								   is-valid-change="" ng-model="question.startMin"></label>
-						</span>
-					</div>
-				</label>
-				<br />
-				<label>Timer:
-				 <input type="checkbox" ng-model="question.endTimeSelected" />
-				 <div class="questionTimer">
-					<span ng-show="question.endTimeSelected">
-						<input type="number" name="hours" min="0" max="100" step="1" value="0"> h
-						<input type="number" name="minutes" min="0" max="59" step="1" value="0"> m
-						<input type="number" name="seconds" min="0" max="59" step="0" value="10"> s
-					</span>
+				<div id="questionStart">
+						Start time:
+						<input type="checkbox" ng-model="question.startTimeSelected" />
+						<div class="questionStartTime">
+								<label>Date:<input type="text" id="calendarStart" ng-disabled="!question.startTimeSelected"></label>
+								Time:
+								<input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
+									   is-valid-change="" ng-model="question.startHour" ng-disabled="!question.startTimeSelected">
+								:
+								<input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
+									   is-valid-change="" ng-model="question.startMin" ng-disabled="!question.startTimeSelected">
+						</div>
 				</div>
-				</label>
+				<div id="questionTimer">
+					Timer:
+					 <input type="checkbox" ng-model="question.endTimeSelected" />
+					 <div class="questionTimer">
+							<input type="text" name="hours" maxlength="2" size="2" ng-model="question.timeLimit.hours" ng-disabled="!question.endTimeSelected"> h
+							<input type="text" name="minutes" maxlength="2" size="2" ng-model="question.timeLimit.minutes" ng-disabled="!question.endTimeSelected"> m
+							<input type="text" name="seconds" maxlength="2" size="2" ng-model="question.timeLimit.seconds" ng-disabled="!question.endTimeSelected"> s
+					</div>
+				</div>
 				<br>
-				<br>
-			</fieldset>			
+				<br>			
 		</form>
 		<div class="buttons">
 			<input type="button" value="Submit" ng-click="createQuestion(question.question, question.type)">

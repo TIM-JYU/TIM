@@ -10,21 +10,20 @@
             <br>
         </div>
         <div class="startingTime">
-            <label for="startTime">Starting time:</label>
+            Starting time:
             <div id="startInfo">
                 <label>Date:
                 <input id="startDate" name="startDate" ng-model="startDate" type="text" /></label>
-                <label>Time:
+                Time:
                 <input type="text" name="startHh" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
                        ng-model="startHour">
                 :
                 <input type="text" name="startMm" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
                        ng-model="startMin">
-                </label>
             </div>
         </div>
         <div class="endingTime">
-            <label>Ending time:
+            Ending time:
                 <div id="endInfo">
                     <input type="radio" id="dateChosen2" name="dateStop" ng-click="enableDate2()"
                            ng-model="dateChosen" ng-checked="dateCheck">
@@ -33,13 +32,12 @@
                             <label>Date:
                                 <input type="text" id="endDate" ng-model="endDate" ng-disabled="!dateCheck"/>
                             </label>
-                            <label>Time:
+                            Time:
                                 <input type="text" id="endHour" name="endHour" maxlength="2" size="2" placeholder="hh"
                                        ng-model="endHour" ng-disabled="!dateCheck">
 									   :
                                 <input type="text" id="endMin" name="endMin" maxlength="2" size="2" placeholder="mm"
                                        ng-model="endMin" ng-disabled="!dateCheck">
-                            </label>
                         </div>
                     </label>
 
@@ -55,7 +53,6 @@
                         </div>
                     </label>
                 </div>
-            </label>
         </div>
         <p id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
         
