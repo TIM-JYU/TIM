@@ -47,7 +47,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 if ($scope.json.TYPE != "true-false") {
                     htmlSheet += "<h2>" + $scope.json.QUESTION + "<h2>";
                 }
-                if ($scope.json.TIMELIMIT != "") {
+                if ($scope.json.TIMELIMIT != "" && !$scope.$parent.isLecturer) {
                     htmlSheet += "<progress value='0' max='" + $scope.json.TIMELIMIT + "' id='progressBar'>";
                     htmlSheet += "</progress>";
                     htmlSheet += "<span id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
@@ -83,7 +83,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         var group;
 
                         if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
-                            group = "group" + row.text.replace(/[^a-zA-Z]/g, "");
+                            group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
                             htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
                             " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
                             "></label></td>";
@@ -104,7 +104,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 $element.append(htmlSheet);
                 $compile($scope);
 
-                if ($scope.$parent.isLecturer) {
+                if (!$scope.$parent.isLecturer) {
                     var fakeTime = $scope.json.TIMELIMIT * 1000;
                     timeLeft = $scope.json.TIMELIMIT;
                     barFilled = 0;
