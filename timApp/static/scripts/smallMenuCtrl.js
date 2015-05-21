@@ -47,6 +47,11 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
 			
 		};
 		
+		$scope.selectCurrentLecture = function() {
+			
+			
+		}
+		
 		var w = angular.element($window);
 		w.bind('resize', function () {
 			$('#currentList').hide();

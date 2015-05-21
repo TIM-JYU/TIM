@@ -1,5 +1,4 @@
 <!--html for upper menu-->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/menustyle.css') }}">
 <div class="menuSection">
     <div id="largeMenu">
         <div class="lectureSection" ng-show="!inLecture">
@@ -110,12 +109,19 @@
 				{% raw %}
 				<ul>
 					<li ng-repeat="lecture in currentLecturesList">
+                        <p ng-click="selectCurrentLecture()">{{ lecture.lecture_code }}<input type="submit" value="Join"> <input type="submit" value="Edit"></p>
+					</li>
+					<li ng-show="currentLecturesList.length == 0">
                         <p>{{ lecture.lecture_code }}<input type="submit" value="Join" ng-click="joinLecture(lecture.lecture_code)"> <input type="submit" value="Edit"></p>
                     </li>
 					<li ng-show="currentLecturesList.length == 0 && isLecturer">
                         <p>No lectures</p>
                     </li>
 					<li> <p ng-click="toggleLecture()" id="addLecture1"> Add new lecture </p></li>
+					<li>
+						<img src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
+						ng-click="joinLecture()" title="Join the lecture">
+					</li>
 				</ul>
 				{% endraw %}
 			</div>
