@@ -6,6 +6,7 @@ timApp.controller('QuestionShowAnswerController', ['$scope', '$http', function (
 
     $scope.dynamicAnswerShowControl = {};
     $scope.canvas = "";
+    $scope.questionTitle = "";
 
     $scope.close = function () {
         $scope.$emit('closeAnswerShow');
@@ -18,6 +19,7 @@ timApp.controller('QuestionShowAnswerController', ['$scope', '$http', function (
 
     $scope.$on("createChart", function (event, question) {
         $scope.dynamicAnswerShowControl.createChart(question);
+        $scope.questionTitle = question.QUESTION;
     });
 
 }]);

@@ -26,6 +26,7 @@ timApp.controller("ViewCtrl", [
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         sc.questionShown = false;
+        sc.firstTimeQuestions = true;
         var NOTE_EDITOR_CLASS = "editorArea";
         var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
@@ -828,7 +829,10 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.$on("getQuestions", function () {
-            sc.getQuestions();
+            if (sc.firstTimeQuestions) {
+                sc.getQuestions();
+                sc.firstTimeQuestions = false;
+            }
         });
 
         // Load index, notes and read markings
@@ -841,8 +845,8 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http',
-    function ($scope, json, lectureId, qId, docId, inLecture, http) {
+timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http', '$rootScope',
+    function ($scope, json, lectureId, qId, docId, inLecture, http, $rootScope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
         $scope.jsonRaw = json;
@@ -870,10 +874,11 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
                     lecture_id: $scope.lectureId,
                     question_id: $scope.qId,
                     doc_id: $scope.docId,
-                    'buster': new Date().getTime()
+                    buster: new Date().getTime()
                 }
             })
                 .success(function () {
+                    $rootScope.$broadcast('askQuestion', {"json": jsonData, "questionId": $scope.qId});
                     $scope.$modalClose();
                 })
                 .error(function (error) {
@@ -916,9 +921,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
     scope.question = {
+        title: "",
         question: "",
         matrixType: "",
-        answerFieldType: ""
+        answerFieldType: "",
+        timeLimit: {hours: "", minutes: "", seconds: ""}
     };
 
 
@@ -980,15 +987,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
         }
         scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
-
     };
 
 
     scope.rowClick = function (index) {
-
         scope.addRow(index);
-
-
     };
 
     scope.addCol = function (loc) {
@@ -1012,7 +1015,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         }
 
 
-    }
+    };
     scope.addRow = function (loc) {
 
         scope.CreateColumnsForRow = function (location) {
@@ -1102,9 +1105,17 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
+        var timeLimit = scope.question.timeLimit.seconds;
+        if (scope.question.timeLimit.hours) {
+            timeLimit += (scope.question.timeLimit.hours * 60 * 60)
+        }
+
+        if (scope.question.timeLimit.minutes) {
+            timeLimit +=  scope.question.timeLimit.minutes * 60
+        }
         //TODO use  JSON.stringify
 
-        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TYPE": "' + scope.question.type + '", "TIME": "' + scope.question.time + '", "DATA": {';
+        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
         if (scope.question.type == "matrix") {
@@ -1168,7 +1179,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             .success(function () {
                 console.log("The question was successfully added to database");
                 scope.clearQuestion();
-                //TODO: This can be optimized to get only the ne
+                //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
             })
             .error(function () {
