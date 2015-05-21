@@ -31,7 +31,7 @@ fieldset, form {
 	max-width: 250px;
 }
 
-#startDate, #endDate{
+#startDate, #endDate, #calendarStart{
 	-webkit-box-sizing : border-box;‌​
     -moz-box-sizing : border-box;
     box-sizing : border-box;
@@ -42,8 +42,16 @@ fieldset, form {
 	width: 25px;
 }
 
-.questionTable {
+input[type="number"] {
+	width: 30px;
+}
 
+.questionTable .negative {
+	background: #c12e2a;
+}
+
+#questionStart label, #questionTimer label {
+	display: inline;
 }
 
 #infoFields label {
@@ -88,7 +96,7 @@ fieldset, form {
 
 
 .createLecture input[type="text"], .createLecture input[type="date"], .createLecture select , .createQuestion input,
-.createQuestion textarea, .createQuestion select {
+.createQuestion textarea{
     border: 1px solid #3cc;
     color: #505050;
     height: 20px;
@@ -101,6 +109,22 @@ fieldset, form {
     -moz-box-shadow: inset 0px 1px 4px #ECECEC;
     -webkit-box-shadow: inset 0px 1px 4px #ECECEC;
 }
+
+.createQuestion select {
+    border: 1px solid #3cc;
+    color: #505050;
+    height: 20px;
+	margin: 2px 6px 10px 2px;
+    outline: 0 none;
+    padding: 3px 3px 3px 5px;
+    font-size: 12px;
+    line-height: 15px;
+    box-shadow: inset 0px 1px 4px #ECECEC;
+    -moz-box-shadow: inset 0px 1px 4px #ECECEC;
+    -webkit-box-shadow: inset 0px 1px 4px #ECECEC;
+	height: 30px;
+}
+
 .questionStartTime, .questionTimer {
 	display: block;
 }
@@ -127,20 +151,6 @@ fieldset, form {
     line-height: normal;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; 
 	float: right;
-}
-
-.popUpWindow button, .popUpWindow input[type="button"] {
-	box-shadow: 1px 1px 5px #B6B6B6;
-	background: #3CC;
-	border: 0;
-	border-radius: 3px;
-	color: #FFF;
-	display: inline-block;
-	font-size: 11px;
-	cursor: pointer;
-	line-height: normal;
-	padding: 5px 10px;
-	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .buttons button {
@@ -194,5 +204,10 @@ fieldset, form {
 .createQuestion #emptyBlock{
 	border: none;
 	background: #F0F0F0
+}
+
+
+.negative button{
+    background: #c12e2a;
 }
 
