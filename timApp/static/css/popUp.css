@@ -16,10 +16,10 @@
     z-index: 6;
     position: fixed;
     top: 25%;
-    right: 25%;
-
+	
     background-color: #fff;
     box-shadow: 4px 4px 80px #000;
+	min-width: 230px;
 }
 
 .pop-up-dialog-content {
