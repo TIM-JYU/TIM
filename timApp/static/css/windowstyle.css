@@ -1,15 +1,17 @@
 .createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion {
-    margin-left: auto;
-    margin-right: auto;
+	display: block;
     width: 100%;
     height: 100%;
     background: #F0F0F0;
-    padding: 15px 15px 25px 10px;
-    font: 12px arial;
+    padding: 10px;
+    font: 12px Georgia;
     color: #505050;
     text-shadow: 1px 1px 1px #FFF;
     border: 1px solid #E4E4E4;
 	text-align: left;
+	-webkit-box-sizing : border-box;‌​
+    -moz-box-sizing : border-box;
+    box-sizing : border-box;
 }
 
 fieldset, form {
@@ -18,6 +20,26 @@ fieldset, form {
 	display: inline-block;
     width: 100%;
     height: 100%;
+}
+
+#infoFields input{
+	-webkit-box-sizing : border-box;‌​
+    -moz-box-sizing : border-box;
+    box-sizing : border-box;
+	width: 100%;
+	height: 30px;
+	max-width: 250px;
+}
+
+#startDate, #endDate{
+	-webkit-box-sizing : border-box;‌​
+    -moz-box-sizing : border-box;
+    box-sizing : border-box;
+	height: 30px;
+	width: 80px;
+}
+#startHour, #startMin, #endHour, #endMin, #durationHour, #durationMin{
+	width: 25px;
 }
 
 .questionTable {
@@ -51,7 +73,7 @@ fieldset, form {
 
 .popUpWindow h1 {
    font-family: verdana;
-   font-size: 16px;
+   font-size: 18px;
    padding: 0px 0px 0px 0px;
    color: #3cc;
    text-align: left;
@@ -64,10 +86,6 @@ fieldset, form {
    line-height: 1;    
 }
 
-.popUpWindow{
-    width: 100%;
-    max-width: 810px;
-}
 
 .createLecture input[type="text"], .createLecture input[type="date"], .createLecture select , .createQuestion input,
 .createQuestion textarea, .createQuestion select {
