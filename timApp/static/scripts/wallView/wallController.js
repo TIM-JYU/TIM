@@ -757,19 +757,19 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                     }
 
                                     if (!$scope.messageName && $scope.messageTime) {
-                                        $scope.msg += " <" + msg[i].time + ">: ";
-                                        $scope.msg += msg[i].message + "\r\n";
+                                        $scope.msg += " <" + msg.time + ">: ";
+                                        $scope.msg += msg.message + "\r\n";
 
                                     }
 
                                     if ($scope.messageName && !$scope.messageTime) {
-                                        $scope.msg += msg[i].sender + ": ";
-                                        $scope.msg += msg[i].message + "\r\n";
+                                        $scope.msg += msg.sender + ": ";
+                                        $scope.msg += msg.message + "\r\n";
 
                                     }
 
                                     if (!$scope.messageName && !$scope.messageTime) {
-                                        $scope.msg += ">" + msg[i].message + "\r\n";
+                                        $scope.msg += ">" + msg.message + "\r\n";
 
                                     }
                                 });
