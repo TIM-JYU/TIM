@@ -57,9 +57,9 @@
 					Timer:
 					 <input type="checkbox" ng-model="question.endTimeSelected" />
 					 <div class="questionTimer">
-							<input type="text" name="hours" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> h
-							<input type="text" name="minutes" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> m
-							<input type="text" name="seconds" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> s
+							<input type="text" name="hours" maxlength="2" size="2" ng-model="question.timeLimit.hours" ng-disabled="!question.endTimeSelected"> h
+							<input type="text" name="minutes" maxlength="2" size="2" ng-model="question.timeLimit.minutes" ng-disabled="!question.endTimeSelected"> m
+							<input type="text" name="seconds" maxlength="2" size="2" ng-model="question.timeLimit.seconds" ng-disabled="!question.endTimeSelected"> s
 					</div>
 				</div>
 				<br>
