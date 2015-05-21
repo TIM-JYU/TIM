@@ -17,6 +17,7 @@
     position: fixed;
     top: 25%;
     right: 25%;
+	left:25%;
     background-color: #fff;
     box-shadow: 4px 4px 80px #000;
 }
