@@ -61,7 +61,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/popUp.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/menustyle.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menustyle.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/windowstyle.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/progressbarstyle.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/jsDatePick_ltr.min.css') }}">
@@ -108,29 +108,38 @@
             </div>
             <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed="false" resizable>
                 <div class="wall-base" id="wallBase">
-                    <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)" ng-click="hideWall()">
+                    <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
+                         ng-click="hideWall()">
                         <span ng-bind="wallName">Wall</span>
                         <span ng-show="!showWall && newMessagesAmount > 0" ng-bind="newMessagesAmountText"></span>
 
                         <!--<input type="button" ng-click="wallRelease($event)" id="detachButton" id="buttonRight"> -->
 
                     </div>
-                    <div ng-show="showWall" class="wall-content">
+                    <div ng-show="showWall" class="wall-content" style="float:left">
                         <div class="wall-message-area">
                             <label>
                                 <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
                             </label>
                         </div>
-                        <div class="wall-buttons">
-                            <label>
-                                <input id="messagebox" ng-model="newMsg" width="200"
-                                       ng-keypress="chatEnterPressed($event)">
-                            </label>
-                            <label title="Shows name of the sender and sending time">
-                                <input type="checkbox" ng-change="showInfo()" ng-model="messageInfo"/>Info
-                            </label>
-                            <!-- <button ng-click="sendMessageEvent(newMsg)">Send</button> -->
-                            <!-- <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button> -->
+                        <div class="wall-footer">
+                            <div class="wall-buttons" style="float:left">
+                                <label>
+                                    <input id="messagebox" ng-model="newMsg" width="200"
+                                           ng-keypress="chatEnterPressed($event)">
+                                </label>
+                                <!-- <button ng-click="sendMessageEvent(newMsg)">Send</button> -->
+                                <!-- <input type="checkbox" ng-change="pollChanged()" ng-model="polling">Poll</button> -->
+                            </div>
+
+                            <div class="wall-info-buttons">
+                                <label title="Shows name of the sender">
+                                    <input type="checkbox" ng-change="showInfo()" ng-model="messageName"/>Name
+                                </label>
+                                <label title="Shows sending time">
+                                    <input type="checkbox" ng-change="showInfo()" ng-model="messageTime"/>Time
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -211,17 +220,17 @@
                             <li ng-repeat="lecture in currentLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="currentLecturesList.length == 0">-</p>
+                            <p ng-show="currentLecturesList.length == 0">No current lectures</p>
                             <h4>Coming Lectures</h4>
                             <li ng-repeat="lecture in futureLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="futureLecturesList.length == 0">-</p>
+                            <p ng-show="futureLecturesList.length == 0">No coming lectures</p>
                             <h4>Past Lectures</h4>
                             <li ng-repeat="lecture in pastLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="pastLecturesList.length == 0">-</p>
+                            <p ng-show="pastLecturesList.length == 0">No past lectures</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -233,12 +242,12 @@
                             <li ng-repeat="question in lectureQuestions">
                                 <a ng-click="showQuestionById(question.questionId)">{{ question.questionTitle }}</a>
                             </li>
-                            <p ng-show="lectureQuestions.length == 0">-</p>
+                            <p ng-show="lectureQuestions.length == 0">No lecture questions</p>
                             <h4>Material questions</h4>
                             <li ng-repeat="question in materialQuestions">
                                 <a>{{ question.question }}</a>
                             </li>
-                            <p ng-show="materialQuestions.length == 0">-</p>
+                            <p ng-show="materialQuestions.length == 0">No material questions</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -250,12 +259,12 @@
                             <li ng-repeat="lecturer in lecturerTable">
                                 {{ lecturer.name }} > {{ lecturer.active }}
                             </li>
-                            <p ng-show="lecturerTable.length == 0">-</p>
+                            <p ng-show="lecturerTable.length == 0">No lecturers</p>
                             <h4>Students</h4>
                             <li ng-repeat="person in studentTable">
                                 {{ person.name }} > {{ person.active }}
                             </li>
-                            <p ng-show="studentTable.length == 0">-</p>
+                            <p ng-show="studentTable.length == 0">No students</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -276,7 +285,7 @@
                                            ng-change="changeUsingQuestions(useQuestions)">
                                 </label>
                             </li>
-                             <li ng-show="isLecturer">
+                            <li ng-show="isLecturer">
                                 <label> Show answers
                                     <input type="checkbox" ng-model="useAnswers"
                                            ng-change="changeUsingAnswers(useAswers)">
