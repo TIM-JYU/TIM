@@ -41,7 +41,6 @@
 				<br />
 				<br />
 				<div id="questionStart">
-					<label>
 						Start time:
 						<input type="checkbox" ng-model="question.startTimeSelected" />
 						<div class="questionStartTime">
@@ -49,21 +48,19 @@
 								Time:
 								<input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
 									   is-valid-change="" ng-model="question.startHour" ng-disabled="!question.startTimeSelected">
-								<label>:</label>
+								:
 								<input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
 									   is-valid-change="" ng-model="question.startMin" ng-disabled="!question.startTimeSelected">
 						</div>
-					</label>
 				</div>
 				<div id="questionTimer">
-					<label>Timer:
+					Timer:
 					 <input type="checkbox" ng-model="question.endTimeSelected" />
 					 <div class="questionTimer">
 							<input type="text" name="hours" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> h
 							<input type="text" name="minutes" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> m
 							<input type="text" name="seconds" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> s
 					</div>
-					</label>
 				</div>
 				<br>
 				<br>			
