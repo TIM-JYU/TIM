@@ -13,7 +13,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             // TODO: find an efficient way to call this whenever
             // position is changed between static and absolute
             position = e.css("position");
-            movable = position != 'static' && position != 'fixed';
+            movable = position != 'static';
             h.css("visibility", movable ? "visible" : "hidden");
         }
 

@@ -315,7 +315,7 @@ ul ul  ul, ol ol ol {
 
 .actionButtons {
     position: absolute;
-    padding: 1em;
+    padding: 0 1em 2em 1em;
     margin: 0;
     z-index: 100;
     top: -1px;
@@ -353,7 +353,10 @@ ul ul  ul, ol ol ol {
 }
 
 .draghandle {
-    background-color: #e8e8ef;
+    background-color: #3CC;
+    position: initial;
+    margin-bottom: 10px;
+    margin-top: 0px;
 }
 
 .readline {
@@ -810,7 +813,7 @@ a.anchor:hover {
     left: 112%;
     min-height:6.5em;
     border-radius: 15px;
-    padding: 0.5em; 
+    padding: 0 0.5em 0.5em 0.5em; 
 }
 
 .editButtonArea {
@@ -1506,7 +1509,7 @@ img.console {
 .actionButtons {
     position: absolute;
     border-radius: 3px;
-    padding: 1em;
+    /* padding: 1em; */
     margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
@@ -1752,7 +1755,11 @@ footer p {
 }
 
 .footer a {
-  color: #3cc;
+  color: #3cc; 
+}
+
+.previewDiv {
+  background: white;
 }
 
 .footer ul {
@@ -1770,3 +1777,6 @@ footer p {
   margin-right: 4pt;
 }
  
+div#previewDiv {
+  background: white;
+}
