@@ -210,17 +210,17 @@
                             <li ng-repeat="lecture in currentLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="currentLecturesList.length == 0">-</p>
+                            <p ng-show="currentLecturesList.length == 0">No current lectures</p>
                             <h4>Coming Lectures</h4>
                             <li ng-repeat="lecture in futureLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="futureLecturesList.length == 0">-</p>
+                            <p ng-show="futureLecturesList.length == 0">No coming lectures</p>
                             <h4>Past Lectures</h4>
                             <li ng-repeat="lecture in pastLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="pastLecturesList.length == 0">-</p>
+                            <p ng-show="pastLecturesList.length == 0">No past lectures</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -232,12 +232,12 @@
                             <li ng-repeat="question in lectureQuestions">
                                 <a ng-click="showQuestionById(question.questionId)">{{ question.questionTitle }}</a>
                             </li>
-                            <p ng-show="lectureQuestions.length == 0">-</p>
+                            <p ng-show="lectureQuestions.length == 0">No lecture questions</p>
                             <h4>Material questions</h4>
                             <li ng-repeat="question in materialQuestions">
                                 <a>{{ question.question }}</a>
                             </li>
-                            <p ng-show="materialQuestions.length == 0">-</p>
+                            <p ng-show="materialQuestions.length == 0">No material questions</p>
                         </ul>
                         {% endraw %}
                     </div>
@@ -249,12 +249,12 @@
                             <li ng-repeat="lecturer in lecturerTable">
                                 {{ lecturer.name }} > {{ lecturer.active }}
                             </li>
-                            <p ng-show="lecturerTable.length == 0">-</p>
+                            <p ng-show="lecturerTable.length == 0">No lecturers</p>
                             <h4>Students</h4>
                             <li ng-repeat="person in studentTable">
                                 {{ person.name }} > {{ person.active }}
                             </li>
-                            <p ng-show="studentTable.length == 0">-</p>
+                            <p ng-show="studentTable.length == 0">No students</p>
                         </ul>
                         {% endraw %}
                     </div>

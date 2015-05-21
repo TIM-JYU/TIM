@@ -27,9 +27,8 @@
 			</div>
         </div>
         <div class="lectureSection" ng-show="inLecture">
-			<h1>Currently:</h1>
-
-			<p ng-bind="lectureName"></p>
+            <p>Currently: </p>
+			<h1 ng-bind="lectureName"></h1>
 
 			<p ng-bind="lectureStartTime"></p>
 
@@ -86,8 +85,8 @@
 		</div>
 		<div class="smallMenu" ng-show="inLecture">
 			<div class="currently">
-				<h2>Currently:</h2>	
-				<p>Lecture info</p>
+				<p>Currently:</p>
+				<h2 ng-bind="lectureName"></h2>
 				<div class="smallIconSection">
 					<img id="leave-icon" src="{{ url_for('static', filename='images/leave-icon3.png') }}" class="icon"
 						ng-click="leaveLecture()" title="Leave this lecture" ng-show="inLecture">
