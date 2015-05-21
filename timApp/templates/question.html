@@ -41,34 +41,26 @@
 				<br />
 				<br />
 				<div id="questionStart">
-					<label>
 						Start time:
 						<input type="checkbox" ng-model="question.startTimeSelected" />
 						<div class="questionStartTime">
-							<span ng-show="question.startTimeSelected">
-								<label>Date:<input type="text" id="calendarStart">
-								</label>
-								<label>Time:
+								<label>Date:<input type="text" id="calendarStart" ng-disabled="!question.startTimeSelected"></label>
+								Time:
 								<input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
-									   is-valid-change="" ng-model="question.startHour">
-								<label>:</label>
+									   is-valid-change="" ng-model="question.startHour" ng-disabled="!question.startTimeSelected">
+								:
 								<input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
-									   is-valid-change="" ng-model="question.startMin"></label>
-							</span>
+									   is-valid-change="" ng-model="question.startMin" ng-disabled="!question.startTimeSelected">
 						</div>
-					</label>
 				</div>
 				<div id="questionTimer">
-					<label>Timer:
+					Timer:
 					 <input type="checkbox" ng-model="question.endTimeSelected" />
 					 <div class="questionTimer">
-						<span ng-show="question.endTimeSelected">
-							<input type="number" name="hours" min="0" max="100" step="1" value="0"> h
-							<input type="number" name="minutes" min="0" max="59" step="1" value="0"> m
-							<input type="number" name="seconds" min="0" max="59" step="0" value="10"> s
-						</span>
+							<input type="text" name="hours" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> h
+							<input type="text" name="minutes" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> m
+							<input type="text" name="seconds" maxlength="2" size="2" ng-disabled="!question.endTimeSelected"> s
 					</div>
-					</label>
 				</div>
 				<br>
 				<br>			
