@@ -13,7 +13,8 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.msg = "";
         $scope.newMsg = "";
         $scope.wallName = "Wall";
-        $scope.messageInfo = true;
+        $scope.messageName = true;
+        $scope.messageTime = true;
         $scope.newMessagesAmount = 0;
         $scope.newMessagesAmountText = "";
         $scope.showPoll = true;
@@ -51,6 +52,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.useQuestions = true;
         $scope.useWall = true;
         $scope.useAnswers = true;
+        $scope.wallMessages = [];
 
         $scope.checkIfInLecture = function () {
             http({
@@ -145,14 +147,69 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.gettingAnswers = false;
         });
 
+
         $scope.showInfo = function () {
-            if (!$scope.messageInfo) {
+            $scope.msg = "";
+            var i = 0;
+            if ($scope.messageName && $scope.messageTime) {
+                for (i = 0; i < $scope.wallMessages.length; i++) {
+                    $scope.msg += $scope.wallMessages[i].sender;
+                    $scope.msg += " <" + $scope.wallMessages[i].time + ">: ";
+                    $scope.msg += $scope.wallMessages[i].message + "\r\n";
+                }
+            }
+
+            if (!$scope.messageName && $scope.messageTime) {
+                for (i = 0; i < $scope.wallMessages.length; i++) {
+                    $scope.msg += " <" + $scope.wallMessages[i].time + ">: ";
+                    $scope.msg += $scope.wallMessages[i].message + "\r\n";
+                }
+            }
+
+            if ($scope.messageName && !$scope.messageTime) {
+                for (i = 0; i < $scope.wallMessages.length; i++) {
+                    $scope.msg += $scope.wallMessages[i].sender + ": ";
+                    $scope.msg += $scope.wallMessages[i].message + "\r\n";
+                }
+            }
+
+            if (!$scope.messageName && !$scope.messageTime) {
+                for (i = 0; i < $scope.wallMessages.length; i++) {
+                    $scope.msg += ">" + $scope.wallMessages[i].message + "\r\n";
+                }
+            }
+        };
+
+        $scope.showName = function () {
+            if (!$scope.messageName) {
+                $scope.msg = "";
+
                 $scope.messagesWithInfo = $scope.msg;
                 var lines = $scope.msg.split(/\r\n|\r|\n/g);
                 var modifiedMessages = "";
                 for (var i = 0; i < lines.length - 1; i++) {
-                    var endInfo = lines[i].indexOf(">:");
-                    modifiedMessages += ">" + lines[i].substring(endInfo + 2) + "\r\n";
+                    var endInfo = lines[i].indexOf("<");
+                    if (endInfo == -1) {
+                        endInfo = lines[i].indexOf(">");
+                    }
+                    modifiedMessages += lines[i].substring(endInfo) + "\r\n";
+                }
+                $scope.msg = modifiedMessages;
+            } else {
+                $scope.msg = $scope.messagesWithInfo;
+            }
+        };
+
+        $scope.showTime = function () {
+            if (!$scope.messageTime) {
+                $scope.messagesWithInfo = $scope.msg;
+                var lines = $scope.msg.split(/\r\n|\r|\n/g);
+                var modifiedMessages = "";
+                for (var i = 0; i < lines.length - 1; i++) {
+                    var startInfo = lines[i].indexOf("<");
+                    var endInfo = lines[i].indexOf(">");
+                    modifiedMessages += lines[i].substring(0, startInfo) + ">";
+                    modifiedMessages += lines[i].substring(endInfo + 2) + "\r\n";
                 }
                 $scope.msg = modifiedMessages;
             } else {
@@ -247,7 +304,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             wall.style.position = "fixed";
 
             if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
-               $scope.wallMoved = false;
+                $scope.wallMoved = false;
             }
         };
 
@@ -293,6 +350,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
             $scope.lectureName = answer.lectureCode;
             $scope.wallName = "Wall - " + answer.lectureCode;
+            if ($scope.wallName.length > 30) {
+                $scope.wallName = $scope.wallName.substring(0, 30) + "...";
+            }
             $scope.lectureStartTime = "Started: " + answer.startTime;
             $scope.lectureEndTime = "Ends: " + answer.endTime;
             $scope.inLecture = true;
@@ -344,7 +404,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 $scope.canStart = true;
                 $scope.canStop = false;
             }
-
+            $scope.wallMessages = [];
             $scope.useWall = false;
             $scope.polling = false;
             $scope.inLecture = false;
@@ -572,7 +632,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             })
                 .success(function (answer) {
                     angular.forEach(answer.data, function (msg) {
-                        $scope.msg = $scope.msg + msg + "\n";
+                        $scope.wallMessages.push(msg);
+                        if ($scope.messageName) {
+                            $scope.msg += msg.sender + " ";
+                        }
+                        if ($scope.messageTime) {
+                            $scope.msg += "<" + msg.time + ">: ";
+                        }
+
+                        $scope.msg += msg.message + "\n";
                     });
 
                     //TODO: Fix this to scroll bottom without cheating.
@@ -681,17 +749,28 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                             if (answer.status == 'results') {
                                 angular.forEach(answer.data, function (msg) {
-                                    if ($scope.messageInfo) {
-                                        $scope.msg += msg + "\r\n";
-                                    } else {
-                                        var endInfo = msg.indexOf(">:");
-                                        $scope.msg += ">" + msg.substring(endInfo + 2) + "\r\n";
-                                        $scope.messagesWithInfo += msg + "\r\n";
+                                    $scope.wallMessages.push(msg);
+                                    if ($scope.messageName && $scope.messageTime) {
+                                        $scope.msg += msg.sender;
+                                        $scope.msg += " <" + msg.time + ">: ";
+                                        $scope.msg += msg.message + "\r\n";
                                     }
 
-                                    if (!$scope.showWall) {
-                                        $scope.newMessagesAmount++;
-                                        $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
+                                    if (!$scope.messageName && $scope.messageTime) {
+                                        $scope.msg += " <" + msg[i].time + ">: ";
+                                        $scope.msg += msg[i].message + "\r\n";
+
+                                    }
+
+                                    if ($scope.messageName && !$scope.messageTime) {
+                                        $scope.msg += msg[i].sender + ": ";
+                                        $scope.msg += msg[i].message + "\r\n";
+
+                                    }
+
+                                    if (!$scope.messageName && !$scope.messageTime) {
+                                        $scope.msg += ">" + msg[i].message + "\r\n";
+
                                     }
                                 });
                                 $scope.lastID = answer.lastid;
