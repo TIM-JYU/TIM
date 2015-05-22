@@ -40,6 +40,17 @@ def teacher_view(doc_name):
 
     return view(doc_name, 'view_html.html', view_range, user, teacher=True)
 
+@view_page.route("/lecture/<path:doc_name>")
+def lecture_view(doc_name):
+    try:
+        view_range = parse_range(request.args.get('b'), request.args.get('e'))
+        userstr = request.args.get('user')
+        user = int(userstr) if userstr is not None and userstr != '' else None
+    except (ValueError, TypeError):
+        abort(400, "Invalid start or end index specified.")
+
+    return view(doc_name, 'view_html.html', view_range, user, lecture=True)
+
 
 def parse_range(start_index, end_index):
     if start_index is None and end_index is None:
@@ -66,7 +77,7 @@ def try_return_folder(doc_name):
                            folder=folder_name)
 
 
-def view(doc_name, template_name, view_range=None, user=None, teacher=False):
+def view(doc_name, template_name, view_range=None, user=None, teacher=False, lecture=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
 
@@ -137,6 +148,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            custom_css=custom_css,
                            start_index=start_index,
                            teacher_mode=teacher,
+                           lecture_mode=lecture,
                            is_owner=hasOwnership(doc_id),
                            rights={'editable': hasEditAccess(doc_id),
                                    'can_mark_as_read': hasReadMarkingRight(doc_id),

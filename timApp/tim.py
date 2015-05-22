@@ -409,7 +409,7 @@ def send_message():
     return jsonResponse(msg_id)
 
 
-@app.route('/view/question')
+@app.route('/lecture/question')
 def show_question():
     return render_template('question.html')
 
@@ -997,7 +997,7 @@ def getQuestions(doc_id):
     return jsonResponse(questions)
 
 
-@app.route("/askQuestion", methods=['GET'])
+@app.route("/askQuestion", methods=['POST'])
 def ask_question():
     if not request.args.get('doc_id') or not request.args.get('question_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")

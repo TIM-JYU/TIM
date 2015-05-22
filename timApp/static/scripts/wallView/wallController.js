@@ -320,6 +320,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $('#currentList').hide();
             $('#futureList').hide();
             $scope.showLectureForm = true;
+            $rootScope.$broadcast("initLectureFormVals");
         };
 
         $scope.startFutureLecture = function () {
