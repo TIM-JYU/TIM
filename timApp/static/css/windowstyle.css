@@ -13,6 +13,22 @@
     -moz-box-sizing : border-box;
     box-sizing : border-box;
 }
+/* Chrome etc. */
+*::-webkit-input-placeholder {
+    color: #3CC;
+}
+*:-moz-placeholder {
+    /* FF 4-18 */
+    color: #3CC;
+}
+*::-moz-placeholder {
+    /* FF 19+ */
+    color: #3CC;
+}
+*:-ms-input-placeholder {
+    /* IE 10+ */
+    color: #3CC;
+}
 
 fieldset, form {
 	margin-left: auto;
