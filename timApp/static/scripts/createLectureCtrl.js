@@ -15,8 +15,15 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
         $scope.error_message = "";
         $scope.lectureCode = "";
         $scope.password = "";
+        $scope.startDate = "";
+        $scope.startHour = "";
+        $scope.startMin = "";
         var date = new Date();
         $scope.startDate = date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear();
+
+        $scope.$on('initLectureFormVals', function () {
+            $scope.initLectureForm();
+        });
 
         // Sets the calendars in the form to the current date and date-format dd.m.yyyy
         $(function() {
@@ -25,6 +32,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http",
         });
 
         $scope.initLectureForm = function() {
+            console.log("Lecture initialized.");
+            var date = new Date();
             $scope.startDate = date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear();
             $scope.startHour = $scope.leftPadder(date.getHours(),2);
             $scope.startMin =  $scope.leftPadder(date.getMinutes(),2);
