@@ -8,11 +8,14 @@ timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($sco
     $scope.answerTypes = [];
     $scope.dynamicAnswerSheetControl = {};
     $scope.isLecturer = false;
+	$scope.questionTitle = "";
 
     $scope.$on("setQuestionJson", function (event, args) {
         $scope.questionId = args.questionId;
         $scope.isLecturer = args.isLecturer;
         $scope.questionJson = args.questionJson;
+		$scope.questionTitle = args.questionJson.TITLE;
+		console.log(args.questionJson.TITLE);
 
         $scope.dynamicAnswerSheetControl.createAnswer();
     });
