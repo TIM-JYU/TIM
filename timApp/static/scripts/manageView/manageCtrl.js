@@ -23,7 +23,10 @@ PermApp.controller("PermCtrl", [
     '$window',
     function (sc, $http, $upload, $window) {
         $http.defaults.headers.common.Version = function() {
-            return sc.doc.versions[0].hash;
+            if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
+                return sc.doc.versions[0].hash;
+            }
+            return "";
         };
 
         sc.getJustDocName = function(fullName) {
@@ -73,6 +76,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.addPermission = function (groupname, type) {
+            console.log("/addPermission/" + sc.doc.id + "/" + groupname + "/" + type);
             $http.put('/addPermission/' + sc.doc.id + '/' + groupname + '/' + type).success(
                 function (data, status, headers, config) {
                     sc.getPermissions();
