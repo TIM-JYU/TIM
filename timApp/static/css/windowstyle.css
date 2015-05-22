@@ -15,20 +15,32 @@
     box-sizing : border-box;
 }
 /* Chrome etc. */
-*::-webkit-input-placeholder {
+input:enabled::-webkit-input-placeholder {
     color: #3CC;
 }
-*:-moz-placeholder {
+input:enabled:-moz-placeholder {
     /* FF 4-18 */
     color: #3CC;
 }
-*::-moz-placeholder {
+input:enabled::-moz-placeholder {
     /* FF 19+ */
     color: #3CC;
 }
-*:-ms-input-placeholder {
+input:enabled:-ms-input-placeholder {
     /* IE 10+ */
     color: #3CC;
+}
+input:disabled::-webkit-input-placeholder { /* WebKit browsers */
+    display: none;
+}
+input:disabled:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    display: none;
+}
+input:disabled::-moz-placeholder { /* Mozilla Firefox 19+ */
+    display: none;
+}
+input:disabled:-ms-input-placeholder { /* Internet Explorer 10+ */
+    display: none;
 }
 
 fieldset, form {
