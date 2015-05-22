@@ -263,7 +263,9 @@ def get_all_messages(param_lecture_id=-1):
             time_as_time = datetime.datetime.fromtimestamp(
                 mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
             list_of_new_messages.append(
-                user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get('message'))
+                {"sender": user.get('name'),
+                 "time": time_as_time.strftime('%H:%M:%S'),
+                 "message": message.get('message')})
 
         # When using this same method just to get the messages for lectureInfo
         if param_lecture_id is not -1:
@@ -365,8 +367,9 @@ def get_updates():
                         time_as_time = datetime.datetime.fromtimestamp(
                             mktime(time.strptime(message.get("timestamp"), "%Y-%m-%d %H:%M:%S.%f")))
                         list_of_new_messages.append(
-                            user.get('name') + " <" + time_as_time.strftime('%H:%M:%S') + ">" + ": " + message.get(
-                                'message'))
+                            {"sender": user.get('name'),
+                             "time": time_as_time.strftime('%H:%M:%S'),
+                             "message": message.get('message')})
                     last_message_id = messages[-1].get('msg_id')
 
         if use_quesitions:
