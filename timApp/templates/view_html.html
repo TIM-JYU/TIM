@@ -105,6 +105,7 @@
 {% endblock %}
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
+
         {% if lecture_mode %}
             <div ng-controller="WallController">
                 {% include 'lectureinfo_menu.html' %}
@@ -167,6 +168,10 @@
                 <pop-up-dialog show="showLectureEnding">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
+                </pop-up-dialog>
+                <pop-up-dialog show="showQuestionPreview">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/showQuestionTeacher.html') }}'"></ng-include>
                 </pop-up-dialog>
                 <!-- Adding question to view. Hidden until creation of question -->
                 <pop-up-dialog show='questionShown'>
@@ -281,6 +286,8 @@
                         </div>
                         <div ng-class="['settings-sidebar', settingsSidebarState]">
                             <h1>Settings</h1>
+                            <h3>View</h3>
+                            <a href="/settings">Customize TIM</a>
 							<h3>Customize</h3>
 							<a href="/settings">Customize TIM</a>
                             {% raw %}

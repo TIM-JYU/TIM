@@ -46,30 +46,37 @@
 
         {% if is_owner %}
             |
-            <a href="/manage/{{docID}}">Manage</a>
-        {%endif%}
+            <a href="/manage/{{ docID }}">Manage</a>
+        {% endif %}
 
         {% if self.title() != "TIM" and is_owner %}
             |
             {% if teacher_mode %}
-               <a href="/view/{{docID}}">Student view</a>
+                <a href="/view/{{ docID }}">Student view</a>
             {% else %}
-               <a href="/teacher/{{docID}}">Teacher view</a>
+                <a href="/teacher/{{ docID }}">Teacher view</a>
             {% endif %}
         {% elif objName == "folder" %}
             |
-            <a href="/view/{{docID}}">View</a>
+            <a href="/view/{{ docID }}">View</a>
         {% elif doc %}
             |
-            <a href="/view/{{doc.name}}">Student view</a>
+            <a href="/view/{{ doc.name }}">Student view</a>
             |
-            <a href="/teacher/{{doc.name}}">Teacher view</a>
-	    {% endif %}
+            <a href="/teacher/{{ doc.name }}">Teacher view</a>
+        {% endif %}
+        |
+
+        {% if lecture_mode %}
+            <a href="/view/{{ docID }}">Material view</a>
+        {% else %}
+            <a href="/lecture/{{ docID }}">Lecture view</a>
+        {% endif %}
 
     {% endblock %}
 </div>
 <div class="material">
-    <!-- <h1>{{ self.title() }}</h1> --> 
+    <!-- <h1>{{ self.title() }}</h1> -->
     {% block content %}{% endblock %}
 </div>
 <div id="footer">

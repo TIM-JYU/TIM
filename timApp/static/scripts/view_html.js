@@ -156,6 +156,7 @@ timApp.controller("ViewCtrl", [
 
             $rootScope.$broadcast('getLectureId');
             $rootScope.$broadcast('getInLecture');
+            //sc.showQuestionPreview = true;
             createDialog('../../../static/templates/showQuestionTeacher.html', {
                 id: 'simpleDialog',
                 title: "",
