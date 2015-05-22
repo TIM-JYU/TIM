@@ -1,7 +1,10 @@
-<div class="questionAskedWindow" ng-controller="QuestionAnswerController">
-    <dynamic-answer-sheet control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
-    <div>
-        <input class="timButton" type="button" ng-click="answer()" value="Answer">
-        <input class="timButton" ng-show="isLecturer" type="button" ng-click="close()" value="Close">
-    </div>
-</div>
+<div class="popUpWindow" ng-controller="QuestionAnswerController">
+	<h1>Question title: <span ng-bind="questionTitle">Question</span></h1>
+		<div class="questionAskedWindow" >
+			<dynamic-answer-sheet control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+		</div>
+	<div class="buttons">
+		<button ng-click="answer()">Answer</button>
+		<button ng-show="isLecturer" ng-click="close()">Close</button>
+	</div>
+<div>

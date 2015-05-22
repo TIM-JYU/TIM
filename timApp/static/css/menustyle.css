@@ -150,7 +150,7 @@ input[type="submit"], input[type="button"] {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-/*Pienet näytöt*/
+/*Pienet resoluutiot*/
 @media only screen and (max-width: 500px) {
 	.menuSection #largeMenu {
 		display: none;
@@ -263,8 +263,3 @@ input[type="submit"], input[type="button"] {
 	}
 }
 
-@media only screen and (max-width: 1200px) {
-	#largeMenu {
-		margin-left: 55px;
-	}
-}
