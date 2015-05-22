@@ -54,6 +54,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         $scope.useAnswers = true;
         $scope.wallMessages = [];
 
+        var header = $('#header');
+        header.css("display", "none");
+
         $scope.checkIfInLecture = function () {
             http({
                 url: '/checkLecture',

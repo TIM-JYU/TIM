@@ -156,7 +156,22 @@ timApp.controller("ViewCtrl", [
 
             $rootScope.$broadcast('getLectureId');
             $rootScope.$broadcast('getInLecture');
-            sc.showQuestionPreview = true;
+            //sc.showQuestionPreview = true;
+            createDialog('../../../static/templates/showQuestionTeacher.html', {
+                id: 'simpleDialog',
+                title: "",
+                backdrop: true,
+                footerTemplate: "<button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>" +
+                "<button ng-click='close()' class='timButton questionButton'>Close</button>" +
+                "<button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>",
+                controller: 'ShowQuestionController'
+            }, {
+                json: json,
+                lectureId: lectureId,
+                qId: qId,
+                docId: docId,
+                inLecture: inLecture
+            });
         };
 
         sc.toggleNoteEditor = function ($par, options) {
