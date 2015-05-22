@@ -1,5 +1,5 @@
 .createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion, .joinLectureOptions ,
-.questionAsked {
+.questionAskedWindow, .statisticsWindow {
 	display: block;
     width: 100%;
     height: 100%;
