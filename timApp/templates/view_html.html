@@ -168,6 +168,10 @@
                     <ng-include
                             src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
                 </pop-up-dialog>
+                <pop-up-dialog show="showQuestionPreview">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/showQuestionTeacher.html') }}'"></ng-include>
+                </pop-up-dialog>
                 <!-- Adding question to view. Hidden until creation of question -->
                 <pop-up-dialog show='questionShown'>
                     <div>
