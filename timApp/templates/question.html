@@ -27,7 +27,7 @@
 				</label>
 
 				<div ng-if="question.type == 'checkbox-vertical'" ng-init="createMatrix(2, 1,'checkbox')">
-					{% include 'matrix.html' %}
+                    {% include 'matrix.html' %}
 				</div>
 				<div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio')">
 					{% include 'matrix.html' %}
@@ -63,7 +63,7 @@
 					</div>
 				</div>
 				<br>
-				<br>			
+				<br>
 		</form>
 		<div class="buttons">
 			<input type="button" value="Submit" ng-click="createQuestion(question.question, question.type)">

@@ -1,4 +1,4 @@
-var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode;
+var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, lectureMode;
 
 
 timApp.controller("ViewCtrl", [
@@ -22,6 +22,7 @@ timApp.controller("ViewCtrl", [
         sc.startIndex = startIndex;
         sc.users = users;
         sc.teacherMode = teacherMode;
+        sc.lectureMode = lectureMode;
         sc.selectedUser = sc.users[0];
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
@@ -511,19 +512,21 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
 
-                var $span = $("<span>");
-                $span.append($("<button>", {
-                    class: QUESTION_ADD_BUTTON_CLASS,
-                    text: 'Create question',
-                    width: button_width
-                }));
-                $span.append($("<button>", {
-                    id: 'createQuestion',
-                    class: DEFAULT_BUTTON_CLASS,
-                    text: 'Default',
-                    width: default_width
-                }));
-                $actionDiv.append($span);
+                if (sc.lectureMode) {
+                    var $span = $("<span>");
+                    $span.append($("<button>", {
+                        class: QUESTION_ADD_BUTTON_CLASS,
+                        text: 'Create question',
+                        width: button_width
+                    }));
+                    $span.append($("<button>", {
+                        id: 'createQuestion',
+                        class: DEFAULT_BUTTON_CLASS,
+                        text: 'Default',
+                        width: default_width
+                    }));
+                    $actionDiv.append($span);
+                }
 
                 var $span = $("<span>");
                 $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
@@ -534,6 +537,7 @@ timApp.controller("ViewCtrl", [
                     width: default_width
                 }));
                 $actionDiv.append($span);
+
             }
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
@@ -828,16 +832,18 @@ timApp.controller("ViewCtrl", [
             return newState;
         };
 
-        sc.$on("getQuestions", function () {
-            if (sc.firstTimeQuestions) {
-                sc.getQuestions();
-                sc.firstTimeQuestions = false;
-            }
-        });
+        if (sc.lectureMode) {
+            sc.$on("getQuestions", function () {
+                if (sc.firstTimeQuestions) {
+                    sc.getQuestions();
+                    sc.firstTimeQuestions = false;
+                }
+            });
 
-        sc.$on("forceGetQuestions", function () {
-            sc.getQuestions();
-        });
+            sc.$on("forceGetQuestions", function () {
+                sc.getQuestions();
+            });
+        }
 
         // Load index, notes and read markings
         sc.setHeaderLinks();
@@ -873,7 +879,7 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
         $scope.ask = function () {
             http({
                 url: '/askQuestion',
-                method: 'GET',
+                method: 'POST',
                 params: {
                     lecture_id: $scope.lectureId,
                     question_id: $scope.qId,
