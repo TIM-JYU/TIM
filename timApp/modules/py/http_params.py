@@ -40,7 +40,7 @@ class QueryParams:
 
     def __check_key(self, key: str) -> str:
         """
-        Check if either "key" ot "-key" exists and return the one that works
+        Check if either "key" or "-key" exists and return the one that works
         :param self: query parmas where to find
         :param key: key to find
         :return: key or -key
@@ -99,14 +99,14 @@ class QueryParams:
         """
         self.__get_query = get_p
 
-    def get_json_param(self, key1: str, key2: str, default):
+    def get_json_param(self, key1: str, key2: str, default) -> object:
         """
-        Get param only from json part and from key1.key2
-        :param key1: first key
-        :param key2: second key
-        :param default: value if not found
-        :return: param from key1.key2 or default
-        """
+            Get param only from json part and from key1.key2
+            :param key1: first key
+            :param key2: second key
+            :param default: value if not found
+            :return: param from key1.key2 or default
+            """
         jso = self.__jso
         try:
             if jso is None: return default
@@ -114,6 +114,10 @@ class QueryParams:
             if not key2: return jso[key1]
             if not jso[key1]: return default
             if key2 not in jso[key1]: return default
+            if type(jso[key1]) is str:
+                jso1 = json.loads(jso[key1])
+                if key2 not in jso1: return default
+                return jso1[key2]
             return jso[key1][key2]
         except Exception as e:
             # print("JSO XXXXXXXXXXXXX", jso)
@@ -131,6 +135,11 @@ class QueryParams:
         s = str(self.get_param(key, default))
         return sanitize_all(s)
 
+    def dump(self):
+        """
+        dumps json part as a string
+        """
+        return json.dumps(self.__jso)
 
 def do_headers(response: http.server.BaseHTTPRequestHandler, content_type: str):
     """
@@ -149,19 +158,19 @@ def do_headers(response: http.server.BaseHTTPRequestHandler, content_type: str):
 
 def copy_jso(jso: dict, f) -> dict:
     """
-    Copies recursive all fields form jso to result if field matches to f
+    Copies recursive all fields form jso to result if field matches to predicate f(key)
     :param jso: params to copy
     :param f: function to return true if param should be copied
     :return: new dict with all fileds matching to predicate f
     """
     result = {}
     keys = jso.keys()
-    for field in keys:
-        if f(field):
-            if isinstance(jso[field], dict):
-                result[field] = copy_jso(jso[field], f)
+    for key in keys:
+        if f(key):
+            if isinstance(jso[key], dict):
+                result[key] = copy_jso(jso[key], f)
             else:
-                result[field] = jso[field]
+                result[key] = jso[key]
     return result
 
 
@@ -208,8 +217,11 @@ def post_params(request: http.server.BaseHTTPRequestHandler) -> QueryParams:
         q = parse_qs(urlparse('k/?' + u).query, keep_blank_values=True)
         result.copy_post_params(q)
     else:
-        jso = json.loads(u)
-        result = QueryParams(jso)
+        try:
+            jso = json.loads(u)
+            result = QueryParams(jso)
+        except Exception as e:
+            print(str(e))
 
     get_query = parse_qs(urlparse(request.path).query, keep_blank_values=True)
     result.set_get_params(get_query)
@@ -235,7 +247,6 @@ def multi_post_params(request: http.server.BaseHTTPRequestHandler) -> [QueryPara
     return results
     # tai:
     # return {QueryParams(jso) for jso in jsons]
-    # hihkse, kun jatkat ;-)
 
 
 def file_to_string(name: str) -> str:
@@ -256,7 +267,7 @@ def file_to_string(name: str) -> str:
 
 def allow(s: str) -> str:
     """
-    Return strinf where few tags are allowed. Others a escaped
+    Return string where few tags are allowed. Others are escaped
     :param s: string to allow tags
     :return: string where allowed tags a on place.
     """
@@ -274,8 +285,7 @@ def sanitize_all(s: str) -> str:
     :return: string without any tags
     """
     tags = []
-    attrs = {
-    }
+    attrs = { }
     return bleach.clean(s, tags, attrs, strip=True)
 
 

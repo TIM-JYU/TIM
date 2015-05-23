@@ -40,8 +40,9 @@ paliApp.directiveTemplatePali = function () {
                   '</div>'+
 				  '<button ng-if="button"  ng-disabled="isRunning" ng-click="runCode();">{{button}}</button>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
-				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
-				  '<pre  class="console" ng-show="result">{{result}}</pre>'+
+                  '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
+				  '<pre class="" ng-if="error">{{error}}</pre>'+
+				  '<pre  class="" ng-show="result">{{result}}</pre>'+
     		      '<p class="plgfooter">Here comes footer</p>'+
               '</div>';
 };
@@ -105,6 +106,8 @@ paliApp.directiveFunction = function() {
             paliApp.set(scope,attrs,"state.userword",scope.initword);
             paliApp.set(scope,attrs,"button","Save");
             paliApp.set(scope,attrs,"resetText","Reset");
+            paliApp.set(scope,attrs,"state.tries",0);
+            paliApp.set(scope,attrs,"max_tries");
             paliApp.set(scope,attrs,"cols",20);
             paliApp.set(scope,attrs,"autoupdate",500);
             paliApp.setn(scope,"tid",attrs,".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
@@ -172,7 +175,6 @@ paliApp.Controller = function($scope,$http,$transclude,$interval) {
     $scope.errors = [];
 	$scope.muokattu = false;
     $scope.result = "";
-    $scope.runSuccess = false;
 
     $scope.$watch('userword', function () {
         //window.clearInterval($scope.runTimer); // perustimerin tapahtumalla ei päivit
@@ -195,8 +197,7 @@ paliApp.Controller = function($scope,$http,$transclude,$interval) {
 	$scope.initCode = function() {
 		$scope.muokattu = false;
 		$scope.userword = $scope.initword;
-		$scope.runSuccess = false;
-		$scope.runError = false;
+		$scope.error = "";
 		$scope.result = "";
 	};
 
@@ -211,10 +212,8 @@ paliApp.Controller = function($scope,$http,$transclude,$interval) {
         // alert("moi");
 
         $scope.error = "... running ...";
-        $scope.runError = true;
         $scope.isRunning = true;
 
-        $scope.runSuccess = false;
         $scope.result = "";
 
         var uword = "";
@@ -227,8 +226,9 @@ paliApp.Controller = function($scope,$http,$transclude,$interval) {
                 'markup': {'taskId': $scope.taskId, 'user_id': $scope.user_id}
             }
         };
-        //		  alert($scope.usercode);
+
         if (nosave) params.input.nosave = true;
+        params.input.paliOK = $scope.runTestGreen;
         var url = "/pali/answer";
         if ($scope.plugin) {
             url = $scope.plugin;
@@ -239,10 +239,10 @@ paliApp.Controller = function($scope,$http,$transclude,$interval) {
 
         $http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
         ).success(function (data, status, headers, config) {
-                $scope.error = data.web.error;
-                $scope.runSuccess = true;
                 $scope.isRunning = false;
-                $scope.result = data.web.console;
+                $scope.error = data.web.error;
+                $scope.result = data.web.result;
+                $scope.tries = data.web.tries;
             }).error(function (data, status) {
                 $scope.isRunning = false;
                 $scope.errors.push(status);
