@@ -11,12 +11,6 @@ view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
 
-
-@view_page.route("/view_old/<path:doc_name>")
-def view_document_old(doc_name):
-    view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    return view(doc_name, 'view.html', view_range)
-
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")
