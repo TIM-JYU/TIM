@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 # Restart pali 
 
 docker stop pali 

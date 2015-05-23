@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 set -eu pipefail
 IFS=$'\n\t'
 
