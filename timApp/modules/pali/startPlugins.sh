@@ -14,4 +14,4 @@ docker run --name pali\
            -v /opt/tim/timApp/modules/py:/py/:ro\
            -v /var/log/pali:/var/log/\
            -d -t -i pali \
-           /bin/bash -c 'cd /pali && python3 pali.py ; /bin/bash'
+           /bin/bash -c 'cd /pali && ./startAll.sh ; /bin/bash'
