@@ -147,9 +147,15 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         /*Creates a new date object with the specified date and time*/
         $scope.translateToDateObject = function(date_to_be_validated, time_hours, time_mins, splitter){
             var parms = date_to_be_validated.split(splitter);
-            var dd = parseInt(parms[0]);
-            var mm = parseInt(parms[1]);
-            var yyyy = parseInt(parms[2]);
+            if(splitter === ".") {
+                var dd = parseInt(parms[0]);
+                var mm = parseInt(parms[1]);
+                var yyyy = parseInt(parms[2]);
+            } else {
+                var dd = parseInt(parms[2]);
+                var mm = parseInt(parms[1]);
+                var yyyy = parseInt(parms[0]);
+            }
             var hours = parseInt(time_hours);
             var mins = parseInt(time_mins);
             return new Date(yyyy,mm-1,dd,hours,mins,0);
@@ -186,7 +192,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             if($scope.start_date !== undefined) {
                 var now_hours = date.getHours();
                 var now_minutes = date.getMinutes();
-                var now_date_object = $scope.translateToDateObject($scope.dateObjectToString(date,false),now_hours,now_minutes,"-");
+                var now_date_object = $scope.translateToDateObject($scope.dateObjectToString(date, false), now_hours, now_minutes, "-");
                 var lecture_starting_in_past = $scope.start_date - now_date_object > 0;
                 var lecture_ending_in_past = false;
 
@@ -196,7 +202,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     if ($scope.end_date - $scope.start_date <= 0) {
                         $scope.errorize("endDateDiv", "Lecture has to last at least a minute.");
                     }
-                    $scope.endDateForDB = $scope.dateObjectToString($scope.end_date,true);
+                    $scope.endDateForDB = $scope.dateObjectToString($scope.end_date, true);
                 }
 
                 if ($scope.useDuration) {
@@ -211,22 +217,24 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     if ($scope.end_date - $scope.start_date <= 0) {
                         $scope.errorize("durationDiv", "Lecture has to last at least a minute.");
                     }
-                    $scope.endDateForDB = $scope.dateObjectToString($scope.end_date,true);
+                    $scope.endDateForDB = $scope.dateObjectToString($scope.end_date, true);
                 }
                 var alert_message = "";
-                lecture_ending_in_past = now_date_object - $scope.end_date < 0;
+                lecture_ending_in_past = $scope.end_date - now_date_object <= 0;
                 if (lecture_starting_in_past) {
                     alert_message += "Are you sure you want the lecture to start before now? ";
                 }
                 if (lecture_ending_in_past) {
-                    alert_message += "Are you sure that the lecture ends in the past and will not run?";
+                    alert_message += "Are you sure that the lecture ends in the past or now and will not run?";
                 }
-                if(!$window.confirm(alert_message)){
-                    if(lecture_starting_in_past) {
-                        $scope.errorize("startInfo","Please select another date and time.");
-                    }
-                    if(lecture_ending_in_past) {
-                        $scope.errorize("endInfo","Please select another date or duration.");
+                if (alert_message !== "") {
+                    if (!$window.confirm(alert_message)) {
+                        if (lecture_starting_in_past) {
+                            $scope.errorize("startInfo", "Please select another date and time.");
+                        }
+                        if (lecture_ending_in_past) {
+                            $scope.errorize("endInfo", "Please select another date or duration.");
+                        }
                     }
                 }
             }
