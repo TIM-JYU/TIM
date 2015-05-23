@@ -193,7 +193,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 var now_hours = date.getHours();
                 var now_minutes = date.getMinutes();
                 var now_date_object = $scope.translateToDateObject($scope.dateObjectToString(date, false), now_hours, now_minutes, "-");
-                var lecture_starting_in_past = $scope.start_date - now_date_object > 0;
+                var lecture_starting_in_past = $scope.start_date - now_date_object < 0;
                 var lecture_ending_in_past = false;
 
                 if ($scope.useDate && $scope.end_date !== undefined) {
@@ -227,7 +227,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 if (lecture_ending_in_past) {
                     alert_message += "Are you sure that the lecture ends in the past or now and will not run?";
                 }
-                if (alert_message !== "") {
+                console.log("$scope.error_message.length")
+                if (alert_message !== "" && $scope.error_message.length<=0) {
                     if (!$window.confirm(alert_message)) {
                         if (lecture_starting_in_past) {
                             $scope.errorize("startInfo", "Please select another date and time.");
