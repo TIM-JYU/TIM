@@ -107,7 +107,7 @@ paliApp.watchWord = function($scope) {
 function isPalindrome(s) {
 "use strict";
     var sc = s.toLowerCase();
-    sc = sc.replace(/[^a-z,åöä]/g,'');
+    sc = sc.replace(/[^a-zåöä]/g,'');
     for (var i1 = 0, i2 = sc.length-1; i1< i2; i1++,i2--)
         if ( sc[i1] != sc[i2] ) return false;
     return true;
