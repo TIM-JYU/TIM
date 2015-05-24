@@ -9,7 +9,7 @@ Serving from local port 5000
 import binascii
 import sys
 import re
-sys.path.insert(0, '/py')
+sys.path.insert(0, '/py') # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 
 from http_params import *
@@ -50,64 +50,73 @@ class PaliServer(tim_server.TimServer):
             return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' \
                    + query.get_sanitized_param("initword", "") + '</pre>'
 
+        # check if points array is 2x2 matrix
+        points_array = query.get_param("points_array", None)
+        if points_array and not check_array(points_array,2,2):
+            return '<p class="pluginError">points_array must be an 2x2 array, f.ex [[0, 0.1], [0.6, 1]]</p>'
+
         jso = query.to_json(accept_nonhyphen)
         runner = 'pali-runner'
-        js = json.dumps(jso)
-        print(js) # uncomment this to look what is in outgoing js
-        hx = binascii.hexlify(js.encode("UTF8"))
-        s = '<' + runner + '>xxxHEXJSONxxx' + hx.decode() + '</' + runner + '>'
+
+        attrs = json.dumps(jso)
+        # print(attrs) # uncomment this to look what is in outgoing js
+        if query.get_param("nohex", False): # as a default do hex
+            attrs = "xxxJSONxxx" + attrs
+        else:  # this is on by default, but for debug can be put off to see the json better
+            hx = 'xxxHEXJSONxxx'+binascii.hexlify(attrs.encode("UTF8")).decode()
+            attrs = hx
+        s = '<' + runner + '>' + attrs + '</' + runner + '>'
         return s
 
     def get_reqs_result(self) -> dict:
         """
         :return: reqs result as json
         """
-        return {"js": ["js/pali.js"], "angularModule": ["paliApp"],
+        return {"js": ["/static/scripts/timHelper.js","js/pali.js"], "angularModule": ["paliApp"],
                        "css": ["css/pali.css"], "multihtml": True}
 
     def do_answer(self, query: QueryParams):
         """
-        Do answer route
-        :type query: QueryParams
+        Do answer route.
+        Check if userword is different than the old word.  If it is save the
+        new word if max_tires is not passed.  Count points based pali ok and length ok.
         :param query: post and get params
         :return: nothing
         """
         do_headers(self, "application/json")
         result = {}
-        save = {}
         web = {}
         result["web"] = web
         out = ""
         err = ""
+        tries = 0
         try:
-            # print(query.dump()) # uncomment this to see the query
+            print(query.dump()) # uncomment this to see the query
 
-            userword = query.get_json_param("input", "userword", None)
-            max_tries = query.get_param("max_tries", 1000000)
-            oldword = query.get_json_param("state", "userword", "")
-            tries = query.get_json_param("state", "tries", 0)
+            userword = str(query.get_json_param("input", "userword", None))
+            oldword = str(query.get_json_param("state", "userword", ""))
+            max_tries = int(query.get_param("max_tries", 1000000))
+            tries = int(query.get_json_param("state", "tries", 0))
             if userword:
-                save["userword"] = userword
                 pali_ok = query.get_json_param("input", "paliOK", False)
-                needed_len = query.get_param("needed_len", None)
+                needed_len = int(query.get_param("needed_len", 0))
                 len_ok = True
-                if needed_len: len_ok = check_letters(userword,needed_len)
+                if needed_len: len_ok = check_letters(userword, needed_len)
                 if not len_ok: err = "Wrong length"
                 if not needed_len and not pali_ok: len_ok = False
-                tim_info = {}
                 points_array = query.get_param("points_array",[[0,0.25],[0.5,1]])
                 points = points_array[pali_ok][len_ok]
-                tim_info["points"] = points
 
                 # plugin can ask not to save the word
                 nosave = query.get_json_param("input", "nosave", None)
                 if (not nosave) and tries < max_tries and  userword != oldword :
                     tries += 1
-                    save["tries"] = tries
+                    tim_info = {"points": points}
+                    save = {"userword": userword, "tries": tries}
                     result["save"] = save
                     result["tim_info"] = tim_info
                     out = "saved"
-                    print(tries,max_tries)
+                    # print(tries,max_tries)
         except Exception as e:
             err = str(e)
 
@@ -118,7 +127,6 @@ class PaliServer(tim_server.TimServer):
 
         sresult = json.dumps(result)
         self.wout(sresult)
-        # print("Result ========")
         print(sresult)
 
 

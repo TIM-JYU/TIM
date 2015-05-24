@@ -77,7 +77,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
 
         # print(htmls)
         sresult = json.dumps(htmls)
-        self.wout(sresult)
+        self.wout(sresult + "\n")
         log(self)  # to measure time spend in doing all the html
 
     def do_PUT(self):

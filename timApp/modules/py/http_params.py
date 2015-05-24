@@ -8,7 +8,6 @@ import codecs
 import bleach
 from urllib.parse import urlparse, parse_qs
 
-
 class QueryParams:
     """
     Class for holding GET params and possible POST params as a json-object
@@ -57,7 +56,7 @@ class QueryParams:
         if key2 in self.__jso["markup"]: return key2
         return key
 
-    def get_param(self, key: str, default: object) -> object:
+    def get_param(self, key: str, default: object) ->  object: # return shoud be Any ???
         """
         Get param value from query params that match to key.  If no match, then return default
         input is prefered over markup
@@ -298,3 +297,20 @@ def clean(s: str) -> str:
     s = str(s)
     s = s.replace('"', '')  # kannattaako, tällä poistetaam katkaisun mahdollisuus?
     return bleach.clean(s)
+
+
+def check_array(a: object, ny: int, nx: int) -> bool:
+    """
+    Check if a is an array of ny rows and ny colums
+    :param a: object to check
+    :param ny: number of needed rows
+    :param nx: number of needed lines
+    :return: true is prober array
+    """
+    if not isinstance(a,list): return False
+    if len(a) != ny: return False
+    for row in a:
+        if not isinstance(row,list): return False
+        if len(row) != nx: return False
+
+    return True;
