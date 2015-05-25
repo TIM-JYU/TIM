@@ -2,7 +2,7 @@
  * Created by hajoviin on 24.2.2015.
  */
 /* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout',
+timApp.controller("LectureController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout',
 
     function ($scope, controller, http, $window, $rootScope, $timeout) {
 

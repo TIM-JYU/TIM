@@ -1097,7 +1097,6 @@ def answer_to_question():
                         except ValueError:
                             points += 0
                     header_number += 1
-                header_number = 0
             else:
                 for row in question_json['DATA']['ROWS']:
                     if row['text'] == oneLine:
