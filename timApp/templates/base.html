@@ -56,6 +56,7 @@
             {% else %}
                 <a href="/teacher/{{ docID }}">Teacher view</a>
             {% endif %}
+            |
         {% elif objName == "folder" %}
             |
             <a href="/view/{{ docID }}">View</a>
@@ -65,12 +66,12 @@
             |
             <a href="/teacher/{{ doc.name }}">Teacher view</a>
         {% endif %}
-        |
-
-        {% if lecture_mode %}
-            <a href="/view/{{ docID }}">Material view</a>
-        {% else %}
-            <a href="/lecture/{{ docID }}">Lecture view</a>
+        {% if self.title() != "TIM" %}
+            {% if lecture_mode %}
+                <a href="/view/{{ docID }}">Material view</a>
+            {% else %}
+                <a href="/lecture/{{ docID }}">Lecture view</a>
+            {% endif %}
         {% endif %}
 
     {% endblock %}

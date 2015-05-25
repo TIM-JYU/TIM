@@ -1,6 +1,8 @@
 var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, lectureMode;
 
+/*global $:false */
 
+var timApp = angular.module('timApp');
 timApp.controller("ViewCtrl", [
     '$scope',
     '$http',
@@ -28,7 +30,6 @@ timApp.controller("ViewCtrl", [
         sc.editing = false;
         sc.questionShown = false;
         sc.firstTimeQuestions = true;
-        var NOTE_EDITOR_CLASS = "editorArea";
         var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
@@ -152,8 +153,6 @@ timApp.controller("ViewCtrl", [
                 inLecture = response;
             });
 
-            var header = json.QUESTION;
-
             $rootScope.$broadcast('getLectureId');
             $rootScope.$broadcast('getInLecture');
             //sc.showQuestionPreview = true;
@@ -247,7 +246,7 @@ timApp.controller("ViewCtrl", [
             $document.on(eventName, className, func);
         };
 
-        sc.showEditWindow = function (e, $par, coords) {
+        sc.showEditWindow = function (e, $par) {
             sc.toggleParEditor($par, {showDelete: true});
         };
 
@@ -255,7 +254,7 @@ timApp.controller("ViewCtrl", [
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
-            sc.showEditWindow(e, $par, null)
+            sc.showEditWindow(e, $par, null);
         });
 
         sc.addEvent("#defaultEdit", function (e) {
@@ -264,14 +263,14 @@ timApp.controller("ViewCtrl", [
             sc.defaultAction = sc.showEditWindow;
         });
 
-        sc.showAddParagraphAbove = function (e, $par, coords) {
+        sc.showAddParagraphAbove = function (e, $par) {
             var $newpar = $("<div>", {class: "par new"})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
             $par.before($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
-        sc.showAddParagraphBelow = function (e, $par, coords) {
+        sc.showAddParagraphBelow = function (e, $par) {
             var $newpar = $("<div>", {class: "par new"})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
             $par.after($newpar);
@@ -310,7 +309,6 @@ timApp.controller("ViewCtrl", [
         };
 
         $.fn.slideFadeToggle = function (easing, callback) {
-            console.log("here I am");
             return this.animate({opacity: 'toggle', height: 'toggle'}, 'fast', easing, callback);
         };
 
@@ -326,7 +324,7 @@ timApp.controller("ViewCtrl", [
             sc.defaultAction = sc.showAddParagraphBelow;
         });
 
-        sc.doNothing = function (e, $par, coords) {
+        sc.doNothing = function (e, $par) {
             sc.toggleActionButtons(e, $par, false, false, null);
         };
 
@@ -379,20 +377,20 @@ timApp.controller("ViewCtrl", [
             sc.editing = false;
         };
 
-        sc.addEvent(".readline", function (e) {
+        sc.addEvent(".readline", function () {
             var par_id = sc.getParIndex($(this).parents('.par'));
             var oldClass = $(this).attr("class");
             $(this).attr("class", "readline read");
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
-                }).error(function (data, status, headers, config) {
+                }).error(function () {
                     $window.alert('Could not save the read marking.');
                     $(this).attr("class", oldClass);
                 });
         });
 
-        sc.showNoteWindow = function (e, $par, coords) {
+        sc.showNoteWindow = function (e, $par) {
             sc.toggleNoteEditor($par, {isNew: true});
         };
 
@@ -408,16 +406,16 @@ timApp.controller("ViewCtrl", [
             sc.defaultAction = sc.showNoteWindow;
         });
 
-        sc.handleNoteCancel = function (extraData) {
+        sc.handleNoteCancel = function () {
             sc.editing = false;
         };
 
-        sc.handleNoteDelete = function (data, extraData) {
+        sc.handleNoteDelete = function () {
             sc.getNotes();
             sc.editing = false;
         };
 
-        sc.handleNoteSave = function (data, extraData) {
+        sc.handleNoteSave = function () {
             sc.getNotes();
             sc.editing = false;
         };
@@ -454,7 +452,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.addEvent(".questionAdded", function () {
-            sc.showQuestion($(this))
+            sc.showQuestion($(this));
         });
 
         // Note-related functions
@@ -463,8 +461,9 @@ timApp.controller("ViewCtrl", [
             var default_width = $par.outerWidth() / 16;
             var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
             var $actionDiv = $("<div>", {class: 'actionButtons'});
+            var $span;
             if (sc.rights.can_comment) {
-                var $span = $("<span>");
+                $span = $("<span>");
                 $span.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
                 $span.append($("<button>", {
                     id: 'defaultAdd',
@@ -475,7 +474,7 @@ timApp.controller("ViewCtrl", [
                 $actionDiv.append($span);
             }
             if (sc.rights.editable) {
-                var $span = $("<span>");
+                $span = $("<span>");
                 $span.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
                 $span.append($("<button>", {
                     id: 'defaultEdit',
@@ -485,7 +484,7 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
 
-                var $span = $("<span>");
+                $span = $("<span>");
                 $span.append($("<button>", {
                     class: PAR_ADD_BUTTON_CLASS + ' above',
                     text: 'Add paragraph above',
@@ -499,7 +498,7 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
 
-                var $span = $("<span>");
+                $span = $("<span>");
                 $span.append($("<button>", {
                     class: PAR_ADD_BUTTON_CLASS + ' below',
                     text: 'Add paragraph below',
@@ -514,7 +513,7 @@ timApp.controller("ViewCtrl", [
                 $actionDiv.append($span);
 
                 if (sc.lectureMode) {
-                    var $span = $("<span>");
+                    $span = $("<span>");
                     $span.append($("<button>", {
                         class: QUESTION_ADD_BUTTON_CLASS,
                         text: 'Create question',
@@ -529,7 +528,7 @@ timApp.controller("ViewCtrl", [
                     $actionDiv.append($span);
                 }
 
-                var $span = $("<span>");
+                $span = $("<span>");
                 $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
                 $span.append($("<button>", {
                     id: 'defaultClose',
@@ -568,7 +567,7 @@ timApp.controller("ViewCtrl", [
                 $par.addClass("lightselect");
                 sc.lastclick = new Date().getTime();
             } else {
-                console.log("This line is new: " + $par);
+                $window.console.log("This line is new: " + $par);
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
                 $par.removeClass("lightselect");
@@ -609,8 +608,7 @@ timApp.controller("ViewCtrl", [
 
 
         sc.getQuestions = function () {
-            var rn = "?_=" + (new Date).getTime();
-            http.get('/questions/' + sc.docId).success(function (data, status, headers, config) {
+            http.get('/questions/' + sc.docId).success(function (data) {
                 var pars = {};
                 var questionCount = data.length;
                 for (var i = 0; i < questionCount; i++) {
@@ -622,7 +620,7 @@ timApp.controller("ViewCtrl", [
                     pars[pi].questions.push(data[i]);
                 }
 
-                sc.forEachParagraph(function (index, elem) {
+                sc.forEachParagraph(function (index) {
                     var parIndex = index + sc.startIndex;
                     if (parIndex in pars) {
                         var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
@@ -632,14 +630,14 @@ timApp.controller("ViewCtrl", [
                 });
 
 
-            })
+            });
         };
 
 
         sc.getNotes = function () {
             var rn = "?_=" + Date.now();
 
-            http.get('/notes/' + sc.docId + rn).success(function (data, status, headers, config) {
+            http.get('/notes/' + sc.docId + rn).success(function (data) {
                 $('.notes').remove();
                 var pars = {};
 
@@ -655,7 +653,7 @@ timApp.controller("ViewCtrl", [
                     }
                     pars[pi].notes.push(data[i]);
                 }
-                sc.forEachParagraph(function (index, elem) {
+                sc.forEachParagraph(function (index) {
                     var parIndex = index + sc.startIndex;
                     if (parIndex in pars) {
                         var $notediv = sc.getNoteHtml(pars[parIndex].notes);
@@ -665,7 +663,7 @@ timApp.controller("ViewCtrl", [
                     }
                 });
 
-            }).error(function (data, status, headers, config) {
+            }).error(function () {
                 $window.alert("Could not fetch notes.");
             });
         };
@@ -675,7 +673,7 @@ timApp.controller("ViewCtrl", [
                 return;
             }
             var rn = "?_=" + Date.now();
-            http.get('/read/' + sc.docId + rn).success(function (data, status, headers, config) {
+            http.get('/read/' + sc.docId + rn).success(function (data) {
                 var readCount = data.length;
                 $('.readline').remove();
                 var pars = {};
@@ -687,7 +685,7 @@ timApp.controller("ViewCtrl", [
                     }
                     pars[pi].readStatus = readPar.status;
                 }
-                sc.forEachParagraph(function (index, elem) {
+                sc.forEachParagraph(function (index) {
                     var parIndex = index + sc.startIndex;
                     var classes = ["readline"];
                     if (parIndex in pars && 'readStatus' in pars[parIndex]) {
@@ -698,7 +696,7 @@ timApp.controller("ViewCtrl", [
                     var $div = $("<div>", {class: classes.join(" "), title: "Click to mark this paragraph as read"});
                     $(this).append($div);
                 });
-            }).error(function (data, status, headers, config) {
+            }).error(function () {
                 $window.alert("Could not fetch reading info.");
             });
         };
@@ -744,7 +742,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getIndex = function () {
-            http.get('/index/' + sc.docId).success(function (data, status, headers, config) {
+            http.get('/index/' + sc.docId).success(function (data) {
                 var parentEntry = null;
                 sc.indexTable = [];
 
@@ -792,7 +790,7 @@ timApp.controller("ViewCtrl", [
                     }
                     sc.indexTable.push(parentEntry);
                 }
-            }).error(function (data, status, headers, config) {
+            }).error(function () {
                 $window.alert("Could not fetch index entries.");
             });
         };
@@ -856,10 +854,11 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http', '$rootScope',
-    function ($scope, json, lectureId, qId, docId, inLecture, http, $rootScope) {
+timApp.controller('ShowQuestionController', ['$scope', '$window', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http', '$rootScope',
+    function ($scope, $window, json, lectureId, qId, docId, inLecture, http, $rootScope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit showQuestionTeacher.html to repeat rows and columns
+        "use strict";
         $scope.jsonRaw = json;
         $scope.docId = docId;
         $scope.qId = qId;
@@ -871,7 +870,6 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
         $scope.jsonRaw = {
             question: jsonData.QUESTION,
             type: jsonData.TYPE,
-            question: jsonData.QUESTION,
             time: jsonData.TIME,
             rows: jsonData.DATA.ROWS,
             headers: jsonData.DATA.HEADERS
@@ -894,7 +892,7 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
                 })
                 .error(function (error) {
                     $scope.$modalClose();
-                    console.log(error);
+                    $window.console.log(error);
                 });
         };
 
@@ -903,7 +901,7 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
         };
 
         $scope.deleteQuestion = function () {
-            var confirmDi = confirm("Are you sure you want to delete this question?");
+            var confirmDi = $window.confirm("Are you sure you want to delete this question?");
             if (confirmDi) {
                 http({
                     url: '/deleteQuestion',
@@ -913,22 +911,21 @@ timApp.controller('ShowQuestionController', ['$scope', 'json', 'lectureId', 'qId
                     .success(function () {
                         $scope.$modalClose();
                         $rootScope.$broadcast('forceGetQuestions');
-                        console.log("Deleted question");
+                        $window.console.log("Deleted question");
                     })
                     .error(function (error) {
                         $scope.$modalClose();
-                        console.log(error);
+                        $window.console.log(error);
                     });
 
             }
-        }
-
-
+        };
     }
 ]);
 
 
-timApp.controller("QuestionController", ['$scope', '$http', function (scope, http) {
+timApp.controller("QuestionController", ['$scope', '$http', '$window', function (scope, http, $window) {
+    "use strict";
     $(function () {
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
@@ -955,24 +952,31 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-        if (type == 'radio' || type == 'checkbox') scope.question.answerFieldType = type;
-        if (type == 'true-false') scope.question.answerFieldType = 'radio';
-        if (type == 'matriisi') scope.question.answerFieldType = 'matriisi';
+        if (type === 'radio' || type === 'checkbox') {
+            scope.question.answerFieldType = type;
+        }
+        if (type === 'true-false') {
+            scope.question.answerFieldType = 'radio';
+        }
+        if (type === 'matriisi') {
+            scope.question.answerFieldType = 'matriisi';
+        }
 
+        var i;
         if (scope.rows.length > 0) {
             scope.columnHeaders.splice(0, scope.columnHeaders.length);
-            for (var i = 0; i < scope.rows.length; i++) {
+            for (i = 0; i < scope.rows.length; i++) {
                 scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
             }
 
-            for (var i = 0; i < columnsCount; i++) {
+            for (i = 0; i < columnsCount; i++) {
                 scope.addCol(i);
             }
 
         } else {
 
             var columnHeaders = [];
-            for (var i = 0; i < rowsCount; i++) {
+            for (i = 0; i < rowsCount; i++) {
                 var columns = [];
                 columnHeaders = [];
                 for (var j = 0; j < columnsCount; j++) {
@@ -984,7 +988,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                         points: '',
                         type: "answer",
                         answerFiledType: scope.question.answerFieldType
-                    }
+                    };
                 }
                 scope.rows[i] = {
                     id: i,
@@ -992,7 +996,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                     type: 'question',
                     value: '',
                     columns: columns
-                }
+                };
 
             }
             scope.columnHeaders = columnHeaders;
@@ -1008,11 +1012,11 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
 
     scope.addCol = function (loc) {
         var location = loc;
-        if (loc == -1) {
+        if (loc === -1) {
             location = scope.rows[0].columns.length;
             loc = scope.rows[0].columns.length;
         }
-        scope.columnHeaders.splice(loc, 0, {type: "header", text: ""})
+        scope.columnHeaders.splice(loc, 0, {type: "header", text: ""});
         //add new column to columns
         for (var i = 0; i < scope.rows.length; i++) {
 
@@ -1046,7 +1050,7 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
         };
 
         var location = loc;
-        if (loc == -1) {
+        if (loc === -1) {
             location = scope.rows.length;
             loc = scope.rows.length;
         }
@@ -1069,24 +1073,29 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.delRow = function (indexToBeDeleted) {
-        if (indexToBeDeleted == -1) {
+        if (indexToBeDeleted === -1) {
             scope.rows.splice(-1, 1);
         }
-        else
+        else {
             scope.rows.splice(indexToBeDeleted, 1);
+        }
     };
 
     scope.delCol = function (indexToBeDeleted) {
         for (var i = 0; i < scope.rows.length; i++) {
-            if (indexToBeDeleted == -1)
+            if (indexToBeDeleted === -1) {
                 scope.rows[i].columns.splice(-1, 1);
-            else
+            }
+            else {
                 scope.rows[i].columns.splice(indexToBeDeleted, 1);
+            }
         }
-        if (indexToBeDeleted == -1)
+        if (indexToBeDeleted === -1) {
             scope.columnHeaders.splice(-1, 1);
-        else
-            scope.columnHeaders.splice(indexToBeDeleted, 1)
+        }
+        else {
+            scope.columnHeaders.splice(indexToBeDeleted, 1);
+        }
 
     };
 
@@ -1106,43 +1115,50 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
     };
 
     scope.createQuestion = function () {
-        if (scope.question.answerFieldType == 'matriisi') {
-            if (scope.question.matrixType == "radiobutton-horizontal" || scope.question.matrixType == "radiobutton-vertical") scope.question.answerFieldType = "radio";
-            if (scope.question.matrixType == "textArea") scope.question.answerFieldType = "text";
-            if (scope.question.matrixType == "checkbox") scope.question.answerFieldType = "checkbox";
+        if (scope.question.answerFieldType === 'matriisi') {
+            if (scope.question.matrixType === "radiobutton-horizontal" || scope.question.matrixType === "radiobutton-vertical") {
+                scope.question.answerFieldType = "radio";
+            }
+        }
+        if (scope.question.matrixType === "textArea") {
+            scope.question.answerFieldType = "text";
+        }
+        if (scope.question.matrixType === "checkbox") {
+            scope.question.answerFieldType = "checkbox";
         }
 
-
-        var url;
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
         var timeLimit = scope.question.timeLimit.seconds;
         if (scope.question.timeLimit.hours) {
-            timeLimit += (scope.question.timeLimit.hours * 60 * 60)
+            timeLimit += (scope.question.timeLimit.hours * 60 * 60);
         }
 
         if (scope.question.timeLimit.minutes) {
-            timeLimit += scope.question.timeLimit.minutes * 60
+            timeLimit += scope.question.timeLimit.minutes * 60;
         }
         //TODO use  JSON.stringify
 
         var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
-        if (scope.question.type == "matrix") {
-            for (var i = 0; i < scope.columnHeaders.length; i++) {
+        var i;
+        if (scope.question.type === "matrix") {
+            for (i = 0; i < scope.columnHeaders.length; i++) {
                 questionJson += '{';
                 questionJson += '"type":"' + scope.columnHeaders[i].type + '",';
                 questionJson += '"id":"' + scope.columnHeaders[i].id + '",';
                 questionJson += '"text":"' + scope.columnHeaders[i].text + '"';
-                questionJson += '},'
+                questionJson += '},';
             }
-            if (i > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
+            if (i > 0) {
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+            }
             questionJson += ']';
             questionJson += ',';
         } else {
-            questionJson += "],"
+            questionJson += "],";
         }
 
         questionJson += '"ROWS": [';
@@ -1159,23 +1175,27 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
                 questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
                 questionJson += '"points":"' + scope.rows[i].columns[j].points + '",';
                 questionJson += '"answerFieldType":"' + scope.question.answerFieldType + '"';
-                questionJson += '},'
+                questionJson += '},';
             }
 
-            if (j > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
+            if (j > 0) {
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+            }
             questionJson += ']';
             questionJson += '},';
 
         }
-        if (i > 0) questionJson = questionJson.substring(0, questionJson.length - 1);
+        if (i > 0) {
+            questionJson = questionJson.substring(0, questionJson.length - 1);
+        }
         questionJson += ']';
         questionJson += '}}';
 
-        if (scope.question.question == undefined || scope.question.question.trim().length == 0) {
-            console.log("Can't save empty questions");
+        if (scope.question.question === undefined || scope.question.question.trim().length === 0) {
+            $window.console.log("Can't save empty questions");
             return;
         }
-        console.log("Question: " + scope.question.question);
+        $window.console.log("Question: " + scope.question.question);
 
         http({
             method: 'POST',
@@ -1189,13 +1209,13 @@ timApp.controller("QuestionController", ['$scope', '$http', function (scope, htt
             }
         })
             .success(function () {
-                console.log("The question was successfully added to database");
+                $window.console.log("The question was successfully added to database");
                 scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
             })
             .error(function () {
-                console.log("There was some error creating question to database.")
+                $window.console.log("There was some error creating question to database.");
             });
     };
 }]);

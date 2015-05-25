@@ -1,9 +1,14 @@
-var docId, lectureId, lectureCode, lectureStartTime, lectureEndTime;
 /**
  * Created by hajoviin on 11.5.2015.
+ * Handels the controls of lecture info page
  */
-timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope, $http) {
 
+/*global $:false */
+var angular, docId, lectureId, lectureCode, lectureStartTime, lectureEndTime;
+
+var timApp = angular.module('timApp');
+timApp.controller('LectureInfoController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
+    "use strict";
     $scope.docId = docId;
     $scope.lectureId = lectureId;
     $scope.lectureCode = "Lecture info: " + lectureCode;
@@ -20,6 +25,10 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
     $scope.showPoints = false;
     $scope.points = [];
 
+
+    /*
+     Sends http request to get info about the specific lecture.
+     */
     $scope.getLectureInfo = function () {
         $http({
             url: '/getLectureInfo',
@@ -29,31 +38,33 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
             .success(function (answer) {
 
                 angular.forEach(answer.messages, function (msg) {
-                    $scope.msg = $scope.msg + msg.sender + " <" + msg.time + ">: " + msg.message +  "\n";
+                    $scope.msg = $scope.msg + msg.sender + " <" + msg.time + ">: " + msg.message + "\n";
                 });
                 $scope.answers = answer.answers;
                 for (var i = 0; i < answer.questions.length; i++) {
                     $scope.dynamicAnswerShowControls.push({});
                     $scope.points.push(0);
                 }
-
-
-                console.log(answer);
-                console.log($scope.points);
                 $scope.questions = answer.questions;
                 $scope.isLecturer = answer.isLecturer;
                 $scope.answerers = answer.answerers;
                 $scope.userName = answer.userName;
             })
             .error(function () {
-                console.log("fail")
-            })
+                $window.console.log("fail");
+            });
     };
 
+    /*
+     Gets the lecture info when loading page.
+     */
     $scope.getLectureInfo();
 
+    /*
+     Sends http request to delete the lecture.
+     */
     $scope.deleteLecture = function () {
-        var confirmAnswer = confirm("Do you really want to delete this lecture?");
+        var confirmAnswer = $window.confirm("Do you really want to delete this lecture?");
         if (confirmAnswer) {
             $http({
                 url: '/deleteLecture',
@@ -64,20 +75,23 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
                     window.history.back();
                 })
                 .error(function () {
-                    console.log("Failed to delete the lecture");
-                })
-
+                    $window.console.log("Failed to delete the lecture");
+                });
         }
     };
 
+    /*
+     Draws charts from the answer of the current lecture.
+     userName: Which users answers to shows. If undefined shows from every user.
+     */
     $scope.drawCharts = function (userName) {
-        for(var p = 0; p < $scope.points.length; p++){
-            $scope.points[p] = 0
+        for (var p = 0; p < $scope.points.length; p++) {
+            $scope.points[p] = 0;
         }
         $scope.showPoints = true;
         var user;
         if (typeof userName === 'undefined') {
-            user = ""
+            user = "";
         } else {
             user = userName;
         }
@@ -88,10 +102,10 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
         }
 
         for (var j = 0; j < $scope.answers.length; j++) {
-            if (($scope.isLecturer && user == "") || $scope.answers[j].user_name == user) {
+            if (($scope.isLecturer && user === "") || $scope.answers[j].user_name === user) {
                 $scope.dynamicAnswerShowControls[questionIndexes.indexOf($scope.answers[j].question_id)]
                     .addAnswer([{"answer": $scope.answers[j].answer}]);
-                $scope.points[questionIndexes.indexOf($scope.answers[j].question_id)] +=  $scope.answers[j].points;
+                $scope.points[questionIndexes.indexOf($scope.answers[j].question_id)] += $scope.answers[j].points;
             }
 
         }
@@ -102,5 +116,5 @@ timApp.controller('LectureInfoController', ['$scope', '$http',  function ($scope
             elem.empty();
             elem.append("No answers from this lecture");
         }
-    }
+    };
 }]);
