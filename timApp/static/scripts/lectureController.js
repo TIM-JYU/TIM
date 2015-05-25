@@ -67,7 +67,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-        Makes http request to check if the current user is in lecture.
+         Makes http request to check if the current user is in lecture.
          */
         $scope.checkIfInLecture = function () {
             http({
@@ -85,13 +85,13 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Checks if the user is in lecture when loading page.
+         Checks if the user is in lecture when loading page.
          */
         $scope.checkIfInLecture();
 
 
         /*
-        Listener of askQuestion event. Opens the question view and answer view for the lecturer.
+         Listener of askQuestion event. Opens the question view and answer view for the lecturer.
          */
         $scope.$on("askQuestion", function (event, data) {
 
@@ -116,28 +116,28 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         });
 
         /*
-        Event listener for getLectureId. Emits the lectureId back
+         Event listener for getLectureId. Emits the lectureId back
          */
         $scope.$on('getLectureId', function () {
             $scope.$emit('postLectureId', $scope.lectureId);
         });
 
         /*
-        Event listener for getLecture. Emits the boolean value if the user is in lecture
+         Event listener for getLecture. Emits the boolean value if the user is in lecture
          */
         $scope.$on('getInLecture', function () {
             $scope.$emit('postInLecture', $scope.inLecture);
         });
 
         /*
-        Event listener for getIsLecturer event. Emits value if the user is lecturer
+         Event listener for getIsLecturer event. Emits value if the user is lecturer
          */
         $scope.$on('getIsLecturer', function () {
             $scope.$emit('postIsLecturer', $scope.isLecturer);
         });
 
         /*
-        Event listener for closeLectureForm. Closes lecture form.
+         Event listener for closeLectureForm. Closes lecture form.
          */
         $scope.$on('closeLectureForm', function () {
             $scope.showLectureForm = false;
@@ -145,7 +145,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         });
 
         /*
-        Event listener for closeQuestion. Closes quesition pop-up.
+         Event listener for closeQuestion. Closes quesition pop-up.
          */
         $scope.$on('closeQuestion', function () {
             $scope.showAnswerWindow = false;
@@ -153,7 +153,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-        Event listener for answerToQuesion. Closes the answer pop-up and sends answer to server.
+         Event listener for answerToQuesion. Closes the answer pop-up and sends answer to server.
          */
         $scope.$on("answerToQuestion", function (event, answer) {
             $scope.showAnswerWindow = false;
@@ -183,7 +183,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-        Event window for closeAnswerShow. Closes pop-up to show answers and stops gettin more of them.
+         Event window for closeAnswerShow. Closes pop-up to show answers and stops gettin more of them.
          */
         //TODO: Also send event to server to remove getting answers for this question.
         $scope.$on("closeAnswerShow", function () {
@@ -192,8 +192,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         });
 
         /*
-        Depending on what users wants to see on the wall, makes the msg to correct form. Able to show the
-        name of the sender, time and message. Sender and time are optional.
+         Depending on what users wants to see on the wall, makes the msg to correct form. Able to show the
+         name of the sender, time and message. Sender and time are optional.
          */
         $scope.showInfo = function () {
             $scope.msg = "";
@@ -228,7 +228,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Clears the password input when changing the lecture from current lectures list.
+         Clears the password input when changing the lecture from current lectures list.
          */
         $scope.clearChange = function () {
             var input = $("#passwordInput");
@@ -237,7 +237,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Puts chosen lecture options to use.
+         Puts chosen lecture options to use.
          */
         $scope.useOptions = function (useQuestions, useWall) {
             $scope.showLectureView($scope.lectureAnswer);
@@ -248,7 +248,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Ask lecture options from students that are coming to lecture.
+         Ask lecture options from students that are coming to lecture.
          */
         $scope.lectureOptions = function () {
             if (!$scope.isLecturer) {
@@ -258,7 +258,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
+         Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
          */
         $scope.joinLecture = function (name) {
 
@@ -307,25 +307,25 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Checks where the mouse is when clicking wall. Sets style to absolute for the draggable directive.
+         Checks where the mouse is when clicking wall. Sets style to absolute for the draggable directive.
          */
         $scope.checkDown = function (e) {
             $scope.mouseDownX = e.clientX;
             $scope.mouseDownY = e.clientY;
-            wall.style.position = "absolute";
-            wall.style.bottom = 'auto';
+            wall.position("absolute");
+            wall.css("bottom", "auto");
             $scope.wallMoved = true;
 
         };
 
         /*
-        Checks where th mouse is when releasing the wall. If the mouse hasn't moved enough, closes the wall.
+         Checks where th mouse is when releasing the wall. If the mouse hasn't moved enough, closes the wall.
          */
         $scope.checkUp = function (e) {
             var mouseUpX = e.clientX;
             var mouseUpY = e.clientY;
 
-            wall.style.position = "fixed";
+            wall.position("fixed");
 
             if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
                 $scope.wallMoved = false;
@@ -334,7 +334,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-        Hides the wall if the wall hasn't moved.
+         Hides the wall if the wall hasn't moved.
          */
         $scope.hideWall = function () {
             if (!$scope.wallMoved) {
@@ -343,7 +343,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Toggle the lecture creation form
+         Toggle the lecture creation form
          */
         $scope.toggleLecture = function () {
             $('#currentList').hide();
@@ -353,7 +353,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Starts lecture that is in future lecture list.
+         Starts lecture that is in future lecture list.
          */
         $scope.startFutureLecture = function () {
             http({
@@ -367,28 +367,28 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Change the usage of wall.
+         Change the usage of wall.
          */
         $scope.changeUsingWall = function (wallUsage) {
             $scope.useWall = wallUsage;
         };
 
         /*
-        Change the usage of getting lecture questions.
+         Change the usage of getting lecture questions.
          */
         $scope.changeUsingQuestions = function (questionUsage) {
             $scope.useQuestions = questionUsage;
         };
 
         /*
-        Changes the usage of getting answers from students.
+         Changes the usage of getting answers from students.
          */
         $scope.changeUsingAnswers = function (answerUsage) {
             $scope.useAnswers = answerUsage;
         };
 
         /*
-        Initializes the window to be lecture view a.k.a. the current user in in lecture.
+         Initializes the window to be lecture view a.k.a. the current user in in lecture.
          */
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
@@ -421,8 +421,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-        Adds people entities to give list
-        people: {name: String, active:String}
+         Adds people entities to give list
+         people: {name: String, active:String}
          */
         $scope.addPeopleToList = function (people, peopleList) {
             var oldUser = false;
@@ -446,7 +446,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Initializes the window to be basic view a.k.a. view where user is not in lecture
+         Initializes the window to be basic view a.k.a. view where user is not in lecture
          */
         $scope.showBasicView = function (answer) {
 
@@ -504,7 +504,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Extends the lecture based on the time selected in pop-up to extend lecture
+         Extends the lecture based on the time selected in pop-up to extend lecture
          */
         $scope.extendLecture = function () {
             var dateTime = $scope.lectureEndTime.split(" ");
@@ -581,7 +581,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Closes the lecture view and sets answered to lectureEnding to true to prevent multiple quesitions from this.
+         Closes the lecture view and sets answered to lectureEnding to true to prevent multiple quesitions from this.
          */
         $scope.continueLecture = function () {
             $scope.answeredToLectureEnding = true;
@@ -589,7 +589,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Sends http request to end the lecture.
+         Sends http request to end the lecture.
          */
         $scope.endLecture = function () {
             $scope.showLectureEnding = false;
@@ -611,7 +611,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Sends http request to delete the lecture.
+         Sends http request to delete the lecture.
          */
         $scope.deleteLecture = function () {
             http({
@@ -633,7 +633,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Sends http request to leave the lecture.
+         Sends http request to leave the lecture.
          */
         $scope.leaveLecture = function () {
             $scope.msg = "";
@@ -649,24 +649,23 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-        Hides the wall. After this you can only see the topbar of the wall.
+         Hides the wall. After this you can only see the topbar of the wall.
          */
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
 
             if (!$scope.showWall) {
-                $scope.wallHeight = wall.style.height;
-                wall.style.height = "";
+                $scope.wallHeight = wall.height();
+                wall.height(0);
                 $scope.newMessagesAmount = 0;
                 $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
             } else {
-                wall.style.height = $scope.wallHeight;
-
+                wall.height($scope.wallHeight);
             }
         };
 
         /*
-        Shows lecture creation. //TODO: Something is missing from here
+         Shows lecture creation. //TODO: Something is missing from here
          */
         $scope.modifyLecture = function () {
             $scope.showLectureCreation = true;
@@ -674,7 +673,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-        Sends http request to send a message.
+         Sends http request to send a message.
          */
         $scope.sendMessageEvent = function (message) {
             if (message.trim() === "") {
@@ -701,7 +700,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Sends http request to get all the messages from the current lecture.
+         Sends http request to get all the messages from the current lecture.
          */
         $scope.getAllMessages = function () {
             http({
@@ -737,7 +736,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Gets answers from the current lecture to current question.
+         Gets answers from the current lecture to current question.
          */
         $scope.getLectureAnswers = function (answer) {
             $scope.gettingAnswers = true;
@@ -765,7 +764,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Starts long polling for the updates.(messages, questions, lecture ending)
+         Starts long polling for the updates.(messages, questions, lecture ending)
          */
         $scope.startLongPolling = function (lastID) {
             function message_longPolling(lastID) {
@@ -882,7 +881,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Event for pressing enter while writing message. Sends message.
+         Event for pressing enter while writing message. Sends message.
          */
         $scope.chatEnterPressed = function (event) {
             if (event.which === 13) {
@@ -891,7 +890,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Event when pressin enter while writing password for lecture. Tries to join lecture
+         Event when pressin enter while writing password for lecture. Tries to join lecture
          */
         $scope.passEnterPressed = function (event) {
             if (event.which === 13) {
@@ -900,9 +899,9 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /*
-        Left padder that adds 0 to left side of number.
-        number: Given number to add 0s
-        size: how many characters the padded value should be.
+         Left padder that adds 0 to left side of number.
+         number: Given number to add 0s
+         size: how many characters the padded value should be.
          */
         $scope.leftPadder = function (number, size) {
             var paddedNumber = "" + number;

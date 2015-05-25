@@ -7,7 +7,7 @@
 var angular;
 
 var timApp = angular.module('timApp');
-timApp.controller('QuestionAnswerController', ['$scope','$window',function ($scope) {
+timApp.controller('AnswerToQuestionController', ['$scope','$window',function ($scope) {
     "use strict";
     $scope.questionHeaders = [];
     $scope.answerTypes = [];

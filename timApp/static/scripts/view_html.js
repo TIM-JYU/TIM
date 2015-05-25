@@ -12,9 +12,8 @@ timApp.controller("ViewCtrl", [
     '$compile',
     '$window',
     '$document',
-    'createDialog',
     '$rootScope',
-    function (sc, http, q, $upload, $injector, $compile, $window, $document, createDialog, $rootScope) {
+    function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope) {
         "use strict";
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
@@ -135,42 +134,28 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.showQuestion = function (question) {
-            var json = "No data";
-            var qId = -1;
+            sc.json = "No data";
+            sc.qId = -1;
             if (question[0].hasAttribute('json')) {
-                json = JSON.parse(question[0].getAttribute('json'));
-                qId = question[0].getAttribute('id');
+                sc.json = JSON.parse(question[0].getAttribute('json'));
+                sc.qId = question[0].getAttribute('id');
 
             }
-            var docId = sc.docId;
-            var lectureId = "";
-            var inLecture = false;
+            sc.lectureId = -1;
+            sc.inLecture = false;
+
             sc.$on('postLectureId', function (event, response) {
-                lectureId = response;
+                sc.lectureId = response;
             });
 
             sc.$on('postInLecture', function (event, response) {
-                inLecture = response;
+                sc.inLecture = response;
             });
 
             $rootScope.$broadcast('getLectureId');
             $rootScope.$broadcast('getInLecture');
-            //sc.showQuestionPreview = true;
-            createDialog('../../../static/templates/showQuestionTeacher.html', {
-                id: 'simpleDialog',
-                title: "",
-                backdrop: true,
-                footerTemplate: "<button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>" +
-                "<button ng-click='close()' class='timButton questionButton'>Close</button>" +
-                "<button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>",
-                controller: 'ShowQuestionController'
-            }, {
-                json: json,
-                lectureId: lectureId,
-                qId: qId,
-                docId: docId,
-                inLecture: inLecture
-            });
+            sc.showQuestionPreview = true;
+            sc.$digest();
         };
 
         sc.toggleNoteEditor = function ($par, options) {
@@ -839,8 +824,8 @@ timApp.controller("ViewCtrl", [
                 }
             });
 
-            sc.$on("forceGetQuestions", function () {
-                sc.getQuestions();
+            sc.$on("closeQuestionPreview", function () {
+                sc.showQuestionPreview = false;
             });
         }
 
@@ -853,76 +838,6 @@ timApp.controller("ViewCtrl", [
         sc.processAllMath($('body'));
         sc.defaultAction = sc.showOptionsWindow;
     }]);
-
-timApp.controller('ShowQuestionController', ['$scope', '$window', 'json', 'lectureId', 'qId', 'docId', 'inLecture', '$http', '$rootScope',
-    function ($scope, $window, json, lectureId, qId, docId, inLecture, http, $rootScope) {
-        //TODO parse json and set values from rows and columns to scope variables
-        //TODO edit showQuestionTeacher.html to repeat rows and columns
-        "use strict";
-        $scope.jsonRaw = json;
-        $scope.docId = docId;
-        $scope.qId = qId;
-        $scope.lectureId = lectureId;
-        $scope.inLecture = inLecture;
-
-
-        var jsonData = json;
-        $scope.jsonRaw = {
-            question: jsonData.QUESTION,
-            type: jsonData.TYPE,
-            time: jsonData.TIME,
-            rows: jsonData.DATA.ROWS,
-            headers: jsonData.DATA.HEADERS
-
-        };
-        $scope.ask = function () {
-            http({
-                url: '/askQuestion',
-                method: 'POST',
-                params: {
-                    lecture_id: $scope.lectureId,
-                    question_id: $scope.qId,
-                    doc_id: $scope.docId,
-                    buster: new Date().getTime()
-                }
-            })
-                .success(function () {
-                    $rootScope.$broadcast('askQuestion', {"json": jsonData, "questionId": $scope.qId});
-                    $scope.$modalClose();
-                })
-                .error(function (error) {
-                    $scope.$modalClose();
-                    $window.console.log(error);
-                });
-        };
-
-        $scope.close = function () {
-            $scope.$modalClose();
-        };
-
-        $scope.deleteQuestion = function () {
-            var confirmDi = $window.confirm("Are you sure you want to delete this question?");
-            if (confirmDi) {
-                http({
-                    url: '/deleteQuestion',
-                    method: 'POST',
-                    params: {question_id: $scope.qId, doc_id: $scope.docId}
-                })
-                    .success(function () {
-                        $scope.$modalClose();
-                        $rootScope.$broadcast('forceGetQuestions');
-                        $window.console.log("Deleted question");
-                    })
-                    .error(function (error) {
-                        $scope.$modalClose();
-                        $window.console.log(error);
-                    });
-
-            }
-        };
-    }
-]);
-
 
 timApp.controller("QuestionController", ['$scope', '$http', '$window', function (scope, http, $window) {
     "use strict";
