@@ -51,7 +51,7 @@ def saveAnswer(plugintype, task_id):
     old_answers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
     # Get the newest answer (state). Only for logged in users.
-    state = old_answers[0]['content'] if loggedIn() and len(old_answers) > 0 else None
+    state = pluginControl.try_load_json(old_answers[0]['content']) if loggedIn() and len(old_answers) > 0 else None
 
     markup = get_plugin_markup(doc_id, plugintype, task_id_name)
     if markup is None:

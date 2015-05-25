@@ -185,6 +185,7 @@ def try_load_json(json_str):
     try:
         if json_str is not None:
             return json.loads(json_str)
+        return None
     except ValueError:
         return json_str
 
