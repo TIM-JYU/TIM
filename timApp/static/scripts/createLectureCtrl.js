@@ -237,7 +237,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 if (lecture_ending_in_past) {
                     alert_message += "Are you sure that the lecture ends in the past or now and will not run?";
                 }
-                $window.console.log("$scope.error_message.length");
+                $window.console.log($scope.error_message.length);
                 if (alert_message !== "" && $scope.error_message.length <= 0) {
                     if (!$window.confirm(alert_message)) {
                         if (lecture_starting_in_past) {

@@ -141,6 +141,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.$on('closeLectureForm', function () {
             $scope.showLectureForm = false;
+            $scope.checkIfInLecture();
         });
 
         /*
