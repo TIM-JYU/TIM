@@ -206,6 +206,12 @@ input[type="number"] {
 .lectureArea {
     vertical-align:middle;
 }
+
+
+#endDateDiv, #durationDiv {
+	margin-left: 24px;
+}
+
 .answerStatistics select, .questioninfoWindow label , .questionAskedWindow label {
 	display: block;
 	margin-top: 10px;
