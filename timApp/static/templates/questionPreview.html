@@ -1,8 +1,8 @@
-<div ng-controller="ShowQuestionController">
+<div ng-controller="QuestionPreviewController" class="popUpWindow">
     <h1>Question preview</h1>
 
-    <div class="showQuestionPreview">
-        <h5> Question: <span ng-bind="json.QUESTION"></span></h5>
+    <div class="questionPreview">
+        <h3> Question: <span ng-bind="json.QUESTION"></span></h3>
         Question type: <span ng-bind="json.TYPE"></span><br>
         Time limit: <span ng-bind="json.TIMELIMIT"></span><br>
 
@@ -28,7 +28,8 @@
                 </td>
             </tr>
         </table>
-
+    </div>
+    <div class="buttons">
         <button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>
         <button ng-click='close()' class='timButton questionButton'>Close</button>
         <button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>
