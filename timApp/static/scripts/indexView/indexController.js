@@ -66,7 +66,10 @@ function(sc, controller, http, q, $upload, $window) {
        http({
             method : 'GET',
             url : '/getFolders',
-            params: {root_path: sc.folder}
+            params: {
+                root_path: sc.folder,
+                _: Date.now()
+            }
         }).success(function(data, status, headers, config) {
             sc.folderList = data;
             sc.displayIndex++;
@@ -80,7 +83,11 @@ function(sc, controller, http, q, $upload, $window) {
        http({
             method : 'GET',
             url : '/getDocuments',
-            params: {versions: 0, folder: sc.folder}
+            params: {
+                versions: 0,
+                folder: sc.folder,
+                _: Date.now()
+            }
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex++;
