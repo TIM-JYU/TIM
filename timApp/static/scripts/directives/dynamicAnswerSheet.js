@@ -1,37 +1,15 @@
 /**
- * Created by hajoviin on 22.4.2015.
+ * Created by localadmin on 25.5.2015.
+ * directive for dynamic answer sheet. Sheet to answer lecture questions.
  */
 
-timApp.controller('QuestionAnswerController', ['$scope', '$http', function ($scope) {
+/*global $:false */
 
-    $scope.questionHeaders = [];
-    $scope.answerTypes = [];
-    $scope.dynamicAnswerSheetControl = {};
-    $scope.isLecturer = false;
-	$scope.questionTitle = "";
+var angular;
 
-    $scope.$on("setQuestionJson", function (event, args) {
-        $scope.questionId = args.questionId;
-        $scope.isLecturer = args.isLecturer;
-        $scope.questionJson = args.questionJson;
-		$scope.questionTitle = args.questionJson.TITLE;
-		console.log(args.questionJson.TITLE);
-
-        $scope.dynamicAnswerSheetControl.createAnswer();
-    });
-
-    $scope.answer = function () {
-        $scope.dynamicAnswerSheetControl.answerToQuestion()
-
-    };
-
-    $scope.close = function () {
-        $scope.dynamicAnswerSheetControl.closeQuestion();
-    }
-}]);
-
-
+var timApp = angular.module('timApp');
 timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($interval, $compile) {
+    "use strict";
     return {
         restrict: 'E',
         replace: "true",
@@ -47,10 +25,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             $scope.internalControl.createAnswer = function () {
                 $scope.json = $scope.$parent.questionJson;
                 var htmlSheet = "<div class = 'answerSheet'>";
-                if ($scope.json.TYPE != "true-false") {
+                if ($scope.json.TYPE !== "true-false") {
                     htmlSheet += "<h2>" + $scope.json.QUESTION + "<h2>";
                 }
-                if ($scope.json.TIMELIMIT != "") {
+                if ($scope.json.TIMELIMIT !== "") {
                     htmlSheet += "<progress value='0' max='" + $scope.json.TIMELIMIT + "' id='progressBar'>";
                     htmlSheet += "</progress>";
                     htmlSheet += "<span id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
@@ -58,7 +36,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
                 htmlSheet += "<table>";
 
-                if ($scope.json.TYPE == "true-false") {
+                if ($scope.json.TYPE === "true-false") {
                     $scope.json.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
                     $scope.json.DATA.HEADERS[1] = {"type": "header", "id": 1, "text": "False"};
                 }
@@ -77,7 +55,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
                 angular.forEach($scope.json.DATA.ROWS, function (row) {
                     htmlSheet += "<tr>";
-                    if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
+                    if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                         htmlSheet += "<td>" + row.text + "</td>";
                     }
                     var header = 0;
@@ -85,7 +63,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                     angular.forEach(row.COLUMNS, function (column) {
                         var group;
 
-                        if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
+                        if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                             group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
                             htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
                             " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
@@ -146,9 +124,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 var answers = [];
                 $interval.cancel(promise);
                 if (angular.isDefined($scope.json.DATA.ROWS)) {
-                    if ($scope.json.TYPE == "matrix" || $scope.json.TYPE == "true-false") {
+                    var groupName = "";
+                    if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                         for (var i = 0; i < $scope.json.DATA.ROWS.length; i++) {
-                            var groupName;
                             groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z]/g, '');
                             var answer = [];
                             //noinspection JSJQueryEfficiency
@@ -157,7 +135,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                                 answer.push(matrixInputs[k].value);
                             }
                             if (matrixInputs.length <= 0) {
-                                answer.push("undefined")
+                                answer.push("undefined");
                             }
                             answers.push(answer);
                         }
@@ -170,7 +148,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         }
 
                         if (checkedInputs.length <= 0) {
-                            answers.push("undefined")
+                            answers.push("undefined");
                         }
                     }
                 }
@@ -192,7 +170,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             };
         }
 
-    }
+    };
 }
 ])
 ;

@@ -1,12 +1,18 @@
 /**
  * Created by hajoviin on 24.2.2015.
+ * Contoller that handles lectures.
  */
-/* TODO: The correct name might be lecture controller, because wall is just a part of lecture */
-timApp.controller("WallController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout',
+
+/*global $:false */
+
+var angular;
+
+var timApp = angular.module('timApp');
+
+timApp.controller("LectureController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout',
 
     function ($scope, controller, http, $window, $rootScope, $timeout) {
-
-
+        "use strict";
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
@@ -57,6 +63,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         var header = $('#header');
         header.css("display", "none");
 
+        var wall = $("wall");
+
+
+        /*
+         Makes http request to check if the current user is in lecture.
+         */
         $scope.checkIfInLecture = function () {
             http({
                 url: '/checkLecture',
@@ -69,9 +81,18 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     } else {
                         $scope.showBasicView(answer);
                     }
-                })
+                });
         };
 
+        /*
+         Checks if the user is in lecture when loading page.
+         */
+        $scope.checkIfInLecture();
+
+
+        /*
+         Listener of askQuestion event. Opens the question view and answer view for the lecturer.
+         */
         $scope.$on("askQuestion", function (event, data) {
 
             if ($scope.useAnswers) {
@@ -83,9 +104,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                 var answer = {"questionId": data.questionId};
                 $scope.getLectureAnswers(answer);
-
             }
-
 
             $rootScope.$broadcast("setQuestionJson", {
                 questionJson: data.json,
@@ -96,36 +115,53 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         });
 
+        /*
+         Event listener for getLectureId. Emits the lectureId back
+         */
         $scope.$on('getLectureId', function () {
             $scope.$emit('postLectureId', $scope.lectureId);
         });
 
+        /*
+         Event listener for getLecture. Emits the boolean value if the user is in lecture
+         */
         $scope.$on('getInLecture', function () {
             $scope.$emit('postInLecture', $scope.inLecture);
         });
 
+        /*
+         Event listener for getIsLecturer event. Emits value if the user is lecturer
+         */
         $scope.$on('getIsLecturer', function () {
-            $scope.$emit('postIsLecturer', $scope.isLecturer)
+            $scope.$emit('postIsLecturer', $scope.isLecturer);
         });
 
+        /*
+         Event listener for closeLectureForm. Closes lecture form.
+         */
         $scope.$on('closeLectureForm', function () {
             $scope.showLectureForm = false;
             $scope.checkIfInLecture();
         });
 
+        /*
+         Event listener for closeQuestion. Closes quesition pop-up.
+         */
         $scope.$on('closeQuestion', function () {
             $scope.showAnswerWindow = false;
-            $scope.gettingAnswers = false;
         });
 
 
+        /*
+         Event listener for answerToQuesion. Closes the answer pop-up and sends answer to server.
+         */
         $scope.$on("answerToQuestion", function (event, answer) {
             $scope.showAnswerWindow = false;
             var mark = "";
             var answerString = "";
             angular.forEach(answer.answer, function (singleAnswer) {
                 answerString += mark + singleAnswer;
-                mark = "|"
+                mark = "|";
             });
 
             http({
@@ -141,16 +177,24 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 .success(function () {
                 })
                 .error(function () {
-                    //console.log("Failed to answer to question");
-                })
+                    $window.console.log("Failed to answer to question");
+                });
         });
 
+
+        /*
+         Event window for closeAnswerShow. Closes pop-up to show answers and stops gettin more of them.
+         */
+        //TODO: Also send event to server to remove getting answers for this question.
         $scope.$on("closeAnswerShow", function () {
             $scope.showStudentAnswers = false;
             $scope.gettingAnswers = false;
         });
 
-
+        /*
+         Depending on what users wants to see on the wall, makes the msg to correct form. Able to show the
+         name of the sender, time and message. Sender and time are optional.
+         */
         $scope.showInfo = function () {
             $scope.msg = "";
             var i = 0;
@@ -183,51 +227,18 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             }
         };
 
-        $scope.showName = function () {
-            if (!$scope.messageName) {
-                $scope.msg = "";
-
-                $scope.messagesWithInfo = $scope.msg;
-                var lines = $scope.msg.split(/\r\n|\r|\n/g);
-                var modifiedMessages = "";
-                for (var i = 0; i < lines.length - 1; i++) {
-                    var endInfo = lines[i].indexOf("<");
-                    if (endInfo == -1) {
-                        endInfo = lines[i].indexOf(">");
-                    }
-                    modifiedMessages += lines[i].substring(endInfo) + "\r\n";
-                }
-                $scope.msg = modifiedMessages;
-            } else {
-                $scope.msg = $scope.messagesWithInfo;
-            }
-        };
-
-        $scope.showTime = function () {
-            if (!$scope.messageTime) {
-                $scope.messagesWithInfo = $scope.msg;
-                var lines = $scope.msg.split(/\r\n|\r|\n/g);
-                var modifiedMessages = "";
-                for (var i = 0; i < lines.length - 1; i++) {
-                    var startInfo = lines[i].indexOf("<");
-                    var endInfo = lines[i].indexOf(">");
-                    modifiedMessages += lines[i].substring(0, startInfo) + ">";
-                    modifiedMessages += lines[i].substring(endInfo + 2) + "\r\n";
-                }
-                $scope.msg = modifiedMessages;
-            } else {
-                $scope.msg = $scope.messagesWithInfo;
-            }
-        };
-
-        $scope.checkIfInLecture();
-
+        /*
+         Clears the password input when changing the lecture from current lectures list.
+         */
         $scope.clearChange = function () {
             var input = $("#passwordInput");
             input.attr("placeholder", "Access code");
             input.removeClass('errorBorder');
         };
 
+        /*
+         Puts chosen lecture options to use.
+         */
         $scope.useOptions = function (useQuestions, useWall) {
             $scope.showLectureView($scope.lectureAnswer);
             $scope.useWall = useWall;
@@ -236,6 +247,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
         };
 
+        /*
+         Ask lecture options from students that are coming to lecture.
+         */
         $scope.lectureOptions = function () {
             if (!$scope.isLecturer) {
                 $scope.showLectureOptions = true;
@@ -243,9 +257,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $scope.joinLecture();
         };
 
+        /*
+         Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
+         */
         $scope.joinLecture = function (name) {
 
-            if ($scope.chosenLecture == "" && name == "") {
+            if ($scope.chosenLecture === "" && name === "") {
                 $window.alert("Choose lecture to join");
                 return;
             }
@@ -256,7 +273,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 lectureName = name;
                 $('#currentList').slideToggle();
             } else {
-                lectureName = $scope.chosenLecture.lecture_code
+                lectureName = $scope.chosenLecture.lecture_code;
             }
 
             http({
@@ -286,39 +303,48 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             $scope.lectureAnswer = answer;
                         }
                     }
-                })
+                });
         };
 
+        /*
+         Checks where the mouse is when clicking wall. Sets style to absolute for the draggable directive.
+         */
         $scope.checkDown = function (e) {
             $scope.mouseDownX = e.clientX;
             $scope.mouseDownY = e.clientY;
-            var wall = document.getElementById("wall");
-            wall.style.position = "absolute";
-            wall.style.bottom = 'auto';
+            wall.position("absolute");
+            wall.css("bottom", "auto");
             $scope.wallMoved = true;
 
         };
 
+        /*
+         Checks where th mouse is when releasing the wall. If the mouse hasn't moved enough, closes the wall.
+         */
         $scope.checkUp = function (e) {
             var mouseUpX = e.clientX;
             var mouseUpY = e.clientY;
 
-            var wall = document.getElementById("wall");
-            wall.style.position = "fixed";
+            wall.position("fixed");
 
             if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
                 $scope.wallMoved = false;
             }
         };
 
+
+        /*
+         Hides the wall if the wall hasn't moved.
+         */
         $scope.hideWall = function () {
             if (!$scope.wallMoved) {
                 $scope.hide();
             }
-
         };
 
-
+        /*
+         Toggle the lecture creation form
+         */
         $scope.toggleLecture = function () {
             $('#currentList').hide();
             $('#futureList').hide();
@@ -326,6 +352,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             $rootScope.$broadcast("initLectureFormVals");
         };
 
+        /*
+         Starts lecture that is in future lecture list.
+         */
         $scope.startFutureLecture = function () {
             http({
                 url: '/startFutureLecture',
@@ -334,21 +363,33 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             })
                 .success(function (answer) {
                     $scope.showLectureView(answer);
-                })
+                });
         };
 
+        /*
+         Change the usage of wall.
+         */
         $scope.changeUsingWall = function (wallUsage) {
             $scope.useWall = wallUsage;
         };
 
+        /*
+         Change the usage of getting lecture questions.
+         */
         $scope.changeUsingQuestions = function (questionUsage) {
             $scope.useQuestions = questionUsage;
         };
 
+        /*
+         Changes the usage of getting answers from students.
+         */
         $scope.changeUsingAnswers = function (answerUsage) {
             $scope.useAnswers = answerUsage;
         };
 
+        /*
+         Initializes the window to be lecture view a.k.a. the current user in in lecture.
+         */
         $scope.showLectureView = function (answer) {
             $scope.isLecturer = answer.isLecturer;
 
@@ -379,11 +420,15 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
         };
 
 
+        /*
+         Adds people entities to give list
+         people: {name: String, active:String}
+         */
         $scope.addPeopleToList = function (people, peopleList) {
             var oldUser = false;
             for (var i = 0; i < people.length; i++) {
                 for (var index = 0; index < peopleList.length; index++) {
-                    if (peopleList[index].name == people[i].name) {
+                    if (peopleList[index].name === people[i].name) {
                         oldUser = true;
                         peopleList[index].active = people[i].active;
                         break;
@@ -400,6 +445,9 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             }
         };
 
+        /*
+         Initializes the window to be basic view a.k.a. view where user is not in lecture
+         */
         $scope.showBasicView = function (answer) {
 
             $scope.isLecturer = answer.isLecturer;
@@ -423,7 +471,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             angular.forEach(answer.lectures, function (lecture) {
                 addLecture = true;
                 for (var i = 0; i < $scope.lectures.length; i++) {
-                    if ($scope.lectures[i].lecture_code == lecture.lecture_code) {
+                    if ($scope.lectures[i].lecture_code === lecture.lecture_code) {
                         addLecture = false;
                         break;
                     }
@@ -436,7 +484,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             angular.forEach(answer.futureLectures, function (lecture) {
                 addLecture = true;
                 for (var i = 0; i < $scope.futureLectures.length; i++) {
-                    if ($scope.futureLectures[i].lecture_code == lecture.lecture_code) {
+                    if ($scope.futureLectures[i].lecture_code === lecture.lecture_code) {
                         addLecture = false;
                         break;
                     }
@@ -447,17 +495,21 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             });
 
             if ($scope.lectures.length > 0) {
-                $scope.chosenLecture = $scope.lectures[0]
+                $scope.chosenLecture = $scope.lectures[0];
             }
 
             if ($scope.futureLectures.length > 0) {
-                $scope.futureLecture = $scope.futureLectures[0]
+                $scope.futureLecture = $scope.futureLectures[0];
             }
         };
 
-//Extends the lecture based on the time selected in pop-up to extend lecture
+        /*
+         Extends the lecture based on the time selected in pop-up to extend lecture
+         */
         $scope.extendLecture = function () {
             var dateTime = $scope.lectureEndTime.split(" ");
+
+            //TODO: Use javascript date object.
             var YearMonthDay = dateTime[1].split("-");
             var endYear = parseInt(YearMonthDay[0]);
             var endMonth = parseInt(YearMonthDay[1]);
@@ -486,7 +538,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                         case 12:
                             if (endDay > 31) {
                                 endDay = 1;
-                                endMonth += 1
+                                endMonth += 1;
                             }
                             break;
                         case 2:
@@ -521,18 +573,24 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId, new_end_time: endTimeDate}
             })
                 .success(function () {
-                    console.log("Lecture extended");
+                    $window.console.log("Lecture extended");
                 })
                 .error(function () {
-                    console.log("Failed to delete the lecture");
-                })
+                    $window.console.log("Failed to delete the lecture");
+                });
         };
 
+        /*
+         Closes the lecture view and sets answered to lectureEnding to true to prevent multiple quesitions from this.
+         */
         $scope.continueLecture = function () {
             $scope.answeredToLectureEnding = true;
             $scope.showLectureEnding = false;
         };
 
+        /*
+         Sends http request to end the lecture.
+         */
         $scope.endLecture = function () {
             $scope.showLectureEnding = false;
             http({
@@ -544,14 +602,17 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     $scope.showBasicView(answer);
                     $scope.chosenLecture = "";
                     $scope.msg = "";
-                    console.log("Lecture ended, not deleted");
+                    $window.console.log("Lecture ended, not deleted");
 
                 })
                 .error(function () {
-                    console.log("Failed to delete the lecture");
-                })
+                    $window.console.log("Failed to delete the lecture");
+                });
         };
 
+        /*
+         Sends http request to delete the lecture.
+         */
         $scope.deleteLecture = function () {
             http({
                 url: '/deleteLecture',
@@ -563,14 +624,17 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     $scope.lectures.splice($scope.lectureId, 1);
                     $scope.chosenLecture = "";
                     $scope.msg = "";
-                    console.log("Lecture deleted");
+                    $window.console.log("Lecture deleted");
 
                 })
                 .error(function () {
-                    console.log("Failed to delete the lecture");
-                })
+                    $window.console.log("Failed to delete the lecture");
+                });
         };
 
+        /*
+         Sends http request to leave the lecture.
+         */
         $scope.leaveLecture = function () {
             $scope.msg = "";
             http({
@@ -579,34 +643,41 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                 params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId}
             })
                 .success(function (answer) {
-                    $scope.showBasicView(answer)
-                })
+                    $scope.showBasicView(answer);
+                });
         };
 
+
+        /*
+         Hides the wall. After this you can only see the topbar of the wall.
+         */
         $scope.hide = function () {
             $scope.showWall = !$scope.showWall;
-            //TODO: Do not use getElementById
 
-            var elemWall = document.getElementById("wall");
             if (!$scope.showWall) {
-                $scope.wallHeight = elemWall.style.height;
-                elemWall.style.height = "";
+                $scope.wallHeight = wall.height();
+                wall.height(0);
                 $scope.newMessagesAmount = 0;
                 $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
             } else {
-                elemWall.style.height = $scope.wallHeight;
-
+                wall.height($scope.wallHeight);
             }
         };
 
+        /*
+         Shows lecture creation. //TODO: Something is missing from here
+         */
         $scope.modifyLecture = function () {
             $scope.showLectureCreation = true;
         };
 
 
+        /*
+         Sends http request to send a message.
+         */
         $scope.sendMessageEvent = function (message) {
-            if (message.trim() == "") {
-                alert("Can't send empty messages");
+            if (message.trim() === "") {
+                $window.alert("Can't send empty messages");
                 return false;
             }
 
@@ -623,11 +694,14 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                 })
                 .error(function () {
-                    console.log("Can't send message or something");
+                    $window.console.log("Can't send message or something");
                 });
 
         };
 
+        /*
+         Sends http request to get all the messages from the current lecture.
+         */
         $scope.getAllMessages = function () {
             http({
                 url: '/getAllMessages',
@@ -654,13 +728,16 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                     $scope.lastID = answer.lastid;
                     $scope.requestDocId = $scope.lectureId;
 
-                    if ($scope.pollingLectures.indexOf(answer.lectureId) == -1) {
+                    if ($scope.pollingLectures.indexOf(answer.lectureId) === -1) {
                         $scope.startLongPolling($scope.lastID);
                         $scope.pollingLectures.push(answer.lectureId);
                     }
-                })
+                });
         };
 
+        /*
+         Gets answers from the current lecture to current question.
+         */
         $scope.getLectureAnswers = function (answer) {
             $scope.gettingAnswers = true;
             http({
@@ -682,15 +759,18 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
 
                 })
                 .error(function () {
-                    console.log("Couldn't get answers");
-                })
+                    $window.console.log("Couldn't get answers");
+                });
         };
 
+        /*
+         Starts long polling for the updates.(messages, questions, lecture ending)
+         */
         $scope.startLongPolling = function (lastID) {
             function message_longPolling(lastID) {
                 var timeout;
 
-                if (lastID == null) {
+                if (lastID === null) {
                     lastID = -1;
                 }
 
@@ -715,12 +795,12 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                             return;
                         }
                         $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
-                        if (answer.lectureId != $scope.lectureId) {
+                        if (answer.lectureId !== $scope.lectureId) {
                             return;
                         }
 
-                        if (answer.lectureEnding != 100) {
-                            if (answer.lectureEnding == 1 && !$scope.lectureEnded) {
+                        if (answer.lectureEnding !== 100) {
+                            if (answer.lectureEnding === 1 && !$scope.lectureEnded) {
                                 $scope.showLectureEnding = true;
                                 $scope.lectureEnded = true;
                             }
@@ -751,7 +831,7 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                 message_longPolling(answer.lastid);
                             }, 1000);
 
-                            if (answer.status == 'results') {
+                            if (answer.status === 'results') {
                                 angular.forEach(answer.data, function (msg) {
                                     $scope.wallMessages.push(msg);
                                     if ($scope.messageName && $scope.messageTime) {
@@ -781,11 +861,11 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
                                 var wallArea = $('#wallArea');
                                 wallArea.scrollTop(wallArea[0].scrollHeight);
                             } else {
-                                console.log("Sending new poll.");
+                                $window.console.log("Sending new poll.");
 
                             }
                         } else {
-                            console.log("Got answer but not polling anymore.")
+                            $window.console.log("Got answer but not polling anymore.");
                         }
                     })
                     .error(function () {
@@ -800,26 +880,29 @@ timApp.controller("WallController", ['$scope', '$controller', "$http", "$window"
             message_longPolling(lastID);
         };
 
+        /*
+         Event for pressing enter while writing message. Sends message.
+         */
         $scope.chatEnterPressed = function (event) {
             if (event.which === 13) {
                 $scope.sendMessageEvent($scope.newMsg);
             }
         };
 
+        /*
+         Event when pressin enter while writing password for lecture. Tries to join lecture
+         */
         $scope.passEnterPressed = function (event) {
             if (event.which === 13) {
                 $scope.joinLecture();
             }
         };
 
-        $scope.pollChanged = function () {
-            if (!$scope.requestOnTheWay) {
-                if ($scope.polling) {
-                    $scope.startLongPolling($scope.lastID);
-                }
-            }
-        };
-
+        /*
+         Left padder that adds 0 to left side of number.
+         number: Given number to add 0s
+         size: how many characters the padded value should be.
+         */
         $scope.leftPadder = function (number, size) {
             var paddedNumber = "" + number;
             var len = paddedNumber.length;
