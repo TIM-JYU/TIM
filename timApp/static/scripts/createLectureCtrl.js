@@ -167,7 +167,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.isDateValid($scope.startDate, "startDate");
             if($scope.error_message<=0) {
                 $scope.start_date = $scope.translateToDateObject($scope.startDate, $scope.startHour, $scope.startMin,".");
-                if ($scope.endDate !== undefined) {
+                if ($scope.endDate !== undefined, $scope.useDate) {
                     $scope.isDateValid($scope.endDate, "endDate");
                     $scope.end_date = $scope.translateToDateObject($scope.endDate, $scope.endHour, $scope.endMin,".");
                 } else {
@@ -294,28 +294,21 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         /* Clears the form of all values */
         $scope.clearForm = function () {
             $scope.$emit("closeLectureForm");
-            var elementsToClear = [
-            $scope.lectureCode,
-            $scope.password,
-            $scope.startDate,
-            $scope.endDate,
-            $scope.startHour,
-            $scope.startMin,
-            $scope.durationMin,
-            $scope.durationHour,
-            $scope.endHour,
-            $scope.endMin
-            ];
-            for (var i = 0; i < elementsToClear.length; i++) {
-                if (elementsToClear[i] !== undefined) {
-                    elementsToClear[i] = "";
-                }
-            }
+            $scope.lectureCode = "";
+            $scope.password = "";
+            $scope.startDate = "";
+            $scope.endDate = "";
+            $scope.startHour = "";
+            $scope.startMin = "";
+            $scope.durationMin = "";
+            $scope.durationHour = "";
+            $scope.endHour = "";
+            $scope.endMin = "";
             $scope.showLectureCreation = false;
             $scope.removeErrors();
             document.getElementById("lectureForm").reset();
             $scope.useDate = false;
-            $scope.useDuration = false;
+            $scope.useDuration = true;
             $scope.dateChosen = false;
             $scope.durationChosen = false;
             $scope.dateCheck = false;
