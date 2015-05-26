@@ -1192,8 +1192,8 @@ img.console {
     top: 0;
     bottom: 0;
     left: 0;
+	width: 270px;
     z-index: 1;
-    overflow-y: auto;
 }
 
 .sidebarMenu h4{
@@ -1207,12 +1207,12 @@ img.console {
 }
 
 .index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
-	position: fixed;
-    top: 0;
-    left: 45px;
+	position:relative;
+	left: 50px;
+	top: -60px;
     z-index: 1;
-    overflow-y: auto;
     width: 215px;
+	max-height: 500px;
     word-wrap: break-word;
     background-color: #e6e6e6;
     /*-webkit-transition: 200ms all ease-in-out;
@@ -1220,8 +1220,9 @@ img.console {
     -o-transition: 200ms all ease-in-out;
     transition: 200ms all ease-in-out;*/
     z-index: 501;
-    overflow: auto;
     overflow-x: hidden;
+	overflow-y: auto;
+	border-top: 1px solid #e6e6e6;
 }
 
 .index-sidebar.hidden, .index-sidebar.autohidden, .lectures-sidebar.hidden, .lectures-sidebar.autohidden,
@@ -1351,14 +1352,13 @@ img.console {
 }
 
 .menu{
-	display: block;
-	background:#e6e6e6;
+	display: inline-block;
     width: 45px;
-    z-index: 501;
 }
 
 .menu-icon {
     z-index: 501;
+	background: #F0F0F0;
     cursor: pointer;
     filter: brightness(1);
     -webkit-filter: brightness(1);
@@ -1370,6 +1370,15 @@ img.console {
     filter: brightness(1);
     -webkit-filter: brightness(1);
     -moz-filter: brightness(1);
+}
+
+.showSidebar {
+	/*position:fixed;
+	top: 0;
+	left: 50px;
+    width: 215px;
+	max-height: 80%;
+    z-index: 501;*/
 }
 
 .close {
@@ -1389,6 +1398,10 @@ img.console {
     font-size: 0.9em;
 }
 
+.questionAdded img {
+	
+}
+
 @media only screen and (max-width: 500px) {
 	#sidebarMenuButton {
 		display: block;
@@ -1403,10 +1416,6 @@ img.console {
 	.menu {
 		display: none;
 		margin-top: 10px;
-	}
-	
-	.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar{
-		top: 80px;
 	}
 	
 }

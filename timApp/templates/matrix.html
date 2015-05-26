@@ -1,4 +1,4 @@
-<div>
+<div class="matrix">
     <div id="check" ng-if="question.type == 'matrix'">
         <label>Answer type:</label>
         <select name="answerType" ng-model="question.matrixType" ng-dropdown
@@ -12,7 +12,7 @@
         <table>
             <thead>
             <!----Top "hidden row" with + and - buttons  ---->
-            <tr style="border: none; background-color: inherit;">
+            <tr class="invisibleRow">
                 <th style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
                 <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit"
@@ -125,7 +125,4 @@
             </tbody>
         </table>
     </div>
-
-    <br>
-    <br>
 </div>

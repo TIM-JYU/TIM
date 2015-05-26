@@ -11,6 +11,11 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         $scope.questionSidebarState = 'autohidden';
         $scope.peopleSidebarState = 'autohidden';
         $scope.settingsSidebarState = 'autohidden';
+		$scope.indexIconState = 'noClick';
+		$scope.lectureIconState = 'noClick';
+		$scope.questionIconState = 'noClick';
+		$scope.peopleIconState = 'noClick';
+		$scope.settingsIconState = 'noClick';
 
         $scope.showSidebar = function () {
             $('.menu').slideToggle();
@@ -30,18 +35,29 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             $scope.questionSidebarState = 'hidden';
             $scope.peopleSidebarState = 'hidden';
             $scope.settingsSidebarState = 'hidden';
+			$scope.indexIconState = 'noClick';
+			$scope.lectureIconState = 'noClick';
+			$scope.questionIconState = 'noClick';
+			$scope.peopleIconState = 'noClick';
+			$scope.settingsIconState = 'noClick';
         });
 
         $scope.toggleIndex = function () {
             var visible = angular.element('.index-sidebar').is(":visible");
             if (visible) {
                 $scope.indexSidebarState = 'hidden';
+				$scope.indexIconState = 'noClick';
             } else {
                 $scope.indexSidebarState = 'open';
                 $scope.lecturesSidebarState = 'hidden';
                 $scope.questionSidebarState = 'hidden';
                 $scope.peopleSidebarState = 'hidden';
                 $scope.settingsSidebarState = 'hidden';
+				$scope.indexIconState = 'clicked';
+				$scope.lectureIconState = 'noClick';
+				$scope.questionIconState = 'noClick';
+				$scope.peopleIconState = 'noClick';
+				$scope.settingsIconState = 'noClick';
             }
         };
 
@@ -49,12 +65,19 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             var visible = angular.element('.lectures-sidebar').is(":visible");
             if (visible) {
                 $scope.lecturesSidebarState = 'hidden';
+				$scope.lectureIconState = 'noClick';
+
             } else {
                 $scope.indexSidebarState = 'hidden';
                 $scope.lecturesSidebarState = 'open';
                 $scope.questionSidebarState = 'hidden';
                 $scope.peopleSidebarState = 'hidden';
                 $scope.settingsSidebarState = 'hidden';
+				$scope.indexIconState = 'noClick';
+				$scope.lectureIconState = 'clicked';
+				$scope.questionIconState = 'noClick';
+				$scope.peopleIconState = 'noClick';
+				$scope.settingsIconState = 'noClick';
 
                 $http({
                     url: '/getAllLecturesFromDocument',
@@ -80,12 +103,19 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             $scope.lectureQuestions = [];
             if (visible) {
                 $scope.questionSidebarState = 'hidden';
+				$scope.questionIconState = 'noClick';
+
             } else {
                 $scope.indexSidebarState = 'hidden';
                 $scope.lecturesSidebarState = 'hidden';
                 $scope.questionSidebarState = 'open';
                 $scope.peopleSidebarState = 'hidden';
                 $scope.settingsSidebarState = 'hidden';
+				$scope.indexIconState = 'noClick';
+				$scope.lectureIconState = 'noClick';
+				$scope.questionIconState = 'clicked';
+				$scope.peopleIconState = 'noClick';
+				$scope.settingsIconState = 'noClick';
 
                 $http({
                     url: '/questions/' + $scope.docId,
@@ -110,12 +140,19 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             var visible = angular.element('.people-sidebar').is(":visible");
             if (visible) {
                 $scope.peopleSidebarState = 'hidden';
+				$scope.peopleIconState = 'noClick';
+
             } else {
                 $scope.indexSidebarState = 'hidden';
                 $scope.lecturesSidebarState = 'hidden';
                 $scope.questionSidebarState = 'hidden';
                 $scope.peopleSidebarState = 'open';
                 $scope.settingsSidebarState = 'hidden';
+				$scope.indexIconState = 'noClick';
+				$scope.lectureIconState = 'noClick';
+				$scope.questionIconState = 'noClick';
+				$scope.peopleIconState = 'clicked';
+				$scope.settingsIconState = 'noClick';
             }
         };
 
@@ -123,12 +160,18 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             var visible = angular.element('.settings-sidebar').is(":visible");
             if (visible) {
                 $scope.settingsSidebarState = 'hidden';
+				$scope.settingsIconState = 'noClick';
             } else {
                 $scope.indexSidebarState = 'hidden';
                 $scope.lecturesSidebarState = 'hidden';
                 $scope.questionSidebarState = 'hidden';
                 $scope.peopleSidebarState = 'hidden';
                 $scope.settingsSidebarState = 'open';
+				$scope.indexIconState = 'noClick';
+				$scope.lectureIconState = 'noClick';
+				$scope.questionIconState = 'noClick';
+				$scope.peopleIconState = 'noClick';
+				$scope.settingsIconState = 'clicked';
             }
         };
 

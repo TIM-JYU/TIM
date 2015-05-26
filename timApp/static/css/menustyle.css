@@ -146,6 +146,18 @@ input[type="submit"], input[type="button"] {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+.index-sidebar.open {
+	
+}
+
+.menu-icon.clicked {
+	padding: 5px;
+	background:#e6e6e6;
+	-webkit-box-shadow: 0px 0px 10px #3cc;
+	-moz-box-shadow: 0px 0px 10px #3cc;
+	box-shadow: 0px 0px 10px #3cc;
+}
+
 /*Pienet resoluutiot*/
 @media only screen and (max-width: 500px) {
 	.menuSection #largeMenu {
@@ -257,5 +269,19 @@ input[type="submit"], input[type="button"] {
 	.smallIconSection img{
 		display: inline;
 	}
+	
+	.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
+		max-height: 260px;
+	}
+	
+	.contents {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+	width: 50px;
+    z-index: 1;
+}
+	
 }
 
