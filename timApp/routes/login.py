@@ -1,8 +1,8 @@
 """Routes for login view."""
 from .common import *
+from .logger import logMessage
 from email.mime.text import MIMEText
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from timdb.timdb2 import TimDb
 
 import codecs
 import os
@@ -11,6 +11,7 @@ import string
 import random
 import re
 import requests
+import socket
 
 
 login_page = Blueprint('login_page',
@@ -29,6 +30,12 @@ def __isValidEmail(email):
     return re.match('^[\w\.-]+@([\w-]+\.)+[\w-]+$', email) is not None
 
 def __sendMail(email, subject, text, sender='no-reply@tim.it.jyu.fi'):
+    # Check connectivity first
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(3)
+    sock.connect(('smtp.jyu.fi', 25))
+    sock.close()
+
     msg = MIMEText(text)
     msg['Subject'] = subject
     msg['From'] = sender
@@ -142,12 +149,6 @@ def altSignup():
         
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     
-    try:
-        __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
-    except Exception as e:
-        flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
-        return finishLogin(ready=False)
-    
     timdb = getTimDb()
     timdb.users.createPotentialUser(email, password)
     
@@ -157,7 +158,14 @@ def altSignup():
     session.pop('appcookie', None)
     session['user_name'] = 'Anonymous'
     session["email"] = email
-    flash("A password has been sent to you. Please check your email.")
+
+    try:
+        __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
+        flash("A password has been sent to you. Please check your email.")
+    except Exception as e:
+        logMessage('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)), 'ERROR')
+        flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
+
     return finishLogin(ready=False)
 
 @login_page.route("/altsignup2", methods=['POST'])

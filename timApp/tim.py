@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
-import os
 import imghdr
 import io
 import re
@@ -22,6 +20,7 @@ from routes.edit import edit_page
 from routes.manage import manage_page
 from routes.view import view_page
 from routes.login import login_page
+from routes.logger import logger_bp
 from timdb.timdbbase import TimDbException
 from containerLink import PluginException
 from routes.settings import settings_page
@@ -45,6 +44,7 @@ app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
+app.register_blueprint(logger_bp)
 app.register_blueprint(answers)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
@@ -54,15 +54,6 @@ app.register_blueprint(Blueprint('bower',
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
 KNOWN_TAGS = ['difficult', 'unclear']
-
-# current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
-if not os.path.exists(app.config['LOG_DIR']):
-    os.mkdir(app.config['LOG_DIR'])
-handler = logging.FileHandler(app.config['LOG_PATH'])
-handler.setLevel(logging.DEBUG)
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -74,22 +65,6 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
-LOG_LEVELS = {"CRITICAL" : app.logger.critical, 
-              "ERROR" : app.logger.error,
-              "WARNING" : app.logger.warning,
-              "INFO": app.logger.info,
-              "DEBUG" : app.logger.debug}
-
-# Logger call
-@app.route("/log/", methods=["POST"])
-def logMessage():
-    try:
-        message = request.get_json()['message']
-        level = request.get_json()['level']
-        LOG_LEVELS[level](message)
-    except KeyError:
-        app.logger.error("Failed logging call: " + str(request.get_data()))
-    
 
 def error_generic(error, code):
     if 'text/html' in request.headers.get("Accept", ""):
