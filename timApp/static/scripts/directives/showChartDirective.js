@@ -2,7 +2,14 @@
  * Created by hajoviin on 13.5.2015.
  */
 
+
+/*global $:false */
+/*global Chart:false */
+var angular;
+
+var timApp = angular.module('timApp');
 timApp.directive('showChartDirective', ['$compile', function ($compile) {
+    "use strict";
     return {
         restrict: 'E',
         replace: "true",
@@ -14,6 +21,8 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
         link: function ($scope, $element) {
             $scope.internalControl = $scope.control || {};
             $scope.canvasId = "#" + $scope.canvas || "";
+            $scope.isText = false;
+
             var basicSets = [
                 {
                     label: "Answers",
@@ -80,13 +89,20 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
 
 
             $scope.internalControl.createChart = function (question) {
+
+                $scope.x = 10;
+                $scope.y = 20;
+                if (typeof question.DATA.ROWS[0].COLUMNS[0].answerFieldType !== "undefined" && question.DATA.ROWS[0].COLUMNS[0].answerFieldType === "text") {
+                    $scope.isText = true;
+                    return;
+                }
                 var labels = [];
                 var emptyData = [];
                 if (angular.isDefined(question.DATA.ROWS)) {
                     angular.forEach(question.DATA.ROWS, function (row) {
                         labels.push(row.text);
                         emptyData.push(0);
-                    })
+                    });
                 }
 
                 if (angular.isDefined(question.DATA.COLUMNS)) {
@@ -95,7 +111,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                             labels.push(row.Value);
                             emptyData.push(0);
                         });
-                    })
+                    });
                 }
 
                 labels.push("No answer");
@@ -106,12 +122,12 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 var usedDataSets = [];
 
 
-                if (question.TYPE == "true-false") {
+                if (question.TYPE === "true-false") {
                     question.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
                     question.DATA.HEADERS[1] = {"type": "header", "id": 1, "text": "False"};
                 }
 
-                if (question.TYPE == "matrix" || question.TYPE == "true-false") {
+                if (question.TYPE === "matrix" || question.TYPE === "true-false") {
                     for (var i = 0; i < question.DATA.ROWS[0].COLUMNS.length; i++) {
                         usedDataSets.push(basicSets[i]);
                         usedDataSets[i].data = emptyData;
@@ -139,32 +155,42 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             };
 
             $scope.internalControl.addAnswer = function (answers) {
-                if (!angular.isDefined(answers)){
+                if (!angular.isDefined(answers)) {
                     return;
                 }
+                $($scope.canvasId)[0].getContext("2d").font = "20px Georgia";
+
                 for (var answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
                     var onePersonAnswers = answers[answerersIndex].answer.split("|");
-                    var datasets = $scope.answerChart.datasets;
+                    var datasets;
+                    if (!$scope.isText) {
+                        datasets = $scope.answerChart.datasets;
+                    }
                     for (var a = 0; a < onePersonAnswers.length; a++) {
                         var singleAnswers = onePersonAnswers[a].split(',');
                         for (var sa = 0; sa < singleAnswers.length; sa++) {
                             var singleAnswer = singleAnswers[sa];
 
-                            if (datasets.length == 1) {
+                            if ($scope.isText) {
+                                $($scope.canvasId)[0].getContext("2d").fillText(singleAnswer, $scope.x, $scope.y);
+                                $scope.y += 20;
+                                continue;
+                            }
+                            if (datasets.length === 1) {
                                 for (var b = 0; b < datasets[0].bars.length; b++) {
-                                    if (datasets[0].bars[b].label == singleAnswer) {
+                                    if (datasets[0].bars[b].label === singleAnswer) {
                                         datasets[0].bars[b].value += 1;
                                     }
                                 }
                             } else {
                                 for (var d = 0; d < datasets.length; d++) {
-                                    if (datasets[d].label == singleAnswer) {
+                                    if (datasets[d].label === singleAnswer) {
                                         datasets[d].bars[a].value += 1;
                                     }
                                 }
                             }
 
-                            if (singleAnswer == "undefined") {
+                            if (singleAnswer === "undefined") {
                                 var helperBars = $scope.answerChart.datasets[0].bars;
                                 helperBars[helperBars.length - 1].value += 1;
                             }
@@ -172,18 +198,23 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     }
                 }
 
-                $scope.answerChart.update();
-
+                if (!$scope.isText) {
+                    $scope.answerChart.update();
+                }
 
             };
 
             $scope.internalControl.close = function () {
-                $scope.answerChart.destroy();
+                if (!$scope.isText) {
+                    $scope.answerChart.destroy();
+                } else {
+                    $($scope.canvasId)[0].getContext("2d").clearRect(0, 0, $($scope.canvasId)[0].width, $($scope.canvasId)[0].height);
+                }
                 $element.empty();
 
-            }
+            };
 
         }
-    }
+    };
 }])
 ;

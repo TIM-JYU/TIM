@@ -79,9 +79,12 @@ LOG_LEVELS = {"CRITICAL": app.logger.critical,
               "INFO": app.logger.info,
               "DEBUG": app.logger.debug}
 
+# List to question that are being asked
 __question_to_be_asked = []
 
+# Dictionary for pull request to answers
 __pull_answer = {}
+# Dictionary to activities of different users
 __user_activity = {}
 
 # Logger call
@@ -207,6 +210,7 @@ def getAllImages():
     return jsonResponse(allowedImages)
 
 
+# Route to get info from lectures. Gives answers, and messages and other necessary info.
 @app.route('/getLectureInfo')
 def get_lecture_info():
     if not request.args.get("lecture_id"):
@@ -239,6 +243,7 @@ def get_lecture_info():
          "userName": user_name})
 
 
+#Route to get all the messages from some lecture.
 @app.route('/getAllMessages')
 def get_all_messages(param_lecture_id=-1):
     if not request.args.get("lecture_id") and param_lecture_id is -1:
@@ -282,6 +287,7 @@ def get_all_messages(param_lecture_id=-1):
     return jsonResponse({"status": "no-results", "data": [], "lastid": -1, "lectureId": lecture_id})
 
 
+# Gets updates from some lecture. Checks updates in 1 second frequently and answers if there is updates.
 @app.route('/getUpdates')
 def get_updates():
     if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
@@ -332,6 +338,7 @@ def get_updates():
     lecture = timdb.lectures.get_lecture(lecture_id)
 
     current_user = getCurrentUserId()
+    # Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
         lecturers, students = get_lecture_users(timdb, lecture_id)
 
@@ -349,11 +356,10 @@ def get_updates():
                 lecture_ending = 5
             else:
                 lecture_ending = 100
-        else:
-            lecture_ending = 100
 
     while step <= 10:
 
+        # Gets new messages if the wall is in use.
         if use_wall:
             last_message = timdb.messages.get_last_message(lecture_id)
             if last_message:
@@ -372,6 +378,7 @@ def get_updates():
                              "message": message.get('message')})
                     last_message_id = messages[-1].get('msg_id')
 
+        # Gets new questions if the questions are in use.
         if use_quesitions:
             for pair in __question_to_be_asked:
                 if pair[0] == lecture_id and current_user not in pair[2]:
@@ -398,6 +405,7 @@ def get_updates():
          "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
 
 
+# Route to add message to database.
 @app.route('/sendMessage', methods=['POST'])
 def send_message():
     timdb = getTimDb()
@@ -409,16 +417,19 @@ def send_message():
     return jsonResponse(msg_id)
 
 
+# Route to render question
 @app.route('/lecture/question')
 def show_question():
     return render_template('question.html')
 
 
+# Route to render question
 @app.route('/question')
 def show_question_without_view():
     return render_template('question.html')
 
 
+# Route to get specific question
 @app.route('/getQuestion')
 def get_quesition():
     doc_id = request.args.get('doc_id')
@@ -428,6 +439,7 @@ def get_quesition():
     return jsonResponse(question)
 
 
+# Route to get all questions
 @app.route('/getQuestions', methods=['GET'])
 def get_questions():
     timdb = getTimDb()
@@ -435,6 +447,7 @@ def get_questions():
     return jsonResponse(questions)
 
 
+# Route to get add question to database
 @app.route('/addQuestion', methods=['POST'])
 def add_question():
     # TODO: Only lecturers should be able to create questions.
@@ -449,6 +462,7 @@ def add_question():
     return jsonResponse(questions)
 
 
+# Route to check if the current user is in some lecture in specific document
 @app.route('/checkLecture', methods=['GET'])
 def check_lecture():
     if not request.args.get('doc_id'):
@@ -487,6 +501,7 @@ def check_lecture():
         return get_running_lectures(doc_id)
 
 
+# Route to start lecture that's start time is in future
 @app.route("/startFutureLecture", methods=['POST'])
 def start_future_lecture():
     if not request.args.get('lecture_code') or not request.args.get("doc_id"):
@@ -506,6 +521,7 @@ def start_future_lecture():
                          "lecturers": lecturers})
 
 
+# Route to get all the lectures from document
 @app.route('/getAllLecturesFromDocument', methods=['GET'])
 def get_all_lectures():
     if not request.args.get('doc_id'):
@@ -533,6 +549,7 @@ def get_all_lectures():
         {"currentLectures": current_lectures, "futureLectures": future_lectures, "pastLectures": past_lectures})
 
 
+# Route to get show lecture info of some specific lecture
 @app.route('/showLectureInfo/<int:lecture_id>', methods=['GET'])
 def show_lecture_info(lecture_id):
     timdb = getTimDb()
@@ -582,12 +599,14 @@ def get_lecture_users(timdb, lecture_id):
     return lecturers, students
 
 
+# Checks if some lecture is running or not.
 def check_if_lecture_is_running(lecture_id):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     return timdb.lectures.check_if_lecture_is_running(lecture_id, time_now)
 
 
+# Gets all lectures that are currently running. Also gives the ones that are in the future
 def get_running_lectures(doc_id):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -609,8 +628,9 @@ def get_running_lectures(doc_id):
          "lectureCode": lecture_code})
 
 
+# Route to create lecture.
 @app.route('/createLecture', methods=['POST'])
-def start_lecture():
+def create_lecture():
     if not request.args.get("doc_id") or not request.args.get("start_date") or not request.args.get(
             "end_date") or not request.args.get("lecture_code"):
         abort(400, "Missing parameters")
@@ -634,6 +654,7 @@ def start_lecture():
     return jsonResponse({"lectureId": lecture_id})
 
 
+# Route to end lecture
 @app.route('/endLecture', methods=['POST'])
 def end_lecture():
     if not request.args.get("doc_id") or not request.args.get("lecture_id"):
@@ -676,6 +697,7 @@ def clean_dictionaries_by_lecture(lecture_id):
         del __pull_answer[pullRequest]
 
 
+# Route to extend lecture
 @app.route('/extendLecture', methods=['POST'])
 def extend_lecture():
     if not request.args.get("doc_id") or not request.args.get("lecture_id") or not request.args.get("new_end_time"):
@@ -689,6 +711,7 @@ def extend_lecture():
     return jsonResponse("")
 
 
+# Route to delete lecture.
 @app.route('/deleteLecture', methods=['POST'])
 def delete_lecture():
     if not request.args.get("doc_id") or not request.args.get("lecture_id"):
@@ -707,6 +730,7 @@ def delete_lecture():
     return get_running_lectures(doc_id)
 
 
+# Route to join lecture. Checks that the given password is correct.
 @app.route('/joinLecture', methods=['POST'])
 def join_lecture():
     if not request.args.get("doc_id") or not request.args.get("lecture_code"):
@@ -738,6 +762,7 @@ def join_lecture():
          "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
 
 
+# Route to leace lecture
 @app.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
     timdb = getTimDb()
@@ -1097,7 +1122,6 @@ def answer_to_question():
                         except ValueError:
                             points += 0
                     header_number += 1
-                header_number = 0
             else:
                 for row in question_json['DATA']['ROWS']:
                     if row['text'] == oneLine:

@@ -1,7 +1,6 @@
 var timApp = angular.module('timApp', [
     'ngSanitize',
     'angularFileUpload',
-    'fundoo.services',
     'ui.ace'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
     var interceptor = [
         '$q',

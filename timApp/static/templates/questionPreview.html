@@ -1,0 +1,37 @@
+<div ng-controller="QuestionPreviewController" class="popUpWindow">
+    <h1>Question preview</h1>
+
+    <div class="questionPreview">
+        <h3> Question: <span ng-bind="json.QUESTION"></span></h3>
+        Question type: <span ng-bind="json.TYPE"></span><br>
+        Time limit: <span ng-bind="json.TIMELIMIT"></span><br>
+
+        <table>
+            <div>
+                <tr ng-if="(json.TYPE == 'true-false')">
+                    <td style="visibility:hidden;"></td>
+                    <td>True</td>
+                    <td>False</td>
+                </tr>
+                <tr ng-if="json.TYPE == 'matrix'">
+                    <td style="visibility:hidden;"></td>
+                    <td ng-repeat="header in json.DATA.HEADERS"><p>{{ header.text }}</p></td>
+                </tr>
+            </div>
+
+            <tr ng-repeat="row in json.DATA.ROWS">
+                <td> {{ row.text }} </td>
+                <td ng-repeat="column in row.COLUMNS">
+                    <div ng-if="(column.answerFieldType == 'radio')"><input type="radio" disabled></div>
+                    <div ng-if="(column.answerFieldType == 'checkbox')"><input type="checkbox" disabled></div>
+                    <div ng-if="(column.answerFieldType == 'text')"><input type="text" disabled></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="buttons">
+        <button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>
+        <button ng-click='close()' class='timButton questionButton'>Close</button>
+        <button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>
+    </div>
+</div>
