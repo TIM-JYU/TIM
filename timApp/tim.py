@@ -3,6 +3,7 @@ import imghdr
 import io
 import re
 import posixpath
+from datetime import timedelta
 
 from flask import Flask, Blueprint
 from flask import stream_with_context
@@ -470,6 +471,11 @@ def indexPage():
                            userName=getCurrentUserName(),
                            userId=getCurrentUserId(),
                            userGroups=possible_groups)
+
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
 
 def startApp():
