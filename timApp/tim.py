@@ -338,6 +338,7 @@ def get_updates():
     lecture = timdb.lectures.get_lecture(lecture_id)
 
     current_user = getCurrentUserId()
+    # Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
         lecturers, students = get_lecture_users(timdb, lecture_id)
 
@@ -355,11 +356,10 @@ def get_updates():
                 lecture_ending = 5
             else:
                 lecture_ending = 100
-        else:
-            lecture_ending = 100
 
     while step <= 10:
 
+        # Gets new messages if the wall is in use.
         if use_wall:
             last_message = timdb.messages.get_last_message(lecture_id)
             if last_message:
@@ -378,6 +378,7 @@ def get_updates():
                              "message": message.get('message')})
                     last_message_id = messages[-1].get('msg_id')
 
+        # Gets new questions if the questions are in use.
         if use_quesitions:
             for pair in __question_to_be_asked:
                 if pair[0] == lecture_id and current_user not in pair[2]:

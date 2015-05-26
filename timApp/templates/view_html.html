@@ -106,26 +106,24 @@
 {% endblock %}
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
+        <div id="kana"></div>
 
         {% if lecture_mode %}
             <div ng-controller="LectureController">
                 {% include 'lectureinfo_menu.html' %}
-                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed="false"
-                     resizable>
+                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed resizable>
                     <div class="wall-base" id="wallBase">
                         <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
                              ng-click="hideWall()">
                             <span ng-bind="wallName">Wall</span>
                             <span ng-show="!showWall && newMessagesAmount > 0" ng-bind="newMessagesAmountText"></span>
                         </div>
-                        <div ng-show="showWall" class="wall-content" style="float:left">
+                        <div ng-show="showWall" class="wall-content">
                             <div class="wall-message-area">
-                                <label>
-                                    <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
-                                </label>
+                                <textarea id="wallArea" readonly rows="20" cols="100">{{ "{{msg}}" }}</textarea>
                             </div>
                             <div class="wall-footer">
-                                <div class="wall-buttons" style="float:left">
+                                <div class="wall-buttons">
                                     <label>
                                         <input id="messagebox" ng-model="newMsg" width="200"
                                                ng-keypress="chatEnterPressed($event)">
@@ -144,6 +142,7 @@
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
                 <pop-up-dialog show="showLectureOptions">
@@ -268,7 +267,9 @@
                         </div>
                         <div ng-class="['people-sidebar', peopleSidebarState]">
                             <h1>People</h1>
-							<h3>People logged-in: <span ng-bind="lecturerTable.length + studentTable.length">None</span></h3>
+
+                            <h3>People logged-in: <span ng-bind="lecturerTable.length + studentTable.length">None</span>
+                            </h3>
                             {% raw %}
                             <ul>
                                 <h4>Lecturer (<span ng-bind="lecturerTable.length">None</span>)</h4>
@@ -286,8 +287,9 @@
                         </div>
                         <div ng-class="['settings-sidebar', settingsSidebarState]">
                             <h1>Settings</h1>
-							<h3>Customize</h3>
-							<a href="/settings">Customize TIM</a>
+
+                            <h3>Customize</h3>
+                            <a href="/settings">Customize TIM</a>
                             {% raw %}
                             <ul ng-show="inLecture">
                                 <h4>Lecture settings</h4>
@@ -320,8 +322,9 @@
         {% if not lecture_mode %}
             <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
                 <div ng-class="['contents']">
-					<img id="sidebarMenuButton" ng-click="showSidebar()"
-                             src="{{ url_for('static', filename='images/small-menu-icon.png') }}" title="Show menu"/>
+                    <img id="sidebarMenuButton" ng-click="showSidebar()"
+                         src="{{ url_for('static', filename='images/small-menu-icon.png') }}" title="Show menu"/>
+
                     <div class="menu">
                         <img ng-click="toggleIndex()" class="menu-icon" ng-show="indexTable.length > 0"
                              src="{{ url_for('static', filename='images/contents.png') }}" width="50"
@@ -351,8 +354,9 @@
                     </div>
                     <div ng-class="['settings-sidebar', settingsSidebarState]">
                         <h1>Settings</h1>
-						<h3>Customize</h3>
-						<a href="/settings">Customize TIM</a>
+
+                        <h3>Customize</h3>
+                        <a href="/settings">Customize TIM</a>
                     </div>
                 </div>
             </div>
