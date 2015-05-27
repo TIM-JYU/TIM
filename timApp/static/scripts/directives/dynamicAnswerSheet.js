@@ -63,11 +63,19 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         var group;
 
                         if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
-                            group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
-                            htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
-                            " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
-                            "></label></td>";
-                            header++;
+                            if(column.answerFieldType === "text") {
+                                group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
+                                htmlSheet += "<td><label> <textarea" + " name='" + group + "'" +
+                                ">" + $scope.json.DATA.HEADERS[header].text +
+                                "</textarea></label></td>";
+                                header++;
+                            } else {
+                                group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
+                                htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
+                                " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
+                                "></label></td>";
+                                header++;
+                            }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
                             htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
