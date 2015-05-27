@@ -1192,8 +1192,23 @@ img.console {
     top: 0;
     bottom: 0;
     left: 0;
-	width: 270px;
+	width: 50px;
     z-index: 1;
+}
+
+#sidebarIcons {
+	position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+}
+
+.sideMenu {
+	position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
 }
 
 .sidebarMenu h4{
@@ -1206,11 +1221,16 @@ img.console {
 	margin: 0;
 }
 
+.invisible {
+	height: 50px;
+	width: 50px;
+}
+
 .index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
 	position:relative;
 	left: 50px;
-	top: -60px;
-    z-index: 1;
+	top: -50px;
+    z-index: 500;
     width: 215px;
 	max-height: 500px;
     word-wrap: break-word;
@@ -1219,7 +1239,6 @@ img.console {
     -moz-transition: 200ms all ease-in-out;
     -o-transition: 200ms all ease-in-out;
     transition: 200ms all ease-in-out;*/
-    z-index: 501;
     overflow-x: hidden;
 	overflow-y: auto;
 	border-top: 1px solid #e6e6e6;
@@ -1352,6 +1371,11 @@ img.console {
 }
 
 .menu{
+	position: fixed;
+	top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 500;
 	display: inline-block;
     width: 45px;
 }
@@ -1404,6 +1428,10 @@ img.console {
 
 @media only screen and (max-width: 500px) {
 	#sidebarMenuButton {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 505;
 		display: block;
 		width: 60px;
 		height: 70px;
@@ -1415,6 +1443,12 @@ img.console {
 	
 	.menu {
 		display: none;
+		top: 80px;
+		margin-top: 10px;
+	}
+	
+	.sideMenu {
+		top: 80px;
 		margin-top: 10px;
 	}
 	

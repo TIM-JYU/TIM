@@ -189,10 +189,9 @@
                                  height="75" title="Click to open sidebar-menu"/>
                         </div>
 						<div class="showSidebar">
-							<div class="menu">
-								<img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]" ng-show="indexTable.length > 0"
-									 src="{{ url_for('static', filename='images/contents.png') }}" width="50"
-									 height="50" title="Contents"/>	 
+							
+							<div class="sideMenu">
+								<div class="invisible" ng-show="indexTable.length > 0"></div>	 
 								<div ng-class="['index-sidebar', indexSidebarState]">
 										<h1>Index</h1>
 										{% raw %}
@@ -213,10 +212,7 @@
 										{% endraw %}
 								</div>
 									 
-									 
-								<img ng-click="toggleLectures()" ng-class="['menu-icon', lectureIconState]"
-									 src="{{ url_for('static', filename='images/lectures-icon.png') }}" width="50"
-									 height="50" title="Lectures-menu"/>
+								<div class="invisible"></div>
 								<div ng-class="['lectures-sidebar', lecturesSidebarState]">
 									<h1>Lectures</h1>
 									{% raw %}
@@ -240,11 +236,7 @@
 									{% endraw %}
 								</div>
 									 
-									 
-								<img ng-show="isLecturer" ng-click="toggleQuestions()"
-									 ng-class="['menu-icon', questionIconState]"
-									 src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
-									 height="50" title="Questions-menu"/>
+								<div class="invisible" ng-show="isLecturer"></div>	 
 								<div ng-class="['questions-sidebar', questionSidebarState]">
 									<h1>Questions</h1>
 									{% raw %}
@@ -262,10 +254,8 @@
 									</ul>
 									{% endraw %}
 								</div>
-									 
-								<img ng-show="isLecturer && inLecture" ng-click="togglePeople()" ng-class="['menu-icon', peopleIconState]"
-									 src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
-									 height="50" title="People logged-in"/>
+										
+								<div class="invisible" ng-show="isLecturer && inLecture"></div>	 
 								<div ng-class="['people-sidebar', peopleSidebarState]">
 									<h1>People</h1>
 									<h3>People logged-in: <span ng-bind="lecturerTable.length + studentTable.length">None</span></h3>
@@ -285,9 +275,7 @@
 									{% endraw %}
 								</div>
 									 
-								<img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
-									 src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
-									 height="50" title="Settings-menu"/>
+								<div class="invisible"></div>
 								<div ng-class="['settings-sidebar', settingsSidebarState]">
 									<h1>Settings</h1>
 									<h3>Customize</h3>
@@ -318,6 +306,27 @@
 								</div>	 
 							</div>
 							
+							<div class="menu">
+								<div id="sideBarIcons">
+									<img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]" ng-show="indexTable.length > 0"
+										 src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+										 height="50" title="Contents"/>
+									<img ng-click="toggleLectures()" ng-class="['menu-icon', lectureIconState]"
+										 src="{{ url_for('static', filename='images/lectures-icon.png') }}" width="50"
+										 height="50" title="Lectures-menu"/>
+									<img ng-show="isLecturer" ng-click="toggleQuestions()"
+										 ng-class="['menu-icon', questionIconState]"
+										 src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
+										 height="50" title="Questions-menu"/>
+									<img ng-show="isLecturer && inLecture" ng-click="togglePeople()" ng-class="['menu-icon', peopleIconState]"
+										 src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
+										 height="50" title="People logged-in"/>
+									<img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
+										 src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
+										 height="50" title="Settings-menu"/>
+								</div>
+							</div>
+							
 						</div>
                     </div>
                 </div>
@@ -328,11 +337,8 @@
                 <div ng-class="['contents']">
                     <img id="sidebarMenuButton" ng-click="showSidebar()"
                          src="{{ url_for('static', filename='images/small-menu-icon.png') }}" title="Show menu"/>
-
-                    <div class="menu">
-                        <img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]" ng-show="indexTable.length > 0"
-                             src="{{ url_for('static', filename='images/contents.png') }}" width="50"
-                             height="50" title="Contents"/>
+					<div class="sideMenu">
+						<div class="invisible" ng-show="indexTable.length > 0"></div>
 						<div ng-class="['index-sidebar', indexSidebarState]">
 							<h1>Index</h1>
 							{% raw %}
@@ -352,16 +358,22 @@
 							</ul>
 							{% endraw %}
 						</div> 
-							 
+						<div class="invisible"></div>
+						<div ng-class="['settings-sidebar', settingsSidebarState]">
+							<h1>Settings</h1>
+
+							<h3>Customize</h3>
+							<a href="/settings">Customize TIM</a>
+						</div>
+					</div>
+                    <div class="menu">
+                        <img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]" ng-show="indexTable.length > 0"
+                             src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+                             height="50" title="Contents"/>
                         <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
                              src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
                              height="50" title="Settings-menu"/>
-						<div ng-class="['settings-sidebar', settingsSidebarState]">
-                        <h1>Settings</h1>
-
-                        <h3>Customize</h3>
-                        <a href="/settings">Customize TIM</a>
-                    </div>
+						
 					
                     </div>
                     
