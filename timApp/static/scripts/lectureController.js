@@ -9,6 +9,8 @@ var angular;
 
 var timApp = angular.module('timApp');
 
+//TODO: Painike, josta voisi hakea kysymyksiä.
+//TODO: Button, to get questions and wall.
 timApp.controller("LectureController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout',
 
     function ($scope, controller, http, $window, $rootScope, $timeout) {
@@ -167,7 +169,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
             http({
                 url: '/answerToQuestion',
-                method: 'POST',
+                method: 'PUT',
                 params: {
                     'question_id': answer.questionId,
                     'lecture_id': $scope.lectureId,
@@ -707,6 +709,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Sends http request to get all the messages from the current lecture.
          */
         $scope.getAllMessages = function () {
+            $scope.msg ="";
             http({
                 url: '/getAllMessages',
                 type: 'GET',
@@ -786,7 +789,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         'client_message_id': lastID,
                         'lecture_id': $scope.lectureId,
                         'doc_id': $scope.docId,
-                        'is_lecturer': $scope.isLecturer,
+                        'is_lecturer': $scope.isLecturer, // Tarkista mielummin serverin päässä
                         'get_messages': $scope.useWall,
                         'get_questions': $scope.useQuestions,
                         'buster': new Date().getTime()
@@ -831,6 +834,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         if ($scope.polling) {
 
                             $scope.pollingLectures.push(answer.lectureId);
+                            // Odottaa sekunnin ennen kuin pollaa uudestaan.
                             timeout = setTimeout(function () {
                                 message_longPolling(answer.lastid);
                             }, 1000);
@@ -875,6 +879,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     .error(function () {
                         $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
+                        //Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.
                         timeout = setTimeout(function () {
                             message_longPolling();
                         }, 30000);
