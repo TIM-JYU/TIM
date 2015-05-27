@@ -132,16 +132,22 @@
 
         <div id="pars">
             {% for t in text %}
+                {% if 'task_id' in t %}
                 <div class="par">
-                    {% if 'task_id' in t %}
-                        <answerbrowser
-                                task-id="{{ t['task_id'] }}">
-                        </answerbrowser>
-                    {% endif %}
+                    <answerbrowser
+                            task-id="{{ t['task_id'] }}">
+                    </answerbrowser>
                     <div class="parContent">
                         {{ t['html']|safe }}
                     </div>
                 </div>
+                {% else %}
+                <div class="par" ng-non-bindable>
+                    <div class="parContent">
+                        {{ t['html']|safe }}
+                    </div>
+                </div>
+                {% endif %}
             {% endfor %}
         </div>
     </div>

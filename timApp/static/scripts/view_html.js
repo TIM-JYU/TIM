@@ -360,8 +360,12 @@ timApp.controller("ViewCtrl", [
                 len = data.texts.length;
             http.defaults.headers.common.Version = data.version;
             for (var i = len - 1; i >= 0; i--) {
+                var html = data.texts[i].html;
+                if ('task_id' in data.texts[i]) {
+                    html = $compile(html)(sc);
+                }
                 var $newpar = $("<div>", {class: "par"})
-                    .append($("<div>", {class: "parContent"}).html($compile(data.texts[i].html)(sc)));
+                    .append($("<div>", {class: "parContent"}).html(html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
