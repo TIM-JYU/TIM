@@ -40,7 +40,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                     $scope.json.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
                     $scope.json.DATA.HEADERS[1] = {"type": "header", "id": 1, "text": "False"};
                 }
-                var nextBoolean = true;
 
                 if ($scope.json.DATA.HEADERS.length > 0) {
                     htmlSheet += "<tr>";
@@ -70,12 +69,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                             "></label></td>";
                             header++;
                         } else {
-                            group = "group" + row.type.replace(/[^a-zA-Z]/g, "");
+                            group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
                             htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
                             " value='" + row.text + "'" +
                             ">" + row.text + "</label></td>";
                         }
-                        nextBoolean = !nextBoolean;
                     });
                     htmlSheet += "</tr>";
                 });
@@ -127,10 +125,22 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                     var groupName = "";
                     if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                         for (var i = 0; i < $scope.json.DATA.ROWS.length; i++) {
-                            groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z]/g, '');
                             var answer = [];
-                            //noinspection JSJQueryEfficiency
-                            var matrixInputs = $('input[name=' + groupName + ']:checked');
+                            var matrixInputs;
+                            groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z0-9]/g, '');
+
+                            if ($scope.json.DATA.ROWS[0].COLUMNS[0].answerFieldType === "text") {
+                                matrixInputs = $('input[name=' + groupName + ']');
+                                for (var c = 0; c < matrixInputs.length; c++) {
+                                    answer.push(matrixInputs[c].value);
+                                }
+
+                                answers.push(answer);
+                                continue;
+                            }
+
+                            matrixInputs = $('input[name=' + groupName + ']:checked');
+
                             for (var k = 0; k < matrixInputs.length; k++) {
                                 answer.push(matrixInputs[k].value);
                             }
@@ -141,7 +151,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         }
                     }
                     else {
-                        groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/[^a-zA-Z]/g, '');
+                        groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/[^a-zA-Z0-9]/g, '');
                         var checkedInputs = $('input[name=' + groupName + ']:checked');
                         for (var j = 0; j < checkedInputs.length; j++) {
                             answers.push(checkedInputs[j].value);

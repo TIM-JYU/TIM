@@ -63,7 +63,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         var header = $('#header');
         header.css("display", "none");
 
-        var wall = $("wall");
+        var wall = $('#wall');
+        var htmlMessageList = $('#wallMessageList');
 
 
         /*
@@ -324,7 +325,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.checkUp = function (e) {
             var mouseUpX = e.clientX;
             var mouseUpY = e.clientY;
-
             wall.position("fixed");
 
             if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
@@ -505,6 +505,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
         /*
          Extends the lecture based on the time selected in pop-up to extend lecture
+         Currently extends to the old lecture ending time. Other option is to extend
+         from the current moment(needs to be implemented)
          */
         $scope.extendLecture = function () {
             var dateTime = $scope.lectureEndTime.split(" ");
@@ -566,6 +568,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $scope.lectureEndTime = "Ends: " + endTimeDate;
             $scope.showLectureEnding = false;
             $scope.lectureEnded = false;
+            $scope.answeredToLectureEnding = true;
 
             http({
                 url: '/extendLecture',
@@ -573,6 +576,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId, new_end_time: endTimeDate}
             })
                 .success(function () {
+                    $scope.answeredToLectureEnding = false;
                     $window.console.log("Lecture extended");
                 })
                 .error(function () {
@@ -656,7 +660,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
             if (!$scope.showWall) {
                 $scope.wallHeight = wall.height();
-                wall.height(0);
+                wall.height(28);
                 $scope.newMessagesAmount = 0;
                 $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
             } else {
