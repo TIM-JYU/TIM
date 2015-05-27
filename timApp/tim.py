@@ -243,7 +243,8 @@ def get_lecture_info():
          "userName": user_name})
 
 
-#Route to get all the messages from some lecture.
+# Route to get all the messages from some lecture.
+# Tulisi hakea myös kaikki aukiolevat kysymykset, joihin käyttäjä ei ole vielä vastannut.
 @app.route('/getAllMessages')
 def get_all_messages(param_lecture_id=-1):
     if not request.args.get("lecture_id") and param_lecture_id is -1:
@@ -357,6 +358,7 @@ def get_updates():
             else:
                 lecture_ending = 100
 
+    # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
 
         # Gets new messages if the wall is in use.
@@ -397,6 +399,7 @@ def get_updates():
                  "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers, "students": students,
                  "lectureEnding": lecture_ending})
 
+        # Myös tämä sleep kannattaa poistaa.
         time.sleep(1)
         step += 1
 
@@ -1016,7 +1019,7 @@ def deleteNote():
 
 @app.route("/questions/<int:doc_id>")
 def getQuestions(doc_id):
-    verifyViewAccess(doc_id)
+    verifyOwnership(doc_id)
     timdb = getTimDb()
     questions = timdb.questions.get_doc_questions(doc_id)
     return jsonResponse(questions)
@@ -1055,6 +1058,7 @@ def delete_question():
     return jsonResponse("")
 
 
+# Tämän muuttaminen long polliksi vaatii threadien poistamisen
 @app.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
     if not request.args.get('question_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
@@ -1088,7 +1092,7 @@ def get_lecture_answers():
     return jsonResponse({"answers": answers, "questionId": question_id, "latestAnswer": latest_answer})
 
 
-@app.route("/answerToQuestion", methods=['POST'])
+@app.route("/answerToQuestion", methods=['PUT'])
 def answer_to_question():
     if not request.args.get("question_id") or not request.args.get('answers') or not request.args.get('lecture_id'):
         abort(400, "Bad request")

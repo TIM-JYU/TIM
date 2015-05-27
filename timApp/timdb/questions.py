@@ -73,7 +73,8 @@ class Questions(TimDbBase):
     @contract
     def add_questions(self, doc_id: 'int', par_index:'int', question: 'str', answer: 'str', questionJson: 'str',
                       commit: 'bool'=True) -> 'int':
-        """ Creates a new questions
+        """
+        Creates a new questions
         :param question: Question to be saved
         :param answer: Answer to the question
         :param commit: Commit or not to commit
@@ -106,6 +107,11 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     def get_multiple_questions(self, question_ids: 'int[]') -> 'list(dict)':
+        """
+        Gets multiple questions
+        :param question_ids: quesitons ids as integet array
+        :return: list of dictionaries of the matching questions.
+        """
 
         cursor = self.db.cursor()
         for_db = str(question_ids)

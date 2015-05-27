@@ -6,8 +6,9 @@ from contracts import contract
 class Answers(TimDbBase):
     @contract
     def saveAnswer(self, user_ids: 'list(int)', task_id: 'str', content: 'str', points: 'str|int|float|None', tags: 'list(str)'):
-        """Saves an answer to the database.
-        
+        """
+        Saves an answer to the database.
+
         :param user_ids: The id of the usergroup to which the answer belongs.
         :param task_id: The id of the task.
         :param content: The content of the answer.
