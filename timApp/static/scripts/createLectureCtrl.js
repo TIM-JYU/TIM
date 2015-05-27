@@ -1,4 +1,6 @@
-/*global $:false */
+/**
+ * Lecture creation controller which is used to handle and validate the form data.
+ */
 
 var angular;
 
@@ -26,17 +28,19 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.startMin = "";
         var date = new Date();
         $scope.startDate = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
+        angular.element('#startDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
+        angular.element('#endDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
 
+        /**
+         * Function called when new lecture form button is pressed.
+         */
         $scope.$on('initLectureFormVals', function () {
             $scope.initLectureForm();
         });
 
-        // Sets the calendars in the form to the current date and date-format dd.m.yyyy
-        $(function () {
-            $('#startDate').datepicker({dateFormat: 'dd.m.yy'});
-            $('#endDate').datepicker({dateFormat: 'dd.m.yy'});
-        });
-
+        /**
+         * Lecture form initialized to have the current date and time as default starting time.
+         */
         $scope.initLectureForm = function () {
             $window.console.log("Lecture initialized.");
             var date = new Date();
@@ -47,16 +51,10 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.enableDue2();
         };
 
-        $scope.setCurrentTimeAndDate = function () {
-            $scope.startDay = $scope.leftPadder(date.getDate(), 2);
-            $scope.startMonth = $scope.leftPadder(date.getMonth() + 1, 2);
-            $scope.startYear = $scope.leftPadder(date.getFullYear(), 4);
-            $scope.startHour = $scope.leftPadder(date.getHours(), 2);
-            $scope.startMin = $scope.leftPadder(date.getMinutes(), 2);
-        };
-
-        $scope.setCurrentTimeAndDate();
-
+        /**
+         * This function is called if end date is selected. Sets boolean values to reflect this choice and sets
+         * the default end time to 2 hours ahead of start time.
+         */
         $scope.enableDate2 = function () {
             $window.console.log($scope.startDate);
             $scope.dateCheck = true;
@@ -71,7 +69,10 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.durationMin = "";
         };
 
-        /*Function for enabling fields and buttons for "Duration" and disabling them for "Use date".*/
+        /**
+         * Function for enabling fields and buttons for "Duration" and disabling them for "Use date". This function
+         * is called when duration is chosen and is chosen by default.
+         */
         $scope.enableDue2 = function () {
             $scope.dateCheck = false;
             $scope.dueCheck = true;
@@ -86,53 +87,54 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.durationMin = "00";
         };
 
-        /*Function for checking that elements value isn't empty.*/
-        $scope.notEmpty = function (element, val) {
-            if (element.value === "") {
-                $scope.errorize(val, "This field can't be empty.");
-            } else {
-                $scope.defInputStyle(val);
-            }
-        };
-
-        /*Function for checking that input is a number.*/
-        $scope.isValid = function (element, val) {
-            if (isNaN(element.value) === true) {
-                $scope.errorize(val, "Use a number.");
-            }
-            else {
-                $scope.notEmpty(element);
-            }
-        };
-
-        /*Removes error style from element (red border around field).*/
+        /**
+         * Remove border from given element.
+         * @param element ID of the field whose border will be removed.
+         */
         $scope.defInputStyle = function (element) {
             if (element !== null || !element.isDefined) {
-                document.getElementById(element).style.border = "";
+                angular.element("#"+element).css("border", "");
             }
         };
 
-        /*Function for checking that hours are correct (between 0 and 23).*/
+        /**
+         * Checks if the value is between 0-23
+         * @param element The value of the element to be validated.
+         * @param val The ID of the input field so user can be notified of the error.
+         */
         $scope.isHour = function (element, val) {
-            if (element > 23 || element < 0) {
+            if (isNaN(element,val) || element > 23 || element < 0) {
                 $scope.errorize(val, "Hour has to be between 0 and 23.");
             }
         };
 
-        /*Function for checking that minutes are correct (between 0 and 59).*/
+        /**
+         * Checks if the value is between 0-59
+         * @param element The value of the element to be validated.
+         * @param val The ID of the input field so user can be notified of the error.
+         */
         $scope.isMinute = function (element, val) {
-            if (element > 59 || element < 0) {
+            if (isNaN(element,val) || element > 59 || element < 0) {
                 $scope.errorize(val, "Minutes has to be between 0 and 59.");
             }
         };
 
-        /*Function for checking that number is positive.*/
+        /**
+         * Checks if the number given is positive.
+         * @param element The value of the element to be validated.
+         * @param val The ID of the input field so user can be notified of the error.
+         */
         $scope.isPositiveNumber = function (element, val) {
             if (isNaN(element) || element < 0) {
                 $scope.errorize(val, "Number has to be positive.");
             }
         };
 
+        /**
+         * Function for validating that the date is of the format dd.mm.yyyy.
+         * @param element The value of the element to be validated.
+         * @param val The ID of the input field so user can be notified of the error.
+         */
         $scope.isDateValid = function (element, val) {
             var reg = new RegExp("^(0?[1-9]|[12][0-9]|3[01])[.]((0?[1-9]|1[012])[.](19|20)?[0-9]{2})*$");
             if (!reg.test(element)) {
@@ -140,6 +142,12 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             }
         };
 
+        /**
+         * Translates date object to string in the form yyyy-mm-dd hh:mm
+         * @param input JavaScript date object
+         * @param include_time Boolean value whether to include the time or not
+         * @returns {string} yyyy-mm-dd( hh:mm)
+         */
         $scope.dateObjectToString = function (input, include_time) {
             var output = $scope.leftPadder(input.getFullYear(), 4) + "-" +
                 $scope.leftPadder(input.getMonth() + 1, 2) + "-" +
@@ -150,7 +158,14 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             }
             return output;
         };
-        /*Creates a new date object with the specified date and time*/
+        /**
+         * Creates a new date object with the specified date and time
+         * @param date_to_be_validated Date as a string in either seperated by dots or dashes.
+         * @param time_hours
+         * @param time_mins
+         * @param splitter Date seperator.
+         * @returns {Date} Returns a JavaScript date object
+         */
         $scope.translateToDateObject = function (date_to_be_validated, time_hours, time_mins, splitter) {
             var parms = date_to_be_validated.split(splitter);
             var dd;
@@ -171,7 +186,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             return new Date(yyyy, mm - 1, dd, hours, mins, 0);
         };
 
-        /*Function for creating a new lecture and error checking.*/
+        /**
+         * Function for creating a new lecture and validation.
+         */
         $scope.submitLecture = function () {
             $scope.removeErrors();
             $scope.isDateValid($scope.startDate, "startDate");
@@ -206,6 +223,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 var lecture_starting_in_past = $scope.start_date - now_date_object < 0;
                 var lecture_ending_in_past;
 
+                /* Checks that are run if end date is used*/
                 if ($scope.useDate && $scope.end_date !== undefined) {
                     $scope.isHour($scope.stopHour, "stopHour");
                     $scope.isMinute($scope.stopMin, "stopMin");
@@ -215,6 +233,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     $scope.endDateForDB = $scope.dateObjectToString($scope.end_date, true);
                 }
 
+                /* Check that are run if duration is used. */
                 if ($scope.useDuration) {
                     $scope.isPositiveNumber($scope.durationHour, "durationHour");
                     $scope.isPositiveNumber($scope.durationMin, "durationMin");
@@ -231,6 +250,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 }
                 var alert_message = "";
                 lecture_ending_in_past = $scope.end_date - now_date_object <= 0;
+                /* Confirmations if lecture starts and/or ends before the current date */
                 if (lecture_starting_in_past) {
                     alert_message += "Are you sure you want the lecture to start before now? ";
                 }
@@ -249,6 +269,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     }
                 }
             }
+            /* If no errors save the lecture to the database */
             if ($scope.error_message <= 0) {
                 $scope.startDateForDB = $scope.dateObjectToString($scope.start_date, true);
                 $http({
@@ -267,6 +288,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         $scope.$parent.useWall = true;
                         $scope.$parent.useAnswers = true;
                         $scope.clearForm();
+                        $scope.$emit("closeLectureForm");
                     })
                     .error(function (answer) {
                         $scope.error_message += answer.error;
@@ -275,14 +297,21 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             }
         };
 
-        /* Changes the border of the element to red*/
+        /**
+         * Changes the border of the element to red
+         * @param div_val The ID of the input field so user can be notified of the error.
+         * @param error_text Error text that will be printed if the error occurs.
+         */
         $scope.errorize = function (div_val, error_text) {
-            document.getElementById(div_val).style.border = "1px solid red";
+            angular.element("#" + div_val).css('border', "1px solid red");
             if (error_text.length > 0) {
                 $scope.error_message += error_text + "<br />";
             }
         };
 
+        /**
+         * Calls defInputStyle for all the form elements.
+         */
         $scope.removeErrors = function () {
             $scope.error_message = "";
             var elementsToRemoveErrorsFrom = [
@@ -305,9 +334,10 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             }
         };
 
-        /* Clears the form of all values */
+        /**
+         *  Resets all the values of the form.
+         */
         $scope.clearForm = function () {
-            $scope.$emit("closeLectureForm");
             $scope.lectureCode = "";
             $scope.password = "";
             $scope.startDate = "";
@@ -320,7 +350,6 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.endMin = "";
             $scope.showLectureCreation = false;
             $scope.removeErrors();
-            document.getElementById("lectureForm").reset();
             $scope.useDate = false;
             $scope.useDuration = true;
             $scope.dateChosen = false;
@@ -328,7 +357,12 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.dateCheck = false;
         };
 
-        /* Adds size number of 0's at the start of the number*/
+        /**
+         * Function for adding preceding zeroes to a number to make it of desired length.
+         * @param number Number to be padded.
+         * @param size How long should the number be.
+         * @returns {string} Returns the number in the padded length.
+         */
         $scope.leftPadder = function (number, size) {
             var paddedNumber = "" + number;
             var len = paddedNumber.length;
@@ -339,8 +373,11 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             return paddedNumber;
         };
 
-        /*Function for cancelling the lecture creation.*/
+        /**
+         * Function for cancelling the lecture creation.
+         */
         $scope.cancelCreation = function () {
+            $scope.$emit("closeLectureForm");
             $scope.clearForm();
         };
     }
