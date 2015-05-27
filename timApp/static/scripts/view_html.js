@@ -365,16 +365,14 @@ timApp.controller("ViewCtrl", [
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
-                    $par.find("answerbrowser").prependTo($newpar);
-                    var taskId = $newpar.find('.parContent').children().first().attr('id');
-                    var ab = $newpar.find('answerbrowser');
-                    ab.attr('task-id', taskId);
-                    if (ab.length > 0) {
-                        ab.isolateScope().taskId = taskId;
-                    }
                     if ($par.find(".read, .modified").length > 0) {
                         readClass = "modified";
                     }
+                }
+                if ('task_id' in data.texts[i]) {
+                    var ab = $('<answerbrowser>').attr('task-id', data.texts[i].task_id);
+                    $compile(ab[0])(sc);
+                    ab.prependTo($newpar);
                 }
                 $par.after($newpar.append($("<div>",
                     {class: "readline " + readClass, title: "Click to mark this paragraph as read"})));
