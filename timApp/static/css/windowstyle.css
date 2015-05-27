@@ -79,10 +79,6 @@ input[type="number"] {
 	background: #c12e2a;
 }
 
-#questionStart label, #questionTimer label {
-	display: inline;
-}
-
 #infoFields label {
     display:inline-block;
 	width: 150px;
@@ -154,9 +150,6 @@ input[type="number"] {
 	height: 30px;
 }
 
-.questionStartTime, .questionTimer {
-	display: block;
-}
 
 .createQuestion input[type="checkbox"] {
 	margin: 0px 5px;
@@ -213,6 +206,12 @@ input[type="number"] {
 .lectureArea {
     vertical-align:middle;
 }
+
+
+#endDateDiv, #durationDiv {
+	margin-left: 24px;
+}
+
 .answerStatistics select, .questioninfoWindow label , .questionAskedWindow label {
 	display: block;
 	margin-top: 10px;
@@ -240,6 +239,50 @@ input[type="number"] {
     background: #c12e2a;
 }
 
+#questionStartTime, #questionTimer {
+	display: inline;
+	margin-left: 10px;
+	margin-top: 10px;
+}
+
+#questionStart {
+	margin-left: 10px;
+	margin-top: 10px;
+}
+
+#questionStart label, #questionTimer label{
+	display: inline;
+}
+
+.questionTimer, .questionStartTime{
+	display: inline;
+}
+
+ #questionName label{
+	display:block;
+ }
+ 
+ #questionName {
+	margin-bottom: 10px;
+ }
+ 
+ #questionTiming {
+	display: block;
+ }
+ 
+
+ .matrix {
+	width: 80%;
+	max-height: 500px;;
+	overflow: auto;
+ }
+ 
+.invisibleRow {
+	border: none; 
+	background-color: inherit;
+	height:20px;
+ }
+ 
 .questionPreview {
     font-size: 125%;
 }
