@@ -594,6 +594,13 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $scope.showLectureEnding = false;
         };
 
+        /**
+         * NOT IMPLEMENTED YET
+         */
+        $scope.editLecture = function () {
+            $window.alert("This feature has not been implemented yet. This function can be found in lectureController.js");
+        };
+
         /*
          Sends http request to end the lecture.
          */

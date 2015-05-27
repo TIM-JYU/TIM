@@ -45,7 +45,7 @@
                 <img id="stop-icon" src="{{ url_for('static', filename='images/stop-icon3.png') }}" class="icon"
                      ng-click="endLecture()" title="End this lecture" ng-show="canStop">
                 <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                     title="Edit this lecture" ng-show="canStop">
+                     title="Edit this lecture" ng-click="editLecture()" ng-show="canStop">
             </div>
         </div>
 
@@ -64,7 +64,7 @@
                     <img id="start-icon" src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
                          title="Start lecture now" ng-click="startFutureLecture()">
                     <img id="edit-icon2" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                         title="Edit this lecture">
+                         title="Edit this lecture" ng-click="editLecture()">
                 </div>
             </div>
         </div>
