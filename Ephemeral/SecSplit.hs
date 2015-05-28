@@ -41,21 +41,21 @@ eol :: Parser T.Text
 eol = (string "\n") <|> (string "\r\n")
 
 document :: Parser [Tokened]
-document = do 
-            parts <- many (heading <|> codeBlock <|> notHeading) <|> (endOfInput>>return [])
-            return $ reverse $ foldPos parts
+document =  reverse . foldPos <$> 
+                (many (heading <|> codeBlock <|> notHeading) 
+                 <|> (endOfInput>>return []))
+
+a <§> b = mappend <$> a <*> b
 
 --- | Parse a block of code into a Body element
 codeBlock :: Parser Tokened
 codeBlock = do
     (sym,st) <- (('~',) <$> "~~~") <|> (('`',) <$> "```")
     additional <- A.takeWhile (== sym)
-    restOfHeader <- mappend <$> takeTill isEndOfLine <*> eol
-    let blockTerm = do
-                term   <- string (st <> additional)
-                extras <- A.takeWhile (== sym)
-                end <- eol
-                return (term<>extras<>end)
+    restOfHeader <- takeTill isEndOfLine <§> eol
+    let blockTerm = string (st <> additional) 
+                    <§> A.takeWhile (== sym)
+                    <§> eol
     let bodyContent = do
                 content <- takeTill (==sym)
                 more <- eitherP blockTerm (T.cons <$> char sym <*> bodyContent)
@@ -72,20 +72,18 @@ heading = do
     e      <- eol
     return $ Heading (mempty `feed` level `feed` header `feed` e) (T.length level) (level<>header<>e)
 
-line :: Parser (SrcPos,T.Text)
+line :: Parser T.Text
 line = do
     crud     <- takeTill (=='\n')
-    e        <- eol<|>(endOfInput*>return "")
-    when (T.isPrefixOf "#" crud) (fail "Unexpected header")
+    e        <- eol <|> (endOfInput*>return "")
+    when (T.isPrefixOf "#" crud)   (fail "Unexpected header")
     when (T.isPrefixOf "~~~" crud) (fail "Unexpected codeblock")
     when (T.isPrefixOf "```" crud) (fail "Unexpected codeblock")
-    when (T.null crud&&T.null e) (fail "expected a line")
-    return (mempty`feed`crud`feed`e,crud<>e) 
+    when (T.null crud&&T.null e)   (fail "Expected a line")
+    return (crud<>e) 
 
 notHeading :: Parser Tokened
-notHeading = do
-    (sp, readlines) <- mconcat <$> many1 line
-    return $ Body sp readlines
+notHeading = body . mconcat <$> many1 line
 
 collate :: [Tokened] -> Tokened
 collate  = foldl' (\(Body sp t) x -> case x of
