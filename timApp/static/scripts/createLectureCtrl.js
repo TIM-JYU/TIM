@@ -103,7 +103,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          */
         $scope.isHour = function (element, val) {
-            if (isNaN(element,val) || element > 23 || element < 0) {
+            if (isNaN(element) || element > 23 || element < 0) {
                 $scope.errorize(val, "Hour has to be between 0 and 23.");
             }
         };
@@ -114,7 +114,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          */
         $scope.isMinute = function (element, val) {
-            if (isNaN(element,val) || element > 59 || element < 0) {
+            if (isNaN(element) || element > 59 || element < 0) {
                 $scope.errorize(val, "Minutes has to be between 0 and 59.");
             }
         };
@@ -225,8 +225,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
                 /* Checks that are run if end date is used*/
                 if ($scope.useDate && $scope.end_date !== undefined) {
-                    $scope.isHour($scope.stopHour, "stopHour");
-                    $scope.isMinute($scope.stopMin, "stopMin");
+                    $scope.isHour($scope.endHour, "endHour");
+                    $scope.isMinute($scope.endMin, "endMin");
                     if ($scope.end_date - $scope.start_date <= 0) {
                         $scope.errorize("endDateDiv", "Lecture has to last at least a minute.");
                     }
