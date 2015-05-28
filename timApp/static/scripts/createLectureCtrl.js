@@ -204,7 +204,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
             /*This checks that "lecture code"-field is not empty.*/
             if ($scope.lectureCode === "") {
-                $scope.errorize("lCode", "Lecture code must be entered!");
+                $scope.errorize("lCode", "Lecture name must be entered!");
             }
 
             /*This checks that either "Use date" or "Duration" is chosen for ending time.*/
@@ -325,7 +325,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 "endHour",
                 "endMin",
                 "endDateDiv",
-                "durationDiv"
+                "durationDiv",
+                "durationHour",
+                "durationMin"
             ];
             for (var i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
                 if (elementsToRemoveErrorsFrom[i] !== undefined) {
