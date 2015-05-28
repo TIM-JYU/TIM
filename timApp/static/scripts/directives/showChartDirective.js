@@ -12,12 +12,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
     "use strict";
     return {
         restrict: 'E',
-        replace: "true",
         scope: {
             canvas: '@',
             control: '='
         },
-        transclude: true,
         link: function ($scope, $element) {
             $scope.internalControl = $scope.control || {};
             $scope.canvasId = "#" + $scope.canvas || "";
@@ -89,13 +87,14 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
 
 
             $scope.internalControl.createChart = function (question) {
-
+                $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
                 if (typeof question.DATA.ROWS[0].COLUMNS[0].answerFieldType !== "undefined" && question.DATA.ROWS[0].COLUMNS[0].answerFieldType === "text") {
                     $scope.isText = true;
                     return;
                 }
+                $scope.isText = false;
                 var labels = [];
                 var emptyData = [];
                 if (angular.isDefined(question.DATA.ROWS)) {
@@ -117,7 +116,6 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 labels.push("No answer");
                 emptyData.push(0);
 
-                $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
 
                 var usedDataSets = [];
 
@@ -158,7 +156,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 if (!angular.isDefined(answers)) {
                     return;
                 }
-                $($scope.canvasId)[0].getContext("2d").font = "20px Georgia";
+                $scope.ctx.font = "20px Georgia";
 
                 for (var answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
                     var onePersonAnswers = answers[answerersIndex].answer.split("|");
@@ -172,7 +170,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                             var singleAnswer = singleAnswers[sa];
 
                             if ($scope.isText) {
-                                $($scope.canvasId)[0].getContext("2d").fillText(singleAnswer, $scope.x, $scope.y);
+                                $scope.ctx.fillText(singleAnswer, $scope.x, $scope.y);
                                 $scope.y += 20;
                                 continue;
                             }
@@ -205,15 +203,14 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             };
 
             $scope.internalControl.close = function () {
-                if (!$scope.isText) {
+                $scope.ctx.clearRect(0, 0, $($scope.canvasId)[0].width, $($scope.canvasId)[0].height);
+                if (typeof $scope.answerChart !== "undefined") {
                     $scope.answerChart.destroy();
-                } else {
-                    $($scope.canvasId)[0].getContext("2d").clearRect(0, 0, $($scope.canvasId)[0].width, $($scope.canvasId)[0].height);
                 }
+                $($scope.canvasId).remove(); // this is my <canvas> element
+                $('#chartDiv').append('<canvas id=' + $scope.canvasId.substring(1) + ' width="400" height="300"><canvas>');
                 $element.empty();
-
             };
-
         }
     };
 }])

@@ -55,34 +55,35 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 angular.forEach($scope.json.DATA.ROWS, function (row) {
                     htmlSheet += "<tr>";
                     if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
-                        htmlSheet += "<td>" + row.text + "</td>";
+                        if (row.text.length >= 1) {
+                            htmlSheet += "<td>" + row.text + "</td>";
+                        }
                     }
                     var header = 0;
                     //TODO: Needs correct JSON to be made better way
-                    angular.forEach(row.COLUMNS, function (column) {
+                    for (var i = 0; i < row.COLUMNS.length; i++) {
                         var group;
-
                         if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
-                            if(column.answerFieldType === "text") {
-                                group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
+                            if (row.COLUMNS[i].answerFieldType === "text") {
+                                group = "group" + i;
                                 htmlSheet += "<td><label> <textarea" + " name='" + group + "'" +
                                 ">" + $scope.json.DATA.HEADERS[header].text +
                                 "</textarea></label></td>";
                                 header++;
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
-                                htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
+                                htmlSheet += "<td><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
                                 " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
                                 "></label></td>";
                                 header++;
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
-                            htmlSheet += "<td><label> <input type='" + column.answerFieldType + "' name='" + group + "'" +
+                            htmlSheet += "<td><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
                             " value='" + row.text + "'" +
                             ">" + row.text + "</label></td>";
                         }
-                    });
+                    }
                     htmlSheet += "</tr>";
                 });
 
@@ -138,7 +139,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                             groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z0-9]/g, '');
 
                             if ($scope.json.DATA.ROWS[0].COLUMNS[0].answerFieldType === "text") {
-                                matrixInputs = $('input[name=' + groupName + ']');
+                                matrixInputs = $('textarea[name=' +"group"+i + ']');
                                 for (var c = 0; c < matrixInputs.length; c++) {
                                     answer.push(matrixInputs[c].value);
                                 }
@@ -180,9 +181,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
                 $element.empty();
                 $scope.$emit('answerToQuestion', {answer: answers, questionId: $scope.$parent.questionId});
+                clearInterval(promise);
             };
 
             $scope.internalControl.closeQuestion = function () {
+                clearInterval(promise);
                 $element.empty();
                 $scope.$emit('closeQuestion');
             };
