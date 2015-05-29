@@ -1059,7 +1059,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
             }
         }
         //TODO use  JSON.stringify
-
+        scope.question.question = scope.question.question.replace(/(?:\r\n|\r|\n)/g, '<br />');
         var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
@@ -1116,7 +1116,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
             return;
         }
         $window.console.log("Question: " + scope.question.question);
-
+        $window.console.log(questionJson);
         http({
             method: 'POST',
             url: '/addQuestion',
