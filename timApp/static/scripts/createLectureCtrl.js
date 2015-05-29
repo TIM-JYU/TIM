@@ -227,8 +227,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 if ($scope.useDate && $scope.end_date !== undefined) {
                     $scope.isHour($scope.endHour, "endHour");
                     $scope.isMinute($scope.endMin, "endMin");
-                    if ($scope.end_date - $scope.start_date <= 0) {
-                        $scope.errorize("endDateDiv", "Lecture has to last at least a minute.");
+                    if ($scope.end_date - $scope.start_date < 120000) {
+                        $scope.errorize("endDateDiv", "Lecture has to last at least two minutes.");
                     }
                     $scope.endDateForDB = $scope.dateObjectToString($scope.end_date, true);
                 }
@@ -243,8 +243,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     $scope.end_date = new Date($scope.start_date.getTime());
                     $scope.end_date.setHours($scope.start_date.getHours() + parseInt($scope.durationHour));
                     $scope.end_date.setMinutes($scope.start_date.getMinutes() + parseInt($scope.durationMin));
-                    if ($scope.end_date - $scope.start_date <= 0) {
-                        $scope.errorize("durationDiv", "Lecture has to last at least a minute.");
+                    if ($scope.end_date - $scope.start_date < 120000) {
+                        $scope.errorize("durationDiv", "Lecture has to last at least two minutes.");
                     }
                     $scope.endDateForDB = $scope.dateObjectToString($scope.end_date, true);
                 }

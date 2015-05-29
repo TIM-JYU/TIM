@@ -593,7 +593,8 @@ timApp.controller("ViewCtrl", [
 
 
         sc.getQuestions = function () {
-            http.get('/questions/' + sc.docId).success(function (data) {
+            http.get('/questions/' + sc.docId)
+                .success(function (data) {
                 var pars = {};
                 var questionCount = data.length;
                 for (var i = 0; i < questionCount; i++) {
@@ -1045,13 +1046,15 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
-        var timeLimit = scope.question.timeLimit.seconds;
-        if (scope.question.timeLimit.hours) {
+        if (scope.question.endTimeSelected) {
+            var timeLimit = 0;
+            timeLimit += scope.question.timeLimit.seconds;
+            if (scope.question.timeLimit.hours) {
             timeLimit += (scope.question.timeLimit.hours * 60 * 60);
-        }
-
-        if (scope.question.timeLimit.minutes) {
-            timeLimit += scope.question.timeLimit.minutes * 60;
+            }
+            if (scope.question.timeLimit.minutes) {
+                timeLimit += scope.question.timeLimit.minutes * 60;
+            }
         }
         //TODO use  JSON.stringify
 
