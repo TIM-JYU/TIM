@@ -1031,7 +1031,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
     };
 
     scope.replaceLinebreaksWithHTML = function (val){
-        return val.replace(/(?:\r\n|\r|\n)/g, '<br />');
+        var output = val.replace(/(?:\r\n|\r|\n)/g, '<br />');
+        return output.replace(/\\/g, "\\\\");
     };
 
     scope.createQuestion = function () {
@@ -1064,6 +1065,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         //TODO use  JSON.stringify
 
         scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
+        scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
         var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
