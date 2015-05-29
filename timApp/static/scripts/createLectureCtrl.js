@@ -288,7 +288,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         $scope.$parent.useWall = true;
                         $scope.$parent.useAnswers = true;
                         $scope.clearForm();
-                        $scope.$emit("closeLectureForm");
+                        $scope.$emit("closeLectureForm", true);
                     })
                     .error(function (answer) {
                         $scope.error_message += answer.error;

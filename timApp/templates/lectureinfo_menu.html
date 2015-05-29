@@ -50,7 +50,7 @@
         </div>
 
         <div class="lectureSection" ng-show="!inLecture">
-            <h1>Next:</h1>
+            <h1>Later:</h1>
 
             <div class="lectureArea">
                 <p ng-show="futureLectures.length <= 0">No upcoming lectures</p>
@@ -61,9 +61,9 @@
                     </select>
                 </div>
                 <div class="iconSection" ng-show="futureLectures.length > 0">
-                    <img id="start-icon" src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
+                    <img ng-show="isLecturer" id="start-icon" src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
                          title="Start lecture now" ng-click="startFutureLecture()">
-                    <img id="edit-icon2" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
+                    <img ng-show="isLecturer" id="edit-icon2" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                          title="Edit this lecture" ng-click="editLecture()">
                 </div>
             </div>
