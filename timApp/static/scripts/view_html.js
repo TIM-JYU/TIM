@@ -1028,7 +1028,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
 
     scope.close = function () {
         scope.clearQuestion();
+    };
 
+    scope.replaceLinebreaksWithHTML = function (val){
+        return val.replace(/(?:\r\n|\r|\n)/g, '<br />');
     };
 
     scope.createQuestion = function () {
@@ -1059,7 +1062,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
             }
         }
         //TODO use  JSON.stringify
-        scope.question.question = scope.question.question.replace(/(?:\r\n|\r|\n)/g, '<br />');
+
+        scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
         var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
@@ -1069,7 +1073,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
                 questionJson += '{';
                 questionJson += '"type":"' + scope.columnHeaders[i].type + '",';
                 questionJson += '"id":"' + scope.columnHeaders[i].id + '",';
-                questionJson += '"text":"' + scope.columnHeaders[i].text + '"';
+                questionJson += '"text":"' + scope.replaceLinebreaksWithHTML(scope.columnHeaders[i].text) + '"';
                 questionJson += '},';
             }
             if (i > 0) {
@@ -1086,7 +1090,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
             questionJson += '{';
             questionJson += '"id":"' + scope.rows[i].id + '",';
             questionJson += '"type":"' + scope.rows[i].type + '",';
-            questionJson += '"text":"' + scope.rows[i].text + '",';
+            questionJson += '"text":"' + scope.replaceLinebreaksWithHTML(scope.rows[i].text) + '",';
             questionJson += '"COLUMNS": [';
             for (var j = 0; j < scope.rows[i].columns.length; j++) {
                 questionJson += '{';

@@ -15,12 +15,12 @@
                 </tr>
                 <tr ng-if="json.TYPE == 'matrix'">
                     <td style="visibility:hidden;"></td>
-                    <td ng-repeat="header in json.DATA.HEADERS"><p>{{ header.text }}</p></td>
+                    <td ng-repeat="header in json.DATA.HEADERS" ng-bind-html="header.text"><p>{{ header.text }}</p></td>
                 </tr>
             </div>
 
             <tr ng-repeat="row in json.DATA.ROWS">
-                <td> {{ row.text }} </td>
+                <td ng-bind-html="row.text"> {{ row.text }} </td>
                 <td ng-repeat="column in row.COLUMNS">
                     <div ng-if="(column.answerFieldType == 'radio')"><input type="radio" disabled></div>
                     <div ng-if="(column.answerFieldType == 'checkbox')"><input type="checkbox" disabled></div>
