@@ -859,6 +859,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
     scope.columns = [];
     scope.columnHeaders = [];
     scope.answerDirection = "horizontal";
+    scope.question.timeLimit.seconds = 10;
     scope.answerFieldTypes = [
 
         {label: "Text area", value: "textArea"},
@@ -1046,8 +1047,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
+        var timeLimit = "";
         if (scope.question.endTimeSelected) {
-            var timeLimit = 0;
+            timeLimit = 0;
             timeLimit += scope.question.timeLimit.seconds;
             if (scope.question.timeLimit.hours) {
             timeLimit += (scope.question.timeLimit.hours * 60 * 60);
