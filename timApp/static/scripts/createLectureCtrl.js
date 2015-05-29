@@ -26,6 +26,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.startDate = "";
         $scope.startHour = "";
         $scope.startMin = "";
+        $scope.earlyJoining = true;
         var date = new Date();
         $scope.startDate = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
         angular.element('#startDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
@@ -48,6 +49,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.startHour = $scope.leftPadder(date.getHours(), 2);
             $scope.startMin = $scope.leftPadder(date.getMinutes(), 2);
             $scope.dueCheck = true;
+            $scope.earlyJoining = true;
             $scope.enableDue2();
         };
 
@@ -138,7 +140,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.isDateValid = function (element, val) {
             var reg = new RegExp("^(0?[1-9]|[12][0-9]|3[01])[.]((0?[1-9]|1[012])[.](19|20)?[0-9]{2})*$");
             if (!reg.test(element)) {
-                $scope.errorize(val, "Date is not of format dd.mm.yyyy.");
+                $scope.errorize(val, "Date is not of format dd.mm.yyyy or date is invalid.");
             }
         };
 
@@ -271,6 +273,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             }
             /* If no errors save the lecture to the database */
             if ($scope.error_message <= 0) {
+                if($scope.earlyJoining){
+                    $scope.start_date = new Date($scope.start_date - 900000); // adds 15 minutes
+                }
                 $scope.startDateForDB = $scope.dateObjectToString($scope.start_date, true);
                 $http({
                     url: '/createLecture',
