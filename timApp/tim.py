@@ -659,7 +659,7 @@ def create_lecture():
         password = ""
     current_user = getCurrentUserId()
     if not timdb.lectures.check_if_correct_name(doc_id, lecture_code):
-        abort(400, "Can't create lecture with same code to same document")
+        abort(400, "Can't create two or more lectures with the same name to the same document.")
     lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
