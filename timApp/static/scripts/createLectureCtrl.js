@@ -103,7 +103,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          */
         $scope.isHour = function (element, val) {
-            if (isNaN(element) || element > 23 || element < 0) {
+            if (element === "" || isNaN(element) || element > 23 || element < 0) {
                 $scope.errorize(val, "Hour has to be between 0 and 23.");
             }
         };
@@ -114,7 +114,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          */
         $scope.isMinute = function (element, val) {
-            if (isNaN(element) || element > 59 || element < 0) {
+            if (element === "" || isNaN(element) || element > 59 || element < 0) {
                 $scope.errorize(val, "Minutes has to be between 0 and 59.");
             }
         };
@@ -125,7 +125,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          */
         $scope.isPositiveNumber = function (element, val) {
-            if (isNaN(element) || element < 0) {
+            if (element === "" || isNaN(element) || element < 0) {
                 $scope.errorize(val, "Number has to be positive.");
             }
         };
