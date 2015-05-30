@@ -237,6 +237,12 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
                 /* Check that are run if duration is used. */
                 if ($scope.useDuration) {
+                    if ($scope.durationHour === "") {
+                        $scope.durationHour = "00";
+                    }
+                    if ($scope.durationMin === "") {
+                        $scope.durationMin = "00";
+                    }
                     $scope.isPositiveNumber($scope.durationHour, "durationHour");
                     $scope.isPositiveNumber($scope.durationMin, "durationMin");
                     if ($scope.durationHour.length <= 0 && $scope.durationMin.length <= 0) {

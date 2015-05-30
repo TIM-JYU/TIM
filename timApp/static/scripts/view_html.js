@@ -595,28 +595,28 @@ timApp.controller("ViewCtrl", [
         sc.getQuestions = function () {
             http.get('/questions/' + sc.docId)
                 .success(function (data) {
-                var pars = {};
-                var questionCount = data.length;
-                for (var i = 0; i < questionCount; i++) {
-                    var pi = data[i].par_index;
-                    if (!(pi in pars)) {
-                        pars[pi] = {questions: []};
+                    var pars = {};
+                    var questionCount = data.length;
+                    for (var i = 0; i < questionCount; i++) {
+                        var pi = data[i].par_index;
+                        if (!(pi in pars)) {
+                            pars[pi] = {questions: []};
+                        }
+
+                        pars[pi].questions.push(data[i]);
                     }
 
-                    pars[pi].questions.push(data[i]);
-                }
+                    sc.forEachParagraph(function (index) {
+                        var parIndex = index + sc.startIndex;
+                        if (parIndex in pars) {
+                            var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
+                            $(this).append($questionsDiv);
 
-                sc.forEachParagraph(function (index) {
-                    var parIndex = index + sc.startIndex;
-                    if (parIndex in pars) {
-                        var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
-                        $(this).append($questionsDiv);
+                        }
+                    });
 
-                    }
+
                 });
-
-
-            });
         };
 
 
@@ -954,7 +954,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
 
         scope.CreateColumnsForRow = function (location) {
             var columns = [];
-            if(scope.rows.length > 0) {
+            if (scope.rows.length > 0) {
                 for (var j = 0; j < scope.rows[0].columns.length; j++) {
                     columns[j] = {
                         id: j,
@@ -994,9 +994,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
 
     scope.delRow = function (indexToBeDeleted) {
         scope.error_message = "";
-        if(scope.rows.length > 1) {
+        if (scope.rows.length > 1) {
             if (indexToBeDeleted === -1) {
-            scope.rows.splice(-1, 1);
+                scope.rows.splice(-1, 1);
             }
             else {
                 scope.rows.splice(indexToBeDeleted, 1);
@@ -1040,7 +1040,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         scope.clearQuestion();
     };
 
-    scope.replaceLinebreaksWithHTML = function (val){
+    scope.replaceLinebreaksWithHTML = function (val) {
         var output = val.replace(/(?:\r\n|\r|\n)/g, '<br />');
         return output.replace(/\\/g, "\\\\");
     };
@@ -1061,7 +1061,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
 
     scope.defInputStyle = function (element) {
         if (element !== null || !element.isDefined) {
-            angular.element("#"+element).css("border", "");
+            angular.element("#" + element).css("border", "");
         }
     };
 
@@ -1073,7 +1073,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
             "questionStart",
             "questionTimer",
             "qType",
-            "matrix"
+            "matrix",
+            "durationSec",
+            "durationHour",
+            "durationMin",
+            "durationDiv"
         ];
         for (var i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
             if (elementsToRemoveErrorsFrom[i] !== undefined) {
@@ -1083,38 +1087,73 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         angular.element(".rowHeading").css("border", "");
     };
 
-    scope.rowHeadingsEmpty = function(rows) {
-        for(var i=0; i<rows.length; i++){
-            if(rows[i].text === "" || rows[i].text === null){
+    scope.rowHeadingsEmpty = function (rows) {
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].text === "" || rows[i].text === null) {
                 return true;
             }
         }
         return false;
     };
 
+    scope.isPositiveNumber = function (element, val) {
+        if (element === "" || isNaN(element) || element < 0) {
+            scope.errorize(val, "Number has to be positive.");
+        }
+    };
+
     scope.createQuestion = function () {
         scope.removeErrors();
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
-            scope.errorize("questionName","Both title and question are required for a question.");
+            scope.errorize("questionName", "Both title and question are required for a question.");
         }
         if (scope.question.type === undefined) {
             scope.errorize("qType", "Question type must be selected.");
         } else if (scope.question.type === "matrix" && scope.question.MatrixType === undefined) {
             scope.errorize("check", "Answer type must be selected.");
         } else if ((scope.question.type === "radio-vertical" ||
-                    scope.question.type === "checkbox-vertical" ||
-                    scope.question.type === "true-false") &&
-                    scope.rowHeadingsEmpty(scope.rows)) {
-                        scope.errorizeClass("rowHeading", "All rows must be filled in.");
+            scope.question.type === "checkbox-vertical" ||
+            scope.question.type === "true-false") &&
+            scope.rowHeadingsEmpty(scope.rows)) {
+            scope.errorizeClass("rowHeading", "All rows must be filled in.");
         }
-        if(scope.rows.length > 0){
+        if (scope.rows.length > 0) {
             if ((scope.question.type === "radio-vertical" || scope.question.type === "checkbox-vertical") && scope.rows.length < 2) {
                 scope.errorize("matrix", "You must have at least two choices.");
             }
-        } else {
-                scope.errorize("matrix", "You must have at least one row.");
+        } else if(scope.question.type !== undefined){
+            scope.errorize("matrix", "You must have at least one row.");
         }
-        if (scope.error_message !== ""){
+        var timeLimit = "";
+        if (scope.question.endTimeSelected) {
+            if(scope.question.timeLimit.hours === "") {
+                scope.question.timeLimit.hours = 0;
+            }
+            if(scope.question.timeLimit.minutes === "") {
+                scope.question.timeLimit.minutes = 0;
+            }
+            if(scope.question.timeLimit.seconds === "") {
+                scope.question.timeLimit.seconds = 0;
+            }
+            scope.isPositiveNumber(scope.question.timeLimit.hours, "durationHour");
+            scope.isPositiveNumber(scope.question.timeLimit.minutes, "durationMin");
+            scope.isPositiveNumber(scope.question.timeLimit.seconds, "durationSec")
+            timeLimit = 0;
+            timeLimit = parseInt(timeLimit) + parseInt(scope.question.timeLimit.seconds);
+            if (scope.question.timeLimit.hours) {
+                timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.hours * 60 * 60);
+            }
+            if (scope.question.timeLimit.minutes) {
+                timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.minutes * 60);
+            }
+            if(timeLimit <= 0) {
+                scope.errorize("durationDiv", "Please enter a duration greater then zero or for unending question uncheck the duration box.");
+            }
+        } else {
+            timeLimit = "";
+        }
+
+        if (scope.error_message !== "") {
             return;
         }
         if (scope.question.answerFieldType === 'matriisi') {
@@ -1132,17 +1171,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
-        var timeLimit = "";
-        if (scope.question.endTimeSelected) {
-            timeLimit = 0;
-            timeLimit = parseInt(timeLimit) + parseInt(scope.question.timeLimit.seconds);
-            if (scope.question.timeLimit.hours) {
-            timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.hours * 60 * 60);
-            }
-            if (scope.question.timeLimit.minutes) {
-                timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.minutes * 60);
-            }
-        }
+
         //TODO use  JSON.stringify
 
         scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
@@ -1197,7 +1226,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         }
         questionJson += ']';
         questionJson += '}}';
-
         http({
             method: 'POST',
             url: '/addQuestion',
