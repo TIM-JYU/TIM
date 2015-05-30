@@ -2,9 +2,11 @@
     <h1>Question preview</h1>
 
     <div class="questionPreview">
-        <h4> Question:</h4><h2> <span ng-bind-html="json.QUESTION"></span></h2>
-        Question type: <span ng-bind="json.TYPE"></span><br>
-        Time limit: <span ng-bind="json.TIMELIMIT"></span><br>
+        <h2> <span ng-bind-html="json.QUESTION"></span></h2>
+        <div id="questionTypeAndTimeLimit">
+            Question type: <span ng-bind="json.TYPE"></span><br>
+            Time limit: <span ng-bind="json.TIMELIMIT"></span> seconds
+        </div>
 
         <table>
             <div>

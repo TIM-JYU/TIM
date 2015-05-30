@@ -201,6 +201,11 @@ input[type="number"] {
 	border: 1px solid #DCDCDC;
 }
 
+.error_message {
+    color:red;
+    margin-left: 0px;
+}
+
 .createLecture p {
 	color: red;
 	margin-left: 0px;

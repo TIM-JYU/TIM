@@ -1,4 +1,4 @@
-<div class="matrix">
+<div id="matrix" class="matrix">
     <div id="check" ng-if="question.type == 'matrix'">
         <label>Answer type:</label>
         <select name="answerType" ng-model="question.matrixType" ng-dropdown
@@ -57,7 +57,7 @@
                 </th>
                 <th>
                     <div class="cart">
-                        <textarea style="margin-left:5px" ng-model="row.text" form="question-form" rows="1"
+                        <textarea class="rowHeading" style="margin-left:5px" ng-model="row.text" form="question-form" rows="1"
                                   cols="20"></textarea>
 
                         <br/>

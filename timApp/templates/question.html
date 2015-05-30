@@ -12,6 +12,7 @@
 					<textarea name="question" rows="2" cols="100" ng-model="question.question"></textarea>
 				</div>
 			</div>
+            <div id="qType">
 				<label>Question type:
 					<select name="question.type" ng-model="question.type" ng-dropdown required>
 						<option value="" ng-option disabled selected> -- select question type --</option>
@@ -21,6 +22,7 @@
 						<option ng-option value="matrix">Many rows and columns</option>
 					</select>
 				</label>
+            </div>
 
 				<div ng-if="question.type == 'checkbox-vertical'" ng-init="createMatrix(2, 1,'checkbox')">
                     {% include 'matrix.html' %}
@@ -62,6 +64,7 @@
 					</div>
 				</div>
 		</form>
+        <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 		<div class="buttons">
 			<button ng-click="createQuestion(question.question, question.type)">Save</button>
 			<button ng-click="close()">Cancel</button>

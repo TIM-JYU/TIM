@@ -860,6 +860,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
     scope.columnHeaders = [];
     scope.answerDirection = "horizontal";
     scope.question.timeLimit.seconds = 10;
+    scope.error_message = "";
     scope.answerFieldTypes = [
 
         {label: "Text area", value: "textArea"},
@@ -1027,6 +1028,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
     };
 
     scope.close = function () {
+        scope.removeErrors();
         scope.clearQuestion();
     };
 
@@ -1035,7 +1037,74 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         return output.replace(/\\/g, "\\\\");
     };
 
+    scope.errorize = function (div_val, error_text) {
+        angular.element("#" + div_val).css('border', "1px solid red");
+        if (error_text.length > 0) {
+            scope.error_message += error_text + "<br />";
+        }
+    };
+
+    scope.errorizeClass = function (div_val, error_text) {
+        angular.element("." + div_val).css('border', "1px solid red");
+        if (error_text.length > 0) {
+            scope.error_message += error_text + "<br />";
+        }
+    };
+
+    scope.defInputStyle = function (element) {
+        if (element !== null || !element.isDefined) {
+            angular.element("#"+element).css("border", "");
+        }
+    };
+
+    scope.removeErrors = function () {
+        scope.error_message = "";
+        var elementsToRemoveErrorsFrom = [
+            "questionName",
+            "questionTiming",
+            "questionStart",
+            "questionTimer",
+            "qType",
+            "matrix"
+        ];
+        for (var i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
+            if (elementsToRemoveErrorsFrom[i] !== undefined) {
+                scope.defInputStyle(elementsToRemoveErrorsFrom[i]);
+            }
+        }
+        angular.element(".rowHeading").css("border", "");
+    };
+
+    scope.rowHeadingsEmpty = function(rows) {
+        for(var i=0; i<rows.length; i++){
+            if(rows[i].text === "" || rows[i].text === null){
+                return true;
+            }
+        }
+        return false;
+    };
+
     scope.createQuestion = function () {
+        scope.removeErrors();
+        if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
+            scope.errorize("questionName","Both title and question are required for a question.");
+        }
+        if (scope.question.type === undefined) {
+            scope.errorize("qType", "Question type must be selected.");
+        } else if (scope.question.type === "matrix" && scope.question.MatrixType === undefined) {
+            scope.errorize("check", "Answer type must be selected.");
+        } else if ((scope.question.type === "radio-vertical" ||
+                    scope.question.type === "checkbox-vertical" ||
+                    scope.question.type === "true-false") &&
+                    scope.rowHeadingsEmpty(scope.rows)) {
+                        scope.errorizeClass("rowHeading", "All rows must be filled in.");
+        }
+        if ((scope.question.type === "radio-vertical" || scope.question.type === "checkbox-vertical") && scope.rows.length < 2) {
+            scope.errorize("matrix", "You must have at least two choices.");
+        }
+        if (scope.error_message !== ""){
+            return;
+        }
         if (scope.question.answerFieldType === 'matriisi') {
             if (scope.question.matrixType === "radiobutton-horizontal" || scope.question.matrixType === "radiobutton-vertical") {
                 scope.question.answerFieldType = "radio";
@@ -1117,12 +1186,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         questionJson += ']';
         questionJson += '}}';
 
-        if (scope.question.question === undefined || scope.question.question.trim().length === 0) {
-            $window.console.log("Can't save empty questions");
-            return;
-        }
-        $window.console.log("Question: " + scope.question.question);
-        $window.console.log(questionJson);
         http({
             method: 'POST',
             url: '/addQuestion',
@@ -1136,6 +1199,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         })
             .success(function () {
                 $window.console.log("The question was successfully added to database");
+                scope.removeErrors();
                 scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
