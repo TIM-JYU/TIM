@@ -1054,12 +1054,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         var timeLimit = "";
         if (scope.question.endTimeSelected) {
             timeLimit = 0;
-            timeLimit += scope.question.timeLimit.seconds;
+            timeLimit = parseInt(timeLimit) + parseInt(scope.question.timeLimit.seconds);
             if (scope.question.timeLimit.hours) {
-            timeLimit += (scope.question.timeLimit.hours * 60 * 60);
+            timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.hours * 60 * 60);
             }
             if (scope.question.timeLimit.minutes) {
-                timeLimit += scope.question.timeLimit.minutes * 60;
+                timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.minutes * 60);
             }
         }
         //TODO use  JSON.stringify
