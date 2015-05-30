@@ -954,15 +954,17 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
 
         scope.CreateColumnsForRow = function (location) {
             var columns = [];
-            for (var j = 0; j < scope.rows[0].columns.length; j++) {
-                columns[j] = {
-                    id: j,
-                    rowId: location,
-                    type: "answer",
-                    value: '',
-                    answerFiledType: scope.question.answerFieldType
-                };
+            if(scope.rows.length > 0) {
+                for (var j = 0; j < scope.rows[0].columns.length; j++) {
+                    columns[j] = {
+                        id: j,
+                        rowId: location,
+                        type: "answer",
+                        value: '',
+                        answerFiledType: scope.question.answerFieldType
+                    };
 
+                }
             }
             return columns;
         };
@@ -991,12 +993,18 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
     };
 
     scope.delRow = function (indexToBeDeleted) {
-        if (indexToBeDeleted === -1) {
+        scope.error_message = "";
+        if(scope.rows.length > 1) {
+            if (indexToBeDeleted === -1) {
             scope.rows.splice(-1, 1);
+            }
+            else {
+                scope.rows.splice(indexToBeDeleted, 1);
+            }
+        } else {
+            scope.errorize("", "You cannot have an empty table.");
         }
-        else {
-            scope.rows.splice(indexToBeDeleted, 1);
-        }
+
     };
 
     scope.delCol = function (indexToBeDeleted) {
@@ -1099,8 +1107,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
                     scope.rowHeadingsEmpty(scope.rows)) {
                         scope.errorizeClass("rowHeading", "All rows must be filled in.");
         }
-        if ((scope.question.type === "radio-vertical" || scope.question.type === "checkbox-vertical") && scope.rows.length < 2) {
-            scope.errorize("matrix", "You must have at least two choices.");
+        if(scope.rows.length > 0){
+            if ((scope.question.type === "radio-vertical" || scope.question.type === "checkbox-vertical") && scope.rows.length < 2) {
+                scope.errorize("matrix", "You must have at least two choices.");
+            }
+        } else {
+                scope.errorize("matrix", "You must have at least one row.");
         }
         if (scope.error_message !== ""){
             return;
