@@ -20,6 +20,7 @@ from routes.answer import answers
 from routes.edit import edit_page
 from routes.manage import manage_page
 from routes.view import view_page
+from routes.slide import slide_page
 from routes.login import login_page
 from routes.logger import logger_bp
 from timdb.timdbbase import TimDbException
@@ -44,6 +45,7 @@ app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
+app.register_blueprint(slide_page)
 app.register_blueprint(login_page)
 app.register_blueprint(logger_bp)
 app.register_blueprint(answers)

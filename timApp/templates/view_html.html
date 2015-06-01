@@ -13,9 +13,7 @@
     {% for script in js %}
         <script src=" {{ script }}"></script>
     {% endfor %}
-
     <script>
-
         var modules = checkModules([
             {% for dep in jsMods %}
                 "{{ dep|safe}}",

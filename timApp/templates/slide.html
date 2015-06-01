@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ docName }}{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
+
+    {% for script in js %}
+        <script src=" {{ script }}"></script>
+    {% endfor %}
+
+    <script>
+
+        var modules = checkModules([
+            {% for dep in jsMods %}
+                "{{ dep|safe}}",
+            {% endfor %}
+        ]);
+
+    </script>
+
+    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
+    <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
+    <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="{{ url_for('static', filename='scripts/view_html.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/answerbrowser.js') }}"></script>
+
+    {% for cssFile in cssFiles %}
+        <link rel="stylesheet" href="{{ cssFile }}">
+    {% endfor %}
+
+    {% for cssFile in custom_css_files %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
+    {% endfor %}
+
+    <style type="text/css">
+        {{ custom_css }}
+    </style>
+    <script>
+        var docId = JSON.parse({{docID|tojson|safe}});
+        var docName = {{docName|tojson|safe}};
+        var version = {{version|tojson|safe}};
+        var rights = {{rights|tojson}};
+        var startIndex = {{start_index|tojson}};
+        var refererPath = {{request.path|tojson|safe}};
+        var teacherMode = {{teacher_mode|tojson}};
+        {% if teacher_mode %}
+            var users = {{plugin_users|tojson}};
+        {% else %}
+            var users = [{{current_user|tojson}}];
+        {% endif %}
+    </script>
+{% endblock %}
+{% block content %}
+    <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
+        <div id="contents" ng-show="indexTable.length > 0">
+            <div class="menu">
+                <img ng-click="toggleSidebar()" class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+                     height="50"/>
+            </div>
+            <div ng-class="['sidebar', sidebarState]">
+                {% raw %}
+                <ul>
+                    <li ng-repeat="entry in indexTable"
+                        ng-class="entry.state"
+                        ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+                        <a class="indexentry" ng-class="entry.style" ng-click="" href="{{entry.target}}">{{entry.text}}</a>
+                        <ul ng-show="entry.state == 'exp'">
+                            <li ng-repeat="subentry in entry.items">
+                                <a ng-class="subentry.style" ng-click="" href="{{subentry.target}}">{{subentry.text}}</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                {% endraw %}
+            </div>
+        </div>
+
+        {% if teacher_mode %}
+            <div id="users" class="userlist" tim-draggable-fixed>
+            {% if plugin_users %}
+                Users with answers:<br>
+                <select ng-model="selectedUser"
+                        ng-options="(user.real_name + ' (' + user.name + '), ' + user.task_count) for user in users track by user.id"
+                        ng-change="changeUser(selectedUser)"
+                        size="20"></select>
+            {% else %}
+                No answerers.
+            {% endif %}
+            </div>
+        {% endif %}
+
+        <iframe src="/show_slide/{{ docName }}" allowfullscreen style="width: 100%; height: 30em"></iframe>
+    </div>
+{% endblock %}

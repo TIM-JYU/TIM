@@ -2,14 +2,14 @@
 	text-align: justify;
 }
 
-.paragraph, .par, .header, .viewLogin , .footer{
-	max-width: 52em; 
+.paragraph, .par  {
+	max-width: 52em;
 }
 
 body {
 	text-align: justify;
 	margin: auto;  
-	margin-left: 245px;
+	margin-left: 210px;
 }
 
 .correct {
@@ -315,7 +315,7 @@ ul ul  ul, ol ol ol {
 
 .actionButtons {
     position: absolute;
-    padding: 0 1em 2em 1em;
+    padding: 1em;
     margin: 0;
     z-index: 100;
     top: -1px;
@@ -350,13 +350,6 @@ ul ul  ul, ol ol ol {
 .timButton {
     display: block;
     margin: auto;
-}
-
-.draghandle {
-    background-color: #3CC;
-    position: initial;
-    margin-bottom: 10px;
-    margin-top: 0px;
 }
 
 .readline {
@@ -813,7 +806,7 @@ a.anchor:hover {
     left: 112%;
     min-height:6.5em;
     border-radius: 15px;
-    padding: 0 0.5em 0.5em 0.5em; 
+    padding: 0.5em; 
 }
 
 .editButtonArea {
@@ -1488,7 +1481,7 @@ img.console {
     line-height: 1.1;
     direction: ltr;
     width: 98%;
-    /*margin-left: 3.8em; */
+    margin-left: 3.8em;
 }
 
 .timButton {
@@ -1509,7 +1502,7 @@ img.console {
 .actionButtons {
     position: absolute;
     border-radius: 3px;
-    /* padding: 1em; */
+    padding: 1em;
     margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
@@ -1669,114 +1662,30 @@ button:disabled {
 
 @media screen and (min-width: 60em) {
     .body {
-    /*    margin-left: 60em !important; */
-    }
-}
-
-.breadcrumb>li+li:before {
-  padding: 8px 15px  !important;
-  color: #ccc  !important;
-  content: "/"  !important;
-}
-
-@media only screen and (max-width: 800px) {
-    .breadcrumb>li+li:before {
-        padding: 0 0  !important;
+        margin-left: 60em !important;
     }
 }
 
 .breadcrumb-div {
-    margin-top: 3px !important;
-    background-color: #fff !important;
+    margin-top: 10px;
 }
 
 .breadcrumb {
     font-size: 1.0em;
-    background-color: #fff !important;
 }
 
 .breadcrumb.ol {
-    background-color: #fff; 
+    background-color: #fff;
 }
 
 .breadcrumb a {
     /* Overrides the default TIM style for links */
-    /*background-color: #fff;  */
     font-size: 1.0em;
-	padding: 0px 0px !important;
+	padding: 8px 15px;
     margin-bottom: 20px;
     border-radius: 4px;
 }
 
 .breadcrumb active {
 	text-decoration: bold;
-}
-
-.breadcrumb>li {
-  display: inline-block;
-}
-
-
-code {
-/*
-  padding: 0px 0px !important;
-  font-size: 90% !important; 
-  color: #000 !important;
-  background-color: #f9f2f4 !important;
-*/   
-  /* border-radius: 4px; */
-}
-
-.plgfooter {
-  text-align: center;
-}
-
-
-.pull-right {
-  float: right!important;
-}
-
-.header {
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-/* Custom page footer */
-.footer {
-  padding-top: 19px;
-  color: #777;
-  border-top: 1px solid #e5e5e5;
-}
-
-footer p {
-  float: left; 
-  margin-left: 0px;
-  display: inline;
-}
-
-.footer a {
-  color: #3cc; 
-}
-
-.previewDiv {
-  background: white;
-}
-
-.footer ul {
-  float: right;
-  margin-right: 0px;
-  display: inline;
-  list-style-type: none;
-}
-
-.footer>li {
-  display: inline-block;
-}
-
-.csRunSnippets button { 
-  margin-right: 4pt;
-}
- 
-div#previewDiv {
-  background: white;
 }
