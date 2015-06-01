@@ -135,4 +135,4 @@ def unpack_args(*args, types):
 
 
 def hide_names_in_teacher(doc_id):
-    return doc_id in [113154, 113156]
+    return False

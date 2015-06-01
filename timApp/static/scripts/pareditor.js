@@ -35,9 +35,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             $previewDiv.html("");
 
                             for (var i = 0; i < len; i++) {
+                                var html = data.texts[i].html;
+                                if ('task_id' in data.texts[i]) {
+                                    html = $compile(html)($scope);
+                                }
                                 $previewDiv.append(angular.element("<div>", {class: "par"})
                                     .append(angular.element("<div>", {class: "parContent"})
-                                        .html($compile(data.texts[i].html)($scope))));
+                                        .html(html)));
                             }
                             $scope.$parent.processAllMath($previewDiv);
                             $scope.outofdate = false;
@@ -123,11 +127,16 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.releaseClicked = function () {
-                    if ( document.getElementById("previewDiv").style.position ) {
-                        document.getElementById("previewDiv").style.position = "";
+                    var div = $("#previewDiv");
+                    
+                    if (div.css("position") == "absolute") {
+                        div.css("position", "static");
+                        div.find(".draghandle").css("visibility", "hidden");
                         document.getElementById("releaseButton").innerHTML = "&#8594;";
-                    } else {
-                        document.getElementById("previewDiv").style.position="absolute";
+                    }
+                    else {
+                        div.css("position", "absolute");
+                        div.find(".draghandle").css("visibility", "visible");
                         document.getElementById("releaseButton").innerHTML = "&#8592;";
                     }
                 };

@@ -77,27 +77,6 @@ def preview(doc_id):
                          'css': cssPaths,
                          'angularModule': modules})
 
-@edit_page.route('/edit/<path:doc_name>')
-@edit_page.route("/documents/<path:doc_name>")
-def editDocument(doc_name):
-    timdb = getTimDb()
-    doc_id = timdb.documents.getDocumentId(doc_name)
-    
-    if doc_id is None or not timdb.documents.documentExists(doc_id):
-        abort(404)
-    if not hasEditAccess(doc_id):
-        if not loggedIn():
-            return redirect(url_for('loginWithKorppi', came_from=request.path))
-        else:
-            abort(403)
-    newest = getNewest(doc_id)
-    doc_metadata = timdb.documents.getDocument(doc_id)
-    xs = timdb.documents.getDocumentAsHtmlBlocks(newest)
-    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs, getCurrentUserName(), timdb.answers, doc_id, getCurrentUserId())
-    modules.append("ngSanitize")
-    modules.append("angularFileUpload")
-    return render_template('editing.html', docId=doc_metadata['id'], docName=doc_metadata['name'], text=json.dumps(texts), version={'hash' : newest.hash}, js=jsPaths, cssFiles=cssPaths, jsMods=modules)
-
 @edit_page.route("/newParagraph/", methods=["POST"])
 def addBlock():
     timdb = getTimDb()

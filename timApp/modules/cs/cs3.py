@@ -192,7 +192,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :return: error code, stdout text, stderr text
     """
     s_in = ""
-    if not ulimit: ulimit = "ulimit -f 100 -t 4 -s 100 " # -v 2000 -s 100 -u 10
+    if not ulimit: ulimit = "ulimit -f 100 -t 3 -s 100 " # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")
@@ -834,7 +834,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
                         exename, csfname)
                 elif ttype == "comtest":
-                    cmdline = "java -jar /tmp/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
+                    cmdline = "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
                         csfname, testdll, csfname, testcs)
                 elif ttype == "jcomtest":
                     cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)

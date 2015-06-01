@@ -22,23 +22,18 @@ param () {
   return $result
 }
 
+checkdir() {
+  if [ ! -d "$1" ] && [ ! -L "$1" ]; then
+    echo "File $1 doesn't exist, creating symbolic link"
+    ln -s $2 $1
+  fi
+}
+
+
 # Create symbolic links for /opt/tim, /opt/cs and /opt/svn
-# TODO: Use loop.
-timdir=/opt/tim
-if [ ! -f $timdir ] && [ ! -L $timdir ]; then
-  echo "File $timdir doesn't exist, creating symbolic link"
-  ln -s $PWD $timdir
-fi
-timdir=/opt/svn
-if [ ! -f $timdir ] && [ ! -L $timdir ]; then
-  echo "File $timdir doesn't exist, creating symbolic link"
-  ln -s $PWD/timApp/modules/svn $timdir
-fi
-timdir=/opt/cs
-if [ ! -f $timdir ] && [ ! -L $timdir ]; then
-  echo "File $timdir doesn't exist, creating symbolic link"
-  ln -s $PWD/timApp/modules/cs $timdir
-fi
+checkdir /opt/tim $PWD
+checkdir /opt/svn $PWD/timApp/modules/svn
+checkdir /opt/cs $PWD/timApp/modules/cs
 
 if param tim ; then
     docker stop tim &

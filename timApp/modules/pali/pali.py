@@ -1,245 +1,134 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 __author__ = 'vesal'
 """
 Module for serving TIM example pali plugin.
+See: https://tim.it.jyu.fi/view/tim/TIMin%20kehitys/Plugin%20development
 Serving from local port 5000
 """
 
-import http.server
-import socketserver
-from http_params import *
-import datetime
 import binascii
-import os
+import sys
 import re
+sys.path.insert(0, '/py') # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
+
+
+from http_params import *
+import tim_server
 
 PORT = 5000
 PROGDIR = "."
 
 
-def get_html(query: QueryParams) -> str:
+def check_letters(word: str, needed_len: int) -> bool:
     """
-    Return the html for this query. Params are dumbed as hexstring to avoid problems
-    with html input and so on.
-    :type query: QueryParams
-    :rtype : str
-    :param query: get or put params
-    :return : html string for this markup
+    checks if word has needed_amount of chars
+    :param word: word to check
+    :param needed_len: how many letters needed
+    :return: true if len match
+    """
+    s = word.upper()
+    return len(re.sub("[^[A-ZÅÄÖ]","",s)) == needed_len
+
+
+class PaliServer(tim_server.TimServer):
+    """
+    Class for palindrome server that can handle the TIM routes
     """
 
-    user_id = query.get_param("user_id", "--")
-    # print("UserId:", user_id)
-    # do the next if Anonymoys is not allowed to use plugins
-    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + query.get_param("initword", "") + '</pre>'
-
-    jso = query.to_json(accept_nonhyphen)
-    # print(jso)
-    runner = 'pali-runner'
-    r = runner
-    # js = jso.encode("UTF8")
-    js = json.dumps(jso)
-    print(js)
-    hx = binascii.hexlify(js.encode("UTF8"))
-    s = '<' + r + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>'
-    return s
-
-
-class PaliServer(http.server.BaseHTTPRequestHandler):
-    """
-    Class for palindrome server that cna handle the TIM routes
-    """
-    def __init__(self, request, client_address, _server):
-        super().__init__(request, client_address, _server)
-        self.user_id = "--"
-
-    def do_OPTIONS(self):
+    def get_html(self, query: QueryParams) -> str:
         """
-        Do needed things for OPTIONS request
-        :return: nothing
+        Return the html for this query. Params are dumbed as hexstring to avoid problems
+        with html input and so on.
+        :param query: get or put params
+        :return : html string for this markup
         """
-        print("do_OPTIONS ==============================================")
-        do_headers(self, "text/plain")
-        print(self.path)
-        print(self.headers)
+        # print(query.dump()) # uncomment to see query
+        user_id = query.get_param("user_id", "--")
+        # do the next if Anonymoys is not allowed to use plugins
+        if user_id == "Anonymous":
+            # SANITOIDAAN markupista tuleva syöte
+            return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' \
+                   + query.get_sanitized_param("initword", "") + '</pre>'
 
-    def do_GET(self):
+        # check if points array is 2x2 matrix
+        points_array = query.get_param("points_array", None)
+        if points_array and not check_array(points_array,2,2):
+            return '<p class="pluginError">points_array must be an 2x2 array, f.ex [[0, 0.1], [0.6, 1]]</p>'
+
+        jso = query.to_json(accept_nonhyphen)
+        runner = 'pali-runner'
+
+        attrs = json.dumps(jso)
+        # print(attrs) # uncomment this to look what is in outgoing js
+        if query.get_param("nohex", False): # as a default do hex
+            attrs = "xxxJSONxxx" + attrs
+        else:  # this is on by default, but for debug can be put off to see the json better
+            hx = 'xxxHEXJSONxxx'+binascii.hexlify(attrs.encode("UTF8")).decode()
+            attrs = hx
+        s = '<' + runner + '>' + attrs + '</' + runner + '>'
+        return s
+
+    def get_reqs_result(self) -> dict:
         """
-        Do needed things for GET request
-        :return: nothing
+        :return: reqs result as json
         """
-        # print("do_GET ==================================================")
-        if self.path.find('/reqs') >= 0: return self.do_reqs();
-        if self.path.find('/favicon.ico') >= 0: return self.send_response(404)
-        fname = self.path.split("?")[0]
-        if fname.find('.css') >= 0:  return self.send_text_file(fname,"css","text/css")
-        if fname.find('.js') >= 0:   return self.send_text_file(fname,"js","application/javascript")
-        if fname.find('.html') >= 0: return self.send_text_file(fname,"html","text/html")
-        return self.do_all(get_params(self))
+        return {"js": ["/static/scripts/timHelper.js","js/pali.js"], "angularModule": ["paliApp"],
+                       "css": ["css/pali.css"], "multihtml": True}
 
-    def do_POST(self):
+    def do_answer(self, query: QueryParams):
         """
-        Do needed things for POST request
-        This may be a f.ex a request single html-plugin or multiple plugins
-        :return: nothing
-        """
-        # print("do_POST =================================================")
-        if self.path.find('/multihtml') < 0: return self.do_all(post_params(self))
-
-        print("do_POST MULTIHML ==========================================")
-        querys = multi_post_params(self)
-        do_headers(self, "application/json")
-        htmls = []
-        self.user_id = querys[0].get_param("user_id", "--")
-        print("UserId:", self.user_id)
-        log(self)
-        # print(querys)
-
-        for query in querys:
-            # print(query.jso)
-            # print(str(query))
-            s = get_html(query)
-            # print(s)
-            htmls.append(s)
-
-        # print(htmls)
-        sresult = json.dumps(htmls)
-        self.wout(sresult)
-        log(self) # to measure time spend in doing all the html
-
-
-    def do_PUT(self):
-        """
-        Do needed things for PUT request
-        :return: nothing
-        """
-        # print("do_PUT =================================================")
-        self.do_all(post_params(self))
-
-
-    def wout(self, s:str):
-        """
-        Write s to servers output stream as UTF8
-        :rtype : object
-        :param s: string to write
-        :return: nothing
-        """
-        self.wfile.write(s.encode("UTF-8"))
-
-
-    def send_text_file(self, name:str, ftype:str, content_type:str):
-        """
-        Sends a file to server from directory ftype with contect_type
-        :param name: files name part, possible extra directories
-        :param ftype: files type (js, html, css), specifies also the directory where to get the file
-        :param content_type: files_content type
-        :return: nothing
-        """
-        fname = re.sub(".*/","",name)
-        do_headers(self, content_type)
-        return self.wout(file_to_string(ftype+"/"+fname))
-
-
-    def do_reqs(self):
-        """
-        Answer to /reqs route
-        :type self: PaliServer
-        """
-        do_headers(self, "application/json")
-        result_json = {"js": ["js/pali.js"], "angularModule": ["paliApp"],
-                       "css": ["css/pali.css"],  "multihtml": True}
-        result_str = json.dumps(result_json)
-        return self.wout(result_str)
-
-
-    def do_all(self, query:QueryParams):
-        """
-        Do all other routes
-        :param query: post and get params
-        :return: nothing
-        """
-
-        if self.path.find('/html') >= 0:
-            do_headers(self, 'text/html; charset=utf-8')
-            s = get_html(query)
-            return self.wout(s)
-
-        if self.path.find('/answer') >= 0: return self.do_answer(query)
-
-        do_headers(self, 'text/plain')
-        return self.wout("Unknow query: " + self.path)
-
-
-    def do_answer(self,query:QueryParams):
-        """
-        Do answer route
-        :type query: QueryParams
+        Do answer route.
+        Check if userword is different than the old word.  If it is save the
+        new word if max_tires is not passed.  Count points based pali ok and length ok.
         :param query: post and get params
         :return: nothing
         """
         do_headers(self, "application/json")
         result = {}
-        save = {}
         web = {}
         result["web"] = web
+        out = ""
         err = ""
+        tries = 0
+        try:
+            print(query.dump()) # uncomment this to see the query
 
-        # userinput = get_json_param(query.jso, "state", "userinput", None)
-        # if userinput: query.query["userinput"] = [userinput]
+            userword = str(query.get_json_param("input", "userword", None))
+            oldword = str(query.get_json_param("state", "userword", ""))
+            max_tries = int(query.get_param("max_tries", 1000000))
+            tries = int(query.get_json_param("state", "tries", 0))
+            if userword:
+                pali_ok = query.get_json_param("input", "paliOK", False)
+                needed_len = int(query.get_param("needed_len", 0))
+                len_ok = True
+                if needed_len: len_ok = check_letters(userword, needed_len)
+                if not len_ok: err = "Wrong length"
+                if not needed_len and not pali_ok: len_ok = False
+                points_array = query.get_param("points_array",[[0,0.25],[0.5,1]])
+                points = points_array[pali_ok][len_ok]
 
-        userword = get_json_param(query.jso, "input", "userword", None)
-        if userword: save["userword"] = userword
-
-        nosave = get_json_param(query.jso, "input", "nosave", None)
-        if not nosave: result["save"] = save
-        out = "saved"
+                # plugin can ask not to save the word
+                nosave = query.get_json_param("input", "nosave", None)
+                if (not nosave) and tries < max_tries and  userword != oldword :
+                    tries += 1
+                    tim_info = {"points": points}
+                    save = {"userword": userword, "tries": tries}
+                    result["save"] = save
+                    result["tim_info"] = tim_info
+                    out = "saved"
+                    # print(tries,max_tries)
+        except Exception as e:
+            err = str(e)
 
         out = out[0:20000]
-        web["console"] = out
+        web["tries"] = tries
+        web["result"] = out
         web["error"] = err
 
         sresult = json.dumps(result)
         self.wout(sresult)
-        # print("Result ========")
         print(sresult)
 
 
-def log(request: PaliServer):
-    """
-    Log the time and user
-    :param request:
-    :return: Nothing
-    """
-    t = datetime.datetime.now()
-    agent = " :AG: " + request.headers["User-Agent"]
-    if agent.find("ython") >= 0: agent = ""
-    logfile = CURRENTDIR + "/log/log.txt"
-    try:
-        open(logfile, 'a').write(t.isoformat(' ') + ": " + request.path + agent + " u:" + request.user_id + "\n")
-    except Exception as e:
-        print(e)
-
-
-
-# Kun debuggaa Windowsissa, pitää vaihtaa ThreadingMixIn
-# Jos ajaa Linuxissa ThreadingMixIn, niin chdir vaihtaa kaikkien hakemistoa?
-# Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
-
-# if __debug__:
-#if True:
-class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-    """Handle requests in a separate thread."""
-
-    print("Debug mode/ThreadingMixIn")
-# else:
-#    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
-#        """Handle requests in a separate thread."""
-#    print("Normal mode/ForkingMixIn")
-
-
 if __name__ == '__main__':
-    if not os.path.exists("log"):
-        os.makedirs("log")
-    CURRENTDIR = os.getcwd()
-    server = ThreadedHTTPServer(('', PORT), PaliServer)
-    print('Starting server, use <Ctrl-C> to stop')
-    server.serve_forever()
+    tim_server.start_server(PaliServer,'pali')

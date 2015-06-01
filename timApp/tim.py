@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import logging
-import os
 import imghdr
 import io
 import re
 import posixpath
+from datetime import timedelta
 
 from flask import Flask, Blueprint
 from flask import stream_with_context
@@ -22,6 +21,7 @@ from routes.edit import edit_page
 from routes.manage import manage_page
 from routes.view import view_page
 from routes.login import login_page
+from routes.logger import logger_bp
 from timdb.timdbbase import TimDbException
 from containerLink import PluginException
 from routes.settings import settings_page
@@ -45,6 +45,7 @@ app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
+app.register_blueprint(logger_bp)
 app.register_blueprint(answers)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
@@ -54,15 +55,6 @@ app.register_blueprint(Blueprint('bower',
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
 KNOWN_TAGS = ['difficult', 'unclear']
-
-# current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
-if not os.path.exists(app.config['LOG_DIR']):
-    os.mkdir(app.config['LOG_DIR'])
-handler = logging.FileHandler(app.config['LOG_PATH'])
-handler.setLevel(logging.DEBUG)
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -74,22 +66,6 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
-LOG_LEVELS = {"CRITICAL" : app.logger.critical, 
-              "ERROR" : app.logger.error,
-              "WARNING" : app.logger.warning,
-              "INFO": app.logger.info,
-              "DEBUG" : app.logger.debug}
-
-# Logger call
-@app.route("/log/", methods=["POST"])
-def logMessage():
-    try:
-        message = request.get_json()['message']
-        level = request.get_json()['level']
-        LOG_LEVELS[level](message)
-    except KeyError:
-        app.logger.error("Failed logging call: " + str(request.get_data()))
-    
 
 def error_generic(error, code):
     if 'text/html' in request.headers.get("Accept", ""):
@@ -461,6 +437,8 @@ def getReadParagraphs(doc_id):
 def setReadParagraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     if len(blocks) <= specifier:
@@ -468,7 +446,19 @@ def setReadParagraph(doc_id, specifier):
     timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
     return "Success"
 
-    
+
+@app.route("/read/<int:doc_id>", methods=['PUT'])
+def setAllAsRead(doc_id):
+    verifyReadMarkingRight(doc_id)
+    timdb = getTimDb()
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
+    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    timdb.readings.setAllAsRead(getCurrentUserGroup(), doc_id, doc_ver, len(blocks))
+    return "Success"
+
+
 @app.route("/")
 def startPage():
     return render_template('start.html')
@@ -481,6 +471,11 @@ def indexPage():
                            userName=getCurrentUserName(),
                            userId=getCurrentUserId(),
                            userGroups=possible_groups)
+
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
 
 def startApp():

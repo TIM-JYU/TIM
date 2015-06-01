@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 COMPRESS_DEBUG     = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
@@ -16,3 +17,4 @@ SECRET_KEY         = '85db8764yhfZz7-U.-y968buyn89b54y8y45tg'
 UPLOAD_FOLDER      = "./media/images/"
 USERNAME           = 'admin'
 SECRET_FILE_PATH   = './tim_secret.py'
+PERMANENT_SESSION_LIFETIME = timedelta(days=14)

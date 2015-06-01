@@ -45,3 +45,14 @@ class Readings(TimDbBase):
 
         if commit:
             self.db.commit()
+
+    @contract
+    def setAllAsRead(self, usergroup_id: 'int',
+                     doc_id : 'int',
+                     doc_ver : 'str',
+                     num_blocks: 'int',
+                     commit : 'bool' = True):
+        for i in range(0, num_blocks):
+            self.setAsRead(usergroup_id, doc_id, doc_ver, i, commit=False)
+        if commit:
+            self.db.commit()

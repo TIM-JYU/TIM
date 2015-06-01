@@ -1,18 +1,27 @@
 [
-  {"state": {
+  {
+   "state": {
     "userword": "abba"
-    },
+   },
    "markup": {
+     "-nohex": true,
      "header": "Kirjoita palindromi",
      "stem": "Kirjoita palindromi jossa 5 kirjainta",
      "user_id": "vesal",
+     "-points_array": [[0,0.2],[0.7,1.0]],
      "initword": "kissa",
-     "-wordlen": 5,
+     "-needed_len": 5,
      "testitem" : {
        "in1" : {  "-notthis": 6, "butthis" : 7},
        "in2" : {  "alsothis": true, "-butnotthis" : 9}
      }
    },
    "taskID": "2.ekapali"
+  },
+  {
+   "markup": {
+     "-points_array": [[3],[2,3]]
+   },
+   "taskID": "2.wrongpoints"
   }
 ]

@@ -7,6 +7,7 @@ maintainer vesal "vesal@jyu.fi"
 run apt-get update
 run apt-get install -y python3
 run apt-get install -y python3-pip
+run pip3 install bleach
 run apt-get install -y wget 
 
 # Lisätään alkuperäinen hakemisto polkuun /service
