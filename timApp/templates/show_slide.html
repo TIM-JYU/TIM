@@ -152,6 +152,8 @@
 
     var pollTimeout;
 
+    var oldh = 0, oldv = 0;
+    
     function refresh() {
         clearTimeout(pollTimeout);
         $.ajax({
@@ -163,9 +165,12 @@
                 pollTimeout = setTimeout(refresh, 250);
             },
             success: function (data) {
-                console.log('Haettu palvelimelta: ');
+                console.log('Haettu palvelimeltako: '); 
                 console.log(data);
-                Reveal.slide(data.indexh, data.indexv, data.indexf, 'remote');
+                if ( oldh != data.indexh || oldv != data.indexv )
+                    Reveal.slide(data.indexh, data.indexv, data.indexf, 'remote');
+                oldh = data.indexh;
+                oldv = data.indexv;
                 pollTimeout = setTimeout(refresh, 250);
             }
         });
@@ -173,6 +178,7 @@
 
     if (GetURLParameter('controls') === undefined) pollTimeout = setTimeout(refresh, 250);
 
+    
     function updateSlideStatus(h, v, f) {
         if (GetURLParameter('controls') !== undefined) return;
         clearTimeout(pollTimeout);

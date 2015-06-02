@@ -65,7 +65,8 @@ fi
 
 if param timbeta ; then
 # Start timbeta
-docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+# NOTE: Don't commit this change in Git; it is only temporary!
+docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim-beta /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
 fi
 
 if param tim ; then

@@ -11,7 +11,7 @@ var timApp = angular.module('timApp', [
             var re = /\/[^/]+\/([^/]+)\/answer\/$/;
             var service = {
                 'request': function(config) {
-                    if (re.test(config.url)){
+                    if ( teacherMode && re.test(config.url)){
                         var match = re.exec(config.url);
                         var taskId = match[1];
                         var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
@@ -33,7 +33,7 @@ var timApp = angular.module('timApp', [
                     return response;
                 }
             };
-            return service;
+            return service; 
         }
     ];
 
@@ -55,8 +55,8 @@ timApp.controller("ViewCtrl", [
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
-        sc.crumbs = crumbs;
-        sc.rights = rights;
+        if ( typeof(crumbs) !== "undefined" ) sc.crumbs;
+        sc.rights = rights; 
         sc.startIndex = startIndex;
         sc.users = users;
         sc.teacherMode = teacherMode;
