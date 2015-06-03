@@ -50,6 +50,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                     .success(function () {
                         $scope.$emit('closeQuestionPreview');
                         $window.console.log("Deleted question");
+                        location.reload();
                     })
                     .error(function (error) {
 

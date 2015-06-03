@@ -1,5 +1,5 @@
 .createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion, .joinLectureOptions ,
-.questionAskedWindow, .statisticsWindow, .questionPreview  {
+.questionAskedWindow, .statisticsWindow, .questionPreview, .extendLectureOptions  {
 	display: block;
     width: 100%;
     height: 100%;
@@ -51,6 +51,9 @@ fieldset, form {
     height: 100%;
 }
 
+#studentsJoinEarly {
+    margin-bottom:10px;
+}
 #infoFields input{
 	-webkit-box-sizing: border-box;‌​
     -moz-box-sizing: border-box;
@@ -196,6 +199,11 @@ input[type="number"] {
 .createLecture input[type="text"]:disabled, .createQuestion input[type="text"]:disabled {
 	background-color: #DCDCDC;
 	border: 1px solid #DCDCDC;
+}
+
+.error_message {
+    color:red;
+    margin-left: 0px;
 }
 
 .createLecture p {

@@ -142,8 +142,11 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         /*
          Event listener for closeLectureForm. Closes lecture form.
          */
-        $scope.$on('closeLectureForm', function () {
+        $scope.$on('closeLectureForm', function (event, showWall) {
             $scope.showLectureForm = false;
+            if (showWall) {
+                $scope.useWall = true;
+            }
             $scope.checkIfInLecture();
         });
 
@@ -468,33 +471,18 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $scope.showAnswerWindow = false;
             $scope.lecturerTable = [];
             $scope.studentTable = [];
+            $scope.lectures = [];
+            $scope.futureLectures = [];
+
 
             var addLecture = true;
-            angular.forEach(answer.lectures, function (lecture) {
-                addLecture = true;
-                for (var i = 0; i < $scope.lectures.length; i++) {
-                    if ($scope.lectures[i].lecture_code === lecture.lecture_code) {
-                        addLecture = false;
-                        break;
-                    }
-                }
-                if (addLecture) {
-                    $scope.lectures.push(lecture);
-                }
-            });
+            for( var i = 0; i < answer.lectures.length; i++) {
+                $scope.lectures.push(answer.lectures[i]);
+            }
 
-            angular.forEach(answer.futureLectures, function (lecture) {
-                addLecture = true;
-                for (var i = 0; i < $scope.futureLectures.length; i++) {
-                    if ($scope.futureLectures[i].lecture_code === lecture.lecture_code) {
-                        addLecture = false;
-                        break;
-                    }
-                }
-                if (addLecture) {
-                    $scope.futureLectures.push(lecture);
-                }
-            });
+            for(  i = 0; i < answer.futureLectures.length; i++) {
+                $scope.futureLectures.push(answer.futureLectures[i]);
+            }
 
             if ($scope.lectures.length > 0) {
                 $scope.chosenLecture = $scope.lectures[0];
@@ -606,22 +594,28 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.endLecture = function () {
             $scope.showLectureEnding = false;
-            http({
-                url: '/endLecture',
-                method: 'POST',
-                params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
-            })
-                .success(function (answer) {
-                    $scope.showBasicView(answer);
-                    $scope.chosenLecture = "";
-                    $scope.msg = "";
-                    $window.console.log("Lecture ended, not deleted");
 
+            // TODO: Change to some better confirm dialog.
+            var confirmAnswer = $window.confirm("Do you really want to end this lecture?");
+            if (confirmAnswer) {
+                http({
+                    url: '/endLecture',
+                    method: 'POST',
+                    params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
                 })
-                .error(function () {
-                    $window.console.log("Failed to delete the lecture");
-                });
+                    .success(function (answer) {
+                        $scope.showBasicView(answer);
+                        $scope.chosenLecture = "";
+                        $scope.msg = "";
+                        $window.console.log("Lecture ended, not deleted");
+
+                    })
+                    .error(function () {
+                        $window.console.log("Failed to delete the lecture");
+                    });
+            }
         };
+
 
         /*
          Sends http request to delete the lecture.
@@ -649,15 +643,23 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Sends http request to leave the lecture.
          */
         $scope.leaveLecture = function () {
-            $scope.msg = "";
-            http({
-                url: '/leaveLecture',
-                method: "POST",
-                params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId}
-            })
-                .success(function (answer) {
-                    $scope.showBasicView(answer);
-                });
+            //TODO: better confirm dialog
+            var confirmAnswer = false;
+            if ($scope.isLecturer) {
+                 confirmAnswer = $window.confirm("Do you really want to leave this lecture?");
+            }
+
+            if (!$scope.isLecturer || confirmAnswer) {
+                $scope.msg = "";
+                http({
+                    url: '/leaveLecture',
+                    method: "POST",
+                    params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId}
+                })
+                    .success(function (answer) {
+                        $scope.showBasicView(answer);
+                    });
+            }
         };
 
 
@@ -716,7 +718,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Sends http request to get all the messages from the current lecture.
          */
         $scope.getAllMessages = function () {
-            $scope.msg ="";
+            $scope.msg = "";
             http({
                 url: '/getAllMessages',
                 type: 'GET',

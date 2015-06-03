@@ -14,6 +14,7 @@
         <div class="startingTime">
             Starting time:
             <div id="startInfo">
+                <div>
                 <label>Date:
                 <input id="startDate" name="startDate" ng-model="startDate" type="text" /></label>
                 Time:
@@ -21,7 +22,8 @@
                        ng-model="startHour" />
                 :
                 <input type="text" name="startMm" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
-                       ng-model="startMin" />
+                       ng-model="startMin" /></div>
+                <div id="studentsJoinEarly"><label><input type="checkbox" ng-model="earlyJoining">Allow students to join 15 minutes prior to the start of the lecture.</label></div>
             </div>
         </div>
         <div class="endingTime">
@@ -36,8 +38,7 @@
                             </label>
                             Time:
                                 <input type="text" id="endHour" name="endHour" maxlength="2" size="2" placeholder="hh"
-                                       ng-model="endHour" ng-disabled="!dateCheck"/>
-									   :
+                                       ng-model="endHour" ng-disabled="!dateCheck"/>:
                                 <input type="text" id="endMin" name="endMin" maxlength="2" size="2" placeholder="mm"
                                        ng-model="endMin" ng-disabled="!dateCheck"/>
                         </div>
@@ -58,7 +59,7 @@
         
     </form>
 	<div class="buttons">
-            <button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Submit</button>
+            <button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Create</button>
             <button type="cancel" ng-click="cancelCreation()">Cancel</button>
     </div>
 </div>

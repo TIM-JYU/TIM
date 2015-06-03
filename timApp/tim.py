@@ -331,7 +331,6 @@ def get_updates():
 
     lecturers = []
     students = []
-    lecture_ending = 100
 
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
     __user_activity[getCurrentUserId(), lecture_id] = time_now
@@ -339,24 +338,7 @@ def get_updates():
     lecture = timdb.lectures.get_lecture(lecture_id)
 
     current_user = getCurrentUserId()
-    # Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
-    if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
-        lecturers, students = get_lecture_users(timdb, lecture_id)
-
-        time_now = datetime.datetime.now()
-        ending_time = datetime.datetime.fromtimestamp(
-            mktime(time.strptime(lecture[0].get("end_time"), "%Y-%m-%d %H:%M")))
-        time_left = str(ending_time - time_now)
-        splitted_time = time_left.split(",")
-        if len(splitted_time) == 1:
-            h, m, s = splitted_time[0].split(":")
-            hours_as_min = int(h) * 60
-            if hours_as_min + int(m) < 1:
-                lecture_ending = 1
-            elif hours_as_min + int(m) < 5:
-                lecture_ending = 5
-            else:
-                lecture_ending = 100
+    lecture_ending = 100
 
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
@@ -386,6 +368,7 @@ def get_updates():
                 if pair[0] == lecture_id and current_user not in pair[2]:
                     question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
                     pair[2].append(getCurrentUserId())
+                    lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                          "lectureId": lecture_id, "question": True, "questionId": pair[1],
@@ -394,6 +377,9 @@ def get_updates():
                          "lectureEnding": lecture_ending})
 
         if len(list_of_new_messages) > 0:
+            if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+                lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
+                lecturers, students = get_lecture_users(timdb, lecture_id)
             return jsonResponse(
                 {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                  "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers, "students": students,
@@ -403,9 +389,33 @@ def get_updates():
         time.sleep(1)
         step += 1
 
+    if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+        lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
+
     return jsonResponse(
         {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
          "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
+
+
+# Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
+def check_if_lecture_is_ending(current_user, timdb, lecture_id):
+    lecture = timdb.lectures.get_lecture(lecture_id)
+    lecture_ending = 100
+    if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+        time_now = datetime.datetime.now()
+        ending_time = datetime.datetime.fromtimestamp(
+            mktime(time.strptime(lecture[0].get("end_time"), "%Y-%m-%d %H:%M")))
+        time_left = str(ending_time - time_now)
+        splitted_time = time_left.split(",")
+        if len(splitted_time) == 1:
+            h, m, s = splitted_time[0].split(":")
+            hours_as_min = int(h) * 60
+            if hours_as_min + int(m) < 1:
+                lecture_ending = 1
+            elif hours_as_min + int(m) < 5:
+                lecture_ending = 5
+
+    return lecture_ending
 
 
 # Route to add message to database.
@@ -521,8 +531,9 @@ def start_future_lecture():
     lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     lecture = timdb.lectures.update_lecture_starting_time(lecture, time_now)
+    timdb.lectures.join_lecture(lecture.get("lecture_id"), getCurrentUserId(), True)
     students, lecturers = get_lecture_users(timdb, lecture.get("lecture_id"))
-    return jsonResponse({"isLecturer": True, "lectureName": lecture_code, "startTime": lecture.get("start_time"),
+    return jsonResponse({"isLecturer": True, "lectureCode": lecture_code, "startTime": lecture.get("start_time"),
                          "endTime": lecture.get("end_time"), "lectureId": lecture.get("lecture_id"),
                          "students": students,
                          "lecturers": lecturers})
@@ -623,7 +634,7 @@ def get_running_lectures(doc_id):
     future_lectures = []
     is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
-        if lecture.get("start_time") <= time_now:
+        if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lecture_codes.append({"lecture_code": lecture.get("lecture_code"),
                                           "is_access_code": not (lecture.get("password") == "")})
         else:
@@ -652,7 +663,7 @@ def create_lecture():
         password = ""
     current_user = getCurrentUserId()
     if not timdb.lectures.check_if_correct_name(doc_id, lecture_code):
-        abort(400, "Can't create lecture with same code to same document")
+        abort(400, "Can't create two or more lectures with the same name to the same document.")
     lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
