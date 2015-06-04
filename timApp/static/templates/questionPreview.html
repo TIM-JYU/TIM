@@ -33,7 +33,7 @@
         </table>
     </div>
     <div class="buttons">
-		<button class='timButton questionButton'>Edit</button>
+		<button ng-click='editQuestion()' class='timButton questionButton'>Edit</button>
         <button ng-click='deleteQuestion()' class='timButton questionButton'>Delete</button>
         <button ng-click='close()' class='timButton questionButton'>Close</button>
         <button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>

@@ -840,11 +840,100 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
-timApp.controller("QuestionController", ['$scope', '$http', '$window', function (scope, http, $window) {
+timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
     "use strict";
     $(function () {
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
+
+    scope.$on("editQuestion", function (event, data) {
+            var id = data.question_id;
+            var json = data.json;
+
+            if (id) scope.question.question_id = id;
+            if (json["TITLE"]) scope.question.title = json["TITLE"];
+            if (json["QUESTION"]) scope.question.question = json["QUESTION"];
+            if (json["TYPE"]) scope.question.type = json["TYPE"];
+            if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
+
+
+
+            var jsonData = json["DATA"];
+            var jsonHeaders = jsonData["HEADERS"];
+            var jsonRows = jsonData["ROWS"];
+
+            var columnHeaders = [];
+            for (var i = 0; i < jsonHeaders.length; i++) {
+                columnHeaders[i] = {
+                    id: i,
+                    type: jsonHeaders[i].type,
+                    text: jsonHeaders[i].text
+                };
+            }
+            scope.columnHeaders = columnHeaders;
+
+            var rows = [];
+            for (var i = 0; i < jsonRows.length; i++) {
+                rows[i] = {
+                    id: jsonRows[i].id,
+                    text: jsonRows[i].text,
+                    type: jsonRows[i].type,
+                    value: jsonRows[i].value
+                };
+
+
+                var jsonColumns = jsonRows[i]["COLUMNS"];
+                var columns = [];
+                for (var j = 0; j < jsonColumns.length; j++) {
+                    columns[j] = {
+                        id: j,
+                        rowId: i,
+                        text: jsonColumns[j].text,
+                        //points: jsonColumns[j].points,
+                        type: jsonColumns[j].type,
+                        answerFiledType: jsonColumns[j].answerFieldType
+                    };
+                    if (jsonColumns[j].points) columns[j].points = jsonColumns[j].points;
+
+                }
+
+                rows[i].columns = columns;
+
+            }
+            scope.rows = rows;
+
+/*            if (json["TIMELIMIT"]) {
+                var time = json["TIMELIMIT"];
+                scope.question.endTimeSelected = 'true';
+                if (time > 3600) {
+                    scope.question.timeLimit.hours = Math.floor(time / 3600);
+                    time = time % 3600;
+                } else {
+                    scope.question.timeLimit.hours = 0;
+                }
+
+                if (time > 60) {
+                    scope.question.timeLimit.minutes = Math.floor(time / 60);
+                    time = time % 60;
+                } else {
+                    scope.question.timeLimit.minutes = 0;
+                }
+
+                if (time > 0) {
+                    scope.question.timeLimit.seconds = time;
+                } else {
+                    scope.question.timeLimit.seconds = 0;
+                }
+
+            }*/
+
+            scope.toggleQuestion();
+
+
+        }
+    );
+
+
     scope.question = {
         title: "",
         question: "",
@@ -870,58 +959,64 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-        if (type === 'radio' || type === 'checkbox') {
-            scope.question.answerFieldType = type;
-        }
-        if (type === 'true-false') {
-            scope.question.answerFieldType = 'radio';
-        }
-        if (type === 'matriisi') {
-            scope.question.answerFieldType = 'matriisi';
-        }
+        if (scope.questionType != type) {
+            scope.questionType = type;
 
-        var i;
-        if (scope.rows.length > 0) {
-            scope.columnHeaders.splice(0, scope.columnHeaders.length);
-            for (i = 0; i < scope.rows.length; i++) {
-                scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
+
+            if (type === 'radio' || type === 'checkbox') {
+                scope.question.answerFieldType = type;
+            }
+            if (type === 'true-false') {
+                scope.question.answerFieldType = 'radio';
+            }
+            if (type === 'matrix') {
+                scope.question.answerFieldType = 'matrix';
             }
 
-            for (i = 0; i < columnsCount; i++) {
-                scope.addCol(i);
-            }
 
-        } else {
-
-            var columnHeaders = [];
-            for (i = 0; i < rowsCount; i++) {
-                var columns = [];
-                columnHeaders = [];
-                for (var j = 0; j < columnsCount; j++) {
-                    columnHeaders.push({type: "header", id: j, text: ""});
-                    columns[j] = {
-                        id: j,
-                        rowId: i,
-                        text: '',
-                        points: '',
-                        type: "answer",
-                        answerFiledType: scope.question.answerFieldType
-                    };
+            var i;
+            if (scope.rows.length > 0) {
+                scope.columnHeaders.splice(0, scope.columnHeaders.length);
+                for (i = 0; i < scope.rows.length; i++) {
+                    scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
                 }
-                scope.rows[i] = {
-                    id: i,
-                    text: '',
-                    type: 'question',
-                    value: '',
-                    columns: columns
-                };
+
+                for (i = 0; i < columnsCount; i++) {
+                    scope.addCol(i);
+                }
+
+            } else {
+
+                var columnHeaders = [];
+                for (i = 0; i < rowsCount; i++) {
+                    var columns = [];
+                    columnHeaders = [];
+                    for (var j = 0; j < columnsCount; j++) {
+                        columnHeaders.push({type: "header", id: j, text: ""});
+                        columns[j] = {
+                            id: j,
+                            rowId: i,
+                            text: '',
+                            points: '',
+                            type: "answer",
+                            answerFiledType: scope.question.answerFieldType
+                        };
+                    }
+                    scope.rows[i] = {
+                        id: i,
+                        text: '',
+                        type: 'question',
+                        value: '',
+                        columns: columns
+                    };
+
+                }
+                scope.columnHeaders = columnHeaders;
 
             }
-            scope.columnHeaders = columnHeaders;
-
-        }
-        scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
-    };
+            scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
+        };
+    }
 
 
     scope.rowClick = function (index) {
@@ -1103,6 +1198,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
     };
 
     scope.createQuestion = function () {
+
         scope.removeErrors();
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
             scope.errorize("questionName", "Both title and question are required for a question.");
@@ -1156,7 +1252,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         if (scope.error_message !== "") {
             return;
         }
-        if (scope.question.answerFieldType === 'matriisi') {
+
+        if (scope.question.answerFieldType === 'matrix') {
+
             if (scope.question.matrixType === "radiobutton-horizontal" || scope.question.matrixType === "radiobutton-vertical") {
                 scope.question.answerFieldType = "radio";
             }
@@ -1174,9 +1272,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
 
         //TODO use  JSON.stringify
 
+
         scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
         scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
-        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
+
+        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "MATRIXTYPE": "' + scope.question.matrixType + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
         var i;
@@ -1226,10 +1326,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
         }
         questionJson += ']';
         questionJson += '}}';
+
         http({
             method: 'POST',
             url: '/addQuestion',
             params: {
+                'question_id': scope.question.question_id,
                 'question': scope.question.question,
                 'answer': "test", //answerVal,
                 'par_index': par_index,
@@ -1247,5 +1349,25 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
             .error(function () {
                 $window.console.log("There was some error creating question to database.");
             });
+        //scope.clearQuestion();
     };
+
+
+    scope.getQuestion = function (question_id) {
+        http({
+            method: 'GET',
+            url: '/getQuestionById',
+            params: {
+                'question_id': question_id
+            }
+        })
+            .success(function (data) {
+                $window.console.log("question loaded");
+                return data;
+            })
+            .error(function () {
+                $window.console.log("Could not get the question");
+            });
+
+    }
 }]);

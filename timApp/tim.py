@@ -465,13 +465,17 @@ def get_questions():
 def add_question():
     # TODO: Only lecturers should be able to create questions.
     # verifyOwnership(doc_id)
+    question_id = int(request.args.get('question_id'))
     question = request.args.get('question')
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     par_index = int(request.args.get('par_index'))
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
-    questions = timdb.questions.add_questions(doc_id, par_index, question, answer, questionJson)
+    if not question_id:
+        questions = timdb.questions.add_questions(doc_id, par_index, question, answer, questionJson)
+    else:
+        questions = timdb.questions.update_question(question_id, doc_id, par_index, question, answer, questionJson)
     return jsonResponse(questions)
 
 
@@ -1052,6 +1056,17 @@ def ask_question():
 
     return jsonResponse("")
 
+@app.route("/getQuestionById", methods=['GET'])
+def get_question():
+    if not request.args.get("question_id"):
+        abort("400")
+#    doc_id = int(request.args.get('doc_id'))
+    question_id = int(request.args.get('question_id'))
+
+#    verifyOwnership(doc_id)
+    timdb = getTimDb()
+    question = timdb.questions.get_question(question_id)
+    return jsonResponse(question)
 
 @app.route("/deleteQuestion", methods=['POST'])
 def delete_question():

@@ -40,7 +40,7 @@ class Questions(TimDbBase):
             self.db.commit()
 
     @contract
-    def get_question(self, question_id) -> 'list(dict)':
+    def get_question(self, question_id: 'int') -> 'list(dict)':
         """
         Gets question with specific id
         :param question_id: question id
@@ -53,8 +53,7 @@ class Questions(TimDbBase):
             SELECT *
             FROM Question
             WHERE question_id = ?
-            """, [question_id]
-        )
+            """, [question_id])
 
         return self.resultAsDictionary(cursor)
 
@@ -71,7 +70,7 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def add_questions(self, doc_id: 'int', par_index:'int', question: 'str', answer: 'str', questionJson: 'str',
+    def add_questions(self, doc_id: 'int', par_index: 'int', question: 'str', answer: 'str', questionJson: 'str',
                       commit: 'bool'=True) -> 'int':
         """
         Creates a new questions
@@ -91,6 +90,22 @@ class Questions(TimDbBase):
         question_id = cursor.lastrowid
         return question_id
 
+
+    @contract
+    def update_question(self, question_id: 'int', doc_id: 'int', par_index:'int', question: 'str', answer: 'str', questionJson: 'str') -> 'int':
+        """
+        Updates the question with particular id
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       UPDATE Question
+                       SET doc_id = ?, par_index = ?, question = ?, answer = ?, questionJson = ?
+                       WHERE question_id = ?
+                       """, [doc_id, par_index, question, answer, questionJson, question_id])
+
+        self.db.commit()
+        return question_id
 
     @contract
     def get_doc_questions(self, doc_id: 'int') -> 'list(dict)':

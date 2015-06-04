@@ -8,6 +8,12 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
 
+        $scope.editQuestion = function () {
+            $scope.close();
+            $rootScope.$broadcast("editQuestion", {"question_id": $scope.qId, "json": $scope.json});
+
+        };
+
         $scope.ask = function () {
             http({
                 url: '/askQuestion',
