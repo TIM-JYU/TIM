@@ -27,12 +27,12 @@ PLUGINS = {
     "mcq":           {"host": "http://172.17.42.1:57000/"},
     "mmcq":          {"host": "http://172.17.42.1:58000/"},
     "shortNote":     {"host": "http://172.17.42.1:59000/"},
-    "graphviz":      {"host": "http://172.17.42.1:60000/"}
+    "graphviz":      {"host": "http://172.17.42.1:60000/"},
+    "pali":          {"host": "http://172.17.42.1:61000/"}
 }
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None):
-    print("Calling plugin {} {} route with data: {}".format(plugin, route, data))
     plug = get_plugin(plugin)
     try:
         request = requests.request(method, plug['host'] + route + "/", data=data, timeout=5, headers=headers)

@@ -1,3 +1,4 @@
+@xcopy t:\tim\timApp\static\stylesheet.css e:\kurssit\tim\timApp\static\ /d /Y
 @pushd E:\kurssit\tim\timApp\modules\cs
 @cd t:\cs
 @t:
@@ -13,5 +14,4 @@
 @kopioi dr*.* e:   /q /s
 @xcopy  ptauno\index.html E:\kurssit\pauno\taulukko.html /d /Y
 @xcopy  ptauno\taulukko.* E:\kurssit\pauno\  /d /Y
-@xcopy t:\tim\timApp\static\stylesheet.css e:\kurssit\tim\timApp\static\ /d /Y
 @popd

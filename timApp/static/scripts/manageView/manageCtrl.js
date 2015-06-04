@@ -20,7 +20,15 @@ PermApp.controller("PermCtrl", [
     '$scope',
     '$http',
     '$upload',
-    function (sc, $http, $upload) {
+    '$window',
+    function (sc, $http, $upload, $window) {
+        $http.defaults.headers.common.Version = function() {
+            if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
+                return sc.doc.versions[0].hash;
+            }
+            return "";
+        };
+
         sc.getJustDocName = function(fullName) {
             i = fullName.lastIndexOf('/');
             return i < 0 ? fullName : fullName.substr(i + 1);
@@ -68,6 +76,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.addPermission = function (groupname, type) {
+            console.log("/addPermission/" + sc.doc.id + "/" + groupname + "/" + type);
             $http.put('/addPermission/' + sc.doc.id + '/' + groupname + '/' + type).success(
                 function (data, status, headers, config) {
                     sc.getPermissions();
@@ -164,6 +173,18 @@ PermApp.controller("PermCtrl", [
                     alert(data.error);
                 }).then(function () {
                     sc.saving = false;
+                });
+        };
+
+        sc.markAllAsRead = function() {
+            sc.readUpdating = true;
+            $http.put('/read/' + sc.doc.id + '?_=' + Date.now())
+                .success(function (data, status, headers, config) {
+
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not mark the document as read.');
+                }).finally(function (data, status, headers, config) {
+                    sc.readUpdating = false;
                 });
         };
 

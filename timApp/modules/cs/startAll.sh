@@ -8,7 +8,7 @@ Xvfb :1 -screen 0 1280x1024x24 &
 export DISPLAY=:1
 
 # Copy Jypeli dll's to temp directory
-cp /cs/jypeli/* /tmp/cs
+# cp /cs/jypeli/* /tmp/cs
 
 # Get ComTest
 #cd /tmp
@@ -26,6 +26,7 @@ cp /cs/jypeli/* /tmp/cs
 
 cd /cs
 export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar
+export MONO_PATH=/cs/jypeli
 
 # Run the server
 python3 -O /cs/cs3.py

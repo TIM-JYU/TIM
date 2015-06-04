@@ -68,13 +68,13 @@
         var crumbs = getBreadcrumbs(docName);
         {% include 'breadcrumbs.js' %}
     </script>
-{% endblock %}
+{% endblock %} 
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
-        
         {% include 'breadcrumbs.html' %}
+        
 
-        <div id="contents" ng-show="indexTable.length > 0">
+        <div id="contents" ng-show="indexTable.length > 0" class="ng-cloak">
             <div class="menu">
                 <img ng-click="toggleSidebar()" class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                      height="50"/>
@@ -130,16 +130,22 @@
 
         <div id="pars">
             {% for t in text %}
+                {% if 'task_id' in t %}
                 <div class="par">
-                    {% if 'task_id' in t %}
-                        <answerbrowser
-                                task-id="{{ t['task_id'] }}">
-                        </answerbrowser>
-                    {% endif %}
+                    <answerbrowser
+                            task-id="{{ t['task_id'] }}">
+                    </answerbrowser>
                     <div class="parContent">
                         {{ t['html']|safe }}
                     </div>
                 </div>
+                {% else %}
+                <div class="par" ng-non-bindable>
+                    <div class="parContent">
+                        {{ t['html']|safe }}
+                    </div>
+                </div>
+                {% endif %}
             {% endfor %}
         </div>
     </div>

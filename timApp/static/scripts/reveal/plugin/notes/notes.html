@@ -186,8 +186,7 @@
 
 				window.addEventListener( 'message', function( event ) {
 
-					var data = JSON.parse( event.data );
-
+                    var data = JSON.parse( event.data );
 					// Messages sent by the notes plugin inside of the main window
 					if( data && data.namespace === 'reveal-notes' ) {
 						if( data.type === 'connect' ) {
@@ -218,7 +217,6 @@
 
 					if( connected === false ) {
 						connected = true;
-
 						setupIframes( data );
 						setupKeyboard();
 						setupNotes();
@@ -277,7 +275,6 @@
 				 * Creates the preview iframes.
 				 */
 				function setupIframes( data ) {
-
 					var params = [
 						'receiver',
 						'progress=false',

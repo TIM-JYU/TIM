@@ -1,30 +1,29 @@
 # -*- coding: utf-8 -*-
-import logging
-import os
 import imghdr
 import io
-import collections
 import re
 import posixpath
+from datetime import timedelta
 
-from flask import Flask, redirect, url_for, Blueprint
+from flask import Flask, Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import send_from_directory
-from flask.ext.compress import Compress
 from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
-from ReverseProxied import ReverseProxied
 
+from ReverseProxied import ReverseProxied
 import containerLink
+from routes.cache import cache
+from routes.answer import answers
 from routes.edit import edit_page
 from routes.manage import manage_page
 from routes.view import view_page
 from routes.slide import slide_page
 from routes.login import login_page
+from routes.logger import logger_bp
 from timdb.timdbbase import TimDbException
-import pluginControl
 from containerLink import PluginException
 from routes.settings import settings_page
 from routes.common import *
@@ -33,7 +32,14 @@ from routes.common import *
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
+default_secret = app.config['SECRET_KEY']
+if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
+    print('WARNING: secret file not found, using default values - do not run in production!')
+else:
+    assert default_secret != app.config['SECRET_KEY']
 #Compress(app)
+
+cache.init_app(app)
 
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
@@ -41,6 +47,8 @@ app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(slide_page)
 app.register_blueprint(login_page)
+app.register_blueprint(logger_bp)
+app.register_blueprint(answers)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',
@@ -49,15 +57,6 @@ app.register_blueprint(Blueprint('bower',
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
 KNOWN_TAGS = ['difficult', 'unclear']
-
-# current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
-if not os.path.exists(app.config['LOG_DIR']):
-    os.mkdir(app.config['LOG_DIR'])
-handler = logging.FileHandler(app.config['LOG_PATH'])
-handler.setLevel(logging.DEBUG)
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -69,22 +68,6 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 STATIC_PATH = "./static/"
 DATA_PATH = "./static/data/"
 
-LOG_LEVELS = {"CRITICAL" : app.logger.critical, 
-              "ERROR" : app.logger.error,
-              "WARNING" : app.logger.warning,
-              "INFO": app.logger.info,
-              "DEBUG" : app.logger.debug}
-
-# Logger call
-@app.route("/log/", methods=["POST"])
-def logMessage():
-    try:
-        message = request.get_json()['message']
-        level = request.get_json()['level']
-        LOG_LEVELS[level](message)
-    except KeyError:
-        app.logger.error("Failed logging call: " + str(request.get_data()))
-    
 
 def error_generic(error, code):
     if 'text/html' in request.headers.get("Accept", ""):
@@ -456,6 +439,8 @@ def getReadParagraphs(doc_id):
 def setReadParagraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     if len(blocks) <= specifier:
@@ -463,145 +448,19 @@ def setReadParagraph(doc_id, specifier):
     timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
     return "Success"
 
-def parse_task_id(task_id):
-    # Assuming task_id is of the form "22.palindrome"
-    pieces = task_id.split('.')
-    if len(pieces) != 2:
-        abort(400, 'The format of task_id is invalid. Expected exactly one dot character.')
-    doc_id = int(pieces[0])
-    task_id_name = pieces[1]
-    return doc_id, task_id_name
 
-@app.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
-def saveAnswer(plugintype, task_id):
+@app.route("/read/<int:doc_id>", methods=['PUT'])
+def setAllAsRead(doc_id):
+    verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
-
-    doc_id, task_id_name = parse_task_id(task_id)
-    verifyViewAccess(doc_id)
-    if not 'input' in request.get_json():
-        return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
-    answerdata = request.get_json()['input']
-
-    answer_browser_data = request.get_json().get('abData', {})
-    is_teacher = answer_browser_data.get('teacher', False)
-    if is_teacher:
-        verifyOwnership(doc_id)
-
-    # Load old answers
-    oldAnswers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
-
-    # Get the newest answer (state). Only for logged in users.
-    state = oldAnswers[0]['content'] if loggedIn() and len(oldAnswers) > 0 else None
-    
-    markup = getPluginMarkup(doc_id, plugintype, task_id_name)
-    if markup is None:
-        return jsonResponse({'error' : 'The task was not found in the document. ' + str(doc_id) + ' ' + task_id_name}, 404)
-    if markup == "YAMLERROR: Malformed string":
-        return jsonResponse({'error' : 'Plugin markup YAML is malformed.'}, 400)
- 
-    answerCallData = {'markup' : markup, 'state' : state, 'input' : answerdata, 'taskID': task_id}
-
-    pluginResponse = containerLink.call_plugin_answer(plugintype, answerCallData)
-    
-    try:
-        jsonresp = json.loads(pluginResponse)
-    except ValueError:
-        return jsonResponse({'error': 'The plugin response was not a valid JSON string. The response was: ' + pluginResponse}, 400)
-    
-    if 'web' not in jsonresp:
-        return jsonResponse({'error': 'The key "web" is missing in plugin response.'}, 400)
-    
-    if 'save' in jsonresp:
-        saveObject = jsonresp['save']
-        tags = []
-        tim_info = jsonresp.get('tim_info', {})
-        points = tim_info.get('points', None)
-
-        # Save the new state
-        try:
-            tags = saveObject['tags']
-        except (TypeError, KeyError):
-            pass
-        if not is_teacher:
-            timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(saveObject), points, tags)
-        else:
-            if answer_browser_data.get('saveTeacher', False):
-                answer_id = answer_browser_data.get('answer_id', None)
-                if answer_id is None:
-                    return jsonResponse({'error': 'Missing answer_id key'}, 400)
-                expected_task_id = timdb.answers.get_task_id(answer_id)
-                if expected_task_id != task_id:
-                    return jsonResponse({'error': 'Task ids did not match'}, 400)
-                users = timdb.answers.get_users(answer_id)
-                if len(users) == 0:
-                    return jsonResponse({'error': 'No users found for the specified answer'}, 400)
-                if not getCurrentUserId() in users:
-                    users.append(getCurrentUserId())
-                points = answer_browser_data.get('points', points)
-                if points == "":
-                    points = None
-                timdb.answers.saveAnswer(users, task_id, json.dumps(saveObject), points, tags)
-
-    return jsonResponse({'web': jsonresp['web']})
+    version = request.headers.get('Version', '')
+    verify_document_version(doc_id, version)
+    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
+    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    timdb.readings.setAllAsRead(getCurrentUserGroup(), doc_id, doc_ver, len(blocks))
+    return "Success"
 
 
-@app.route("/answers/<task_id>/<int:user_id>")
-def get_answers(task_id, user_id):
-    verifyLoggedIn()
-    timdb = getTimDb()
-    doc_id, task_id_name = parse_task_id(task_id)
-    if not timdb.documents.documentExists(doc_id):
-        abort(404, 'No such document')
-    user = timdb.users.getUser(user_id)
-    if user_id != getCurrentUserId():
-        verifyOwnership(doc_id)
-    if user is None:
-        abort(400, 'Non-existent user')
-    answers = timdb.answers.getAnswers(user_id, task_id)
-    if hide_names_in_teacher(doc_id):
-        for answer in answers:
-            for c in answer['collaborators']:
-                if not timdb.users.userIsOwner(c['user_id'], doc_id)\
-                   and c['user_id'] != getCurrentUserId():
-                    c['real_name'] = 'Undisclosed student %d' % c['user_id']
-    return jsonResponse(answers)
-
-@app.route("/getState")
-def get_state():
-    timdb = getTimDb()
-    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, int, int, str])
-    if not timdb.documents.documentExists(doc_id):
-        abort(404, 'No such document')
-    user = timdb.users.getUser(user_id)
-    if user_id != getCurrentUserId():
-        verifyOwnership(doc_id)
-    if user is None:
-        abort(400, 'Non-existent user')
-    if not timdb.documents.documentExists(doc_id):
-        abort(404, 'No such document')
-    if not hasViewAccess(doc_id):
-        abort(403, 'Permission denied')
-
-    version = request.headers['Version']
-    block = timdb.documents.getBlockAsHtml(DocIdentifier(doc_id, version), par_id)
-
-    texts, jsPaths, cssPaths, modules = pluginControl.pluginify([block],
-                                                                user['name'],
-                                                                timdb.answers,
-                                                                doc_id,
-                                                                user_id,
-                                                                custom_state=state)
-    return jsonResponse(texts[0])
-
-def getPluginMarkup(doc_id, plugintype, task_id):
-    timdb = getTimDb()
-    doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
-    for block in doc_markdown:
-        if('plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block):
-            markup = pluginControl.get_block_yaml(block)
-            return markup
-    return None
-    
 @app.route("/")
 def startPage():
     return render_template('start.html')
@@ -614,6 +473,11 @@ def indexPage():
                            userName=getCurrentUserName(),
                            userId=getCurrentUserId(),
                            userGroups=possible_groups)
+
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
 
 def startApp():

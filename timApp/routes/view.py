@@ -2,6 +2,7 @@
 
 from flask import Blueprint, render_template, redirect, url_for
 from .common import *
+from .cache import cache
 
 import pluginControl
 
@@ -9,12 +10,6 @@ import pluginControl
 view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
-
-
-@view_page.route("/view_old/<path:doc_name>")
-def view_document_old(doc_name):
-    view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    return view(doc_name, 'view.html', view_range)
 
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
@@ -63,6 +58,11 @@ def try_return_folder(doc_name):
                            docName=folder_name)
 
 
+@cache.memoize(3600)
+def get_document(document_id):
+    return getTimDb().documents.getDocumentAsHtmlBlocksSanitized(document_id)
+
+
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
@@ -88,8 +88,8 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         else:
             abort(403)
 
-    version = timdb.documents.getNewestVersion(doc_id)
-    xs = timdb.documents.getDocumentAsHtmlBlocks(DocIdentifier(doc_id, version['hash']))
+    version = {'hash': timdb.documents.getNewestVersionHash(doc_id)}
+    xs = get_document(DocIdentifier(doc_id, version['hash']))
     doc = timdb.documents.getDocument(doc_id)
     start_index = 0
     if view_range is not None:
@@ -110,7 +110,8 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                                                 current_user['name'],
                                                                 timdb.answers,
                                                                 doc_id,
-                                                                current_user['id'])
+                                                                current_user['id'],
+                                                                sanitize=False)
     if hide_names_in_teacher(doc_id):
         pass
         if not timdb.users.userIsOwner(current_user['id'], doc_id)\

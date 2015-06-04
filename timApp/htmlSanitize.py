@@ -51,22 +51,24 @@ TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
                       'img': ['src', 'width', 'height'],
                       'a': ['href', 'title', 'target']}
 
-TIM_SAFE_ATTRS = ['class',
-                  'id',
-                  'align',
-                  'src',
-                  'controls',
-                  'title',
-                  'width',
-                  'height',
-                  'href',
-                  'target']
+TIM_SAFE_ATTRS = frozenset([
+    'abbr', 'accept', 'accept-charset', 'accesskey', 'action', 'align',
+    'alt', 'axis', 'border', 'cellpadding', 'cellspacing', 'char', 'charoff',
+    'charset', 'checked', 'cite', 'class', 'clear', 'cols', 'colspan',
+    'color', 'compact', 'coords', 'datetime', 'dir', 'disabled', 'enctype',
+    'for', 'frame', 'headers', 'height', 'href', 'hreflang', 'hspace', 'id',
+    'ismap', 'label', 'lang', 'longdesc', 'maxlength', 'media', 'method',
+    'multiple', 'name', 'nohref', 'noshade', 'nowrap', 'prompt', 'readonly',
+    'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape',
+    'size', 'span', 'src', 'start', 'summary', 'tabindex', 'target', 'title',
+    'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin'])
+
+c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False, safe_attrs=TIM_SAFE_ATTRS)
 
 
 # NOTE: lxml cleaner is a LOT faster than bleach.
 def sanitize_html(html_string):
     try:
-        c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False)
         return c.clean_html(html_string)
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
         return ""

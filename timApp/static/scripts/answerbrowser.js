@@ -14,6 +14,16 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
             },
             link: function ($scope, $element, $attrs) {
+                $scope.$watch("taskId", function (newValue, oldValue) {
+                    if (newValue === oldValue) {
+                        return;
+                    }
+                    if ($scope.$parent.teacherMode) {
+                        $scope.getAvailableUsers();
+                    }
+                    $scope.getAvailableAnswers();
+                });
+
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
                     $scope.points = $scope.selectedAnswer.points;
@@ -74,18 +84,24 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         };
                 };
 
-                $scope.getUserById = function (user_id) {
-                    for (var i = 0; i < $scope.$parent.users.length; i++) {
-                        if ($scope.$parent.users[i].id === user_id) {
-                            return $scope.$parent.users[i];
-                        }
-                    }
-                    return null;
+                $scope.getAvailableUsers = function () {
+                    $scope.loading++;
+                    $http.get('/getTaskUsers/' + $scope.taskId)
+                        .success(function (data, status, headers, config) {
+                            $scope.users = data;
+                        }).error(function (data, status, headers, config) {
+                            $window.alert('Error getting users: ' + data.error);
+                        }).finally(function () {
+                            $scope.loading--;
+                        });
                 };
 
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
                     if (!$scope.$parent.rights.browse_own_answers) {
+                        return;
+                    }
+                    if ($scope.user === null) {
                         return;
                     }
                     $scope.loading++;
@@ -115,6 +131,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
                     $scope.changed = true;
+                    $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
                 });
 
@@ -122,17 +139,31 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     if ($scope.changed) {
                         $scope.getAvailableAnswers($scope.shouldUpdateHtml);
                         $scope.changed = false;
+                        $scope.firstLoad = false;
                         $scope.shouldUpdateHtml = false;
                     }
                 };
 
-                $scope.user = $scope.$parent.users[0];
+                if ($scope.$parent.users.length > 0) {
+                    $scope.user = $scope.$parent.users[0];
+                } else {
+                    $scope.user = null;
+                }
+
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.loadIfChanged();
+                    if ($scope.$parent.teacherMode && $scope.users === null) {
+                        $scope.users = [];
+                        if ($scope.$parent.users.length > 0) {
+                            $scope.getAvailableUsers();
+                        }
+                    }
                 });
                 $scope.changed = true;
+                $scope.firstLoad = true;
                 $scope.shouldUpdateHtml = false;
                 $scope.saveTeacher = false;
+                $scope.users = null;
             }
         };
     }]);

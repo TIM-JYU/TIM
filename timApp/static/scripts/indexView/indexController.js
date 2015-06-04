@@ -1,23 +1,29 @@
+var angular, folder, crumbs, groups;
 var TimCtrl = angular.module('controller', []);
 
-TimCtrl.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', '$upload',
+TimCtrl.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', '$upload', '$window',
 
-function(sc, controller, http, q, $upload) {
+function(sc, controller, http, q, $upload, $window) {
+    sc.endsWith = function(str, suffix) {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    };
+
     sc.getParameterByName = function(name) {
         name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
         var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-            results = regex.exec(location.search);
+            results = regex.exec($window.location.search);
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     };
 
     sc.getAbsolutePath = function(name) {
-        if (name.startsWith('/'))
-            return name.substr(1)
+        // startsWith and endsWith are ES6 features and do not work on IE
+        if (name.lastIndexOf('/', 0) === 0)
+            return name.substr(1);
 
-        if (sc.folder == '')
-            return name
+        if (sc.folder === '')
+            return name;
 
-        if (sc.folder.endsWith('/'))
+        if (sc.endsWith(sc.folder, '/'))
             return sc.folder + name;
 
         return sc.folder + '/' + name;
@@ -27,9 +33,9 @@ function(sc, controller, http, q, $upload) {
         http.post('/createDocument', {
             "doc_name" : sc.getAbsolutePath(name)
         }).success(function(data, status, headers, config) {
-            window.location.href = "/view/" + data.name;
+            $window.location.href = "/view/" + data.name;
         }).error(function(data, status, headers, config) {
-            alert(data.error);
+            $window.alert(data.error);
         });
     };
 
@@ -38,16 +44,16 @@ function(sc, controller, http, q, $upload) {
             "name" : sc.getAbsolutePath(name),
             "owner" : owner
         }).success(function(data, status, headers, config) {
-            window.location.href = "/view/" + data.name;
+            $window.window.location.href = "/view/" + data.name;
         }).error(function(data, status, headers, config) {
-            alert(data.error);
+            $window.alert(data.error);
         });
     };
 
     sc.initFolderVars = function() {
        sc.folder = folder;
 
-       if (sc.getParameterByName('folder') != '')
+       if (sc.getParameterByName('folder') !== '')
            sc.folder = sc.getParameterByName('folder');
 
        if (sc.folder === '' || sc.folder === undefined || sc.folder === null)
@@ -60,7 +66,10 @@ function(sc, controller, http, q, $upload) {
        http({
             method : 'GET',
             url : '/getFolders',
-            params: {root_path: sc.folder}
+            params: {
+                root_path: sc.folder,
+                _: Date.now()
+            }
         }).success(function(data, status, headers, config) {
             sc.folderList = data;
             sc.displayIndex++;
@@ -74,7 +83,11 @@ function(sc, controller, http, q, $upload) {
        http({
             method : 'GET',
             url : '/getDocuments',
-            params: {versions: 0, folder: sc.folder}
+            params: {
+                versions: 0,
+                folder: sc.folder,
+                _: Date.now()
+            }
         }).success(function(data, status, headers, config) {
             sc.documentList = data;
             sc.displayIndex++;

@@ -45,11 +45,11 @@ class Answers(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute("""SELECT id, task_id, content, points, datetime(answered_on, 'localtime') as answered_on
+        cursor.execute("""SELECT Answer.id, task_id, content, points, datetime(answered_on, 'localtime') as answered_on
                           FROM Answer
+                          JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
                           WHERE task_id = ?
-                          AND id IN
-                              (SELECT answer_id FROM UserAnswer WHERE user_id = ?)
+                            AND user_id = ?
                           ORDER BY answered_on DESC""", [task_id, user_id])
 
         answers = self.resultAsDictionary(cursor)
@@ -61,6 +61,18 @@ class Answers(TimDbBase):
             r = self.resultAsDictionary(cursor)
             answer['collaborators'] = r
         return answers
+
+    @contract
+    def get_newest_answers(self, user_id: 'int', task_ids: 'list(str)') -> 'list(dict)':
+        template = ','.join('?' * len(task_ids))
+        return self.resultAsDictionary(self.db.execute("""SELECT Answer.id, task_id, content, points,
+                                  datetime(MAX(answered_on), 'localtime') as answered_on
+                           FROM Answer
+                           JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
+                           WHERE task_id IN (%s)
+                            AND user_id = ?
+                           GROUP BY task_id""" % template, task_ids + [user_id]))
+
 
     @contract
     def get_common_answers(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
@@ -147,3 +159,12 @@ class Answers(TimDbBase):
                  self.db.execute("""SELECT task_id FROM Answer
                                     WHERE id = ?""", [answer_id]))
         return result[0]['task_id'] if len(result) > 0 else None
+
+    def get_users_by_taskid(self, task_id: 'str'):
+        result = self.resultAsDictionary(self.db.execute("""SELECT DISTINCT User.id, name, real_name
+                           FROM User
+                           JOIN UserAnswer ON UserAnswer.user_id = User.id
+                           JOIN Answer on Answer.id = UserAnswer.answer_id
+                           WHERE task_id = ?
+                           ORDER BY real_name ASC""", [task_id]))
+        return result

@@ -15,8 +15,8 @@ wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
 
 # Copy Jypeli dll's to temp directory
 mkdir /tmp/uhome
-mkdir /tmp/uhome/cs
-sudo cp /opt/cs/jypeli/* /tmp/uhome/cs
+# mkdir /tmp/uhome/cs
+# sudo cp /opt/cs/jypeli/* /tmp/uhome/cs
 
 
 # docker run --name csPlugin -t -i -p 56000:5000 -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash  

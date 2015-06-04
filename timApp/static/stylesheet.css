@@ -1,7 +1,5 @@
 .content { 
-	max-width: 52em;
 	text-align: justify;
-    margin-right: 1em;
 }
 
 .paragraph, .par  {
@@ -9,8 +7,9 @@
 }
 
 body {
-	max-width: 60.2em;
 	text-align: justify;
+	margin: auto;  
+	margin-left: 210px;
 }
 
 .correct {
@@ -75,16 +74,14 @@ body {
 .ansi46 { background-color: #00FFFF; }
 .ansi47 { background-color: #FFFFFF; }
 
-body {
-    margin: 0 260px;
-}
 .noteButton, .addNoteButton,  .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton {
     background-color: #f8f8f8;
 	color: white;
-	font-size: x-small;
+	font-size: x-small; 
 	text-align:center;
     border-radius: 12px;
 	outline: none;
+	float: left;
 	
     border: 2px none;
 	line-height: 0.8;
@@ -123,6 +120,7 @@ input[type="submit"], button, input[type="button"] {
     padding: 5px 10px;
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+
 
 
 
@@ -446,7 +444,6 @@ ul ul  ul, ol ol ol {
 }
 
 .material {
-	display: inline-block;
 	width: 90%;
 }
 
@@ -593,16 +590,12 @@ p.kannentiedotoikea-western {
 	margin-bottom: 0.1cm;
 }
 
-.caption, .footer {
+.caption {
 	text-align: center;
 	font-style: italic;
 	margin-top: 1em;
     margin-left: 5em;
     margin-right: 5em;
-}
-
-#footer {
-    height: 10em;
 }
 
 h1 {
@@ -663,7 +656,6 @@ a {
 
 :visited {
 	color: blue;
-	text-decoration: none;
 }
 
 a:active {
@@ -679,6 +671,10 @@ a:hover {
 
 answerbrowser a {
     font-size: inherit;
+}
+
+answerbrowser .firstanswer {
+    float: right;
 }
 
 sub {
@@ -866,6 +862,7 @@ p.stem {
 
 .csRunError {
     white-space: pre-wrap;
+    text-align: left;
 }
 
 .csRunPre {
@@ -991,15 +988,16 @@ p.stem {
 		/* height: 5em; */
 	}
 	.content { 
-		max-width: 45em;
+		/* max-width: 45em; */
 		text-align: justify;
         margin-right: 0.5em;
 	}
 	.paragraph,  .par {
 		position: relative;
-		max-width: 43em;
+		/* max-width: 43em; */
 		margin-left: 0em;
 		margin-top: 1em;
+		margin-right: 1em;
 	}
 	.addNoteButton {
 		position: absolute;
@@ -1038,9 +1036,9 @@ p.stem {
 	
 	
 	body {
-		max-width: 45em;
+		/* max-width: 45em; */
 		margin-left: 5px !important;
-		margin-right: 10px;
+		/*margin-right: 10px; */
 		font-family: Verdana, Arial, sans-serif;
 		font-size: 1em;
 		line-height: 1.2;
@@ -1093,7 +1091,7 @@ p.stem {
 		margin-right: 0.00cm;
 	}
     .csRunCode {
-        margin-left: 0.5em;
+        margin-left: 1.1em;
         /*width: 98%;  */
     }
 	.addNoteButton {
@@ -1160,6 +1158,9 @@ task, .csRunDiv {
     font-family: "Helvetica", Arial, sans-serif;
 
 }
+
+
+
 
 .note {
     border-top: 4px solid;
@@ -1252,9 +1253,11 @@ img.console {
     task, .csRunDiv {
         margin-left: 0.2em;
         margin-right: 0em;
-    } 
-
-
+    }
+    
+    .csrunEditorDiv  .csEditArea {
+        /* margin-left: 1px;  */
+    }
 }
 
 
@@ -1272,7 +1275,7 @@ img.console {
 
         display: block;
         z-index: 9;
-        // max-height: 100%;
+        /* max-height: 100%; */
         padding-left: 2em;
     }
 
@@ -1291,6 +1294,32 @@ img.console {
 	z-index: 501;
 	overflow: auto;
 	overflow-x: hidden;
+        max-height: 90vh;
+}
+
+.userlist td, .userlist th {
+    max-width: 50px;
+}
+
+.userlist td {
+    padding: 1px;
+}
+
+.userlist td:first-child, .userlist th:first-child {
+    max-width: 200px;
+}
+
+.userlist .input-filter {
+    width: 95%;
+}
+
+.userlist .sortable.header {
+    cursor: pointer;
+}
+
+.userlist li {
+    list-style-type: none;
+    display: inline;
 }
 
 .userentry {
@@ -1305,7 +1334,9 @@ img.console {
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 1;
+    z-index: 5;
+    /* bottom: 0; */
+    overflow-y: auto;
 }
 
 .sidebar {
@@ -1445,12 +1476,12 @@ img.console {
 .ace_editor {
     position: relative;
     overflow: hidden;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
-    font-size: 12px;
-    line-height: normal;
+    font-family: 'Courier','Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-size: 14px;
+    line-height: 1.1;
     direction: ltr;
     width: 98%;
-    margin-left: 2px;
+    margin-left: 3.8em;
 }
 
 .timButton {
@@ -1484,7 +1515,7 @@ img.console {
     background-color: #f8f8f8;
 }
 
-.addNote, .editPar, .addPar {
+.addNote, .editPar, .addPar .menuClose {
     width: 220px;
 }
 
@@ -1549,10 +1580,6 @@ img.console {
   display: none;
   }
 
-  .unread {
-  display: none;
-  }
-
   .parContent {
   position: static;
   border: 0px;
@@ -1573,6 +1600,9 @@ img.console {
   display: none;
  }
 
+  #contents {
+      display: none;
+  }
     /* Harmaa varjo dokumentilta pois */ 
     .material {
         box-shadow: none !important;
@@ -1580,29 +1610,6 @@ img.console {
     }
 }
 
-.breadcrumb-div {
-    margin-top: 10px;
-}
-
-.breadcrumb {
-    font-size: 1.0em;
-}
-
-.breadcrumb.ol {
-    background-color: #fff;
-}
-
-.breadcrumb a {
-    /* Overrides the default TIM style for links */
-    font-size: 1.0em;
-	padding: 8px 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-}
-
-.breadcrumb active {
-	text-decoration: bold;
-}
 .speaker {
   position: absolute;
   left: 105%;
@@ -1631,5 +1638,54 @@ img.console {
   position: absolute;
   top: 0;
   left: -0.5em;
-}
+} 
  
+.sagecell_editor {
+  line-height: 13px;
+  margin-bottom: 8px;
+  font-size: 10pt;
+}
+
+pre.sagecell_pyout {
+  border: none;
+}
+
+pre.sagecell_stdout {
+  border: none;
+}
+
+
+button:disabled {
+    background: #AAA;
+    color: #CCC;
+}
+
+@media screen and (min-width: 60em) {
+    .body {
+        margin-left: 60em !important;
+    }
+}
+
+.breadcrumb-div {
+    margin-top: 10px;
+}
+
+.breadcrumb {
+    font-size: 1.0em;
+}
+
+.breadcrumb.ol {
+    background-color: #fff;
+}
+
+.breadcrumb a {
+    /* Overrides the default TIM style for links */
+    font-size: 1.0em;
+	padding: 8px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.breadcrumb active {
+	text-decoration: bold;
+}

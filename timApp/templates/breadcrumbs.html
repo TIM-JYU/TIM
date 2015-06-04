@@ -1,4 +1,4 @@
-<div ng-show="crumbs" class="breadcrumb-div">
+<div ng-show="crumbs" class="breadcrumb-div ng-cloak">
     <ol id="docpath" class="breadcrumb">
         <li ng-repeat="c in crumbs" ng-class="$last?'active':''">
             <a ng-if="!$last" href="/view/{{ '{{ c.fullname }}' }}">{{ '{{ c.name }}' }}</a>

@@ -59,7 +59,7 @@ videoApp.directiveTemplateVideo = function(t) {
                   '</p>'+
 				  '<div ><p></p></div>' + 
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
-				  '<p class="footer">Here comes footer</p>'+
+				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
    if ( t == "listvideo" ) return '<div class="listVideoRunDiv">' +
 				  '<p>Here comes header</p>' +
@@ -72,7 +72,7 @@ videoApp.directiveTemplateVideo = function(t) {
                   '</li></ul>' +
 				  '<div ><p></p></div>' + 
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
-				  '<p class="footer">Here comes footer</p>'+
+				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
    return '<div class="videoRunDiv">' +
 				  '<p>Here comes header</p>' +
@@ -83,7 +83,7 @@ videoApp.directiveTemplateVideo = function(t) {
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docoicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
-				  '<p class="footer">Here comes footer</p>'+
+				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
 }
 
@@ -138,7 +138,7 @@ videoApp.directiveFunction = function(t) {
 			head = videoApp.getHeading(attrs,"header",scope,"h4");
 			element[0].childNodes[0].outerHTML = head;
 			var n = element[0].childNodes.length;
-			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="footer"');
+			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = videoApp.getHeading(attrs,"footer",scope,'p class="plgfooter"');
             if ( scope.open ) scope.showVideo();
 		},		
 		scope: {},				

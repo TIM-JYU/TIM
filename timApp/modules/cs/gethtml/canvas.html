@@ -10,6 +10,7 @@
           width:  100%;
           height: 95%;
           margin: 0px;
+          overflow: hidden;
      }
      .error, .mycanvas {
         position: fixed;
@@ -25,28 +26,55 @@
       var error;
       var myConsole;
       var resized = false;
+      var consoleText = "";
+      var canvasConsole = {};
+      canvasConsole.log = function(s) {
+        var res = "", sep = "";
+        for (var i=0; i<arguments.length; i++) { res += sep + arguments[i]; sep = " "; }    
+        writeln(res);
+      };
       
-      function runJavaScript(text,userargs,userinput) {
+      var beforeCode = 'function paint(ctx,out, userargs, userinput, console) {"use strict"; ';
+      var afterCode = '\n}\n';
+      
+      function getConsoleHeight() {
+         if ( myConsole ) return myConsole.clientHeight+20;
+         // if ( myConsole ) return document.body.scrollHeight; // ei palaudu pieneksi enää
+         return 0;
+      }
+      
+      function runJavaScript(text,userargs,userinput, wantsConsole) {
         try {
             if ( !error ) error = document.getElementById('error');
             error.innerHTML = "";
             if ( !myConsole ) myConsole = document.getElementById('myConsole');
             if ( myConsole ) myConsole.innerHTML = "";
+            consoleText = "";
 
             if ( !canvas ) canvas = document.getElementById('myCanvas');
-            var paint = new Function("return ("+text+")")(); 
+            var b = "";
+            var a = "";
+            var cons = console;
+            if ( wantsConsole ) {
+               b = beforeCode;
+               a = afterCode; 
+               cons = canvasConsole;
+            }
+            var paint = new Function("return ("+b+text+a+")")(); 
             var ctx = canvas.getContext("2d");
-            if ( !resized ) {
-              ctx.canvas.width  = window.innerWidth;
-              ctx.canvas.height = window.innerHeight-20;
-              resized = true;
-            }  
             var out=myConsole;
             out.write = write;
             out.writeln = writeln;
+            out.flush = flush;
+            if ( !resized ) {
+              ctx.canvas.width  = window.innerWidth; // jos toisella puolen piirtoa niin kuva häviää
+              ctx.canvas.height = window.innerHeight-20;
+              resized = true;
+            }  
             ctx.save(); 
-            paint(ctx,out,userargs,userinput);
+            paint(ctx,out,userargs,userinput,cons);
             ctx.restore(); 
+            out.flush();
         } catch (exc) {
           var rivi ='';
           var sarake = '';
@@ -59,13 +87,20 @@
        }
       }
       
+      
+      
     function write(s) {
-       if ( !myConsole ) myConsole = document.getElementById('myConsole');
-       if ( myConsole ) myConsole.innerHTML += s;
+       //if ( !myConsole ) myConsole = document.getElementById('myConsole');
+       //if ( myConsole ) myConsole.innerHTML += s;
+       consoleText += s;
     }    
       
     function writeln(s) {
        write(s+"\n");
+    }    
+      
+    function flush() {
+       myConsole.innerHTML = consoleText;
     }    
       
     function resize_canvas(){
@@ -98,6 +133,6 @@
   <body onresize="resize_canvas()">
     <div id="error" class="error" ></div>
     <pre id="myConsole" class="jsconsole" ></pre>
-    <canvas id="myCanvas" class="mycanvas" width="578" height="200"></canvas>
+    <canvas id="myCanvas" class="mycanvas" width="800" height="1"></canvas>
   </body>
 </html>     

@@ -1,36 +1,74 @@
-#!/bin/sh
-
-# Do NOT try to run this script in tim-beta machine!
+#!/bin/bash
 
 # Stop the script if any error occurs
 set -e
 
-# Stop tim and Haskell plugins
-docker stop tim &
-docker stop haskellplugins2 &
+params="$*"
+
+if [ "$params" = "" ] ; then
+    echo "Usage: restart [tim [sshd]|nginx|plugins]..."
+    echo "Example: restart tim plugins"
+    exit
+fi
+
+param () {
+  local list="$params"
+  local item="$1"
+  if echo "$list" | grep -q "\b$item\b"; then
+    result=0
+  else
+    result=1
+  fi
+  return $result
+}
+
+checkdir() {
+  if [ ! -d "$1" ] && [ ! -L "$1" ]; then
+    echo "File $1 doesn't exist, creating symbolic link"
+    ln -s $2 $1
+  fi
+}
+
+
+# Create symbolic links for /opt/tim, /opt/cs and /opt/svn
+checkdir /opt/tim $PWD
+checkdir /opt/svn $PWD/timApp/modules/svn
+checkdir /opt/cs $PWD/timApp/modules/cs
+
+if param tim ; then
+    docker stop tim &
+fi
+
+if param nginx ; then
+    docker stop nginx &
+fi
 wait
 
 # Remove stopped containers
-docker rm tim &
-docker rm haskellplugins2 &
+if param tim ; then
+    docker rm tim &
+fi
+
+if param nginx ; then
+    docker rm nginx &
+fi
 wait
 
-# Start Haskell plugins
-docker run -d\
-   -v $PWD/timApp/modules/Haskell/.cabal-sandbox/bin/:/hbin\
-   -v $PWD/timApp/modules/Haskell/:/Haskell\
-   -v $PWD/timApp/modules/Haskell/startAll.sh:/startAll.sh\
-   -p 57000:5001\
-   -p 58000:5002\
-   -p 59000:5003\
-   -p 60000:5004\
-   --name "haskellplugins2" haskellrun /startAll.sh
-
-# Start tim
-if [ "$1" = "sshd" ] ; then
-    docker run --name tim -p 50000:5000 -p 49999:22 -v $PWD:/service -d -t -i tim /bin/bash -c '/usr/sbin/sshd -D ; /bin/bash'
-    # Initialize the database in case it doesn't exist yet
-    docker exec tim /bin/bash -c 'cd /service/timApp && python3 initdb2.py'
-else
-    docker run --name tim -p 50000:5000 -v $PWD:/service -d -t -i tim /bin/bash -c 'cd /service/timApp && python3 initdb2.py && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+if param plugins ; then
+ /opt/cs/startPlugins.sh
+ /opt/svn/startPlugins.sh
+ /opt/tim/timApp/modules/Haskell/startPlugins.sh
 fi
+
+if param tim ; then
+  if param sshd ; then
+    docker run --name tim -p 50001:5000 -p 49999:22 -v /opt/tim:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c '/usr/sbin/sshd -D ; /bin/bash'
+  else
+    docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh ; python3 launch.py ; /bin/bash'
+  fi
+fi
+
+if param nginx ; then
+  docker run -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx
+fi
+exit 0
