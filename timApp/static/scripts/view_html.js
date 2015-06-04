@@ -857,7 +857,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
 
 
-
             var jsonData = json["DATA"];
             var jsonHeaders = jsonData["HEADERS"];
             var jsonRows = jsonData["ROWS"];
@@ -902,30 +901,30 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
             scope.rows = rows;
 
-/*            if (json["TIMELIMIT"]) {
-                var time = json["TIMELIMIT"];
-                scope.question.endTimeSelected = 'true';
-                if (time > 3600) {
-                    scope.question.timeLimit.hours = Math.floor(time / 3600);
-                    time = time % 3600;
-                } else {
-                    scope.question.timeLimit.hours = 0;
-                }
+            /*            if (json["TIMELIMIT"]) {
+             var time = json["TIMELIMIT"];
+             scope.question.endTimeSelected = 'true';
+             if (time > 3600) {
+             scope.question.timeLimit.hours = Math.floor(time / 3600);
+             time = time % 3600;
+             } else {
+             scope.question.timeLimit.hours = 0;
+             }
 
-                if (time > 60) {
-                    scope.question.timeLimit.minutes = Math.floor(time / 60);
-                    time = time % 60;
-                } else {
-                    scope.question.timeLimit.minutes = 0;
-                }
+             if (time > 60) {
+             scope.question.timeLimit.minutes = Math.floor(time / 60);
+             time = time % 60;
+             } else {
+             scope.question.timeLimit.minutes = 0;
+             }
 
-                if (time > 0) {
-                    scope.question.timeLimit.seconds = time;
-                } else {
-                    scope.question.timeLimit.seconds = 0;
-                }
+             if (time > 0) {
+             scope.question.timeLimit.seconds = time;
+             } else {
+             scope.question.timeLimit.seconds = 0;
+             }
 
-            }*/
+             }*/
 
             scope.toggleQuestion();
 
@@ -961,7 +960,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.createMatrix = function (rowsCount, columnsCount, type) {
         if (scope.questionType != type) {
             scope.questionType = type;
-
 
             if (type === 'radio' || type === 'checkbox') {
                 scope.question.answerFieldType = type;
@@ -1015,7 +1013,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
             }
             scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
-        };
+        }
+        ;
     }
 
 
@@ -1205,7 +1204,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
         if (scope.question.type === undefined) {
             scope.errorize("qType", "Question type must be selected.");
-        } else if (scope.question.type === "matrix" && scope.question.MatrixType === undefined) {
+        } else if (scope.question.type === "matrix" && scope.question.matrixType === undefined) {
             scope.errorize("check", "Answer type must be selected.");
         } else if ((scope.question.type === "radio-vertical" ||
             scope.question.type === "checkbox-vertical" ||
@@ -1217,23 +1216,23 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if ((scope.question.type === "radio-vertical" || scope.question.type === "checkbox-vertical") && scope.rows.length < 2) {
                 scope.errorize("matrix", "You must have at least two choices.");
             }
-        } else if(scope.question.type !== undefined){
+        } else if (scope.question.type !== undefined) {
             scope.errorize("matrix", "You must have at least one row.");
         }
         var timeLimit = "";
         if (scope.question.endTimeSelected) {
-            if(scope.question.timeLimit.hours === "") {
+            if (scope.question.timeLimit.hours === "") {
                 scope.question.timeLimit.hours = 0;
             }
-            if(scope.question.timeLimit.minutes === "") {
+            if (scope.question.timeLimit.minutes === "") {
                 scope.question.timeLimit.minutes = 0;
             }
-            if(scope.question.timeLimit.seconds === "") {
+            if (scope.question.timeLimit.seconds === "") {
                 scope.question.timeLimit.seconds = 0;
             }
             scope.isPositiveNumber(scope.question.timeLimit.hours, "durationHour");
             scope.isPositiveNumber(scope.question.timeLimit.minutes, "durationMin");
-            scope.isPositiveNumber(scope.question.timeLimit.seconds, "durationSec")
+            scope.isPositiveNumber(scope.question.timeLimit.seconds, "durationSec");
             timeLimit = 0;
             timeLimit = parseInt(timeLimit) + parseInt(scope.question.timeLimit.seconds);
             if (scope.question.timeLimit.hours) {
@@ -1242,7 +1241,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (scope.question.timeLimit.minutes) {
                 timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.minutes * 60);
             }
-            if(timeLimit <= 0) {
+            if (timeLimit <= 0) {
                 scope.errorize("durationDiv", "Please enter a duration greater then zero or for unending question uncheck the duration box.");
             }
         } else {
