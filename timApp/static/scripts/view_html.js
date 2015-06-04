@@ -1137,7 +1137,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', function 
             }
             scope.isPositiveNumber(scope.question.timeLimit.hours, "durationHour");
             scope.isPositiveNumber(scope.question.timeLimit.minutes, "durationMin");
-            scope.isPositiveNumber(scope.question.timeLimit.seconds, "durationSec")
+            scope.isPositiveNumber(scope.question.timeLimit.seconds, "durationSec");
             timeLimit = 0;
             timeLimit = parseInt(timeLimit) + parseInt(scope.question.timeLimit.seconds);
             if (scope.question.timeLimit.hours) {
