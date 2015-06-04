@@ -901,30 +901,30 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
             scope.rows = rows;
 
-            /*            if (json["TIMELIMIT"]) {
-             var time = json["TIMELIMIT"];
-             scope.question.endTimeSelected = 'true';
-             if (time > 3600) {
-             scope.question.timeLimit.hours = Math.floor(time / 3600);
-             time = time % 3600;
-             } else {
-             scope.question.timeLimit.hours = 0;
-             }
+            if (json["TIMELIMIT"] && json["TIMELIMIT"] > 0) {
+                var time = json["TIMELIMIT"];
+                scope.question.endTimeSelected = true;
+                if (time > 3600) {
+                    scope.question.timeLimit.hours = Math.floor(time / 3600);
+                    time = time % 3600;
+                } else {
+                    scope.question.timeLimit.hours = 0;
+                }
 
-             if (time > 60) {
-             scope.question.timeLimit.minutes = Math.floor(time / 60);
-             time = time % 60;
-             } else {
-             scope.question.timeLimit.minutes = 0;
-             }
+                if (time > 60) {
+                    scope.question.timeLimit.minutes = Math.floor(time / 60);
+                    time = time % 60;
+                } else {
+                    scope.question.timeLimit.minutes = 0;
+                }
 
-             if (time > 0) {
-             scope.question.timeLimit.seconds = time;
-             } else {
-             scope.question.timeLimit.seconds = 0;
-             }
+                if (time > 0) {
+                    scope.question.timeLimit.seconds = time;
+                } else {
+                    scope.question.timeLimit.seconds = 0;
+                }
 
-             }*/
+            }
 
             scope.toggleQuestion();
 
@@ -938,7 +938,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         question: "",
         matrixType: "",
         answerFieldType: "",
-        timeLimit: {hours: "", minutes: "", seconds: ""}
+        timeLimit: {hours: "0", minutes: "0", seconds: "0"}
     };
 
 
@@ -958,7 +958,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-        if (scope.questionType != type) {
+        if (scope.questionType != type || scope.rows <= 0) {
             scope.questionType = type;
 
             if (type === 'radio' || type === 'checkbox') {
@@ -1121,17 +1121,23 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     scope.clearQuestion = function () {
         scope.question = {
-            question: ""
+            title: "",
+            question: "",
+            matrixType: "",
+            answerFieldType: "",
+            timeLimit: {hours: "0", minutes: "0", seconds: "0"}
         };
 
-        scope.rows.splice(0, scope.rows.length - 1);
+        scope.rows = [];
         scope.answer = "";
-        scope.toggleQuestion();
+        scope.columnHeaders = [];
+        //scope.toggleQuestion();
     };
 
     scope.close = function () {
         scope.removeErrors();
         scope.clearQuestion();
+        scope.toggleQuestion();
     };
 
     scope.replaceLinebreaksWithHTML = function (val) {
@@ -1344,6 +1350,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
+                scope.close();
             })
             .error(function () {
                 $window.console.log("There was some error creating question to database.");
