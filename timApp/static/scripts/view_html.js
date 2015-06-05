@@ -438,6 +438,7 @@ timApp.controller("ViewCtrl", [
 
         sc.addEvent(".questionAdded", function () {
             sc.showQuestion($(this));
+            sc.par = ($(this.parentNode.parentNode));
         });
 
         // Note-related functions
