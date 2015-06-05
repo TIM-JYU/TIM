@@ -395,7 +395,6 @@ timApp.controller("ViewCtrl", [
 
         sc.markParRead = function ($this, par_id) {
             var oldClass = $this.attr("class");
-            console.log("Vanha: " + oldClass + " id: " + par_id);
             $this.attr("class", "readline read");
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
