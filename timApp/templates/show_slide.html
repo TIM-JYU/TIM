@@ -153,6 +153,8 @@
     var pollTimeout;
     var receiving = true;
 
+    var oldh = 0, oldv = 0;
+    
     function refresh() {
         clearTimeout(pollTimeout);
         $.ajax({
@@ -184,6 +186,7 @@
 
     if (GetURLParameter('controls') === undefined) pollTimeout = setTimeout(refresh, 250);
 
+    
     function updateSlideStatus(h, v, f) {
         if (GetURLParameter('controls') !== undefined) return;
         receiving = false;
