@@ -855,6 +855,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (json["QUESTION"]) scope.question.question = json["QUESTION"];
             if (json["TYPE"]) scope.question.type = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
+            if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
 
 
             var jsonData = json["DATA"];
@@ -892,7 +893,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                         type: jsonColumns[j].type,
                         answerFiledType: jsonColumns[j].answerFieldType
                     };
-                    if (jsonColumns[j].points) columns[j].points = jsonColumns[j].points;
+                    if (jsonColumns[j].points) {
+                        columns[j].points = jsonColumns[j].points;
+                    } else {
+                        columns[j].points = "";
+                    }
 
                 }
 
@@ -1055,7 +1060,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                         rowId: location,
                         type: "answer",
                         value: '',
-                        answerFiledType: scope.question.answerFieldType
+                        answerFiledType: scope.question.answerFieldType,
+                        points: ""
                     };
 
                 }
@@ -1281,7 +1287,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
         scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
 
-        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "MATRIXTYPE": "' + scope.question.matrixType + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
+        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "ANSWERFIELDTYPE": "' + scope.question.answerFieldType + '", "MATRIXTYPE": "' + scope.question.matrixType + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
         var i;
