@@ -50,6 +50,8 @@
         {% else %}
             var users = [{{current_user|tojson}}];
         {% endif %}
+        var crumbs = getBreadcrumbs(docName);
+        {% include 'breadcrumbs.js' %}
     </script>
 {% endblock %}
 {% block content %}
