@@ -380,15 +380,22 @@ timApp.controller("ViewCtrl", [
                 }
                 $par.after($newpar.append($("<div>",
                     {class: "readline " + readClass, title: "Click to mark this paragraph as read"})));
+
+                if (extraData.markRead) {
+                    var $newread = $newpar.find("div.readline");
+                    var par_id = sc.getParIndex($par) + i;
+                    sc.markParRead($newread, par_id);
+                }
+
                 sc.processMath($newpar[0]);
             }
             $par.remove();
             sc.editing = false;
         };
 
-        sc.onClick(".readline", function ($this, e) {
-            var par_id = sc.getParIndex($this.parents('.par'));
+        sc.markParRead = function ($this, par_id) {
             var oldClass = $this.attr("class");
+            console.log("Vanha: " + oldClass + " id: " + par_id);
             $this.attr("class", "readline read");
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
@@ -398,6 +405,22 @@ timApp.controller("ViewCtrl", [
                     $this.attr("class", oldClass);
                 });
             return true;
+        };
+
+        sc.onClick(".readline", function ($this, e) {
+            var par_id = sc.getParIndex($this.parents('.par'));
+            return sc.markParRead($this, par_id);
+            /*
+             var oldClass = $this.attr("class");
+             $this.attr("class", "readline read");
+             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
+             .success(function (data, status, headers, config) {
+             // No need to do anything here
+             }).error(function (data, status, headers, config) {
+             $window.alert('Could not save the read marking.');
+             $this.attr("class", oldClass);
+             });
+             return true; */
         });
 
         sc.showNoteWindow = function (e, $par, coords) {

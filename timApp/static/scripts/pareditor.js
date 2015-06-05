@@ -1,6 +1,8 @@
 var angular;
 var timApp = angular.module('timApp');
 
+// "mark-read-url": '/read/' + sc.docId + '/' + par_id + '?_='
+
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
         return {
@@ -82,6 +84,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.timer = null;
                 $scope.outofdate = false;
                 $scope.parCount = 0;
+                $scope.extraData.markRead = false;
+                var snippetManager = ace.require("ace/snippets").snippetManager;
+
 
                 $scope.saveClicked = function () {
                     var text = $scope.editor.getSession().getValue();
@@ -120,7 +125,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.cancelClicked = function () {
-                    $element.remove(); 
+                    $element.remove();
                     $scope.afterCancel({
                         extraData: $scope.extraData
                     });
@@ -128,7 +133,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.releaseClicked = function () {
                     var div = $("#previewDiv");
-                    
+
                     if (div.css("position") == "absolute") {
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
@@ -140,8 +145,77 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         document.getElementById("releaseButton").innerHTML = "&#8592;";
                     }
                 };
-                
-                
+
+
+                $scope.wrapFn = function (func) {
+                    $scope.editor.focus();
+                    return (func());
+                };
+
+                $scope.undoClicked = function () {
+                    $scope.editor.undo();
+                };
+
+                $scope.redoClicked = function () {
+                    $scope.editor.redo();
+                };
+
+                $scope.boldClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "**${0:$SELECTION}**");
+                };
+
+                $scope.italicClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "*${0:$SELECTION}*");
+                };
+
+
+                $scope.leftClicked = function () {
+                    $scope.editor.navigateLeft(1);
+                };
+
+                $scope.rightClicked = function () {
+                    $scope.editor.navigateRight(1);
+                };
+
+                $scope.upClicked = function () {
+                    $scope.editor.navigateUp(1);
+                };
+
+                $scope.downClicked = function () {
+                    $scope.editor.navigateDown(1);
+                };
+
+                $scope.linkClicked = function () {
+                    var selectedText = "Linkin osoite";
+                    if (!$scope.editor.getSelection().$isEmpty)
+                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
+                    snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}](" + selectedText + ")");
+                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
+                };
+
+                $scope.codeClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "```\n${0:$SELECTION}\n```");
+                };
+
+                $scope.indentClicked = function () {
+                    $scope.editor.indent();
+                };
+
+                $scope.outdentClicked = function () {
+                    $scope.editor.blockOutdent();
+                };
+
+                $scope.listClicked = function () {
+                    $scope.editor.navigateLineStart();
+                    snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
+                };
+
+                $scope.ruleClicked = function () {
+                    $scope.editor.navigateLineEnd();
+                    snippetManager.insertSnippet($scope.editor, "\n---\n");
+                };
+
                 $scope.onFileSelect = function (url, $files) {
                     //$files: an array of files selected, each file has name, size, and type.
                     for (var i = 0; i < $files.length; i++) {

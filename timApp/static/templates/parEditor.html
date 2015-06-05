@@ -1,16 +1,31 @@
 <span ng-show="options.showImageUpload">
     Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
+    Mark as read: <input type="checkbox" ng-model="extraData.markRead">
 <span ng-bind="progress"></span>
 </span>
 <div class="editor" ui-ace="{
   useWrapMode: false,
   onLoad: aceLoaded,
   onChange: aceChanged
-}" ng-model="editorText"></div>
+    }" ng-model="editorText"></div>
 <div class="editButtonArea">
     <button class="timButton savePar" ng-click="saveClicked()">Save</button>
     <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
     <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
+    <button class="timButton deletePar" ng-click="wrapFn(undoClicked)">Undo</button>
+    <button class="timButton deletePar" ng-click="wrapFn(redoClicked)">Redo</button>
+    <button class="timButton deletePar" ng-click="wrapFn(leftClicked)">Left</button>
+    <button class="timButton deletePar" ng-click="wrapFn(rightClicked)">Right</button>
+    <button class="timButton deletePar" ng-click="wrapFn(upClicked)">Up</button>
+    <button class="timButton deletePar" ng-click="wrapFn(downClicked)">Down</button>
+    <button class="timButton deletePar" ng-click="wrapFn(indentClicked)">Indent</button>
+    <button class="timButton deletePar" ng-click="wrapFn(outdentClicked)">Outdent</button>
+    <button class="timButton deletePar" ng-click="wrapFn(boldClicked)">Bold</button>
+    <button class="timButton deletePar" ng-click="wrapFn(italicClicked)">Italic</button>
+    <button class="timButton deletePar" ng-click="wrapFn(linkClicked)">Link</button>
+    <button class="timButton deletePar" ng-click="wrapFn(codeClicked)">Code</button>
+    <button class="timButton deletePar" ng-click="wrapFn(listClicked)">List</button>
+    <button class="timButton deletePar" ng-click="wrapFn(ruleClicked)">Rule</button>
 </div>
 <div class="tags">
     <label ng-repeat="tag in options.tags">
