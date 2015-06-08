@@ -594,7 +594,9 @@ timApp.controller("ViewCtrl", [
 
 
         sc.getQuestions = function () {
-            http.get('/questions/' + sc.docId)
+            var rn = "?_=" + Date.now();
+
+            http.get('/questions/' + sc.docId + rn)
                 .success(function (data) {
                     var pars = {};
                     var questionCount = data.length;
@@ -1339,9 +1341,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         questionJson += ']';
         questionJson += '}}';
 
+        var rn = "?_=" + Date.now();
+
         http({
             method: 'POST',
-            url: '/addQuestion',
+            url: '/addQuestion/' + rn,
             params: {
                 'question_id': scope.question.question_id,
                 'question': scope.question.question,

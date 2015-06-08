@@ -461,7 +461,7 @@ def get_questions():
 
 
 # Route to get add question to database
-@app.route('/addQuestion', methods=['POST'])
+@app.route('/addQuestion/', methods=['POST'])
 def add_question():
     # TODO: Only lecturers should be able to create questions.
     # verifyOwnership(doc_id)
