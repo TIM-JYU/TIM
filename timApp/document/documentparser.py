@@ -11,6 +11,7 @@ class DocReference:
     """
     :type lines: list[str]
     :type i: int
+    :type current_line: int
     :param lines:
     :param i:
     """
@@ -20,6 +21,11 @@ class DocReference:
         self.current_line = i
 
     def peek_line(self):
+        """
+
+        :rtype: str
+        :return:
+        """
         return self.lines[self.current_line]
 
     def get_line_and_advance(self):
@@ -36,24 +42,25 @@ class DocumentParser:
     def __init__(self):
         pass
 
-    @contract
-    def parse_document(self, doc_text: str,
-                       id_func: 'str -> str',
-                       hash_func) -> list(dict):
+    def parse_document(self, doc_text):
         results = []
 
         lines = doc_text.split("\n")
         doc = DocReference(lines)
-        funcs = [self.try_parse_code_block, self.try_parse_header_block, self.parse_normal_block]
-        while doc.has_more_lines():
+        funcs = [self.eat_whitespace,
+                 self.try_parse_code_block,
+                 self.try_parse_header_block,
+                 self.parse_normal_block]
+        while True:
+            self.eat_whitespace(doc)
+            if not doc.has_more_lines():
+                break
             for func in funcs:
                 result = func(doc)
                 if result:
                     results.append(result)
                     # TODO: Check if the block is missing attributes (like ID/hash)
-                else:
-                    assert False, 'Should be impossible to come here'
-
+                    break
         return results
 
     def parse_attributes(self, attribute_str: str):
@@ -76,8 +83,10 @@ class DocumentParser:
         is_code_block, code_block_marker = self.is_beginning_of_code_block(doc)
         if not is_code_block:
             return None
-        block_lines = [doc.get_line_and_advance()]
-        tokens, start = AttributeParser(block_lines[0]).get_attributes()
+        start_line = doc.get_line_and_advance()
+        block_lines = []
+        tokens, start = AttributeParser(start_line).get_attributes()
+        block_lines.append(start_line[:start].strip())
         while True:
             line = doc.get_line_and_advance()
             block_lines.append(line)
@@ -85,15 +94,25 @@ class DocumentParser:
                 break
             if not doc.has_more_lines():
                 raise SplitterException("Missing end of code block")
-        return '\n'.join(block_lines), tokens
+        tokens['md'] = '\n'.join(block_lines)
+        return tokens
 
     def try_parse_header_block(self, doc):
+        """
+        :type doc: DocReference
+        :param doc:
+        :return:
+        """
         if not self.is_beginning_of_header_block(doc):
             return None
-        block_lines = [doc.get_line_and_advance()]
-        tokens, start = AttributeParser(block_lines[0]).get_attributes()
-        block_lines.append(self.parse_normal_block(doc))
-        return '\n'.join(block_lines), tokens
+        header_line = doc.get_line_and_advance()
+        block_lines = []
+        tokens, start = AttributeParser(header_line).get_attributes()
+        if not header_line.startswith('#-'):
+            block_lines.append(header_line[:start].strip())
+        block_lines.append(self.parse_normal_block(doc)['md'])
+        tokens['md'] = '\n'.join(block_lines)
+        return tokens
 
     def parse_normal_block(self, doc):
         block_lines = []
@@ -101,4 +120,14 @@ class DocumentParser:
             if self.is_beginning_of_header_block(doc) or self.is_beginning_of_code_block(doc)[0]:
                 break
             block_lines.append(doc.get_line_and_advance())
-        return '\n'.join(block_lines), {}
+        return {'md': '\n'.join(block_lines)}
+
+    def eat_whitespace(self, doc):
+        """
+        :type doc: DocReference
+        """
+        if not doc.has_more_lines():
+            return None
+        if doc.peek_line().isspace() or doc.peek_line() == '':
+            doc.get_line_and_advance()
+        return None
