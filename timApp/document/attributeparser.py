@@ -26,7 +26,7 @@ class AttributeParser:
     def get_attributes(self):
         self.current_pos = 0
         if not self.find_attr_list_start_char():
-            return {}, -1
+            return {}, None
         start_index = self.current_pos - 1
         tokens = {}
         end_found = False
@@ -57,7 +57,7 @@ class AttributeParser:
         if end_found:
             return tokens, start_index
         else:
-            return {}, -1
+            return {}, None
 
     @staticmethod
     def attr_list_start_char():

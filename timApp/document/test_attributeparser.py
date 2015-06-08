@@ -45,11 +45,12 @@ class AttributeParserTest(unittest.TestCase):
         ap = AttributeParser()
         attrs, index = ap.set_str(string).get_attributes()
         self.assertDictEqual({}, attrs)
-        self.assertEqual(-1, index)
+        self.assertEqual(None, index)
 
     def test_broken(self):
         self.check_invalid('  { #asd     ')
         self.check_invalid('  { #asd')
+        self.check_invalid(r'\{ #asd}')
         self.check_invalid('   #asd     }')
         self.check_invalid('{somekey="}')
         self.check_invalid('{somekey="""}')
