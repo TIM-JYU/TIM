@@ -438,6 +438,7 @@ timApp.controller("ViewCtrl", [
 
         sc.addEvent(".questionAdded", function () {
             sc.showQuestion($(this));
+            sc.par = ($(this.parentNode.parentNode));
         });
 
         // Note-related functions
@@ -593,7 +594,9 @@ timApp.controller("ViewCtrl", [
 
 
         sc.getQuestions = function () {
-            http.get('/questions/' + sc.docId)
+            var rn = "?_=" + Date.now();
+
+            http.get('/questions/' + sc.docId + rn)
                 .success(function (data) {
                     var pars = {};
                     var questionCount = data.length;
@@ -855,7 +858,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (json["QUESTION"]) scope.question.question = json["QUESTION"];
             if (json["TYPE"]) scope.question.type = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
-
+            if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
 
 
             var jsonData = json["DATA"];
@@ -893,7 +896,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                         type: jsonColumns[j].type,
                         answerFiledType: jsonColumns[j].answerFieldType
                     };
-                    if (jsonColumns[j].points) columns[j].points = jsonColumns[j].points;
+                    if (jsonColumns[j].points) {
+                        columns[j].points = jsonColumns[j].points;
+                    } else {
+                        columns[j].points = "";
+                    }
 
                 }
 
@@ -902,9 +909,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
             scope.rows = rows;
 
-/*            if (json["TIMELIMIT"]) {
+            if (json["TIMELIMIT"] && json["TIMELIMIT"] > 0) {
                 var time = json["TIMELIMIT"];
-                scope.question.endTimeSelected = 'true';
+                scope.question.endTimeSelected = true;
                 if (time > 3600) {
                     scope.question.timeLimit.hours = Math.floor(time / 3600);
                     time = time % 3600;
@@ -925,7 +932,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     scope.question.timeLimit.seconds = 0;
                 }
 
-            }*/
+            }
 
             scope.toggleQuestion();
 
@@ -939,7 +946,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         question: "",
         matrixType: "",
         answerFieldType: "",
-        timeLimit: {hours: "", minutes: "", seconds: ""}
+        timeLimit: {hours: "0", minutes: "0", seconds: "0"}
     };
 
 
@@ -959,9 +966,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     ];
 
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-        if (scope.questionType != type) {
+        if (scope.questionType != type || scope.rows <= 0) {
             scope.questionType = type;
-
 
             if (type === 'radio' || type === 'checkbox') {
                 scope.question.answerFieldType = type;
@@ -1015,7 +1021,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
             }
             scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
-        };
+        }
+        ;
     }
 
 
@@ -1056,7 +1063,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                         rowId: location,
                         type: "answer",
                         value: '',
-                        answerFiledType: scope.question.answerFieldType
+                        answerFiledType: scope.question.answerFieldType,
+                        points: ""
                     };
 
                 }
@@ -1122,17 +1130,23 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     scope.clearQuestion = function () {
         scope.question = {
-            question: ""
+            title: "",
+            question: "",
+            matrixType: "",
+            answerFieldType: "",
+            timeLimit: {hours: "0", minutes: "0", seconds: "0"}
         };
 
-        scope.rows.splice(0, scope.rows.length - 1);
+        scope.rows = [];
         scope.answer = "";
-        scope.toggleQuestion();
+        scope.columnHeaders = [];
+        //scope.toggleQuestion();
     };
 
     scope.close = function () {
         scope.removeErrors();
         scope.clearQuestion();
+        scope.toggleQuestion();
     };
 
     scope.replaceLinebreaksWithHTML = function (val) {
@@ -1205,7 +1219,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
         if (scope.question.type === undefined) {
             scope.errorize("qType", "Question type must be selected.");
-        } else if (scope.question.type === "matrix" && scope.question.MatrixType === undefined) {
+        } else if (scope.question.type === "matrix" && scope.question.matrixType === undefined) {
             scope.errorize("check", "Answer type must be selected.");
         } else if ((scope.question.type === "radio-vertical" ||
             scope.question.type === "checkbox-vertical" ||
@@ -1217,18 +1231,18 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if ((scope.question.type === "radio-vertical" || scope.question.type === "checkbox-vertical") && scope.rows.length < 2) {
                 scope.errorize("matrix", "You must have at least two choices.");
             }
-        } else if(scope.question.type !== undefined){
+        } else if (scope.question.type !== undefined) {
             scope.errorize("matrix", "You must have at least one row.");
         }
         var timeLimit = "";
         if (scope.question.endTimeSelected) {
-            if(scope.question.timeLimit.hours === "") {
+            if (scope.question.timeLimit.hours === "") {
                 scope.question.timeLimit.hours = 0;
             }
-            if(scope.question.timeLimit.minutes === "") {
+            if (scope.question.timeLimit.minutes === "") {
                 scope.question.timeLimit.minutes = 0;
             }
-            if(scope.question.timeLimit.seconds === "") {
+            if (scope.question.timeLimit.seconds === "") {
                 scope.question.timeLimit.seconds = 0;
             }
             scope.isPositiveNumber(scope.question.timeLimit.hours, "durationHour");
@@ -1242,7 +1256,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (scope.question.timeLimit.minutes) {
                 timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.minutes * 60);
             }
-            if(timeLimit <= 0) {
+            if (timeLimit <= 0) {
                 scope.errorize("durationDiv", "Please enter a duration greater then zero or for unending question uncheck the duration box.");
             }
         } else {
@@ -1276,7 +1290,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
         scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
 
-        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "MATRIXTYPE": "' + scope.question.matrixType + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
+        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "ANSWERFIELDTYPE": "' + scope.question.answerFieldType + '", "MATRIXTYPE": "' + scope.question.matrixType + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
 
         questionJson += '"HEADERS" : [';
         var i;
@@ -1327,9 +1341,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         questionJson += ']';
         questionJson += '}}';
 
+        var rn = "?_=" + Date.now();
+
         http({
             method: 'POST',
-            url: '/addQuestion',
+            url: '/addQuestion/' + rn,
             params: {
                 'question_id': scope.question.question_id,
                 'question': scope.question.question,
@@ -1345,6 +1361,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
+                scope.close();
             })
             .error(function () {
                 $window.console.log("There was some error creating question to database.");

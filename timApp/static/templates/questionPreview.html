@@ -25,9 +25,10 @@
             <tr ng-repeat="row in json.DATA.ROWS">
                 <td ng-bind-html="row.text"> {{ row.text }} </td>
                 <td ng-repeat="column in row.COLUMNS">
-                    <div ng-if="(column.answerFieldType == 'radio')"><input type="radio" disabled></div>
+                    <div ng-if="(column.answerFieldType == 'radio')"><input type="radio" disabled> </div>
                     <div ng-if="(column.answerFieldType == 'checkbox')"><input type="checkbox" disabled></div>
                     <div ng-if="(column.answerFieldType == 'text')"><input type="text" disabled></div>
+                    <div ng-if="(column.points)"> {{ column.points }} pts. </div>
                 </td>
             </tr>
         </table>
