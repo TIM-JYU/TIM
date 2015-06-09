@@ -1,6 +1,15 @@
 /**
  * Created by hajoviin on 13.5.2015.
+ * @module showChartDirective
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
  */
+
 
 
 /*global $:false */
@@ -85,7 +94,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 }
             ];
 
-
+            /**
+             * @memberof module:showChartDirective
+             * @param question
+             */
             $scope.internalControl.createChart = function (question) {
                 $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
                 $scope.x = 10;
@@ -152,6 +164,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 $compile($scope);
             };
 
+            /**
+             * @memberof module:showChartDirective
+             * @param answers
+             */
             $scope.internalControl.addAnswer = function (answers) {
                 if (!angular.isDefined(answers)) {
                     return;
@@ -202,6 +218,9 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
 
             };
 
+            /**
+             * @memberof module:showChartDirective
+             */
             $scope.internalControl.close = function () {
                 $scope.ctx.clearRect(0, 0, $($scope.canvasId)[0].width, $($scope.canvasId)[0].height);
                 if (typeof $scope.answerChart !== "undefined") {

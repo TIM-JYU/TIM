@@ -1,3 +1,14 @@
+/**
+ * @module popUpDialog
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
+ */
+
 timApp.directive('popUpDialog', function () {
     return {
         restrict: 'E',
@@ -16,6 +27,10 @@ timApp.directive('popUpDialog', function () {
 
         link: function ($scope, $element) {
 
+            /**
+             * @memberof module:popUpDialog
+             * @param e
+             */
             $scope.checkDown = function (e) {
                 $scope.mouseDownX = e.clientX;
                 $scope.mouseDownY = e.clientY;
@@ -25,6 +40,9 @@ timApp.directive('popUpDialog', function () {
 
             };
 
+            /**
+             * @memberof module:popUpDialog
+             */
             $scope.checkUp = function () {
                 var window = $element.find("popUpBack");
                 window.context.style.position = "fixed";

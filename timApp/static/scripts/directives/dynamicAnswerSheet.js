@@ -1,9 +1,15 @@
 /**
  * Created by localadmin on 25.5.2015.
  * directive for dynamic answer sheet. Sheet to answer lecture questions.
+ * @module dynamicAnswerSheet
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
  */
-
-/*global $:false */
 
 var angular;
 
@@ -108,6 +114,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             }
             ;
 
+            /**
+             * @memberof module:dynamicAnswerSheet
+             */
             $scope.internalControl.updateBar = function () {
                 //TODO: Problem with inactive tab.
                 timeLeft -= $scope.valChange;
@@ -127,6 +136,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
             };
 
+            /**
+             * @memberof module:dynamicAnswerSheet
+             */
             $scope.internalControl.answerToQuestion = function () {
                 var answers = [];
                 $interval.cancel(promise);
@@ -184,6 +196,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 clearInterval(promise);
             };
 
+            /**
+             * @memberof module:dynamicAnswerSheet
+             */
             $scope.internalControl.closeQuestion = function () {
                 clearInterval(promise);
                 $element.empty();
