@@ -1,4 +1,14 @@
-/*global $:false */
+/**
+ * @module questionPreviewController
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
+ */
+
 var angular, docId, lectureId, lectureCode, lectureStartTime, lectureEndTime;
 
 var timApp = angular.module('timApp');
@@ -8,12 +18,18 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
 
+        /**
+         * @memberof module:questionPreviewController
+         */
         $scope.editQuestion = function () {
             $scope.close();
             $rootScope.$broadcast("editQuestion", {"question_id": $scope.qId, "json": $scope.json});
 
         };
 
+        /**
+         * @memberof module:questionPreviewController
+         */
         $scope.ask = function () {
             http({
                 url: '/askQuestion',
@@ -35,10 +51,16 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 });
         };
 
+        /**
+         * @memberof module:questionPreviewController
+         */
         $scope.close = function () {
             $scope.$emit('closeQuestionPreview');
         };
 
+        /**
+         * @memberof module:questionPreviewController
+         */
         $scope.deleteQuestion = function () {
             var confirmDi = $window.confirm("Are you sure you want to delete this question?");
             if (confirmDi) {

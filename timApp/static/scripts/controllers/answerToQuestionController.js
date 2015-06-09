@@ -1,8 +1,14 @@
 /**
- * Created by hajoviin on 22.4.2015.
+ * Created by hajoviin on 22.4.2015
+ * @module answerToQuestionController
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
  */
-
-/*global $:false */
 
 var angular;
 
@@ -24,11 +30,17 @@ timApp.controller('AnswerToQuestionController', ['$scope','$window',function ($s
         $scope.dynamicAnswerSheetControl.createAnswer();
     });
 
+    /**
+     * @memberof module:answerToQuestionController
+     */
     $scope.answer = function () {
         $scope.dynamicAnswerSheetControl.answerToQuestion();
 
     };
 
+    /**
+     * @memberof module:answerToQuestionController
+     */
     $scope.close = function () {
         $scope.dynamicAnswerSheetControl.closeQuestion();
     };

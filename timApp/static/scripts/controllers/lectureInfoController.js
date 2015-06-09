@@ -1,9 +1,16 @@
 /**
  * Created by hajoviin on 11.5.2015.
- * Handels the controls of lecture info page
+ * Handles the controls of lecture info page
+ * @module lectureInfoController
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
  */
 
-/*global $:false */
 var angular, docId, lectureId, lectureCode, lectureStartTime, lectureEndTime;
 
 var timApp = angular.module('timApp');
@@ -25,9 +32,9 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     $scope.showPoints = false;
     $scope.points = [];
 
-
-    /*
-     Sends http request to get info about the specific lecture.
+    /**
+     * Sends http request to get info about the specific lecture.
+     * @memberof module:lectureInfoController
      */
     $scope.getLectureInfo = function () {
         $http({
@@ -60,8 +67,9 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
      */
     $scope.getLectureInfo();
 
-    /*
-     Sends http request to delete the lecture.
+    /**
+     * Sends http request to delete the lecture.
+     * @memberof module:lectureInfoController
      */
     $scope.deleteLecture = function () {
         var confirmAnswer = $window.confirm("Do you really want to delete this lecture?");
@@ -80,9 +88,10 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         }
     };
 
-    /*
-     Draws charts from the answer of the current lecture.
-     userName: Which users answers to shows. If undefined shows from every user.
+    /**
+     * Draws charts from the answer of the current lecture.
+     * @param userName Which users answers to shows. If undefined shows from every user.
+     * @memberof module:lectureInfoController
      */
     $scope.drawCharts = function (userName) {
         for (var p = 0; p < $scope.points.length; p++) {
