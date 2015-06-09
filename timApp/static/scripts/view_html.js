@@ -3,15 +3,15 @@ var katex, $, angular, modules, version, refererPath, docId, docName, rights, st
 var timApp = angular.module('timApp', [
     'ngSanitize',
     'angularFileUpload',
-    'ui.ace'].concat(modules)).config(['$httpProvider', function($httpProvider){
+    'ui.ace'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
     var interceptor = [
         '$q',
         '$rootScope',
-        function($q, $rootScope) {
+        function ($q, $rootScope) {
             var re = /\/[^/]+\/([^/]+)\/answer\/$/;
             var service = {
-                'request': function(config) {
-                    if ( teacherMode && re.test(config.url)){
+                'request': function (config) {
+                    if (teacherMode && re.test(config.url)) {
                         var match = re.exec(config.url);
                         var taskId = match[1];
                         var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
@@ -22,9 +22,9 @@ var timApp = angular.module('timApp', [
                     }
                     return config;
                 },
-                'response': function(response) {
+                'response': function (response) {
 
-                    if (re.test(response.config.url)){
+                    if (re.test(response.config.url)) {
                         var match = re.exec(response.config.url);
                         var taskId = match[1];
                         $rootScope.$broadcast('answerSaved', {taskId: taskId});
@@ -32,7 +32,7 @@ var timApp = angular.module('timApp', [
                     return response;
                 }
             };
-            return service; 
+            return service;
         }
     ];
 
@@ -54,8 +54,8 @@ timApp.controller("ViewCtrl", [
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
         sc.docName = docName;
-        if ( typeof(crumbs) !== "undefined" ) sc.crumbs;
-        sc.rights = rights; 
+        if (typeof(crumbs) !== "undefined") sc.crumbs;
+        sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;
         sc.teacherMode = teacherMode;
@@ -81,13 +81,13 @@ timApp.controller("ViewCtrl", [
         var PAR_CLOSE_BUTTON_CLASS = "timButton menuClose";
         var PAR_CLOSE_BUTTON = "." + PAR_CLOSE_BUTTON_CLASS.replace(" ", ".");
 
-        sc.processAllMath = function($elem) {
-            $elem.find('.math').each(function() {
+        sc.processAllMath = function ($elem) {
+            $elem.find('.math').each(function () {
                 sc.processMath(this);
             });
         };
 
-        sc.processMath = function(elem) {
+        sc.processMath = function (elem) {
             var $this = $(elem);
             var math = $this.text();
             var hasDisplayMode = false;
@@ -218,14 +218,16 @@ timApp.controller("ViewCtrl", [
                             {name: 'difficult', desc: 'The text is difficult to understand'},
                             {name: 'unclear', desc: 'The text is unclear'}
                         ],
-                        choices: {desc: [{
-                            desc: 'Show note to:',
-                            name: 'access',
-                            opts: [
-                                {desc: 'Everyone', value: 'everyone'},
-                                {desc: 'Just me', value: 'justme'}
-                            ]
-                        }]},
+                        choices: {
+                            desc: [{
+                                desc: 'Show note to:',
+                                name: 'access',
+                                opts: [
+                                    {desc: 'Everyone', value: 'everyone'},
+                                    {desc: 'Just me', value: 'justme'}
+                                ]
+                            }]
+                        },
                         destroyAfterSave: true
                     }),
                     "after-save": 'handleNoteSave(saveData, extraData)',
@@ -246,15 +248,15 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick = function (className, func) {
             $document.on('touchstart click', className, function (e) {
-                if ( !('pageX' in e) || (e.pageX == 0 && e.pageY == 0) ) {
+                if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
                     e.pageX = e.originalEvent.touches[0].pageX;
                     e.pageY = e.originalEvent.touches[0].pageY;
                 }
 
-                if ( func($(this), e) ) {
+                if (func($(this), e)) {
                     e.stopPropagation();
                     e.preventDefault();
-		        }
+                }
             });
         };
 
@@ -277,14 +279,14 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.showAddParagraphAbove = function(e, $par, coords) {
+        sc.showAddParagraphAbove = function (e, $par, coords) {
             var $newpar = $("<div>", {class: "par new"})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
             $par.before($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
-        sc.showAddParagraphBelow = function(e, $par, coords) {
+        sc.showAddParagraphBelow = function (e, $par, coords) {
             var $newpar = $("<div>", {class: "par new"})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
             $par.after($newpar);
@@ -472,7 +474,7 @@ timApp.controller("ViewCtrl", [
             }
 
             var $par = $this.parent();
-            var coords = { left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top };
+            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
             var toggle1 = $par.find(".actionButtons").length === 0;
             var toggle2 = $par.hasClass("lightselect");
 
@@ -491,20 +493,30 @@ timApp.controller("ViewCtrl", [
 
         // Note-related functions
 
-        sc.showOptionsWindow = function(e, $par, coords) {
+        sc.showOptionsWindow = function (e, $par, coords) {
             var default_width = $par.outerWidth() / 16;
             var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
             var $actionDiv = $("<div>", {class: 'actionButtons'});
-            if (sc.rights.can_comment){
+            if (sc.rights.can_comment) {
                 var $span = $("<span>");
                 $span.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
-                $span.append($("<button>", {id: 'defaultAdd', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $span.append($("<button>", {
+                    id: 'defaultAdd',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
                 $actionDiv.append($span);
             }
             if (sc.rights.editable) {
                 var $span = $("<span>");
                 $span.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
-                $span.append($("<button>", {id: 'defaultEdit', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $span.append($("<button>", {
+                    id: 'defaultEdit',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
                 $actionDiv.append($span);
 
                 var $span = $("<span>");
@@ -513,7 +525,12 @@ timApp.controller("ViewCtrl", [
                     text: 'Add paragraph above',
                     width: button_width
                 }));
-                $span.append($("<button>", {id: 'defaultPrepend', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $span.append($("<button>", {
+                    id: 'defaultPrepend',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
                 $actionDiv.append($span);
 
                 var $span = $("<span>");
@@ -522,12 +539,22 @@ timApp.controller("ViewCtrl", [
                     text: 'Add paragraph below',
                     width: button_width
                 }));
-                $span.append($("<button>", {id: 'defaultAppend', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $span.append($("<button>", {
+                    id: 'defaultAppend',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
                 $actionDiv.append($span);
 
                 var $span = $("<span>");
                 $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
-                $span.append($("<button>", {id: 'defaultClose', class: DEFAULT_BUTTON_CLASS, text: 'Default', width: default_width}));
+                $span.append($("<button>", {
+                    id: 'defaultClose',
+                    class: DEFAULT_BUTTON_CLASS,
+                    text: 'Default',
+                    width: default_width
+                }));
                 $actionDiv.append($span);
             }
             $actionDiv.offset(coords);
@@ -537,8 +564,8 @@ timApp.controller("ViewCtrl", [
             $par.prepend($actionDiv);
         };
 
-        sc.dist = function(coords1, coords2) {
-            return Math.sqrt( Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2) );
+        sc.dist = function (coords1, coords2) {
+            return Math.sqrt(Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2));
         };
 
         sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
@@ -610,10 +637,10 @@ timApp.controller("ViewCtrl", [
 
             return $noteDiv;
             /*
-            var $noteDiv = $("<div>", {class: 'notes'});
-            $(notes).removeClass('speaker').addClass('notes');
-            return notes;
-            */
+             var $noteDiv = $("<div>", {class: 'notes'});
+             $(notes).removeClass('speaker').addClass('notes');
+             return notes;
+             */
         };
 
         sc.getNotes = function () {
@@ -645,13 +672,13 @@ timApp.controller("ViewCtrl", [
                         sc.processAllMath($this);
                     }
                     /*
-                    var speakernotes = $(this).children('div').find('.speaker');
-                    if (speakernotes.length > 0) {
-                        var $notediv = sc.getSpeakerNoteHtml(speakernotes[0]);
-                        $(this).append($notediv);
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
-                    }
-                    */
+                     var speakernotes = $(this).children('div').find('.speaker');
+                     if (speakernotes.length > 0) {
+                     var $notediv = sc.getSpeakerNoteHtml(speakernotes[0]);
+                     $(this).append($notediv);
+                     MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
+                     }
+                     */
                 });
 
 
@@ -693,7 +720,7 @@ timApp.controller("ViewCtrl", [
             });
         };
 
-        sc.markAllAsRead = function() {
+        sc.markAllAsRead = function () {
             http.put('/read/' + sc.docId + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     $('.readline').attr("class", "readline read");

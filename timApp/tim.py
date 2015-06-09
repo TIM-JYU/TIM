@@ -340,6 +340,14 @@ def pluginCall(plugin, fileName):
     except PluginException:
         abort(404)
 
+@app.route("/<plugin>/template/<template>")
+def view_template(plugin, template):
+    try:
+        req = containerLink.call_plugin_resource(plugin, "template?file=" + template)
+        return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
+    except PluginException:
+        abort(404)
+
 @app.route("/index/<int:docId>")
 def getIndex(docId):
     timdb = getTimDb()

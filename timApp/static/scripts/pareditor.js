@@ -1,8 +1,6 @@
 var angular;
 var timApp = angular.module('timApp');
 
-// "mark-read-url": '/read/' + sc.docId + '/' + par_id + '?_='
-
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
         return {
@@ -86,7 +84,14 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.parCount = 0;
                 $scope.extraData.markRead = false;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
+                //var touchDevice = 'ontouchstart' in document.documentElement;
+                var touchDevice = (typeof window.ontouchstart !== 'undefined');
 
+                $scope.wrapFn = function (func) {
+                    // console.log(touchDevice);
+                    if (!touchDevice) $scope.editor.focus();
+                    return (func());
+                };
 
                 $scope.saveClicked = function () {
                     var text = $scope.editor.getSession().getValue();
@@ -146,12 +151,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }
                 };
 
-
-                $scope.wrapFn = function (func) {
-                    $scope.editor.focus();
-                    return (func());
-                };
-
+                //Navigation
                 $scope.undoClicked = function () {
                     $scope.editor.undo();
                 };
@@ -184,13 +184,24 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.downClicked = function () {
                     $scope.editor.navigateDown(1);
                 };
+                //Navigation
 
+                //Style
                 $scope.linkClicked = function () {
                     var selectedText = "Linkin osoite";
                     if (!$scope.editor.getSelection().$isEmpty)
                         selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
                     //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
                     snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}](" + selectedText + ")");
+                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
+                };
+
+                $scope.imageClicked = function () {
+                    var selectedText = "Kuvan osoite";
+                    if (!$scope.editor.getSelection().$isEmpty)
+                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
+                    snippetManager.insertSnippet($scope.editor, "![${0:Kuvan teksti}](" + selectedText + ")");
                     //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
                 };
 
@@ -215,6 +226,76 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.editor.navigateLineEnd();
                     snippetManager.insertSnippet($scope.editor, "\n---\n");
                 };
+                //Style
+
+                //Special characters
+
+                $scope.charClicked = function ($event) {
+                    var character = $($event.target).text();
+                    $scope.editor.insert(character);
+                    $scope.editor.focus();
+                }
+
+                //Special characters
+
+                //TEX
+                $scope.texClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "$$${0:$SELECTION}$$");
+                };
+
+                $scope.indexClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "_{${0:$SELECTION}}");
+                };
+
+                $scope.powerClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "^{${0:$SELECTION}}");
+                };
+
+                $scope.squareClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "\\sqrt{${0:$SELECTION}}");
+                };
+
+                $scope.rootClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "\\sqrt[$0]{$SELECTION}");
+                };
+                //TEX
+
+                //Plugins
+                $scope.csClicked = function () {
+                    $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
+                    //TODO
+                    $.ajax({
+                        type: 'GET',
+                        url: '/csPlugin/template/template',
+                        success: function (data) {
+                            console.log(data);
+                            snippetManager.insertSnippet($scope.editor, data);
+                        },
+                        error: function () {
+                            console.log("Virhe");
+                        }
+                    })
+                };
+
+                $scope.pluginClicked = function (plugin, template) {
+                    // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
+                    //TODO
+                    $.ajax({
+                        type: 'GET',
+                        url: '/' + plugin + '/template/' + template,
+                        success: function (data) {
+                            console.log(data);
+                            snippetManager.insertSnippet($scope.editor, data);
+                        },
+                        error: function () {
+                            console.log("Virhe");
+                        }
+                    })
+                }
+
+                $scope.insertText
+
+                //Plugins
 
                 $scope.onFileSelect = function (url, $files) {
                     //$files: an array of files selected, each file has name, size, and type.
@@ -234,6 +315,16 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             $scope.progress = 'Error while uploading: ' + data.error;
                         });
                     }
+                };
+
+                $scope.ribbonClicked = function ($event, area) {
+                    var naviArea = $($event.target).parent().find("#" + area);
+                    var buttons = $($event.target).parent().find(".extraButtonArea");
+                    for (var i = 0; i < buttons.length; i++) {
+                        $(buttons[i]).attr("class", 'extraButtonArea hidden');
+                    }
+                    $(naviArea).attr("class", 'extraButtonArea');
+                    $scope.editor.focus();
                 };
             }
         };

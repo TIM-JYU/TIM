@@ -340,6 +340,7 @@ ul ul  ul, ol ol ol {
 }
 
 .previewcontent {
+    clear: both;
     border: 1px solid black;
     border-radius: 5px;
     padding-top: 0.0em;
@@ -811,9 +812,17 @@ a.anchor:hover {
 
 .editButtonArea {
 	float: left;
-    
 	padding-right: 1em;
 	margin-bottom: 0em;
+}
+
+.extraButtonArea {
+	padding-right: 1em;
+	margin-bottom: 0em;
+}
+
+.extraButtonArea.hidden {
+	display: none;
 }
 	
 video {

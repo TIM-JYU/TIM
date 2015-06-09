@@ -6,7 +6,6 @@ from .cache import cache
 
 import pluginControl
 
-
 view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
@@ -66,7 +65,7 @@ def get_document(document_id):
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
-    
+
     if doc_id is None or not timdb.documents.documentExists(doc_id):
         # Backwards compatibility: try to use as document id
         try:
