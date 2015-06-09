@@ -7,7 +7,7 @@ class SplitterException(Exception):
     pass
 
 
-class DocReference:
+class DocReader:
     """
     :type lines: list[str]
     :type i: int
@@ -38,17 +38,47 @@ class DocReference:
 
 
 class DocumentParser:
-    """Splits documents into paragraphs."""
-    def __init__(self):
-        pass
+    """Splits documents into paragraphs.
 
-    def parse_document(self, doc_text):
-        results = []
+    :type blocks: list[dict]
+    :type doc_text: str
+    """
+    def __init__(self, doc_text=''):
+        """
 
-        lines = doc_text.split("\n")
-        doc = DocReference(lines)
-        funcs = [self.eat_whitespace,
-                 self.try_parse_code_block,
+        :type doc_text: str
+        """
+        self.doc_text = doc_text
+        self.blocks = None
+
+    def set_text(self, doc_text):
+        """
+
+        :type doc_text: str
+        """
+        self.doc_text = doc_text
+        return self
+
+    def add_missing_attributes(self, hash_func, id_func):
+        for r in self.blocks:
+            r['t'] = hash_func(r['md'])
+            if not r.get('id'):
+                r['id'] = id_func(r['md'])
+
+    def validate_ids(self, id_func):
+        for r in self.blocks:
+            curr_id = r.get('id')
+            if curr_id is not None:
+                if curr_id != id_func(r['md']):
+                    return False
+        return True
+
+    def parse_document(self):
+        self.blocks = []
+
+        lines = self.doc_text.split("\n")
+        doc = DocReader(lines)
+        funcs = [self.try_parse_code_block,
                  self.try_parse_header_block,
                  self.parse_normal_block]
         while True:
@@ -58,15 +88,15 @@ class DocumentParser:
             for func in funcs:
                 result = func(doc)
                 if result:
-                    results.append(result)
-                    # TODO: Check if the block is missing attributes (like ID/hash)
+                    self.blocks.append(result)
                     break
-        return results
-
-    def parse_attributes(self, attribute_str: str):
-        pass
+        return self.blocks
 
     def is_beginning_of_code_block(self, doc):
+        """
+
+        :type doc: DocReader
+        """
         if doc.peek_line().startswith('```'):
             code_start_char = '`'
         elif doc.peek_line().startswith('~~~'):
@@ -80,6 +110,11 @@ class DocumentParser:
         return doc.peek_line().startswith('#')
 
     def try_parse_code_block(self, doc):
+        """
+
+        :type doc: DocReader
+        :rtype: dict
+        """
         is_code_block, code_block_marker = self.is_beginning_of_code_block(doc)
         if not is_code_block:
             return None
@@ -99,7 +134,9 @@ class DocumentParser:
 
     def try_parse_header_block(self, doc):
         """
-        :type doc: DocReference
+
+        :rtype: dict
+        :type doc: DocReader
         :param doc:
         :return:
         """
@@ -115,6 +152,10 @@ class DocumentParser:
         return tokens
 
     def parse_normal_block(self, doc):
+        """
+
+        :type doc: DocReader
+        """
         block_lines = []
         while doc.has_more_lines():
             if self.is_beginning_of_header_block(doc) or self.is_beginning_of_code_block(doc)[0]:
@@ -124,7 +165,9 @@ class DocumentParser:
 
     def eat_whitespace(self, doc):
         """
-        :type doc: DocReference
+
+        :rtype: NoneType
+        :type doc: DocReader
         """
         if not doc.has_more_lines():
             return None

@@ -4,8 +4,7 @@ from document.documentparser import DocumentParser
 
 class DocumentParserTest(unittest.TestCase):
     def test_parsing(self):
-        dp = DocumentParser()
-        result = dp.parse_document(
+        dp = DocumentParser(
             """
 ``` {plugin=csPlugin}
 code1
@@ -37,6 +36,7 @@ text 3
 text 4
 """
         )
+        result = dp.parse_document()
         self.assertListEqual([{'md': '```\ncode1\n```', 'plugin': 'csPlugin'},
                               {'md': 'text1\n\ntext2\n'},
                               {'md': '```\ncode2\n```', 'plugin': 'mmcq'},
@@ -45,7 +45,7 @@ text 4
                               {'md': 'text 3\n\ntext 4\n',
                                'classes': ['someClass']}], result)
 
-        self.assertEqual([], dp.parse_document(''))
+        self.assertEqual([], dp.set_text('').parse_document())
 
 
 if __name__ == '__main__':
