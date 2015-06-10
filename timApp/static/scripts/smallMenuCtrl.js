@@ -1,13 +1,33 @@
+/**
+ * FILL WITH SUITABLE TEXT
+ * @module smallMenuCtrl
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
+ */
+
 timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
     function ($scope, $window, $http) {
 		$scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
-		
-		var ready = function() {
+
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:smallMenuCtrl
+         */
+        var ready = function() {
 			$('#currentList').hide();
 			$('#futureList').hide();
 		};
-		
+
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:smallMenuCtrl
+         */
 		$scope.openCurrentLectureMenu = function() {
 			$('#currentList').slideToggle();
 			$('#futureList').hide();
@@ -27,7 +47,11 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
                     })
 			
 		};
-		
+
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:smallMenuCtrl
+         */
 		$scope.openFutureLectureMenu = function() {
 			$('#futureList').slideToggle();
 			$('#currentList').hide();
@@ -46,11 +70,14 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
                     })
 			
 		};
-		
+
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:smallMenuCtrl
+         */
 		$scope.selectCurrentLecture = function() {
-			
-			
-		}
+
+		};
 		
 		var w = angular.element($window);
 		w.bind('resize', function () {

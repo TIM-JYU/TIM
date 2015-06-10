@@ -843,6 +843,18 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = sc.showOptionsWindow;
     }]);
 
+/**
+ * FILL WITH SUITABLE TEXT
+ * @module questionController
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
+ */
+
 timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
     "use strict";
     $(function () {
@@ -965,6 +977,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         {label: "Checkbox", value: "checkbox"}
     ];
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param rowsCount FILL WITH SUITABLE TEXT
+     * @param columnsCount FILL WITH SUITABLE TEXT
+     * @param type FILL WITH SUITABLE TEXT
+     */
     scope.createMatrix = function (rowsCount, columnsCount, type) {
         if (scope.questionType != type || scope.rows <= 0) {
             scope.questionType = type;
@@ -1025,11 +1044,20 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         ;
     }
 
-
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param index FILL WITH SUITABLE TEXT
+     */
     scope.rowClick = function (index) {
         scope.addRow(index);
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param loc FILL WITH SUITABLE TEXT
+     */
     scope.addCol = function (loc) {
         var location = loc;
         if (loc === -1) {
@@ -1052,6 +1080,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
 
     };
+
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param loc FILL WITH SUITABLE TEXT
+     */
     scope.addRow = function (loc) {
 
         scope.CreateColumnsForRow = function (location) {
@@ -1095,6 +1129,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param indexToBeDeleted FILL WITH SUITABLE TEXT
+     */
     scope.delRow = function (indexToBeDeleted) {
         scope.error_message = "";
         if (scope.rows.length > 1) {
@@ -1110,6 +1149,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param indexToBeDeleted FILL WITH SUITABLE TEXT
+     */
     scope.delCol = function (indexToBeDeleted) {
         for (var i = 0; i < scope.rows.length; i++) {
             if (indexToBeDeleted === -1) {
@@ -1128,6 +1172,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     */
     scope.clearQuestion = function () {
         scope.question = {
             title: "",
@@ -1143,17 +1191,33 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         //scope.toggleQuestion();
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     */
     scope.close = function () {
         scope.removeErrors();
         scope.clearQuestion();
         scope.toggleQuestion();
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param val FILL WITH SUITABLE TEXT
+     * @returns {*} FILL WITH SUITABLE TEXT
+     */
     scope.replaceLinebreaksWithHTML = function (val) {
         var output = val.replace(/(?:\r\n|\r|\n)/g, '<br />');
         return output.replace(/\\/g, "\\\\");
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param div_val FILL WITH SUITABLE TEXT
+     * @param error_text FILL WITH SUITABLE TEXT
+     */
     scope.errorize = function (div_val, error_text) {
         angular.element("#" + div_val).css('border', "1px solid red");
         if (error_text.length > 0) {
@@ -1161,6 +1225,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param div_val FILL WITH SUITABLE TEXT
+     * @param error_text FILL WITH SUITABLE TEXT
+     */
     scope.errorizeClass = function (div_val, error_text) {
         angular.element("." + div_val).css('border', "1px solid red");
         if (error_text.length > 0) {
@@ -1168,12 +1238,21 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param element FILL WITH SUITABLE TEXT
+     */
     scope.defInputStyle = function (element) {
         if (element !== null || !element.isDefined) {
             angular.element("#" + element).css("border", "");
         }
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     */
     scope.removeErrors = function () {
         scope.error_message = "";
         var elementsToRemoveErrorsFrom = [
@@ -1196,6 +1275,12 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         angular.element(".rowHeading").css("border", "");
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param rows FILL WITH SUITABLE TEXT
+     * @returns {boolean} FILL WITH SUITABLE TEXT
+     */
     scope.rowHeadingsEmpty = function (rows) {
         for (var i = 0; i < rows.length; i++) {
             if (rows[i].text === "" || rows[i].text === null) {
@@ -1205,12 +1290,22 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         return false;
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param element FILL WITH SUITABLE TEXT
+     * @param val FILL WITH SUITABLE TEXT
+     */
     scope.isPositiveNumber = function (element, val) {
         if (element === "" || isNaN(element) || element < 0) {
             scope.errorize(val, "Number has to be positive.");
         }
     };
 
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     */
     scope.createQuestion = function () {
 
         scope.removeErrors();
@@ -1369,7 +1464,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         //scope.clearQuestion();
     };
 
-
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionController
+     * @param question_id FILL WITH SUITABLE TEXT
+     */
     scope.getQuestion = function (question_id) {
         http({
             method: 'GET',

@@ -1,3 +1,15 @@
+/**
+ * FILL WITH SUITABLE TEXT
+ * @module sidebarMenuCtrl
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
+ */
+
 timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 
     function ($scope, $http, $window) {
@@ -17,6 +29,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 		$scope.peopleIconState = 'noClick';
 		$scope.settingsIconState = 'noClick';
 
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         $scope.showSidebar = function () {
             $('.menu').slideToggle();
             $('#futureList').hide();
@@ -29,6 +45,11 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
         };
 
         var w = angular.element($window);
+
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         w.bind('resize', function () {
             $scope.indexSidebarState = 'hidden';
             $scope.lecturesSidebarState = 'hidden';
@@ -42,6 +63,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
 			$scope.settingsIconState = 'noClick';
         });
 
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         $scope.toggleIndex = function () {
             var visible = angular.element('.index-sidebar').is(":visible");
             if (visible) {
@@ -61,6 +86,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             }
         };
 
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         $scope.toggleLectures = function () {
             var visible = angular.element('.lectures-sidebar').is(":visible");
             if (visible) {
@@ -97,6 +126,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             }
         };
 
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         $scope.toggleQuestions = function () {
             var visible = angular.element('.questions-sidebar').is(":visible");
 
@@ -136,6 +169,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             }
         };
 
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         $scope.togglePeople = function () {
             var visible = angular.element('.people-sidebar').is(":visible");
             if (visible) {
@@ -156,6 +193,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             }
         };
 
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         $scope.toggleSettings = function () {
             var visible = angular.element('.settings-sidebar').is(":visible");
             if (visible) {
@@ -175,6 +216,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window",
             }
         };
 
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:sidebarMenuCtrl
+         */
         $scope.autoHideSidebar = function () {
             if ($scope.indexSidebarState === 'open') {
                 $scope.indexSidebarState = 'autohidden';
