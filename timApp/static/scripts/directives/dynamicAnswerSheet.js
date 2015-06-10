@@ -1,6 +1,6 @@
 /**
  * Created by localadmin on 25.5.2015.
- * directive for dynamic answer sheet. Sheet to answer lecture questions.
+ * Directive for dynamic answer sheet. Sheet to answer lecture questions.
  * @module dynamicAnswerSheet
  * @author Matias Berg
  * @author Bek Eljurkaev
@@ -115,6 +115,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             ;
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:dynamicAnswerSheet
              */
             $scope.internalControl.updateBar = function () {
@@ -137,6 +138,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             };
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:dynamicAnswerSheet
              */
             $scope.internalControl.answerToQuestion = function () {
@@ -197,6 +199,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
             };
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:dynamicAnswerSheet
              */
             $scope.internalControl.closeQuestion = function () {

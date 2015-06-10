@@ -1,4 +1,5 @@
 /**
+ * FILL WITH SUITABLE TEXT
  * @module questionPreviewController
  * @author Matias Berg
  * @author Bek Eljurkaev
@@ -19,6 +20,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         "use strict";
 
         /**
+         * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
         $scope.editQuestion = function () {
@@ -28,6 +30,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         };
 
         /**
+         * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
         $scope.ask = function () {
@@ -52,6 +55,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         };
 
         /**
+         * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
         $scope.close = function () {
@@ -59,6 +63,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         };
 
         /**
+         * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
         $scope.deleteQuestion = function () {

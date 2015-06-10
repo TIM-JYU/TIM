@@ -1,5 +1,6 @@
 /**
  * Created by hajoviin on 6.5.2015.
+ * FILL WITH SUITABLE TEXT
  * @module showStatisticsToQuestionController
  * @author Matias Berg
  * @author Bek Eljurkaev
@@ -20,6 +21,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     $scope.questionTitle = "";
 
     /**
+     * FILL WITH SUITABLE TEXT
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.close = function () {
@@ -28,6 +30,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     };
 
     /**
+     * FILL WITH SUITABLE TEXT
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.$on("putAnswers", function (event, answer) {
@@ -35,6 +38,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     });
 
     /**
+     * FILL WITH SUITABLE TEXT
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.$on("createChart", function (event, question) {

@@ -1,5 +1,6 @@
 /**
  * Created by hajoviin on 13.5.2015.
+ * FILL WITH SUITABLE TEXT
  * @module showChartDirective
  * @author Matias Berg
  * @author Bek Eljurkaev
@@ -95,8 +96,9 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             ];
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:showChartDirective
-             * @param question
+             * @param question FILL WITH SUITABLE TEXT
              */
             $scope.internalControl.createChart = function (question) {
                 $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
@@ -165,8 +167,9 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             };
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:showChartDirective
-             * @param answers
+             * @param answers FILL WITH SUITABLE TEXT
              */
             $scope.internalControl.addAnswer = function (answers) {
                 if (!angular.isDefined(answers)) {
@@ -219,6 +222,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             };
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:showChartDirective
              */
             $scope.internalControl.close = function () {

@@ -1,4 +1,5 @@
 /**
+ * FILL WITH SUITABLE TEXT
  * @module popUpDialog
  * @author Matias Berg
  * @author Bek Eljurkaev
@@ -28,6 +29,7 @@ timApp.directive('popUpDialog', function () {
         link: function ($scope, $element) {
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:popUpDialog
              * @param e
              */
@@ -41,6 +43,7 @@ timApp.directive('popUpDialog', function () {
             };
 
             /**
+             * FILL WITH SUITABLE TEXT
              * @memberof module:popUpDialog
              */
             $scope.checkUp = function () {

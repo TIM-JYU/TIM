@@ -1,5 +1,13 @@
 /**
  * Lecture creation controller which is used to handle and validate the form data.
+ * @module createLectureCtrl
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
  */
 
 var angular;
@@ -34,6 +42,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         /**
          * Function called when new lecture form button is pressed.
+         * @memberof module:createLectureCtrl
          */
         $scope.$on('initLectureFormVals', function () {
             $scope.initLectureForm();
@@ -41,6 +50,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         /**
          * Lecture form initialized to have the current date and time as default starting time.
+         * @memberof module:createLectureCtrl
          */
         $scope.initLectureForm = function () {
             $window.console.log("Lecture initialized.");
@@ -56,6 +66,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         /**
          * This function is called if end date is selected. Sets boolean values to reflect this choice and sets
          * the default end time to 2 hours ahead of start time.
+         * @memberof module:createLectureCtrl
          */
         $scope.enableDate2 = function () {
             $window.console.log($scope.startDate);
@@ -74,6 +85,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         /**
          * Function for enabling fields and buttons for "Duration" and disabling them for "Use date". This function
          * is called when duration is chosen and is chosen by default.
+         * @memberof module:createLectureCtrl
          */
         $scope.enableDue2 = function () {
             $scope.dateCheck = false;
@@ -92,6 +104,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         /**
          * Remove border from given element.
          * @param element ID of the field whose border will be removed.
+         * @memberof module:createLectureCtrl
          */
         $scope.defInputStyle = function (element) {
             if (element !== null || !element.isDefined) {
@@ -103,6 +116,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Checks if the value is between 0-23
          * @param element The value of the element to be validated.
          * @param val The ID of the input field so user can be notified of the error.
+         * @memberof module:createLectureCtrl
          */
         $scope.isHour = function (element, val) {
             if (element === "" || isNaN(element) || element > 23 || element < 0) {
@@ -114,6 +128,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Checks if the value is between 0-59
          * @param element The value of the element to be validated.
          * @param val The ID of the input field so user can be notified of the error.
+         * @memberof module:createLectureCtrl
          */
         $scope.isMinute = function (element, val) {
             if (element === "" || isNaN(element) || element > 59 || element < 0) {
@@ -125,6 +140,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Checks if the number given is positive.
          * @param element The value of the element to be validated.
          * @param val The ID of the input field so user can be notified of the error.
+         * @memberof module:createLectureCtrl
          */
         $scope.isPositiveNumber = function (element, val) {
             if (element === "" || isNaN(element) || element < 0) {
@@ -136,6 +152,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Function for validating that the date is of the format dd.mm.yyyy.
          * @param element The value of the element to be validated.
          * @param val The ID of the input field so user can be notified of the error.
+         * @memberof module:createLectureCtrl
          */
         $scope.isDateValid = function (element, val) {
             var reg = new RegExp("^(0?[1-9]|[12][0-9]|3[01])[.]((0?[1-9]|1[012])[.](19|20)?[0-9]{2})*$");
@@ -149,6 +166,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param input JavaScript date object
          * @param include_time Boolean value whether to include the time or not
          * @returns {string} yyyy-mm-dd( hh:mm)
+         * @memberof module:createLectureCtrl
          */
         $scope.dateObjectToString = function (input, include_time) {
             var output = $scope.leftPadder(input.getFullYear(), 4) + "-" +
@@ -166,7 +184,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param time_hours
          * @param time_mins
          * @param splitter Date seperator.
-         * @returns {Date} Returns a JavaScript date object
+         * @returns {Date} Returns a JavaScript date object.
+         * @memberof module:createLectureCtrl
          */
         $scope.translateToDateObject = function (date_to_be_validated, time_hours, time_mins, splitter) {
             var parms = date_to_be_validated.split(splitter);
@@ -190,6 +209,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         /**
          * Function for creating a new lecture and validation.
+         * @memberof module:createLectureCtrl
          */
         $scope.submitLecture = function () {
             $scope.removeErrors();
@@ -312,6 +332,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Changes the border of the element to red
          * @param div_val The ID of the input field so user can be notified of the error.
          * @param error_text Error text that will be printed if the error occurs.
+         * @memberof module:createLectureCtrl
          */
         $scope.errorize = function (div_val, error_text) {
             angular.element("#" + div_val).css('border', "1px solid red");
@@ -322,6 +343,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         /**
          * Calls defInputStyle for all the form elements.
+         * @memberof module:createLectureCtrl
          */
         $scope.removeErrors = function () {
             $scope.error_message = "";
@@ -349,6 +371,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         /**
          *  Resets all the values of the form.
+         *  @memberof module:createLectureCtrl
          */
         $scope.clearForm = function () {
             $scope.lectureCode = "";
@@ -375,6 +398,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param number Number to be padded.
          * @param size How long should the number be.
          * @returns {string} Returns the number in the padded length.
+         * @memberof module:createLectureCtrl
          */
         $scope.leftPadder = function (number, size) {
             var paddedNumber = "" + number;
@@ -388,6 +412,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         /**
          * Function for cancelling the lecture creation.
+         * @memberof module:createLectureCtrl
          */
         $scope.cancelCreation = function () {
             $scope.$emit("closeLectureForm");

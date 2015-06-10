@@ -1,6 +1,6 @@
 /**
  * Created by hajoviin on 11.5.2015.
- * Handles the controls of lecture info page
+ * Handles the controls of lecture info page.
  * @module lectureInfoController
  * @author Matias Berg
  * @author Bek Eljurkaev
