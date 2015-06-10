@@ -84,6 +84,31 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.parCount = 0;
                 $scope.extraData.markRead = false;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
+
+                /*
+                var langTools = ace.require("ace/ext/language_tools");
+                langTools.setCompleters([]);
+                // $scope.editor.getSession().setMode("ace/mode/java");
+                $scope.editor.setOptions({enableBasicAutocompletion: true});
+                var pluginCompleter = {
+                    getCompletions: function (editor, session, pos, prefix, callback) {
+                        if (prefix.length === 0) {
+                            callback(null, []);
+                            return
+                        }
+                        $.getJSON(
+                            "http://rhymebrain.com/talk?function=getRhymes&word=" + prefix,
+                            function (wordList) {
+                                // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
+                                callback(null, wordList.map(function (ea) {
+                                    return {name: ea.word, value: ea.word , score: ea.score, meta: "rhyme" }
+                                }));
+                            })
+                    }
+                };
+                langTools.addCompleter(pluginCompleter);
+                */
+
                 //var touchDevice = 'ontouchstart' in document.documentElement;
                 var touchDevice = (typeof window.ontouchstart !== 'undefined');
 
@@ -233,8 +258,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.charClicked = function ($event) {
                     var character = $($event.target).text();
                     $scope.editor.insert(character);
-                    $scope.editor.focus();
-                }
+                    if (!touchDevice) $scope.editor.focus();
+                };
 
                 //Special characters
 
@@ -261,21 +286,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 //TEX
 
                 //Plugins
-                $scope.csClicked = function () {
-                    $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
-                    //TODO
-                    $.ajax({
-                        type: 'GET',
-                        url: '/csPlugin/template/template',
-                        success: function (data) {
-                            console.log(data);
-                            snippetManager.insertSnippet($scope.editor, data);
-                        },
-                        error: function () {
-                            console.log("Virhe");
-                        }
-                    })
-                };
 
                 $scope.pluginClicked = function (plugin, template) {
                     // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
@@ -324,7 +334,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $(buttons[i]).attr("class", 'extraButtonArea hidden');
                     }
                     $(naviArea).attr("class", 'extraButtonArea');
-                    $scope.editor.focus();
+                    if (!touchDevice) $scope.editor.focus();
                 };
             }
         };

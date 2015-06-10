@@ -1490,7 +1490,7 @@ img.console {
     line-height: 1.1;
     direction: ltr;
     width: 98%;
-    margin-left: 3.8em;
+    /* margin-left: 3.8em; */
 }
 
 .timButton {
