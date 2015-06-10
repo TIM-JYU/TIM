@@ -85,7 +85,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.extraData.markRead = false;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
 
-                /*
                 var langTools = ace.require("ace/ext/language_tools");
                 langTools.setCompleters([]);
                 // $scope.editor.getSession().setMode("ace/mode/java");
@@ -101,13 +100,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             function (wordList) {
                                 // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
                                 callback(null, wordList.map(function (ea) {
-                                    return {name: ea.word, value: ea.word , score: ea.score, meta: "rhyme" }
+                                    return {name: ea.word, value: ea.word , score: ea.score, meta: "plugin" }
                                 }));
                             })
                     }
                 };
                 langTools.addCompleter(pluginCompleter);
-                */
 
                 //var touchDevice = 'ontouchstart' in document.documentElement;
                 var touchDevice = (typeof window.ontouchstart !== 'undefined');
@@ -294,7 +292,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         type: 'GET',
                         url: '/' + plugin + '/template/' + template,
                         success: function (data) {
-                            console.log(data);
                             snippetManager.insertSnippet($scope.editor, data);
                         },
                         error: function () {
