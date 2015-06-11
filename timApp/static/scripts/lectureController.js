@@ -481,12 +481,12 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
         /**
          * Initializes the window to be basic view a.k.a. view where user is not in lecture.
-         * @param lecture The lecture to be processed.
+         * @param answer The lecture to be processed.
          * @memberof module:lectureController
          */
-        $scope.showBasicView = function (lecture) {
+        $scope.showBasicView = function (answer) {
 
-            $scope.isLecturer = lecture.isLecturer;
+            $scope.isLecturer = answer.isLecturer;
             if ($scope.isLecturer) {
                 $rootScope.$broadcast("getQuestions");
                 $scope.canStart = true;
