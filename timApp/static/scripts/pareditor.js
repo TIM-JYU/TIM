@@ -108,7 +108,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 langTools.addCompleter(pluginCompleter);
 
                 //var touchDevice = 'ontouchstart' in document.documentElement;
-                var touchDevice = (typeof window.ontouchstart !== 'undefined');
+                //var touchDevice = (typeof window.ontouchstart !== 'undefined');
+                var touchDevice = true;
 
                 $scope.wrapFn = function (func) {
                     // console.log(touchDevice);
