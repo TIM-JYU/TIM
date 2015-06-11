@@ -3,29 +3,30 @@
     Mark as read: <input type="checkbox" ng-model="extraData.markRead">
 <span ng-bind="progress"></span>
 </span>
-<div class="editor" ui-ace="{
-  useWrapMode: false,
-  onLoad: aceLoaded,
-  onChange: aceChanged
-    }" ng-model="editorText"></div>
-<div class="editButtonArea">
-    <button class="timButton savePar" ng-click="saveClicked()">Save</button>
-    <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
-    <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
+<div id="tabs">
+    <ul>
+        <li><a href="#tabs-1" ng-click="wrapFn()">Navigation</a></li>
+        <li><a href="#tabs-2" ng-click="wrapFn()">Style</a></li>
+        <li><a href="#tabs-3" ng-click="wrapFn()">Special characters</a></li>
+        <li><a href="#tabs-4" ng-click="wrapFn()">TeX</a></li>
+        <li><a href="#tabs-5" ng-click="wrapFn()">Plugins</a></li>
+    </ul>
+
+    <!--
     <button class="timButton" ng-click="ribbonClicked($event, 'navigateButtons')">Navigation</button>
     <button class="timButton" ng-click="ribbonClicked($event, 'styleButtons')">Style</button>
     <button class="timButton" ng-click="ribbonClicked($event, 'specialButtons')">Special characters</button>
     <button class="timButton" ng-click="ribbonClicked($event, 'texButtons')">TeX</button>
-    <button class="timButton" ng-click="ribbonClicked($event, 'pluginButtons')">Plugins</button>
-    <div id="navigateButtons" class="extraButtonArea">
+    <button class="timButton" ng-click="ribbonClicked($event, 'pluginButtons')">Plugins</button> -->
+    <div id="tabs-1" class="extraButtonArea">
         <button class="timButton" title="Undo" ng-click="wrapFn(undoClicked)">&#8630;</button>
         <button class="timButton" title="Redo" ng-click="wrapFn(redoClicked)">&#8631;</button>
-        <button class="timButton" title="Move left" ng-click="wrapFn(leftClicked)"><b>&#8592;</b></button>
+        <button class="timButton" title="Move left" ng-click="wrapFn(leftClicked)">&#8592;</button>
         <button class="timButton" title="Move Right" ng-click="wrapFn(rightClicked)">&#8594;</button>
         <button class="timButton" title="Move up" ng-click="wrapFn(upClicked)">&#8593;</button>
         <button class="timButton" title="Move down" ng-click="wrapFn(downClicked)">&#8595;</button>
     </div>
-    <div id="styleButtons" class="extraButtonArea hidden">
+    <div id="tabs-2" class="extraButtonArea">
         <button class="timButton" title="Indent selection/line" ng-click="wrapFn(indentClicked)">Indent
         </button>
         <button class="timButton" title="Outdent selection/line" ng-click="wrapFn(outdentClicked)">Outdent
@@ -38,20 +39,20 @@
         <button class="timButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
         <button class="timButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
     </div>
-    <div id="specialButtons" class="extraButtonArea hidden">
+    <div id="tabs-3" class="extraButtonArea">
         <button class="timButton" ng-click="charClicked($event)">@</button>
         <button class="timButton" ng-click="charClicked($event)">#</button>
         <button class="timButton" ng-click="charClicked($event)">`</button>
         <button class="timButton" ng-click="charClicked($event)">€</button>
     </div>
-    <div id="texButtons" class="extraButtonArea hidden">
+    <div id="tabs-4" class="extraButtonArea">
         <button class="timButton" ng-click="wrapFn(texClicked)">Tex equation</button>
         <button class="timButton" ng-click="wrapFn(indexClicked)">Index</button>
         <button class="timButton" ng-click="wrapFn(powerClicked)">Power</button>
         <button class="timButton" ng-click="wrapFn(squareClicked)">Square</button>
         <!-- <button class="timButton" ng-click="wrapFn(rootClicked)">Root</button> -->
     </div>
-    <div id="pluginButtons" class="extraButtonArea hidden">
+    <div id="tabs-5" class="extraButtonArea">
         <button class="timButton" ng-click="pluginClicked('csPlugin', 'template');editor.focus()">CsPlugin
         </button>
         <button class="timButton" ng-click="pluginClicked('showImage', 'template');editor.focus()">ImagePlugin
@@ -61,6 +62,16 @@
         <!--<button class="timButton" ng-click="pluginClicked('taunoPlugin', 'template');editor.focus()">TaunoPlugin
         </button> -->
     </div>
+</div>
+<div class="editor" ui-ace="{
+  useWrapMode: false,
+  onLoad: aceLoaded,
+  onChange: aceChanged
+    }" ng-model="editorText"></div>
+<div class="editButtonArea">
+    <button class="timButton savePar" ng-click="saveClicked()">Save</button>
+    <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
+    <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
 </div>
 <div class="tags">
     <label ng-repeat="tag in options.tags">

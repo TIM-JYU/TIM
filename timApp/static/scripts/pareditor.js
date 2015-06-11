@@ -84,6 +84,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.parCount = 0;
                 $scope.extraData.markRead = false;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
+                $(function () {
+                    $("#tabs").tabs();
+                });
 
                 var langTools = ace.require("ace/ext/language_tools");
                 langTools.setCompleters([]);
@@ -100,7 +103,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             function (wordList) {
                                 // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
                                 callback(null, wordList.map(function (ea) {
-                                    return {name: ea.word, value: ea.word , score: ea.score, meta: "plugin" }
+                                    return {name: ea.word, value: ea.word, score: ea.score, meta: "plugin"}
                                 }));
                             })
                     }
@@ -109,7 +112,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 //var touchDevice = 'ontouchstart' in document.documentElement;
                 //var touchDevice = (typeof window.ontouchstart !== 'undefined');
-                var touchDevice = true;
+                var touchDevice = false;
 
                 $scope.wrapFn = function (func) {
                     // console.log(touchDevice);
