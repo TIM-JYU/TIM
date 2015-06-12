@@ -868,7 +868,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (id) scope.question.question_id = id;
             if (json["TITLE"]) scope.question.title = json["TITLE"];
             if (json["QUESTION"]) scope.question.question = json["QUESTION"];
-            if (json["TYPE"]) scope.question.type = json["TYPE"];
+            if (json["TYPE"]) scope.question.type = json["TYPE"]; scope.questionType = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
             if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
 
@@ -985,7 +985,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      * @param type FILL WITH SUITABLE TEXT
      */
     scope.createMatrix = function (rowsCount, columnsCount, type) {
-        if (scope.questionType != type || scope.rows <= 0) {
+        if (scope.questionType != type || scope.rows.length <= 0) {
             scope.questionType = type;
 
             if (type === 'radio' || type === 'checkbox') {
