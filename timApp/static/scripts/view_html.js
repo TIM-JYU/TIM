@@ -830,6 +830,7 @@ timApp.controller("ViewCtrl", [
 
             sc.$on("closeQuestionPreview", function () {
                 sc.showQuestionPreview = false;
+                sc.clearQuestion();
             });
         }
 
@@ -868,7 +869,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (id) scope.question.question_id = id;
             if (json["TITLE"]) scope.question.title = json["TITLE"];
             if (json["QUESTION"]) scope.question.question = json["QUESTION"];
-            if (json["TYPE"]) scope.question.type = json["TYPE"]; scope.questionType = json["TYPE"];
+            if (json["TYPE"]) scope.question.type = json["TYPE"];
+            scope.questionType = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
             if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
 
@@ -1367,14 +1369,14 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (scope.question.matrixType === "radiobutton-horizontal" || scope.question.matrixType === "radiobutton-vertical") {
                 scope.question.answerFieldType = "radio";
             }
-        }
-        if (scope.question.matrixType === "textArea") {
-            scope.question.answerFieldType = "text";
-        }
-        if (scope.question.matrixType === "checkbox") {
-            scope.question.answerFieldType = "checkbox";
-        }
 
+            if (scope.question.matrixType === "textArea") {
+                scope.question.answerFieldType = "text";
+            }
+            if (scope.question.matrixType === "checkbox") {
+                scope.question.answerFieldType = "checkbox";
+            }
+        }
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_index = scope.getParIndex($par);
