@@ -1314,7 +1314,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
         if (scope.question.type === undefined) {
             scope.errorize("qType", "Question type must be selected.");
-        } else if (scope.question.type === "matrix" && scope.question.matrixType === undefined) {
+        } else if (scope.question.type === "matrix" && (scope.question.matrixType === undefined || scope.question.matrixType == "")) {
             scope.errorize("check", "Answer type must be selected.");
         } else if ((scope.question.type === "radio-vertical" ||
             scope.question.type === "checkbox-vertical" ||
@@ -1362,7 +1362,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             return;
         }
 
-        if (scope.question.answerFieldType === 'matrix') {
+        if (scope.question.type === 'matrix') {
 
             if (scope.question.matrixType === "radiobutton-horizontal" || scope.question.matrixType === "radiobutton-vertical") {
                 scope.question.answerFieldType = "radio";
@@ -1418,7 +1418,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 questionJson += '"id":"' + scope.rows[i].columns[j].id + '",';
                 questionJson += '"rowId":"' + scope.rows[i].columns[j].rowId + '",';
                 questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
-                questionJson += '"points":"' + scope.rows[i].columns[j].points + '",';
+                if (scope.question.answerFieldType != "text") {
+                    questionJson += '"points":"' + scope.rows[i].columns[j].points + '",';
+                } else {
+                    questionJson += '"points":"' + "" + '",';
+                }
                 questionJson += '"answerFieldType":"' + scope.question.answerFieldType + '"';
                 questionJson += '},';
             }
