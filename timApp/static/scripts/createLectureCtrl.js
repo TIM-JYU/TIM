@@ -329,7 +329,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         };
 
         /**
-         * Changes the border of the element to red
+         * Changes the border of the element to red.
          * @param div_val The ID of the input field so user can be notified of the error.
          * @param error_text Error text that will be printed if the error occurs.
          * @memberof module:createLectureCtrl

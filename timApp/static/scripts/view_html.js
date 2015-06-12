@@ -845,7 +845,7 @@ timApp.controller("ViewCtrl", [
     }]);
 
 /**
- * FILL WITH SUITABLE TEXT
+ * Controller for creating and editing questions
  * @module questionController
  * @author Matias Berg
  * @author Bek Eljurkaev
@@ -980,11 +980,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     ];
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * A function for creating a matrix.
      * @memberof module:questionController
-     * @param rowsCount FILL WITH SUITABLE TEXT
-     * @param columnsCount FILL WITH SUITABLE TEXT
-     * @param type FILL WITH SUITABLE TEXT
+     * @param rowsCount The number of rows to create for the matrix.
+     * @param columnsCount The number of columns to create for new matrix.
+     * @param type The answer type of the matrix.
      */
     scope.createMatrix = function (rowsCount, columnsCount, type) {
         if (scope.questionType != type || scope.rows.length <= 0) {
@@ -1046,19 +1046,19 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         ;
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
+/*    *//**
+     * A function handling rowClick
      * @memberof module:questionController
      * @param index FILL WITH SUITABLE TEXT
-     */
+     *//*
     scope.rowClick = function (index) {
         scope.addRow(index);
-    };
+    };*/
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * A function to add a column to an existing matrix.
      * @memberof module:questionController
-     * @param loc FILL WITH SUITABLE TEXT
+     * @param loc The index in the matrix where to add the new column.
      */
     scope.addCol = function (loc) {
         var location = loc;
@@ -1084,9 +1084,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * The function adds a row to an existing matrix
      * @memberof module:questionController
-     * @param loc FILL WITH SUITABLE TEXT
+     * @param loc The index in the matrix where to add the new row.
      */
     scope.addRow = function (loc) {
 
@@ -1132,9 +1132,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * A function to delete a row from a matrix.
      * @memberof module:questionController
-     * @param indexToBeDeleted FILL WITH SUITABLE TEXT
+     * @param indexToBeDeleted The index of the row to be deleted.
      */
     scope.delRow = function (indexToBeDeleted) {
         scope.error_message = "";
@@ -1152,9 +1152,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * A function to delete a column from a matrix.
      * @memberof module:questionController
-     * @param indexToBeDeleted FILL WITH SUITABLE TEXT
+     * @param indexToBeDeleted Index of the column to be deleted.
      */
     scope.delCol = function (indexToBeDeleted) {
         for (var i = 0; i < scope.rows.length; i++) {
@@ -1175,7 +1175,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * A function to reset the question values.
      * @memberof module:questionController
      */
     scope.clearQuestion = function () {
@@ -1194,7 +1194,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * A function to close question edition form.
      * @memberof module:questionController
      */
     scope.close = function () {
@@ -1204,10 +1204,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * The function replaces linebreaks with HTML code.
      * @memberof module:questionController
-     * @param val FILL WITH SUITABLE TEXT
-     * @returns {*} FILL WITH SUITABLE TEXT
+     * @param val The input string
+     * @returns {*} The reformatted line.
      */
     scope.replaceLinebreaksWithHTML = function (val) {
         var output = val.replace(/(?:\r\n|\r|\n)/g, '<br />');
@@ -1215,10 +1215,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * The function to highlight the source of the errors for a given ID.
      * @memberof module:questionController
-     * @param div_val FILL WITH SUITABLE TEXT
-     * @param error_text FILL WITH SUITABLE TEXT
+     * @param div_val ID of the element to be errorized.
+     * @param error_text Description of the occured error.
      */
     scope.errorize = function (div_val, error_text) {
         angular.element("#" + div_val).css('border', "1px solid red");
@@ -1228,10 +1228,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * The function to highlight the source of the errors for a given class.
      * @memberof module:questionController
-     * @param div_val FILL WITH SUITABLE TEXT
-     * @param error_text FILL WITH SUITABLE TEXT
+     * @param div_val Class of the element to be errorized.
+     * @param error_text Description of the occured error.
      */
     scope.errorizeClass = function (div_val, error_text) {
         angular.element("." + div_val).css('border', "1px solid red");
@@ -1241,9 +1241,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Removes border of a given element.
      * @memberof module:questionController
-     * @param element FILL WITH SUITABLE TEXT
+     * @param element ID of the field whose border will be removed.
      */
     scope.defInputStyle = function (element) {
         if (element !== null || !element.isDefined) {
@@ -1252,7 +1252,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Calls defInputStyle for all the form elements.
      * @memberof module:questionController
      */
     scope.removeErrors = function () {
@@ -1278,10 +1278,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Function for checking if the row headings are empty.
      * @memberof module:questionController
-     * @param rows FILL WITH SUITABLE TEXT
-     * @returns {boolean} FILL WITH SUITABLE TEXT
+     * @param rows The array of rows to be checked.
+     * @returns {boolean} Whether or not the row headings are empty.
      */
     scope.rowHeadingsEmpty = function (rows) {
         for (var i = 0; i < rows.length; i++) {
@@ -1293,10 +1293,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Checks if a value is a positive number and makes the appropriate errors if this is not the case.
      * @memberof module:questionController
-     * @param element FILL WITH SUITABLE TEXT
-     * @param val FILL WITH SUITABLE TEXT
+     * @param element The value to be checked.
+     * @param val The id of the value, which is used in case the number is not positive.
      */
     scope.isPositiveNumber = function (element, val) {
         if (element === "" || isNaN(element) || element < 0) {
@@ -1305,7 +1305,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Validates and saves the question into the database.
      * @memberof module:questionController
      */
     scope.createQuestion = function () {
@@ -1470,26 +1470,4 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         //scope.clearQuestion();
     };
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:questionController
-     * @param question_id FILL WITH SUITABLE TEXT
-     */
-    scope.getQuestion = function (question_id) {
-        http({
-            method: 'GET',
-            url: '/getQuestionById',
-            params: {
-                'question_id': question_id
-            }
-        })
-            .success(function (data) {
-                $window.console.log("question loaded");
-                return data;
-            })
-            .error(function () {
-                $window.console.log("Could not get the question");
-            });
-
-    }
 }]);
