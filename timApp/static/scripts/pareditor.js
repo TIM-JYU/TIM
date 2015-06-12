@@ -82,10 +82,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.timer = null;
                 $scope.outofdate = false;
                 $scope.parCount = 0;
-                $scope.extraData.markRead = false;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
                 $(function () {
                     $("#tabs").tabs();
+                    $("#tabs").tabs({active: 0});
                 });
 
                 var langTools = ace.require("ace/ext/language_tools");
@@ -117,7 +117,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.wrapFn = function (func) {
                     // console.log(touchDevice);
                     if (!touchDevice) $scope.editor.focus();
-                    return (func());
+                    if (func) return (func());
                 };
 
                 $scope.saveClicked = function () {
@@ -245,7 +245,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.listClicked = function () {
-                    $scope.editor.navigateLineStart();
                     snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
                 };
 
@@ -302,9 +301,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             console.log("Virhe");
                         }
                     })
+                    if (!touchDevice) $scope.editor.focus();
                 }
-
-                $scope.insertText
 
                 //Plugins
 

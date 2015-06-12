@@ -209,6 +209,15 @@ td p {
     opacity: 0.5;
 	background: #F60; /* rgb(236,103,27); */
 }
+
+.editline {
+	border-color: #3CC; /* rgb(236,103,27); */
+}
+
+.editline:hover {
+    opacity: 0.5;
+	background: #3CC; /* rgb(236,103,27); */
+}
 	
 .readline.read {
 	display: none;
@@ -351,7 +360,32 @@ ul ul  ul, ol ol ol {
 .timButton {
     display: block;
     margin: auto;
+    min-width: 40px;
 }
+
+/* Juuson: Editorissa käytettäviä jQueryn tabeja varten tehtyjä muutoksia. Näistä pitää tehdä oma jQuery teema */
+.ui-tabs-active {
+    background: #3CC !important;
+    border: none !important;
+}
+
+.ui-tabs-anchor {
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+.ui-widget button {
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-size: 1em !important;
+    margin-bottom: 0 !important;
+    min-width: 40px;
+    padding: 4px;
+}
+
+.ui-tabs .ui-tabs-panel {
+    padding: 0.5em 1em !important;
+}
+
+/* Juuson: Editorissa käytettäviä jQueryn tabeja varten tehtyjä muutoksia. Näistä pitää tehdä oma jQuery teema */
 
 .readline {
     position: absolute;
@@ -362,6 +396,17 @@ ul ul  ul, ol ol ol {
     top: 0em;
     border-right: 0.5em solid;
     border-color: #F60; /* rgb(236,103,27); */
+}
+
+.editline {
+    position: absolute;
+    left: -1.2em;
+    z-index: 3;
+    width: 4em;
+    height: 100%;
+    top: 0em;
+    border-left: 0.5em solid;
+    border-color: #3CC; /* rgb(236,103,27); */
 }
 
 .addNoteButton:hover {

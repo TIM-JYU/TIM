@@ -144,7 +144,10 @@ timApp.controller("ViewCtrl", [
                 "options": JSON.stringify({
                     showDelete: options.showDelete,
                     showImageUpload: true,
-                    destroyAfterSave: true
+                    destroyAfterSave: true,
+                    tags: [
+                        {name: 'markread', desc: 'Mark as read'}
+                    ]
                 }),
                 "after-save": 'addSavedParToDom(saveData, extraData)',
                 "after-cancel": 'handleCancel(extraData)',
@@ -383,10 +386,12 @@ timApp.controller("ViewCtrl", [
                 $par.after($newpar.append($("<div>",
                     {class: "readline " + readClass, title: "Click to mark this paragraph as read"})));
 
-                if (extraData.markRead) {
-                    var $newread = $newpar.find("div.readline");
-                    var par_id = sc.getParIndex($par) + i;
-                    sc.markParRead($newread, par_id);
+                if (extraData.tags) {
+                    if (extraData.tags['markread']) {
+                        var $newread = $newpar.find("div.readline");
+                        var par_id = sc.getParIndex($par) + i;
+                        sc.markParRead($newread, par_id);
+                    }
                 }
 
                 sc.processMath($newpar[0]);
@@ -422,6 +427,13 @@ timApp.controller("ViewCtrl", [
              $this.attr("class", oldClass);
              });
              return true; */
+        });
+
+        sc.onClick(".editline", function ($this, e) {
+            $(".actionButtons").remove();
+            var $par = $this.parent();
+            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+            return sc.showOptionsWindow(e, $par, coords);
         });
 
         sc.showNoteWindow = function (e, $par, coords) {
@@ -720,6 +732,13 @@ timApp.controller("ViewCtrl", [
             });
         };
 
+        sc.getEditPars = function () {
+            sc.forEachParagraph(function (index, elem) {
+                var $div = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
+                $(this).append($div);
+            });
+        };
+
         sc.markAllAsRead = function () {
             http.put('/read/' + sc.docId + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
@@ -864,6 +883,7 @@ timApp.controller("ViewCtrl", [
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
+        if (sc.rights.editable) sc.getEditPars();
         sc.processAllMath($('body'));
 
         sc.defaultAction = sc.showOptionsWindow;
