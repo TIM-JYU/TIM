@@ -1165,7 +1165,7 @@ def answer_to_question():
             question_ended = False
 
     if question_ended:
-        return jsonResponse({"questionLate": "The questions has already finished. Your answer was not saved."})
+        return jsonResponse({"questionLate": "The question has already finished. Your answer was not saved."})
 
 
     single_answers = []
