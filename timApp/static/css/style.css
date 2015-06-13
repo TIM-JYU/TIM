@@ -262,3 +262,18 @@ td.selected {
     display: block;
     min-width: 150px;
 }
+
+/* Special style for mobile devices with width less than 500 px*/
+@media only screen and (max-device-width: 500px) {
+    .answerSheet table {
+        font-size: small;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .answerSheet h2 {
+        font-size: large;
+        margin-top: 0.5em;
+        margin-bottom: 1em;
+    }
+}

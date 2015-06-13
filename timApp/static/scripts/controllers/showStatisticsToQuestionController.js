@@ -21,7 +21,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     $scope.questionTitle = "";
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Closes statistic window
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.close = function () {
@@ -30,7 +30,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     };
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Adds answer to statistic diractive
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.$on("putAnswers", function (event, answer) {
@@ -38,7 +38,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     });
 
     /**
-     * FILL WITH SUITABLE TEXT
+     * Creates chart based on question json.
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.$on("createChart", function (event, question) {

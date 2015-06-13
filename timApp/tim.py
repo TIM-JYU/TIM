@@ -1050,25 +1050,51 @@ def ask_question():
     question_id = int(request.args.get('question_id'))
     lecture_id = int(request.args.get('lecture_id'))
 
+    verifyOwnership(doc_id)
+
     if lecture_id < 0:
         abort(400, "Not valid lecture id")
+
+    timdb = getTimDb()
+    question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"])
+    threadToStopQuestion = threading.Thread(target=stop_question_from_running,
+                                            args=(lecture_id, question_id, question_timelimit))
+
+    threadToStopQuestion.start()
 
     verifyOwnership(int(doc_id))
     __question_to_be_asked.append((lecture_id, question_id, []))
 
     return jsonResponse("")
 
+
+def stop_question_from_running(lecture_id, question_id, question_timelimit):
+    if question_timelimit == 0:
+        return
+
+    # Adding extra time to limit so when people gets question a bit later than others they still get to answer
+    # TODO: If current implementation changes the way that the question last 10 seconds and after that you can't
+    # TODO: answer. Remove this part
+    extra_time = 3
+    time.sleep(question_timelimit + extra_time)
+
+    for question in __question_to_be_asked:
+        if question[0] == lecture_id and question[1] == question_id:
+            __question_to_be_asked.remove(question)
+
+
 @app.route("/getQuestionById", methods=['GET'])
 def get_question():
     if not request.args.get("question_id"):
         abort("400")
-#    doc_id = int(request.args.get('doc_id'))
+    # doc_id = int(request.args.get('doc_id'))
     question_id = int(request.args.get('question_id'))
 
-#    verifyOwnership(doc_id)
+    # verifyOwnership(doc_id)
     timdb = getTimDb()
     question = timdb.questions.get_question(question_id)
     return jsonResponse(question)
+
 
 @app.route("/deleteQuestion", methods=['POST'])
 def delete_question():
@@ -1132,6 +1158,16 @@ def answer_to_question():
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+
+    question_ended = True
+    for question in __question_to_be_asked:
+         if question[0] == lecture_id and question[1] == question_id:
+            question_ended = False
+
+    if question_ended:
+        return jsonResponse({"questionLate": "The questions has already finished. Your answer was not saved."})
+
+
     single_answers = []
     answers = answer.split('|')
     for answer in answers:
