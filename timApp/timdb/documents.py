@@ -263,19 +263,6 @@ class Documents(TimDbBase):
         return cursor.fetchall()
 
     @contract
-    def getDocumentBlockIds(self, document_id: 'DocIdentifier') -> 'list(int)':
-        """Gets the block ids of the specified document.
-        
-        :param document_id: The id of the document.
-        :returns: A list of the block ids of the document.
-        """
-        document_path = self.getDocumentPath(document_id.id)
-
-        assert os.path.exists(document_path), 'document does not exist: %d' % document_id
-
-        # TODO: Get ids of the document from Ephemeral. If the ids are indexes, maybe only count is needed?
-
-    @contract
     def getBlock(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
         """Gets a block of a document.
         
