@@ -15,7 +15,7 @@ timApp.directive('popUpDialog', function () {
         restrict: 'E',
         template: "<div class='pop-up' ng-show='show' id='popUpBack'>"+
         "<div class='pop-up-overlay'></div> " +
-        "<div class='pop-up-dialog' tim-draggable-fixed ng-mousedown='checkDown($event)' ng-mouseup='checkUp($event)'>" +
+        "<div class='pop-up-dialog' tim-draggable-fixed ng-mousedown='checkDown($event)' ng-mouseup='checkUp($event)' style='top:0px'>" +
         "<div class='pop-up-dialog-content' ng-transclude></div>" +
         "</div>" +
         "</div>",
