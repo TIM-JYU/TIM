@@ -125,7 +125,6 @@ class Documents(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.DOCUMENT, document_id])
-        cursor.execute('DELETE FROM ParMappings where doc_id = ?', [document_id])
         cursor.execute('DELETE FROM ReadParagraphs where doc_id = ?', [document_id])
         cursor.execute('DELETE FROM UserNotes where doc_id = ?', [document_id])
         self.db.commit()
@@ -466,170 +465,6 @@ class Documents(TimDbBase):
     def ensureCached(self, document_id: 'DocIdentifier'):
         self.getDocumentAsBlocks(document_id)
 
-    def getParMappings(self, doc_id : 'DocIdentifier', start_index = 0, end_index = -1) -> 'list(tuple)':
-        cursor = self.db.cursor()
-        endclause = " and par_index < {}".format(end_index) if end_index >= 0 else ""
-        cursor.execute(
-            "select par_index, new_index from ParMappings where doc_id = ? and doc_ver = ? and par_index >= ?" + endclause,
-            [doc_id.id, doc_id.hash, start_index])
-        return cursor.fetchall()
-
-    def addParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int', modified=False, commit=True):
-        cursor = self.db.cursor()
-        cursor.execute(
-            """
-            update ParMappings set new_ver = ?, new_index = ?, modified = ?
-            where doc_id = ? and doc_ver = ? and par_index = ?
-            """,
-            [new_document_id.hash, new_index, modified, old_document_id.id, old_document_id.hash, par_index])
-        cursor.execute(
-            """
-            insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
-            values (?, ?, ?, NULL, NULL, NULL)
-            """,
-            [old_document_id.id, new_document_id.hash, new_index])
-
-        if commit:
-            self.db.commit()
-
-    def __copyParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, end_index : 'int' = -1, offset : 'int' = 0, commit: 'bool'=True):
-        for m in self.getParMappings(old_document_id, start_index, end_index):
-            par_index = int(m[0])
-            new_index = par_index + offset
-            #print("{0} par {1} -> {2} par {3}".format(old_document_id.hash[:6], new_index, new_document_id.hash[:6], new_index))
-            self.addParMapping(old_document_id, new_document_id, par_index, new_index, commit=False)
-        if commit:
-            self.db.commit()
-
-    @contract
-    def updateParMappings(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', start_index : 'int' = 0, commit: 'bool'=True):
-        cursor = self.db.cursor()
-        cursor.execute(
-            """
-            select par_index from ParMappings
-            where doc_id = ? and doc_ver = ? and par_index >= ?
-            order by par_index
-            """,
-            [old_document_id.id, old_document_id.hash, start_index])
-        old_pars = self.resultAsDictionary(cursor)
-
-        self.ensureCached(old_document_id)
-        self.ensureCached(new_document_id)
-
-        mappings = []
-        invmap = {}
-        removemaps = []
-        for p in old_pars:
-            old_index = int(p['par_index'])
-            affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, old_index)
-            [affinity, new_index] = max(affinities, key=lambda x: x[0] if x[0] is not None else 0)
-
-            if affinity < 0.5:
-                # This is most likely a deleted paragraph
-                continue
-
-            if new_index in invmap and invmap[new_index] in mappings:
-                # There is an existing mapping for the same index in the new document
-                prevmap = mappings[invmap[new_index]]
-                if affinity > prevmap[2]:
-                    # This one is a better match
-                    print('Taking back {} to {}'.format(invmap[new_index], new_index))
-                    removemaps.append(invmap[new_index])
-                else:
-                    # This one is a bad match, do not add
-                    continue
-
-            mappings.append([old_index, new_index, affinity])
-            invmap[new_index] = old_index
-
-        # Remove mappings for bad matches
-        for i in range(len(removemaps) - 1, -1, -1):
-            del mappings[i]
-
-        for m in mappings:
-            [old_index, new_index, affinity] = m
-            #print("{0} par {1} -> {2} par {3} (affinity {4})".format(old_document_id.hash[:6], old_index, new_document_id.hash[:6], new_index, affinity))
-
-            cursor.execute(
-                """
-                update ParMappings set new_ver = ?, new_index = ?, modified = ?
-                where doc_id = ? and doc_ver = ? and par_index = ?""",
-                [new_document_id.hash, new_index, str(affinity < 1), old_document_id.id, old_document_id.hash, old_index])
-
-            # We use "or ignore" in case two old paragraphs have been mapped to the same new one
-            cursor.execute(
-                """
-                insert or ignore into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
-                values (?, ?, ?, NULL, NULL, NULL)
-                """,
-                [old_document_id.id, new_document_id.hash, new_index])
-
-        if commit:
-            self.db.commit()
-
-    @contract
-    def __updateParMapping(self, old_document_id : 'DocIdentifier', new_document_id : 'DocIdentifier', par_index : 'int', new_index : 'int' = -1, commit: 'bool'=True):
-        if new_index == -1:
-            new_index = par_index
-
-        #print("updateParMapping(doc {0}) : ver {1} par {2} -> ver {3} par {4}".format(old_document_id.id, old_document_id.hash[:6], par_index, new_document_id.hash[:6], new_index))
-
-        cursor = self.db.cursor()
-        cursor.execute(
-            """
-            select par_index from ParMappings
-            where doc_id = ? and doc_ver = ? and par_index = ?
-            """,
-            [old_document_id.id, old_document_id.hash, par_index])
-
-        if cursor.fetchone() is None:
-            # Nothing to update
-            return
-
-        # TODO: this could be optimized by getting only a 1:1 affinity instead of 1:n
-        affinities = self.ec.getSingleBlockMapping(old_document_id, new_document_id, par_index)
-        affinity = affinities[new_index][0]
-
-        cursor.execute(
-            """
-            update ParMappings set new_ver = ?, new_index = ?, modified = ?
-            where doc_id = ? and doc_ver = ? and par_index = ?
-            """,
-            [new_document_id.hash, new_index, str(affinity < 1),
-             old_document_id.id, old_document_id.hash, par_index])
-
-        cursor.execute(
-            """
-            insert into ParMappings (doc_id, doc_ver, par_index, new_ver, new_index, modified)
-            values (?, ?, ?, NULL, NULL, NULL)
-            """,
-            [old_document_id.id, new_document_id.hash, new_index])
-
-        if commit:
-            self.db.commit()
-
-    @contract
-    def __deleteParMapping(self, document_id : 'DocIdentifier', par_index : 'int'):
-        #print("deleteParMapping(doc {0}:{1}, par {2})".format(document_id.id, document_id.hash[:6], par_index))
-
-        cursor = self.db.cursor()
-        cursor.execute(
-            """
-            select par_index from ParMappings
-            where doc_id = ? and doc_ver = ? and par_index = ?
-            """,
-            [document_id.id, document_id.hash, par_index])
-
-        if cursor.fetchone() is None:
-            #print("Mapping does not exist.")
-            return
-
-        cursor.execute(
-            """delete from ParMappings
-               where doc_id = ? and doc_ver = ? and par_index = ?""",
-            [document_id.id, document_id.hash, par_index])
-        self.db.commit()
-
     @contract
     def __handleModifyResponse(self, document_id: 'DocIdentifier',
                                response: 'dict',
@@ -658,35 +493,6 @@ class Documents(TimDbBase):
 
         new_id = DocIdentifier(new_id.id, version)
         self.updateLatestRevision(new_id)
-        self.__copyParMappings(document_id, new_id, start_index = 0, end_index = mod_index, commit=False)
-
-        if mod_count >= 0:
-            # Add or modify
-            #print("__handleModifyResponse({0}): adding {1} paragraph(s) to index {2}".format(document_id.id, mod_count, mod_index))
-            if message[:3] == 'Add':
-                # No modifications to the paragraph at mod_index
-                self.__updateParMapping(document_id, new_id, mod_index, mod_index + mod_count, commit=False)
-            else:
-                # This is a modify request, but there may still be more paragraphs...
-                self.__updateParMapping(document_id, new_id, mod_index, commit=False)
-
-            self.__copyParMappings(
-                document_id, new_id,
-                start_index = mod_index + 1,
-                offset = mod_count,
-                commit=False
-            )
-        else:
-            # Remove
-            #print("__handleModifyResponse({0}): removing {1} paragraph(s) from index {2}".format(document_id.id, -mod_count, mod_index))
-            #print("copyParMappings({}, {}, start_index = {}, offset = {})".format(document_id.hash[:6], new_id.hash[:6], mod_index - mod_count, mod_count))
-            self.__copyParMappings(
-                document_id, new_id,
-                start_index = mod_index - mod_count,
-                offset = mod_count,
-                commit=False
-            )
-
         self.updateDocModified(new_id, commit=False)
         self.db.commit()
         return new_id
@@ -748,7 +554,6 @@ class Documents(TimDbBase):
             return document_id
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.updateParMappings(document_id, new_id, commit=False)
         self.updateDocModified(new_id, commit=False)
         self.updateLatestRevision(new_id, commit=False)
         self.db.commit()
