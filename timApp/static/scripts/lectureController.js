@@ -454,7 +454,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
         /**
          * Adds people entities to give list.
-         * @param people {name: String, active:String}
+         * @param people name: String, active:String
          * @param peopleList List of people in the lecture.
          * @memberof module:lectureController
          */
