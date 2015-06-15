@@ -186,7 +186,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     'buster': new Date().getTime()
                 }
             })
-                .success(function () {
+                .success(function (answer) {
+                    if(angular.isDefined(answer.questionLate)) {
+                        $window.alert(answer.questionLate);
+                    }
                 })
                 .error(function () {
                     $window.console.log("Failed to answer to question");
@@ -447,8 +450,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             if ($scope.isLecturer) {
                 $rootScope.$broadcast("getQuestions");
                 $scope.canStop = true;
-                $scope.addPeopleToList(answer.students, $scope.studentTable);
-                $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
+                $scope.addPeopleToList(lecture.students, $scope.studentTable);
+                $scope.addPeopleToList(lecture.lecturers, $scope.lecturerTable);
             }
         };
 
@@ -481,12 +484,12 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
         /**
          * Initializes the window to be basic view a.k.a. view where user is not in lecture.
-         * @param lecture The lecture to be processed.
+         * @param answer The lecture to be processed.
          * @memberof module:lectureController
          */
-        $scope.showBasicView = function (lecture) {
+        $scope.showBasicView = function (answer) {
 
-            $scope.isLecturer = lecture.isLecturer;
+            $scope.isLecturer = answer.isLecturer;
             if ($scope.isLecturer) {
                 $rootScope.$broadcast("getQuestions");
                 $scope.canStart = true;
@@ -620,6 +623,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.editLecture = function () {
+
             $window.alert("This feature has not been implemented yet. This function can be found in lectureController.js");
         };
 
