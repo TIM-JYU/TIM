@@ -584,6 +584,7 @@ timApp.controller("ViewCtrl", [
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image(30, 30);
                 img.src = questionImage;
+                img.title = JSON.parse(questions[i].questionJson).TITLE;
                 var $questionDiv = $("<div>", {
                     class: 'questionAdded', html: img, json: questions[i].questionJson, id: questions[i].question_id
                 });
