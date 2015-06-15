@@ -973,7 +973,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.answerFieldTypes = [
 
         {label: "Text area", value: "textArea"},
-        {label: "Radio button vertical", value: "radiobutton-vertical"},
         {label: "Radio Button horizontal", value: "radiobutton-horizontal"},
         {label: "Checkbox", value: "checkbox"}
     ];
