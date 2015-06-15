@@ -65,7 +65,7 @@
 				</div>
 		</form>
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
-		<div class="buttons">
+		<div class="buttons" id="question_buttons">
 			<button ng-click="createQuestion(question.question, question.type)">Save</button>
 			<button ng-click="close()">Cancel</button>
 		</div>

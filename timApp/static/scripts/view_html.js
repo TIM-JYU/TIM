@@ -950,7 +950,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
             scope.toggleQuestion();
 
-
         }
     );
 
