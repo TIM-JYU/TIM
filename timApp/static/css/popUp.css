@@ -7,6 +7,7 @@
     height: 100%;
     background-color: #000000;
     opacity: 0.2;
+    text-align: center;
 }
 
 .pop-up-dialog {
@@ -15,10 +16,11 @@
     overflow: auto;
     z-index: 6;
     position: fixed;
-    top: 25%;
+    top: 5%;
     background-color: #fff;
     box-shadow: 4px 4px 80px #000;
 	min-width: 230px;
+    vertical-align: middle;
 }
 
 .pop-up-dialog-content {

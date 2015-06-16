@@ -31,6 +31,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
             $scope.canvasId = "#" + $scope.canvas || "";
             $scope.isText = false;
 
+            //TODO: If more than 12 choices this will break. Refactor to better format.
             var basicSets = [
                 {
                     label: "Answers",
@@ -91,6 +92,66 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     pointStrokeColor: "#fff",
                     pointHighlightFill: "#fff",
                     pointHighlightStroke: "rgba(220,220,220,1)",
+                    data: []
+                },
+                 {
+                    label: "Answers",
+                    fillColor: "rgba(165,220,0,0.2)",
+                    strokeColor: "rgba(165,220,0,1)",
+                    pointColor: "rgba(165,220,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(165,220,0,1)",
+                    data: []
+                },
+                 {
+                    label: "Answers",
+                    fillColor: "rgba(220,165,0,0.2)",
+                    strokeColor: "rgba(220,165,0,1)",
+                    pointColor: "rgba(220,165,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,165,0,1)",
+                    data: []
+                },
+                 {
+                    label: "Answers",
+                    fillColor: "rgba(0,165,220,0.2)",
+                    strokeColor: "rgba(220,165,0,1)",
+                    pointColor: "rgba(220,165,0,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,165,0,1)",
+                    data: []
+                },
+                 {
+                    label: "Answers",
+                    fillColor: "rgba(220,0,165,0.2)",
+                    strokeColor: "rgba(220,0,165,1)",
+                    pointColor: "rgba(220,0,165,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,0,165,1)",
+                    data: []
+                },
+                 {
+                    label: "Answers",
+                    fillColor: "rgba(30,0,75,0.2)",
+                    strokeColor: "rgba(30,0,75,1)",
+                    pointColor: "rgba(30,0,75,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(30,0,75,1)",
+                    data: []
+                },
+                 {
+                    label: "Answers",
+                    fillColor: "rgba(75,75,180,0.2)",
+                    strokeColor: "rgba(75,75,180,1)",
+                    pointColor: "rgba(75,75,180,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(75,75,180,1)",
                     data: []
                 }
             ];
