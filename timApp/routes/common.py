@@ -1,4 +1,5 @@
 """Common functions for use with routes."""
+from document.docparagraphencoder import DocParagraphEncoder
 
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response, request
@@ -95,7 +96,9 @@ def canWriteToFolder(folderName):
 
 
 def jsonResponse(jsondata, status_code=200):
-    response = Response(json.dumps(jsondata, separators=(',', ':')), mimetype='application/json')
+    response = Response(json.dumps(jsondata,
+                                   separators=(',', ':'),
+                                   cls=DocParagraphEncoder), mimetype='application/json')
     response.status_code = status_code
     return response
 

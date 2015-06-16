@@ -3,14 +3,15 @@ from shutil import copyfile
 from datetime import datetime
 
 from contracts import contract
-from htmlSanitize import sanitize_html
+from ansi2html import Ansi2HTMLConverter
 
+from document.docparagraph import DocParagraph
+from htmlSanitize import sanitize_html
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative
-from ansi2html import Ansi2HTMLConverter
 
 
 class Documents(TimDbBase):
@@ -292,22 +293,29 @@ class Documents(TimDbBase):
         return [self.trimDoc(block) for block in self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)]
 
     @contract
-    def getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
+    def getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(DocParagraph)':
         """Gets the specified document in HTML form.
 
         :param document_id: The id of the document.
         :returns: The document contents as a list of HTML blocks.
         """
 
-        return self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
+        html_blocks = self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
 
-    def getDocumentAsHtmlBlocksSanitized(self, document_id: 'DocIdentifier') -> 'list(str)':
+        pars = [DocParagraph(md='', html=block, t='rghurig', par_id='asdads' + str(idx)) for idx, block in enumerate(html_blocks)]
+
+        return pars
+
+    def getDocumentAsHtmlBlocksSanitized(self, document_id: 'DocIdentifier') -> 'list(DocParagraph)':
         """Gets the specified document in HTML form sanitized.
 
         :param document_id: The id of the document.
         :returns: The document contents as a list of sanitized HTML blocks.
         """
-        return [sanitize_html(block) for block in self.getDocumentAsHtmlBlocks(document_id)]
+        pars = self.getDocumentAsHtmlBlocks(document_id)
+        for par in pars:
+            par.html = sanitize_html(par.html)
+        return pars
 
     @contract
     def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
