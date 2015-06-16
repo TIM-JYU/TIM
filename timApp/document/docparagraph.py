@@ -7,5 +7,6 @@ class DocParagraph:
         self.html = html
         self.id = par_id
         self.t = t
+        self.attrs = {}
 
 new_contract('DocParagraph', DocParagraph)
