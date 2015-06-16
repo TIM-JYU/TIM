@@ -5,11 +5,11 @@
 			<div id="questionName">
 				<label>
 					Question title:
-					<input name="question.title" type="text" cols="100" ng-model="question.title"/>
+					<input name="question.title" type="text" ng-model="question.title"/>
 				</label>
 				<div>
 					<label>Question:</label>
-					<textarea name="question" rows="2" cols="100" ng-model="question.question"></textarea>
+					<textarea name="question" rows="3" cols="100" ng-model="question.question"></textarea>
 				</div>
 			</div>
             <div id="qType">
@@ -39,8 +39,8 @@
 				<br />
 				<br />
 				<div id="questionTiming">
-					<label>Set question  timing:</label>
-					<div id="questionStart">
+					<div><label>Set question  timing:</label></div>
+					<span id="questionStart">
 							<label>Starting time:</label>
 							<input type="checkbox" ng-model="question.startTimeSelected" />
 							<div class="questionStartTime">
@@ -52,8 +52,8 @@
 									<input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
 										   is-valid-change="" ng-model="question.startMin" ng-disabled="!question.startTimeSelected">
 							</div>
-					</div>
-					<div id="questionTimer">
+					</span>
+					<span id="questionTimer">
 						<label>Duration:</label>
 						 <input type="checkbox" ng-model="question.endTimeSelected" />
 						 <div id="durationDiv" class="questionTimer">
@@ -61,7 +61,7 @@
 								<input id="durationMin" type="text" name="minutes" maxlength="2" size="2" ng-model="question.timeLimit.minutes" ng-disabled="!question.endTimeSelected"> m
 								<input id="durationSec" type="text" name="seconds" maxlength="2" size="2" ng-model="question.timeLimit.seconds" ng-disabled="!question.endTimeSelected"> s
 						</div>
-					</div>
+					</span>
 				</div>
 		</form>
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
