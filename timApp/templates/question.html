@@ -14,9 +14,9 @@
 			</div>
             <div id="qType">
 				<label>Question type:
-					<select name="question.type" ng-model="question.type" ng-dropdown required>
+					<select name="question.type" ng-model="question.type" ng-dropdown required ng-change="createMatrix(question.type)" >
 						<option value="" ng-option disabled selected> -- select question type --</option>
-						<option ng-option value="radio-vertical">Multiple choice (radio button)</option>
+						<option ng-option value="radio-vertical">Multiple choice (radio button) </option>
 						<option ng-option value="checkbox-vertical">Multiple choice (checkbox)</option>
 						<option ng-option value="true-false">True/False</option>
 						<option ng-option value="matrix">Many rows and columns</option>
@@ -24,20 +24,14 @@
 				</label>
             </div>
 
-				<div ng-if="question.type == 'checkbox-vertical'" ng-init="createMatrix(2, 1,'checkbox')">
+				<div ng-if="question.type" >
                     {% include 'matrix.html' %}
 				</div>
-				<div ng-if="question.type == 'radio-vertical'" ng-init="createMatrix(2, 1,'radio')">
-					{% include 'matrix.html' %}
-				</div>
-				<div ng-if="question.type == 'true-false'" ng-init="createMatrix(2, 2, 'true-false')">
-					{% include 'matrix.html' %}
-				</div>
-				<div ng-if="question.type == 'matrix'" ng-init="createMatrix(2, 2, 'matrix')">
-					{% include 'matrix.html' %}
-				</div>
+
 				<br />
 				<br />
+
+
 				<div id="questionTiming">
 					<label>Set question  timing:</label>
 					<div id="questionStart">

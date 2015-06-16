@@ -831,7 +831,7 @@ timApp.controller("ViewCtrl", [
 
             sc.$on("closeQuestionPreview", function () {
                 sc.showQuestionPreview = false;
-                sc.clearQuestion();
+                //sc.clearQuestion();
             });
         }
 
@@ -871,7 +871,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             if (json["TITLE"]) scope.question.title = json["TITLE"];
             if (json["QUESTION"]) scope.question.question = json["QUESTION"];
             if (json["TYPE"]) scope.question.type = json["TYPE"];
-            scope.questionType = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
             if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
 
@@ -960,16 +959,15 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         question: "",
         matrixType: "",
         answerFieldType: "",
-        timeLimit: {hours: "0", minutes: "0", seconds: "0"}
+        timeLimit: {hours: "0", minutes: "0", seconds: "30"}
     };
 
 
-    scope.questionType = "";
     scope.rows = [];
     scope.columns = [];
     scope.columnHeaders = [];
     scope.answerDirection = "horizontal";
-    scope.question.timeLimit.seconds = 10;
+    scope.question.timeLimit.seconds = 30;
     scope.error_message = "";
     scope.answerFieldTypes = [
 
@@ -985,73 +983,111 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      * @param columnsCount The number of columns to create for new matrix.
      * @param type The answer type of the matrix.
      */
-    scope.createMatrix = function (rowsCount, columnsCount, type) {
-        if (scope.questionType != type || scope.rows.length <= 0) {
-            scope.questionType = type;
-
-            if (type === 'radio' || type === 'checkbox') {
-                scope.question.answerFieldType = type;
-            }
-            if (type === 'true-false') {
-                scope.question.answerFieldType = 'radio';
-            }
-            if (type === 'matrix') {
-                scope.question.answerFieldType = 'matrix';
-            }
-
-
-            var i;
-            if (scope.rows.length > 0) {
-                scope.columnHeaders.splice(0, scope.columnHeaders.length);
-                for (i = 0; i < scope.rows.length; i++) {
-                    scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
-                }
-
-                for (i = 0; i < columnsCount; i++) {
-                    scope.addCol(i);
-                }
-
-            } else {
-
-                var columnHeaders = [];
-                for (i = 0; i < rowsCount; i++) {
-                    var columns = [];
-                    columnHeaders = [];
-                    for (var j = 0; j < columnsCount; j++) {
-                        columnHeaders.push({type: "header", id: j, text: ""});
-                        columns[j] = {
-                            id: j,
-                            rowId: i,
-                            text: '',
-                            points: '',
-                            type: "answer",
-                            answerFiledType: scope.question.answerFieldType
-                        };
-                    }
-                    scope.rows[i] = {
-                        id: i,
-                        text: '',
-                        type: 'question',
-                        value: '',
-                        columns: columns
-                    };
-
-                }
-                scope.columnHeaders = columnHeaders;
-
-            }
-            scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
+    scope.createMatrix = function (type) {
+        var rowsCount = 0;
+        var columnsCount = 0;
+        if (type === 'matrix' || type === 'true-false') {
+            rowsCount = 2;
+            columnsCount = 2;
+        } else {
+            rowsCount = 2;
+            columnsCount = 1;
         }
+
+        if (scope.rows.length < 1) {
+            for (var i = 0; i < rowsCount; i++) {
+                scope.addRow(i);
+            }
+        }
+
+
+        if (type === 'radio-vertical' || 'true-false') scope.question.answerFieldType = 'radio';
+        if (type === 'checkbox-vertical') scope.question.answerFieldType = 'checkbox';
+        if (type === 'matrix') scope.question.answerFieldType = 'matrix';
+
+        for (var i = 0; i < scope.rows.length; i++) {
+            if (scope.rows[i].columns.length > columnsCount) scope.rows[i].columns.splice(columnsCount, scope.rows[i].columns.length);
+            if (scope.rows[i].columns.length < columnsCount) scope.addCol(scope.rows[0].columns.length);
+            for (var j = 0; j < scope.rows[i].columns.length; j++) {
+                scope.rows[j].columns.answerFieldType = scope.question.answerFieldType;
+            }
+        }
+
+        scope.columnHeaders = [];
+        if (type === 'matrix') {
+            for (var i = 0; i < scope.rows[0].columns.length; i++) {
+                scope.columnHeaders[i] = {
+                    id: i,
+                    text: "",
+                    type: 'header'
+                };
+            }
+        }
+
+
+        /*        if (scope.question.type != type || scope.rows.length <= 0) {
+         scope.question.type = type;
+
+         if (type === 'radio-vertical' || 'true-false') scope.question.answerFieldType = 'radio';
+         else if (type === 'checkbox-vertical') scope.question.answerFieldType = 'checkbox';
+         else if (type === 'matrix') scope.question.answerFieldType = 'matrix';
+
+
+
+         var i;
+         if (scope.rows.length > 0) {
+         scope.columnHeaders.splice(0, scope.columnHeaders.length);
+         for (i = 0; i < scope.rows.length; i++) {
+         scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
+         }
+
+         for (i = 0; i < columnsCount; i++) {
+         scope.addCol(i);
+         }
+
+         } else {
+
+         var columnHeaders = [];
+         for (i = 0; i < rowsCount; i++) {
+         var columns = [];
+         columnHeaders = [];
+         for (var j = 0; j < columnsCount; j++) {
+         columnHeaders.push({type: "header", id: j, text: ""});
+         columns[j] = {
+         id: j,
+         rowId: i,
+         text: '',
+         points: '',
+         type: "answer",
+         answerFiledType: scope.question.answerFieldType
+         };
+         }
+         scope.rows[i] = {
+         id: i,
+         text: '',
+         type: 'question',
+         value: '',
+         columns: columns
+         };
+
+         }
+         scope.columnHeaders = columnHeaders;
+
+         }
+         scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
+         }*/
     };
 
-/*    *//**
+    /*    */
+    /**
      * A function handling rowClick
      * @memberof module:questionController
      * @param index FILL WITH SUITABLE TEXT
-     *//*
-    scope.rowClick = function (index) {
-        scope.addRow(index);
-    };*/
+     */
+    /*
+     scope.rowClick = function (index) {
+     scope.addRow(index);
+     };*/
 
     /**
      * A function to add a column to an existing matrix.
@@ -1064,7 +1100,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             location = scope.rows[0].columns.length;
             loc = scope.rows[0].columns.length;
         }
-        scope.columnHeaders.splice(loc, 0, {type: "header", text: ""});
+        scope.columnHeaders.splice(loc, 0, {type: "header", id: loc, text: ""});
         //add new column to columns
         for (var i = 0; i < scope.rows.length; i++) {
 
@@ -1182,7 +1218,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             question: "",
             matrixType: "",
             answerFieldType: "",
-            timeLimit: {hours: "0", minutes: "0", seconds: "0"}
+            timeLimit: {hours: "0", minutes: "0", seconds: "30"}
         };
 
         scope.rows = [];
@@ -1457,7 +1493,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             .success(function () {
                 $window.console.log("The question was successfully added to database");
                 scope.removeErrors();
-                scope.clearQuestion();
+                //scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
                 scope.close();
@@ -1465,7 +1501,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             .error(function () {
                 $window.console.log("There was some error creating question to database.");
             });
-        //scope.clearQuestion();
     };
 
 }]);
