@@ -210,10 +210,6 @@ td p {
 	background: #F60; /* rgb(236,103,27); */
 }
 
-.editline {
-	border-color: #3CC; /* rgb(236,103,27); */
-}
-
 .editline:hover {
     opacity: 0.5;
 	background: #3CC; /* rgb(236,103,27); */
@@ -357,35 +353,18 @@ ul ul  ul, ol ol ol {
     background-color: #f8f8f8;
 }
 
-.timButton {
+.timButton, .editorButton {
     display: block;
     margin: auto;
     min-width: 40px;
 }
 
-/* Juuson: Editorissa käytettäviä jQueryn tabeja varten tehtyjä muutoksia. Näistä pitää tehdä oma jQuery teema */
-.ui-tabs-active {
-    background: #3CC !important;
-    border: none !important;
+.draghandle {
+    background-color: #3CC;
+    position: initial;
+    margin-bottom: 10px;
+    margin-top: 0px;
 }
-
-.ui-tabs-anchor {
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-}
-
-.ui-widget button {
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-    font-size: 1em !important;
-    margin-bottom: 0 !important;
-    min-width: 40px;
-    padding: 4px;
-}
-
-.ui-tabs .ui-tabs-panel {
-    padding: 0.5em 1em !important;
-}
-
-/* Juuson: Editorissa käytettäviä jQueryn tabeja varten tehtyjä muutoksia. Näistä pitää tehdä oma jQuery teema */
 
 .readline {
     position: absolute;
@@ -405,8 +384,6 @@ ul ul  ul, ol ol ol {
     width: 4em;
     height: 100%;
     top: 0em;
-    border-left: 0.5em solid;
-    border-color: #3CC; /* rgb(236,103,27); */
 }
 
 .addNoteButton:hover {
@@ -861,13 +838,76 @@ a.anchor:hover {
 	margin-bottom: 0em;
 }
 
+.editorButton {
+    margin-bottom: 0 !important;
+    height: 35px;
+}
+
 .extraButtonArea {
-	padding-right: 1em;
-	margin-bottom: 0em;
+    margin: 0 0 0.2em 0;
+	padding: 0.5em 1em;
+    background: white;
+    border-left: 1px solid rgb(183, 183, 183);
+    border-right: 1px solid rgb(183, 183, 183);
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
 }
 
 .extraButtonArea.hidden {
 	display: none;
+}
+
+.tabsarea, .extraButtonArea {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    border-bottom: 1px solid rgb(183, 183, 183);
+}
+
+.tabsarea {
+    margin: 0;
+    padding: 0;
+}
+
+.tabsarea li {
+    height: 100%;
+    display: inline-block;
+    list-style: none;
+    border: 1px solid rgb(183, 183, 183);
+    border-bottom: none;
+    border-top-right-radius: 3px;
+    border-top-left-radius: 3px;
+    margin: 0;
+    background: rgb(246, 246, 246);
+}
+
+
+li.active {
+    background: #3CC;
+}
+
+li.tab.active a {
+    color: white;
+}
+
+.tabsarea li > a {
+    display: block;
+    height: auto;
+    margin: 0;
+    color: rgb(96, 96, 96);
+    padding: 0.5em 1em;
+    text-decoration: none;
+}
+
+input[type="file"] {
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.tabsarea li > a:hover {
+    text-decoration: none;
 }
 	
 video {
@@ -1118,6 +1158,7 @@ p.stem {
 
 /* Kännyköiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 500px) {
+
 	P {
 		margin-top: 0.0em;
 		margin-bottom: 0.0em;
@@ -1189,6 +1230,11 @@ p.stem {
  
 body {
  	line-height: 1.4;	
+}
+
+.defaultCheckbox {
+    vertical-align: middle;
+    margin-left: 2em;
 }
 
 task, .csRunDiv {
@@ -1538,7 +1584,7 @@ img.console {
     /* margin-left: 3.8em; */
 }
 
-.timButton {
+.timButton, .editorButton {
     margin: auto;
     background: #3CC;
     border: 0;
@@ -1553,17 +1599,19 @@ img.console {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
     margin-bottom: 5px;
 }
+
 .actionButtons {
+    display: table;
     position: absolute;
     border-radius: 3px;
     padding: 1em;
     margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
-    width: 220px;
+    width: 200px;
     min-height: 50px;
     left: 103%;
-}  
+}
 
 .par.selected {
     background-color: #f8f8f8;

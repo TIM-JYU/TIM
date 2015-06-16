@@ -69,7 +69,7 @@ timApp.controller("ViewCtrl", [
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
-        var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
+        var DEFAULT_CHECKBOX_CLASS = "defaultCheckbox";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
         var EDITOR_CLASS = "editorArea";
@@ -80,6 +80,23 @@ timApp.controller("ViewCtrl", [
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
         var PAR_CLOSE_BUTTON_CLASS = "timButton menuClose";
         var PAR_CLOSE_BUTTON = "." + PAR_CLOSE_BUTTON_CLASS.replace(" ", ".");
+
+        sc.defaults = [false, false, false, false, false];
+
+        sc.updateSelection = function(index) {
+            var selected = false;
+            for (var i = 0; i < sc.defaults.length; i++) {
+                if (sc.defaults[i]) selected = true;
+                if (i != index) {
+                    sc.defaults[i] = false;
+                }
+            };
+            if (selected) {
+                sc.defaultAction = sc.editorFunctions[index];
+            } else {
+                sc.defaultAction = sc.showOptionsWindow;
+            }
+        };
 
         sc.processAllMath = function ($elem) {
             $elem.find('.math').each(function () {
@@ -383,8 +400,14 @@ timApp.controller("ViewCtrl", [
                     $compile(ab[0])(sc);
                     ab.prependTo($newpar);
                 }
+                /*
+                var editDiv = "";
+                if (sc.rights.editable)
+                    editDiv = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
+                */
                 $par.after($newpar.append($("<div>",
-                    {class: "readline " + readClass, title: "Click to mark this paragraph as read"})));
+                    {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
+                        $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
 
                 if (extraData.tags) {
                     if (extraData.tags['markread']) {
@@ -393,7 +416,6 @@ timApp.controller("ViewCtrl", [
                         sc.markParRead($newread, par_id);
                     }
                 }
-
                 sc.processMath($newpar[0]);
             }
             $par.remove();
@@ -416,24 +438,13 @@ timApp.controller("ViewCtrl", [
         sc.onClick(".readline", function ($this, e) {
             var par_id = sc.getParIndex($this.parents('.par'));
             return sc.markParRead($this, par_id);
-            /*
-             var oldClass = $this.attr("class");
-             $this.attr("class", "readline read");
-             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
-             .success(function (data, status, headers, config) {
-             // No need to do anything here
-             }).error(function (data, status, headers, config) {
-             $window.alert('Could not save the read marking.');
-             $this.attr("class", oldClass);
-             });
-             return true; */
         });
 
         sc.onClick(".editline", function ($this, e) {
             $(".actionButtons").remove();
             var $par = $this.parent();
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            return sc.showOptionsWindow(e, $par, coords);
+            return sc.defaultAction(e, $par, coords);
         });
 
         sc.showNoteWindow = function (e, $par, coords) {
@@ -507,27 +518,28 @@ timApp.controller("ViewCtrl", [
 
         sc.showOptionsWindow = function (e, $par, coords) {
             var default_width = $par.outerWidth() / 16;
-            var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
+            var button_width = 130;
+            //var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
             var $actionDiv = $("<div>", {class: 'actionButtons'});
             if (sc.rights.can_comment) {
                 var $span = $("<span>");
                 $span.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
-                $span.append($("<button>", {
-                    id: 'defaultAdd',
-                    class: DEFAULT_BUTTON_CLASS,
-                    text: 'Default',
-                    width: default_width
+                $span.append($("<input>", {
+                    class: DEFAULT_CHECKBOX_CLASS,
+                    type: 'checkbox',
+                    'ng-click': 'updateSelection(0)',
+                    'ng-model': 'defaults[0]'
                 }));
                 $actionDiv.append($span);
             }
             if (sc.rights.editable) {
                 var $span = $("<span>");
                 $span.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
-                $span.append($("<button>", {
-                    id: 'defaultEdit',
-                    class: DEFAULT_BUTTON_CLASS,
-                    text: 'Default',
-                    width: default_width
+                $span.append($("<input>", {
+                    class: DEFAULT_CHECKBOX_CLASS,
+                    type: 'checkbox',
+                    'ng-click': 'updateSelection(1)',
+                    'ng-model': 'defaults[1]'
                 }));
                 $actionDiv.append($span);
 
@@ -537,11 +549,11 @@ timApp.controller("ViewCtrl", [
                     text: 'Add paragraph above',
                     width: button_width
                 }));
-                $span.append($("<button>", {
-                    id: 'defaultPrepend',
-                    class: DEFAULT_BUTTON_CLASS,
-                    text: 'Default',
-                    width: default_width
+                $span.append($("<input>", {
+                    class: DEFAULT_CHECKBOX_CLASS,
+                    type: 'checkbox',
+                    'ng-click': 'updateSelection(2)',
+                    'ng-model': 'defaults[2]'
                 }));
                 $actionDiv.append($span);
 
@@ -551,21 +563,21 @@ timApp.controller("ViewCtrl", [
                     text: 'Add paragraph below',
                     width: button_width
                 }));
-                $span.append($("<button>", {
-                    id: 'defaultAppend',
-                    class: DEFAULT_BUTTON_CLASS,
-                    text: 'Default',
-                    width: default_width
+                $span.append($("<input>", {
+                    class: DEFAULT_CHECKBOX_CLASS,
+                    type: 'checkbox',
+                    'ng-click': 'updateSelection(3)',
+                    'ng-model': 'defaults[3]'
                 }));
                 $actionDiv.append($span);
 
                 var $span = $("<span>");
                 $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
-                $span.append($("<button>", {
-                    id: 'defaultClose',
-                    class: DEFAULT_BUTTON_CLASS,
-                    text: 'Default',
-                    width: default_width
+                $span.append($("<input>", {
+                    class: DEFAULT_CHECKBOX_CLASS,
+                    type: 'checkbox',
+                    'ng-click': 'updateSelection(4)',
+                    'ng-model': 'defaults[4]'
                 }));
                 $actionDiv.append($span);
             }
@@ -878,6 +890,9 @@ timApp.controller("ViewCtrl", [
         };
 
         // Load index, notes and read markings
+        sc.editorFunctions = [sc.showNoteWindow, sc.showEditWindow, sc.showAddParagraphAbove,
+            sc.showAddParagraphBelow, sc.doNothing];
+
         sc.setHeaderLinks();
         sc.indexTable = [];
         sc.getIndex();

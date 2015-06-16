@@ -1,63 +1,58 @@
-<div id="tabs">
-    <ul>
-        <li><a href="#tabs-1" ng-click="wrapFn();editor.focus()">Navigation</a></li>
-        <li><a href="#tabs-2" ng-click="wrapFn();editor.focus()">Style</a></li>
-        <li><a href="#tabs-3" ng-click="wrapFn();editor.focus()">Special characters</a></li>
-        <li><a href="#tabs-4" ng-click="wrapFn();editor.focus()">TeX</a></li>
-        <li><a href="#tabs-5" ng-click="wrapFn();editor.focus()">Plugins</a></li>
-        <li ng-show="options.showImageUpload"><a href="#tabs-6" ng-click="wrapFn();editor.focus()">Upload file/image</a>
+<div id="pareditor">
+<div>
+    <ul class="tabsarea">
+        <li class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a></li>
+        <li class="tab"><a ng-click="tabClicked($event, 'styleButtons')">Style</a></li>
+        <li class="tab"><a ng-click="tabClicked($event, 'specialButtons')">Special characters</a></li>
+        <li class="tab"><a ng-click="tabClicked($event, 'texButtons')">TeX</a></li>
+        <li class="tab"><a ng-click="tabClicked($event, 'pluginButtons')">Plugins</a></li>
+        <li class="tab" ng-show="options.showImageUpload"><a ng-click="tabClicked($event, 'uploadButtons')">Upload
+            file/image</a>
         </li>
     </ul>
-
-    <!--
-    <button class="timButton" ng-click="ribbonClicked($event, 'navigateButtons')">Navigation</button>
-    <button class="timButton" ng-click="ribbonClicked($event, 'styleButtons')">Style</button>
-    <button class="timButton" ng-click="ribbonClicked($event, 'specialButtons')">Special characters</button>
-    <button class="timButton" ng-click="ribbonClicked($event, 'texButtons')">TeX</button>
-    <button class="timButton" ng-click="ribbonClicked($event, 'pluginButtons')">Plugins</button> -->
-    <div id="tabs-1" class="extraButtonArea">
-        <button title="Undo" ng-click="wrapFn(undoClicked);editor.focus();">&#8630;</button>
-        <button title="Redo" ng-click="wrapFn(redoClicked)">&#8631;</button>
-        <button title="Move left" ng-click="wrapFn(leftClicked)">&#11013;</button>
-        <button title="Move Right" ng-click="wrapFn(rightClicked)">&#10145;</button>
-        <button title="Move up" ng-click="wrapFn(upClicked)">&#11014;</button>
-        <button title="Move down" ng-click="wrapFn(downClicked)">&#11015;</button>
+    <div id="navigateButtons" class="extraButtonArea">
+        <button class="editorButton" title="Undo" ng-click="wrapFn(undoClicked);editor.focus();">&#8630;</button>
+        <button class="editorButton" title="Redo" ng-click="wrapFn(redoClicked)">&#8631;</button>
+        <button class="editorButton" title="Move left" ng-click="wrapFn(leftClicked)">&#11013;</button>
+        <button class="editorButton" title="Move Right" ng-click="wrapFn(rightClicked)">&#10145;</button>
+        <button class="editorButton" title="Move up" ng-click="wrapFn(upClicked)">&#11014;</button>
+        <button class="editorButton" title="Move down" ng-click="wrapFn(downClicked)">&#11015;</button>
     </div>
-    <div id="tabs-2" class="extraButtonArea">
-        <button title="Indent selection/line" ng-click="wrapFn(indentClicked)">&#8649;
+    <div id="styleButtons" class="extraButtonArea hidden">
+        <button class="editorButton" title="Indent selection/line" ng-click="wrapFn(indentClicked)">&#8649;
         </button>
-        <button title="Outdent selection/line" ng-click="wrapFn(outdentClicked)">&#8647;
+        <button class="editorButton" title="Outdent selection/line" ng-click="wrapFn(outdentClicked)">&#8647;
         </button>
-        <button title="Bold" ng-click="wrapFn(boldClicked)">&#119809;</button>
-        <button title="Italic" ng-click="wrapFn(italicClicked)">&#119868;</button>
-        <button title="Add link" ng-click="wrapFn(linkClicked)">Link</button>
-        <button title="Add image" ng-click="wrapFn(imageClicked)">Image</button>
-        <button title="Code block" ng-click="wrapFn(codeClicked)">Code</button>
-        <button title="List item" ng-click="wrapFn(listClicked)">List</button>
-        <button title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
+        <button class="editorButton" title="Bold" ng-click="wrapFn(boldClicked)"><b>B</b></button>
+        <button class="editorButton" title="Italic" ng-click="wrapFn(italicClicked)"><i>I</i></button>
+        <button class="editorButton" title="Add link" ng-click="wrapFn(linkClicked)">Link</button>
+        <button class="editorButton" title="Add image" ng-click="wrapFn(imageClicked)">Image</button>
+        <button class="editorButton" title="Code block" ng-click="wrapFn(codeClicked)">Code</button>
+        <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
+        <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
     </div>
-    <div id="tabs-3" class="extraButtonArea">
-        <button ng-click="charClicked($event)">@</button>
-        <button ng-click="charClicked($event)">#</button>
-        <button ng-click="charClicked($event)">`</button>
-        <button ng-click="charClicked($event)">€</button>
+    <div id="specialButtons" class="extraButtonArea hidden">
+        <button class="editorButton" ng-click="charClicked($event)">@</button>
+        <button class="editorButton" ng-click="charClicked($event)">#</button>
+        <button class="editorButton" ng-click="charClicked($event)">`</button>
+        <button class="editorButton" ng-click="charClicked($event)">€</button>
     </div>
-    <div id="tabs-4" class="extraButtonArea">
-        <button ng-click="wrapFn(texClicked)">TeX equation</button>
-        <button ng-click="wrapFn(indexClicked)">X&#x2099;</button>
-        <button ng-click="wrapFn(powerClicked)">X&#x207f;</button>
-        <button ng-click="wrapFn(squareClicked)">&#x221a;</button>
-        <!-- <button class="timButton" ng-click="wrapFn(rootClicked)">Root</button> -->
+    <div id="texButtons" class="extraButtonArea hidden">
+        <button class="editorButton" ng-click="wrapFn(texClicked)">TeX equation</button>
+        <button class="editorButton" ng-click="wrapFn(indexClicked)">X&#x2099;</button>
+        <button class="editorButton" ng-click="wrapFn(powerClicked)">X&#x207f;</button>
+        <button class="editorButton" ng-click="wrapFn(squareClicked)">&#x221a;</button>
+        <!-- <button class="editorButton" ng-click="wrapFn(rootClicked)">Root</button> -->
     </div>
-    <div id="tabs-5" class="extraButtonArea">
-        <button ng-click="pluginClicked('csPlugin', 'template')">CsPlugin
+    <div id="pluginButtons" class="extraButtonArea hidden">
+        <button class="editorButton" ng-click="pluginClicked('csPlugin', 'template')">CsPlugin
         </button>
-        <button ng-click="pluginClicked('showImage', 'template')">ImagePlugin
+        <button class="editorButton" ng-click="pluginClicked('showImage', 'template')">ImagePlugin
         </button>
-        <button ng-click="pluginClicked('showVideo', 'template')">VideoPlugin
+        <button class="editorButton" ng-click="pluginClicked('showVideo', 'template')">VideoPlugin
         </button>
     </div>
-    <div id="tabs-6" class="extraButtonArea">
+    <div id="uploadButtons" class="extraButtonArea hidden">
         <span>
             Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
             <span ng-bind="progress"></span>
@@ -70,6 +65,7 @@
   onChange: aceChanged
     }" ng-model="editorText"></div>
 <div class="editButtonArea">
+    <button class="timButton" ng-click="goFullScreen()">Fullscreen</button>
     <button class="timButton savePar" ng-click="saveClicked()">Save</button>
     <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
     <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
@@ -99,4 +95,4 @@
     <span ng-show="outofdate">...</span>
 
     <div class="previewcontent"></div>
-</div>
+</div></div>

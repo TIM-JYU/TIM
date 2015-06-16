@@ -79,14 +79,21 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
             },
             link: function ($scope, $element, $attrs) {
+
+                $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function (event) {
+                    // The event object doesn't carry information about the fullscreen state of the browser,
+                    // but it is possible to retrieve it through the fullscreen API
+                    var editor = document.getElementById("pareditor");
+                    if (!document.fullscreenElement &&    // alternative standard method
+                        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                        editor.removeAttribute('style');
+                    }
+                });
+
                 $scope.timer = null;
                 $scope.outofdate = false;
                 $scope.parCount = 0;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
-                $(function () {
-                    $("#tabs").tabs();
-                    $("#tabs").tabs({active: 0});
-                });
 
                 var langTools = ace.require("ace/ext/language_tools");
                 langTools.setCompleters([]);
@@ -115,7 +122,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 var touchDevice = false;
 
                 $scope.wrapFn = function (func) {
-                    // console.log(touchDevice);
                     if (!touchDevice) $scope.editor.focus();
                     if (func) return (func());
                 };
@@ -290,7 +296,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.pluginClicked = function (plugin, template) {
                     // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
-                    //TODO
                     $.ajax({
                         type: 'GET',
                         url: '/' + plugin + '/template/' + template,
@@ -307,6 +312,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 //Plugins
 
                 $scope.onFileSelect = function (url, $files) {
+                    if (!touchDevice) $scope.editor.focus();
                     //$files: an array of files selected, each file has name, size, and type.
                     for (var i = 0; i < $files.length; i++) {
                         var file = $files[i];
@@ -326,14 +332,52 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }
                 };
 
-                $scope.ribbonClicked = function ($event, area) {
-                    var naviArea = $($event.target).parent().find("#" + area);
-                    var buttons = $($event.target).parent().find(".extraButtonArea");
+                $scope.tabClicked = function ($event, area) {
+                    var naviArea = $('#' + area);
+                    var buttons = $('.extraButtonArea');
+                    var tabs = $('.tab');
                     for (var i = 0; i < buttons.length; i++) {
                         $(buttons[i]).attr("class", 'extraButtonArea hidden');
                     }
-                    $(naviArea).attr("class", 'extraButtonArea');
+                    ;
+                    for (var i = 0; i < tabs.length; i++) {
+                        $(tabs[i]).removeClass('active');
+                    }
+                    var active = $($event.target).parent();
+                    $(active).attr('class', 'tab active');
+                    $(naviArea).attr('class', 'extraButtonArea');
                     if (!touchDevice) $scope.editor.focus();
+                };
+
+
+                $scope.goFullScreen = function () {
+                    var div = document.getElementById("pareditor");
+                    if (!document.fullscreenElement &&    // alternative standard method
+                        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+
+                        var div = document.getElementById("pareditor");
+                        div.setAttribute("style", "width: 100%; height: 100%; position: absolute; top: 0px; padding-top: 2em; background: rgb(224, 224, 224);");
+
+                        var requestMethod = div.requestFullScreen ||
+                            div.webkitRequestFullscreen ||
+                            div.webkitRequestFullScreen ||
+                            div.mozRequestFullScreen ||
+                            div.msRequestFullscreen;
+
+                        if (requestMethod) {
+                            requestMethod.apply(div);
+                        }
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        } else if (document.msExitFullscreen) {
+                            document.msExitFullscreen();
+                        } else if (document.mozCancelFullScreen) {
+                            document.mozCancelFullScreen();
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        }
+                    }
                 };
             }
         };
