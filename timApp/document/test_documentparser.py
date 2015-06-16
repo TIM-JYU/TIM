@@ -1,4 +1,6 @@
+import random
 import unittest
+
 from document.documentparser import DocumentParser, SplitterException
 
 
@@ -53,7 +55,17 @@ text 4
                               {'md': 'text 3\n\ntext 4\n',
                                'classes': ['someClass']},
                               {'md': '# Test1\n\n# Test2\n\n# Test3'}], result)
-
+        random.seed(0)
+        dp.add_missing_attributes()
+        self.assertListEqual([{'id': 'SoMUq2gZwvpI', 't': 'MHgzOTdhMzhlYg=='},
+                              {'id': 'WORjZumBVWdm', 't': 'MHgzNTc5ZTBjNg=='},
+                              {'id': 'w8i8M6DPgWyR', 't': 'MHgxODVhZTVmMA=='},
+                              {'id': 'JPCV9j6K4VSg', 't': 'MHgyYzA4MGZkOQ=='},
+                              {'id': 'Hluz6mrkDEWe', 't': 'MHg3OWI0NzJhYw=='},
+                              {'id': 'dZzusTxg3PW5', 't': 'LTB4MjAwYmUxMDI='},
+                              {'id': 'zW05KRpJQOG9', 't': 'LTB4MzFkNmM4N2Y='}],
+                             [{'id': block['id'], 't': block['t']} for block in dp.blocks])
+        dp.validate_ids()
         self.assertEqual([], dp.set_text('').parse_document())
         with self.assertRaises(SplitterException):
             dp.set_text('```').parse_document()

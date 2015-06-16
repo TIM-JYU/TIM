@@ -1,9 +1,14 @@
 import re
 from contracts import contract
 from document.attributeparser import AttributeParser
+from document.randutils import hashfunc, random_id, is_valid_id
 
 
 class SplitterException(Exception):
+    pass
+
+
+class ValidationException(Exception):
     pass
 
 
@@ -59,18 +64,18 @@ class DocumentParser:
         self.doc_text = doc_text
         return self
 
-    def add_missing_attributes(self, hash_func, id_func):
+    def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id):
         for r in self.blocks:
             r['t'] = hash_func(r['md'])
             if not r.get('id'):
-                r['id'] = id_func(r['md'])
+                r['id'] = id_func()
 
-    def validate_ids(self, id_func):
+    def validate_ids(self, id_validator_func=is_valid_id):
         for r in self.blocks:
             curr_id = r.get('id')
             if curr_id is not None:
-                if curr_id != id_func(r['md']):
-                    return False
+                if not id_validator_func(curr_id):
+                    raise ValidationException('Invalid paragraph id: ' + curr_id)
         return True
 
     def parse_document(self):
