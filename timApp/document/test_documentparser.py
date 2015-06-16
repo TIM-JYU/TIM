@@ -1,5 +1,5 @@
 import unittest
-from document.documentparser import DocumentParser
+from document.documentparser import DocumentParser, SplitterException
 
 
 class DocumentParserTest(unittest.TestCase):
@@ -34,6 +34,14 @@ headerpar 4
 text 3
 
 text 4
+
+``` {atom=true}
+# Test1
+
+# Test2
+
+# Test3
+```
 """
         )
         result = dp.parse_document()
@@ -43,9 +51,12 @@ text 4
                               {'md': '# Header 1\n\nheaderpar 1\n\nheaderpar 2\n'},
                               {'md': '# Header 2\n\nheaderpar 3\n\nheaderpar 4\n'},
                               {'md': 'text 3\n\ntext 4\n',
-                               'classes': ['someClass']}], result)
+                               'classes': ['someClass']},
+                              {'md': '# Test1\n\n# Test2\n\n# Test3'}], result)
 
         self.assertEqual([], dp.set_text('').parse_document())
+        with self.assertRaises(SplitterException):
+            dp.set_text('```').parse_document()
 
 
 if __name__ == '__main__':

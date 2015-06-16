@@ -121,14 +121,21 @@ class DocumentParser:
         start_line = doc.get_line_and_advance()
         block_lines = []
         tokens, start = AttributeParser(start_line).get_attributes()
-        block_lines.append(start_line[:start].strip())
+        is_atom = tokens.get('atom', False)
+        if is_atom:
+            tokens.pop('atom')
+        else:
+            first_line = start_line[:start].strip()
+            block_lines.append(first_line)
         while True:
-            line = doc.get_line_and_advance()
-            block_lines.append(line)
-            if line.startswith(code_block_marker):
-                break
             if not doc.has_more_lines():
                 raise SplitterException("Missing end of code block")
+            line = doc.get_line_and_advance()
+            if line.startswith(code_block_marker):
+                break
+            block_lines.append(line)
+        if not is_atom:
+            block_lines.append(line)
         tokens['md'] = '\n'.join(block_lines)
         return tokens
 
