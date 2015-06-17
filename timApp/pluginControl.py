@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
+"""Functions for dealing with plugin paragraphs."""
 from collections import OrderedDict
 import json
-import html
 import re
 
-from bs4 import BeautifulSoup
 import yaml
 from yaml import CLoader
 import yaml.parser
@@ -26,18 +25,19 @@ def correct_yaml(text):
 
     :param text: text to convert proper yaml
     :return: text that is proper yaml
+    :type text: str
     """
     lines = text.splitlines()
     s = ""
     p = re.compile("^[^ :]*:[^ ]")  # kissa:istuu
     pm = re.compile("^[^ :]*:[ ]+\|[^ a-zA-Z]+$")  # program: ||| or  program: |!!!
     multiline = False
+    end_str = ''
     for line in lines:
         if p.match(line) and not multiline:
             line = line.replace(':', ': ', 1)
         if pm.match(line):
             multiline = True
-            n = 0
             line, end_str = line.split("|", 1)
             s = s + line + "|\n"
             continue
@@ -51,6 +51,11 @@ def correct_yaml(text):
 
 
 def parse_yaml(text):
+    """
+
+    :type text: str
+    :return:
+    """
     if len(text) == 0:
         return False
     try:
@@ -69,67 +74,41 @@ def parse_yaml(text):
         return "Missing identifier"
 
 
-def parse_plugin_values(node):
+def parse_plugin_values(par):
     """
 
-    :type node: DocParagraph
-    :param nodes:
+    :type par: DocParagraph
     :return:
     :rtype: dict
     """
-    plugins = []
-    name = node.attrs['plugin']
-    if not len(node.md):
-        return plugins
     try:
-        # TODO
-        values = parse_yaml(node.md)
+        # We get the yaml str by removing the first and last lines of the paragraph markup
+        yaml_str = par.md[par.md.index('\n') + 1:par.md.rindex('\n')]
+        values = parse_yaml(yaml_str)
         if type(values) is str:
-            plugins.append({"plugin": name, 'error': "YAML is malformed: " + values})
+            return {'error': "YAML is malformed: " + values}
         else:
-            plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
+            return {"markup": values}
     except Exception as e:
-        plugins.append({"plugin": name, 'error': "Unknown error: " + str(e)})
-
-    return plugins
-
-
-def find_plugins(html_str):
-    if not html_str.startswith('<pre id="'):
-        return []
-    if not ' plugin="' in html_str:
-        return []
-
-    tree = BeautifulSoup(html_str, "lxml")
-    pres = tree.find_all('pre')
-    plugins = []
-    for pre in pres:
-        if pre.has_attr('plugin'):
-            plugins.append(pre)
-    return plugins
-
-
-def get_block_yaml(block):
-    tree = BeautifulSoup(block)
-    values = None
-    for node in tree.find_all('pre'):
-        if len(node.text) > 0:
-            try:
-                values = parse_yaml(node.text) # yaml.load(node.text, Loader=CLoader)
-                if type(values) is str:
-                    print("Malformed yaml string ", values)
-                    return "YAMLERROR: Malformed string"
-            except Exception as e:
-                print("Malformed yaml string ", str(e))
-                return "YAMLERROR: Malformed string"
-    return values
+        return {'error': "Unknown error: " + str(e)}
 
 
 def get_error_html(plugin_name, message):
+    """
+
+    :type message: str
+    :type plugin_name: str
+    """
     return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
 
 
 def find_task_ids(blocks, doc_id):
+    """
+
+    :rtype: list[str]
+    :type doc_id: int
+    :type blocks: list[DocParagraph]
+    """
     task_ids = []
     for idx, block in enumerate(blocks):
         task_ids.append("{}.{}".format(doc_id, block.attrs['taskId']))
@@ -137,6 +116,11 @@ def find_task_ids(blocks, doc_id):
 
 
 def try_load_json(json_str):
+    """
+
+    :rtype : dict|list
+    :type json_str: str
+    """
     try:
         if json_str is not None:
             return json.loads(json_str)
@@ -146,9 +130,8 @@ def try_load_json(json_str):
 
 
 def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True):
-    """ "Pluginifies" or sanitizes the specified HTML blocks by inspecting each block
-    for plugin markers, calling the corresponding plugin route if such is found. The input
-    HTML is assumed to be sanitized.
+    """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
+        plugin route for each plugin paragraph. The input HTML is assumed to be sanitized.
 
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param blocks: A list of DocParagraphs to be processed.
@@ -166,28 +149,26 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     if custom_state is not None:
         if len(blocks) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
-    final_html_blocks = []
     plugins = {}
     state_map = {}
     for idx, block in enumerate(blocks):
         if sanitize:
             block.html = sanitize_html(block.html)
         if 'taskId' in block.attrs:
-            plugin_info = parse_plugin_values(block)
-            vals = plugin_info[0]
-            plugin_name = vals['plugin']
+            vals = parse_plugin_values(block)
+            plugin_name = block.attrs['plugin']
             if 'error' in vals:
-                final_html_blocks.append({'html': '<div class="pluginError">'
-                                                  'Error(s) occurred while rendering plugin.'
-                                                  '</div>'
-                                                  + get_error_html(plugin_name, vals['error'])
-                                          })
+                block.html = ('<div class="pluginError">'
+                              'Error(s) occurred while rendering plugin.'
+                              '</div>'
+                              + get_error_html(plugin_name, vals['error']))
+
                 continue
 
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
             vals['markup']["user_id"] = user
-            task_id = "{}.{}".format(doc_id, vals['taskId'])
+            task_id = "{}.{}".format(doc_id, block.attrs['taskId'])
 
             if custom_state is not None:
                 state = try_load_json(custom_state)
@@ -195,11 +176,6 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
                 state = None
             plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
-
-            final_html_blocks.append({'html': '',  # This will be filled later
-                                      'task_id': task_id})
-        else:
-            final_html_blocks.append({'html': block})
 
     if custom_state is None and user_id != 0:
         answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
@@ -217,14 +193,14 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
-                final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
+                blocks[idx].html = get_error_html(plugin_name, str(e))
             continue
         try:
             reqs = json.loads(resp)
         except ValueError:
             for idx in plugin_block_map.keys():
-                final_html_blocks[idx]['html'] = get_error_html(plugin_name,
-                                                                'Failed to parse JSON from plugin reqs route.')
+                blocks[idx].html = get_error_html(plugin_name,
+                                                  'Failed to parse JSON from plugin reqs route.')
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -254,62 +230,41 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
             except PluginException as e:
                 for idx in plugin_block_map.keys():
-                    final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
+                    blocks[idx].html = get_error_html(plugin_name, str(e))
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError:
                 for idx in plugin_block_map.keys():
-                    final_html_blocks[idx]['html'] = get_error_html(plugin_name,
-                                                                    'Failed to parse plugin response from reqs route.')
+                    blocks[idx].html = get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.')
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
-                                                                                         plugin_url,
-                                                                                         html)
+                blocks[idx].html = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
+                                                                                   plugin_url,
+                                                                                   html)
         else:
             for idx, val in plugin_block_map.items():
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
                 except PluginException as e:
-                    final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
+                    blocks[idx].html = get_error_html(plugin_name, str(e))
                     continue
-                final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
-                                                                                         plugin_url,
-                                                                                         html)
+                blocks[idx].html = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                                                                                   plugin_url,
+                                                                                   html)
 
-    return final_html_blocks, js_paths, css_paths, modules
+    return blocks, js_paths, css_paths, modules
 
 
-def make_browse_buttons(user_id, task_id, answer_db):
-    states = answer_db.getAnswers(user_id, task_id)
-    if len(states) > 1:
-        formatted = ""
-        content_obj = json.loads(states[len(states)-1]["content"])
-        if isinstance(content_obj, dict):
-            for key, val in content_obj.items():
-                formatted += key + "\n---------------\n" + str(val) + "\n\n"
-        elif isinstance(content_obj, list):
-            for v in content_obj:
-                formatted += "List element:" + "\n---------------\n" + str(v) + "\n\n"
-        else:
-            formatted = str(content_obj)
-        first = "<br/>First answer:<br/><pre>{}</pre>".format(html.escape(formatted))
-    else:
-        first = ""
-    return """
-       <div class="answerbuttons">
-           <input type="button" value="<-">
-           {} / {}
-           <input type="button" value="->">
-           {}
-       </div>
-    """.format(len(states), len(states), first)
-
-# p is json of plugin requirements of the form:
-# {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
 def plugin_deps(p):
+    """
+
+    :param p: is json of plugin requirements of the form:
+              {"js": ["js.js"], "css":["css.css"], "angularModule":["module"]}
+    :rtype : tuple[list,list,list]
+    :type p: dict
+    """
     js_files = []
     modules = []
     css_files = []
