@@ -13,6 +13,7 @@ import yaml.scanner
 from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
 from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
+from document.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
 
 
@@ -50,9 +51,8 @@ def correct_yaml(text):
 
 
 def parse_yaml(text):
-    values = {}
-
-    if len(text) == 0: return False
+    if len(text) == 0:
+        return False
     try:
         text = correct_yaml(text)
         values = yaml.load(text, Loader=CLoader)
@@ -67,49 +67,32 @@ def parse_yaml(text):
             return values
     except KeyError:
         return "Missing identifier"
-    return "Unknown error"
 
 
-def parse_plugin_values(nodes):
+def parse_plugin_values(node):
+    """
+
+    :type node: DocParagraph
+    :param nodes:
+    :return:
+    :rtype: dict
+    """
     plugins = []
-    for node in nodes:
-        values = {}
-        name = node['plugin']
-
-        if not len(node.text): continue
-        try:
-            values = parse_yaml(node.text)
-            if type(values) is str:
-                plugins.append({"plugin": name, 'error': "YAML is malformed: " + values})
-            else:
-                plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
-        except Exception as e:
-            plugins.append({"plugin": name, 'error': "Unknown error: " + str(e)})
+    name = node.attrs['plugin']
+    if not len(node.md):
+        return plugins
+    try:
+        # TODO
+        values = parse_yaml(node.md)
+        if type(values) is str:
+            plugins.append({"plugin": name, 'error': "YAML is malformed: " + values})
+        else:
+            plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
+    except Exception as e:
+        plugins.append({"plugin": name, 'error': "Unknown error: " + str(e)})
 
     return plugins
 
-    
-'''
-def parse_plugin_values(nodes):
-    plugins = []
-    for node in nodes:
-        values = {}
-        name = node['plugin']
-
-        if len(node.text) > 0:
-            try:
-                values = yaml.load(node.text, Loader=CLoader)
-            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
-                plugins.append({"plugin": name, 'error': "YAML is malformed"})
-        try:
-            if type(values) is str:
-                plugins.append({"plugin": name, 'error': "YAML is malformed"})
-            else:
-                plugins.append({"plugin": name, "markup": values, "taskId": node['id']})
-        except KeyError:
-            plugins.append({"plugin": name, 'error': "Missing identifier"})
-    return plugins
-''' 
 
 def find_plugins(html_str):
     if not html_str.startswith('<pre id="'):
@@ -141,43 +124,15 @@ def get_block_yaml(block):
                 return "YAMLERROR: Malformed string"
     return values
 
-    
-'''
-def get_block_yaml(block):
-    tree = BeautifulSoup(block)
-    values = None
-    for node in tree.find_all('pre'):
-        if len(node.text) > 0:
-            try:
-                values = yaml.load(node.text, Loader=CLoader)
-            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
-                print("Malformed yaml string")
-                return "YAMLERROR: Malformed string"
-    return values
-'''
 
 def get_error_html(plugin_name, message):
     return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
 
+
 def find_task_ids(blocks, doc_id):
     task_ids = []
-    final_html_blocks = []
-    plugins = {}
     for idx, block in enumerate(blocks):
-        found_plugins = find_plugins(block)
-        if len(found_plugins) > 0:
-            plugin_info = parse_plugin_values(found_plugins)
-            error_messages = []
-            for vals in plugin_info:
-                plugin_name = vals['plugin']
-                if 'error' in vals:
-                    error_messages.append(get_error_html(plugin_name, vals['error']))
-                    continue
-
-                if not plugin_name in plugins:
-                    plugins[plugin_name] = OrderedDict()
-                task_ids.append("{}.{}".format(doc_id, vals['taskId']))
-    
+        task_ids.append("{}.{}".format(doc_id, block.attrs['taskId']))
     return task_ids
 
 
@@ -196,7 +151,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     HTML is assumed to be sanitized.
 
     :param sanitize: Whether the blocks should be sanitized before processing.
-    :param blocks: A list of HTML blocks to be processed.
+    :param blocks: A list of DocParagraphs to be processed.
     :param user: The current user's username.
     :param answer_db: A reference to the answer database.
     :param doc_id: The document id.
@@ -204,6 +159,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
                          If this parameter is specified, the expression len(blocks) MUST be 1.
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
+
+    :type blocks: list[DocParagraph]
     """
 
     if custom_state is not None:
@@ -214,11 +171,9 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     state_map = {}
     for idx, block in enumerate(blocks):
         if sanitize:
-            block = sanitize_html(block)
-        found_plugins = find_plugins(block)
-        if len(found_plugins) > 0:
-            assert len(found_plugins) == 1
-            plugin_info = parse_plugin_values(found_plugins)
+            block.html = sanitize_html(block.html)
+        if 'taskId' in block.attrs:
+            plugin_info = parse_plugin_values(block)
             vals = plugin_info[0]
             plugin_name = vals['plugin']
             if 'error' in vals:
