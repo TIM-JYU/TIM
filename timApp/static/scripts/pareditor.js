@@ -53,12 +53,32 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.aceLoaded = function (editor) {
+                    var max = 50;
+                    if(typeof window.orientation !== 'undefined') max = 15;
                     $scope.editor = editor;
                     editor.renderer.setPadding(10, 10, 10, 10);
-                    editor.getSession().setMode("markdown");
+                    //editor.getSession().setMode("markdown");
                     editor.getSession().setUseWrapMode(false);
                     editor.getSession().setWrapLimitRange(0, 79);
-                    editor.setOptions({maxLines: 40, minLines: 3});
+                    editor.setOptions({
+                        maxLines: max,
+                        minLines: 3,
+                        autoScrollEditorIntoView: true,
+                        vScrollBarAlwaysVisible: true
+                    });
+
+                    editor.commands.addCommand({
+                        name: 'saveFile',
+                        bindKey: {
+                            win: 'Ctrl-S',
+                            mac: 'Command-S',
+                            sender: 'editor|cli'
+                        },
+                        exec: function (env, args, request) {
+                            $scope.saveClicked();
+                        }
+                    });
+
                     if ($scope.initialTextUrl) {
                         editor.getSession().setValue('Loading text...');
                         $http.get($scope.initialTextUrl).

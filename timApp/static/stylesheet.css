@@ -819,7 +819,6 @@ a.anchor:hover {
 	border-radius: 5px;
 	text-align: left;
     resize: both;
-    max-height: 50vh;
 }
 
 .editorArea {
