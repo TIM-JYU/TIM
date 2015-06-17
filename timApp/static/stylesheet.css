@@ -346,7 +346,7 @@ ul ul  ul, ol ol ol {
 
 .previewcontent {
     clear: both;
-    border: 1px solid black;
+    border: 1px solid rgb(183, 183, 183);
     border-radius: 5px;
     padding-top: 0.0em;
     margin-top: 5px;
@@ -381,7 +381,7 @@ ul ul  ul, ol ol ol {
     position: absolute;
     left: -1.2em;
     z-index: 3;
-    width: 4em;
+    width: 3em;
     height: 100%;
     top: 0em;
 }
@@ -813,12 +813,19 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	width: 45em;
-	border: 1px solid;
-	padding: 15px 5px 5px 5px;
-	border-radius: 5px;
+	width: 100%;
+	padding: 5px 0px;
 	text-align: left;
     resize: both;
+    border-radius: 5px;
+}
+
+.editorContainer {
+	border-radius: 5px;
+    border: 1px solid rgb(183, 183, 183);
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .editorArea {
@@ -849,8 +856,8 @@ a.anchor:hover {
     background: white;
     border-left: 1px solid rgb(183, 183, 183);
     border-right: 1px solid rgb(183, 183, 183);
-    border-bottom-right-radius: 3px;
-    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 
 .extraButtonArea.hidden {
@@ -875,8 +882,8 @@ a.anchor:hover {
     list-style: none;
     border: 1px solid rgb(183, 183, 183);
     border-bottom: none;
-    border-top-right-radius: 3px;
-    border-top-left-radius: 3px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
     margin: 0;
     background: rgb(246, 246, 246);
 }
@@ -1565,9 +1572,7 @@ img.console {
 .editorArea {
     z-index: 110;
     position: absolute;
-    width: 102%;
     top: 0em;
-    left: -1.5em;
     min-height: 6.5em;
     border-radius: 5px;
     background: #e0e0e0;
@@ -1580,8 +1585,6 @@ img.console {
     font-size: 14px;
     line-height: 1.1;
     direction: ltr;
-    width: 98%;
-    /* margin-left: 3.8em; */
 }
 
 .timButton, .editorButton {

@@ -53,17 +53,21 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.aceLoaded = function (editor) {
-                    var max = 50;
-                    if ('ontouchstart' in window || navigator.msMaxTouchPoints) max = 15;
-
                     $scope.editor = editor;
+                    var max = 50;
+                    if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
+                        var line = editor.renderer.lineHeight;
+                        var height = $(window).height();
+                        max = Math.floor((height / 2) / line);
+                    }
+
                     editor.renderer.setPadding(10, 10, 10, 10);
-                    //editor.getSession().setMode("markdown");
+                    editor.getSession().setMode("markdown");
                     editor.getSession().setUseWrapMode(false);
                     editor.getSession().setWrapLimitRange(0, 79);
                     editor.setOptions({
                         maxLines: max,
-                        minLines: 3,
+                        minLines: 5,
                         autoScrollEditorIntoView: true,
                         vScrollBarAlwaysVisible: true
                     });
@@ -102,8 +106,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             link: function ($scope, $element, $attrs) {
 
                 $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function (event) {
-                    // The event object doesn't carry information about the fullscreen state of the browser,
-                    // but it is possible to retrieve it through the fullscreen API
                     var editor = document.getElementById("pareditor");
                     if (!document.fullscreenElement &&    // alternative standard method
                         !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
@@ -118,7 +120,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 var langTools = ace.require("ace/ext/language_tools");
                 langTools.setCompleters([]);
-                // $scope.editor.getSession().setMode("ace/mode/java");
                 $scope.editor.setOptions({enableBasicAutocompletion: true});
                 var pluginCompleter = {
                     getCompletions: function (editor, session, pos, prefix, callback) {
@@ -138,8 +139,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
                 langTools.addCompleter(pluginCompleter);
 
-                //var touchDevice = 'ontouchstart' in document.documentElement;
-                //var touchDevice = (typeof window.ontouchstart !== 'undefined');
                 var touchDevice = false;
 
                 $scope.wrapFn = function (func) {
@@ -375,9 +374,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     var div = document.getElementById("pareditor");
                     if (!document.fullscreenElement &&    // alternative standard method
                         !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-
-                        var div = document.getElementById("pareditor");
-                        div.setAttribute("style", "width: 100%; height: 100%; position: absolute; top: 0px; padding-top: 2em; background: rgb(224, 224, 224);");
+                        div.setAttribute("style", "width: 100%; height: 100%; position: absolute; top: 0px;" +
+                            "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
+                            "-moz-box-sizing: border-box; box-sizing: border-box;");
 
                         var requestMethod = div.requestFullScreen ||
                             div.webkitRequestFullscreen ||

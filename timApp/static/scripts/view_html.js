@@ -83,14 +83,15 @@ timApp.controller("ViewCtrl", [
 
         sc.defaults = [false, false, false, false, false];
 
-        sc.updateSelection = function(index) {
+        sc.updateSelection = function (index) {
             var selected = false;
             for (var i = 0; i < sc.defaults.length; i++) {
                 if (sc.defaults[i]) selected = true;
                 if (i != index) {
                     sc.defaults[i] = false;
                 }
-            };
+            }
+            ;
             if (selected) {
                 sc.defaultAction = sc.editorFunctions[index];
             } else {
@@ -401,13 +402,13 @@ timApp.controller("ViewCtrl", [
                     ab.prependTo($newpar);
                 }
                 /*
-                var editDiv = "";
-                if (sc.rights.editable)
-                    editDiv = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
-                */
+                 var editDiv = "";
+                 if (sc.rights.editable)
+                 editDiv = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
+                 */
                 $par.after($newpar.append($("<div>",
-                    {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
-                        $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
+                        {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
+                    $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
 
                 if (extraData.tags) {
                     if (extraData.tags['markread']) {
@@ -581,6 +582,9 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
             }
+            if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
+                coords = {left: 0, top: 0};
+            };
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
             $actionDiv.attr('tim-draggable-fixed', '');
