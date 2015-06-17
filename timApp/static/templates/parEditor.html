@@ -5,7 +5,7 @@
             <li class="tab"><a ng-click="tabClicked($event, 'styleButtons')">Style</a></li>
             <li class="tab"><a ng-click="tabClicked($event, 'specialButtons')">Special characters</a></li>
             <li class="tab"><a ng-click="tabClicked($event, 'texButtons')">TeX</a></li>
-            <li class="tab"><a ng-click="tabClicked($event, 'pluginButtons')">Plugins</a></li>
+            <li class="tab" ng-show="options.showPlugins"><a ng-click="tabClicked($event, 'pluginButtons')">Plugins</a></li>
             <li class="tab" ng-show="options.showImageUpload"><a ng-click="tabClicked($event, 'uploadButtons')">Upload
                 file/image</a>
             </li>

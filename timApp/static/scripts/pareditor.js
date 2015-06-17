@@ -117,6 +117,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.outofdate = false;
                 $scope.parCount = 0;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
+                var snippetManager = ace.require("ace/snippets").snippetManager;
 
                 var langTools = ace.require("ace/ext/language_tools");
                 langTools.setCompleters([]);
@@ -214,12 +215,27 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.boldClicked = function () {
+                    if (!$scope.editor.getSelection().$isEmpty) {
+                        $scope.selectWord();
+                    }
                     snippetManager.insertSnippet($scope.editor, "**${0:$SELECTION}**");
                 };
 
                 $scope.italicClicked = function () {
+                    if (!$scope.editor.getSelection().$isEmpty) {
+                        $scope.selectWord();
+                    }
                     snippetManager.insertSnippet($scope.editor, "*${0:$SELECTION}*");
                 };
+
+                $scope.selectWord = function () {
+                    var cursor = $scope.editor.getCursorPosition();
+                    var wordrange = $scope.editor.getSession().getAWordRange(cursor.row, cursor.column);
+                    var linelength = $scope.editor.getSession().getLine(cursor.row).length;
+                    if (wordrange.end.column < linelength)
+                        wordrange.end.column -= 1;
+                    $scope.editor.selection.setRange(wordrange);
+                }
 
 
                 $scope.leftClicked = function () {

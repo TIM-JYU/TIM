@@ -847,6 +847,7 @@ a.anchor:hover {
 
 .editorButton {
     margin-bottom: 0 !important;
+    font-size: 14px !important;
     height: 35px;
 }
 
@@ -1606,14 +1607,18 @@ img.console {
 .actionButtons {
     display: table;
     position: absolute;
+    white-space: nowrap;
     border-radius: 3px;
     padding: 1em;
     margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
-    width: 200px;
     min-height: 50px;
     left: 103%;
+}
+
+.actionButtonRow {
+    display: table-row;
 }
 
 .par.selected {

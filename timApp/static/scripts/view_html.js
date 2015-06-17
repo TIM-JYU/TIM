@@ -70,6 +70,7 @@ timApp.controller("ViewCtrl", [
         sc.editing = false;
         var NOTE_EDITOR_CLASS = "editorArea";
         var DEFAULT_CHECKBOX_CLASS = "defaultCheckbox";
+        var ACTION_BUTTON_ROW_CLASS = "actionButtonRow";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
         var EDITOR_CLASS = "editorArea";
@@ -162,6 +163,7 @@ timApp.controller("ViewCtrl", [
                 "options": JSON.stringify({
                     showDelete: options.showDelete,
                     showImageUpload: true,
+                    showPlugins: true,
                     destroyAfterSave: true,
                     tags: [
                         {name: 'markread', desc: 'Mark as read'}
@@ -234,7 +236,8 @@ timApp.controller("ViewCtrl", [
                     }, data)),
                     "options": JSON.stringify({
                         showDelete: !options.isNew,
-                        showImageUpload: false,
+                        showImageUpload: true,
+                        showPlugins: false,
                         tags: [
                             {name: 'difficult', desc: 'The text is difficult to understand'},
                             {name: 'unclear', desc: 'The text is unclear'}
@@ -523,7 +526,7 @@ timApp.controller("ViewCtrl", [
             //var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
             var $actionDiv = $("<div>", {class: 'actionButtons'});
             if (sc.rights.can_comment) {
-                var $span = $("<span>");
+                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
                 $span.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
                 $span.append($("<input>", {
                     class: DEFAULT_CHECKBOX_CLASS,
@@ -534,7 +537,7 @@ timApp.controller("ViewCtrl", [
                 $actionDiv.append($span);
             }
             if (sc.rights.editable) {
-                var $span = $("<span>");
+                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
                 $span.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
                 $span.append($("<input>", {
                     class: DEFAULT_CHECKBOX_CLASS,
@@ -544,7 +547,7 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
 
-                var $span = $("<span>");
+                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
                 $span.append($("<button>", {
                     class: PAR_ADD_BUTTON_CLASS + ' above',
                     text: 'Add paragraph above',
@@ -558,7 +561,7 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
 
-                var $span = $("<span>");
+                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
                 $span.append($("<button>", {
                     class: PAR_ADD_BUTTON_CLASS + ' below',
                     text: 'Add paragraph below',
@@ -572,7 +575,7 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
 
-                var $span = $("<span>");
+                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
                 $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
                 $span.append($("<input>", {
                     class: DEFAULT_CHECKBOX_CLASS,
