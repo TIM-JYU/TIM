@@ -54,7 +54,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.aceLoaded = function (editor) {
                     var max = 50;
-                    if(typeof window.orientation !== 'undefined') max = 15;
+                    if ('ontouchstart' in window || navigator.msMaxTouchPoints) max = 15;
+
                     $scope.editor = editor;
                     editor.renderer.setPadding(10, 10, 10, 10);
                     //editor.getSession().setMode("markdown");
