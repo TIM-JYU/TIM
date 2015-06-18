@@ -24,6 +24,10 @@ def getCurrentUserGroup():
 
 
 def getTimDb():
+    """
+
+    :rtype : TimDb
+    """
     if not hasattr(g, 'timdb'):
         g.timdb = TimDb(db_path=current_app.config['DATABASE'],
                         files_root_path=current_app.config['FILES_PATH'],

@@ -119,12 +119,12 @@ timApp.controller("ViewCtrl", [
             sc.$broadcast('userChanged', {user: user});
         };
 
-        sc.getParIndex = function ($par) {
-            return $par.index() + sc.startIndex;
+        sc.getParId = function ($par) {
+            return $par.attr("id");
         };
 
-        sc.getElementByParIndex = function (index) {
-            return $("#pars").children().eq(index - sc.startIndex);
+        sc.getElementByParId = function (id) {
+            return $("#" + id);
         };
 
         sc.toggleParEditor = function ($par, options) {
@@ -134,7 +134,7 @@ timApp.controller("ViewCtrl", [
             } else {
                 url = '/postParagraph/';
             }
-            var par_id = sc.getParIndex($par);
+            var par_id = sc.getParId($par);
             var attrs = {
                 "save-url": url,
                 "extra-data": JSON.stringify({
@@ -204,7 +204,7 @@ timApp.controller("ViewCtrl", [
                     return;
                 }
             }
-            var par_id = sc.getParIndex($par),
+            var par_id = sc.getParId($par),
                 attrs = {
                     "save-url": url,
                     "extra-data": JSON.stringify(angular.extend({
@@ -369,7 +369,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.handleCancel = function (extraData) {
-            var $par = sc.getElementByParIndex(extraData.par);
+            var $par = sc.getElementByParId(extraData.par);
             if ($par.hasClass("new")) {
                 $par.remove();
             }
@@ -377,19 +377,19 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.handleDelete = function (data, extraData) {
-            var $par = sc.getElementByParIndex(extraData.par);
+            var $par = sc.getElementByParId(extraData.par);
             http.defaults.headers.common.Version = data.version;
             $par.remove();
             sc.editing = false;
         };
 
         sc.addSavedParToDom = function (data, extraData) {
-            var $par = sc.getElementByParIndex(extraData.par),
+            var $par = sc.getElementByParId(extraData.par),
                 len = data.texts.length;
             http.defaults.headers.common.Version = data.version;
             for (var i = len - 1; i >= 0; i--) {
                 var html = data.texts[i].html;
-                if ('task_id' in data.texts[i]) {
+                if ('taskId' in data.texts[i].attrs) {
                     html = $compile(html)(sc);
                 }
                 var $newpar = $("<div>", {class: "par"})
@@ -401,8 +401,8 @@ timApp.controller("ViewCtrl", [
                         readClass = "modified";
                     }
                 }
-                if ('task_id' in data.texts[i]) {
-                    var ab = $('<answerbrowser>').attr('task-id', data.texts[i].task_id);
+                if ('taskId' in data.texts[i].attrs) {
+                    var ab = $('<answerbrowser>').attr('task-id', data.texts[i].attrs.taskId);
                     $compile(ab[0])(sc);
                     ab.prependTo($newpar);
                 }
@@ -415,7 +415,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.onClick(".readline", function ($this, e) {
-            var par_id = sc.getParIndex($this.parents('.par'));
+            var par_id = sc.getParId($this.parents('.par'));
             var oldClass = $this.attr("class");
             $this.attr("class", "readline read");
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())

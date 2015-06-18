@@ -3,7 +3,6 @@ import imghdr
 import io
 import re
 import posixpath
-from datetime import timedelta
 
 from flask import Flask, Blueprint
 from flask import stream_with_context
@@ -246,33 +245,6 @@ def getFolders():
 
     return jsonResponse(allowedFolders)
 
-@app.route("/getJSON/<int:doc_id>/")
-def getJSON(doc_id):
-    timdb = getTimDb()
-    verifyViewAccess(doc_id)
-    try:
-        texts = timdb.documents.getDocumentBlocks(getNewest(doc_id))
-        doc = timdb.documents.getDocument(doc_id.id)
-        return jsonResponse({"name" : doc['name'], "text" : texts})
-    except IOError as err:
-        print(err)
-        return "No data found"
-
-@app.route("/getJSON-HTML/<int:doc_id>")
-def getJSON_HTML(doc_id):
-    timdb = getTimDb()
-    verifyViewAccess(doc_id)
-    try:
-        newest = getNewest(doc_id)
-        blocks = timdb.documents.getDocumentAsHtmlBlocks(newest)
-        doc = timdb.documents.getDocument(doc_id)
-        return jsonResponse({"name" : doc['name'], "text" : blocks})
-    except ValueError as err:
-        print(err)
-        return "[]"
-    except TimDbException as err:
-        print(err)
-        return "[]"
 
 def createItem(itemName, itemType, createFunction):
     if not loggedIn():
@@ -361,8 +333,9 @@ def postNote():
     verifyCommentRight(doc_id)
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, access, tags)
-    #TODO: Handle error.
+    # TODO: Fix parameters
+    timdb.notes.addNote(group_id, doc_id, paragraph_id, noteText, access, tags)
+    # TODO: Handle error.
     return "Success"
 
 @app.route("/editNote", methods=['POST'])
@@ -372,7 +345,7 @@ def editNote():
     group_id = getCurrentUserGroup()
     doc_id = int(jsondata['docId'])
     doc_ver = request.headers.get('Version')
-    paragraph_id = int(jsondata['par'])
+    paragraph_id = jsondata['par']
     noteText = jsondata['text']
     access = jsondata['access']
     note_index = int(jsondata['note_index'])
@@ -382,11 +355,11 @@ def editNote():
         if sent_tags[tag]:
             tags.append(tag)
     timdb = getTimDb()
-
+    # TODO: Fix parameters
     if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
-
+    # TODO: Fix parameters
     timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, access, tags)
     return "Success"
 
@@ -399,11 +372,11 @@ def deleteNote():
     paragraph_id = int(jsondata['par'])
     note_index = int(jsondata['note_index'])
     timdb = getTimDb()
-
+    # TODO: Fix parameters
     if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
-
+    # TODO: Fix parameters
     timdb.notes.deleteNote(doc_id, paragraph_id, note_index)
     return "Success"
 
@@ -413,6 +386,7 @@ def getNotes(doc_id):
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    # TODO: Fix parameters
     notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
     for note in notes:
         note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
@@ -428,6 +402,7 @@ def getReadParagraphs(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    # TODO: Fix parameters
     readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
     for r in readings:
         r.pop('doc_ver', None)
@@ -443,6 +418,7 @@ def setReadParagraph(doc_id, specifier):
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
     if len(blocks) <= specifier:
         return jsonResponse({'error' : 'Invalid paragraph specifier.'}, 400)
+    # TODO: Fix parameters
     timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
     return "Success"
 
@@ -455,6 +431,7 @@ def setAllAsRead(doc_id):
     verify_document_version(doc_id, version)
     blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
     doc_ver = timdb.documents.getNewestVersionHash(doc_id)
+    # TODO: Fix parameters
     timdb.readings.setAllAsRead(getCurrentUserGroup(), doc_id, doc_ver, len(blocks))
     return "Success"
 

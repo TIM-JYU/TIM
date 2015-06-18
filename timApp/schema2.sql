@@ -108,7 +108,7 @@ CREATE TABLE Block (
 id INTEGER NOT NULL,
 latest_revision_id INTEGER,
 type_id INTEGER NOT NULL,
-description VARCHAR(100), -- better name would be: tag
+description VARCHAR(100),
 created TIMESTAMP,
 modified TIMESTAMP,
 UserGroup_id INTEGER NOT NULL,
@@ -216,58 +216,31 @@ CONSTRAINT BlockEditAccess_id
 )
 ;
 
-CREATE TABLE ParMappings(
-doc_id INTEGER NOT NULL,
-doc_ver INTEGER NOT NULL,
-par_index INTEGER NOT NULL,
-new_ver INTEGER NULL,
-new_index INTEGER NULL,
-modified BOOLEAN NULL,
-
-CONSTRAINT ParMappings_PK
-	PRIMARY KEY (doc_id, doc_ver, par_index)
-)
-;
-
 
 CREATE TABLE UserNotes(
-UserGroup_id	INTEGER NOT NULL,
+id INTEGER NOT NULL,
+UserGroup_id INTEGER NOT NULL,
 doc_id INTEGER NOT NULL,
-doc_ver INTEGER NOT NULL,
-par_index INTEGER NOT NULL,
-note_index INTEGER NOT NULL,
+par_id TEXT NOT NULL,
+par_hash TEXT NOT NULL,
 content VARCHAR(255) NOT NULL,
 created TIMESTAMP NOT NULL,
-modified TIMESTAMP NULL,
+modified TIMESTAMP,
 access VARCHAR(20) NOT NULL,
 tags VARCHAR(20) NOT NULL,
-deprecated BOOLEAN,
 
 CONSTRAINT UserNotes_PK
-	PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index, note_index),
-
-CONSTRAINT UserNotes_id
-	FOREIGN KEY (doc_id, doc_ver, par_index)
-	REFERENCES ParMappings (doc_id, doc_ver, par_index)
-		ON DELETE CASCADE
-		ON UPDATE RESTRICT
+	PRIMARY KEY (id)
 );
 
 
 CREATE TABLE ReadParagraphs(
 UserGroup_id	INTEGER NOT NULL,
 doc_id INTEGER NOT NULL,
-doc_ver INTEGER NOT NULL,
-par_index INTEGER NOT NULL,
+par_id INTEGER NOT NULL,
+par_hash TEXT NOT NULL,
 timestamp TIMESTAMP NOT NULL,
-deprecated BOOLEAN,
 
 CONSTRAINT ReadParagraphs_PK
-	PRIMARY KEY (UserGroup_id, doc_id, doc_ver, par_index),
-
-CONSTRAINT ReadParagraphs_id
-	FOREIGN KEY (doc_id, doc_ver, par_index)
-	REFERENCES ParMappings (doc_id, doc_ver, par_index)
-		ON DELETE CASCADE
-		ON UPDATE RESTRICT
+	PRIMARY KEY (UserGroup_id, doc_id, par_id)
 );

@@ -25,7 +25,17 @@ TABLE_NAMES = ['BlockEditAccess',
 
 
 class TimDb(object):
-    """Handles saving and retrieving information from TIM database."""
+    """Handles saving and retrieving information from TIM database.
+
+    :type readings: Readings
+    :type notes: Notes
+    :type users: Users
+    :type images: Images
+    :type documents: Documents
+    :type answers: Answers
+    :type folders: Folders
+    :type db: sqlite3.Connection
+    """
 
     @contract
     def __init__(self, db_path: 'str', files_root_path: 'str', current_user_name='Anonymous'):

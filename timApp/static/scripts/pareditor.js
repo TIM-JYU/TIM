@@ -36,7 +36,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                             for (var i = 0; i < len; i++) {
                                 var html = data.texts[i].html;
-                                if ('task_id' in data.texts[i]) {
+                                if ('task_id' in data.texts[i].attrs) {
                                     html = $compile(html)($scope);
                                 }
                                 $previewDiv.append(angular.element("<div>", {class: "par"})
