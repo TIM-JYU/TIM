@@ -390,8 +390,12 @@ timApp.controller("ViewCtrl", [
                 if ('task_id' in data.texts[i]) {
                     html = $compile(html)(sc);
                 }
+
+                var $mathdiv = $.parseHTML(html);
+                sc.processMath($mathdiv[0]);
+
                 var $newpar = $("<div>", {class: "par"})
-                    .append($("<div>", {class: "parContent"}).html(html));
+                    .append($("<div>", {class: "parContent"}).append($mathdiv));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
@@ -420,7 +424,6 @@ timApp.controller("ViewCtrl", [
                         sc.markParRead($newread, par_id);
                     }
                 }
-                sc.processMath($newpar[0]);
             }
             $par.remove();
             sc.editing = false;
@@ -587,7 +590,8 @@ timApp.controller("ViewCtrl", [
             }
             if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
                 coords = {left: 0, top: 0};
-            };
+            }
+            ;
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
             $actionDiv.attr('tim-draggable-fixed', '');
