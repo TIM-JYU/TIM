@@ -314,7 +314,7 @@ class Documents(TimDbBase):
         """
         pars = self.getDocumentAsHtmlBlocks(document_id)
         for par in pars:
-            par.html = sanitize_html(par.html)
+            par.setHtml(sanitize_html(par.getHtml()))
         return pars
 
     @contract

@@ -83,7 +83,8 @@ def parse_plugin_values(par):
     """
     try:
         # We get the yaml str by removing the first and last lines of the paragraph markup
-        yaml_str = par.md[par.md.index('\n') + 1:par.md.rindex('\n')]
+        par_md = par.getMarkdown()
+        yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
         values = parse_yaml(yaml_str)
         if type(values) is str:
             return {'error': "YAML is malformed: " + values}
@@ -111,7 +112,7 @@ def find_task_ids(blocks, doc_id):
     """
     task_ids = []
     for idx, block in enumerate(blocks):
-        task_ids.append("{}.{}".format(doc_id, block.attrs['taskId']))
+        task_ids.append("{}.{}".format(doc_id, block.getAttrs()['taskId']))
     return task_ids
 
 
@@ -153,12 +154,12 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     state_map = {}
     for idx, block in enumerate(blocks):
         if sanitize:
-            block.html = sanitize_html(block.html)
-        if 'taskId' in block.attrs:
+            block.setHtml(sanitize_html(block.getHtml()))
+        if 'taskId' in block.getAttrs():
             vals = parse_plugin_values(block)
-            plugin_name = block.attrs['plugin']
+            plugin_name = block.getAttrs()['plugin']
             if 'error' in vals:
-                block.html = ('<div class="pluginError">'
+                block.setHtml('<div class="pluginError">'
                               'Error(s) occurred while rendering plugin.'
                               '</div>'
                               + get_error_html(plugin_name, vals['error']))
@@ -168,7 +169,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
             vals['markup']["user_id"] = user
-            task_id = "{}.{}".format(doc_id, block.attrs['taskId'])
+            task_id = "{}.{}".format(doc_id, block.getAttrs()['taskId'])
 
             if custom_state is not None:
                 state = try_load_json(custom_state)
@@ -193,14 +194,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
-                blocks[idx].html = get_error_html(plugin_name, str(e))
+                blocks[idx].setHtml(get_error_html(plugin_name, str(e)))
             continue
         try:
             reqs = json.loads(resp)
         except ValueError:
             for idx in plugin_block_map.keys():
-                blocks[idx].html = get_error_html(plugin_name,
-                                                  'Failed to parse JSON from plugin reqs route.')
+                blocks[idx].setHtml(get_error_html(plugin_name, 'Failed to parse JSON from plugin reqs route.'))
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -230,13 +230,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
             except PluginException as e:
                 for idx in plugin_block_map.keys():
-                    blocks[idx].html = get_error_html(plugin_name, str(e))
+                    blocks[idx].setHtml(get_error_html(plugin_name, str(e)))
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError:
                 for idx in plugin_block_map.keys():
-                    blocks[idx].html = get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.')
+                    blocks[idx].setHtml(get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.'))
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
@@ -248,11 +248,11 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
                 except PluginException as e:
-                    blocks[idx].html = get_error_html(plugin_name, str(e))
+                    blocks[idx].setHtml(get_error_html(plugin_name, str(e)))
                     continue
-                blocks[idx].html = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
-                                                                                   plugin_url,
-                                                                                   html)
+                blocks[idx].setHtml("<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                                                                                    plugin_url,
+                                                                                    html))
 
     return blocks, js_paths, css_paths, modules
 
