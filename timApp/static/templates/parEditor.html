@@ -27,7 +27,8 @@
             <button class="editorButton" title="Italic" ng-click="wrapFn(italicClicked)"><i>I</i></button>
             <button class="editorButton" title="Add link" ng-click="wrapFn(linkClicked)">Link</button>
             <button class="editorButton" title="Add image" ng-click="wrapFn(imageClicked)">Image</button>
-            <button class="editorButton" title="Code block" ng-click="wrapFn(codeClicked)">Code</button>
+            <button class="editorButton" title="Code" ng-click="wrapFn(codeClicked)">Code</button>
+            <button class="editorButton" title="Code block" ng-click="wrapFn(codeBlockClicked)">Code block</button>
             <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
             <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
         </div>
@@ -39,6 +40,7 @@
         </div>
         <div id="texButtons" class="extraButtonArea hidden">
             <button class="editorButton" ng-click="wrapFn(texClicked)">TeX equation</button>
+            <button class="editorButton" ng-click="wrapFn(texBlockClicked)">TeX block</button>
             <button class="editorButton" ng-click="wrapFn(indexClicked)">X&#x2099;</button>
             <button class="editorButton" ng-click="wrapFn(powerClicked)">X&#x207f;</button>
             <button class="editorButton" ng-click="wrapFn(squareClicked)">&#x221a;</button>

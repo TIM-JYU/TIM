@@ -832,8 +832,8 @@ a.anchor:hover {
     z-index: 10;
     position: absolute;
     width: 100%;
-    top: 0em;
-    left: 112%;
+    left: 0;
+    top: 0;
     min-height:6.5em;
     border-radius: 15px;
     padding: 0.5em; 
@@ -1614,7 +1614,6 @@ img.console {
     background-color: #f8f8ff;
     z-index: 100;
     min-height: 50px;
-    left: 103%;
 }
 
 .actionButtonRow {

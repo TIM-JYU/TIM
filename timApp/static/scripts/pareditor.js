@@ -275,6 +275,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.codeClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "`${0:$SELECTION}`");
+                };
+
+                $scope.codeBlockClicked = function () {
                     snippetManager.insertSnippet($scope.editor, "```\n${0:$SELECTION}\n```");
                 };
 
@@ -308,6 +312,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 //TEX
                 $scope.texClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "$${0:$SELECTION}$");
+                };
+
+                $scope.texBlockClicked = function () {
                     snippetManager.insertSnippet($scope.editor, "$$${0:$SELECTION}$$");
                 };
 
