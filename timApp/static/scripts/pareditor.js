@@ -117,7 +117,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.outofdate = false;
                 $scope.parCount = 0;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
-                var snippetManager = ace.require("ace/snippets").snippetManager;
 
                 var langTools = ace.require("ace/ext/language_tools");
                 langTools.setCompleters([]);
@@ -214,30 +213,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.editor.redo();
                 };
 
-                $scope.boldClicked = function () {
-                    if (!$scope.editor.getSelection().$isEmpty) {
-                        $scope.selectWord();
-                    }
-                    snippetManager.insertSnippet($scope.editor, "**${0:$SELECTION}**");
-                };
-
-                $scope.italicClicked = function () {
-                    if (!$scope.editor.getSelection().$isEmpty) {
-                        $scope.selectWord();
-                    }
-                    snippetManager.insertSnippet($scope.editor, "*${0:$SELECTION}*");
-                };
-
-                $scope.selectWord = function () {
-                    var cursor = $scope.editor.getCursorPosition();
-                    var wordrange = $scope.editor.getSession().getAWordRange(cursor.row, cursor.column);
-                    var linelength = $scope.editor.getSession().getLine(cursor.row).length;
-                    if (wordrange.end.column < linelength)
-                        wordrange.end.column -= 1;
-                    $scope.editor.selection.setRange(wordrange);
-                }
-
-
                 $scope.leftClicked = function () {
                     $scope.editor.navigateLeft(1);
                 };
@@ -254,8 +229,54 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.editor.navigateDown(1);
                 };
                 //Navigation
-
                 //Style
+
+                $scope.surroundClicked = function (str, func) {
+                    if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
+                        $scope.selectWord();
+                    }
+                    var text = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                    var surrounded = false;
+                    if (func) {
+                        surrounded = func();
+                    }
+                    else {
+                        surrounded = $scope.surroundedBy(str);
+                    }
+                    if (surrounded) {
+                        var range = $scope.editor.getSelectionRange();
+                        range.start.column -= str.length;
+                        range.end.column += str.length;
+                        $scope.editor.selection.setRange(range);
+                        snippetManager.insertSnippet($scope.editor, "${0:" + text + "}");
+                    } else {
+                        snippetManager.insertSnippet($scope.editor, str + "${0:$SELECTION}" + str);
+                    }
+                };
+
+                $scope.selectWord = function () {
+                    var cursor = $scope.editor.getCursorPosition();
+                    var wordrange = $scope.editor.getSession().getAWordRange(cursor.row, cursor.column);
+                    var word = ($scope.editor.session.getTextRange(wordrange));
+                    if (/^\s*$/.test(word)) return;
+                    var wordtrim = word.trim();
+                    var difference = word.length - wordtrim.length;
+                    wordrange.end.column -= difference;
+                    $scope.editor.selection.setRange(wordrange);
+                }
+
+                $scope.surroundedBy = function (string) {
+                    var range = $scope.editor.getSelectionRange();
+                    range.start.column -= string.length;
+                    range.end.column += string.length;
+                    var word = ($scope.editor.session.getTextRange(range));
+                    return (word.indexOf(string) === 0 && word.lastIndexOf(string) === (word.length - string.length));
+                };
+
+                $scope.surroundedByItalic = function () {
+                    return (($scope.surroundedBy('*') && !$scope.surroundedBy('**')) || $scope.surroundedBy('***'));
+                };
+
                 $scope.linkClicked = function () {
                     var selectedText = "Linkin osoite";
                     if (!$scope.editor.getSelection().$isEmpty)
@@ -272,10 +293,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
                     snippetManager.insertSnippet($scope.editor, "![${0:Kuvan teksti}](" + selectedText + ")");
                     //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
-                };
-
-                $scope.codeClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "`${0:$SELECTION}`");
                 };
 
                 $scope.codeBlockClicked = function () {
@@ -298,8 +315,21 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.editor.navigateLineEnd();
                     snippetManager.insertSnippet($scope.editor, "\n---\n");
                 };
-                //Style
 
+                $scope.headerClicked = function (head) {
+                    var cursor = $scope.editor.getCursorPosition();
+                    var line = $scope.editor.session.getLine(cursor.row);
+                    var range = $scope.editor.getSelection().getRange();
+                    range.start.column = 0;
+                    range.end.column = line.length;
+                    while (line.charAt(0) === '#')
+                        line = line.substr(1);
+                    line = line.trim();
+                    $scope.editor.selection.setRange(range);
+                    $scope.editor.insert(head + ' ' + line);
+                    if (!touchDevice) $scope.editor.focus();
+                };
+                //Style
                 //Special characters
 
                 $scope.charClicked = function ($event) {
@@ -309,7 +339,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 //Special characters
-
                 //TEX
                 $scope.texClicked = function () {
                     snippetManager.insertSnippet($scope.editor, "$${0:$SELECTION}$");
@@ -335,7 +364,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     snippetManager.insertSnippet($scope.editor, "\\sqrt[$0]{$SELECTION}");
                 };
                 //TEX
-
                 //Plugins
 
                 $scope.pluginClicked = function (plugin, template) {
