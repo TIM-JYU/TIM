@@ -17,10 +17,16 @@ class TimDbException(Exception):
 
 
 class TimDbBase(object):
-    """Base class for TimDb classes (e.g. Users, Notes)."""
+    """Base class for TimDb classes (e.g. Users, Notes).
+
+    :type db: sqlite3.Connection
+    :type files_root_path: str
+    :type current_user_name: str
+    :type blocks_path: str
+    """
 
     @contract
-    def __init__(self, db: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db: 'sqlite3.Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
         
         :param db: The database connection.

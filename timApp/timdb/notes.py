@@ -1,11 +1,11 @@
-import hashlib
+from sqlite3 import Connection
+
 from contracts import contract
+
 from document.docparagraph import DocParagraph
 from document.document import Document
-from ephemeralclient import EphemeralException, EphemeralClient, EPHEMERAL_URL
-from timdb.docidentifier import DocIdentifier
+from ephemeralclient import EphemeralClient, EPHEMERAL_URL
 from timdb.timdbbase import TimDbBase
-from sqlite3 import Connection
 
 
 class Notes(TimDbBase):
@@ -68,15 +68,15 @@ class Notes(TimDbBase):
         :param tags: Tags for the note (difficult, unclear).
         """
         cursor = self.db.cursor()
-
+        note_html = self.ec.to_html([content])
         cursor.execute(
             """
                 INSERT INTO UserNotes
                 (UserGroup_id, doc_id, par_id, par_hash,
-                content, created, modified, access, tags)
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?)
+                content, created, modified, access, tags, html)
+                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?, ?)
             """, [usergroup_id, doc.doc_id, par.getId(), par.getHash(),
-              content, access, self.__tagstostr(tags)])
+                  content, access, self.__tagstostr(tags), note_html])
 
         if commit:
             self.db.commit()
@@ -92,16 +92,15 @@ class Notes(TimDbBase):
         :param new_tags: New tags to set.
         """
         cursor = self.db.cursor()
-
+        new_html = self.ec.to_html([new_content])
         cursor.execute(
             """
                 UPDATE UserNotes
-                SET content = ?, tags = ?, access = ?
+                SET content = ?, tags = ?, access = ?, html = ?
                 WHERE id = ?
-            """, [new_content, self.__tagstostr(new_tags), access, note_id])
+            """, [new_content, self.__tagstostr(new_tags), access, new_html, note_id])
 
         self.db.commit()
-        self.ec.loadDocument(self.getDocIdentifierForNote({'content': new_content}), new_content.encode('utf-8'))
 
     @contract
     def deleteNote(self, note_id: 'int'):
@@ -126,18 +125,16 @@ class Notes(TimDbBase):
         :param usergroup_id: The usergroup id.
         :param doc: The document for which to get the notes.
         """
-        result = {}  # TODO
+        result = self.resultAsDictionary(
+            self.db.execute('SELECT id, par_id, par_hash, content, created, modified, access, tags, html '
+                            'FROM UserNotes '
+                            'WHERE UserGroup_id = ? AND doc_id = ?', [usergroup_id, doc.doc_id]))
 
         for note in result:
             note["tags"] = self.__strtotags(note["tags"])
-            note_id = self.getDocIdentifierForNote(note)
-            try:
-                note['htmlContent'] = self.ec.getDocumentFullHtmlSanitized(note_id)
-            except EphemeralException:
-                self.ec.loadDocument(note_id, note['content'].encode('utf-8'))
-                note['htmlContent'] = self.ec.getDocumentFullHtmlSanitized(note_id)
-
+            if note['html'] is None:
+                note['html'] = self.ec.to_html([note['content']])
+                self.db.execute('UPDATE UserNotes SET html = ? '
+                                'WHERE id = ?', [note['html'], note['id']])
+                self.db.commit()
         return result
-
-    def getDocIdentifierForNote(self, note):
-        return DocIdentifier('note', hashlib.sha256(note['content'].encode()).hexdigest())

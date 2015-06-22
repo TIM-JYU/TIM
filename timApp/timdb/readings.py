@@ -21,7 +21,8 @@ class Readings(TimDbBase):
         :param doc: The document for which to get the readings.
         :param usergroup_id: The id of the user group whose readings will be fetched.
         """
-        return None  # TODO
+        return self.resultAsDictionary(self.db.execute("""SELECT par_id, par_hash, timestamp FROM ReadParagraphs
+                           WHERE doc_id = ? AND UserGroup_id = ?""", [doc.doc_id, usergroup_id]))
 
     @contract
     def setAsRead(self, usergroup_id: 'int', doc: 'Document', par: 'DocParagraph', commit: 'bool'=True):
@@ -33,8 +34,9 @@ class Readings(TimDbBase):
 
         # Set current version as read
         cursor.execute(
-            'INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp) VALUES (?, ?, ?, CURRENT_TIMESTAMP)',
-            [usergroup_id, doc.doc_id, par.getId()])
+            'INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash)'
+            'VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)',
+            [usergroup_id, doc.doc_id, par.getId(), par.getHash()])
 
         if commit:
             self.db.commit()

@@ -1,14 +1,16 @@
 """
 An Ephemeral client that can communicate with Ephemeral server.
 """
-import requests
-import requests.exceptions
 import os
 import subprocess
-import signal
+
+import requests
+import requests.exceptions
 from contracts import contract, new_contract
+from requests import Response
+
 from htmlSanitize import sanitize_html
-import timdb.docidentifier
+from timdb.docidentifier import DocIdentifier
 
 EPHEMERAL_URL = 'http://127.0.0.1:8001'
 EPHEMERAL_PATH = os.path.join("..", "Ephemeral", "dist", "build", "Ephemeral")
@@ -338,3 +340,11 @@ class EphemeralClient(object):
         """"""
 
         return self.renameDocumentStr(str(document_id), str(new_id))
+
+    @contract
+    def to_html(self, md_list: 'list(str)'):
+        """
+
+        :type md_list: list[str]
+        """
+        # TODO: Call Dumbo to get HTML.
