@@ -516,6 +516,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
         '''
 
+        is_template = self.path.find('/template') >= 0
         is_fullhtml = self.path.find('/fullhtml') >= 0
         is_gethtml = self.path.find('/gethtml') >= 0
         is_html = (self.path.find('/html') >= 0 or self.path.find('.html') >= 0) and not is_gethtml
@@ -535,6 +536,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_fullhtml or is_gethtml or is_html or is_ptauno or is_tauno: content_type = 'text/html; charset=utf-8'
         if is_css: content_type = 'text/css'
         do_headers(self, content_type)
+
+        if is_template:
+            tempfile = get_param(query, "file", "")
+            return self.wout(file_to_string('templates/' + tempfile))
 
         if self.path.find("refresh") >= 0:
             self.wout(get_chache_keys())

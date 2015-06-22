@@ -13,9 +13,7 @@
     {% for script in js %}
         <script src=" {{ script }}"></script>
     {% endfor %}
-
     <script>
-
         var modules = checkModules([
             {% for dep in jsMods %}
                 "{{ dep|safe}}",
@@ -133,20 +131,22 @@
         <div id="pars">
             {% for t in text %}
                 {% if 'task_id' in t %}
-                <div class="par">
-                    <answerbrowser
-                            task-id="{{ t['task_id'] }}">
-                    </answerbrowser>
-                    <div class="parContent">
-                        {{ t['html']|safe }}
-                    </div>
-                </div>
+                    {% if not t['html'].startswith("<div></div>") %}
+                        <div class="par">
+                            <answerbrowser task-id="{{ t['task_id'] }}"></answerbrowser>
+                            <div class="parContent">
+                                {{ t['html']|safe }}
+                            </div>
+                        </div>
+                    {% endif %}
                 {% else %}
-                <div class="par" ng-non-bindable>
-                    <div class="parContent">
-                        {{ t['html']|safe }}
-                    </div>
+                    {% if not t['html'].startswith("<div></div>") %}
+                        <div class="par" ng-non-bindable>
+                            <div class="parContent">
+                                {{ t['html']|safe }}
+                            </div>
                 </div>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
         </div>
