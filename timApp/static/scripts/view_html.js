@@ -1518,4 +1518,23 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             });
     };
 
+            scope.deleteQuestion = function () {
+            var confirmDi = $window.confirm("Are you sure you want to delete this question?");
+            if (confirmDi) {
+                http({
+                    url: '/deleteQuestion',
+                    method: 'POST',
+                    params: {question_id: scope.qId, doc_id: scope.docId}
+                })
+                    .success(function () {
+                        $window.console.log("Deleted question done!");
+                        location.reload();
+                    })
+                    .error(function (error) {
+
+                        $window.console.log(error);
+                    });
+
+            }
+        };
 }]);
