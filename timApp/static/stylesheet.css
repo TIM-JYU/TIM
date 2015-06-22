@@ -2,14 +2,14 @@
 	text-align: justify;
 }
 
-.paragraph, .par, .header, .viewLogin , .footer{
-	max-width: 52em; 
+.paragraph, .par  {
+	max-width: 52em;
 }
 
 body {
 	text-align: justify;
 	margin: auto;  
-	margin-left: 245px;
+	margin-left: 210px;
 }
 
 .correct {
@@ -209,6 +209,11 @@ td p {
     opacity: 0.5;
 	background: #F60; /* rgb(236,103,27); */
 }
+
+.editline:hover {
+    opacity: 0.5;
+	background: #3CC; /* rgb(236,103,27); */
+}
 	
 .readline.read {
 	display: none;
@@ -315,7 +320,7 @@ ul ul  ul, ol ol ol {
 
 .actionButtons {
     position: absolute;
-    padding: 0 1em 2em 1em;
+    padding: 1em;
     margin: 0;
     z-index: 100;
     top: -1px;
@@ -340,16 +345,18 @@ ul ul  ul, ol ol ol {
 }
 
 .previewcontent {
-    border: 1px solid black;
+    clear: both;
+    border: 1px solid rgb(183, 183, 183);
     border-radius: 5px;
     padding-top: 0.0em;
     margin-top: 5px;
     background-color: #f8f8f8;
 }
 
-.timButton {
+.timButton, .editorButton {
     display: block;
     margin: auto;
+    min-width: 40px;
 }
 
 .draghandle {
@@ -368,6 +375,15 @@ ul ul  ul, ol ol ol {
     top: 0em;
     border-right: 0.5em solid;
     border-color: #F60; /* rgb(236,103,27); */
+}
+
+.editline {
+    position: absolute;
+    left: -1.2em;
+    z-index: 3;
+    width: 3em;
+    height: 100%;
+    top: 0em;
 }
 
 .addNoteButton:hover {
@@ -797,30 +813,109 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	width: 45em;
-	border: 1px solid;
-	padding: 15px 5px 5px 5px;
-	border-radius: 5px;
+	width: 100%;
+	padding: 5px 0px;
 	text-align: left;
     resize: both;
+    border-radius: 5px;
+}
+
+.editorContainer {
+	border-radius: 5px;
+    border: 1px solid rgb(183, 183, 183);
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .editorArea {
     z-index: 10;
     position: absolute;
     width: 100%;
-    top: 0em;
-    left: 112%;
+    left: 0;
+    top: 0;
     min-height:6.5em;
     border-radius: 15px;
-    padding: 0 0.5em 0.5em 0.5em; 
+    padding: 0.5em; 
 }
 
 .editButtonArea {
 	float: left;
-    
 	padding-right: 1em;
 	margin-bottom: 0em;
+}
+
+.editorButton {
+    margin-bottom: 0 !important;
+    font-size: 14px !important;
+    height: 35px;
+}
+
+.extraButtonArea {
+    margin: 0 0 0.2em 0;
+	padding: 0.5em 1em;
+    background: white;
+    border-left: 1px solid rgb(183, 183, 183);
+    border-right: 1px solid rgb(183, 183, 183);
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.extraButtonArea.hidden {
+	display: none;
+}
+
+.tabsarea, .extraButtonArea {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    border-bottom: 1px solid rgb(183, 183, 183);
+}
+
+.tabsarea {
+    margin: 0;
+    padding: 0;
+}
+
+.tabsarea li {
+    height: 100%;
+    display: inline-block;
+    list-style: none;
+    border: 1px solid rgb(183, 183, 183);
+    border-bottom: none;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    margin: 0;
+    background: rgb(246, 246, 246);
+}
+
+
+li.tab.active {
+    background: #3CC;
+}
+
+li.tab.active a {
+    color: white;
+}
+
+.tabsarea li > a {
+    display: block;
+    height: auto;
+    margin: 0;
+    color: rgb(96, 96, 96);
+    padding: 0.5em 1em;
+    text-decoration: none;
+}
+
+input[type="file"] {
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.tabsarea li > a:hover {
+    text-decoration: none;
 }
 	
 video {
@@ -1071,6 +1166,7 @@ p.stem {
 
 /* Kännyköiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 500px) {
+
 	P {
 		margin-top: 0.0em;
 		margin-bottom: 0.0em;
@@ -1142,6 +1238,11 @@ p.stem {
  
 body {
  	line-height: 1.4;	
+}
+
+.defaultCheckbox {
+    vertical-align: middle;
+    margin-left: 2em;
 }
 
 task, .csRunDiv {
@@ -1472,9 +1573,7 @@ img.console {
 .editorArea {
     z-index: 110;
     position: absolute;
-    width: 102%;
     top: 0em;
-    left: -1.5em;
     min-height: 6.5em;
     border-radius: 5px;
     background: #e0e0e0;
@@ -1487,11 +1586,9 @@ img.console {
     font-size: 14px;
     line-height: 1.1;
     direction: ltr;
-    width: 98%;
-    /*margin-left: 3.8em; */
 }
 
-.timButton {
+.timButton, .editorButton {
     margin: auto;
     background: #3CC;
     border: 0;
@@ -1506,17 +1603,22 @@ img.console {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
     margin-bottom: 5px;
 }
+
 .actionButtons {
+    display: table;
     position: absolute;
+    white-space: nowrap;
     border-radius: 3px;
-    /* padding: 1em; */
+    padding: 1em;
     margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
-    width: 220px;
     min-height: 50px;
-    left: 103%;
-}  
+}
+
+.actionButtonRow {
+    display: table-row;
+}
 
 .par.selected {
     background-color: #f8f8f8;
@@ -1669,114 +1771,30 @@ button:disabled {
 
 @media screen and (min-width: 60em) {
     .body {
-    /*    margin-left: 60em !important; */
-    }
-}
-
-.breadcrumb>li+li:before {
-  padding: 8px 15px  !important;
-  color: #ccc  !important;
-  content: "/"  !important;
-}
-
-@media only screen and (max-width: 800px) {
-    .breadcrumb>li+li:before {
-        padding: 0 0  !important;
+        margin-left: 60em !important;
     }
 }
 
 .breadcrumb-div {
-    margin-top: 3px !important;
-    background-color: #fff !important;
+    margin-top: 10px;
 }
 
 .breadcrumb {
     font-size: 1.0em;
-    background-color: #fff !important;
 }
 
 .breadcrumb.ol {
-    background-color: #fff; 
+    background-color: #fff;
 }
 
 .breadcrumb a {
     /* Overrides the default TIM style for links */
-    /*background-color: #fff;  */
     font-size: 1.0em;
-	padding: 0px 0px !important;
+	padding: 8px 15px;
     margin-bottom: 20px;
     border-radius: 4px;
 }
 
 .breadcrumb active {
 	text-decoration: bold;
-}
-
-.breadcrumb>li {
-  display: inline-block;
-}
-
-
-code {
-/*
-  padding: 0px 0px !important;
-  font-size: 90% !important; 
-  color: #000 !important;
-  background-color: #f9f2f4 !important;
-*/   
-  /* border-radius: 4px; */
-}
-
-.plgfooter {
-  text-align: center;
-}
-
-
-.pull-right {
-  float: right!important;
-}
-
-.header {
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-/* Custom page footer */
-.footer {
-  padding-top: 19px;
-  color: #777;
-  border-top: 1px solid #e5e5e5;
-}
-
-footer p {
-  float: left; 
-  margin-left: 0px;
-  display: inline;
-}
-
-.footer a {
-  color: #3cc; 
-}
-
-.previewDiv {
-  background: white;
-}
-
-.footer ul {
-  float: right;
-  margin-right: 0px;
-  display: inline;
-  list-style-type: none;
-}
-
-.footer>li {
-  display: inline-block;
-}
-
-.csRunSnippets button { 
-  margin-right: 4pt;
-}
- 
-div#previewDiv {
-  background: white;
 }
