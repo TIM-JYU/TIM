@@ -86,13 +86,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                     if ($scope.initialTextUrl) {
                         editor.getSession().setValue('Loading text...');
-                        $http.get($scope.initialTextUrl).
-                            success(function (data, status, headers, config) {
-                                $scope.editorText = data.text;
-                            }).
-                            error(function (data, status, headers, config) {
-                                $window.alert('Failed to get text: ' + data.error);
-                            });
+                        $http.get($scope.initialTextUrl, {
+                            params: {"_": Date.now()}
+                        }).success(function (data, status, headers, config) {
+                            $scope.editorText = data.text;
+                        }).error(function (data, status, headers, config) {
+                            $window.alert('Failed to get text: ' + data.error);
+                        });
                     }
 
                     var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
