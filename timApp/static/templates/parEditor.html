@@ -28,16 +28,16 @@
             <button class="editorButton" title="Italic" ng-click="surroundClicked('*', surroundedByItalic); wrapFn()"><i>I</i></button>
             <button class="editorButton" title="Code" ng-click="surroundClicked('`'); wrapFn()">Code</button>
             <button class="editorButton" title="Code block" ng-click="wrapFn(codeBlockClicked)">Code block</button>
+            <button class="editorButton" title="Heading 1" ng-click="headerClicked('#')">H1</button>
+            <button class="editorButton" title="Heading 2" ng-click="headerClicked('##')">H2</button>
+            <button class="editorButton" title="Heading 3" ng-click="headerClicked('###')">H3</button>
+            <button class="editorButton" title="Heading 4" ng-click="headerClicked('####')">H4</button>
         </div>
         <div id="insertButtons" class="extraButtonArea hidden">
             <button class="editorButton" title="Add link" ng-click="wrapFn(linkClicked)">Link</button>
             <button class="editorButton" title="Add image" ng-click="wrapFn(imageClicked)">Image</button>
             <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
             <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
-            <button class="editorButton" title="Heading 1" ng-click="headerClicked('#')">H1</button>
-            <button class="editorButton" title="Heading 2" ng-click="headerClicked('##')">H2</button>
-            <button class="editorButton" title="Heading 3" ng-click="headerClicked('###')">H3</button>
-            <button class="editorButton" title="Heading 4" ng-click="headerClicked('####')">H4</button>
         </div>
         <div id="specialButtons" class="extraButtonArea hidden">
             <button class="editorButton" ng-click="charClicked($event)">@</button>
