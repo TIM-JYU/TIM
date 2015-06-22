@@ -106,6 +106,11 @@ def jsonResponse(jsondata, status_code=200):
     response.status_code = status_code
     return response
 
+
+def okJsonResponse():
+    return jsonResponse({'status': 'ok'})
+
+
 def getNewest(docId):
     docId = int(docId)
     timdb = getTimDb()
