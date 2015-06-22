@@ -135,12 +135,27 @@ timApp.controller("ViewCtrl", [
 
         sc.showQuestion = function (question) {
             sc.json = "No data";
-            sc.qId = -1;
-            if (question[0].hasAttribute('json')) {
-                sc.json = JSON.parse(question[0].getAttribute('json'));
-                sc.qId = question[0].getAttribute('id');
+            sc.qId = question[0].getAttribute('id');
 
-            }
+            http({
+                url: '/getQuestionById',
+                method: 'GET',
+                params: {'question_id': sc.qId, 'buster': new Date().getTime()}
+            })
+                .success(function (data) {
+                    sc.json = JSON.parse(data.questionJson);
+
+                })
+
+                .error(function () {
+                    $window.console.log("There was some error creating question to database.");
+                });
+
+
+
+
+
+
             sc.lectureId = -1;
             sc.inLecture = false;
 
@@ -584,9 +599,9 @@ timApp.controller("ViewCtrl", [
             for (var i = 0; i < questions.length; i++) {
                 var img = new Image(30, 30);
                 img.src = questionImage;
-                img.title = JSON.parse(questions[i].questionJson).TITLE;
-                var $questionDiv = $("<div>", {
-                    class: 'questionAdded', html: img, json: questions[i].questionJson, id: questions[i].question_id
+                img.title = questions[i].question_title;
+                var $questionDiv = $("<span>", {
+                    class: 'questionAdded', html: img, id: questions[i].question_id
                 });
                 $questionsDiv.append($questionDiv);
             }
@@ -1483,7 +1498,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             url: '/addQuestion/' + rn,
             params: {
                 'question_id': scope.question.question_id,
-                'question': scope.question.question,
+                'question_title': scope.question.title,
                 'answer': "test", //answerVal,
                 'par_index': par_index,
                 'doc_id': doc_id,

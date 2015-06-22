@@ -468,16 +468,16 @@ def add_question():
     question_id = None
     if (request.args.get('question_id')):
         question_id = int(request.args.get('question_id'))
-    question = request.args.get('question')
+    question_title = request.args.get('question_title')
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     par_index = int(request.args.get('par_index'))
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_index, question, answer, questionJson)
+        questions = timdb.questions.add_questions(doc_id, par_index, question_title, answer, questionJson)
     else:
-        questions = timdb.questions.update_question(question_id, doc_id, par_index, question, answer, questionJson)
+        questions = timdb.questions.update_question(question_id, doc_id, par_index, question_title, answer, questionJson)
     return jsonResponse(questions)
 
 
@@ -1093,8 +1093,7 @@ def get_question():
     # verifyOwnership(doc_id)
     timdb = getTimDb()
     question = timdb.questions.get_question(question_id)
-    return jsonResponse(question)
-
+    return jsonResponse(question[0])
 
 @app.route("/deleteQuestion", methods=['POST'])
 def delete_question():
