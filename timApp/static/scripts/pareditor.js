@@ -91,8 +91,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }).success(function (data, status, headers, config) {
                             $scope.editorText = data.text;
                         }).error(function (data, status, headers, config) {
-                                $window.alert('Failed to get text: ' + data.error);
-                            });
+                            $window.alert('Failed to get text: ' + data.error);
+                        });
                     }
 
                     var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
