@@ -607,7 +607,7 @@ timApp.controller("ViewCtrl", [
 
                 var noteCount = data.length;
                 for (var i = 0; i < noteCount; i++) {
-                    var pi = data[i].par_index;
+                    var pi = data[i].par_id;
                     if (!(pi in pars)) {
                         pars[pi] = {notes: []};
 
@@ -617,16 +617,12 @@ timApp.controller("ViewCtrl", [
                     }
                     pars[pi].notes.push(data[i]);
                 }
-                sc.forEachParagraph(function (index, elem) {
-                    var parIndex = index + sc.startIndex;
-                    if (parIndex in pars) {
-                        var $notediv = sc.getNoteHtml(pars[parIndex].notes);
-                        var $this = $(this);
-                        $this.append($notediv);
-                        sc.processAllMath($this);
-                    }
+                Object.keys(pars).forEach(function(par_id, index) {
+                    var $par = sc.getElementByParId(par_id);
+                    var $notediv = sc.getNoteHtml(pars[par_id].notes);
+                    $par.append($notediv);
+                    sc.processAllMath($par);
                 });
-
             }).error(function (data, status, headers, config) {
                 $window.alert("Could not fetch notes.");
             });
@@ -643,17 +639,22 @@ timApp.controller("ViewCtrl", [
                 var pars = {};
                 for (var i = 0; i < readCount; i++) {
                     var readPar = data[i];
-                    var pi = data[i].par_index;
+                    var pi = data[i].par_id;
                     if (!(pi in pars)) {
                         pars[pi] = {};
                     }
-                    pars[pi].readStatus = readPar.status;
                 }
                 sc.forEachParagraph(function (index, elem) {
-                    var parIndex = index + sc.startIndex;
+                    var $par = $(elem);
+                    var hash = $par.attr('t');
+                    var par_id = $par.attr('id');
                     var classes = ["readline"];
-                    if (parIndex in pars && 'readStatus' in pars[parIndex]) {
-                        classes.push(pars[parIndex].readStatus);
+                    if (par_id in pars) {
+                        var status = 'read';
+                        if (hash !== pars[par_id].par_hash) {
+                            status = 'modified';
+                        }
+                        classes.push(status);
                     } else {
                         classes.push("unread");
                     }
