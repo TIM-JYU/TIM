@@ -890,7 +890,7 @@ a.anchor:hover {
 }
 
 
-li.active {
+li.tab.active {
     background: #3CC;
 }
 

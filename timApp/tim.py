@@ -126,7 +126,7 @@ def upload_file():
         abort(400, 'Missing file')
     folder = request.form.get('folder')
     if folder is None:
-        return try_upload_image(file)
+        return upload_image_or_file(file)
     filename = posixpath.join(folder, secure_filename(file.filename))
 
     user_name = getCurrentUserName()
@@ -161,6 +161,23 @@ def try_upload_image(image_file):
     else:
         abort(400, 'Invalid image type')
 
+def upload_image_or_file(image_file):
+    content = image_file.read()
+    imgtype = imghdr.what(None, h=content)
+    timdb = getTimDb()
+    if imgtype is not None:
+        img_id, img_filename = timdb.images.saveImage(content,
+                                                      secure_filename(image_file.filename),
+                                                      getCurrentUserGroup())
+        timdb.users.grantViewAccess(0, img_id)  # So far everyone can see all images
+        return jsonResponse({"image": str(img_id) + '/' + img_filename})
+    else:
+        file_id, file_filename = timdb.files.saveFile(content,
+                                                      secure_filename(image_file.filename),
+                                                      getCurrentUserGroup())
+        timdb.users.grantViewAccess(0, file_id)  # So far everyone can see all images
+        return jsonResponse({"file": str(file_id) + '/' + file_filename})
+
 
 @app.route('/images/<int:image_id>/<image_filename>')
 def getImage(image_id, image_filename):
@@ -173,13 +190,23 @@ def getImage(image_id, image_filename):
     f = io.BytesIO(img_data)
     return send_file(f, mimetype='image/' + imgtype)
 
+@app.route('/files/<int:file_id>/<file_filename>')
+def getFile(file_id, file_filename):
+    timdb = getTimDb()
+    if not timdb.files.fileExists(file_id, file_filename):
+        abort(404)
+    verifyViewAccess(file_id)
+    img_data = timdb.files.getFile(file_id, file_filename)
+    f = io.BytesIO(img_data)
+    return send_file(f)
+
 @app.route('/images')
 def getAllImages():
     timdb = getTimDb()
     images = timdb.images.getImages()
     allowedImages = [image for image in images if timdb.users.userHasViewAccess(getCurrentUserId(), image['id'])]
     return jsonResponse(allowedImages)
-    
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
@@ -202,25 +229,25 @@ def getDocuments():
     timdb = getTimDb()
     docs = timdb.documents.getDocuments(historylimit=versions)
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
-    
+
     req_folder = request.args.get('folder')
     if req_folder is not None and len(req_folder) == 0:
         req_folder = None
-        
+
     #print('req_folder is "{}"'.format(req_folder))
-    
+
     finalDocs = []
-    
+
     for doc in allowedDocs:
         fullname = doc['name']
-        
+
         if req_folder:
             if not fullname.startswith(req_folder + '/'):
                 continue
             docname = fullname[len(req_folder) + 1:]
         else:
             docname = fullname
-        
+
         if '/' in docname:
             continue
 
@@ -231,7 +258,7 @@ def getDocuments():
         doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.userHasAdminAccess(uid)
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         finalDocs.append(doc)
-        
+
     return jsonResponse(finalDocs)
 
 @app.route("/getFolders")
@@ -329,7 +356,7 @@ def getBlockMd(docId, blockId):
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)    
+    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
     return block
 
 @app.route("/<plugin>/<path:fileName>")

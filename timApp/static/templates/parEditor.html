@@ -3,6 +3,7 @@
         <ul class="tabsarea">
             <li class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a></li>
             <li class="tab"><a ng-click="tabClicked($event, 'styleButtons')">Style</a></li>
+            <li class="tab"><a ng-click="tabClicked($event, 'insertButtons')">Insert</a></li>
             <li class="tab"><a ng-click="tabClicked($event, 'specialButtons')">Special characters</a></li>
             <li class="tab"><a ng-click="tabClicked($event, 'texButtons')">TeX</a></li>
             <li class="tab" ng-show="options.showPlugins"><a ng-click="tabClicked($event, 'pluginButtons')">Plugins</a></li>
@@ -25,10 +26,12 @@
             </button>
             <button class="editorButton" title="Bold" ng-click="surroundClicked('**'); wrapFn()"><b>B</b></button>
             <button class="editorButton" title="Italic" ng-click="surroundClicked('*', surroundedByItalic); wrapFn()"><i>I</i></button>
-            <button class="editorButton" title="Add link" ng-click="wrapFn(linkClicked)">Link</button>
-            <button class="editorButton" title="Add image" ng-click="wrapFn(imageClicked)">Image</button>
             <button class="editorButton" title="Code" ng-click="surroundClicked('`'); wrapFn()">Code</button>
             <button class="editorButton" title="Code block" ng-click="wrapFn(codeBlockClicked)">Code block</button>
+        </div>
+        <div id="insertButtons" class="extraButtonArea hidden">
+            <button class="editorButton" title="Add link" ng-click="wrapFn(linkClicked)">Link</button>
+            <button class="editorButton" title="Add image" ng-click="wrapFn(imageClicked)">Image</button>
             <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
             <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
             <button class="editorButton" title="Heading 1" ng-click="headerClicked('#')">H1</button>
@@ -40,7 +43,16 @@
             <button class="editorButton" ng-click="charClicked($event)">@</button>
             <button class="editorButton" ng-click="charClicked($event)">#</button>
             <button class="editorButton" ng-click="charClicked($event)">`</button>
+            <button class="editorButton" ng-click="charClicked($event)">$</button>
             <button class="editorButton" ng-click="charClicked($event)">€</button>
+            <button class="editorButton" ng-click="charClicked($event)">%</button>
+            <button class="editorButton" ng-click="charClicked($event)">&</button>
+            <button class="editorButton" ng-click="charClicked($event)">{</button>
+            <button class="editorButton" ng-click="charClicked($event)">}</button>
+            <button class="editorButton" ng-click="charClicked($event)">[</button>
+            <button class="editorButton" ng-click="charClicked($event)">]</button>
+            <button class="editorButton" ng-click="charClicked($event)">/</button>
+            <button class="editorButton" ng-click="charClicked($event)">\</button>
         </div>
         <div id="texButtons" class="extraButtonArea hidden">
             <button class="editorButton" ng-click="wrapFn(texClicked)">TeX equation</button>

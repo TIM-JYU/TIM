@@ -395,9 +395,15 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }).progress(function (evt) {
                             $scope.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
                         }).success(function (data, status, headers, config) {
-                            $scope.uploadedFile = '/images/' + data.file;
-                            $scope.progress = 'Uploading... Done!';
-                            $scope.editor.insert("![Image](" + $scope.uploadedFile + ")");
+                            if (data.image) {
+                                $scope.uploadedFile = '/images/' + data.image;
+                                $scope.progress = 'Uploading... Done!';
+                                $scope.editor.insert("![Image](" + $scope.uploadedFile + ")");
+                            } else {
+                                $scope.uploadedFile = '/files/' + data.file;
+                                $scope.progress = 'Uploading... Done!';
+                                $scope.editor.insert("[File](" + $scope.uploadedFile + ")");
+                            }
                         }).error(function (data, status, headers, config) {
                             $scope.progress = 'Error while uploading: ' + data.error;
                         });
