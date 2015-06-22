@@ -30,7 +30,7 @@ class Files(TimDbBase):
 
     @contract
     def saveFile(self, file_data: 'bytes', file_filename: 'str', owner_group_id: 'int') -> 'tuple(int, str)':
-        """Saves an file to the database.
+        """Saves a file to the database.
         
         :param file_data: The file data.
         :param file_filename: The filename of the file.

@@ -175,7 +175,7 @@ def upload_image_or_file(image_file):
         file_id, file_filename = timdb.files.saveFile(content,
                                                       secure_filename(image_file.filename),
                                                       getCurrentUserGroup())
-        timdb.users.grantViewAccess(0, file_id)  # So far everyone can see all images
+        timdb.users.grantViewAccess(0, file_id)  # So far everyone can see all files
         return jsonResponse({"file": str(file_id) + '/' + file_filename})
 
 
