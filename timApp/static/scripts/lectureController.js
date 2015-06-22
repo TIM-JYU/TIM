@@ -623,8 +623,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.editLecture = function () {
-
-            $window.alert("This feature has not been implemented yet. This function can be found in lectureController.js");
+            $('#currentList').hide();
+            $('#futureList').hide();
+            $rootScope.$broadcast("editLecture", {"lecture_id": $scope.lectureId, "lecture_name": $scope.lectureName, "start_date": $scope.lectureStartTime, "end_date": $scope.lectureEndTime, "password": $scope.password});
+            $scope.showLectureForm = true;
         };
 
         /**

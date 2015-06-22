@@ -22,6 +22,23 @@ class Lectures(TimDbBase):
 
         return lecture_id
 
+
+    @contract
+    def update_lecture(self, lecture_id: "int", doc_id: "int", lecturer: 'int', start_time: "string", end_time: "string",
+                       lecture_code: "string",
+                       password: "string"):
+
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+                        UPDATE Lecture
+                        SET lecture_code = ?, doc_id = ?, lecturer = ?, start_time = ?, end_time = ?, password = ?
+                        WHERE lecture_id = ?
+                        """, [lecture_code, doc_id, lecturer, start_time, end_time, password, lecture_id])
+
+        self.db.commit()
+        return lecture_id
+
     @contract
     def delete_lecture(self, lecture_id: 'int', commit: 'bool'):
         cursor = self.db.cursor()
@@ -128,14 +145,14 @@ class Lectures(TimDbBase):
         return cursor.fetchone()[0]
 
     @contract
-    def check_if_correct_name(self, doc_id: 'int', lecture_code: 'string') -> 'int':
+    def check_if_correct_name(self, doc_id: 'int', lecture_code: 'string', lecture_id : 'int') -> 'int':
         cursor = self.db.cursor()
 
         cursor.execute("""
                         SELECT lecture_id
                         FROM Lecture
-                        WHERE lecture_code = ? AND doc_id = ?
-                        """, [lecture_code, doc_id])
+                        WHERE lecture_code = ? AND doc_id = ? AND lecture_id != ?
+                        """, [lecture_code, doc_id, lecture_id])
 
         answer = cursor.fetchall()
 

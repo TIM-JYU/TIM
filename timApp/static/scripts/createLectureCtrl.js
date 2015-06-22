@@ -48,6 +48,27 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.initLectureForm();
         });
 
+        $scope.$on('editLecture', function (event,data) {
+            $scope.lectureCode = data.lecture_name;
+            $scope.lectureId = data.lecture_id;
+            var splittedStart = data.start_date.split(" ");
+            var splittedStartTime = splittedStart[2].split(":");
+            var splittedStartDate = splittedStart[1].split("-");
+            $scope.startMin = splittedStartTime[1];
+            $scope.startHour = splittedStartTime[0];
+            $scope.startDate = splittedStartDate[2] + "." + splittedStartDate[1] + "." + splittedStartDate[0];
+            var splittedEnd = data.end_date.split(" ");
+            var splittedEndTime = splittedEnd[2].split(":");
+            var splittedEndDate = splittedEnd[1].split("-");
+            $scope.enableDate2();
+            $scope.endMin = splittedEndTime[1];
+            $scope.endHour = splittedEndTime[0];
+            $scope.endDate = splittedEndDate[2] + "." + splittedEndDate[1] + "." + splittedEndDate[0];
+            if(data.password !== undefined){
+                $scope.password = data.password;
+            }
+        });
+
         /**
          * Lecture form initialized to have the current date and time as default starting time.
          * @memberof module:createLectureCtrl
@@ -61,6 +82,10 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.dueCheck = true;
             $scope.earlyJoining = true;
             $scope.enableDue2();
+        };
+
+        $scope.populateLectureForm = function(name) {
+            $scope.lectureCode = name;
         };
 
         /**
@@ -307,6 +332,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     url: '/createLecture',
                     method: 'POST',
                     params: {
+                        'lecture_id': $scope.lectureId,
                         'doc_id': $scope.docId,
                         'lecture_code': $scope.lectureCode,
                         'password': $scope.password,
