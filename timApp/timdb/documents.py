@@ -12,7 +12,8 @@ from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative
-
+from sqlite3 import Connection
+from document.document import Document
 
 class Documents(TimDbBase):
     def __repr__(self):
@@ -35,23 +36,23 @@ class Documents(TimDbBase):
 
     @contract
     def addMarkdownBlock(self, document_id: 'DocIdentifier', content: 'str',
-                         new_block_index: 'int') -> 'tuple(list(str),DocIdentifier)':
+                         prev_par_id: 'str') -> 'tuple(list(DocParagraph),DocIdentifier)':
         """Adds a new markdown block to the specified document.
         
         :param document_id: The id of the document.
         :param content: The content of the block.
-        :param new_block_index: The index of the new block.
+        :param prev_par_id: The id of the previous paragraph. None if this paragraph should become the first.
         :returns: A list of the added blocks.
         """
 
         assert self.documentExists(document_id.id), 'document does not exist: %r' % document_id
         self.ensureCached(document_id)
         content = self.trimDoc(content)
-        response = self.ec.addBlock(document_id, new_block_index, content)
+        response = self.ec.addBlock(document_id, prev_par_id, content)
         new_doc = self.__handleModifyResponse(document_id,
                                               response,
-                                              'Added a paragraph at index %d' % (new_block_index),
-                                              new_block_index,
+                                              'Added a paragraph at index %d' % (prev_par_id),
+                                              prev_par_id,
                                               len(response['paragraphs']))
         return response['paragraphs'], new_doc
 
@@ -95,27 +96,6 @@ class Documents(TimDbBase):
         return docId
 
     @contract
-    def createDocumentFromBlocks(self, block_directory: 'str', document_name: 'str'):
-        """
-        Creates a document from existing blocks in the specified directory.
-        The blocks should be ordered alphabetically.
-        
-        :param block_directory: The path to the directory containing the blocks.
-        :param document_name: The name of the document to be created.
-        """
-        assert os.path.isdir(block_directory)
-        blockfiles = [int(f) for f in os.listdir(block_directory) if os.path.isfile(os.path.join(block_directory, f))]
-
-        blockfiles.sort()
-        with open("tmp.temp", "w", encoding='utf-8') as tmpfile:
-            for file in blockfiles:
-                print(file)
-                with open(os.path.join(block_directory, str(file)), 'r', encoding='utf-8') as f:
-                    tmpfile.write(f.read())
-                    tmpfile.write('\n\n')
-        self.importDocumentFromFile('tmp.temp', document_name, 0)
-
-    @contract
     def deleteDocument(self, document_id: 'int'):
         """Deletes the specified document.
         
@@ -136,11 +116,11 @@ class Documents(TimDbBase):
         self.git.commit('Deleted document {}.'.format(document_id))
 
     @contract
-    def deleteParagraph(self, document_id: 'DocIdentifier', par_id: 'int') -> 'DocIdentifier':
+    def deleteParagraph(self, document_id: 'DocIdentifier', par_id: 'str') -> 'DocIdentifier':
         """Deletes a paragraph from a document.
         
         :param document_id: The id of the document from which to delete the paragraph.
-        :param par_id: The index of the paragraph in the document that should be deleted.
+        :param par_id: The id of the paragraph in the document that should be deleted.
         """
 
         self.ensureCached(document_id)
@@ -506,12 +486,12 @@ class Documents(TimDbBase):
         return new_id
 
     @contract
-    def modifyMarkDownBlock(self, document_id: 'DocIdentifier', block_id: 'int',
-                            new_content: 'str') -> 'tuple(list(str), DocIdentifier)':
+    def modifyMarkDownBlock(self, document_id: 'DocIdentifier', par_id: 'str',
+                            new_content: 'str') -> 'tuple(list(DocParagraph), DocIdentifier)':
         """Modifies the specified block.
         
         :param document_id: The id of the document.
-        :param block_id: The id (relative to document) of the paragraph to be modified.
+        :param par_id: The id of the paragraph to be modified.
         :param new_content: The new content of the paragraph.
         :returns: The modified blocks and the new document id as a tuple.
         """
@@ -519,12 +499,12 @@ class Documents(TimDbBase):
         assert self.documentExists(document_id.id), 'document does not exist: ' + str(document_id)
         self.ensureCached(document_id)
         new_content = self.trimDoc(new_content)
-        response = self.ec.modifyBlock(document_id, block_id, new_content)
+        response = self.ec.modifyBlock(document_id, par_id, new_content)
 
         new_doc = self.__handleModifyResponse(document_id,
                                               response,
-                                              'Modified a paragraph at index %d' % (block_id),
-                                              block_id,
+                                              'Modified a paragraph at index %d' % (par_id),
+                                              par_id,
                                               len(response['paragraphs']) - 1)
         blocks = response['paragraphs']
         return blocks, new_doc
