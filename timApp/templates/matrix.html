@@ -7,16 +7,14 @@
 
         </select>
     </div>
-
     <div class="questionTable">
-        <table>
+        <table id="question-table">
             <thead>
             <!----Top "hidden row" with + and - buttons  ---->
-            <tr class="invisibleRow">
+            <tr class="invisibleRow" ng-if="question.type == 'matrix'">
                 <th style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
-                <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit"
-                    ng-if="question.type == 'matrix'">
+                <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit">
                     <div style="top:35px; position:relative;">
                         <button ng-click="addCol($index)" style="float:left; margin-left: -20px;">+</button>
                         <button class="negative" ng-click="delCol($index)" style="margin-left:80px">-</button>
@@ -36,7 +34,7 @@
 
                 <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'">
                     <div class="cart">
-                        <textarea form="question-form" rows="1" cols="20"
+                        <textarea class="rowHeading" form="question-form" rows="1" cols="20"
                                   ng-model="columnHeaders[$index].text"></textarea>
                         <br/>
                     </div>
@@ -49,46 +47,41 @@
             </thead>
             <tbody>
             <tr ng-repeat="row in rows">
-                <th width="5%" id="buttons">
-                    <div style="left:20px; position:relative;">
-                        <button ng-click="addRow($index)" style="float:right; margin-top:-35px">+</button>
+                <th id="buttons">
+                    <div style="left:18px; position:relative;">
+                        <button ng-click="addRow($index)" style="float:right; margin-top:-42px;">+</button>
                         <button ng-click="delRow($index)" class="negative" style="float:right">-</button>
                     </div>
                 </th>
-                <th>
-                    <div class="cart">
-                        <textarea class="rowHeading" style="margin-left:5px" ng-model="row.text" form="question-form" rows="1"
+                <th id="row-heading">
+                        <textarea class="rowHeading" ng-model="row.text" form="question-form" rows="1"
                                   cols="20"></textarea>
-
-                        <br/>
-
-                    </div>
                 </th>
-                <td ng-repeat="column in row.columns">
+                <td ng-repeat="column in row.columns" class="answer-columns">
                     <!-- Horizontal radio-button-->
                     <div ng-if="(question.matrixType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
                         <!-- ng-model="row.id" -->
-                        <input type="radio"
+                        <div><input type="radio"
                                ng-value="column.id"
                                placeholder=""
-                               disabled/>
-                        <input type="text"
+                               disabled/></div>
+                        <div><input type="text"
                                size="1"
                                placeholder="pts"
-                               ng-model="column.points" />
+                               ng-model="column.points" /></div>
                     </div>
                     <!-- Vertical radio-button -->
                     <div ng-if="question.type != 'true-false'">
                         <div ng-if="(question.matrixType == 'radiobutton-vertical' && question.type=='matrix') || question.type == 'radio-vertical'">
-                            <input type="radio"
+                            <div><input type="radio"
                                    name="column.rowId"
                                    ng-value="column.id"
                                    placeholder=""
-                                    disabled/>
-                            <input type="text"
+                                    disabled/></div>
+                            <div><input type="text"
                                    size="1"
                                    placeholder="pts"
-                                   ng-model="column.points"/>
+                                   ng-model="column.points"/></div>
                         </div>
                         <!-- Text area-->
                         <div ng-if="question.type != 'radio-button'">
@@ -100,13 +93,13 @@
                                     disabled></textarea>
                             <!-- Checkbox-->
                             <div ng-if="(question.matrixType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">
-                                <input type="checkbox"
+                                <div><input type="checkbox"
                                        ng-model="row.id"
-                                        disabled/>
-                                <input type="text"
+                                        disabled/></div>
+                                <div><input type="text"
                                        size="1"
                                        placeholder="pts"
-                                       ng-model="column.points"/>
+                                       ng-model="column.points"/></div>
                             </div>
                         </div>
                     </div>
@@ -116,7 +109,7 @@
                 <td id="emptyBlock"></td>
                 <th>
                     <div>
-                        <button style="width: 150px; height: 50px;" ng-click="addRow(-1)">+</button>
+                        <button id="addRow" ng-click="addRow(-1)">+</button>
                     </div>
                 </th>
             </tr>
