@@ -392,7 +392,7 @@ timApp.controller("ViewCtrl", [
                 }
 
                 var $mathdiv = $.parseHTML(html);
-                if (mathdiv) sc.processMath($mathdiv[0]);
+                if ($mathdiv) sc.processMath($mathdiv[0]);
 
                 var $newpar = $("<div>", {class: "par"})
                     .append($("<div>", {class: "parContent"}).append($mathdiv));
