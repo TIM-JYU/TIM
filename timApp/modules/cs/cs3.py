@@ -192,7 +192,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :return: error code, stdout text, stderr text
     """
     s_in = ""
-    if not ulimit: ulimit = "ulimit -f 100 -t 5 -s 100 " # -v 2000 -s 100 -u 10
+    if not ulimit: ulimit = "ulimit -f 100 -t 3 -s 100 " # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")
@@ -372,7 +372,7 @@ def wait_file(f1):
 def copy_file(f1, f2, remove_f1=False, is_optional=False):
     """
     Copy file.  This function is done, because basic copy2 seems to fail in some
-    cases or to be more specific, the f1 may not be ready before starting copy.
+    cases or to be more specific, the f1 may not be ready before stating copy.
     First if the file is not optional, it is waited to appear.  After
     appering it should be more than 43 bytes long (seems the not ready file is many
     times 43 bytes long)
@@ -408,11 +408,6 @@ def copy_file(f1, f2, remove_f1=False, is_optional=False):
         return False, e
 
 
-def debug_str(s):        
-    t = datetime.datetime.now()
-    print(t.isoformat(' ') + ": " + s)
-    
-        
 def log(self):
     t = datetime.datetime.now()
     agent = " :AG: " + self.headers["User-Agent"]
@@ -544,9 +539,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_template:
             tempfile = get_param(query, "file", "")
-            print("tempfile:",tempfile)
-            return self.wout(file_to_string('templates/' + tempfile))        
-        
+            return self.wout(file_to_string('templates/' + tempfile))
+
         if self.path.find("refresh") >= 0:
             self.wout(get_chache_keys())
             clear_cache()
@@ -696,20 +690,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 pure_exename = "/home/agent/%s" % filename
                 pngname = "/csimages/%s.png" % rndname
                 bmpname = get_param(query, "bmpname", "")
-                
-            if ttype == "r":
-                debug_str("r alkaa")
-                prgpath = "/tmp/%s/r" % basename
-                filepath = prgpath
-                csfname = "%s/%s.r" % (prgpath, filename)
-                exename = csfname
-                mkdirs(filepath)
-                image_ext = "png"
-                pure_exename = "./%s.r" % filename
-                bmpname = "%s/Rplot001.%s" % (prgpath, image_ext)
-                pure_pngname = u"{0:s}.{1:s}".format(rndname,image_ext)
-                pngname = "/csimages/%s.%s" % (rndname,image_ext)
-
 
             if ttype == "jjs":
                 csfname = "/tmp/%s/%s.js" % (basename, filename)
@@ -897,8 +877,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = ""
                 elif ttype == "sage":
                     cmdline = ""
-                elif ttype == "r":
-                    cmdline = ""
                 elif ttype == "fs":
                     cmdline = "fsharpc --out:%s %s" % (exename, csfname)
                 elif ttype == "cs":
@@ -1028,29 +1006,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                     web["image"] = "/csimages/cs/" + rndname + ".png"
 
-            elif ttype == "r":
-                debug_str("r ajoon")
-                code, out, err = run2(["Rscript", "--save", "--restore", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                      uargs=userargs, ulimit = "ulimit -f 80000")
-                debug_str("r ajo valmis")
-                if type('') != type(out): out = out.decode()
-                if type('') != type(err): err = err.decode()
-                print(err)
-                #  wait_file(bmpname)
-                debug_str("r kuvan kopiointi aloitetaan")
-                image_ok, e = copy_file(bmpname, pngname, True, True) # is_optional_image)
-                remove(bmpname)
-                debug_str("r kuva kopioitu")
-                print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
-                if code == -9:
-                    out = "Runtime exceeded, maybe loop forever\n" + out
-                else:
-                    if image_ok: web["image"] = "/csimages/cs/" + pure_pngname
-                if delete_tmp:
-                    remove(csfname)
-                    remove(exename)
-                debug_str("r tiedostot poistettu")
-                    
             elif ttype == "alloy":
                 runcmd = ["java", "-cp", "/cs/java/alloy-dev.jar:/cs/java", "RunAll", pure_exename]
                 code, out, err = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs)
@@ -1157,7 +1112,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if ttype == "java":
                     print("java: ", javaclassname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
-                    code, out, err = run2(["java", "-cp", classpath , javaclassname], cwd=prgpath, timeout=10, env=env, stdin=stdin, ulimit = "ulimit -f 10000",
+                    code, out, err = run2(["java", "-cp", classpath , javaclassname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                           uargs=userargs)
                 elif ttype == "shell":
                     print("shell: ", pure_exename)

@@ -8,9 +8,4 @@
 @kopioi *.sh e:    /q /s
 @kopioi *.bat e:   /q
 @kopioi *. e:      /q
-@mkdir E:\kurssit\tim\timApp\modules\svn\templates
-@cd E:\kurssit\tim\timApp\modules\svn\templates
-@cd t:\svn\templates
-@kopioi *.* e:      /q /s
-cd ..
 

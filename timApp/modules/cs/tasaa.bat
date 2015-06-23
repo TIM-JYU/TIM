@@ -14,9 +14,4 @@
 @kopioi dr*.* e:   /q /s
 @xcopy  ptauno\index.html E:\kurssit\pauno\taulukko.html /d /Y
 @xcopy  ptauno\taulukko.* E:\kurssit\pauno\  /d /Y
-@mkdir E:\kurssit\tim\timApp\modules\cs\templates
-@cd E:\kurssit\tim\timApp\modules\cs\templates
-@cd t:\cs\templates
-@kopioi *.* e:      /q /s
-cd ..
 @popd
