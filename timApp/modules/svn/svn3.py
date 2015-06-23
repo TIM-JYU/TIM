@@ -184,17 +184,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 def get_html(self, query, show_html):
     is_image = self.path.find('/image/') >= 0
     is_video = self.path.find('/video/') >= 0
-    is_template = self.path.find('/template/') >= 0
+    is_template = self.path.find('/template') >= 0
+    tempfile = get_param(query, "file", "")
 
     if is_image:
         if is_template:
-            return self.wout(file_to_string('templates/image'))
+            return file_to_string('templates/image/' + tempfile)
         s = get_image_html(query)
         return s
 
     if is_video:
         if is_template:
-            return self.wout(file_to_string('templates/video'))
+            return file_to_string('templates/video/' + tempfile)
         s = get_video_html(query)
         return s
 

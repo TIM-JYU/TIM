@@ -3,7 +3,7 @@ videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	videoApp.s
 videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('listvideo'); }]);
 
-
+  
 videoApp.nr = 0;
  
 videoApp.getHeading = function(a,key,$scope,deftype) {
