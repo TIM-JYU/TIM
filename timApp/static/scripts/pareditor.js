@@ -118,26 +118,29 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.parCount = 0;
                 var snippetManager = ace.require("ace/snippets").snippetManager;
 
-                var langTools = ace.require("ace/ext/language_tools");
-                langTools.setCompleters([]);
-                $scope.editor.setOptions({enableBasicAutocompletion: true});
-                var pluginCompleter = {
-                    getCompletions: function (editor, session, pos, prefix, callback) {
-                        if (prefix.length === 0) {
-                            callback(null, []);
-                            return
-                        }
-                        $.getJSON(
-                            "http://rhymebrain.com/talk?function=getRhymes&word=" + prefix,
-                            function (wordList) {
-                                // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
-                                callback(null, wordList.map(function (ea) {
-                                    return {name: ea.word, value: ea.word, score: ea.score, meta: "plugin"}
-                                }));
-                            })
-                    }
-                };
-                langTools.addCompleter(pluginCompleter);
+                /*
+                 var langTools = ace.require("ace/ext/language_tools");
+                 langTools.setCompleters([]);
+                 $scope.editor.setOptions({enableBasicAutocompletion: true});
+                 var pluginCompleter = {
+                 getCompletions: function (editor, session, pos, prefix, callback) {
+                 if (prefix.length === 0) {
+                 callback(null, []);
+                 return
+                 }
+                 $.getJSON(
+                 //TODO: tähän json tiedoston osoite, josta halutaan täydennyksiä
+                 "http://rhymebrain.com/talk?function=getRhymes&word=" + prefix,
+                 function (wordList) {
+                 // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
+                 callback(null, wordList.map(function (ea) {
+                 return {name: ea.word, value: ea.word, score: ea.score, meta: "plugin"}
+                 }));
+                 })
+                 }
+                 };
+                 langTools.addCompleter(pluginCompleter);
+                 */
 
                 var touchDevice = false;
 
@@ -230,6 +233,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
                 //Navigation
                 //Style
+                $scope.indentClicked = function () {
+                    $scope.editor.indent();
+                };
+
+                $scope.outdentClicked = function () {
+                    $scope.editor.blockOutdent();
+                };
 
                 $scope.surroundClicked = function (str, func) {
                     if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
@@ -258,11 +268,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     var cursor = $scope.editor.getCursorPosition();
                     var wordrange = $scope.editor.getSession().getAWordRange(cursor.row, cursor.column);
                     var word = ($scope.editor.session.getTextRange(wordrange));
-                    if (/^\s*$/.test(word)) return;
+                    if (/^\s*$/.test(word)) return false;
                     var wordtrim = word.trim();
                     var difference = word.length - wordtrim.length;
                     wordrange.end.column -= difference;
                     $scope.editor.selection.setRange(wordrange);
+                    return true;
                 }
 
                 $scope.surroundedBy = function (string) {
@@ -277,43 +288,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     return (($scope.surroundedBy('*') && !$scope.surroundedBy('**')) || $scope.surroundedBy('***'));
                 };
 
-                $scope.linkClicked = function () {
-                    var selectedText = "Linkin osoite";
-                    if (!$scope.editor.getSelection().$isEmpty)
-                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
-                    snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}](" + selectedText + ")");
-                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
-                };
-
-                $scope.imageClicked = function () {
-                    var selectedText = "Kuvan osoite";
-                    if (!$scope.editor.getSelection().$isEmpty)
-                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
-                    snippetManager.insertSnippet($scope.editor, "![${0:Kuvan teksti}](" + selectedText + ")");
-                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
-                };
-
                 $scope.codeBlockClicked = function () {
                     snippetManager.insertSnippet($scope.editor, "```\n${0:$SELECTION}\n```");
-                };
-
-                $scope.indentClicked = function () {
-                    $scope.editor.indent();
-                };
-
-                $scope.outdentClicked = function () {
-                    $scope.editor.blockOutdent();
-                };
-
-                $scope.listClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
-                };
-
-                $scope.ruleClicked = function () {
-                    $scope.editor.navigateLineEnd();
-                    snippetManager.insertSnippet($scope.editor, "\n---\n");
                 };
 
                 $scope.headerClicked = function (head) {
@@ -330,14 +306,45 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     if (!touchDevice) $scope.editor.focus();
                 };
                 //Style
-                //Special characters
+                //Insert
+                $scope.linkClicked = function () {
+                    var selectedText = "Linkin osoite";
+                    if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
+                        if ($scope.selectWord()) {
+                            selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                        }
+                    } else {
+                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                    }
+                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
+                    snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}](" + selectedText + ")");
+                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
+                };
 
+                $scope.imageClicked = function () {
+                    var selectedText = "Kuvan osoite";
+                    if (!$scope.editor.getSelection().$isEmpty)
+                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
+                    snippetManager.insertSnippet($scope.editor, "![${0:Kuvan teksti}](" + selectedText + ")");
+                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
+                };
+
+                $scope.listClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
+                };
+
+                $scope.ruleClicked = function () {
+                    $scope.editor.navigateLineEnd();
+                    snippetManager.insertSnippet($scope.editor, "\n---\n");
+                };
+                //Insert
+                //Special characters
                 $scope.charClicked = function ($event) {
                     var character = $($event.target).text();
                     $scope.editor.insert(character);
                     if (!touchDevice) $scope.editor.focus();
                 };
-
                 //Special characters
                 //TEX
                 $scope.texClicked = function () {
@@ -365,7 +372,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
                 //TEX
                 //Plugins
-
                 $scope.pluginClicked = function (plugin, template) {
                     // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
                     $.ajax({
@@ -377,10 +383,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         error: function () {
                             console.log("Virhe");
                         }
-                    })
+                    });
                     if (!touchDevice) $scope.editor.focus();
-                }
-
+                };
                 //Plugins
 
                 $scope.onFileSelect = function (url, $files) {
@@ -417,7 +422,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     for (var i = 0; i < buttons.length; i++) {
                         $(buttons[i]).attr("class", 'extraButtonArea hidden');
                     }
-                    ;
                     for (var i = 0; i < tabs.length; i++) {
                         $(tabs[i]).removeClass('active');
                     }
