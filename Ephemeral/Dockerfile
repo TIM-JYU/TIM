@@ -24,7 +24,6 @@ run cd /Ephemeral && cabal install --only-dependencies
 add EphemeralPrelude.hs /Ephemeral/
 add Setup.hs /Ephemeral/
 add Simplistic.hs /Ephemeral/
-add SecSplit.hs /Ephemeral/
 
 run cd /Ephemeral && cabal configure
 run cd /Ephemeral && cabal build

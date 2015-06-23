@@ -33,51 +33,72 @@
     {% endblock %}
 </head>
 <body>
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul class="flashes">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
-<div id="header">
-    {% block header %}
-        {% if self.title() != "TIM" %}
-            <div class="doctitle">{{ self.title() }}</div>
-        {% endif %}
-        {% include 'loginlogout.html' %}
-        <a href="/">Main page</a>
-        {% if session.user_id %}
-            |
-            <a href="/settings">Customize TIM</a>
-        {% endif %}
 
-        {% if self.title() != "TIM" and is_owner %}
-            |
-            <a href="/manage/{{docID}}">Manage</a>
-            |
-            {% if teacher_mode %}
-               <a href="/view/{{docID}}">Student view</a>
-            {% else %}
-               <a href="/teacher/{{docID}}">Teacher view</a>
+<div class="container">
+    <div class="header clearfix">
+        <a href="/">
+            <img alt="TIM - The Interactive Material." class="pull-left"
+                 src="{{url_for('static', filename='images/tim-logo_42height.png')}}"/>
+        </a>
+        <a href="https://www.jyu.fi">
+            <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                 src="{{url_for('static', filename='images/jyulogo.png')}}"/>
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div id="header">
+        {% block header %}
+            {% if self.title() != "TIM" %}
+                <!-- <div class="doctitle">{{ self.title() }}</div> -->
             {% endif %}
-        {% elif doc %}
-            |
-            <a href="/view/{{doc.name}}">Student view</a>
-            |
-            <a href="/teacher/{{doc.name}}">Teacher view</a>
-	{% endif %}
-    {% endblock %}
-</div>
-<div class="material">
-    <!-- <h1>{{ self.title() }}</h1> --> 
-    {% block content %}{% endblock %}
-</div>
-<div id="footer">
-    {% block footer %}
-    {% endblock %}
+            {% include 'loginlogout.html' %}
+            {% if is_owner %}
+                <a href="/manage/{{docID}}">Manage</a>
+            {%endif%}
+
+            {% if self.title() != "TIM" and is_owner %}
+                |
+                {% if teacher_mode %}
+                   <a href="/view/{{docID}}">Student view</a>
+                {% else %}
+                   <a href="/teacher/{{docID}}">Teacher view</a>
+                {% endif %}
+            {% elif objName == "folder" %}
+                |
+                <a href="/view/{{docID}}">View</a>
+            {% elif doc %}
+                |
+                <a href="/view/{{doc.name}}">Student view</a>
+                |
+                <a href="/teacher/{{doc.name}}">Teacher view</a>
+            {% endif %}
+
+        {% endblock %}
+    </div>
+
+    {% block beforecontent %}{% endblock %}
+
+    <div class="material">
+        <!-- <h1>{{ self.title() }}</h1> -->
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block aftercontent %}{% endblock %}
+
+    <footer class="footer">
+        {% block footer %}
+        {% endblock %}
+    </footer>
 </div>
 
 </body>
