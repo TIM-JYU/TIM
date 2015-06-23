@@ -11,7 +11,7 @@ wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
 rm Graphics.jar*
 wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
 rm Ali*.jar
-wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
+wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar 
 
 # Copy Jypeli dll's to temp directory
 mkdir /tmp/uhome

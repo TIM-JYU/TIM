@@ -4,7 +4,7 @@
 docker stop csPlugin
 docker rm csPlugin
 
-# Start csPlugin
+# Start csPlugin 
 pkill csdaemon
 
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
