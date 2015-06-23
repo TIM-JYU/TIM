@@ -10,7 +10,7 @@ export DISPLAY=:1
 # Copy Jypeli dll's to temp directory
 # cp /cs/jypeli/* /tmp/cs
 
-# Get ComTest
+# Get ComTest 
 #cd /tmp
 #rm ComTest.jar*
 #wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar

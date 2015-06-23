@@ -9,7 +9,7 @@ cmd=$1
 if [  -z "$cmd"  ]; then
     cmd="cmd.sh"
 fi
-
+ 
 # Copy Jypeli dll's to temp directory
 # cp /cs/jypeli/* /tmp/
 
@@ -30,10 +30,10 @@ fi
 # echo "Running: $cmd" >> log.txt
 chmod 755 ~/$cmd
 #cp $cmd a.sh
-#cd $PWD # ei tässä kun kaikki eivät kestä muutosta
+#cd $PWD # ei tÃ¤ssÃ¤ kun kaikki eivÃ¤t kestÃ¤ muutosta
 ulimit -f 80000 # -t 1 -v 2000 -s 100 -u 10
 source ~/$cmd
-rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
+rm ~/$cmd # TÃ¤mÃ¤ ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
 export >~/.state
 #set >>~/.state
 
