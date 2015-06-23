@@ -69,7 +69,7 @@ var crumbs = getBreadcrumbs(doc.name);
 
     
         <div class="margin">
-            {{objNameC}} owner: <select ng-model="doc.owner"
+            Document owner: <select ng-model="doc.owner"
                                   ng-options="group.name for group in userGroups track by group.id"
                 ng-change="changeOwner()">
 
