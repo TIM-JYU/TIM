@@ -1775,12 +1775,19 @@ button:disabled {
     }
 }
 
-.breadcrumb-div {
-    margin-top: 10px;
+.breadcrumb>li+li:before {
+    padding: 0 0px  !important;
+    color: #ccc  !important;
+    content: "/"  !important;
 }
 
+.breadcrumb-div {
+    margin-top: 3px !important;
+    background-color: #fff !important;
+}
 .breadcrumb {
     font-size: 1.0em;
+    background-color: #fff !important;
 }
 
 .breadcrumb.ol {
@@ -1789,12 +1796,17 @@ button:disabled {
 
 .breadcrumb a {
     /* Overrides the default TIM style for links */
+    /*background-color: #fff;  */
     font-size: 1.0em;
-	padding: 8px 15px;
+    padding: 0px 0px !important;
     margin-bottom: 20px;
     border-radius: 4px;
 }
 
 .breadcrumb active {
-	text-decoration: bold;
+    text-decoration: bold;
+}
+
+.breadcrumb>li {
+    display: inline-block;
 }
