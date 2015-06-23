@@ -70,11 +70,11 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def add_questions(self, doc_id: 'int', par_index: 'int', question: 'str', answer: 'str', questionJson: 'str',
+    def add_questions(self, doc_id: 'int', par_index: 'int', question_title: 'str', answer: 'str', questionJson: 'str',
                       commit: 'bool'=True) -> 'int':
         """
         Creates a new questions
-        :param question: Question to be saved
+        :param question_title: Question to be saved
         :param answer: Answer to the question
         :param commit: Commit or not to commit
         :return: The id of the newly creater question
@@ -82,9 +82,9 @@ class Questions(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       INSERT INTO Question (doc_id, par_index, question,answer, questionJson)
+                       INSERT INTO Question (doc_id, par_index, question_title, answer, questionJson)
                        VALUES(?,?,?,?,?)
-                       """, [doc_id, par_index, question, answer, questionJson])
+                       """, [doc_id, par_index, question_title, answer, questionJson])
         if commit:
             self.db.commit()
         question_id = cursor.lastrowid
@@ -92,7 +92,7 @@ class Questions(TimDbBase):
 
 
     @contract
-    def update_question(self, question_id: 'int', doc_id: 'int', par_index:'int', question: 'str', answer: 'str', questionJson: 'str') -> 'int':
+    def update_question(self, question_id: 'int', doc_id: 'int', par_index:'int', question_title: 'str', answer: 'str', questionJson: 'str') -> 'int':
         """
         Updates the question with particular id
         """
@@ -100,9 +100,9 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Question
-                       SET doc_id = ?, par_index = ?, question = ?, answer = ?, questionJson = ?
+                       SET doc_id = ?, par_index = ?, question_title = ?, answer = ?, questionJson = ?
                        WHERE question_id = ?
-                       """, [doc_id, par_index, question, answer, questionJson, question_id])
+                       """, [doc_id, par_index, question_title, answer, questionJson, question_id])
 
         self.db.commit()
         return question_id

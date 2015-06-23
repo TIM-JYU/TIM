@@ -468,16 +468,16 @@ def add_question():
     question_id = None
     if (request.args.get('question_id')):
         question_id = int(request.args.get('question_id'))
-    question = request.args.get('question')
+    question_title = request.args.get('question_title')
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     par_index = int(request.args.get('par_index'))
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_index, question, answer, questionJson)
+        questions = timdb.questions.add_questions(doc_id, par_index, question_title, answer, questionJson)
     else:
-        questions = timdb.questions.update_question(question_id, doc_id, par_index, question, answer, questionJson)
+        questions = timdb.questions.update_question(question_id, doc_id, par_index, question_title, answer, questionJson)
     return jsonResponse(questions)
 
 
@@ -654,6 +654,9 @@ def create_lecture():
     if not request.args.get("doc_id") or not request.args.get("start_date") or not request.args.get(
             "end_date") or not request.args.get("lecture_code"):
         abort(400, "Missing parameters")
+    lecture_id = -1
+    if request.args.get("lecture_id"):
+        lecture_id = int(request.args.get("lecture_id"))
     doc_id = int(request.args.get("doc_id"))
     verifyOwnership(doc_id)
     timdb = getTimDb()
@@ -664,9 +667,13 @@ def create_lecture():
     if not password:
         password = ""
     current_user = getCurrentUserId()
-    if not timdb.lectures.check_if_correct_name(doc_id, lecture_code):
-        abort(400, "Can't create two or more lectures with the same name to the same document.")
-    lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
+    if not timdb.lectures.check_if_correct_name(doc_id, lecture_code, lecture_id):
+            abort(400, "Can't create two or more lectures with the same name to the same document.")
+    if lecture_id <0:
+        lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
+    else:
+        timdb.lectures.update_lecture(lecture_id, doc_id, current_user, start_time, end_time, lecture_code, password)
+
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
     if start_time <= current_time <= end_time:
@@ -1093,8 +1100,7 @@ def get_question():
     # verifyOwnership(doc_id)
     timdb = getTimDb()
     question = timdb.questions.get_question(question_id)
-    return jsonResponse(question)
-
+    return jsonResponse(question[0])
 
 @app.route("/deleteQuestion", methods=['POST'])
 def delete_question():

@@ -28,6 +28,16 @@ DROP TABLE IF EXISTS UserNotes;
 
 DROP TABLE IF EXISTS ReadParagraphs;
 
+DROP TABLE IF EXISTS Question;
+
+DROP TABLE IF EXISTS Lecture;
+
+DROP TABLE IF EXISTS LectureUsers;
+
+DROP TABLE IF EXISTS LectureAnswer;
+
+DROP TABLE IF EXISTS Message;
+
 CREATE TABLE Answer (
   id          INTEGER      NOT NULL,
   task_id     VARCHAR(255) NOT NULL,
@@ -264,7 +274,7 @@ CREATE TABLE Question (
   question_id  INTEGER NOT NULL PRIMARY KEY,
   doc_id       INTEGER NOT NULL,
   par_index    INTEGER NOT NULL,
-  question     TEXT    NOT NULL,
+  question_title    TEXT NOT NULL,
   answer       TEXT,
   questionJson TEXT
 );

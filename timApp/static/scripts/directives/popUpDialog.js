@@ -44,6 +44,7 @@ timApp.directive('popUpDialog', function () {
                 $scope.mouseDownX = e.clientX;
                 $scope.mouseDownY = e.clientY;
                 var window = $element.find("popUpBack");
+
                 window.context.style.position = "absolute";
                 window.context.style.bottom = 'auto';
 
