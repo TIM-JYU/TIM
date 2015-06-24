@@ -152,10 +152,6 @@ timApp.controller("ViewCtrl", [
                 });
 
 
-
-
-
-
             sc.lectureId = -1;
             sc.inLecture = false;
 
@@ -626,14 +622,23 @@ timApp.controller("ViewCtrl", [
                     }
 
                     sc.forEachParagraph(function (index) {
-                        var parIndex = index + sc.startIndex;
-                        if (parIndex in pars) {
-                            var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
-                            $(this).append($questionsDiv);
+                            if ($(this).children().hasClass("questions")) {
+                                var children = $(this).children();
+                                for (var i = 0; i < children.length; i++) {
+                                    if (children[i].className == "questions") {
+                                        children[i].remove();
+                                    }
+                                }
+                            }
 
+                            var parIndex = index + sc.startIndex;
+                            if (parIndex in pars) {
+                                var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
+                                $(this).append($questionsDiv);
+
+                            }
                         }
-                    });
-
+                    );
 
                 });
         };
@@ -698,7 +703,10 @@ timApp.controller("ViewCtrl", [
                     } else {
                         classes.push("unread");
                     }
-                    var $div = $("<div>", {class: classes.join(" "), title: "Click to mark this paragraph as read"});
+                    var $div = $("<div>", {
+                        class: classes.join(" "),
+                        title: "Click to mark this paragraph as read"
+                    });
                     $(this).append($div);
                 });
             }).error(function () {
@@ -858,7 +866,9 @@ timApp.controller("ViewCtrl", [
         sc.getReadPars();
         sc.processAllMath($('body'));
         sc.defaultAction = sc.showOptionsWindow;
-    }]);
+    }
+])
+;
 
 /**
  * Controller for creating and editing questions
@@ -1249,7 +1259,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.close = function () {
         scope.removeErrors();
         scope.clearQuestion();
-        scope.toggleQuestion();
+        if (scope.questionShown) scope.toggleQuestion();
     };
 
     /**
@@ -1518,23 +1528,28 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             });
     };
 
-            scope.deleteQuestion = function () {
-            var confirmDi = $window.confirm("Are you sure you want to delete this question?");
-            if (confirmDi) {
-                http({
-                    url: '/deleteQuestion',
-                    method: 'POST',
-                    params: {question_id: scope.qId, doc_id: scope.docId}
+    scope.deleteQuestion = function () {
+        var confirmDi = $window.confirm("Are you sure you want to delete this question?");
+        if (confirmDi) {
+            http({
+                url: '/deleteQuestion',
+                method: 'POST',
+                params: {question_id: scope.qId, doc_id: scope.docId}
+            })
+                .success(function () {
+                    $window.console.log("Deleted question done!");
+                    //location.reload();
+                    scope.close();
+                    //scope.clearQuestion();
+                    scope.getQuestions();
                 })
-                    .success(function () {
-                        $window.console.log("Deleted question done!");
-                        location.reload();
-                    })
-                    .error(function (error) {
+                .error(function (error) {
 
-                        $window.console.log(error);
-                    });
+                    $window.console.log(error);
+                    scope.getQuestions();
 
-            }
-        };
+                });
+
+        }
+    };
 }]);
