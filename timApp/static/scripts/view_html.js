@@ -395,7 +395,7 @@ timApp.controller("ViewCtrl", [
                 if ($mathdiv) sc.processMath($mathdiv[0]);
 
                 var $newpar = $("<div>", {class: "par"})
-                    .append($("<div>", {class: "parContent"}).append($mathdiv || html));
+                    .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
@@ -597,6 +597,22 @@ timApp.controller("ViewCtrl", [
             $actionDiv.attr('tim-draggable-fixed', '');
             $actionDiv = $compile($actionDiv)(sc);
             $par.prepend($actionDiv);
+
+
+            var element = $('.actionButtons');
+            console.log(element.outerHeight());
+            var viewport = {};
+            viewport.top = $(window).scrollTop();
+            viewport.bottom = viewport.top + $(window).height();
+            var bounds = {};
+            bounds.top = element.offset().top;
+            bounds.bottom = bounds.top + element.outerHeight();
+            var y = $(window).scrollTop();
+            if (bounds.bottom > viewport.bottom) y += (bounds.bottom - viewport.bottom);
+            else if (bounds.top < viewport.top) y += (bounds.top - viewport.top);
+            $('html, body').animate({
+                scrollTop: y
+            }, 500);
         };
 
         sc.dist = function (coords1, coords2) {
@@ -909,7 +925,20 @@ timApp.controller("ViewCtrl", [
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
-        if (sc.rights.editable) sc.getEditPars();
+        if (sc.rights.editable) {
+            var $material = $('.material');
+            $material.append($("<div>", {class: "addBottomContainer"}).append($("<a>", {
+                class: "addBottom",
+                text: 'Add paragraph'
+            })));
+            sc.onClick(".addBottom", function ($this, e) {
+                $(".actionButtons").remove();
+                var $par = $('#pars').children().last();
+                var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top - 1000};
+                return sc.showAddParagraphBelow(e, $par, coords);
+            });
+            sc.getEditPars();
+        }
         sc.processAllMath($('body'));
 
         sc.defaultAction = sc.showOptionsWindow;

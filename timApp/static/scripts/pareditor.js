@@ -231,6 +231,14 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.downClicked = function () {
                     $scope.editor.navigateDown(1);
                 };
+
+                $scope.homeClicked = function () {
+                    $scope.editor.navigateFileStart();
+                };
+
+                $scope.endClicked = function () {
+                    $scope.editor.navigateFileEnd();
+                };
                 //Navigation
                 //Style
                 $scope.indentClicked = function () {
@@ -318,7 +326,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     if (isImage) image = "!";
                     if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
                         if ($scope.selectWord())
-                            descDefault= $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                            descDefault = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
                     } else
                         descDefault = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
                     snippetManager.insertSnippet($scope.editor, image + "[" + descDefault + "](${0:" + linkDefault + "})");
@@ -326,6 +334,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.listClicked = function () {
                     snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
+                };
+
+                $scope.tableClicked = function () {
+                    snippetManager.insertSnippet($scope.editor, "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
+                        "-------- -------- -------- --------\n" +
+                        "1.rivi   x        x        x       \n" +
+                        "2.rivi   x        x        x       ");
                 };
 
                 $scope.ruleClicked = function () {
@@ -455,6 +470,20 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }
                     }
                 };
+
+                var element = $('pareditor');
+                console.log(element.outerHeight());
+                var viewport = {};
+                viewport.top = $(window).scrollTop();
+                viewport.bottom = viewport.top + $(window).height();
+                var bounds = {};
+                bounds.top = element.offset().top;
+                bounds.bottom = bounds.top + element.outerHeight();
+                if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
+                    $('html, body').animate({
+                        scrollTop: $("pareditor").offset().top
+                    }, 2000);
+                }
             }
         };
     }]);

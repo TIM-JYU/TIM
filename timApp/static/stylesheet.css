@@ -1811,3 +1811,16 @@ button:disabled {
 .breadcrumb>li {
     display: inline-block;
 }
+
+.addBottomContainer {
+    position: relative;
+    margin-left: 1em;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    padding-top: 19px;
+    color: #777;
+    border-top: 1px solid #e5e5e5;
+    max-width: 52em;
+    text-align: center;
+    padding-bottom: 1em;
+}

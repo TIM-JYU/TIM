@@ -18,6 +18,9 @@
             <button class="editorButton" title="Move Right" ng-click="wrapFn(rightClicked)">&#8594;</button>
             <button class="editorButton" title="Move up" ng-click="wrapFn(upClicked)">&#8593;</button>
             <button class="editorButton" title="Move down" ng-click="wrapFn(downClicked)">&#8595;</button>
+            <button class="editorButton" title="Move to the beginning of the file" ng-click="wrapFn(homeClicked)">Home</button>
+            <button class="editorButton" title="Move to the end of the file" ng-click="wrapFn(endClicked)">End</button>
+            <a onclick="window.open('https://tim.it.jyu.fi/view/tim/TIM-ohjeet','_blank')">Help</a>
         </div>
         <div id="styleButtons" class="extraButtonArea hidden">
             <button class="editorButton" title="Indent selection/line" ng-click="wrapFn(indentClicked)">&#8649;
@@ -37,6 +40,7 @@
             <button class="editorButton" title="Add link" ng-click="linkClicked('Linkin teksti', 'Linkin osoite'); wrapFn()">Link</button>
             <button class="editorButton" title="Add image" ng-click="linkClicked('Kuvan teksti', 'Kuvan osoite', true); wrapFn()">Image</button>
             <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
+            <button class="editorButton" title="Table" ng-click="wrapFn(tableClicked)">Table</button>
             <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
         </div>
         <div id="specialButtons" class="extraButtonArea hidden">
