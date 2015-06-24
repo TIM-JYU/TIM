@@ -14,7 +14,7 @@
 var angular;
 
 var timApp = angular.module('timApp');
-timApp.controller('AnswerToQuestionController', ['$scope','$window',function ($scope) {
+timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', function ($scope, $rootScope) {
     "use strict";
     $scope.questionHeaders = [];
     $scope.answerTypes = [];
@@ -37,6 +37,9 @@ timApp.controller('AnswerToQuestionController', ['$scope','$window',function ($s
      */
     $scope.answer = function () {
         $scope.dynamicAnswerSheetControl.answerToQuestion();
+        if($scope.isLecturer) {
+            $rootScope.$broadcast("lecturerAnswered");
+        }
 
     };
 
@@ -46,5 +49,12 @@ timApp.controller('AnswerToQuestionController', ['$scope','$window',function ($s
      */
     $scope.close = function () {
         $scope.dynamicAnswerSheetControl.closeQuestion();
+    };
+
+    /**
+     *
+     */
+    $scope.showAnswers = function () {
+        $scope.$emit('showAnswers', true);
     };
 }]);

@@ -1063,7 +1063,10 @@ def ask_question():
         abort(400, "Not valid lecture id")
 
     timdb = getTimDb()
-    question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"])
+    if not json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"]  :
+        question_timelimit = 0
+    else:
+        question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"])
     threadToStopQuestion = threading.Thread(target=stop_question_from_running,
                                             args=(lecture_id, question_id, question_timelimit))
 

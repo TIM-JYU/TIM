@@ -19,18 +19,29 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     $scope.dynamicAnswerShowControl = {};
     $scope.canvas = "";
     $scope.questionTitle = "";
+    $scope.lecturerAnswered = false;
 
+    $scope.$on("closeAnswerSheetForGood", function() {
+        $scope.$emit('closeAnswerShow');
+       $scope.dynamicAnswerShowControl.close();
+    });
     /**
      * Closes statistic window
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.close = function () {
         $scope.$emit('closeAnswerShow');
-        $scope.dynamicAnswerShowControl.close();
+        if($scope.lecturerAnswered) {
+            $scope.dynamicAnswerShowControl.close();
+        }
     };
 
+    $scope.$on("lecturerAnswered", function () {
+       $scope.lecturerAnswered = true;
+    });
+
     /**
-     * Adds answer to statistic diractive
+     * Adds answer to statistic directive
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.$on("putAnswers", function (event, answer) {
@@ -42,6 +53,7 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
      * @memberof module:showStatisticsToQuestionController
      */
     $scope.$on("createChart", function (event, question) {
+        $scope.lecturerAnswered = false;
         $scope.dynamicAnswerShowControl.createChart(question);
         $scope.questionTitle = question.QUESTION;
     });

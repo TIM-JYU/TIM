@@ -103,9 +103,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Listener of askQuestion event. Opens the question view and answer view for the lecturer.
          */
         $scope.$on("askQuestion", function (event, data) {
-
+            $scope.showStudentAnswers = true;
             if ($scope.useAnswers) {
-                $scope.showStudentAnswers = true;
                 // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
                 $timeout(function () {
                     $rootScope.$broadcast("createChart", data.json);
@@ -121,7 +120,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 isLecturer: $scope.isLecturer
             });
             $scope.showAnswerWindow = true;
-
         });
 
         /*
@@ -143,6 +141,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.$on('getIsLecturer', function () {
             $scope.$emit('postIsLecturer', $scope.isLecturer);
+        });
+
+        $scope.$on('showAnswers', function (x) {
+            $scope.showStudentAnswers = x;
         });
 
         /*

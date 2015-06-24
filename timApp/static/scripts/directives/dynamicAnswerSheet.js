@@ -14,7 +14,7 @@
 var angular;
 
 var timApp = angular.module('timApp');
-timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($interval, $compile) {
+timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', function ($interval, $compile, $rootScope) {
     "use strict";
     return {
         restrict: 'E',
@@ -206,6 +206,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                 clearInterval(promise);
                 $element.empty();
                 $scope.$emit('closeQuestion');
+                $rootScope.$broadcast('closeAnswerSheetForGood');
             };
         }
 
