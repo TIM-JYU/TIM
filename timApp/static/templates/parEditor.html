@@ -34,8 +34,8 @@
             <button class="editorButton" title="Heading 4" ng-click="headerClicked('####')">H4</button>
         </div>
         <div id="insertButtons" class="extraButtonArea hidden">
-            <button class="editorButton" title="Add link" ng-click="wrapFn(linkClicked)">Link</button>
-            <button class="editorButton" title="Add image" ng-click="wrapFn(imageClicked)">Image</button>
+            <button class="editorButton" title="Add link" ng-click="linkClicked('Linkin teksti', 'Linkin osoite'); wrapFn()">Link</button>
+            <button class="editorButton" title="Add image" ng-click="linkClicked('Kuvan teksti', 'Kuvan osoite', true); wrapFn()">Image</button>
             <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
             <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
         </div>

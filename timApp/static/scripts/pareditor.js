@@ -305,29 +305,23 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.editor.insert(head + ' ' + line);
                     if (!touchDevice) $scope.editor.focus();
                 };
+
                 //Style
                 //Insert
-                $scope.linkClicked = function () {
-                    var selectedText = "Linkin osoite";
+                /**
+                 * @param descDefault Placeholder for description
+                 * @param linkDefault Placeholder for link address
+                 * @param isImage true, if link is an image
+                 */
+                $scope.linkClicked = function (descDefault, linkDefault, isImage) {
+                    var image = "";
+                    if (isImage) image = "!";
                     if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
-                        if ($scope.selectWord()) {
-                            selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                        }
-                    } else {
-                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                    }
-                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
-                    snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}](" + selectedText + ")");
-                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
-                };
-
-                $scope.imageClicked = function () {
-                    var selectedText = "Kuvan osoite";
-                    if (!$scope.editor.getSelection().$isEmpty)
-                        selectedText = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                    //console.log(selectedText.toLowerCase().indexOf("http://") === 0);
-                    snippetManager.insertSnippet($scope.editor, "![${0:Kuvan teksti}](" + selectedText + ")");
-                    //snippetManager.insertSnippet($scope.editor, "[${0:Linkin teksti}]($SELECTION)");
+                        if ($scope.selectWord())
+                            descDefault= $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                    } else
+                        descDefault = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
+                    snippetManager.insertSnippet($scope.editor, image + "[" + descDefault + "](${0:" + linkDefault + "})");
                 };
 
                 $scope.listClicked = function () {

@@ -131,22 +131,18 @@
         <div id="pars">
             {% for t in text %}
                 {% if 'task_id' in t %}
-                    {% if not t['html'].startswith("<div></div>") %}
                         <div class="par">
                             <answerbrowser task-id="{{ t['task_id'] }}"></answerbrowser>
                             <div class="parContent">
                                 {{ t['html']|safe }}
                             </div>
                         </div>
-                    {% endif %}
                 {% else %}
-                    {% if not t['html'].startswith("<div></div>") %}
                         <div class="par" ng-non-bindable>
                             <div class="parContent">
                                 {{ t['html']|safe }}
                             </div>
                 </div>
-                    {% endif %}
                 {% endif %}
             {% endfor %}
         </div>
