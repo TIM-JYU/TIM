@@ -270,43 +270,16 @@ timApp.controller("ViewCtrl", [
 
         // Event handlers
 
-        sc.fixPageCoords = function (e) {
-            if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
-                e.pageX = e.originalEvent.touches[0].pageX;
-                e.pageY = e.originalEvent.touches[0].pageY;
-            }
-            return e;
-        };
-
         sc.onClick = function (className, func) {
-            var downEvent = null;
-            var downCoords = null;
-
-            $document.on('mousedown touchstart', className, function (e) {
-                downEvent = sc.fixPageCoords(e);
-                downCoords = {left: downEvent.pageX, top: downEvent.pageY};
-            });
-            $document.on('mousemove touchmove', className, function (e) {
-                if (downEvent == null)
-                    return;
-                var e2 = sc.fixPageCoords(e);
-                if (sc.dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
-                    // Moved too far away, cancel the event
-                    downEvent = null;
+            $document.on('touchstart click', className, function (e) {
+                if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
+                    e.pageX = e.originalEvent.touches[0].pageX;
+                    e.pageY = e.originalEvent.touches[0].pageY;
                 }
-            });
-            $document.on('touchcancel', className, function (e) {
-                console.log("cancel");
-                downEvent = null;
-            });
-            $document.on('mouseup touchend', className, function (e) {
-                console.log("tock");
-                if (downEvent != null) {
-                    console.log("event!");
-                    if (func($(this), downEvent)) {
-                        e.preventDefault();
-                    }
-                    downEvent = null;
+
+                if (func($(this), e)) {
+                    e.stopPropagation();
+                    e.preventDefault();
                 }
             });
         };
@@ -422,7 +395,7 @@ timApp.controller("ViewCtrl", [
                 if ($mathdiv) sc.processMath($mathdiv[0]);
 
                 var $newpar = $("<div>", {class: "par"})
-                    .append($("<div>", {class: "parContent"}).append($mathdiv));
+                    .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
