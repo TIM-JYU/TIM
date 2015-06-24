@@ -1,5 +1,6 @@
 import os
 import shutil
+import dumboclient
 import initdb2
 import tim
 import ephemeralclient
@@ -38,12 +39,17 @@ if __name__ == '__main__':
     else:
         print('Not running inside docker, skipping bower check.')
     ephemeral_started = False
+    dumbo_started = False
     try:
         if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
             p = ephemeralclient.launch_ephemeral(ignore_signals='pudb' in sys.modules)
+            d = dumboclient.launch_dumbo()
             ephemeral_started = True
+            dumbo_started = True
         initdb2.initialize_database()
         tim.startApp()
     finally:
         if ephemeral_started:
             p.kill()
+        if dumbo_started:
+            d.kill()
