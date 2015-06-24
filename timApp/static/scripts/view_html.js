@@ -395,7 +395,7 @@ timApp.controller("ViewCtrl", [
                 if ($mathdiv) sc.processMath($mathdiv[0]);
 
                 var $newpar = $("<div>", {class: "par"})
-                    .append($("<div>", {class: "parContent"}).append($mathdiv));
+                    .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
