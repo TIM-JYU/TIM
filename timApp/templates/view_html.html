@@ -64,15 +64,15 @@
         {% else %}
             var users = [{{current_user|tojson}}];
         {% endif %}
-        
+
         var crumbs = getBreadcrumbs(docName);
         {% include 'breadcrumbs.js' %}
     </script>
-{% endblock %} 
+{% endblock %}
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
         {% include 'breadcrumbs.html' %}
-        
+
 
         <div id="contents" ng-show="indexTable.length > 0" class="ng-cloak">
             <div class="menu">
@@ -131,18 +131,26 @@
         <div id="pars">
             {% for t in text %}
                 {% if 'task_id' in t %}
+                    {% if not t['html'].startswith("<div></div>") %}
                         <div class="par">
+                    {% else %}
+                        <div class="par" style="display: none;">
+                    {% endif %}
                             <answerbrowser task-id="{{ t['task_id'] }}"></answerbrowser>
                             <div class="parContent">
                                 {{ t['html']|safe }}
                             </div>
                         </div>
                 {% else %}
+                    {% if not t['html'].startswith("<div></div>") %}
                         <div class="par" ng-non-bindable>
+                    {% else %}
+                        <div class="par" ng-non-bindable style="display: none;">
+                    {% endif %}
                             <div class="parContent">
                                 {{ t['html']|safe }}
                             </div>
-                </div>
+                        </div>
                 {% endif %}
             {% endfor %}
         </div>
