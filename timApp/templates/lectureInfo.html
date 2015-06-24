@@ -51,8 +51,8 @@
                 <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
                 <strong>Questions asked:</strong>
                 <ul>
-                    <li ng-repeat="question in questions" ng-bind-html="question.question">
-                        {{ "{{ question.question }}" }}
+                    <li ng-repeat="question in questions" ng-bind-html="question.question_title">
+                        {{ "{{ question.question_title }}" }}
                     </li>
                 </ul>
             </div>
@@ -75,7 +75,7 @@
 
             <div>
                 <div ng-repeat="question in questions" style="margin-bottom: 2em">
-                    <p class="bold" ng-show="showPoints" ng-bind-html="question.question">{{ "{{question.question}}" }}</p>
+                    <p class="bold" ng-show="showPoints" ng-bind-html="question.question_title">{{ "{{question.question_title}}" }}</p>
                     <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
                                           control='dynamicAnswerShowControls[$index]'
                                           class="chart"></show-chart-directive>
