@@ -971,6 +971,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     scope.question.timeLimit.seconds = 0;
                 }
 
+            } else {
+                scope.question.endTimeSelected = false;
             }
 
             scope.toggleQuestion();
@@ -984,7 +986,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         question: "",
         matrixType: "",
         answerFieldType: "",
-        timeLimit: {hours: "0", minutes: "0", seconds: "30"}
+        timeLimit: {hours: "0", minutes: "0", seconds: "30"},
+        endTimeSelected: true
+
     };
 
 
@@ -1243,7 +1247,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             question: "",
             matrixType: "",
             answerFieldType: "",
-            timeLimit: {hours: "0", minutes: "0", seconds: "30"}
+            timeLimit: {hours: "0", minutes: "0", seconds: "30"},
+            endTimeSelected: true
         };
 
         scope.rows = [];
