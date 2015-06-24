@@ -185,6 +185,15 @@ def uploaded_file(filename):
 
 @app.route("/getDocuments")
 def getDocuments():
+    timdb = getTimDb()
+    user_id = getCurrentUserId()
+    docs = [doc for doc in timdb.documents if timdb.users.userHasViewAccess(user_id, doc['id'])]
+    for doc in docs:
+        doc['canEdit'] = timdb.users.userHasEditAccess(user_id, doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(user_id, doc['id']) or timdb.users.userHasAdminAccess(user_id)
+        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
+    return jsonResponse(docs)
+
     versions = 1
     if request.args.get('versions'):
         ver_str = request.args.get('versions')
@@ -262,7 +271,7 @@ def createItem(itemName, itemType, createFunction):
 
     userName = getCurrentUserName()
 
-    if timdb.documents.getDocumentId(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
+    if timdb.documents.get_document_id(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
         abort(403, 'Item with a same name already exists.')
 
     if not canWriteToFolder(itemName):
@@ -277,7 +286,7 @@ def createDocument():
     jsondata = request.get_json()
     docName = jsondata['doc_name']
     timdb = getTimDb()
-    createFunc = lambda docName: timdb.documents.createDocument(docName, getCurrentUserGroup())
+    createFunc = lambda docName: timdb.documents.create_document(docName, getCurrentUserGroup())
     return createItem(docName, 'document', createFunc)
 
 @app.route("/createFolder", methods=["POST"])
@@ -312,11 +321,11 @@ def pluginCall(plugin, fileName):
     except PluginException:
         abort(404)
 
-@app.route("/index/<int:docId>")
-def getIndex(docId):
+@app.route("/index/<int:doc_id>")
+def getIndex(doc_id):
     timdb = getTimDb()
-    verifyViewAccess(docId)
-    index = timdb.documents.getIndex(getNewest(docId))
+    verifyViewAccess(doc_id)
+    index = Document(doc_id).get_index()
     return jsonResponse(index)
 
 
@@ -405,8 +414,7 @@ def getNotes(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    doc = get_document(doc_id, doc_ver)
+    doc = Document(doc_id)
     notes = [note for note in timdb.notes.getNotes(group_id, doc)]
     for note in notes:
         note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
@@ -421,20 +429,19 @@ def getNotes(doc_id):
 def getReadParagraphs(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    doc = get_document(doc_id, doc_ver)
+    doc = Document(doc_id)
     readings = timdb.readings.getReadings(getCurrentUserGroup(), doc)
     return jsonResponse(readings)
 
-@app.route("/read/<int:doc_id>/<str:specifier>", methods=['PUT'])
+@app.route("/read/<int:doc_id>/<specifier>", methods=['PUT'])
 def setReadParagraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
-    version = request.headers.get('Version', '')
-    verify_document_version(doc_id, version)
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    doc = get_document(doc_id, doc_ver)
-    par = get_paragraph(doc, specifier)
+    # todo: document versions
+    #version = request.headers.get('Version', 'latest')
+    #verify_document_version(doc_id, version)
+    doc = Document(doc_id)
+    par = DocParagraph.get(specifier)
     if par is None:
         return abort(400, 'Non-existent paragraph')
     timdb.readings.setAsRead(getCurrentUserGroup(), doc, par)
@@ -445,10 +452,10 @@ def setReadParagraph(doc_id, specifier):
 def setAllAsRead(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
-    version = request.headers.get('Version', '')
-    verify_document_version(doc_id, version)
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    doc = get_document(doc_id, doc_ver)
+    # todo: document versions
+    #version = request.headers.get('Version', 'latest')
+    #verify_document_version(doc_id, version)
+    doc = Document(doc_id, version)
     timdb.readings.setAllAsRead(getCurrentUserGroup(), doc)
     return okJsonResponse()
 

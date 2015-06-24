@@ -102,21 +102,21 @@ class Folders(TimDbBase):
         if root_path is None or root_path == '' or root_path == '.':
             cursor.execute(
                 """
-                SELECT description FROM Block WHERE type_id = ? AND description LIKE "%/%"
+                SELECT name FROM DocEntry WHERE name LIKE "%/%"
                 UNION
-                SELECT description || "/" FROM Block WHERE type_id = ?
-                """, [blocktypes.DOCUMENT, blocktypes.FOLDER])
+                SELECT (description || "/") as name FROM Block WHERE type_id = ?
+                """, [blocktypes.FOLDER])
             startindex = 0
         else:
             cursor.execute(
                 """
-                SELECT description FROM Block WHERE type_id = ? AND description LIKE "{0}/%/%"
+                SELECT name FROM DocEntry WHERE name LIKE "{0}/%/%"
                 UNION
-                SELECT description || "/" FROM Block WHERE type_id = ? AND description LIKE "{0}/%"
-                """.format(root_path), [blocktypes.DOCUMENT, blocktypes.FOLDER])
+                SELECT (description || "/") as name FROM Block WHERE type_id = ? AND description LIKE ?
+                """, [root_path + '/%', blocktypes.FOLDER])
             startindex = len(root_path) + 1
 
-        foldernames = {doc['description'][startindex:doc['description'].find('/', startindex)] for doc in self.resultAsDictionary(cursor)}
+        foldernames = {doc['name'][startindex:doc['name'].find('/', startindex)] for doc in self.resultAsDictionary(cursor)}
 
         folders = [{
                        'id': self.getFolderId(posixpath.join(root_path, name), group_id),
@@ -144,7 +144,8 @@ class Folders(TimDbBase):
                        [new_name, blocktypes.FOLDER, block_id])
 
         # Rename contents
-        cursor.execute('SELECT description FROM Block WHERE description LIKE "{}/%"'.format(old_name))
+        #cursor.execute('SELECT description FROM Block WHERE description LIKE "{}/%"'.format(old_name))
+        cursor.execute('SELECT description FROM Block WHERE description LIKE ?', [old_name + '/%'])
         for row in cursor.fetchall():
             # TODO: update sqlite and use sql update set description = replace(...) ...
             old_docname = row[0]
@@ -161,7 +162,8 @@ class Folders(TimDbBase):
         folder_name = folder_info['name']
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT exists(SELECT description FROM Block WHERE description LIKE "{}/%")'.format(folder_name))
+        #cursor.execute('SELECT exists(SELECT description FROM Block WHERE description LIKE "{}/%")'.format(folder_name))
+        cursor.execute('SELECT exists(SELECT description FROM Block WHERE description LIKE ?)', [folder_name + '/%'])
         return cursor.fetchone()[0] == 0
 
     @contract

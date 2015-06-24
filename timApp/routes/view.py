@@ -1,15 +1,47 @@
 """Routes for document view."""
 
+from contracts import contract, new_contract
 from flask import Blueprint, render_template, redirect, url_for
+from .cache import *
 from .common import *
-from .cache import cache
+from document.document import Document, DocParagraph
+from htmlSanitize import sanitize_html
 
 import pluginControl
 
+new_contract('range', 'tuple(int, int)')
 
 view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
+
+
+@cache.memoize(3600)
+def get_whole_document(document_id):
+    pars = [par for par in Document(document_id)]
+    for par in pars:
+        par.setHtml(sanitize_html(par.getHtml()))
+    return pars
+
+@contract
+def get_partial_document(document_id: 'int', view_range: 'range') -> 'list(DocParagraph)':
+    i = 0
+    pars = []
+    for par in Document(document_id):
+        if i >= view_range[1]:
+            break
+        if i >= view_range[0]:
+            par.setHtml(sanitize_html(par.getHtml()))
+            pars.append(par)
+        i += 1
+    return pars
+
+@contract
+def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'list(DocParagraph)':
+    # Separated into 2 functions for optimization
+    # (don't cache partial documents and don't check ranges in the loop for whole ones)
+    return get_whole_document(doc_id) if view_range is None else get_partial_document(doc_id, view_range)
+
 
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
@@ -33,8 +65,8 @@ def teacher_view(doc_name):
 
     return view(doc_name, 'view_html.html', view_range, user, teacher=True)
 
-
-def parse_range(start_index, end_index):
+@contract
+def parse_range(start_index: 'int|None', end_index: 'int|None') -> 'range|None':
     if start_index is None and end_index is None:
         return None
 
@@ -58,25 +90,19 @@ def try_return_folder(doc_name):
                            docName=folder_name)
 
 
-@cache.memoize(3600)
-def get_document(document_id):
-    return getTimDb().documents.getDocumentAsHtmlBlocksSanitized(document_id)
-
-
 def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     timdb = getTimDb()
-    doc_id = timdb.documents.getDocumentId(doc_name)
+    doc_id = timdb.documents.get_document_id(doc_name)
     
     if doc_id is None or not timdb.documents.documentExists(doc_id):
         # Backwards compatibility: try to use as document id
         try:
             doc_id = int(doc_name)
             if not timdb.documents.documentExists(doc_id):
-                #abort(404)
                 return try_return_folder(doc_name)
+            doc_name = timdb.documents.get_first_document_name(doc_id)
         except ValueError:
             return try_return_folder(doc_name)
-            #abort(404)
 
     if teacher:
         verifyOwnership(doc_id)
@@ -88,14 +114,8 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         else:
             abort(403)
 
-    version = {'hash': timdb.documents.getNewestVersionHash(doc_id)}
-    xs = get_document(DocIdentifier(doc_id, version['hash']))
-    doc = timdb.documents.getDocument(doc_id)
-    start_index = 0
-    if view_range is not None:
-        start_index = max(view_range[0], 0)
-        end_index = min(view_range[1], len(xs))
-        xs = xs[start_index:end_index + 1]
+    start_index = max(view_range[0], 0) if view_range else 0
+    xs = get_document(doc_id, view_range)
 
     user = getCurrentUserId()
     if teacher:
@@ -132,12 +152,12 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
     return render_template(template_name,
-                           docID=doc['id'],
-                           docName=doc['name'],
+                           docID=doc_id,
+                           docName=doc_name,
                            text=texts,
                            plugin_users=users,
                            current_user=current_user,
-                           version=version,
+                           version=Document(doc_id).getVersion(),
                            js=jsPaths,
                            cssFiles=cssPaths,
                            jsMods=modules,

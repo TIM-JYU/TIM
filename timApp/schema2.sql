@@ -11,6 +11,8 @@ DROP TABLE IF EXISTS BlockRelation;
 
 DROP TABLE IF EXISTS Block;
 
+DROP TABLE IF EXISTS DocEntry;
+
 DROP TABLE IF EXISTS NewUser;
 
 DROP TABLE IF EXISTS User;
@@ -123,6 +125,20 @@ CONSTRAINT Block_id
 )
 ;
 
+CREATE TABLE DocEntry (
+id INTEGER NOT NULL,
+name VARCHAR(512) NOT NULL,
+public INTEGER NOT NULL default 1,
+
+CONSTRAINT DocEntry_PK
+    PRIMARY KEY (name),
+CONSTRAINT DocEntry_id
+    FOREIGN KEY (id)
+    REFERENCES Block (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+;
 
 CREATE TABLE BlockRelation (
 parent_block_specifier INTEGER NOT NULL,

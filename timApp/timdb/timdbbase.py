@@ -26,7 +26,7 @@ class TimDbBase(object):
     """
 
     @contract
-    def __init__(self, db: 'sqlite3.Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
+    def __init__(self, db: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
         
         :param db: The database connection.
@@ -82,12 +82,7 @@ class TimDbBase(object):
         cursor.execute('SELECT exists(SELECT id FROM Block WHERE id = ? AND type_id = ? LIMIT 1)',
                        [block_id, block_type])
         result = cursor.fetchone()
-        if result[0] == 1:
-            if check_file and not os.path.exists(self.getBlockPath(block_id)):
-                print ('blockExists: the block {} was in database but the file was not found'.format(block_id))
-                return False
-            return True
-        return False
+        return result[0] == 1
 
     @contract
     def setOwner(self, block_id: 'int', usergroup_id: 'int'):

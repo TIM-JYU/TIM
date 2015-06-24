@@ -106,7 +106,7 @@ def renameDocument(doc_id):
     if new_name.endswith('/'):
         return jsonResponse({'message': 'The document name cannot end with /'}, 404)
 
-    if timdb.documents.getDocumentId(new_name) is not None or timdb.folders.getFolderId(new_name) is not None:
+    if timdb.documents.get_document_id(new_name) is not None or timdb.folders.getFolderId(new_name) is not None:
         return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
 
     if not timdb.documents.documentExists(doc_id):

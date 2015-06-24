@@ -77,7 +77,7 @@ class TimDb(object):
         self.db.commit()
         self.db.close()
 
-    def initializeTables(self, schema_file='schema2.sql'):
+    def initialize_tables(self, schema_file='schema2.sql'):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
         with open(schema_file, 'r') as schema_file:

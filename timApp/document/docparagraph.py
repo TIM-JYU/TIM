@@ -80,7 +80,8 @@ class DocParagraph:
 
     @contract
     def getHtml(self) -> 'str':
-        return self.__data['html']
+        # TODO: integration to Dumbo
+        return self.__data['html'] if self.__data['html'] else self.getMarkdown()
 
     @contract
     def setHtml(self, new_html: 'str'):

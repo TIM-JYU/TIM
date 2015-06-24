@@ -1,4 +1,6 @@
 import os
+import re
+
 from shutil import copyfile
 from datetime import datetime
 
@@ -6,13 +8,12 @@ from contracts import contract
 from ansi2html import Ansi2HTMLConverter
 
 from document.docparagraph import DocParagraph
-from htmlSanitize import sanitize_html
+from document.documentparser import DocumentParser
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralClient, EphemeralException, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException, GitClient
 from utils import date_to_relative
-from sqlite3 import Connection
 from document.document import Document
 
 class Documents(TimDbBase):
@@ -31,8 +32,11 @@ class Documents(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-        self.ec = EphemeralClient(EPHEMERAL_URL)
-        self.git = GitClient.connect(files_root_path)
+        #self.ec = EphemeralClient(EPHEMERAL_URL)
+        #self.git = GitClient.connect(files_root_path)
+
+    def __iter__(self):
+        return DocEntryIterator(self.db)
 
     @contract
     def addMarkdownBlock(self, document_id: 'DocIdentifier', content: 'str',
@@ -57,43 +61,47 @@ class Documents(TimDbBase):
         return response['paragraphs'], new_doc
 
     @contract
-    def createDocument(self, name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
+    def create_document(self, name: 'str', owner_group_id: 'int') -> 'Document':
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created.
         :param owner_group_id: The id of the owner group.
-        :returns: The id of the newly created document.
+        :returns: The newly created document object.
         """
 
         if '\0' in name:
             raise TimDbException('Document name cannot contain null characters.')
 
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
-        document_path = os.path.join(self.blocks_path, str(document_id))
+        document = Document(document_id)
+        document.addParagraph('Edit me!')
+        #document_path = os.path.join(self.blocks_path, str(document_id))
 
-        try:
-            self.writeUtf8('Edit me!', document_path)
-        except OSError:
-            print('Couldn\'t open file for writing:' + document_path)
-            self.db.rollback()
-            raise
+        #try:
+        #    self.writeUtf8('Edit me!', document_path)
+        #except OSError:
+        #    print('Couldn\'t open file for writing:' + document_path)
+        #    self.db.rollback()
+        #    raise
 
-        rel_block_path = os.path.relpath(self.blocks_path, self.files_root_path)
-        rel_document_path = os.path.join(rel_block_path, str(document_id))
-        self.git.add(rel_document_path)
-        doc_hash = self.git.commit('Created a new document: {} (id = {})'.format(name, document_id))
+        #rel_block_path = os.path.relpath(self.blocks_path, self.files_root_path)
+        #rel_document_path = os.path.join(rel_block_path, str(document_id))
+        #self.git.add(rel_document_path)
+        #doc_hash = self.git.commit('Created a new document: {} (id = {})'.format(name, document_id))
 
-        docId = DocIdentifier(document_id, doc_hash)
+        #docId = DocIdentifier(document_id, doc_hash)
 
-        self.ec.loadDocument(docId, b'Edit me!')
+        #self.ec.loadDocument(docId, b'Edit me!')
 
         cursor = self.db.cursor()
         cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP
                           WHERE type_id = ? and id = ?""",
-                       [blocktypes.DOCUMENT, docId.id])
+                       [blocktypes.DOCUMENT, document_id])
+        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
+                       [document_id, name, True])
         self.db.commit()
-        self.updateLatestRevision(docId)
-        return docId
+        #self.update_latest_revision(docId)
+        return document
 
     @contract
     def deleteDocument(self, document_id: 'int'):
@@ -143,18 +151,40 @@ class Documents(TimDbBase):
         return self.blockExists(document_id, blocktypes.DOCUMENT)
 
     @contract
-    def getDocumentId(self, document_name: 'str') -> 'int|None':
+    def get_document_id(self, document_name: 'str') -> 'int|None':
         """Gets the document's identifier by its name or None if not found.
         
         :param document_name: The name of the document.
-        :returns: A row representing the document.
+        :returns: The document id, or none if not found.
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM Block WHERE description = ? AND type_id = ?',
-                       [document_name, blocktypes.DOCUMENT])
+        cursor.execute('SELECT id FROM DocEntry WHERE name = ?', [document_name])
 
         row = cursor.fetchone()
-        return row[0] if row is not None else None
+        return row[0] if row else None
+
+    @contract
+    def get_document_names(self, document_id: 'int') -> 'list(dict)':
+        """Gets the document's names by its id.
+
+        :param document_id: The id of the document.
+        :returns: A list of dictionaries in format [{'name': (str), 'public': (bool)}, ...].
+        """
+        cursor = self.db.cursor()
+        cursor.execute('SELECT name, public FROM DocEntry WHERE id = ?', [document_id])
+        return self.resultAsDictionary(cursor)
+
+    def get_first_document_name(self, document_id: 'int') -> 'str':
+        """Gets the first public (or non-public if not found) name for a document id.
+
+        :param document_id: The id of the document.
+        :returns: A name for the document.
+        """
+        aliases = self.get_document_names(document_id)
+        for alias in aliases:
+            if alias['public']:
+                return alias['name']
+        return aliases[0]['name'] if len[aliases] > 0 else 'Untitled document'
 
     @contract
     def getDocument(self, document_id: 'int') -> 'dict':
@@ -163,6 +193,7 @@ class Documents(TimDbBase):
         :param document_id: The id of the document to be retrieved.
         :returns: A row representing the document.
         """
+        # To be deleted (use get_document_names)
         cursor = self.db.cursor()
         cursor.execute('SELECT id, description AS name FROM Block WHERE id = ? AND type_id = ?',
                        [document_id, blocktypes.DOCUMENT])
@@ -171,6 +202,7 @@ class Documents(TimDbBase):
 
     @contract
     def getDocuments(self, historylimit: 'int'=100) -> 'list(dict)':
+        # To be deleted (use iterator)
         """Gets all the documents in the database.
         
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
@@ -205,7 +237,7 @@ class Documents(TimDbBase):
         return results
 
     @contract
-    def updateLatestRevision(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
+    def update_latest_revision(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
         revid = cursor.fetchone()[0]
@@ -273,7 +305,7 @@ class Documents(TimDbBase):
         return [self.trimDoc(block) for block in self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)]
 
     @contract
-    def getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(DocParagraph)':
+    def __getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(DocParagraph)':
         """Gets the specified document in HTML form.
 
         :param document_id: The id of the document.
@@ -281,25 +313,9 @@ class Documents(TimDbBase):
         """
 
         html_blocks = self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
-
         pars = [DocParagraph(md='', html=block, t='rghurig', par_id='asdads' + str(idx)) for idx, block in enumerate(html_blocks)]
 
         return pars
-
-    def getDocumentAsHtmlBlocksSanitized(self, document_id: 'DocIdentifier') -> 'list(DocParagraph)':
-        """Gets the specified document in HTML form sanitized.
-
-        :param document_id: The id of the document.
-        :returns: The document contents as a list of sanitized HTML blocks.
-        """
-        pars = self.getDocumentAsHtmlBlocks(document_id)
-        for par in pars:
-            par.setHtml(sanitize_html(par.getHtml()))
-        return pars
-
-    @contract
-    def getIndex(self, document_id: 'DocIdentifier') -> 'list(str)':
-        return [block for block in self.getDocumentAsBlocks(document_id) if len(block) > 0 and block[0] == '#']
 
     @contract
     def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
@@ -398,35 +414,49 @@ class Documents(TimDbBase):
         revid = cursor.fetchone()
         if revid is None:
             doc_ver = self.git.getLatestVersion(self.getDocumentPathAsRelative(doc_id))
-            self.updateLatestRevision(DocIdentifier(doc_id, doc_ver))
+            self.update_latest_revision(DocIdentifier(doc_id, doc_ver))
             return doc_ver
         else:
             cursor.execute("SELECT Hash FROM ReadRevision WHERE revision_id = ?", [revid[0]])
             return cursor.fetchone()[0]
 
     @contract
-    def importDocumentFromFile(self, document_file: 'str', document_name: 'str',
-                               owner_group_id: 'int') -> 'DocIdentifier':
+    def import_document_from_file(self, document_file: 'str', document_name: 'str',
+                               owner_group_id: 'int') -> 'Document':
         """Imports the specified document in the database.
 
         :param document_file: The file path of the document to import.
         :param document_name: The name for the document.
         :param owner_group_id: The owner group of the document.
-        :returns: The id of the imported document.
+        :returns: The created document object.
         """
 
         # Assuming the document file is markdown-formatted, importing a document is very straightforward.
-        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
-        copyfile(document_file, self.getDocumentPath(doc_id.id))
+        doc_id = self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT)
+        copyfile(document_file, self.getDocumentPath(doc_id))
 
-        self.git.add(self.getDocumentPathAsRelative(doc_id.id))
-        doc_hash = self.git.commit('Imported document: {} (id = {})'.format(document_name, doc_id.id))
-        docId = DocIdentifier(doc_id.id, doc_hash)
+        cursor = self.db.cursor()
+        cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP
+                          WHERE type_id = ? and id = ?""",
+                       [blocktypes.DOCUMENT, doc_id])
+        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
+                       [doc_id, document_name, True])
+        self.db.commit()
 
-        with open(document_file, 'rb') as f:
-            self.ec.loadDocument(docId, f.read())
+        #self.git.add(self.getDocumentPathAsRelative(doc_id.id))
+        #doc_hash = self.git.commit('Imported document: {} (id = {})'.format(document_name, doc_id.id))
+        #docId = DocIdentifier(doc_id.id, doc_hash)
 
-        return docId
+        #with open(document_file, 'rb') as f:
+        #    self.ec.loadDocument(docId, f.read())
+
+        #return docId
+        doc = Document(doc_id)
+        with open(document_file, 'r') as f:
+            parser = DocumentParser(f.read()) # todo: use a stream instead
+            for block in parser.parse_document():
+                doc.addParagraph(block['md'])
+        return doc
 
     @contract
     def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
@@ -480,7 +510,7 @@ class Documents(TimDbBase):
         self.ec.renameDocument(new_id, DocIdentifier(new_id.id, version))
 
         new_id = DocIdentifier(new_id.id, version)
-        self.updateLatestRevision(new_id)
+        self.update_latest_revision(new_id)
         self.updateDocModified(new_id, commit=False)
         self.db.commit()
         return new_id
@@ -543,7 +573,7 @@ class Documents(TimDbBase):
         new_id = DocIdentifier(document_id.id, version)
         self.ec.loadDocument(new_id, new_content.encode('utf-8'))
         self.updateDocModified(new_id, commit=False)
-        self.updateLatestRevision(new_id, commit=False)
+        self.update_latest_revision(new_id, commit=False)
         self.db.commit()
         return new_id
 
@@ -570,6 +600,39 @@ class Documents(TimDbBase):
         :param content: The markdown to preview.
         :returns: A list of HTML blocks.
         """
+        # TODO: Dumbo integration
         doc_id = DocIdentifier('temp', '')
         self.ec.loadDocument(doc_id, content.encode('utf-8'))
-        return self.getDocumentAsHtmlBlocks(doc_id)
+        return self.__getDocumentAsHtmlBlocks(doc_id)
+
+class DocEntryIterator:
+    @contract
+    def __init__(self, db: 'Connection', root_folder: 'str' = ''):
+        self.db = db
+        self.cursor = db.cursor()
+        self.root_folder = re.sub('^\/+', '', root_folder)
+
+        if len(self.root_folder) > 0:
+            self.cursor.execute(
+                "SELECT id, name FROM DocEntry WHERE name LIKE ?",
+                [blocktypes.DOCUMENT, self.root_folder + '/%'])
+        else:
+            self.cursor.execute("SELECT id, name FROM DocEntry")
+
+    @contract
+    def __next__(self) -> 'dict':
+        row = self.cursor.fetchone()
+        if row is None:
+            raise StopIteration()
+        doc_id = int(row[0])
+        fullname = row[1]
+        name = re.sub('^({})\/'.format(re.escape(self.root_folder))) if len(self.root_folder) > 0 else fullname
+
+        cursor = self.db.cursor()
+        cursor.execute("SELECT created, modified, latest_revision_id FROM Block WHERE id = ?", [doc_id])
+        block = cursor.fetchone()
+        if block is None:
+            print("Block entry missing for document id ")
+            return {'id': doc_id, 'name': name, 'fullname': fullname}
+
+        return {'id': doc_id, 'name': name, 'fullname': fullname, 'created': block[0], 'modified': block[1], 'latest_revision_id': block[2]}

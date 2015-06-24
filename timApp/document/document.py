@@ -9,7 +9,7 @@ class Document:
     @contract()
     def __init__(self, doc_id: 'int|None', files_root = None):
         self.doc_id = doc_id if doc_id is not None else Document.getNextFreeId()
-        self.files_root = self.get_files_root() if files_root is None else files_root
+        self.files_root = self.get_default_files_root() if not files_root else files_root
         self.__check_paths()
 
     @classmethod
@@ -209,6 +209,11 @@ class Document:
         # todo: file to record paragraph hashes
         self.__incrementVersion(increment_major=False)
         return p
+
+    @contract
+    def get_index(self) -> 'list(str)':
+        # todo: optimization?
+        return [par.getMarkdown() for par in self if par.getMarkdown().startswith('#')]
 
 
 new_contract('Document', Document)
