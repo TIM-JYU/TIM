@@ -103,7 +103,7 @@
                          ng-click="leaveLecture()" title="Leave this lecture" ng-show="inLecture">
                     <img id="stop-icon" src="{{ url_for('static', filename='images/stop-icon3.png') }}" class="icon"
                          ng-click="endLecture()" title="End this lecture" ng-show="canStop">
-                    <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
+                    <img ng-click="editLecture()" id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                          title="Edit this lecture" ng-show="canStop">
                 </div>
             </div>
@@ -121,12 +121,11 @@
                 {% raw %}
                 <ul>
                     <li ng-repeat="lecture in currentLecturesList">
-                        <p ng-click="selectCurrentLecture()">{{ lecture.lecture_code }}<input type="submit"
-                                                                                              value="Join" ng-click="joinLecture(lecture.lecture_code)"> <input
-                                type="submit" value="Edit"></p>
+                        <p ng-click="selectCurrentLecture()">{{ lecture.lecture_code }}<input style="margin-left: 5px;" type="submit"
+                                                                                              value="Join" ng-click="joinLecture(lecture.lecture_code)"></p>
                     </li>
                     <li ng-show="currentLecturesList.length == 0">
-                        <p>{{ lecture.lecture_code }}<input type="submit" value="Join"
+                        <p>{{ lecture.lecture_code }} <input type="submit" value="Join"
                                                             ng-click="joinLecture(lecture.lecture_code)"> <input
                                 type="submit" value="Edit"></p>
                     </li>
@@ -142,8 +141,7 @@
                 {% raw %}
                 <ul>
                     <li ng-repeat="lecture in futureLecturesList">
-                        <p> {{ lecture.lecture_code }}<input type="submit" value="Start"> <input type="submit"
-                                                                                                 value="Edit"></p>
+                        <p> {{ lecture.lecture_code }}<input type="submit" value="Start"></p>
                     </li>
                     <li ng-show="futureLecturesList.length == 0">
                         <p>No lectures</p>
