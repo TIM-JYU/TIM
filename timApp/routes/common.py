@@ -1,5 +1,6 @@
 """Common functions for use with routes."""
 from document.docparagraphencoder import DocParagraphEncoder
+from document.document import Document
 
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response, request
@@ -111,11 +112,17 @@ def okJsonResponse():
     return jsonResponse({'status': 'ok'})
 
 
-def getNewest(docId):
-    docId = int(docId)
-    timdb = getTimDb()
-    version = timdb.documents.getNewestVersionHash(docId)
-    return DocIdentifier(docId, version)
+def get_newest_document(doc_id):
+    """
+    Returns the newest Document object with the specified numeric id.
+
+    :rtype: Document
+    :type doc_id: int
+    :param doc_id: The numeric id.
+    :return: The Document object.
+    """
+
+    return Document(doc_id)
 
 def verify_document_version(doc_id, version):
     timdb = getTimDb()
@@ -127,6 +134,11 @@ def verify_document_version(doc_id, version):
 
 
 def verify_json_params(*args):
+    """
+
+    :type args: list[str]
+    :rtype: tuple[str]
+    """
     result = ()
     json_params = request.get_json()
     for arg in args:

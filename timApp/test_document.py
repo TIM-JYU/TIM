@@ -118,7 +118,7 @@ class DocTest(TimDbTest):
         doc, _ = self.create_test_notes(test_length)
         new_par_index = test_length // 2
         new_count = random.randint(1, 100)
-        _, doc = self.db.documents.addMarkdownBlock(doc, '\n\n'.join(['new'] * new_count), new_par_index)
+        _, doc = self.db.documents.add_paragraph(doc, '\n\n'.join(['new'] * new_count), new_par_index)
         self.check_notes(new_count, new_par_index, self.db.notes.getNotes(0, doc.id, doc.hash), test_length)
 
     def test_notes_with_edit(self):
@@ -126,14 +126,14 @@ class DocTest(TimDbTest):
         doc, _ = self.create_test_notes(test_length)
         par_index = test_length // 2
         new_count = random.randint(1, 100)
-        _, doc = self.db.documents.modifyMarkDownBlock(doc, par_index, '\n\n'.join(['new'] * new_count))
+        _, doc = self.db.documents.modify_paragraph(doc, par_index, '\n\n'.join(['new'] * new_count))
         self.check_notes(new_count - 1, par_index + 1, self.db.notes.getNotes(0, doc.id, doc.hash), test_length)
 
     def test_notes_with_delete(self):
         print('test_notes_with_delete')
         doc, _ = self.create_test_notes(test_length)
         delete_par_index = test_length // 2
-        doc = self.db.documents.deleteParagraph(doc, delete_par_index)
+        doc = self.db.documents.delete_paragraph(doc, delete_par_index)
         self.check_notes(-1, delete_par_index, self.db.notes.getNotes(0, doc.id, doc.hash), test_length - 1)
 
     def test_readings(self):
@@ -149,7 +149,7 @@ class DocTest(TimDbTest):
         fr = readings[0]
         self.assertEqual(fr['par_index'], par_index)
 
-        doc = self.db.documents.deleteParagraph(doc, 0)
+        doc = self.db.documents.delete_paragraph(doc, 0)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         fr = readings[0]
         par_index -= 1
@@ -177,7 +177,7 @@ class DocTest(TimDbTest):
         self.db.readings.setAsRead(0, doc.id, doc.hash, 3)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.check_list_dict_contents(readings, 'par_index', 2, 3)
-        blocks, doc = self.db.documents.addMarkdownBlock(doc, 'edited', 3)
+        blocks, doc = self.db.documents.add_paragraph(doc, 'edited', 3)
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.check_list_dict_contents(readings, 'par_index', 2, 4)
         self.db.readings.setAsRead(0, doc.id, doc.hash, 3)
@@ -189,7 +189,7 @@ class DocTest(TimDbTest):
         doc, _ = self.create_test_document(5)
         par_index = 3
         self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
-        _, doc = self.db.documents.modifyMarkDownBlock(doc, par_index, 'edited')
+        _, doc = self.db.documents.modify_paragraph(doc, par_index, 'edited')
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.check_list_dict_contents(readings, 'par_index', par_index)
         self.check_list_dict_contents(readings, 'status', 'modified')
@@ -239,7 +239,7 @@ class DocTest(TimDbTest):
         self.assertEqual(note['UserGroup_id'], 0)
         self.assertEqual(note['content'], content3)
 
-        blocks, doc = self.db.documents.addMarkdownBlock(doc, 'edited', 0)
+        blocks, doc = self.db.documents.add_paragraph(doc, 'edited', 0)
         notes = self.db.notes.getNotes(0, doc.id, doc.hash)
         self.assertEqual(len(notes), 2)
         self.assertEqual(notes[0]['note_index'], 0)
@@ -258,7 +258,7 @@ class DocTest(TimDbTest):
         self.assertEqual(note['par_index'], par_index + 1)
         self.assertEqual(note['content'], content4)
 
-        blocks, doc = self.db.documents.addMarkdownBlock(doc, 'edited', 0)
+        blocks, doc = self.db.documents.add_paragraph(doc, 'edited', 0)
         content5 = 'new2'
 
         self.db.notes.modifyNote(doc.id, doc.hash, par_index + 2, 0, content5, 'everyone', [])
@@ -309,7 +309,7 @@ class DocTest(TimDbTest):
         # Leading space shouldn't get stripped here because it may denote a code block
         self.assertEqual(text, '  test')
 
-        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, '  test  ')
+        _, doc = self.db.documents.modify_paragraph(doc, 0, '  test  ')
         text = self.db.documents.getDocumentMarkdown(doc)
         # Leading space gets stripped now because the paragraph was processed by Ephemeral
         self.assertEqual(text, 'test')
@@ -317,7 +317,7 @@ class DocTest(TimDbTest):
         self.assertEqual(text, 'test')
 
         # Test to strip non-breaking spaces
-        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, '  test  ')
+        _, doc = self.db.documents.modify_paragraph(doc, 0, '  test  ')
         text = self.db.documents.getDocumentMarkdown(doc)
         self.assertEqual(text, 'test')
         text = self.db.documents.getBlock(doc, 0)
@@ -330,7 +330,7 @@ class DocTest(TimDbTest):
         doc = self.db.documents.updateDocument(doc, 'edit1')
         self.check_newest_version(doc)
 
-        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit2')
+        _, doc = self.db.documents.modify_paragraph(doc, 0, 'edit2')
         self.check_newest_version(doc)
 
     def check_newest_version(self, latest_doc):
@@ -352,7 +352,7 @@ class DocTest(TimDbTest):
         self.assertEqual(len(result), 0)
 
         self.db.readings.setAsRead(0, doc.id, doc.hash, par_index)
-        _, doc2 = self.db.documents.modifyMarkDownBlock(doc, par_index, 'edited')
+        _, doc2 = self.db.documents.modify_paragraph(doc, par_index, 'edited')
 
         result = self.get_mapping(doc, par_index)
 
@@ -360,7 +360,7 @@ class DocTest(TimDbTest):
         self.check_list_dict_contents(result, 'new_ver', doc2.hash)
         self.check_list_dict_contents(result, 'modified', 'True')
 
-        _, doc3 = self.db.documents.modifyMarkDownBlock(doc2, par_index, 'edited2')
+        _, doc3 = self.db.documents.modify_paragraph(doc2, par_index, 'edited2')
 
         result = self.get_mapping(doc, par_index)
 
@@ -431,10 +431,10 @@ class DocTest(TimDbTest):
         doc = self.db.documents.createDocument('test', 0)
         self.check_newest_version(doc)
 
-        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit 1')
+        _, doc = self.db.documents.modify_paragraph(doc, 0, 'edit 1')
         self.check_newest_version(doc)
 
-        _, doc = self.db.documents.modifyMarkDownBlock(doc, 0, 'edit  1')
+        _, doc = self.db.documents.modify_paragraph(doc, 0, 'edit  1')
         self.check_newest_version(doc)
 
 if __name__ == '__main__':

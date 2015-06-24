@@ -112,7 +112,7 @@ def documentHistory(doc_id, doc_hash):
 
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
-    return documentHistory(doc_id, getNewest(doc_id).hash)
+    return documentHistory(doc_id, get_newest_document(doc_id).hash)
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
@@ -303,14 +303,14 @@ def createFolder():
 def getBlockMd(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlock(getNewest(docId), blockId)
+    block = timdb.documents.getBlock(get_newest_document(docId), blockId)
     return jsonResponse({"text": block})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)    
+    block = timdb.documents.getBlockAsHtml(get_newest_document(docId), blockId)
     return block
 
 @app.route("/<plugin>/<path:fileName>")

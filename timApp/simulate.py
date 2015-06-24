@@ -57,7 +57,7 @@ class TimSimulation:
                 doc = self.db.documents.createDocument(random_word(), user_id)
                 pars = random.randint(min_pars, max_pars)
                 for par_index in range(pars):
-                    _, doc = self.db.documents.addMarkdownBlock(doc, random_paragraph(), par_index)
+                    _, doc = self.db.documents.add_paragraph(doc, random_paragraph(), par_index)
 
     def modify_docs(self, user_count, min_mods, max_mods):
         self.docs = None
@@ -71,18 +71,18 @@ class TimSimulation:
                     mod_type = random.randint(0, 3)
                     if mod_type == 0:
                         # Insert
-                        _, doc = self.db.documents.addMarkdownBlock(doc, random_paragraph(), par_index)
+                        _, doc = self.db.documents.add_paragraph(doc, random_paragraph(), par_index)
                         pars += 1
                     elif mod_type == 1:
                         # Delete
                         try:
-                            doc = self.db.documents.deleteParagraph(doc, par_index)
+                            doc = self.db.documents.delete_paragraph(doc, par_index)
                         except TimDbException:
                             #print("! Nothing to commit exception, par_index = " + str(par_index))
                             pass
                     else:
                         # Modify
-                        _, doc = self.db.documents.modifyMarkDownBlock(doc, par_index, random_paragraph())
+                        _, doc = self.db.documents.modify_paragraph(doc, par_index, random_paragraph())
 
     def mkmeta(self, user_count, readcv, notecv):
         #print("Adding notes with {0}% coverage and read markings with {1}% coverage...".format(100 * notecv, 100 * readcv))
