@@ -29,8 +29,8 @@
                 <th>
                 </th>
 
-                <th ng-show="question.type == 'true-false'">True</th>
-                <th ng-show="question.type == 'true-false'">False</th>
+                <th ng-show="question.type == 'true-false'" class="true-false-title">True</th>
+                <th ng-show="question.type == 'true-false'" class="true-false-title">False</th>
 
                 <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'" id="row-heading">
                     <div class="cart">
@@ -88,8 +88,7 @@
                             <textarea ng-if="question.matrixType == 'textArea' && question.type=='matrix'"
                                       type="text"
                                       placeholder=""
-                                      rows="1"
-                                      cols="20"
+                                      id="matrix-textarea"
                                     disabled></textarea>
                             <!-- Checkbox-->
                             <div ng-if="(question.matrixType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">

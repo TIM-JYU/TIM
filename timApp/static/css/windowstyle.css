@@ -169,8 +169,14 @@ input[type="number"] {
     width: 95% !important;
 }
 
+.true-false-title {
+    text-align: center;
+    width: 50px;
+}
+
 .answer-columns {
     width: 5% !important;
+    text-align: center;
 }
 
 #addRow {
@@ -265,6 +271,12 @@ input[type="number"] {
     border: none;
     background-color: inherit;
     width: 5%;
+}
+
+.answer-columns
+#matrix-textarea {
+    width: 90px;
+    height: 30px;
 }
 
 .negative button{
