@@ -160,7 +160,7 @@ input[type="number"] {
 
 .createQuestion textarea {
     height:100px;
-    width: 400px;
+    width: 95%;
 	resize: vertical;
 }
 
@@ -258,6 +258,7 @@ input[type="number"] {
 }
 
 #row-heading {
+    min-width: 100px;
 }
 
 #buttons {
@@ -311,6 +312,9 @@ input[type="number"] {
     font-size: 125%;
 }
 
+#questionWindow {
+    width: 450px;
+}
 /*Kännykät*/
 
 /* ----------- Galaxy S3 & iPhone 6 & iPhone 5 & 5S & iPhone 4 & 4S----------- */
@@ -327,6 +331,7 @@ input[type="number"] {
 		background-color: #fff;
 		box-shadow: 4px 4px 80px #000;
 	}
+
 }
 
 /* ----------- Galaxy S4 & S5 & iPhone 6+ ----------- */
