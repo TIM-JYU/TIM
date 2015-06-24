@@ -49,13 +49,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
 
                 if ($scope.json.DATA.HEADERS.length > 0) {
                     htmlSheet += "<tr>";
-                    htmlSheet += "<th></th>";
+                    if($scope.json.DATA.HEADERS.length > 1) {
+                        htmlSheet += "<th></th>";
+                    }
                     angular.forEach($scope.json.DATA.HEADERS, function (header) {
                         htmlSheet += "<th>" + header.text + "</th>";
                     });
                     htmlSheet += "</tr>";
-
-
                 }
 
                 angular.forEach($scope.json.DATA.ROWS, function (row) {
@@ -72,7 +72,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                             if (row.COLUMNS[i].answerFieldType === "text") {
                                 group = "group" + i;
-                                htmlSheet += "<td><label> <textarea" + " name='" + group + "'" +
+                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'" +
                                 ">" + $scope.json.DATA.HEADERS[header].text +
                                 "</textarea></label></td>";
                                 header++;
@@ -85,7 +85,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
-                            htmlSheet += "<td><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
+                            htmlSheet += "<td class='answerbutton'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
                             " value='" + row.text + "'" +
                             ">" + row.text + "</label></td>";
                         }

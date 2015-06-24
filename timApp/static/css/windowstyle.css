@@ -184,6 +184,14 @@ input[type="number"] {
     height: 50px;
 }
 
+.answer-button {
+    text-align: center;
+}
+
+#textarea-answer {
+    width: 100%
+}
+
 .buttons {
     border: none;
 	margin: 5px;
