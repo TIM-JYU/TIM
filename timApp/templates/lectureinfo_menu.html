@@ -133,7 +133,7 @@
                     <li ng-show="currentLecturesList.length == 0 && isLecturer">
                         <p>No lectures</p>
                     </li>
-                    <li><p ng-click="toggleLecture()" id="addLecture1"> Add new lecture </p></li>
+                    <li ng-show="isLecturer"><p ng-click="toggleLecture()" id="addLecture1"> Add new lecture </p></li>
                     {% endraw %}
                 </ul>
 
@@ -148,7 +148,7 @@
                     <li ng-show="futureLecturesList.length == 0">
                         <p>No lectures</p>
                     </li>
-                    <li><p ng-click="toggleLecture()" id="addLecture2"> Add new lecture </p></li>
+                    <li ng-show="isLecturer"><p ng-click="toggleLecture()" id="addLecture2"> Add new lecture </p></li>
                 </ul>
                 {% endraw %}
             </div>
