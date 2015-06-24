@@ -36,7 +36,7 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
 			 $http({
                     url: '/getAllLecturesFromDocument',
                     method: 'GET',
-                    params: {'doc_id': $scope.docId}
+                    params: {'doc_id': $scope.docId, 'buster': Date.now()}
                 })
                     .success(function (lectures) {
                         $scope.currentLecturesList = lectures.currentLectures;
