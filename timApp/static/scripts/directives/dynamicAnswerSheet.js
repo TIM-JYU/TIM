@@ -73,8 +73,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                             if (row.COLUMNS[i].answerFieldType === "text") {
                                 group = "group" + i;
                                 htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'" +
-                                ">" + $scope.json.DATA.HEADERS[header].text +
-                                "</textarea></label></td>";
+                                "></textarea></label></td>";
                                 header++;
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
