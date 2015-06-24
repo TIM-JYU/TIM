@@ -40,7 +40,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                     htmlSheet += "<span id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
                 }
 
-                htmlSheet += "<table>";
+                htmlSheet += "<table id='answer-sheet-table'>";
 
                 if ($scope.json.TYPE === "true-false") {
                     $scope.json.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
@@ -53,7 +53,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                         htmlSheet += "<th></th>";
                     }
                     angular.forEach($scope.json.DATA.HEADERS, function (header) {
-                        htmlSheet += "<th>" + header.text + "</th>";
+                        htmlSheet += "<th class='answer-button'>" + header.text + "</th>";
                     });
                     htmlSheet += "</tr>";
                 }
@@ -78,7 +78,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', function ($inte
                                 header++;
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
-                                htmlSheet += "<td><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
+                                htmlSheet += "<td class='answer-button'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
                                 " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
                                 "></label></td>";
                                 header++;

@@ -184,8 +184,12 @@ input[type="number"] {
     height: 50px;
 }
 
+#answer-sheet-table {
+    table-layout: fixed;
+    width: 500px;
+}
 .answer-button {
-    text-align: center;
+    text-align: center !important;
 }
 
 #textarea-answer {
