@@ -10,6 +10,7 @@
             <li class="tab" ng-show="options.showImageUpload"><a ng-click="tabClicked($event, 'uploadButtons')">Upload
                 file/image</a>
             </li>
+            <li class="tab"><a ng-click="tabClicked($event, 'helpButtons')">Help</a></li>
         </ul>
         <div id="navigateButtons" class="extraButtonArea">
             <button class="editorButton" title="Undo" ng-click="wrapFn(undoClicked);editor.focus();">&#8630;</button>
@@ -20,7 +21,7 @@
             <button class="editorButton" title="Move down" ng-click="wrapFn(downClicked)">&#8595;</button>
             <button class="editorButton" title="Move to the beginning of the file" ng-click="wrapFn(homeClicked)">Home</button>
             <button class="editorButton" title="Move to the end of the file" ng-click="wrapFn(endClicked)">End</button>
-            <a onclick="window.open('https://tim.it.jyu.fi/view/tim/TIM-ohjeet','_blank')">Help</a>
+            <button class="editorButton" title="Toggle insert mode on or off" ng-click="wrapFn(insertClicked)">Ins</button>
         </div>
         <div id="styleButtons" class="extraButtonArea hidden">
             <button class="editorButton" title="Indent selection/line" ng-click="wrapFn(indentClicked)">&#8649;
@@ -61,9 +62,10 @@
         <div id="texButtons" class="extraButtonArea hidden">
             <button class="editorButton" ng-click="wrapFn(texClicked)">TeX equation</button>
             <button class="editorButton" ng-click="wrapFn(texBlockClicked)">TeX block</button>
-            <button class="editorButton" ng-click="wrapFn(indexClicked)">X&#x2099;</button>
+            <button class="editorButton" ng-click="wrapFn(indexClicked)">X&#x2093;</button>
             <button class="editorButton" ng-click="wrapFn(powerClicked)">X&#x207f;</button>
-            <button class="editorButton" ng-click="wrapFn(squareClicked)">&#x221a;</button>
+            <!--<button class="editorButton" ng-click="wrapFn(squareClicked)">&#x221a;</button>-->
+            <button class="editorButton" ng-click="wrapFn(squareClicked)">&radic;</button>
             <!-- <button class="editorButton" ng-click="wrapFn(rootClicked)">Root</button> -->
         </div>
         <div id="pluginButtons" class="extraButtonArea hidden">
@@ -79,6 +81,9 @@
             Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
             <span ng-bind="progress"></span>
         </span>
+        </div>
+        <div id="helpButtons" class="extraButtonArea hidden">
+            <a onclick="window.open('https://tim.it.jyu.fi/view/tim/TIM-ohjeet','_blank')">Help</a>
         </div>
     </div>
     <div class="editorContainer">

@@ -600,7 +600,6 @@ timApp.controller("ViewCtrl", [
 
 
             var element = $('.actionButtons');
-            console.log(element.outerHeight());
             var viewport = {};
             viewport.top = $(window).scrollTop();
             viewport.bottom = viewport.top + $(window).height();
@@ -925,6 +924,13 @@ timApp.controller("ViewCtrl", [
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
+
+        $('body,html').bind('scroll mousedown wheel DOMMouseScroll mousewheel', function (e) {
+            if (e.which > 0 || e.type == "mousedown" || e.type == "mousewheel") {
+                $("html,body").stop();
+            }
+        });
+
         if (sc.rights.editable) {
             var $material = $('.material');
             $material.append($("<div>", {class: "addBottomContainer"}).append($("<a>", {

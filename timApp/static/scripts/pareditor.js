@@ -239,6 +239,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.endClicked = function () {
                     $scope.editor.navigateFileEnd();
                 };
+
+                $scope.insertClicked = function () {
+                    $scope.editor.setOverwrite(!$scope.editor.getOverwrite());
+                };
                 //Navigation
                 //Style
                 $scope.indentClicked = function () {
