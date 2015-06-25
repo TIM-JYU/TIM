@@ -378,7 +378,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          */
         $scope.removeErrors = function () {
             $scope.error_message = "";
-            var elementsToRemoveErrorsFrom = [u
+            var elementsToRemoveErrorsFrom = [
                 "lCode",
                 "startDate",
                 "startHour",
