@@ -59,7 +59,8 @@
         
     </form>
 	<div class="buttons">
-            <button id="btnSubmitLecture" type="button" ng-click="submitLecture()">Create</button>
+            <button id="btnSubmitLecture" type="button" ng-click="submitLecture()" ng-show="!editMode">Create</button>
+            <button id="btnSubmitLecture" type="button" ng-click="submitLecture()" ng-show="editMode">Update</button>
             <button type="cancel" ng-click="cancelCreation()">Cancel</button>
     </div>
 </div>

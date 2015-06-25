@@ -627,7 +627,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.editLecture = function () {
             $('#currentList').hide();
             $('#futureList').hide();
-            $rootScope.$broadcast("editLecture", {"lecture_id": $scope.lectureId, "lecture_name": $scope.lectureName, "start_date": $scope.lectureStartTime, "end_date": $scope.lectureEndTime, "password": $scope.password});
+            $rootScope.$broadcast("editLecture", {"lecture_id": $scope.lectureId, "lecture_name": $scope.lectureName, "start_date": $scope.lectureStartTime, "end_date": $scope.lectureEndTime, "password": $scope.password, "editMode": true});
             $scope.showLectureForm = true;
         };
 

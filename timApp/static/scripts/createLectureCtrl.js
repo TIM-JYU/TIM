@@ -36,6 +36,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.startMin = "";
         $scope.earlyJoining = true;
         var date = new Date();
+        $scope.editMode = false;
         $scope.startDate = date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear();
         angular.element('#startDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
         angular.element('#endDate').datepicker({dateFormat: 'dd.m.yy'}); //calendar for start date initalized
@@ -67,6 +68,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             if(data.password !== undefined){
                 $scope.password = data.password;
             }
+            $scope.editMode = data.editMode;
         });
 
         /**
@@ -237,6 +239,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @memberof module:createLectureCtrl
          */
         $scope.submitLecture = function () {
+            if($scope.lectureId === undefined || $scope.lectureId === null) {
+                $scope.editMode = false;
+            }
             $scope.removeErrors();
             $scope.isDateValid($scope.startDate, "startDate");
             if($scope.error_message<=0) {
@@ -304,10 +309,10 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 var alert_message = "";
                 lecture_ending_in_past = $scope.end_date - now_date_object <= 0;
                 /* Confirmations if lecture starts and/or ends before the current date */
-                if (lecture_starting_in_past) {
+                if (lecture_starting_in_past && !$scope.editMode) {
                     alert_message += "Are you sure you want the lecture to start before now? ";
                 }
-                if (lecture_ending_in_past) {
+                if (lecture_ending_in_past && !$scope.editMode) {
                     alert_message += "Are you sure that the lecture ends in the past or now and will not run?";
                 }
                 $window.console.log($scope.error_message.length);
@@ -373,7 +378,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          */
         $scope.removeErrors = function () {
             $scope.error_message = "";
-            var elementsToRemoveErrorsFrom = [
+            var elementsToRemoveErrorsFrom = [u
                 "lCode",
                 "startDate",
                 "startHour",
@@ -441,6 +446,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @memberof module:createLectureCtrl
          */
         $scope.cancelCreation = function () {
+            $scope.editMode = false;
             $scope.$emit("closeLectureForm");
             $scope.clearForm();
         };
