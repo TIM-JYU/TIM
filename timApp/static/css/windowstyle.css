@@ -186,10 +186,11 @@ input[type="number"] {
 
 #answer-sheet-table {
     table-layout: fixed;
-    width: 500px;
+    width: 100%;
 }
 .answer-button {
     text-align: center !important;
+    width: 100px;
 }
 
 #textarea-answer {
