@@ -888,13 +888,17 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
 
+    scope.putBackQuotations = function(x){
+        return x.replace(/&quot;/g, '"');
+    };
+
     scope.$on("editQuestion", function (event, data) {
             var id = data.question_id;
             var json = data.json;
 
             if (id) scope.question.question_id = id;
-            if (json["TITLE"]) scope.question.title = json["TITLE"];
-            if (json["QUESTION"]) scope.question.question = json["QUESTION"];
+            if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
+            if (json["QUESTION"]) scope.question.question = scope.putBackQuotations(json["QUESTION"]);
             if (json["TYPE"]) scope.question.type = json["TYPE"];
             if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
             if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
@@ -909,7 +913,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 columnHeaders[i] = {
                     id: i,
                     type: jsonHeaders[i].type,
-                    text: jsonHeaders[i].text
+                    text: scope.putBackQuotations(jsonHeaders[i].text)
                 };
             }
             scope.columnHeaders = columnHeaders;
@@ -918,7 +922,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             for (var i = 0; i < jsonRows.length; i++) {
                 rows[i] = {
                     id: jsonRows[i].id,
-                    text: jsonRows[i].text,
+                    text: scope.putBackQuotations(jsonRows[i].text),
                     type: jsonRows[i].type,
                     value: jsonRows[i].value
                 };
@@ -1275,6 +1279,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      */
     scope.replaceLinebreaksWithHTML = function (val) {
         var output = val.replace(/(?:\r\n|\r|\n)/g, '<br />');
+        output = output.replace(/"/g, '&quot;');
         return output.replace(/\\/g, "\\\\");
     };
 
@@ -1452,6 +1457,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
 
         var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "ANSWERFIELDTYPE": "' + scope.question.answerFieldType + '", "MATRIXTYPE": "' + scope.question.matrixType + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
+
+        var testJson = JSON.stringify(scope.question);
+        testJson += JSON.stringify(scope.columnHeaders);
 
         questionJson += '"HEADERS" : [';
         var i;
