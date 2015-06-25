@@ -73,7 +73,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                             if (row.COLUMNS[i].answerFieldType === "text") {
                                 group = "group" + i;
                                 htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'"
-                                if($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1) {
+                                if($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1 && $scope.json.DATA.ROWS.length ===1) {
                                     htmlSheet += "style='height:200px'";
                                 }
                                 htmlSheet += "></textarea></label></td>";
