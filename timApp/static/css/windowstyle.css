@@ -253,6 +253,10 @@ input[type="number"] {
 	margin-left: 24px;
 }
 
+.questionAskedWindow {
+    max-width: 800px;
+}
+
 .answerStatistics select, .questioninfoWindow label , .questionAskedWindow label {
 	display: block;
 	margin-top: 10px;
