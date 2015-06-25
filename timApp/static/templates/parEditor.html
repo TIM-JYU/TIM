@@ -13,14 +13,16 @@
             <li class="tab"><a ng-click="tabClicked($event, 'helpButtons')">Help</a></li>
         </ul>
         <div id="navigateButtons" class="extraButtonArea">
-            <button class="editorButton" title="Undo" ng-click="wrapFn(undoClicked);editor.focus();">&#8630;</button>
+            <button class="editorButton" title="Undo" ng-click="wrapFn(undoClicked)">&#8630;</button>
             <button class="editorButton" title="Redo" ng-click="wrapFn(redoClicked)">&#8631;</button>
             <button class="editorButton" title="Move left" ng-click="wrapFn(leftClicked)">&#8592;</button>
             <button class="editorButton" title="Move Right" ng-click="wrapFn(rightClicked)">&#8594;</button>
             <button class="editorButton" title="Move up" ng-click="wrapFn(upClicked)">&#8593;</button>
             <button class="editorButton" title="Move down" ng-click="wrapFn(downClicked)">&#8595;</button>
-            <button class="editorButton" title="Move to the beginning of the file" ng-click="wrapFn(homeClicked)">Home</button>
-            <button class="editorButton" title="Move to the end of the file" ng-click="wrapFn(endClicked)">End</button>
+            <button class="editorButton" title="Move to the beginning of the line" ng-click="wrapFn(homeClicked)">Home</button>
+            <button class="editorButton" title="Move to the end of the line" ng-click="wrapFn(endClicked)">End</button>
+            <button class="editorButton" title="Move to the beginning of the file" ng-click="wrapFn(topClicked)">Top</button>
+            <button class="editorButton" title="Move to the end of the file" ng-click="wrapFn(bottomClicked)">Bottom</button>
             <button class="editorButton" title="Toggle insert mode on or off" ng-click="wrapFn(insertClicked)">Ins</button>
         </div>
         <div id="styleButtons" class="extraButtonArea hidden">
@@ -41,7 +43,7 @@
             <button class="editorButton" title="Add link" ng-click="linkClicked('Linkin teksti', 'Linkin osoite'); wrapFn()">Link</button>
             <button class="editorButton" title="Add image" ng-click="linkClicked('Kuvan teksti', 'Kuvan osoite', true); wrapFn()">Image</button>
             <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
-            <button class="editorButton" title="Table" ng-click="wrapFn(tableClicked)">Table</button>
+            <button class="editorButton" title="Table" ng-click="tableClicked($event)">Table</button>
             <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
         </div>
         <div id="specialButtons" class="extraButtonArea hidden">

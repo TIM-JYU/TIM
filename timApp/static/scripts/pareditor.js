@@ -1,4 +1,5 @@
 var angular;
+var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
 
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
@@ -61,6 +62,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         max = Math.floor((height / 2) / line);
                     }
 
+                    editor.$blockScrolling = Infinity;
                     editor.renderer.setPadding(10, 10, 10, 10);
                     editor.getSession().setMode("markdown");
                     editor.getSession().setUseWrapMode(false);
@@ -105,6 +107,55 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             },
             link: function ($scope, $element, $attrs) {
 
+                $scope.tables = {};
+
+                $scope.tables['normal'] = "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
+                    "-------- -------- -------- --------\n" +
+                    "1.rivi   x        x        x       \n" +
+                    "2.rivi   x        x        x       ";
+
+                $scope.tables['example'] = "Table:  Otsikko taulukolle\n\n" +
+                    "Otsikko    Vasen laita    Keskitetty    Oikea laita\n" +
+                    "---------- ------------- ------------ -------------\n" +
+                    "1. rivi      2                  3         4\n" +
+                    "2. rivi        1000      2000             30000";
+
+                $scope.tables['noheaders'] = ":  Otsikko taulukolle\n\n" +
+                    "---------- ------------- ------------ -------------\n" +
+                    "1. rivi      2                  3         4\n" +
+                    "2. rivi        1000      2000             30000\n" +
+                    "---------- ------------- ------------ -------------\n";
+
+
+                $scope.tables['multiline'] = "Table:  Otsikko taulukolle voi\n" +
+                    "jakaantua usealle riville\n\n" +
+                    "-----------------------------------------------------\n" +
+                    "Ekan       Toisen\         kolmas\            neljäs\\\n" +
+                    "sarkkeen   sarakkeen\     keskitettynä      oikeassa\\\n" +
+                    "otsikko    otsikko                           reunassa\n" +
+                    "---------- ------------- -------------- -------------\n" +
+                    "1. rivi     toki\              3         4\n" +
+                    "voi olla    sisältökin\n" +
+                    "useita        voi\\\n" +
+                    "rivejä      olla \n" +
+                    "            monella\\\n" +
+                    "            rivillä\n" +
+                    "            \n" +
+                    "2. rivi        1000      2000             30000\n" +
+                    "-----------------------------------------------------\n";
+
+                $scope.tables['strokes'] = ": Viivoilla tehty taulukko\n\n" +
+                    "+---------------+---------------+----------------------+\n" +
+                    "| Hedelmä       | Hinta         | Edut                 |\n" +
+                    "+===============+===============+======================+\n" +
+                    "| Banaani       |  1.34 €       | - valmis kääre       |\n" +
+                    "|               |               | - kirkas väri        |\n" +
+                    "+---------------+---------------+----------------------+\n" +
+                    "| Appelsiini    |  2.10 €       | - auttaa keripukkiin |\n" +
+                    "|               |               | - makea              |\n" +
+                    "+---------------+---------------+----------------------+\n";
+
+
                 $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function (event) {
                     var editor = document.getElementById("pareditor");
                     if (!document.fullscreenElement &&    // alternative standard method
@@ -116,7 +167,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.timer = null;
                 $scope.outofdate = false;
                 $scope.parCount = 0;
-                var snippetManager = ace.require("ace/snippets").snippetManager;
+                $scope.snippetManager = ace.require("ace/snippets").snippetManager;
 
                 /*
                  var langTools = ace.require("ace/ext/language_tools");
@@ -146,7 +197,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.wrapFn = function (func) {
                     if (!touchDevice) $scope.editor.focus();
-                    if (func) return (func());
+                    if (typeof(func)!=='undefined') return (func());
                 };
 
                 $scope.saveClicked = function () {
@@ -233,10 +284,18 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.homeClicked = function () {
-                    $scope.editor.navigateFileStart();
+                    $scope.editor.navigateLineStart();
                 };
 
                 $scope.endClicked = function () {
+                    $scope.editor.navigateLineEnd();
+                };
+
+                $scope.topClicked = function () {
+                    $scope.editor.navigateFileStart();
+                };
+
+                $scope.bottomClicked = function () {
                     $scope.editor.navigateFileEnd();
                 };
 
@@ -258,21 +317,15 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.selectWord();
                     }
                     var text = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                    var surrounded = false;
-                    if (func) {
-                        surrounded = func();
-                    }
-                    else {
-                        surrounded = $scope.surroundedBy(str);
-                    }
+                    var surrounded = (func) ? func() : $scope.surroundedBy(str);
                     if (surrounded) {
                         var range = $scope.editor.getSelectionRange();
                         range.start.column -= str.length;
                         range.end.column += str.length;
                         $scope.editor.selection.setRange(range);
-                        snippetManager.insertSnippet($scope.editor, "${0:" + text + "}");
+                        $scope.snippetManager.insertSnippet($scope.editor, "${0:" + text + "}");
                     } else {
-                        snippetManager.insertSnippet($scope.editor, str + "${0:$SELECTION}" + str);
+                        $scope.snippetManager.insertSnippet($scope.editor, str + "${0:$SELECTION}" + str);
                     }
                 };
 
@@ -301,7 +354,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.codeBlockClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "```\n${0:$SELECTION}\n```");
+                    $scope.snippetManager.insertSnippet($scope.editor, "```\n${0:$SELECTION}\n```");
                 };
 
                 $scope.headerClicked = function (head) {
@@ -326,30 +379,67 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                  * @param isImage true, if link is an image
                  */
                 $scope.linkClicked = function (descDefault, linkDefault, isImage) {
-                    var image = "";
-                    if (isImage) image = "!";
+                    var image = (isImage) ? '!' : '';
                     if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
                         if ($scope.selectWord())
                             descDefault = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
                     } else
                         descDefault = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                    snippetManager.insertSnippet($scope.editor, image + "[" + descDefault + "](${0:" + linkDefault + "})");
+                    $scope.snippetManager.insertSnippet($scope.editor, image + "[" + descDefault + "](${0:" + linkDefault + "})");
                 };
 
                 $scope.listClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
+                    $scope.snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
                 };
 
-                $scope.tableClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
-                        "-------- -------- -------- --------\n" +
-                        "1.rivi   x        x        x       \n" +
-                        "2.rivi   x        x        x       ");
+                $scope.insertTemplate = function (text) {
+                    $scope.closeMenu(null, close);
+                    $scope.snippetManager.insertSnippet($scope.editor, text);
+                };
+
+                $scope.closeMenu = function (e, force) {
+                    var container = $("." + MENU_BUTTON_CLASS);
+                    if (force || (!container.is(e.target) && container.has(e.target).length === 0)) {
+                        container.remove();
+                        $(document).off("mouseup.closemenu");
+                    }
+                };
+
+                $scope.tableClicked = function ($event) {
+                    $scope.closeMenu(null, true);
+                    var $button = $($event.target);
+                    var coords = {left: $button.position().left, top: $button.position().top};
+                    var button_width = 130;
+                    var $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
+
+                    var createButtonSpan = function (text, clickfunction) {
+                        var $span = $("<span>", {class: 'actionButtonRow'});
+                        $span.append($("<button>", {
+                            class: 'timButton',
+                            text: text,
+                            'ng-click': clickfunction,
+                            width: button_width
+                        }));
+                        return $span;
+                    }
+
+                    for (var key in $scope.tables) {
+                        var text = key.charAt(0).toUpperCase() + key.substring(1);
+                        var clickfn = 'insertTemplate(tables[\'' + key + '\']); wrapFn()';
+                        $actionDiv.append(createButtonSpan(text, clickfn));
+                    }
+                    $actionDiv.append(createButtonSpan('Close menu', 'closeMenu(null, true); wrapFn()'));
+                    $actionDiv.offset(coords);
+                    $actionDiv.css('position', 'absolute'); // IE needs this
+                    $actionDiv = $compile($actionDiv)($scope);
+                    $button.parent().prepend($actionDiv);
+
+                    $(document).on('mouseup.closemenu', $scope.closeMenu);
                 };
 
                 $scope.ruleClicked = function () {
                     $scope.editor.navigateLineEnd();
-                    snippetManager.insertSnippet($scope.editor, "\n---\n");
+                    $scope.snippetManager.insertSnippet($scope.editor, "\n---\n");
                 };
                 //Insert
                 //Special characters
@@ -361,27 +451,27 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 //Special characters
                 //TEX
                 $scope.texClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "$${0:$SELECTION}$");
+                    $scope.snippetManager.insertSnippet($scope.editor, "$${0:$SELECTION}$");
                 };
 
                 $scope.texBlockClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "$$${0:$SELECTION}$$");
+                    $scope.snippetManager.insertSnippet($scope.editor, "$$${0:$SELECTION}$$");
                 };
 
                 $scope.indexClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "_{${0:$SELECTION}}");
+                    $scope.snippetManager.insertSnippet($scope.editor, "_{${0:$SELECTION}}");
                 };
 
                 $scope.powerClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "^{${0:$SELECTION}}");
+                    $scope.snippetManager.insertSnippet($scope.editor, "^{${0:$SELECTION}}");
                 };
 
                 $scope.squareClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "\\sqrt{${0:$SELECTION}}");
+                    $scope.snippetManager.insertSnippet($scope.editor, "\\sqrt{${0:$SELECTION}}");
                 };
 
                 $scope.rootClicked = function () {
-                    snippetManager.insertSnippet($scope.editor, "\\sqrt[$0]{$SELECTION}");
+                    $scope.snippetManager.insertSnippet($scope.editor, "\\sqrt[$0]{$SELECTION}");
                 };
                 //TEX
                 //Plugins
@@ -391,7 +481,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         type: 'GET',
                         url: '/' + plugin + '/template/' + template,
                         success: function (data) {
-                            snippetManager.insertSnippet($scope.editor, data);
+                            $scope.snippetManager.insertSnippet($scope.editor, data);
                         },
                         error: function () {
                             console.log("Virhe");
@@ -476,7 +566,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 var element = $('pareditor');
-                console.log(element.outerHeight());
                 var viewport = {};
                 viewport.top = $(window).scrollTop();
                 viewport.bottom = viewport.top + $(window).height();

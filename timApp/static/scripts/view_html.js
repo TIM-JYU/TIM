@@ -524,7 +524,7 @@ timApp.controller("ViewCtrl", [
         // Note-related functions
 
         sc.showOptionsWindow = function (e, $par, coords) {
-            var default_width = $par.outerWidth() / 16;
+            //var default_width = $par.outerWidth() / 16;
             var button_width = 130;
             //var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
             var $actionDiv = $("<div>", {class: 'actionButtons'});
@@ -925,7 +925,9 @@ timApp.controller("ViewCtrl", [
         sc.getNotes();
         sc.getReadPars();
 
-        $('body,html').bind('scroll mousedown wheel DOMMouseScroll mousewheel', function (e) {
+
+        // Tässä jos lisää bindiin 'mousedown' scrollaus menua avattaessa ei toimi Androidilla
+        $('body,html').bind('scroll wheel DOMMouseScroll mousewheel', function (e) {
             if (e.which > 0 || e.type == "mousedown" || e.type == "mousewheel") {
                 $("html,body").stop();
             }
