@@ -1036,7 +1036,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
         if (type === 'radio-vertical' || 'true-false') scope.question.answerFieldType = 'radio';
         if (type === 'checkbox-vertical') scope.question.answerFieldType = 'checkbox';
-        if (type === 'matrix') scope.question.answerFieldType = 'matrix';
+        if (type === 'matrix') {
+            scope.question.answerFieldType = 'matrix';
+        }
 
         for (var i = 0; i < scope.rows.length; i++) {
             if (scope.rows[i].columns.length > columnsCount) scope.rows[i].columns.splice(columnsCount, scope.rows[i].columns.length);
