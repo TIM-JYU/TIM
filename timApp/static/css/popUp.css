@@ -36,6 +36,7 @@
         top: 0;
         max-width: 100%;
         min-width: 100%;
+        position: absolute;
     }
 
     .pop-up-dialog.label{
