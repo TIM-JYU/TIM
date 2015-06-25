@@ -47,7 +47,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                     $scope.json.DATA.HEADERS[1] = {"type": "header", "id": 1, "text": "False"};
                 }
 
-                if ($scope.json.DATA.HEADERS.length > 0) {
+                if ($scope.json.DATA.HEADERS.length > 0 && !($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1)) {
                     htmlSheet += "<tr>";
                     if($scope.json.DATA.HEADERS.length > 1) {
                         htmlSheet += "<th></th>";
@@ -72,8 +72,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                         if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                             if (row.COLUMNS[i].answerFieldType === "text") {
                                 group = "group" + i;
-                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'" +
-                                "></textarea></label></td>";
+                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'"
+                                if($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1) {
+                                    htmlSheet += "style='height:200px'";
+                                }
+                                htmlSheet += "></textarea></label></td>";
                                 header++;
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
@@ -84,7 +87,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
-                            htmlSheet += "<td class='answerbutton'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
+                            htmlSheet += "<td class='answer-button'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
                             " value='" + row.text + "'" +
                             ">" + row.text + "</label></td>";
                         }
