@@ -587,6 +587,20 @@ def show_lecture_info(lecture_id):
                            lectureEndTime=lecture.get("end_time"))
 
 
+# Route to get show lecture info of some specific lecture
+@app.route('/showLectureInfoGivenName/', methods=['GET'])
+def show_lecture_info_given_name():
+    timdb = getTimDb()
+    lecture = timdb.lectures.get_lecture_by_name(request.args.get('lecture_code'),int(request.args.get('doc_id')))
+    if len(lecture) <= 0:
+        abort(400)
+
+    lecture = lecture[0]
+    return jsonResponse({"docId": lecture.get("doc_id"), "lectureId": lecture.get("lecture_id"),
+                        "lectureCode": lecture.get("lecture_code"), "lectureStartTime": lecture.get("start_time"),
+                        "lectureEndTime": lecture.get("end_time")})
+
+
 # Gets users from specific lecture
 # returns 2 lists of dictionaries.
 # TODO: Think if it would be better to return only one
@@ -1048,6 +1062,14 @@ def getQuestions(doc_id):
     timdb = getTimDb()
     questions = timdb.questions.get_doc_questions(doc_id)
     return jsonResponse(questions)
+
+
+@app.route("/getLectureWithName", methods=['POST'])
+def getLectureWithName(lecture_code,doc_id):
+    verifyOwnership(doc_id)
+    timdb = getTimDb()
+    lecture = timdb.lectures.get_lecture_by_code(lecture_code,doc_id)
+    return jsonResponse(lecture)
 
 
 @app.route("/askQuestion", methods=['POST'])
