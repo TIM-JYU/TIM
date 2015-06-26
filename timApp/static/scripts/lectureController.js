@@ -286,12 +286,12 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @param name Name of the lecture to be joined.
          */
         $scope.joinLecture = function (name) {
-
+            $scope.password_required = true;
+            if($scope.password_required) $scope.passwordQuess = $window.prompt("Please enter a password:");
             if ($scope.chosenLecture === "" && name === "") {
                 $window.alert("Choose lecture to join");
                 return;
             }
-
 
             var lectureName = "";
             if (angular.isDefined(name)) {
@@ -314,8 +314,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     $scope.passwordQuess = "";
                     var input = $("#passwordInput");
                     if (!answer.correctPassword) {
-                        input.addClass('errorBorder');
-                        input.attr("placeholder", "Wrong access code");
+                        $window.alert("Wrong access code!");
                     } else {
                         input.removeClass('errorBorder');
                         input.attr("placeholder", "Access code");

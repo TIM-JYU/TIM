@@ -8,8 +8,8 @@
                 <select ng-change="clearChange()" ng-model="chosenLecture"
                         ng-options="lecture.lecture_code for lecture in lectures">
                 </select>
-                <input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
-                       ng-keypress="passEnterPressed($event)" size="7" ng-disabled="!chosenLecture.is_access_code">
+                <!--<input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
+                       ng-keypress="passEnterPressed($event)" size="7" ng-disabled="!chosenLecture.is_access_code">-->
 
                 <div class="iconSection" ng-show="lectures.length > 0">
                     <img id="join-icon" src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
