@@ -157,7 +157,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
 
                 $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function (event) {
-                    var editor = document.getElementById("pareditor");
+                    var editor = $($element).find("#pareditor").get(0);
                     if (!document.fullscreenElement &&    // alternative standard method
                         !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
                         editor.removeAttribute('style');
@@ -197,7 +197,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.wrapFn = function (func) {
                     if (!touchDevice) $scope.editor.focus();
-                    if (typeof(func)!=='undefined') return (func());
+                    if (typeof(func) !== 'undefined') return (func());
                 };
 
                 $scope.saveClicked = function () {
@@ -267,36 +267,57 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.editor.redo();
                 };
 
+                $scope.gotoCursor = function () {
+                    var firstrow = $scope.editor.renderer.getFirstFullyVisibleRow();
+                    var lastrow = $scope.editor.renderer.getLastFullyVisibleRow();
+                    var cursor = $scope.editor.getCursorPosition();
+                    if (cursor.row < firstrow) {
+                        $scope.editor.renderer.scrollToLine(cursor.row, false, true, function () {
+                        });
+                    } else if (cursor.row > lastrow) {
+                        $scope.editor.renderer.scrollToLine(cursor.row - (lastrow - firstrow), false, true, function () {
+                        });
+                    }
+                };
+
                 $scope.leftClicked = function () {
                     $scope.editor.navigateLeft(1);
+                    $scope.gotoCursor();
                 };
 
                 $scope.rightClicked = function () {
                     $scope.editor.navigateRight(1);
+                    $scope.gotoCursor();
                 };
 
                 $scope.upClicked = function () {
                     $scope.editor.navigateUp(1);
+                    $scope.gotoCursor();
                 };
 
                 $scope.downClicked = function () {
                     $scope.editor.navigateDown(1);
+                    $scope.gotoCursor();
                 };
 
                 $scope.homeClicked = function () {
                     $scope.editor.navigateLineStart();
+                    $scope.gotoCursor();
                 };
 
                 $scope.endClicked = function () {
                     $scope.editor.navigateLineEnd();
+                    $scope.gotoCursor();
                 };
 
                 $scope.topClicked = function () {
                     $scope.editor.navigateFileStart();
+                    $scope.gotoCursor();
                 };
 
                 $scope.bottomClicked = function () {
                     $scope.editor.navigateFileEnd();
+                    $scope.gotoCursor();
                 };
 
                 $scope.insertClicked = function () {
@@ -534,14 +555,21 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     if (!touchDevice) $scope.editor.focus();
                 };
 
+                $scope.fullscreenSupported = function () {
+                    var div = $($element).get(0);
+                    var requestMethod = div.requestFullScreen ||
+                        div.webkitRequestFullscreen ||
+                        div.webkitRequestFullScreen ||
+                        div.mozRequestFullScreen ||
+                        div.msRequestFullscreen;
+                    return (typeof(requestMethod) !== 'undefined');
+                };
+
 
                 $scope.goFullScreen = function () {
-                    var div = document.getElementById("pareditor");
+                    var div = $($element).find("#pareditor").get(0);
                     if (!document.fullscreenElement &&    // alternative standard method
                         !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-                        div.setAttribute("style", "width: 100%; height: 100%; position: absolute; top: 0px;" +
-                            "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
-                            "-moz-box-sizing: border-box; box-sizing: border-box;");
 
                         var requestMethod = div.requestFullScreen ||
                             div.webkitRequestFullscreen ||
@@ -551,6 +579,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                         if (requestMethod) {
                             requestMethod.apply(div);
+                            div.setAttribute("style", "width: 100%; height: 100%; position: absolute; top: 0px;" +
+                                "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
+                                "-moz-box-sizing: border-box; box-sizing: border-box;");
                         }
                     } else {
                         if (document.exitFullscreen) {
@@ -565,18 +596,19 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }
                 };
 
-                var element = $('pareditor');
                 var viewport = {};
                 viewport.top = $(window).scrollTop();
                 viewport.bottom = viewport.top + $(window).height();
                 var bounds = {};
-                bounds.top = element.offset().top;
-                bounds.bottom = bounds.top + element.outerHeight();
+                bounds.top = $element.offset().top;
+                bounds.bottom = bounds.top + $element.outerHeight();
                 if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
                     $('html, body').animate({
-                        scrollTop: $("pareditor").offset().top
+                        scrollTop: $element.offset().top
                     }, 2000);
                 }
             }
-        };
-    }]);
+        }
+            ;
+    }])
+;

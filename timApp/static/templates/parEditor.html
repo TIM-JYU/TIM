@@ -96,7 +96,7 @@
     }" ng-model="editorText"></div>
     </div>
     <div class="editButtonArea">
-        <button class="timButton" ng-click="goFullScreen()">Fullscreen</button>
+        <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
         <button class="timButton savePar" ng-click="saveClicked()">Save</button>
         <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
         <button class="timButton deletePar" ng-show="options.showDelete" ng-click="deleteClicked()">Delete</button>
