@@ -13,7 +13,7 @@
 
                 <div class="iconSection" ng-show="lectures.length > 0">
                     <img id="join-icon" src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
-                         ng-click="joinLecture()" title="Join the lecture">
+                         ng-click="joinLecture(_,chosenLecture.is_access_code)" title="Join the lecture">
                     <img id="add-icon1" src="{{ url_for('static', filename='images/add-icon3.png') }}" class="icon"
                          ng-show="isLecturer"
                          ng-click="toggleLecture()" title="Add new lecture">
@@ -122,7 +122,7 @@
                 <ul>
                     <li ng-show="currentLecturesList.length > 0" ng-repeat="lecture in currentLecturesList">
                         <p ng-click="selectCurrentLecture()">{{ lecture.lecture_code }}<input style="margin-left: 5px;" type="submit"
-                                                                                              value="Join" ng-click="joinLecture(lecture.lecture_code)"></p>
+                                                                                              value="Join" ng-click="joinLecture(lecture.lecture_code,lecture.is_access_code)"></p>
                     </li>
                     <li ng-show="currentLecturesList.length == 0">
                         <p>No lectures</p>
@@ -136,7 +136,7 @@
                 {% raw %}
                 <ul>
                     <li ng-repeat="lecture in futureLecturesList">
-                        <p> {{ lecture.lecture_code }}<input type="submit" value="Start"></p>
+                        <p> {{ lecture.lecture_code }}<input type="submit" ng-show="isLecturer" value="Start"></p>
                     </li>
                     <li ng-show="futureLecturesList.length == 0">
                         <p>No lectures</p>
