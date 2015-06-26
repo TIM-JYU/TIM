@@ -250,9 +250,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.clearChange = function () {
-            var input = $("#passwordInput");
-            input.attr("placeholder", "Access code");
-            input.removeClass('errorBorder');
+            $scope.passwordQuess = "";
         };
 
         /**
@@ -285,13 +283,12 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          * @param name Name of the lecture to be joined.
          */
-        $scope.joinLecture = function (name) {
-
+        $scope.joinLecture = function (name, code_required) {
+            if(code_required) $scope.passwordQuess = $window.prompt("Please enter a password:", "");
             if ($scope.chosenLecture === "" && name === "") {
                 $window.alert("Choose lecture to join");
                 return;
             }
-
 
             var lectureName = "";
             if (angular.isDefined(name)) {
@@ -314,8 +311,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     $scope.passwordQuess = "";
                     var input = $("#passwordInput");
                     if (!answer.correctPassword) {
-                        input.addClass('errorBorder');
-                        input.attr("placeholder", "Wrong access code");
+                        $window.alert("Wrong access code!");
                     } else {
                         input.removeClass('errorBorder');
                         input.attr("placeholder", "Access code");
@@ -624,11 +620,21 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * NOT IMPLEMENTED YET
          * @memberof module:lectureController
          */
-        $scope.editLecture = function () {
+        $scope.editLecture = function (lecture_code) {
             $('#currentList').hide();
             $('#futureList').hide();
-            $rootScope.$broadcast("editLecture", {"lecture_id": $scope.lectureId, "lecture_name": $scope.lectureName, "start_date": $scope.lectureStartTime, "end_date": $scope.lectureEndTime, "password": $scope.password, "editMode": true});
-            $scope.showLectureForm = true;
+            http({
+                url: '/showLectureInfoGivenName',
+                method: 'GET',
+                params: {'lecture_code': lecture_code, 'doc_id': $scope.docId}
+            })
+                .success(function(lecture) {
+                    $rootScope.$broadcast("editLecture", {"lecture_id": lecture.lectureId, "lecture_name": lecture.lectureCode, "start_date": lecture.lectureStartTime, "end_date": lecture.lectureEndTime, "password": "", "editMode": true});
+                    $scope.showLectureForm = true;
+                })
+                .error(function() {
+                    $window.console.log("Failed to fetch lecture.");
+                });
         };
 
         /**
