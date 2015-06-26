@@ -620,11 +620,21 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * NOT IMPLEMENTED YET
          * @memberof module:lectureController
          */
-        $scope.editLecture = function () {
+        $scope.editLecture = function (lecture_code) {
             $('#currentList').hide();
             $('#futureList').hide();
-            $rootScope.$broadcast("editLecture", {"lecture_id": $scope.lectureId, "lecture_name": $scope.lectureName, "start_date": $scope.lectureStartTime, "end_date": $scope.lectureEndTime, "password": $scope.password, "editMode": true});
-            $scope.showLectureForm = true;
+            http({
+                url: '/showLectureInfoGivenName',
+                method: 'GET',
+                params: {'lecture_code': lecture_code, 'doc_id': $scope.docId}
+            })
+                .success(function(lecture) {
+                    $rootScope.$broadcast("editLecture", {"lecture_id": lecture.lectureId, "lecture_name": lecture.lectureCode, "start_date": lecture.lectureStartTime, "end_date": lecture.lectureEndTime, "password": "", "editMode": true});
+                    $scope.showLectureForm = true;
+                })
+                .error(function() {
+                    $window.console.log("Failed to fetch lecture.");
+                });
         };
 
         /**

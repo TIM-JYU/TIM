@@ -53,14 +53,14 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.lectureCode = data.lecture_name;
             $scope.lectureId = data.lecture_id;
             var splittedStart = data.start_date.split(" ");
-            var splittedStartTime = splittedStart[2].split(":");
-            var splittedStartDate = splittedStart[1].split("-");
+            var splittedStartTime = splittedStart[1].split(":");
+            var splittedStartDate = splittedStart[0].split("-");
             $scope.startMin = splittedStartTime[1];
             $scope.startHour = splittedStartTime[0];
             $scope.startDate = splittedStartDate[2] + "." + splittedStartDate[1] + "." + splittedStartDate[0];
             var splittedEnd = data.end_date.split(" ");
-            var splittedEndTime = splittedEnd[2].split(":");
-            var splittedEndDate = splittedEnd[1].split("-");
+            var splittedEndTime = splittedEnd[1].split(":");
+            var splittedEndDate = splittedEnd[0].split("-");
             $scope.enableDate2();
             $scope.endMin = splittedEndTime[1];
             $scope.endHour = splittedEndTime[0];
@@ -346,7 +346,12 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     }
                 })
                     .success(function (answer) {
-                        $window.console.log("Lecture created: " + answer.lectureId);
+                        if($scope.editMode) {
+                            $window.console.log("Lecture " + answer.lectureId + " updated.");
+                        }
+                        else {
+                            $window.console.log("Lecture created: " + answer.lectureId);
+                        }
                         $scope.$parent.useWall = true;
                         $scope.$parent.useAnswers = true;
                         $scope.clearForm();
@@ -378,6 +383,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          */
         $scope.removeErrors = function () {
             $scope.error_message = "";
+
             var elementsToRemoveErrorsFrom = [
                 "lCode",
                 "startDate",
@@ -422,6 +428,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.dateChosen = false;
             $scope.durationChosen = false;
             $scope.dateCheck = false;
+            $scope.lectureId = null;
         };
 
         /**

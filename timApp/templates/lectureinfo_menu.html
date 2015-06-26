@@ -14,6 +14,8 @@
                 <div class="iconSection" ng-show="lectures.length > 0">
                     <img id="join-icon" src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
                          ng-click="joinLecture(_,chosenLecture.is_access_code)" title="Join the lecture">
+                    <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
+                        title="Edit this lecture" ng-click="editLecture(chosenLecture.lecture_code)" ng-show="isLecturer">
                     <img id="add-icon1" src="{{ url_for('static', filename='images/add-icon3.png') }}" class="icon"
                          ng-show="isLecturer"
                          ng-click="toggleLecture()" title="Add new lecture">
@@ -45,7 +47,7 @@
                 <img id="stop-icon" src="{{ url_for('static', filename='images/stop-icon3.png') }}" class="icon"
                      ng-click="endLecture()" title="End this lecture" ng-show="canStop">
                 <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                     title="Edit this lecture" ng-click="editLecture()" ng-show="canStop">
+                     title="Edit this lecture" ng-click="editLecture(lectureName)" ng-show="canStop">
             </div>
         </div>
 
@@ -64,7 +66,7 @@
                     <img ng-show="isLecturer" id="start-icon" src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
                          title="Start lecture now" ng-click="startFutureLecture()">
                     <img ng-show="isLecturer" id="edit-icon2" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                         title="Edit this lecture" ng-click="editLecture()">
+                         title="Edit this lecture" ng-click="editLecture(futureLecture.lecture_code)">
                 </div>
             </div>
         </div>
@@ -103,7 +105,7 @@
                          ng-click="leaveLecture()" title="Leave this lecture" ng-show="inLecture">
                     <img id="stop-icon" src="{{ url_for('static', filename='images/stop-icon3.png') }}" class="icon"
                          ng-click="endLecture()" title="End this lecture" ng-show="canStop">
-                    <img ng-click="editLecture()" id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
+                    <img ng-click="editLecture(lectureName)" id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                          title="Edit this lecture" ng-show="canStop">
                 </div>
             </div>
