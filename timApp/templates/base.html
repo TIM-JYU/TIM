@@ -78,11 +78,14 @@
                 <a href="/view/{{docID}}">View</a>
             {% elif doc %}
                 |
-                <a href="/view/{{doc.name}}">Student view</a>
+                {% if lecture_mode %}
+                    <a href="/view/{{ doc.name }}">Student view</a>
+                {% else %}
+                    <a href="/lecture/{{ doc.name }}">Lecture view</a>
+                {% endif %}
                 |
                 <a href="/teacher/{{doc.name}}">Teacher view</a>
             {% endif %}
-
         {% endblock %}
     </div>
 
