@@ -73,6 +73,10 @@
                 {% else %}
                    <a href="/teacher/{{docID}}">Teacher view</a>
                 {% endif %}
+                |
+                {% if not lecture_mode %}
+                    <a href="/lecture/{{ doc.name }}">Lecture view</a>
+                {% endif %}
             {% elif objName == "folder" %}
                 |
                 <a href="/view/{{docID}}">View</a>

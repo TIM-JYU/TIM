@@ -605,7 +605,9 @@ def show_lecture_info(lecture_id):
         abort(400)
 
     lecture = lecture[0]
+    doc = timdb.documents.getDocument(lecture.get('doc_id'))
     return render_template("lectureInfo.html",
+                           doc=doc,
                            docId=lecture.get("doc_id"),
                            lectureId=lecture_id,
                            lectureCode=lecture.get("lecture_code"),
