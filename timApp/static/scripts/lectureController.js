@@ -250,9 +250,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.clearChange = function () {
-            var input = $("#passwordInput");
-            input.attr("placeholder", "Access code");
-            input.removeClass('errorBorder');
+            $scope.passwordQuess = "";
         };
 
         /**

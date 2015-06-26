@@ -557,7 +557,8 @@ def get_all_lectures():
     future_lectures = []
     for lecture in lectures:
         lecture_info = {"lecture_id": lecture.get("lecture_id"), "lecture_code": lecture.get('lecture_code'),
-                        "target": "/showLectureInfo/" + str(lecture.get("lecture_id"))}
+                        "target": "/showLectureInfo/" + str(lecture.get("lecture_id")),
+                        "is_access_code": not (lecture.get("password") == "")};
         if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lectures.append(lecture_info)
         elif lecture.get("end_time") <= time_now:
