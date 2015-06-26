@@ -35,10 +35,8 @@ var timApp = angular.module('timApp', [
             return service;
         }
     ];
+}]);
 
-/*global $:false */
-
-var timApp = angular.module('timApp');
 timApp.controller("ViewCtrl", [
     '$scope',
     '$http',
@@ -99,7 +97,7 @@ timApp.controller("ViewCtrl", [
                     sc.defaults[i] = false;
                 }
             }
-            ;
+
             if (selected) {
                 sc.defaultAction = sc.editorFunctions[index];
             } else {
@@ -372,7 +370,7 @@ timApp.controller("ViewCtrl", [
 
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
-        sc.addEvent(QUESTION_ADD_BUTTON, function (e) {
+        sc.onClick(QUESTION_ADD_BUTTON, function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleQuestion();
             sc.toggleActionButtons(e, $par, false, false, null);
@@ -574,7 +572,7 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.addEvent(".questionAdded", function () {
+        sc.onClick(".questionAdded", function ($this, e) {
             sc.showQuestion($(this));
             sc.par = ($(this.parentNode.parentNode));
         });

@@ -147,6 +147,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False, lec
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
 
     return render_template(template_name,
+                           doc=doc,
                            docID=doc['id'],
                            docName=doc['name'],
                            text=texts,
