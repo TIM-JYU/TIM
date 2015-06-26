@@ -285,9 +285,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          * @param name Name of the lecture to be joined.
          */
-        $scope.joinLecture = function (name) {
-            $scope.password_required = true;
-            if($scope.password_required) $scope.passwordQuess = $window.prompt("Please enter a password:");
+        $scope.joinLecture = function (name, code_required) {
+            if(code_required) $scope.passwordQuess = $window.prompt("Please enter a password:", "");
             if ($scope.chosenLecture === "" && name === "") {
                 $window.alert("Choose lecture to join");
                 return;
