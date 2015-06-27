@@ -1819,3 +1819,14 @@ button:disabled {
     text-align: center;
     padding-bottom: 1em;
 }
+
+div.CodeMirror {
+    font-family: Consolas, Monaco, Courier New, Courier, monospace;
+    font-size: 80%;
+    height: auto;
+}
+
+.CodeMirror-scroll {
+    min-height: 4vh;
+    max-height: 35vh;
+}

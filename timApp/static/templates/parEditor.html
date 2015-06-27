@@ -89,11 +89,7 @@
         </div>
     </div>
     <div class="editorContainer">
-        <div class="editor" ui-ace="{
-  useWrapMode: false,
-  onLoad: aceLoaded,
-  onChange: aceChanged
-    }" ng-model="editorText"></div>
+        <textarea id="codemirror"></textarea>
     </div>
     <div class="editButtonArea">
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
