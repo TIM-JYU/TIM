@@ -55,6 +55,7 @@ class DocumentParser:
         """
         self.doc_text = doc_text
         self.blocks = None
+        self.break_on_empty_line = False
 
     def set_text(self, doc_text):
         """
@@ -78,9 +79,9 @@ class DocumentParser:
                     raise ValidationException('Invalid paragraph id: ' + curr_id)
         return True
 
-    def parse_document(self):
+    def parse_document(self, break_on_empty_line=False):
         self.blocks = []
-
+        self.break_on_empty_line = break_on_empty_line
         lines = self.doc_text.split("\n")
         doc = DocReader(lines)
         funcs = [self.try_parse_code_block,
@@ -114,6 +115,13 @@ class DocumentParser:
     def is_beginning_of_header_block(self, doc):
         return doc.peek_line().startswith('#')
 
+    def is_empty_line(self, doc):
+        """
+
+        :type doc: DocReader
+        """
+        return doc.peek_line().isspace() or doc.peek_line() == ''
+
     def try_parse_code_block(self, doc):
         """
 
@@ -140,6 +148,7 @@ class DocumentParser:
                 break
             block_lines.append(line)
         if not is_atom:
+            # noinspection PyUnboundLocalVariable
             block_lines.append(line)
         tokens['md'] = '\n'.join(block_lines)
         return tokens
@@ -170,7 +179,9 @@ class DocumentParser:
         """
         block_lines = []
         while doc.has_more_lines():
-            if self.is_beginning_of_header_block(doc) or self.is_beginning_of_code_block(doc)[0]:
+            if self.is_beginning_of_header_block(doc) \
+                    or self.is_beginning_of_code_block(doc)[0] \
+                    or (self.break_on_empty_line and self.is_empty_line(doc)):
                 break
             block_lines.append(doc.get_line_and_advance())
         return {'md': '\n'.join(block_lines)}
@@ -181,8 +192,6 @@ class DocumentParser:
         :rtype: NoneType
         :type doc: DocReader
         """
-        if not doc.has_more_lines():
-            return None
-        if doc.peek_line().isspace() or doc.peek_line() == '':
+        while doc.has_more_lines() and self.is_empty_line(doc):
             doc.get_line_and_advance()
         return None
