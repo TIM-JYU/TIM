@@ -12,7 +12,7 @@ import yaml.scanner
 from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
 from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
-from document.docparagraph import DocParagraph
+from documentmodel.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
 
 

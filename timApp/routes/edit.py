@@ -3,7 +3,7 @@ from bs4 import UnicodeDammit
 from flask import Blueprint
 
 from .common import *
-from document.docparagraph import DocParagraph
+from documentmodel.docparagraph import DocParagraph
 from markdownconverter import md_to_html
 import pluginControl
 from timdb.docidentifier import DocIdentifier

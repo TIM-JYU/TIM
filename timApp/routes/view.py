@@ -4,7 +4,7 @@ from contracts import contract, new_contract
 from flask import Blueprint, render_template, redirect, url_for
 from .cache import *
 from .common import *
-from document.document import Document, DocParagraph
+from documentmodel.document import Document, DocParagraph
 from htmlSanitize import sanitize_html
 
 import pluginControl

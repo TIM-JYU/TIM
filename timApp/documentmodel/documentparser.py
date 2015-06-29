@@ -1,7 +1,7 @@
 import re
-from contracts import contract
-from document.attributeparser import AttributeParser
-from document.randutils import hashfunc, random_id, is_valid_id
+
+from documentmodel.attributeparser import AttributeParser
+from documentmodel.randutils import hashfunc, random_id, is_valid_id
 
 
 class SplitterException(Exception):

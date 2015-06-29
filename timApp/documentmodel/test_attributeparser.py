@@ -1,5 +1,5 @@
 import unittest
-from document.attributeparser import AttributeParser
+from documentmodel.attributeparser import AttributeParser
 
 
 class AttributeParserTest(unittest.TestCase):

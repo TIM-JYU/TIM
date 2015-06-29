@@ -3,7 +3,7 @@
 from flask import Blueprint
 
 from .common import *
-from document.docparagraph import DocParagraph
+from documentmodel.docparagraph import DocParagraph
 import pluginControl
 import containerLink
 

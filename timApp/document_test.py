@@ -1,8 +1,8 @@
 import os
 import shutil
 
-from document.document import Document
-from document.docparagraph import DocParagraph
+from documentmodel.document import Document
+from documentmodel.docparagraph import DocParagraph
 
 if __name__ == "__main__":
     test_files = 'test_files'

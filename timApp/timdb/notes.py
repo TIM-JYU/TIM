@@ -2,8 +2,8 @@ from sqlite3 import Connection
 
 from contracts import contract
 
-from document.docparagraph import DocParagraph
-from document.document import Document
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
 from ephemeralclient import EphemeralClient, EPHEMERAL_URL
 from timdb.timdbbase import TimDbBase
 

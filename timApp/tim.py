@@ -14,8 +14,8 @@ from bs4 import UnicodeDammit
 
 from ReverseProxied import ReverseProxied
 import containerLink
-from document.docparagraph import DocParagraph
-from document.document import Document
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
 from routes.cache import cache
 from routes.answer import answers
 from routes.edit import edit_page

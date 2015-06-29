@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from document.documentparser import DocumentParser, SplitterException
+from documentmodel.documentparser import DocumentParser, SplitterException
 
 
 class DocumentParserTest(unittest.TestCase):

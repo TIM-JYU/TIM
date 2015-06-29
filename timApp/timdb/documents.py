@@ -9,14 +9,14 @@ from sqlite3 import Connection
 from contracts import contract
 from ansi2html import Ansi2HTMLConverter
 
-from document.docparagraph import DocParagraph
-from document.documentparser import DocumentParser
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.documentparser import DocumentParser
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralException
 from timdb.gitclient import NothingToCommitException
 from utils import date_to_relative
-from document.document import Document
+from documentmodel.document import Document
 
 
 class Documents(TimDbBase):

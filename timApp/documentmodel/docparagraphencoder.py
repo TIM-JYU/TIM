@@ -1,5 +1,5 @@
 import json
-from document.docparagraph import DocParagraph
+from documentmodel.docparagraph import DocParagraph
 
 
 class DocParagraphEncoder(json.JSONEncoder):

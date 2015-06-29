@@ -1,6 +1,6 @@
 """Common functions for use with routes."""
-from document.docparagraphencoder import DocParagraphEncoder
-from document.document import Document
+from documentmodel.docparagraphencoder import DocParagraphEncoder
+from documentmodel.document import Document
 
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response, request

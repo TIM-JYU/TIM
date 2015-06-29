@@ -2,7 +2,7 @@ import os
 import shutil
 
 from contracts import contract, new_contract
-from .docparagraph import DocParagraph
+from documentmodel.docparagraph import DocParagraph
 
 
 class Document:
