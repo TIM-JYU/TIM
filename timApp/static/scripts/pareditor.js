@@ -79,8 +79,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         var outdent = e.shiftKey;
                         $scope.indent(outdent);
                         e.preventDefault();
-                    } else if (e.keyCode === 9) {
-
+                    } else if (e.keyCode === 83 && e.ctrlKey) {
+                        $scope.saveClicked();
+                        e.preventDefault();
                     }
                 });
 
