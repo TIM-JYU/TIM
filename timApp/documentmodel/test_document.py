@@ -15,7 +15,7 @@ class DocumentTest(unittest.TestCase):
 
     def test_document(self):
         d = Document(doc_id=1, files_root=DocumentTest.files_root)
-        self.assertFalse(Document.exists(1))
+        self.assertTrue(Document.exists(1))
         self.assertEqual(2, Document.getNextFreeId(self.files_root))
         par = d.addParagraph('testing')
         self.assertTrue(d.hasParagraph(par.getId()))

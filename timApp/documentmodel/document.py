@@ -143,30 +143,25 @@ class Document:
         return p
 
     @contract
-    def deleteParagraph(self, par_id: 'str', prev_par_id: 'str|None'):
+    def deleteParagraph(self, par_id: 'str'):
         """
         Removes a paragraph from the document.
         :param par_id: Paragraph id to remove.
-        :param prev_par_id: Previous paragraph id. Used in case there are multiple
-        instances of the same paragraph id. None if it's the first paragraph.
         """
         old_ver = self.getVersion()
         new_ver = self.__incrementVersion(increment_major=True)
-        prev_line = None
         id_line = par_id + '\n'
-        prev_id_line = None if prev_par_id is None else prev_par_id + '\n'
         with open(self.getVersionPath(old_ver), 'r') as f_src:
             with open(self.getVersionPath(new_ver), 'w') as f:
                 while True:
                     line = f_src.readline()
                     if not line:
                         return
-                    if line == id_line and prev_line == prev_id_line:
+                    if line == id_line:
                         p = DocParagraph.getLatest(par_id, files_root=self.files_root)
                         p.removeLink(self.doc_id)
                     else:
                         f.write(line)
-                        prev_line = line
         # todo: don't make a new version if the paragraph was not found
 
     @contract
