@@ -73,6 +73,17 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         });
                     }, 500);
                 };
+
+                $scope.editor.keydown(function (e) {
+                    if (e.keyCode === 9) {
+                        var outdent = e.shiftKey;
+                        $scope.indent(outdent);
+                        e.preventDefault();
+                    } else if (e.keyCode === 9) {
+
+                    }
+                });
+
             },
             link: function ($scope, $element, $attrs) {
 
