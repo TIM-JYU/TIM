@@ -622,9 +622,10 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
             }
+            /*
             if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
                 coords = {left: 0, top: 0};
-            }
+            }*/
             ;
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this

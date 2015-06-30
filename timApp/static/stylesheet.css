@@ -1819,8 +1819,8 @@ button:disabled {
 }
 
 #teksti {
-    font-size: 13px;
-    line-height: 13px;
+    font-size: 15px;
+    line-height: 15px;
     font-family: Consolas, Monaco, Courier New, Courier, monospace;
     height: auto;
     width: 100%;
