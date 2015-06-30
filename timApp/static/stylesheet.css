@@ -810,8 +810,6 @@ a.anchor:hover {
 }
 
 .editorContainer {
-	border-radius: 5px;
-    border: 1px solid rgb(183, 183, 183);
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -1820,13 +1818,19 @@ button:disabled {
     padding-bottom: 1em;
 }
 
-div.CodeMirror {
+#teksti {
+    font-size: 13px;
+    line-height: 13px;
     font-family: Consolas, Monaco, Courier New, Courier, monospace;
-    font-size: 80%;
     height: auto;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid rgb(183, 183, 183);
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }
 
-.CodeMirror-scroll {
-    min-height: 4vh;
-    max-height: 35vh;
+#teksti:focus {
+    outline: none;
 }
