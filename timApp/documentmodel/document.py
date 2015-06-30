@@ -117,9 +117,12 @@ class Document:
         """
         par_line = par_id + '\n'
         with open(self.getVersionPath(self.getVersion()), 'r') as f:
-            if f.readline() == par_line:
-                return True
-        return False
+            while True:
+                line = f.readline()
+                if line == '':
+                    return False
+                if line == par_line:
+                    return True
 
     @contract
     def addParagraph(self, text: 'str') -> 'DocParagraph':
