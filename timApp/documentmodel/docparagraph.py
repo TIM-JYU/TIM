@@ -1,6 +1,7 @@
 import os
 
 from contracts import contract, new_contract
+from markdownconverter import md_to_html
 from .randutils import *
 
 class DocParagraph:
@@ -80,8 +81,10 @@ class DocParagraph:
 
     @contract
     def getHtml(self) -> 'str':
-        # TODO: integration to Dumbo
-        return self.__data['html'] if self.__data['html'] else self.getMarkdown()
+        if self.__data['html']:
+            return self.__data['html']
+        self.setHtml(md_to_html(self.getMarkdown()))
+        return self.__data['html']
 
     @contract
     def setHtml(self, new_html: 'str'):
