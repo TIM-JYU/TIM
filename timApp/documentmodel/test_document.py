@@ -26,9 +26,11 @@ class DocumentTest(unittest.TestCase):
         par2 = d.addParagraph('second')
         self.assertListEqual([], d.get_index())
         self.assertListEqual(['first', 'second'], [p.getMarkdown() for p in d])
-        par2_new = d.modifyParagraph(par2.getId(), 'new second')
-        self.assertEqual(par2.getId(), par2_new.getId())
-        self.assertNotEqual(par2.getHash(), par2_new.getHash())
+        par3_new = d.modifyParagraph(par2.getId(), 'third')
+        self.assertEqual(par2.getId(), par3_new.getId())
+        self.assertNotEqual(par2.getHash(), par3_new.getHash())
+        par2_new = d.insertParagraph('new second', par3_new.getId())
+        self.assertListEqual(['first', 'new second', 'third'], [p.getMarkdown() for p in d])
 
 if __name__ == '__main__':
     unittest.main()
