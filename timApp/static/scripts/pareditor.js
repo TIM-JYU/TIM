@@ -161,12 +161,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                         if ($scope.initialTextUrl) $scope.setInitialText();
 
-                        var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
-
-                        // iPad does not open the keyboard if not manually focused to editable area
-                        if (!iOS) {
-                            editor.focus();
-                        }
+                        /* iPad does not open the keyboard if not manually focused to editable area
+                         var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
+                         if (!iOS) editor.focus();
+                         */
                     };
                 }
             },
@@ -191,7 +189,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     "2. rivi        1000      2000             30000\n" +
                     "---------- ------------- ------------ -------------\n";
 
-
                 $scope.tables['multiline'] = "Table:  Otsikko taulukolle voi\n" +
                     "jakaantua usealle riville\n\n" +
                     "-----------------------------------------------------\n" +
@@ -208,7 +205,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     "            \n" +
                     "2. rivi        1000      2000             30000\n" +
                     "-----------------------------------------------------\n";
-
                 $scope.tables['strokes'] = ": Viivoilla tehty taulukko\n\n" +
                     "+---------------+---------------+----------------------+\n" +
                     "| Hedelmä       | Hinta         | Edut                 |\n" +
@@ -220,7 +216,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     "|               |               | - makea              |\n" +
                     "+---------------+---------------+----------------------+\n";
 
-
                 $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function (event) {
                     var editor = $($element).find("#pareditor").get(0);
                     if (!document.fullscreenElement &&    // alternative standard method
@@ -228,7 +223,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         editor.removeAttribute('style');
                     }
                 });
-
 
                 $scope.timer = null;
                 $scope.outofdate = false;
@@ -264,11 +258,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         error(function (data, status, headers, config) {
                             $window.alert("Failed to delete: " + data.error);
                         });
-                    $scope.changeMeta();
+                    if ($scope.options.touchDevide) $scope.changeMeta();
                 };
 
                 $scope.cancelClicked = function () {
-                    $scope.changeMeta();
+                    if ($scope.options.touchDevide) $scope.changeMeta();
                     $element.remove();
                     $scope.afterCancel({
                         extraData: $scope.extraData
@@ -305,11 +299,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to save: " + data.error);
                     });
-                    $scope.changeMeta();
+                    if ($scope.options.touchDevide) $scope.changeMeta();
                 };
 
                 if ($scope.options.touchDevice) {
-
                     //Navigation
                     $scope.undoClicked = function () {
                         document.execCommand("undo", false, null);
@@ -473,7 +466,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     };
 
                     $scope.surroundClicked = function (str, func) {
-
                         if ($scope.editor.getSelection().text == "") {
                             $scope.selectWord();
                         }
@@ -616,11 +608,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.squareClicked = function () {
                         $scope.editor.surroundSelectedText('\\sqrt {', '}', 'select');
                     };
-
-                    /*
-                     $scope.rootClicked = function () {
-                     $scope.snippetManager.insertSnippet($scope.editor, "\\sqrt[$0]{$SELECTION}");
-                     };*/
                     //TEX
                 } else {
                     $scope.snippetManager = ace.require("ace/snippets").snippetManager;
@@ -883,7 +870,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }
                 };
 
-
                 $scope.createMenuButton = function (text, title, clickfunction) {
                     var $span = $("<span>", {class: 'actionButtonRow'});
                     var button_width = 130;
@@ -901,7 +887,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.closeMenu(null, true);
                     var $button = $($event.target);
                     var coords = {left: $button.position().left, top: $button.position().top};
-                    var button_width = 130;
                     var $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
 
                     for (var key in $scope.tables) {
@@ -929,17 +914,18 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         url: '/' + plugin + '/reqs/',
                         success: function (data) {
                             var $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
-                            for (var i = 0; i < data.templates.length; i++) {
-                                var template = data.templates[i];
-                                var text = (template.text || template.file);
-                                var file = template.file;
-                                var title = template.expl;
-                                console.log(template.file);
-                                console.log(plugin);
-                                var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\'); wrapFn()';
-                                $actionDiv.append($scope.createMenuButton(text, title, clickfn));
+                            if (data.templates) {
+                                for (var i = 0; i < data.templates.length; i++) {
+                                    var template = data.templates[i];
+                                    var text = (template.text || template.file);
+                                    var file = template.file;
+                                    var title = template.expl;
+                                    console.log(template.file);
+                                    console.log(plugin);
+                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\'); wrapFn()';
+                                    $actionDiv.append($scope.createMenuButton(text, title, clickfn));
+                                }
                             }
-
                             $actionDiv.append($scope.createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
                             $actionDiv.offset(coords);
                             $actionDiv.css('position', 'absolute'); // IE needs this

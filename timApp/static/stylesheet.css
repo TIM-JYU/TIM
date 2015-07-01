@@ -335,6 +335,7 @@ ul ul  ul, ol ol ol {
 
 .previewcontent {
     clear: both;
+    overflow-y: scroll;
     border: 1px solid rgb(183, 183, 183);
     border-radius: 5px;
     padding-top: 0.0em;
@@ -1121,6 +1122,10 @@ p.stem {
         -moz-box-sizing: border-box;
         box-sizing: border-box;
         max-width: 52em;
+    }
+
+    .previewcontent {
+        max-height: 15em;
     }
 	
 	.addParButton{
