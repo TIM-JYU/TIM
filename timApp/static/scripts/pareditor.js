@@ -939,7 +939,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                 return $span;
                             };
 
-                            for (var template in data.templates) {
+
+                            for (var i = 0; i < data.templates.length; i++) {
+                                var template = data.templates[i];
                                 console.log(template);
                                 var text = (template.text || template.text);
                                 var file = template.text;
@@ -947,7 +949,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                 var clickfn = 'getTemplate(plugin, file); wrapFn()';
                                 $actionDiv.append(createButtonSpan(text, title, clickfn));
                             }
-                            $actionDiv.append(createButtonSpan('Close menu',  '', 'closeMenu(null, true); wrapFn()'));
+                            
+                            $actionDiv.append(createButtonSpan('Close menu', '', 'closeMenu(null, true); wrapFn()'));
                             $actionDiv.offset(coords);
                             $actionDiv.css('position', 'absolute'); // IE needs this
                             $actionDiv = $compile($actionDiv)($scope);
