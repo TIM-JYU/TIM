@@ -15,6 +15,8 @@ class DocumentTest(unittest.TestCase):
 
     def test_document(self):
         d = Document(doc_id=1, files_root=DocumentTest.files_root)
+        self.assertFalse(Document.exists(1, files_root=DocumentTest.files_root))
+        d.create()
         self.assertTrue(Document.exists(1, files_root=DocumentTest.files_root))
         self.assertEqual(2, Document.get_next_free_id(self.files_root))
         self.assertEqual((0, 0), d.get_version())

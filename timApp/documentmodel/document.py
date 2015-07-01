@@ -10,11 +10,13 @@ class Document:
     def __init__(self, doc_id: 'int|None', files_root = None):
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id()
         self.files_root = self.get_default_files_root() if not files_root else files_root
-        self.__check_paths()
 
     @classmethod
     def get_default_files_root(cls):
         return 'tim_files'
+
+    def create(self):
+        self.__check_paths()
 
     def __check_paths(self):
         path = os.path.join(self.files_root, 'docs', str(self.doc_id))
