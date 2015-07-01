@@ -921,6 +921,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     var coords = {left: $button.position().left, top: $button.position().top};
                     var button_width = 130;
                     $.ajax({
+                        dataType: "json",
                         type: 'GET',
                         url: '/' + plugin + '/reqs/',
                         success: function (data) {
