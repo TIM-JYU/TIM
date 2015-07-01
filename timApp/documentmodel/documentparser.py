@@ -150,8 +150,10 @@ class DocumentParser:
         if not is_atom:
             # noinspection PyUnboundLocalVariable
             block_lines.append(line)
-        tokens['md'] = '\n'.join(block_lines)
-        return tokens
+        result = {'md': '\n'.join(block_lines)}
+        if len(tokens) > 0:
+            result['attrs'] = tokens
+        return result
 
     def try_parse_header_block(self, doc):
         """
@@ -169,8 +171,10 @@ class DocumentParser:
         if not header_line.startswith('#-'):
             block_lines.append(header_line[:start].strip())
         block_lines.append(self.parse_normal_block(doc)['md'])
-        tokens['md'] = '\n'.join(block_lines)
-        return tokens
+        result = {'md': '\n'.join(block_lines)}
+        if len(tokens) > 0:
+            result['attrs'] = tokens
+        return result
 
     def parse_normal_block(self, doc):
         """
