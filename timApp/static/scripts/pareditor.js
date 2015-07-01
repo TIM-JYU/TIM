@@ -97,12 +97,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }
                     $scope.options.metaset = true;
 
-                    /*
-                     $(".editorButton").click(function (event) {
-                     event.preventDefault();
-                     event.stopPropagation();
-                     });*/
-
                     $scope.editor.keydown(function (e) {
                         if (e.keyCode === 9) {
                             var outdent = e.shiftKey;
@@ -230,7 +224,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 var touchDevice = false;
 
                 $scope.wrapFn = function (func) {
-                    $('#teksti').focus();
                     if (!touchDevice) $scope.editor.focus();
                     if (typeof(func) !== 'undefined') (func());
                 };
@@ -543,8 +536,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             while (tempEnd < lineend && isWordCharBasic(doc.charAt(tempEnd))) {
                                 tempEnd++;
                             }
-                            $scope.editor.setSelection(tempStart, tempEnd);
+                            if (tempStart != tempEnd) {
+                                $scope.editor.setSelection(tempStart, tempEnd);
+                                return true;
+                            }
                         }
+                        return false;
                     };
 
                     $scope.surroundedBy = function (string) {
@@ -552,10 +549,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         var selection = $scope.editor.getSelection();
                         var word = value.substring(selection.start - string.length, selection.end + string.length);
                         return (word.indexOf(string) === 0 && word.lastIndexOf(string) === (word.length - string.length));
-                    };
-
-                    $scope.surroundedByItalic = function () {
-                        return (($scope.surroundedBy('*') && !$scope.surroundedBy('**')) || $scope.surroundedBy('***'));
                     };
                     //Style
                     //Insert
@@ -748,10 +741,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         return (word.indexOf(string) === 0 && word.lastIndexOf(string) === (word.length - string.length));
                     };
 
-                    $scope.surroundedByItalic = function () {
-                        return (($scope.surroundedBy('*') && !$scope.surroundedBy('**')) || $scope.surroundedBy('***'));
-                    };
-
                     $scope.codeBlockClicked = function () {
                         $scope.snippetManager.insertSnippet($scope.editor, "```\n${0:$SELECTION}\n```");
                     };
@@ -828,12 +817,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.squareClicked = function () {
                         $scope.snippetManager.insertSnippet($scope.editor, "\\sqrt{${0:$SELECTION}}");
                     };
-
-                    $scope.rootClicked = function () {
-                        $scope.snippetManager.insertSnippet($scope.editor, "\\sqrt[$0]{$SELECTION}");
-                    };
                     //TEX
                 }
+
+                $scope.surroundedByItalic = function () {
+                    return (($scope.surroundedBy('*') && !$scope.surroundedBy('**')) || $scope.surroundedBy('***'));
+                };
 
                 $scope.onFileSelect = function (url, $files) {
                     if (!touchDevice) $scope.editor.focus();

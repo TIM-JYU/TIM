@@ -192,8 +192,8 @@ timApp.controller("ViewCtrl", [
 
                 var createEditor = function (attrs) {
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
-                    $par.append($div);
                     $div.attr('tim-draggable-fixed', '');
+                    $par.append($div);
                     $compile($div[0])(sc);
                     //$div = $compile($div)(sc);
                     sc.editing = true;
