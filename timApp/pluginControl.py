@@ -83,7 +83,7 @@ def parse_plugin_values(par):
     """
     try:
         # We get the yaml str by removing the first and last lines of the paragraph markup
-        par_md = par.getMarkdown()
+        par_md = par.get_markdown()
         yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
         values = parse_yaml(yaml_str)
         if type(values) is str:

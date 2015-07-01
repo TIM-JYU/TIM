@@ -8,7 +8,7 @@ from documentmodel.docparagraph import DocParagraph
 class Document:
     @contract()
     def __init__(self, doc_id: 'int|None', files_root = None):
-        self.doc_id = doc_id if doc_id is not None else Document.getNextFreeId()
+        self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id()
         self.files_root = self.get_default_files_root() if not files_root else files_root
         self.__check_paths()
 
@@ -69,7 +69,7 @@ class Document:
 
     @classmethod
     @contract
-    def getNextFreeId(cls, files_root: 'str|None' = None) -> 'int':
+    def get_next_free_id(cls, files_root: 'str|None' = None) -> 'int':
         """
         Gets the next free document id.
         :return:
@@ -78,7 +78,7 @@ class Document:
         return cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=-1) + 1
 
     @contract
-    def getVersion(self) -> 'tuple(int, int)':
+    def get_version(self) -> 'tuple(int, int)':
         """
         Gets the latest version of the document as a major-minor tuple.
         :return: Latest version, or (-1, 0) if there isn't yet one.
@@ -89,34 +89,34 @@ class Document:
         return major, minor
 
     @contract
-    def getVersionPath(self, ver: 'tuple(int, int)') -> 'str':
+    def get_version_path(self, ver: 'tuple(int, int)') -> 'str':
         return os.path.join(self.files_root, 'docs', str(self.doc_id), str(ver[0]), str(ver[1]))
 
     @contract
-    def __incrementVersion(self, increment_major: 'bool') -> 'tuple(int, int)':
+    def __increment_version(self, increment_major: 'bool') -> 'tuple(int, int)':
         ver_exists = True
         while ver_exists:
-            old_ver = self.getVersion()
+            old_ver = self.get_version()
             ver = (old_ver[0] + 1, 0) if increment_major else (old_ver[0], old_ver[1] + 1)
-            ver_exists = os.path.isfile(self.getVersionPath(ver))
+            ver_exists = os.path.isfile(self.get_version_path(ver))
         if increment_major:
             os.mkdir(os.path.join(self.files_root, 'docs', str(self.doc_id), str(ver[0])))
         if old_ver[0] > 0:
-            shutil.copyfile(self.getVersionPath(old_ver), self.getVersionPath(ver))
+            shutil.copyfile(self.get_version_path(old_ver), self.get_version_path(ver))
         else:
-            with open(self.getVersionPath(ver), 'w'):
+            with open(self.get_version_path(ver), 'w'):
                 pass
         return ver
 
     @contract
-    def hasParagraph(self, par_id: 'str') -> 'bool':
+    def has_paragraph(self, par_id: 'str') -> 'bool':
         """
         Checks if the document has the given paragraph.
         :param par_id: The paragraph id.
         :return: Boolean.
         """
         par_line = par_id + '\n'
-        with open(self.getVersionPath(self.getVersion()), 'r') as f:
+        with open(self.get_version_path(self.get_version()), 'r') as f:
             while True:
                 line = f.readline()
                 if line == '':
@@ -125,7 +125,7 @@ class Document:
                     return True
 
     @contract
-    def addParagraph(self, text: 'str') -> 'DocParagraph':
+    def add_paragraph(self, text: 'str') -> 'DocParagraph':
         """
         Appends a new paragraph into the document.
         :param text: New paragraph text.
@@ -133,29 +133,29 @@ class Document:
         """
         p = DocParagraph(text, files_root=self.files_root)
         p.addLink(self.doc_id)
-        old_ver = self.getVersion()
-        new_ver = self.__incrementVersion(increment_major=True)
-        old_path = self.getVersionPath(old_ver)
-        new_path = self.getVersionPath(new_ver)
+        old_ver = self.get_version()
+        new_ver = self.__increment_version(increment_major=True)
+        old_path = self.get_version_path(old_ver)
+        new_path = self.get_version_path(new_ver)
         if os.path.exists(old_path):
             shutil.copyfile(old_path, new_path)
 
         with open(new_path, 'a') as f:
-            f.write(p.getId())
+            f.write(p.get_id())
             f.write('\n')
         return p
 
     @contract
-    def deleteParagraph(self, par_id: 'str'):
+    def delete_paragraph(self, par_id: 'str'):
         """
         Removes a paragraph from the document.
         :param par_id: Paragraph id to remove.
         """
-        old_ver = self.getVersion()
-        new_ver = self.__incrementVersion(increment_major=True)
+        old_ver = self.get_version()
+        new_ver = self.__increment_version(increment_major=True)
         id_line = par_id + '\n'
-        with open(self.getVersionPath(old_ver), 'r') as f_src:
-            with open(self.getVersionPath(new_ver), 'w') as f:
+        with open(self.get_version_path(old_ver), 'r') as f_src:
+            with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
                     line = f_src.readline()
                     if not line:
@@ -168,7 +168,7 @@ class Document:
         # todo: don't make a new version if the paragraph was not found
 
     @contract
-    def insertParagraph(self, text: 'str', insert_before_id: 'str') -> 'DocParagraph':
+    def insert_paragraph(self, text: 'str', insert_before_id: 'str') -> 'DocParagraph':
         """
         Inserts a paragraph before a given paragraph id.
         :param text: New paragraph text.
@@ -177,41 +177,41 @@ class Document:
         """
         p = DocParagraph(text, files_root=self.files_root)
         p.addLink(self.doc_id)
-        old_ver = self.getVersion()
-        new_ver = self.__incrementVersion(increment_major=True)
+        old_ver = self.get_version()
+        new_ver = self.__increment_version(increment_major=True)
         id_line = insert_before_id + '\n'
-        with open(self.getVersionPath(old_ver), 'r') as f_src:
-            with open(self.getVersionPath(new_ver), 'w') as f:
+        with open(self.get_version_path(old_ver), 'r') as f_src:
+            with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
                     line = f_src.readline()
                     if not line:
                         return p
                     if line == id_line:
-                        f.write(p.getId())
+                        f.write(p.get_id())
                         f.write('\n')
                     f.write(line)
 
     @contract
-    def modifyParagraph(self, par_id: 'str', new_text: 'str') -> 'DocParagraph':
+    def modify_paragraph(self, par_id: 'str', new_text: 'str') -> 'DocParagraph':
         """
         Modifies the text of the given paragraph.
         :param par_id: Paragraph id.
         :param new_text: New text.
         :return: The new paragraph object.
         """
-        if not self.hasParagraph(par_id):
-            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.getVersion()))
+        if not self.has_paragraph(par_id):
+            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
         p_src = DocParagraph.getLatest(par_id, files_root=self.files_root)
         p = DocParagraph(new_text, par_id=par_id, links=p_src.getLinks(), attrs=p_src.getAttrs(), files_root=self.files_root)
         p.updateLinks()
         # todo: file to record paragraph hashes
-        self.__incrementVersion(increment_major=False)
+        self.__increment_version(increment_major=False)
         return p
 
     @contract
     def get_index(self) -> 'list(str)':
         # todo: optimization?
-        return [par.getMarkdown() for par in self if par.getMarkdown().startswith('#')]
+        return [par.get_markdown() for par in self if par.get_markdown().startswith('#')]
 
 
 new_contract('Document', Document)
@@ -221,7 +221,7 @@ class DocParagraphIter:
     def __init__(self, doc: 'Document'):
         self.doc = doc
         self.next_index = 0
-        name = doc.getVersionPath(doc.getVersion())
+        name = doc.get_version_path(doc.get_version())
         self.f = open(name, 'r') if os.path.isfile(name) else None
 
     def __next__(self) -> 'DocParagraph':

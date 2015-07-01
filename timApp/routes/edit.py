@@ -76,7 +76,7 @@ def modify_paragraph():
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
-                         'version': doc.getVersion()})
+                         'version': doc.get_version()})
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
@@ -121,7 +121,7 @@ def add_paragraph():
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
-                         'version': new_doc.getVersion()})
+                         'version': new_doc.get_version()})
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>/<par_id>", methods=["POST"])
@@ -137,4 +137,4 @@ def delete_paragraph(doc_id, par_id):
     version = request.headers.get('Version', '')
     verify_document_version(doc_id, version)
     new_doc = timdb.documents.delete_paragraph(get_newest_document(doc_id), par_id)
-    return jsonResponse({'version': new_doc.getVersion()})
+    return jsonResponse({'version': new_doc.get_version()})

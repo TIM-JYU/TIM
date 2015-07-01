@@ -346,7 +346,7 @@ def get_paragraph(doc, par_id):
     :type par_id: str
     :rtype: DocParagraph
     """
-    if not doc.hasParagraph(par_id):
+    if not doc.has_paragraph(par_id):
         return None
     return DocParagraph(par_id=par_id)
 

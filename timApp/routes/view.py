@@ -157,7 +157,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            text=texts,
                            plugin_users=users,
                            current_user=current_user,
-                           version=Document(doc_id).getVersion(),
+                           version=Document(doc_id).get_version(),
                            js=jsPaths,
                            cssFiles=cssPaths,
                            jsMods=modules,

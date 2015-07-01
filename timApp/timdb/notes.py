@@ -75,7 +75,7 @@ class Notes(TimDbBase):
                 (UserGroup_id, doc_id, par_id, par_hash,
                 content, created, modified, access, tags, html)
                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, ?, ?, ?)
-            """, [usergroup_id, doc.doc_id, par.getId(), par.getHash(),
+            """, [usergroup_id, doc.doc_id, par.get_id(), par.get_hash(),
                   content, access, self.__tagstostr(tags), note_html])
 
         if commit:

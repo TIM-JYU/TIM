@@ -13,7 +13,7 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentparser import DocumentParser
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
-from ephemeralclient import EphemeralException
+from ephemeralclient import EphemeralException, EphemeralClient, EPHEMERAL_URL
 from timdb.gitclient import NothingToCommitException
 from utils import date_to_relative
 from documentmodel.document import Document
@@ -37,6 +37,7 @@ class Documents(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
+        self.ec = EphemeralClient(EPHEMERAL_URL)
 
     def __iter__(self):
         return DocEntryIterator(self.db)
@@ -54,7 +55,7 @@ class Documents(TimDbBase):
 
         assert doc.exists(), 'document does not exist: %r' % doc.doc_id
         content = self.trim_markdown(content)
-        par = doc.insertParagraph(content, prev_par_id)
+        par = doc.insert_paragraph(content, prev_par_id)
         return [par], doc
 
     @contract
@@ -71,7 +72,7 @@ class Documents(TimDbBase):
 
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document = Document(document_id)
-        document.addParagraph('Edit me!')
+        document.add_paragraph('Edit me!')
 
         cursor = self.db.cursor()
         cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP
@@ -110,7 +111,7 @@ class Documents(TimDbBase):
         :param par_id: The id of the paragraph in the document that should be deleted.
         """
 
-        doc.deleteParagraph(par_id)
+        doc.delete_paragraph(par_id)
         return doc
 
     @contract
@@ -428,7 +429,7 @@ class Documents(TimDbBase):
         with open(document_file, 'r') as f:
             parser = DocumentParser(f.read()) # todo: use a stream instead
             for block in parser.parse_document():
-                doc.addParagraph(block['md'])
+                doc.add_paragraph(block['md'])
         return doc
 
     @contract
@@ -465,7 +466,7 @@ class Documents(TimDbBase):
 
         assert doc.exists(), 'document does not exist: ' + str(doc.doc_id)
         new_content = self.trim_markdown(new_content)
-        par = doc.modifyParagraph(par_id, new_content)
+        par = doc.modify_paragraph(par_id, new_content)
         return [par], doc
 
     @contract

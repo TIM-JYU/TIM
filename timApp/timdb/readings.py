@@ -30,13 +30,13 @@ class Readings(TimDbBase):
         # Remove previous markings for this paragraph to reduce clutter
         cursor.execute(
             'DELETE FROM ReadParagraphs WHERE UserGroup_id = ? AND doc_id = ? AND par_id = ?',
-            [usergroup_id, doc.doc_id, par.getId()])
+            [usergroup_id, doc.doc_id, par.get_id()])
 
         # Set current version as read
         cursor.execute(
             'INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash)'
             'VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)',
-            [usergroup_id, doc.doc_id, par.getId(), par.getHash()])
+            [usergroup_id, doc.doc_id, par.get_id(), par.get_hash()])
 
         if commit:
             self.db.commit()

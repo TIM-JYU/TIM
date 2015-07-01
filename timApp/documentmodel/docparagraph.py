@@ -68,22 +68,22 @@ class DocParagraph:
         return self.__data
 
     @contract
-    def getId(self) -> 'str':
+    def get_id(self) -> 'str':
         return self.__data['id']
 
     @contract
-    def getHash(self) -> 'str':
+    def get_hash(self) -> 'str':
         return self.__data['t']
 
     @contract
-    def getMarkdown(self) -> 'str':
+    def get_markdown(self) -> 'str':
         return self.__data['md']
 
     @contract
     def getHtml(self) -> 'str':
         if self.__data['html']:
             return self.__data['html']
-        self.setHtml(md_to_html(self.getMarkdown()))
+        self.setHtml(md_to_html(self.get_markdown()))
         return self.__data['html']
 
     @contract
@@ -100,11 +100,11 @@ class DocParagraph:
 
     @contract
     def get_base_path(self) -> 'str':
-        return self.getBasePath(self.getId(), files_root=self.files_root)
+        return self.getBasePath(self.get_id(), files_root=self.files_root)
 
     @contract
     def get_path(self) -> 'str':
-        return self.getPath(self.getId(), self.getHash(), files_root=self.files_root)
+        return self.getPath(self.get_id(), self.get_hash(), files_root=self.files_root)
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
@@ -137,12 +137,12 @@ class DocParagraph:
             f.write(json.dumps(self.__data))
 
     def __setLatest(self):
-        linkpath = self.getPath(self.getId(), 'current', files_root=self.files_root)
-        if linkpath == self.getHash():
+        linkpath = self.getPath(self.get_id(), 'current', files_root=self.files_root)
+        if linkpath == self.get_hash():
             return
         if os.path.isfile(linkpath):
             os.unlink(linkpath)
-        os.symlink(self.getHash(), linkpath)
+        os.symlink(self.get_hash(), linkpath)
 
     @contract
     def addLink(self, doc_id: 'int'):
