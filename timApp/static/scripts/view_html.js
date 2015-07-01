@@ -147,6 +147,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleParEditor = function ($par, options) {
+            var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var url;
             if ($par.hasClass("new")) {
                 url = '/newParagraph/';
@@ -165,6 +166,7 @@ timApp.controller("ViewCtrl", [
                     showImageUpload: true,
                     showPlugins: true,
                     destroyAfterSave: true,
+                    touchDevice: touch,
                     tags: [
                         {name: 'markread', desc: 'Mark as read'}
                     ]

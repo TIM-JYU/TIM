@@ -80,7 +80,7 @@
         <!-- <button class="editorButton" ng-click="wrapFn(rootClicked)">Root</button> -->
     </div>
     <div id="pluginButtons" class="extraButtonArea hidden">
-        <button class="editorButton" ng-click="pluginClicked('csPlugin', 'template')">CsPlugin
+        <button class="editorButton" ng-click="pluginClicked($event, 'csPlugin')">CsPlugin
         </button>
         <button class="editorButton" ng-click="pluginClicked('showImage', 'template')">ImagePlugin
         </button>
@@ -98,7 +98,14 @@
     </div>
 
     <div class="editorContainer">
-        <textarea rows="10" ng-model="value" ng-change="textchanged()" id="teksti"></textarea>
+        <!-- <textarea ng-if="options.touchDevice" rows="10" ng-model="value" ng-change="textchanged()" id="teksti"></textarea> -->
+
+        <div ng-if="!options.touchDevice" class="editor" ui-ace="{
+  useWrapMode: false,
+  onLoad: aceLoaded,
+  onChange: aceChanged
+    }" ng-model="editorText">
+        </div>
     </div>
     <div class="editButtonArea">
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
@@ -128,7 +135,8 @@
                      'other': '{} paragraphs'}">
         </ng-pluralize>)
     </span>
-        <button id="releaseButton" class="timButton" style='float: right' ng-click="releaseClicked()">&#8594;</button>
+        <button id="releaseButton" class="timButton" style='float: right' ng-click="releaseClicked()">
+            &#8594;</button>
         <span ng-show="outofdate">...</span>
 
         <div class="previewcontent"></div>
