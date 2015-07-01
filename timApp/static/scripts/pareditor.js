@@ -940,9 +940,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             };
 
                             for (var template in data.templates) {
-                                var text = (template['text'] || template['file']);
-                                var file = template['file'];
-                                var title = template['expl'];
+                                console.log(template);
+                                var text = (template.text || template.text);
+                                var file = template.text;
+                                var title = template.text;
                                 var clickfn = 'getTemplate(plugin, file); wrapFn()';
                                 $actionDiv.append(createButtonSpan(text, title, clickfn));
                             }
