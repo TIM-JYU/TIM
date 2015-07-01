@@ -18,9 +18,7 @@ view_page = Blueprint('view_page',
 
 @cache.memoize(3600)
 def get_whole_document(document_id):
-    pars = [par for par in Document(document_id)]
-    for par in pars:
-        par.set_html(sanitize_html(par.get_html()))
+    pars = [par for par in getTimDb().documents.get_document_with_autoimport(DocIdentifier(id=document_id, hash=''))]
     return pars
 
 @contract
@@ -31,7 +29,6 @@ def get_partial_document(document_id: 'int', view_range: 'range') -> 'list(DocPa
         if i >= view_range[1]:
             break
         if i >= view_range[0]:
-            par.set_html(sanitize_html(par.get_html()))
             pars.append(par)
         i += 1
     return pars
@@ -116,8 +113,8 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
 
     start_index = max(view_range[0], 0) if view_range else 0
     xs = get_document(doc_id, view_range)
-
     user = getCurrentUserId()
+
     if teacher:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         users = timdb.answers.getUsersForTasks(task_ids)

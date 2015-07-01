@@ -13,6 +13,7 @@ def launch_dumbo():
     Launches Dumbo.
 
     :return: The process object that represents the Dumbo process.
+    :rtype: subprocess.Popen
     """
     path = DUMBO_PATH
     log_path = os.path.join(path, "log")

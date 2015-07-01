@@ -8,6 +8,7 @@ from sqlite3 import Connection
 
 from contracts import contract
 from ansi2html import Ansi2HTMLConverter
+from documentmodel.attributeparser import AttributeParser
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentparser import DocumentParser
@@ -72,6 +73,7 @@ class Documents(TimDbBase):
 
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document = Document(document_id)
+        document.create()
         document.add_paragraph('Edit me!')
 
         cursor = self.db.cursor()
@@ -279,17 +281,28 @@ class Documents(TimDbBase):
         return [self.trim_markdown(block) for block in self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)]
 
     @contract
-    def __getDocumentAsHtmlBlocks(self, document_id: 'DocIdentifier') -> 'list(DocParagraph)':
-        """Gets the specified document in HTML form.
+    def get_document_with_autoimport(self, document_id: 'DocIdentifier') -> 'Document|None':
+        """Attempts to load a document from the new model. If it doesn't exist, attempts to load from old model.
+        If found, an autoimport is performed and a Document object is returned. Otherwise, None is returned.
 
         :param document_id: The id of the document.
         :returns: The document contents as a list of HTML blocks.
         """
-
-        html_blocks = self.ephemeralCall(document_id, self.ec.getDocumentAsHtmlBlocks)
-        pars = [DocParagraph(md='', html=block, t='rghurig', par_id='asdads' + str(idx)) for idx, block in enumerate(html_blocks)]
-
-        return pars
+        d = Document(doc_id=document_id.id)
+        if Document.exists(document_id.id):
+            return d
+        if not self.documentExists(document_id.id):
+            return None
+        md_blocks = self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)
+        d.create()
+        ap = AttributeParser()
+        for md in md_blocks:
+            ap.set_str(md.split('\n', 1)[0])
+            attrs, index = ap.get_attributes()
+            if index is None:
+                attrs = None
+            d.add_paragraph(md=md, attrs=attrs)
+        return d
 
     @contract
     def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
@@ -416,20 +429,12 @@ class Documents(TimDbBase):
         cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
                        [doc_id, document_name, True])
         self.db.commit()
-
-        #self.git.add(self.getDocumentPathAsRelative(doc_id.id))
-        #doc_hash = self.git.commit('Imported document: {} (id = {})'.format(document_name, doc_id.id))
-        #docId = DocIdentifier(doc_id.id, doc_hash)
-
-        #with open(document_file, 'rb') as f:
-        #    self.ec.loadDocument(docId, f.read())
-
-        #return docId
         doc = Document(doc_id)
-        with open(document_file, 'r') as f:
-            parser = DocumentParser(f.read()) # todo: use a stream instead
+        doc.create()
+        with open(document_file, 'r', encoding='utf-8') as f:
+            parser = DocumentParser(f.read())  # todo: use a stream instead
             for block in parser.parse_document():
-                doc.add_paragraph(block['md'])
+                doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
         return doc
 
     @contract

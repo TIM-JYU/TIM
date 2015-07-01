@@ -132,19 +132,19 @@
 
         <div id="pars">
             {% for t in text %}
-                {% if 'task_id' in t.getAttrs() %}
-                <div class="par" id="{{ t.getId() }}">
+                {% if 'task_id' in t.get_attrs() %}
+                <div class="par" id="{{ t.get_id() }}">
                     <answerbrowser
-                            task-id="{{ t.getAttrs()['task_id'] }}">
+                            task-id="{{ t.get_attrs()['task_id'] }}">
                     </answerbrowser>
                     <div class="parContent">
-                        {{ t.getHtml()|safe }}
+                        {{ t.get_html()|safe }}
                     </div>
                 </div>
                 {% else %}
-                <div class="par" id="{{ t.getId() }}" ng-non-bindable>
+                <div class="par" id="{{ t.get_id() }}" ng-non-bindable>
                     <div class="parContent">
-                        {{ t.getHtml()|safe }}
+                        {{ t.get_html()|safe }}
                     </div>
                 </div>
                 {% endif %}

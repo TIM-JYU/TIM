@@ -127,13 +127,14 @@ class Document:
                     return True
 
     @contract
-    def add_paragraph(self, text: 'str') -> 'DocParagraph':
+    def add_paragraph(self, text: 'str', attrs: 'dict|None'=None) -> 'DocParagraph':
         """
         Appends a new paragraph into the document.
+        :param attrs: The attributes for the paragraph.
         :param text: New paragraph text.
         :return: The new paragraph object.
         """
-        p = DocParagraph(text, files_root=self.files_root)
+        p = DocParagraph(md=text, files_root=self.files_root, attrs=attrs)
         p.get_html()
         p.add_link(self.doc_id)
         old_ver = self.get_version()
