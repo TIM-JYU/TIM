@@ -190,12 +190,10 @@ timApp.controller("ViewCtrl", [
 
                 var createEditor = function (attrs) {
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
-                    $compile($div[0])(sc);
-                    //$(document.body).css('overflow', 'hidden')
-                    //$(document.body).css('position', 'fixed')
                     $par.append($div);
                     $div.attr('tim-draggable-fixed', '');
-                    $div = $compile($div)(sc);
+                    $compile($div[0])(sc);
+                    //$div = $compile($div)(sc);
                     sc.editing = true;
                 };
 
@@ -203,6 +201,7 @@ timApp.controller("ViewCtrl", [
                     $(".par.new").remove();
                 }
                 createEditor(attrs);
+
             }
         };
 
