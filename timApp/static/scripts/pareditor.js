@@ -907,9 +907,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     for (var key in $scope.tables) {
                         var text = key.charAt(0).toUpperCase() + key.substring(1);
                         var clickfn = 'insertTemplate(tables[\'' + key + '\']); wrapFn()';
-                        $actionDiv.append(createMenuButton(text, '', clickfn));
+                        $actionDiv.append($scope.createMenuButton(text, '', clickfn));
                     }
-                    $actionDiv.append(createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
+                    $actionDiv.append($scope.createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
                     $actionDiv.offset(coords);
                     $actionDiv.css('position', 'absolute'); // IE needs this
                     $actionDiv = $compile($actionDiv)($scope);
@@ -937,10 +937,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                 console.log(template.file);
                                 console.log(plugin);
                                 var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\'); wrapFn()';
-                                $actionDiv.append(createMenuButton(text, title, clickfn));
+                                $actionDiv.append($scope.createMenuButton(text, title, clickfn));
                             }
 
-                            $actionDiv.append(createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
+                            $actionDiv.append($scope.createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
                             $actionDiv.offset(coords);
                             $actionDiv.css('position', 'absolute'); // IE needs this
                             $actionDiv = $compile($actionDiv)($scope);
