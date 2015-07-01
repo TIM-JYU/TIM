@@ -872,56 +872,52 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     return $span;
                 };
 
-                $scope.tableClicked = function ($event) {
+                $scope.createMenu = function ($event, buttons) {
                     $scope.closeMenu(null, true);
                     var $button = $($event.target);
                     var coords = {left: $button.position().left, top: $button.position().top};
                     var $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
 
-                    for (var key in $scope.tables) {
-                        var text = key.charAt(0).toUpperCase() + key.substring(1);
-                        var clickfn = 'insertTemplate(tables[\'' + key + '\']); wrapFn()';
-                        $actionDiv.append($scope.createMenuButton(text, '', clickfn));
+                    for (var i = 0; i < buttons.length; i++) {
+                        $actionDiv.append(buttons[i]);
                     }
+
                     $actionDiv.append($scope.createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
                     $actionDiv.offset(coords);
                     $actionDiv.css('position', 'absolute'); // IE needs this
                     $actionDiv = $compile($actionDiv)($scope);
                     $button.parent().prepend($actionDiv);
-
                     $(document).on('mouseup.closemenu', $scope.closeMenu);
                 };
 
-                $scope.pluginClicked = function ($event, plugin) {
-                    $scope.closeMenu(null, true);
-                    var $button = $($event.target);
-                    var coords = {left: $button.position().left, top: $button.position().top};
+                $scope.tableClicked = function ($event) {
+                    var buttons = [];
+                    for (var key in $scope.tables) {
+                        var text = key.charAt(0).toUpperCase() + key.substring(1);
+                        var clickfn = 'insertTemplate(tables[\'' + key + '\']); wrapFn()';
+                        buttons.push($scope.createMenuButton(text, '', clickfn));
+                    }
+                    $scope.createMenu($event, buttons);
+                };
 
+                $scope.pluginClicked = function ($event, plugin) {
                     $.ajax({
                         dataType: "json",
                         type: 'GET',
                         url: '/' + plugin + '/reqs/',
                         success: function (data) {
-                            var $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
                             if (data.templates) {
+                                var buttons = [];
                                 for (var i = 0; i < data.templates.length; i++) {
                                     var template = data.templates[i];
                                     var text = (template.text || template.file);
                                     var file = template.file;
                                     var title = template.expl;
-                                    console.log(template.file);
-                                    console.log(plugin);
                                     var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\'); wrapFn()';
-                                    $actionDiv.append($scope.createMenuButton(text, title, clickfn));
+                                    buttons.push($scope.createMenuButton(text, title, clickfn));
                                 }
+                                $scope.createMenu($event, buttons);
                             }
-                            $actionDiv.append($scope.createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
-                            $actionDiv.offset(coords);
-                            $actionDiv.css('position', 'absolute'); // IE needs this
-                            $actionDiv = $compile($actionDiv)($scope);
-                            $button.parent().prepend($actionDiv);
-
-                            $(document).on('mouseup.closemenu', $scope.closeMenu);
                         },
                         error: function () {
                             console.log("Virhe");
@@ -968,10 +964,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         div.mozRequestFullScreen ||
                         div.msRequestFullscreen;
                     return (typeof(requestMethod) !== 'undefined');
-                };
-
-                $scope.isTouchDevide = function () {
-                    return ('ontouchstart' in window || navigator.msMaxTouchPoints);
                 };
 
                 $scope.goFullScreen = function () {
