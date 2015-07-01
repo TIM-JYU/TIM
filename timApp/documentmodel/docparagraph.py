@@ -35,7 +35,7 @@ class DocParagraph:
 
     @classmethod
     @contract
-    def fromDict(cls, d: 'dict'):
+    def from_dict(cls, d: 'dict'):
         return DocParagraph(src_dict=d)
 
     @classmethod
@@ -52,7 +52,7 @@ class DocParagraph:
 
     @classmethod
     @contract
-    def getLatest(cls, par_id: 'str', files_root: 'str|None' = None):
+    def get_latest(cls, par_id: 'str', files_root: 'str|None' = None):
         froot = cls.get_default_files_root() if files_root is None else files_root
         t = os.readlink(cls.getPath(par_id, 'current', froot))
         return cls.get(par_id, t, files_root=froot)
@@ -61,7 +61,7 @@ class DocParagraph:
     @contract
     def get(cls, par_id: 'str', t: 'str', files_root: 'str|None' = None):
         with open(cls.getPath(par_id, t, files_root), 'r') as f:
-            return cls.fromDict(json.loads(f.read()))
+            return cls.from_dict(json.loads(f.read()))
 
     @contract
     def dict(self) -> 'dict':
@@ -80,22 +80,22 @@ class DocParagraph:
         return self.__data['md']
 
     @contract
-    def getHtml(self) -> 'str':
+    def get_html(self) -> 'str':
         if self.__data['html']:
             return self.__data['html']
-        self.setHtml(md_to_html(self.get_markdown()))
+        self.set_html(md_to_html(self.get_markdown()))
         return self.__data['html']
 
     @contract
-    def setHtml(self, new_html: 'str'):
+    def set_html(self, new_html: 'str'):
         self.__data['html'] = new_html
 
     @contract
-    def getLinks(self) -> 'list(int)':
+    def get_links(self) -> 'list(int)':
         return self.__data['links']
 
     @contract
-    def getAttrs(self) -> 'dict':
+    def get_attrs(self) -> 'dict':
         return self.__data['attrs']
 
     @contract
@@ -114,7 +114,7 @@ class DocParagraph:
 
     def __write(self):
         file_name = self.get_path()
-        should_exist = len(self.getLinks()) > 0
+        should_exist = len(self.get_links()) > 0
         does_exist = os.path.isfile(file_name)
 
         if does_exist and not should_exist:
@@ -131,12 +131,12 @@ class DocParagraph:
             base_path = self.get_base_path()
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
-            self.__setLatest()
+            self.__set_latest()
 
         with open(file_name, 'w') as f:
             f.write(json.dumps(self.__data))
 
-    def __setLatest(self):
+    def __set_latest(self):
         linkpath = self.getPath(self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
@@ -145,18 +145,18 @@ class DocParagraph:
         os.symlink(self.get_hash(), linkpath)
 
     @contract
-    def addLink(self, doc_id: 'int'):
+    def add_link(self, doc_id: 'int'):
         self.__read()
         self.__data['links'].append(doc_id)
         self.__write()
 
     @contract
-    def removeLink(self, doc_id: 'int'):
+    def remove_link(self, doc_id: 'int'):
         self.__read()
         self.__data['links'].remove(doc_id)
         self.__write()
 
-    def updateLinks(self):
+    def update_links(self):
         self.__read()
         self.__write()
 

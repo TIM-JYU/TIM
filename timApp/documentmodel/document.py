@@ -134,7 +134,8 @@ class Document:
         :return: The new paragraph object.
         """
         p = DocParagraph(text, files_root=self.files_root)
-        p.addLink(self.doc_id)
+        p.get_html()
+        p.add_link(self.doc_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version(increment_major=True)
         old_path = self.get_version_path(old_ver)
@@ -163,8 +164,8 @@ class Document:
                     if not line:
                         return
                     if line == id_line:
-                        p = DocParagraph.getLatest(par_id, files_root=self.files_root)
-                        p.removeLink(self.doc_id)
+                        p = DocParagraph.get_latest(par_id, files_root=self.files_root)
+                        p.remove_link(self.doc_id)
                     else:
                         f.write(line)
         # todo: don't make a new version if the paragraph was not found
@@ -178,7 +179,7 @@ class Document:
         :return: The inserted paragraph object.
         """
         p = DocParagraph(text, files_root=self.files_root)
-        p.addLink(self.doc_id)
+        p.add_link(self.doc_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version(increment_major=True)
         id_line = insert_before_id + '\n'
@@ -203,9 +204,9 @@ class Document:
         """
         if not self.has_paragraph(par_id):
             raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
-        p_src = DocParagraph.getLatest(par_id, files_root=self.files_root)
-        p = DocParagraph(new_text, par_id=par_id, links=p_src.getLinks(), attrs=p_src.getAttrs(), files_root=self.files_root)
-        p.updateLinks()
+        p_src = DocParagraph.get_latest(par_id, files_root=self.files_root)
+        p = DocParagraph(new_text, par_id=par_id, links=p_src.get_links(), attrs=p_src.get_attrs(), files_root=self.files_root)
+        p.update_links()
         # todo: file to record paragraph hashes
         self.__increment_version(increment_major=False)
         return p
@@ -235,7 +236,7 @@ class DocParagraphIter:
                 self.__close()
                 raise StopIteration
             if line != '\n':
-                return DocParagraph.getLatest(line.replace('\n', ''), self.doc.files_root)
+                return DocParagraph.get_latest(line.replace('\n', ''), self.doc.files_root)
 
     def __close(self):
         if self.f:

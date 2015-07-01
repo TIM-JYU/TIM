@@ -16,14 +16,14 @@ if __name__ == "__main__":
     p = doc.add_paragraph('testikappale')
     assert(doc.get_version() == (1, 0))
     assert(len(doc) == 1)
-    p1 = DocParagraph.getLatest(p.get_id(), files_root=test_files)
+    p1 = DocParagraph.get_latest(p.get_id(), files_root=test_files)
     assert(p1.dict() == p.dict())
     assert(p1.get_markdown() == 'testikappale')
 
     p2 = doc.add_paragraph('kakkoskappale')
     assert(doc.get_version() == (2, 0))
     assert(len(doc) == 2)
-    pp2 = DocParagraph.getLatest(p2.get_id(), files_root=test_files)
+    pp2 = DocParagraph.get_latest(p2.get_id(), files_root=test_files)
     assert(pp2.dict() == p2.dict())
     assert(p2.get_markdown() == 'kakkoskappale')
 

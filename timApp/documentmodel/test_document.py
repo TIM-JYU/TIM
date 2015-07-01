@@ -2,11 +2,13 @@ import os
 import unittest
 import shutil
 from documentmodel.document import Document
+import dumboclient
 from filemodehelper import change_permission_and_retry
 
 
 class DocumentTest(unittest.TestCase):
     files_root = 'doctest_files'
+    dumbo = dumboclient.launch_dumbo()
 
     @classmethod
     def setUpClass(cls):
@@ -33,6 +35,7 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual((4, 0), d.get_version())
         self.assertListEqual([], d.get_index())
         self.assertListEqual(['first', 'second'], [p.get_markdown() for p in d])
+        self.assertListEqual(['<p>first</p>', '<p>second</p>'], [p.get_html() for p in d])
         par3_new = d.modify_paragraph(par2.get_id(), 'third')
         self.assertEqual((4, 1), d.get_version())
         self.assertEqual(par2.get_id(), par3_new.get_id())
@@ -42,6 +45,11 @@ class DocumentTest(unittest.TestCase):
         self.assertListEqual(['first', 'new second', 'third'], [p.get_markdown() for p in d])
         Document.remove(doc_id=1, files_root=DocumentTest.files_root)
         self.assertFalse(Document.exists(1, files_root=DocumentTest.files_root))
+
+    @classmethod
+    def tearDownClass(cls):
+        DocumentTest.dumbo.kill()
+
 
 if __name__ == '__main__':
     unittest.main()

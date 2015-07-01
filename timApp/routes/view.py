@@ -20,7 +20,7 @@ view_page = Blueprint('view_page',
 def get_whole_document(document_id):
     pars = [par for par in Document(document_id)]
     for par in pars:
-        par.setHtml(sanitize_html(par.getHtml()))
+        par.set_html(sanitize_html(par.get_html()))
     return pars
 
 @contract
@@ -31,7 +31,7 @@ def get_partial_document(document_id: 'int', view_range: 'range') -> 'list(DocPa
         if i >= view_range[1]:
             break
         if i >= view_range[0]:
-            par.setHtml(sanitize_html(par.getHtml()))
+            par.set_html(sanitize_html(par.get_html()))
             pars.append(par)
         i += 1
     return pars
