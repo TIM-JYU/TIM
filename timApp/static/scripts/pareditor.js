@@ -883,6 +883,20 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }
                 };
 
+
+                $scope.createMenuButton = function (text, title, clickfunction) {
+                    var $span = $("<span>", {class: 'actionButtonRow'});
+                    var button_width = 130;
+                    $span.append($("<button>", {
+                        class: 'timButton',
+                        text: text,
+                        title: title,
+                        'ng-click': clickfunction,
+                        width: button_width
+                    }));
+                    return $span;
+                };
+
                 $scope.tableClicked = function ($event) {
                     $scope.closeMenu(null, true);
                     var $button = $($event.target);
@@ -890,23 +904,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     var button_width = 130;
                     var $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
 
-                    var createButtonSpan = function (text, clickfunction) {
-                        var $span = $("<span>", {class: 'actionButtonRow'});
-                        $span.append($("<button>", {
-                            class: 'timButton',
-                            text: text,
-                            'ng-click': clickfunction,
-                            width: button_width
-                        }));
-                        return $span;
-                    };
-
                     for (var key in $scope.tables) {
                         var text = key.charAt(0).toUpperCase() + key.substring(1);
                         var clickfn = 'insertTemplate(tables[\'' + key + '\']); wrapFn()';
-                        $actionDiv.append(createButtonSpan(text, clickfn));
+                        $actionDiv.append(createMenuButton(text, '', clickfn));
                     }
-                    $actionDiv.append(createButtonSpan('Close menu', 'closeMenu(null, true); wrapFn()'));
+                    $actionDiv.append(createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
                     $actionDiv.offset(coords);
                     $actionDiv.css('position', 'absolute'); // IE needs this
                     $actionDiv = $compile($actionDiv)($scope);
@@ -919,27 +922,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.closeMenu(null, true);
                     var $button = $($event.target);
                     var coords = {left: $button.position().left, top: $button.position().top};
-                    var button_width = 130;
+
                     $.ajax({
                         dataType: "json",
                         type: 'GET',
                         url: '/' + plugin + '/reqs/',
                         success: function (data) {
                             var $actionDiv = $("<div>", {class: MENU_BUTTON_CLASS});
-
-                            var createButtonSpan = function (text, title, clickfunction) {
-                                var $span = $("<span>", {class: 'actionButtonRow'});
-                                $span.append($("<button>", {
-                                    class: 'timButton',
-                                    text: text,
-                                    title: title,
-                                    'ng-click': clickfunction,
-                                    width: button_width
-                                }));
-                                return $span;
-                            };
-
-
                             for (var i = 0; i < data.templates.length; i++) {
                                 var template = data.templates[i];
                                 var text = (template.text || template.file);
@@ -947,11 +936,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                 var title = template.expl;
                                 console.log(template.file);
                                 console.log(plugin);
-                                var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file +'\'); wrapFn()';
-                                $actionDiv.append(createButtonSpan(text, title, clickfn));
+                                var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\'); wrapFn()';
+                                $actionDiv.append(createMenuButton(text, title, clickfn));
                             }
 
-                            $actionDiv.append(createButtonSpan('Close menu', '', 'closeMenu(null, true); wrapFn()'));
+                            $actionDiv.append(createMenuButton('Close menu', '', 'closeMenu(null, true); wrapFn()'));
                             $actionDiv.offset(coords);
                             $actionDiv.css('position', 'absolute'); // IE needs this
                             $actionDiv = $compile($actionDiv)($scope);
