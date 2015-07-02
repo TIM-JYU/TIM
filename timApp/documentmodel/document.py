@@ -3,7 +3,7 @@ import shutil
 
 from contracts import contract, new_contract
 from documentmodel.docparagraph import DocParagraph
-
+from documentmodel.exceptions import DocExistsError
 
 class Document:
     @contract()
@@ -15,13 +15,6 @@ class Document:
     def get_default_files_root(cls):
         return 'tim_files'
 
-    def create(self):
-        self.__check_paths()
-
-    def __check_paths(self):
-        path = os.path.join(self.files_root, 'docs', str(self.doc_id))
-        if not os.path.exists(path):
-            os.makedirs(path)
 
     def __len__(self):
         count = 0
@@ -57,17 +50,27 @@ class Document:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.exists(os.path.join(froot, 'docs', str(doc_id)))
 
+    def create(self, ignore_exists=False):
+        path = os.path.join(self.files_root, 'docs', str(self.doc_id))
+        if not os.path.exists(path):
+            os.makedirs(path)
+        elif not ignore_exists:
+            raise DocExistsError(self.doc_id)
+
     @classmethod
     @contract
-    def remove(cls, doc_id: 'int', files_root: 'str|None' = None):
+    def remove(cls, doc_id: 'int', files_root: 'str|None' = None, ignore_exists=False):
         """
         Removes the whole document.
         :param doc_id: Document id to remove.
         :return:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        shutil.rmtree(os.path.join(froot, 'docs', str(doc_id)))
-        # todo: remove all paragraph links
+        if cls.exists(doc_id, files_root=froot):
+            shutil.rmtree(os.path.join(froot, 'docs', str(doc_id)))
+            # todo: remove all paragraph links
+        elif not ignore_exists:
+            raise DocExistsError(doc_id)
 
     @classmethod
     @contract
@@ -77,7 +80,7 @@ class Document:
         :return:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=-1) + 1
+        return 1 + cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=0)
 
     @contract
     def get_version(self) -> 'tuple(int, int)':
@@ -172,13 +175,16 @@ class Document:
         # todo: don't make a new version if the paragraph was not found
 
     @contract
-    def insert_paragraph(self, text: 'str', insert_before_id: 'str') -> 'DocParagraph':
+    def insert_paragraph(self, text: 'str', insert_before_id: 'str|None') -> 'DocParagraph':
         """
         Inserts a paragraph before a given paragraph id.
         :param text: New paragraph text.
-        :param insert_before_id: Id of the paragraph to insert before.
+        :param insert_before_id: Id of the paragraph to insert before, or None if last.
         :return: The inserted paragraph object.
         """
+        if not insert_before_id:
+            return self.add_paragraph(text)
+
         p = DocParagraph(text, files_root=self.files_root)
         p.add_link(self.doc_id)
         old_ver = self.get_version()
@@ -193,6 +199,7 @@ class Document:
                     if line == id_line:
                         f.write(p.get_id())
                         f.write('\n')
+                        inserted = True
                     f.write(line)
 
     @contract
