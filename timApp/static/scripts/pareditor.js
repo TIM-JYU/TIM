@@ -1,7 +1,7 @@
 var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
-var plugins = ['csPlugin', 'svn', 'svn/image', 'svn/video'];
+var plugins = ['csPlugin', 'taunoPlugin', 'csPluginRikki', 'showCode', 'showImage', 'showVideo'];
 
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
@@ -23,6 +23,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             controller: function ($scope) {
 
                 var $plugintab = $('#pluginButtons');
+
                 function getData(plugin) {
                     $.ajax({
                         cache: false,
@@ -30,7 +31,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         type: 'GET',
                         url: '/' + plugin + '/reqs/',
                         success: function (data, status, headers, config) {
-                            console.log(plugin);
                             if (data.templates) {
                                 var tabs = data.text || [plugin];
                                 for (var i = 0; i < tabs.length; i++) {
@@ -53,9 +53,50 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     });
                 }
 
-                for (var i = 0; i < plugins.length; i++) {
-                    getData(plugins[i]);
+                function getPluginsInOrder() {
+                    if (plugins.length === 0) {
+                        return;
+                    }
+                    var plugin = plugins.pop();
+                    console.log(plugin);
+                    var delay = Math.random() * 3;
+
+                    $.ajax({
+                        cache: false,
+                        dataType: "json",
+                        type: 'GET',
+                        url: '/' + plugin + '/reqs/',
+                        success: function (data, status, headers, config) {
+                            if (data.templates) {
+                                var tabs = data.text || [plugin];
+                                for (var i = 0; i < tabs.length; i++) {
+                                    var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
+                                    var button = $("<button>", {
+                                        class: 'editorButton',
+                                        text: tabs[i],
+                                        title: tabs[i],
+                                        'ng-click': clickfunction
+                                    });
+                                    //button = $compile(button)($scope);
+                                    $plugintab.append(button);
+                                    //$compile($plugintab)($scope);
+                                }
+                            }
+                            getPluginsInOrder();
+                        },
+                        error: function () {
+                            console.log("Virhe");
+                            getPluginsInOrder();
+                        }
+                    });
                 }
+
+                getPluginsInOrder();
+                $compile('#pluginButtons')($scope);
+
+                //for (var i = 0; i < plugins.length; i++) {
+                //    getData(plugins[i]);
+                //}
 
                 if ((navigator.userAgent.match(/Trident/i))) {
                     $scope.isIE = true;
