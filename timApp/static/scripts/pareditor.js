@@ -977,11 +977,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         type: 'GET',
                         url: '/' + plugin + '/reqs/',
                         success: function (data) {
-
-                            if (data.templates && data.templates.length > 0) {
+                            if (data.templates[index] && data.templates[index].length > 0) {
                                 var buttons = [];
-                                for (var i = 0; i < data.templates.length; i++) {
-                                    var template = data.templates[i];
+                                for (var i = 0; i < data.templates[index].length; i++) {
+                                    var template = data.templates[index][i];
                                     var text = (template.text || template.file);
                                     var file = template.file;
                                     var title = template.expl;
