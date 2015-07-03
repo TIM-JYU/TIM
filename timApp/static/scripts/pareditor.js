@@ -21,6 +21,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             },
             controller: function ($scope) {
 
+
+                if ((navigator.userAgent.match(/Trident/i))) {
+                    $scope.isIE = true;
+                    window.alert(navigator.userAgent);
+                }
+
                 $scope.getEditorText = function () {
                     return "";
                 };
@@ -40,6 +46,18 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $window.alert('Failed to get text: ' + data.error);
                     });
                 };
+
+                $scope.adjustPreview = function () {
+                    window.setTimeout(function () {
+                            var height = parseInt($('pareditor').css('max-height'));
+                            var $preview = $('.previewcontent');
+                            var offset = $($preview).position().top;
+                            $($preview).css('max-height', height - offset + 'px');
+                        }, 50
+                    )
+                };
+
+                $('.editorContainer').on('resize', $scope.adjustPreview);
 
                 $scope.aceChanged = function () {
                     $scope.outofdate = true;
@@ -72,6 +90,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             $window.alert("Failed to show preview: " + data.error);
                         });
                     }, 500);
+                    $('.editorContainer').resize();
                 };
 
                 if ($scope.options.touchDevice) {
@@ -83,7 +102,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.editor.val(text);
                     };
                     var $container = ('.editorContainer');
-                    var $textarea = $.parseHTML('<textarea rows="10" ng-model="editorText" ng-change="aceChanged()" id="teksti"></textarea>');
+                    var $textarea = $.parseHTML('<textarea rows="10" ng-model="editorText" ng-change="aceChanged()" ng-trim="false" id="teksti"></textarea>');
                     $compile($textarea)($scope);
                     $($container).append($textarea);
 
@@ -95,6 +114,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $meta.remove();
                         $('head').append('<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">');
                     }
+
                     $scope.options.metaset = true;
 
                     $scope.editor.keydown(function (e) {
@@ -121,16 +141,16 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                     $scope.aceLoaded = function (editor) {
                         $scope.editor = editor;
+
                         var max = 50;
-                        /*
-                         if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
-                         var line = editor.renderer.lineHeight;
-                         var height = $(window).height();
-                         max = Math.floor((height / 2) / line);
-                         }*/
+                        var line = editor.renderer.lineHeight;
+                        var containertop = $('.editorContainer').position().top;
+                        var height = $(window).innerHeight() - containertop;
+                        max = Math.floor((height / 2) / line);
 
                         editor.$blockScrolling = Infinity;
                         editor.renderer.setPadding(10, 10, 10, 10);
+                        console.log(editor.renderer);
                         editor.getSession().setMode("markdown");
                         editor.getSession().setUseWrapMode(false);
                         editor.getSession().setWrapLimitRange(0, 79);
@@ -226,6 +246,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.wrapFn = function (func) {
                     if (!touchDevice) $scope.editor.focus();
                     if (typeof(func) !== 'undefined') (func());
+                    if ($scope.isIE) $scope.aceChanged();
                 };
 
                 $scope.changeMeta = function () {
@@ -264,14 +285,21 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.releaseClicked = function () {
                     var div = $("#previewDiv");
+                    var content = $('.previewcontent');
+                    var editor = $('.editorArea');
 
                     if (div.css("position") == "absolute") {
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
+                        editor.css('overflow', '');
                         document.getElementById("releaseButton").innerHTML = "&#8594;";
+                        $scope.adjustPreview();
                     }
                     else {
+                        var height = window.innerHeight - 30 + 'px';
+                        content.css('max-height', height);
                         div.css("position", "absolute");
+                        editor.css('overflow', 'visible');
                         div.find(".draghandle").css("visibility", "visible");
                         document.getElementById("releaseButton").innerHTML = "&#8592;";
                     }
@@ -296,6 +324,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 if ($scope.options.touchDevice) {
+
+                    $scope.wrapFn = function (func) {
+                        if (!touchDevice) $scope.editor.focus();
+                        if (typeof(func) !== 'undefined') (func());
+                        $scope.aceChanged();
+                    };
+
                     //Navigation
                     $scope.undoClicked = function () {
                         document.execCommand("undo", false, null);
@@ -491,8 +526,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         line = line.substr(1);
                         line = line.trim();
                         $scope.editor.replaceSelectedText(head + ' ' + line);
-                        if (!touchDevice) $scope.editor.focus();
                         $scope.editor.setSelection(tempEnd + (head.length - original), tempEnd + (head.length - original));
+                        $scope.wrapFn();
                     };
 
                     $scope.selectLine = function (select) {
@@ -575,6 +610,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.insertTemplate = function (text) {
                         $scope.closeMenu(null, close);
                         $scope.editor.replaceSelectedText(text);
+                        $scope.wrapFn();
                     };
 
                     $scope.ruleClicked = function () {
@@ -586,7 +622,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.charClicked = function ($event) {
                         var character = $($event.target).text();
                         $scope.editor.replaceSelectedText(character);
-                        if (!touchDevice) $scope.editor.focus();
+                        $scope.wrapFn();
                     };
                     //Special characters
                     //TEX
@@ -756,7 +792,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         line = line.trim();
                         $scope.editor.selection.setRange(range);
                         $scope.editor.insert(head + ' ' + line);
-                        if (!touchDevice) $scope.editor.focus();
+                        $scope.wrapFn();
                     };
 
                     //Style
@@ -783,6 +819,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.insertTemplate = function (text) {
                         $scope.closeMenu(null, close);
                         $scope.snippetManager.insertSnippet($scope.editor, text);
+                        $scope.wrapFn();
                     };
 
                     $scope.ruleClicked = function () {
@@ -794,7 +831,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.charClicked = function ($event) {
                         var character = $($event.target).text();
                         $scope.editor.insert(character);
-                        if (!touchDevice) $scope.editor.focus();
+                        $scope.wrapFn();
                     };
                     //Special characters
                     //TEX
@@ -953,7 +990,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     var active = $($event.target).parent();
                     $(active).attr('class', 'tab active');
                     $(naviArea).attr('class', 'extraButtonArea');
-                    if (!touchDevice) $scope.editor.focus();
+                    $scope.wrapFn();
                 };
 
                 $scope.fullscreenSupported = function () {
@@ -1007,6 +1044,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         scrollTop: $element.offset().top
                     }, 2000);
                 }
+
+                var height = window.innerHeight - 30 + 'px';
+                $($element).css('max-height', height);
             }
         };
     }]);

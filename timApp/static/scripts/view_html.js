@@ -148,6 +148,7 @@ timApp.controller("ViewCtrl", [
 
         sc.toggleParEditor = function ($par, options) {
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
+            var mobile = touch && (window.screen.width < 1200);
             var url;
             if ($par.hasClass("new")) {
                 url = '/newParagraph/';
@@ -166,7 +167,7 @@ timApp.controller("ViewCtrl", [
                     showImageUpload: true,
                     showPlugins: true,
                     destroyAfterSave: true,
-                    touchDevice: touch,
+                    touchDevice: mobile,
                     tags: [
                         {name: 'markread', desc: 'Mark as read'}
                     ]
@@ -293,10 +294,6 @@ timApp.controller("ViewCtrl", [
                 if (downEvent == null)
                     return;
 
-                if (func($(this), e)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                }
                 var e2 = sc.fixPageCoords(e);
                 if (sc.dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
                     // Moved too far away, cancel the event
@@ -482,12 +479,13 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, par_id);
         });
 
-        sc.onClick(".editline", function ($this, e) {
-            $(".actionButtons").remove();
-            var $par = $this.parent();
-            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            return sc.defaultAction(e, $par, coords);
-        });
+        /*
+         sc.onClick(".editline", function ($this, e) {
+         $(".actionButtons").remove();
+         var $par = $this.parent();
+         var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+         return sc.showOptionsWindow(e, $par, coords);
+         });*/
 
         sc.showNoteWindow = function (e, $par, coords) {
             sc.toggleNoteEditor($par, {isNew: true});
@@ -624,9 +622,9 @@ timApp.controller("ViewCtrl", [
                 $actionDiv.append($span);
             }
             /*
-            if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
-                coords = {left: 0, top: 0};
-            }*/
+             if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
+             coords = {left: 0, top: 0};
+             }*/
             ;
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
@@ -981,7 +979,7 @@ timApp.controller("ViewCtrl", [
                 var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top - 1000};
                 return sc.showAddParagraphBelow(e, $par, coords);
             });
-            sc.getEditPars();
+            //sc.getEditPars();
         }
         sc.processAllMath($('body'));
 

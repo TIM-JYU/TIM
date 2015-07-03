@@ -335,7 +335,6 @@ ul ul  ul, ol ol ol {
 
 .previewcontent {
     clear: both;
-    max-height: 50vh;
     overflow-y: auto;
     border: 1px solid rgb(183, 183, 183);
     border-radius: 5px;
@@ -818,6 +817,7 @@ a.anchor:hover {
 }
 
 .editorArea {
+    overflow: hidden;
     z-index: 110;
     position: absolute;
     width: 100%;
