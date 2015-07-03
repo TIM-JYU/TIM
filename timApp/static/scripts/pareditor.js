@@ -63,7 +63,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 }
 
                 getPluginsInOrder();
-                
+
                 if ((navigator.userAgent.match(/Trident/i))) {
                     $scope.isIE = true;
                 }
@@ -1009,6 +1009,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         type: 'GET',
                         url: '/' + plugin + '/template/' + template + '/' + index,
                         success: function (data) {
+                            data.replace(/\\/, "\\\\");
                             $scope.insertTemplate(data);
                         },
                         error: function () {
