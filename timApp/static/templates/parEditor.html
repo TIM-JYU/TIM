@@ -89,7 +89,7 @@
     </div>
 
     <div class="editorContainer">
-        <div ng-if="options.touchDevice" class="editor" ui-ace="{
+        <div ng-if="!options.touchDevice" class="editor" ui-ace="{
   useWrapMode: false,
   onLoad: aceLoaded,
   onChange: aceChanged
