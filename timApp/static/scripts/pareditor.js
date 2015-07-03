@@ -77,7 +77,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                         title: tabs[i],
                                         'ng-click': clickfunction
                                     });
-                                    //button = $compile(button)($scope);
+                                    button = $compile(button)($scope);
                                     $plugintab.append(button);
                                     //$compile($plugintab)($scope);
                                 }
