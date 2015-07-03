@@ -49,10 +49,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
-                            var height = parseInt($('pareditor').css('max-height'));
+                            var height = parseInt($('pareditor').css('max-height')) - 15;
                             var $preview = $('.previewcontent');
                             var offset = $($preview).position().top;
-                            $($preview).css('max-height', height - offset + 'px');
+                            $($preview).css('max-height', (height - offset) + 'px');
                         }, 50
                     )
                 };
@@ -1045,7 +1045,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }, 2000);
                 }
 
-                var height = window.innerHeight - 30 + 'px';
+                var height = window.innerHeight - 15 + 'px';
                 $($element).css('max-height', height);
             }
         };
