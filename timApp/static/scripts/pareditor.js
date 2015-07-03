@@ -1,6 +1,7 @@
 var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
+var plugins = ['csPlugin', 'svn', 'svn/image', 'svn/video'];
 
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
@@ -21,6 +22,41 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             },
             controller: function ($scope) {
 
+                var $plugintab = $('#pluginButtons');
+                function getData(plugin) {
+                    $.ajax({
+                        cache: false,
+                        dataType: "json",
+                        type: 'GET',
+                        url: '/' + plugin + '/reqs/',
+                        success: function (data, status, headers, config) {
+                            console.log(plugin);
+                            data = JSON.parse('{"multihtml": true, "text": ["Programs", "Questions"], "js": ["/cs/js/dir.js", "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js", "/cs/js/embedded_sagecell.js"], "css": ["/cs/css/cs.css"], "angularModule": ["csApp", "csConsoleApp"], "templates": [{"expl": "c# program with only main visible", "text": "c# main", "file": "cs1"}, {"expl": "Tauno with 4 length table", "text": "Tauno table", "file": "tauno"}, {"expl": "Tauno with 2 variables", "text": "Tauno variable", "file": "taunoVar"}, {"expl": "Full Java program", "text": "java", "file": "template"}]}');
+                            if (data.templates) {
+                                var tabs = data.text || [plugin];
+                                for (var i = 0; i < tabs.length; i++) {
+                                    var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
+                                    var button = $("<button>", {
+                                        class: 'editorButton',
+                                        text: tabs[i],
+                                        title: tabs[i],
+                                        'ng-click': clickfunction
+                                    });
+                                    button = $compile(button)($scope);
+                                    $plugintab.append(button);
+                                    $compile($plugintab)($scope);
+                                }
+                            }
+                        },
+                        error: function () {
+                            console.log("Virhe");
+                        }
+                    });
+                }
+
+                for (var i = 0; i < plugins.length; i++) {
+                    getData(plugins[i]);
+                }
 
                 if ((navigator.userAgent.match(/Trident/i))) {
                     $scope.isIE = true;
@@ -55,6 +91,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }, 50
                     )
                 };
+
 
                 $('.editorContainer').on('resize', $scope.adjustPreview);
 
@@ -935,20 +972,21 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.createMenu($event, buttons);
                 };
 
-                $scope.pluginClicked = function ($event, plugin) {
+                $scope.pluginClicked = function ($event, plugin, index) {
                     $.ajax({
                         dataType: "json",
                         type: 'GET',
                         url: '/' + plugin + '/reqs/',
                         success: function (data) {
-                            if (data.templates) {
+
+                            if (data.templates && data.templates.length > 0) {
                                 var buttons = [];
                                 for (var i = 0; i < data.templates.length; i++) {
                                     var template = data.templates[i];
                                     var text = (template.text || template.file);
                                     var file = template.file;
                                     var title = template.expl;
-                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\'); wrapFn()';
+                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\', \'' + index + '\'); wrapFn()';
                                     buttons.push($scope.createMenuButton(text, title, clickfn));
                                 }
                                 $scope.createMenu($event, buttons);
@@ -960,11 +998,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     });
                 };
 
-                $scope.getTemplate = function (plugin, template) {
+                $scope.getTemplate = function (plugin, template, index) {
                     // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
                     $.ajax({
                         type: 'GET',
-                        url: '/' + plugin + '/template/' + template,
+                        url: '/' + plugin + '/template/' + template + '/' + index,
                         success: function (data) {
                             $scope.insertTemplate(data);
                         },

@@ -367,10 +367,10 @@ def pluginCall(plugin, fileName):
     except PluginException:
         abort(404)
 
-@app.route("/<plugin>/template/<template>")
-def view_template(plugin, template):
+@app.route("/<plugin>/template/<template>/<index>")
+def view_template(plugin, template, index):
     try:
-        req = containerLink.call_plugin_resource(plugin, "template?file=" + template)
+        req = containerLink.call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
         return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
     except PluginException:
         abort(404)
