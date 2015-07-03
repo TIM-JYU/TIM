@@ -294,11 +294,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.adjustPreview();
                     }
                     else {
-                        var height = window.innerHeight - 30 + 'px';
-                        content.css('max-height', height);
                         div.css("position", "absolute");
                         editor.css('overflow', 'visible');
                         div.find(".draghandle").css("visibility", "visible");
+                        var height = window.innerHeight - 90;
+                        content.css('max-height', height);
                         document.getElementById("releaseButton").innerHTML = "&#8592;";
                     }
                 };
