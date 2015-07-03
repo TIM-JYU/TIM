@@ -27,7 +27,7 @@ def update_document(doc_id, version):
         abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)
-    verify_document_version(doc_id, version)
+    # verify_document_version(doc_id, version)
     if 'file' in request.files:
         doc = request.files['file']
         raw = doc.read()
@@ -62,7 +62,7 @@ def modify_paragraph():
     verifyEditAccess(doc_id)
     current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, par_id))
     version = request.headers.get('Version', '')
-    verify_document_version(doc_id, version)
+    # verify_document_version(doc_id, version)
     identifier = get_newest_document(doc_id)
 
     blocks, doc = timdb.documents.modify_paragraph(identifier, par_id, md)
@@ -107,10 +107,10 @@ def add_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     timdb = getTimDb()
-    md, doc_id, paragraph_id = verify_json_params('text', 'docId', 'par')
+    md, doc_id, paragraph_id = verify_json_params('text', 'docId', 'par_next')
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
-    verify_document_version(doc_id, version)
+    # verify_document_version(doc_id, version)
     blocks, new_doc = timdb.documents.add_paragraph(get_newest_document(doc_id), md, paragraph_id)
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
@@ -135,6 +135,6 @@ def delete_paragraph(doc_id, par_id):
     timdb = getTimDb()
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
-    verify_document_version(doc_id, version)
+    # verify_document_version(doc_id, version)
     new_doc = timdb.documents.delete_paragraph(get_newest_document(doc_id), par_id)
     return jsonResponse({'version': new_doc.get_version()})

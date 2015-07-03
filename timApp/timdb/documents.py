@@ -45,12 +45,12 @@ class Documents(TimDbBase):
 
     @contract
     def add_paragraph(self, doc: 'Document', content: 'str',
-                      prev_par_id: 'str') -> 'tuple(list(DocParagraph),DocIdentifier)':
+                      prev_par_id: 'str|None') -> 'tuple(list(DocParagraph),Document)':
         """Adds a new markdown block to the specified document.
         
         :param doc: The id of the document.
         :param content: The content of the block.
-        :param prev_par_id: The id of the previous paragraph. None if this paragraph should become the first.
+        :param prev_par_id: The id of the previous paragraph. None if this paragraph should become the last.
         :returns: A list of the added blocks.
         """
 
@@ -289,7 +289,7 @@ class Documents(TimDbBase):
         :returns: The document contents as a list of HTML blocks.
         """
         d = Document(doc_id=document_id.id)
-        if Document.exists(document_id.id):
+        if Document.doc_exists(document_id.id):
             return d
         if not self.documentExists(document_id.id):
             return None
@@ -469,7 +469,7 @@ class Documents(TimDbBase):
         :returns: The paragraphs and the new document as a tuple.
         """
 
-        assert doc.exists(), 'document does not exist: ' + str(doc.doc_id)
+        assert Document.doc_exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
         new_content = self.trim_markdown(new_content)
         par = doc.modify_paragraph(par_id, new_content)
         return [par], doc

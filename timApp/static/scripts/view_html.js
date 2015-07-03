@@ -120,6 +120,9 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getParId = function ($par) {
+            if ($par.length === 0) {
+                return null;
+            }
             return $par.attr("id");
         };
 
@@ -129,17 +132,20 @@ timApp.controller("ViewCtrl", [
 
         sc.toggleParEditor = function ($par, options) {
             var url;
+            var par_id = sc.getParId($par);
+            var par_next_id = sc.getParId($par.next());
             if ($par.hasClass("new")) {
                 url = '/newParagraph/';
             } else {
                 url = '/postParagraph/';
             }
-            var par_id = sc.getParId($par);
+
             var attrs = {
                 "save-url": url,
                 "extra-data": JSON.stringify({
                     docId: sc.docId,
-                    par: par_id
+                    par: par_id,
+                    par_next: par_next_id
                 }),
                 "options": JSON.stringify({
                     showDelete: options.showDelete,
@@ -305,16 +311,19 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.showAddParagraphAbove = function(e, $par, coords) {
-            var $newpar = $("<div>", {class: "par new"})
+        sc.createNewPar = function() {
+            return $("<div>", {class: "par new", id: 'NEW_PAR'})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
+        };
+
+        sc.showAddParagraphAbove = function(e, $par, coords) {
+            var $newpar = sc.createNewPar();
             $par.before($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
         sc.showAddParagraphBelow = function(e, $par, coords) {
-            var $newpar = $("<div>", {class: "par new"})
-                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+            var $newpar = sc.createNewPar();
             $par.after($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
@@ -323,8 +332,7 @@ timApp.controller("ViewCtrl", [
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
-            var $newpar = $("<div>", {class: "par new"})
-                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+            var $newpar = sc.createNewPar();
 
             if ($(e.target).hasClass("above")) {
                 $par.before($newpar);
@@ -392,7 +400,7 @@ timApp.controller("ViewCtrl", [
                 if ('taskId' in data.texts[i].attrs) {
                     html = $compile(html)(sc);
                 }
-                var $newpar = $("<div>", {class: "par"})
+                var $newpar = $("<div>", {class: "par", id: data.texts[i].id})
                     .append($("<div>", {class: "parContent"}).html(html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {

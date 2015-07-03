@@ -45,7 +45,7 @@ class Document:
 
     @classmethod
     @contract
-    def exists(cls, doc_id: 'int', files_root: 'str|None' = None) -> 'bool':
+    def doc_exists(cls, doc_id: 'int', files_root: 'str|None' = None) -> 'bool':
         """
         Checks if a document id exists.
         :param doc_id: Document id.
@@ -61,6 +61,9 @@ class Document:
         elif not ignore_exists:
             raise DocExistsError(self.doc_id)
 
+    def exists(self):
+        return Document.doc_exists(self.doc_id, self.files_root)
+
     @classmethod
     @contract
     def remove(cls, doc_id: 'int', files_root: 'str|None' = None, ignore_exists=False):
@@ -70,7 +73,7 @@ class Document:
         :return:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        if cls.exists(doc_id, files_root=froot):
+        if cls.doc_exists(doc_id, files_root=froot):
             shutil.rmtree(os.path.join(froot, 'docs', str(doc_id)))
             # todo: remove all paragraph links
         elif not ignore_exists:
@@ -164,6 +167,10 @@ class Document:
                     return False
                 if line == par_line:
                     return True
+
+    @contract
+    def get_paragraph(self, par_id: 'str') -> 'DocParagraph':
+        return DocParagraph.get_latest(par_id, self.files_root)
 
     @contract
     def add_paragraph(self, text: 'str', attrs: 'dict|None'=None) -> 'DocParagraph':

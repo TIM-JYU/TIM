@@ -299,12 +299,12 @@ def createFolder():
     return createItem(folderName, 'folder', createFunc)
 
 
-@app.route("/getBlock/<int:docId>/<int:blockId>")
-def getBlockMd(docId, blockId):
+@app.route("/getBlock/<int:docId>/<par_id>")
+def getBlockMd(docId, par_id):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlock(get_newest_document(docId), blockId)
-    return jsonResponse({"text": block})
+    par = Document(docId).get_paragraph(par_id)
+    return jsonResponse({"text": par.get_markdown()})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
@@ -365,7 +365,7 @@ def postNote():
     doc_ver = request.headers.get('Version')
     paragraph_id = jsondata['par']
     verifyCommentRight(doc_id)
-    verify_document_version(doc_id, doc_ver)
+    # verify_document_version(doc_id, doc_ver)
     doc = get_document(doc_id, doc_ver)
     par = get_paragraph(doc, paragraph_id)
     if par is None:

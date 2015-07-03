@@ -1,12 +1,10 @@
 """Routes for document view."""
 
 from contracts import contract, new_contract
-from flask import Blueprint, render_template, redirect, url_for
-from .cache import *
+from flask import Blueprint, render_template, url_for
+
 from .common import *
 from documentmodel.document import Document, DocParagraph
-from htmlSanitize import sanitize_html
-
 import pluginControl
 
 new_contract('range', 'tuple(int, int)')
@@ -16,7 +14,7 @@ view_page = Blueprint('view_page',
                       url_prefix='')
 
 
-@cache.memoize(3600)
+# @cache.memoize(3600)
 def get_whole_document(document_id):
     pars = [par for par in getTimDb().documents.get_document_with_autoimport(DocIdentifier(id=document_id, hash=''))]
     return pars

@@ -36,17 +36,17 @@ class DocumentTest(unittest.TestCase):
     def test_document_create(self):
         self.cleanup()
         d = Document(doc_id=1, files_root=self.files_root)
-        self.assertFalse(Document.exists(1, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(1, files_root=self.files_root))
         d.create()
-        self.assertTrue(Document.exists(1, files_root=self.files_root))
+        self.assertTrue(Document.doc_exists(1, files_root=self.files_root))
         self.assertEqual(2, Document.get_next_free_id(self.files_root))
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog())
 
         d = Document(doc_id=2, files_root=self.files_root)
-        self.assertFalse(Document.exists(2, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(2, files_root=self.files_root))
         d.create()
-        self.assertTrue(Document.exists(2, files_root=self.files_root))
+        self.assertTrue(Document.doc_exists(2, files_root=self.files_root))
         self.assertEqual(3, Document.get_next_free_id(self.files_root))
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog())
@@ -195,11 +195,11 @@ class DocumentTest(unittest.TestCase):
     def test_document_remove(self):
         self.cleanup()
 
-        self.assertFalse(Document.exists(doc_id=1, files_root=self.files_root))
-        self.assertFalse(Document.exists(doc_id=2, files_root=self.files_root))
-        self.assertFalse(Document.exists(doc_id=3, files_root=self.files_root))
-        self.assertFalse(Document.exists(doc_id=4, files_root=self.files_root))
-        self.assertFalse(Document.exists(doc_id=5, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=1, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=2, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=3, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=4, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=5, files_root=self.files_root))
 
         for i in range(1,6):
             if i != 3:
@@ -212,19 +212,19 @@ class DocumentTest(unittest.TestCase):
             Document.remove(doc_id=3, files_root=self.files_root)
 
         Document.remove(doc_id=2, files_root=self.files_root)
-        self.assertFalse(Document.exists(doc_id=2, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=2, files_root=self.files_root))
         self.assertEqual(6, Document.get_next_free_id(files_root=self.files_root))
 
         Document.remove(doc_id=5, files_root=self.files_root)
-        self.assertFalse(Document.exists(doc_id=5, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=5, files_root=self.files_root))
         self.assertEqual(5, Document.get_next_free_id(files_root=self.files_root))
 
         Document.remove(doc_id=1, files_root=self.files_root)
-        self.assertFalse(Document.exists(doc_id=1, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=1, files_root=self.files_root))
         self.assertEqual(5, Document.get_next_free_id(files_root=self.files_root))
 
         Document.remove(doc_id=4, files_root=self.files_root)
-        self.assertFalse(Document.exists(doc_id=4, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=4, files_root=self.files_root))
         self.assertEqual(1, Document.get_next_free_id(files_root=self.files_root))
 
     @classmethod
