@@ -23,35 +23,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             controller: function ($scope) {
 
                 var $plugintab = $('#pluginButtons');
-
-                function getData(plugin) {
-                    $.ajax({
-                        cache: false,
-                        dataType: "json",
-                        type: 'GET',
-                        url: '/' + plugin + '/reqs/',
-                        success: function (data, status, headers, config) {
-                            if (data.templates) {
-                                var tabs = data.text || [plugin];
-                                for (var i = 0; i < tabs.length; i++) {
-                                    var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
-                                    var button = $("<button>", {
-                                        class: 'editorButton',
-                                        text: tabs[i],
-                                        title: tabs[i],
-                                        'ng-click': clickfunction
-                                    });
-                                    button = $compile(button)($scope);
-                                    $plugintab.append(button);
-                                    $compile($plugintab)($scope);
-                                }
-                            }
-                        },
-                        error: function () {
-                            console.log("Virhe");
-                        }
-                    });
-                }
+                var plugins = ['csPlugin', 'taunoPlugin', 'csPluginRikki', 'showCode', 'showImage', 'showVideo'];
 
                 function getPluginsInOrder() {
                     if (plugins.length === 0) {
@@ -79,7 +51,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                     });
                                     button = $compile(button)($scope);
                                     $plugintab.append(button);
-                                    //$compile($plugintab)($scope);
                                 }
                             }
                             getPluginsInOrder();
@@ -92,12 +63,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 }
 
                 getPluginsInOrder();
-                //$('#pluginButtons').find('.editorButton').$compile('#pluginButtons')($scope);
-
-                //for (var i = 0; i < plugins.length; i++) {
-                //    getData(plugins[i]);
-                //}
-
+                
                 if ((navigator.userAgent.match(/Trident/i))) {
                     $scope.isIE = true;
                 }
