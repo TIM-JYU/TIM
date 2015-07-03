@@ -24,7 +24,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 if ((navigator.userAgent.match(/Trident/i))) {
                     $scope.isIE = true;
-                    window.alert(navigator.userAgent);
                 }
 
                 $scope.getEditorText = function () {
@@ -150,7 +149,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                         editor.$blockScrolling = Infinity;
                         editor.renderer.setPadding(10, 10, 10, 10);
-                        console.log(editor.renderer);
                         editor.getSession().setMode("markdown");
                         editor.getSession().setUseWrapMode(false);
                         editor.getSession().setWrapLimitRange(0, 79);
