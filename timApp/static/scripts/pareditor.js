@@ -169,7 +169,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $('.editorContainer').resize();
                 };
 
-                if ($scope.options.touchDevice) {
+                if (!$scope.options.touchDevice) {
                     $scope.getEditorText = function () {
                         return $scope.editor.val();
                     };
@@ -398,7 +398,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     if ($scope.options.touchDevide) $scope.changeMeta();
                 };
 
-                if ($scope.options.touchDevice) {
+                if (!$scope.options.touchDevice) {
 
                     $scope.wrapFn = function (func) {
                         if (!touchDevice) $scope.editor.focus();
