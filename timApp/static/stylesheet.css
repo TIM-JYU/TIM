@@ -1810,3 +1810,7 @@ button:disabled {
 .breadcrumb>li {
     display: inline-block;
 }
+ 
+p.plgfooter {
+  text-align: center;
+}
