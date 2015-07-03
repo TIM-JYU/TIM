@@ -479,13 +479,13 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, par_id);
         });
 
-        /*
-         sc.onClick(".editline", function ($this, e) {
-         $(".actionButtons").remove();
-         var $par = $this.parent();
-         var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-         return sc.showOptionsWindow(e, $par, coords);
-         });*/
+
+        sc.onClick(".editline", function ($this, e) {
+            $(".actionButtons").remove();
+            var $par = $this.parent();
+            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+            return sc.showOptionsWindow(e, $par, coords);
+        });
 
         sc.showNoteWindow = function (e, $par, coords) {
             sc.toggleNoteEditor($par, {isNew: true});
@@ -979,7 +979,7 @@ timApp.controller("ViewCtrl", [
                 var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top - 1000};
                 return sc.showAddParagraphBelow(e, $par, coords);
             });
-            //sc.getEditPars();
+            sc.getEditPars();
         }
         sc.processAllMath($('body'));
 
