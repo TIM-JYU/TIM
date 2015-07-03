@@ -1008,6 +1008,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $.ajax({
                         type: 'GET',
                         url: '/' + plugin + '/template/' + template + '/' + index,
+                        processData: false,
                         success: function (data) {
                             data.replace(/\\\\/g, "\\\\\\\\");
                             $scope.insertTemplate(data);
