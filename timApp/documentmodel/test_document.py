@@ -41,6 +41,7 @@ class DocumentTest(unittest.TestCase):
         self.assertTrue(Document.exists(1, files_root=self.files_root))
         self.assertEqual(2, Document.get_next_free_id(self.files_root))
         self.assertEqual((0, 0), d.get_version())
+        self.assertListEqual([], d.get_changelog())
 
         d = Document(doc_id=2, files_root=self.files_root)
         self.assertFalse(Document.exists(2, files_root=self.files_root))
@@ -48,6 +49,7 @@ class DocumentTest(unittest.TestCase):
         self.assertTrue(Document.exists(2, files_root=self.files_root))
         self.assertEqual(3, Document.get_next_free_id(self.files_root))
         self.assertEqual((0, 0), d.get_version())
+        self.assertListEqual([], d.get_changelog())
 
         with self.assertRaises(DocExistsError):
             d.create()
@@ -61,12 +63,14 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual('testing', par1.get_markdown())
         self.assertTrue(d.has_paragraph(par1.get_id()))
         self.assertEqual((1, 0), d.get_version())
+        self.assertEqual(1, len(d.get_changelog()))
 
         # Add different next paragraph
         par2 = d.add_paragraph('different')
         self.assertEqual('different', par2.get_markdown())
         self.assertTrue(d.has_paragraph(par2.get_id()))
         self.assertEqual((2, 0), d.get_version())
+        self.assertEqual(2, len(d.get_changelog()))
         self.assertNotEqual(par1.get_id(), par2.get_id())
 
         # Add next paragraph with same text as the first
@@ -74,6 +78,7 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual('testing', par3.get_markdown())
         self.assertTrue(d.has_paragraph(par3.get_id()))
         self.assertEqual((3, 0), d.get_version())
+        self.assertEqual(3, len(d.get_changelog()))
         self.assertNotEqual(par1.get_id(), par2.get_id())
 
         # Add an empty paragraph
@@ -81,6 +86,7 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual('', par3.get_markdown())
         self.assertTrue(d.has_paragraph(par3.get_id()))
         self.assertEqual((4, 0), d.get_version())
+        self.assertEqual(4, len(d.get_changelog()))
         self.assertNotEqual(par2.get_id(), par3.get_id())
         self.assertNotEqual(par1.get_id(), par3.get_id())
 
@@ -89,6 +95,7 @@ class DocumentTest(unittest.TestCase):
 
         pars = [d.add_paragraph(random_paragraph()) for _ in range(0, 10)]
         self.assertEqual((10, 0), d.get_version())
+        self.assertEqual(10, len(d.get_changelog()))
         self.assertListEqual([p.get_id() for p in pars], [par.get_id() for par in d])
         self.assertListEqual([p.get_hash() for p in pars], [par.get_hash() for par in d])
 
@@ -102,6 +109,7 @@ class DocumentTest(unittest.TestCase):
         pars.remove(pars[0])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((11, 0), d.get_version())
+        self.assertEqual(11, len(d.get_changelog()))
 
         # Delete from the middle
         d.delete_paragraph(pars[2])
@@ -109,6 +117,7 @@ class DocumentTest(unittest.TestCase):
         pars.remove(pars[2])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((12, 0), d.get_version())
+        self.assertEqual(12, len(d.get_changelog()))
 
         # Delete last paragraph
         n = len(pars)
@@ -117,6 +126,7 @@ class DocumentTest(unittest.TestCase):
         pars.remove(pars[n-1])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
+        self.assertEqual(13, len(d.get_changelog()))
         
 
     def test_insertparagraph(self):
@@ -128,18 +138,21 @@ class DocumentTest(unittest.TestCase):
         pars = [par.get_id()] + pars
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((11, 0), d.get_version())
+        self.assertEqual(11, len(d.get_changelog()))
 
         # Insert in the middle
         par = d.insert_paragraph('middle', pars[4])
         pars = pars[0:4] + [par.get_id()] + pars[4:]
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((12, 0), d.get_version())
+        self.assertEqual(12, len(d.get_changelog()))
 
         # Insert as last
         par = d.insert_paragraph('last', None)
         pars.append(par.get_id())
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
+        self.assertEqual(13, len(d.get_changelog()))
         
    
     def test_get_html(self):
@@ -165,6 +178,7 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual('new text', par2_mod.get_markdown())
         self.assertNotEqual(par2_hash, par2_mod.get_hash())
         self.assertEqual((10, 1), d.get_version())
+        self.assertEqual(11, len(d.get_changelog()))
 
         for i in range(0, 10):
             par2_id = pars[i].get_id()
@@ -175,6 +189,7 @@ class DocumentTest(unittest.TestCase):
             self.assertEqual(new_text, par2_mod.get_markdown())
             self.assertNotEqual(par2_hash, par2_mod.get_hash())
             self.assertEqual((10, i + 2), d.get_version())
+            self.assertEqual(12 + i, len(d.get_changelog()))
 
 
     def test_document_remove(self):

@@ -1,6 +1,10 @@
 import os
 import shutil
 
+from datetime import datetime
+from time import time
+from tempfile import mkstemp
+
 from contracts import contract, new_contract
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.exceptions import DocExistsError
@@ -94,11 +98,42 @@ class Document:
         return major, minor
 
     @contract
+    def get_document_path(self) -> 'str':
+        return os.path.join(self.files_root, 'docs', str(self.doc_id))
+
+    @contract
     def get_version_path(self, ver: 'tuple(int, int)') -> 'str':
         return os.path.join(self.files_root, 'docs', str(self.doc_id), str(ver[0]), str(ver[1]))
 
     @contract
-    def __increment_version(self, increment_major: 'bool') -> 'tuple(int, int)':
+    def getlogfilename(self) -> 'str':
+        return os.path.join(self.get_document_path(), 'changelog')
+
+    @contract
+    def __write_changelog(self, ver: 'tuple(int, int)', msg: 'str'):
+        logname = self.getlogfilename()
+        src = open(logname, 'r') if os.path.exists(logname) else None
+        destfd, tmpname = mkstemp()
+        dest = os.fdopen(destfd, 'w')
+
+        ts = time()
+        timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        dest.write('{} {}.{} {}\n'.format(timestamp, ver[0], ver[1], msg))
+
+        while src:
+            line = src.readline()
+            if line:
+                dest.write(line)
+            else:
+                src.close()
+                src = None
+
+        dest.close()
+        shutil.copyfile(tmpname, logname)
+        os.unlink(tmpname)
+
+    @contract
+    def __increment_version(self, msg: 'str', increment_major: 'bool') -> 'tuple(int, int)':
         ver_exists = True
         while ver_exists:
             old_ver = self.get_version()
@@ -111,6 +146,7 @@ class Document:
         else:
             with open(self.get_version_path(ver), 'w'):
                 pass
+        self.__write_changelog(ver, msg)
         return ver
 
     @contract
@@ -141,7 +177,7 @@ class Document:
         p.get_html()
         p.add_link(self.doc_id)
         old_ver = self.get_version()
-        new_ver = self.__increment_version(increment_major=True)
+        new_ver = self.__increment_version('Added paragraph id {}'.format(p.get_id()), increment_major=True)
         old_path = self.get_version_path(old_ver)
         new_path = self.get_version_path(new_ver)
         if os.path.exists(old_path):
@@ -158,8 +194,11 @@ class Document:
         Removes a paragraph from the document.
         :param par_id: Paragraph id to remove.
         """
+        if not self.has_paragraph(par_id):
+            return
+
         old_ver = self.get_version()
-        new_ver = self.__increment_version(increment_major=True)
+        new_ver = self.__increment_version('Deleted paragraph id {}'.format(par_id), increment_major=True)
         id_line = par_id + '\n'
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
@@ -172,7 +211,6 @@ class Document:
                         p.remove_link(self.doc_id)
                     else:
                         f.write(line)
-        # todo: don't make a new version if the paragraph was not found
 
     @contract
     def insert_paragraph(self, text: 'str', insert_before_id: 'str|None') -> 'DocParagraph':
@@ -188,7 +226,7 @@ class Document:
         p = DocParagraph(text, files_root=self.files_root)
         p.add_link(self.doc_id)
         old_ver = self.get_version()
-        new_ver = self.__increment_version(increment_major=True)
+        new_ver = self.__increment_version('Inserted paragraph {}'.format(p.get_id()), increment_major=True)
         id_line = insert_before_id + '\n'
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
@@ -213,10 +251,11 @@ class Document:
         if not self.has_paragraph(par_id):
             raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
         p_src = DocParagraph.get_latest(par_id, files_root=self.files_root)
+        old_hash = p_src.get_hash()
         p = DocParagraph(new_text, par_id=par_id, links=p_src.get_links(), attrs=p_src.get_attrs(), files_root=self.files_root)
+        new_hash = p.get_hash()
         p.update_links()
-        # todo: file to record paragraph hashes
-        self.__increment_version(increment_major=False)
+        self.__increment_version('Modified paragraph {} from hash {} to {}'.format(par_id, old_hash, new_hash), increment_major=False)
         return p
 
     @contract
@@ -224,6 +263,23 @@ class Document:
         # todo: optimization?
         return [par.get_markdown() for par in self if par.get_markdown().startswith('#')]
 
+    @contract
+    def get_changelog(self, max_entries : 'int' = -1) -> 'list(str)':
+        log = []
+        logname = self.getlogfilename()
+        if not os.path.isfile(logname):
+            return []
+
+        lc = max_entries
+        with open(logname, 'r') as f:
+            while lc != 0:
+                line = f.readline()
+                if not line:
+                    break
+                log.append(line)
+                lc -= 1
+        
+        return log
 
 new_contract('Document', Document)
 
