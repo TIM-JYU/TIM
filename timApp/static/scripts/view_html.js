@@ -147,6 +147,8 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleParEditor = function ($par, options) {
+            var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
+            var mobile = touch && (window.screen.width < 1200);
             var url;
             if ($par.hasClass("new")) {
                 url = '/newParagraph/';
@@ -165,6 +167,7 @@ timApp.controller("ViewCtrl", [
                     showImageUpload: true,
                     showPlugins: true,
                     destroyAfterSave: true,
+                    touchDevice: mobile,
                     tags: [
                         {name: 'markread', desc: 'Mark as read'}
                     ]
@@ -190,10 +193,10 @@ timApp.controller("ViewCtrl", [
 
                 var createEditor = function (attrs) {
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
-                    $compile($div[0])(sc);
-                    $par.append($div);
                     $div.attr('tim-draggable-fixed', '');
-                    $div = $compile($div)(sc);
+                    $par.append($div);
+                    $compile($div[0])(sc);
+                    //$div = $compile($div)(sc);
                     sc.editing = true;
                 };
 
@@ -201,6 +204,7 @@ timApp.controller("ViewCtrl", [
                     $(".par.new").remove();
                 }
                 createEditor(attrs);
+
             }
         };
 
@@ -270,16 +274,44 @@ timApp.controller("ViewCtrl", [
 
         // Event handlers
 
-        sc.onClick = function (className, func) {
-            $document.on('touchstart click', className, function (e) {
-                if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
-                    e.pageX = e.originalEvent.touches[0].pageX;
-                    e.pageY = e.originalEvent.touches[0].pageY;
-                }
+        sc.fixPageCoords = function (e) {
+            if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
+                e.pageX = e.originalEvent.touches[0].pageX;
+                e.pageY = e.originalEvent.touches[0].pageY;
+            }
+            return e;
+        };
 
-                if (func($(this), e)) {
-                    e.stopPropagation();
-                    e.preventDefault();
+        sc.onClick = function (className, func) {
+            var downEvent = null;
+            var downCoords = null;
+
+            $document.on('mousedown touchstart', className, function (e) {
+                downEvent = sc.fixPageCoords(e);
+                downCoords = {left: downEvent.pageX, top: downEvent.pageY};
+            });
+            $document.on('mousemove touchmove', className, function (e) {
+                if (downEvent == null)
+                    return;
+
+                var e2 = sc.fixPageCoords(e);
+                if (sc.dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
+                    // Moved too far away, cancel the event
+                    downEvent = null;
+                }
+            });
+            $document.on('touchcancel', className, function (e) {
+                console.log("cancel");
+                downEvent = null;
+            });
+            $document.on('mouseup touchend', className, function (e) {
+                console.log("tock");
+                if (downEvent != null) {
+                    console.log("event!");
+                    if (func($(this), downEvent)) {
+                        e.preventDefault();
+                    }
+                    downEvent = null;
                 }
             });
         };
@@ -395,7 +427,7 @@ timApp.controller("ViewCtrl", [
                 if ($mathdiv) sc.processMath($mathdiv[0]);
 
                 var $newpar = $("<div>", {class: "par"})
-                    .append($("<div>", {class: "parContent"}).append($mathdiv || html));
+                    .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
                     $par.find(".notes").appendTo($newpar);
@@ -447,11 +479,12 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, par_id);
         });
 
+
         sc.onClick(".editline", function ($this, e) {
             $(".actionButtons").remove();
             var $par = $this.parent();
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            return sc.defaultAction(e, $par, coords);
+            return sc.showOptionsWindow(e, $par, coords);
         });
 
         sc.showNoteWindow = function (e, $par, coords) {
@@ -524,7 +557,7 @@ timApp.controller("ViewCtrl", [
         // Note-related functions
 
         sc.showOptionsWindow = function (e, $par, coords) {
-            var default_width = $par.outerWidth() / 16;
+            //var default_width = $par.outerWidth() / 16;
             var button_width = 130;
             //var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
             var $actionDiv = $("<div>", {class: 'actionButtons'});
@@ -588,15 +621,31 @@ timApp.controller("ViewCtrl", [
                 }));
                 $actionDiv.append($span);
             }
-            if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
-                coords = {left: 0, top: 0};
-            }
+            /*
+             if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
+             coords = {left: 0, top: 0};
+             }*/
             ;
             $actionDiv.offset(coords);
             $actionDiv.css('position', 'absolute'); // IE needs this
             $actionDiv.attr('tim-draggable-fixed', '');
             $actionDiv = $compile($actionDiv)(sc);
             $par.prepend($actionDiv);
+
+
+            var element = $('.actionButtons');
+            var viewport = {};
+            viewport.top = $(window).scrollTop();
+            viewport.bottom = viewport.top + $(window).height();
+            var bounds = {};
+            bounds.top = element.offset().top;
+            bounds.bottom = bounds.top + element.outerHeight();
+            var y = $(window).scrollTop();
+            if (bounds.bottom > viewport.bottom) y += (bounds.bottom - viewport.bottom);
+            else if (bounds.top < viewport.top) y += (bounds.top - viewport.top);
+            $('html, body').animate({
+                scrollTop: y
+            }, 500);
         };
 
         sc.dist = function (coords1, coords2) {
@@ -909,7 +958,29 @@ timApp.controller("ViewCtrl", [
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
-        if (sc.rights.editable) sc.getEditPars();
+
+
+        // Tässä jos lisää bindiin 'mousedown' scrollaus menua avattaessa ei toimi Androidilla
+        $('body,html').bind('scroll wheel DOMMouseScroll mousewheel', function (e) {
+            if (e.which > 0 || e.type == "mousedown" || e.type == "mousewheel") {
+                $("html,body").stop();
+            }
+        });
+
+        if (sc.rights.editable) {
+            var $material = $('.material');
+            $material.append($("<div>", {class: "addBottomContainer"}).append($("<a>", {
+                class: "addBottom",
+                text: 'Add paragraph'
+            })));
+            sc.onClick(".addBottom", function ($this, e) {
+                $(".actionButtons").remove();
+                var $par = $('#pars').children().last();
+                var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top - 1000};
+                return sc.showAddParagraphBelow(e, $par, coords);
+            });
+            sc.getEditPars();
+        }
         sc.processAllMath($('body'));
 
         sc.defaultAction = sc.showOptionsWindow;

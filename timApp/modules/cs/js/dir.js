@@ -23,8 +23,8 @@ csApp.taunoNr = 0;
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage"];
-languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python"];
+languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","r"];
+languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","r"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -205,7 +205,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   : "") + // end of isInput
                   
                   
-				  '<p class="csRunSnippets" ng-if="buttons && viewCode">' +
+				  '<p class="csRunSnippets" ng-if="buttons">' + // && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
                   '</p>' +
                   '<div class="csRunMenuArea">'+
@@ -301,7 +301,6 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"user_id");
             csApp.set(scope,attrs,"isHtml",false);
             csApp.set(scope,attrs,"autoupdate",false);
-            csApp.set(scope,attrs,"button","");
             csApp.set(scope,attrs,"canvasWidth",700);
             csApp.set(scope,attrs,"canvasHeight",300);
             csApp.set(scope,attrs,"button","");
@@ -348,7 +347,10 @@ csApp.directiveFunction = function(t,isInput) {
                 scope.isRun = true;
                 scope.buttonText = "Tallenna";
             }            
-            if ( scope.button ) scope.buttonText = scope.button;
+            if ( scope.button ) {
+                scope.isRun = true;
+                scope.buttonText = scope.button;
+            }
             
 			scope.indent = csApp.getInt(scope.indent);
             if ( scope.indent < 0 )
@@ -416,7 +418,11 @@ csApp.directiveFunction = function(t,isInput) {
 function alustaSage(scope,firstTime) {
 // TODO: lisää kentätkin vasta kun 1. kerran alustetaan.
 // TODO: kielien valinnan tallentaminen
-// TODO: kielien valinta kunnolla float.    
+// TODO: kielien valinta kunnolla float.  
+// ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    var types = scope.type.split("/");
+    var languages = sagecell.allLanguages;
+    if ( types.length > 1 ) languages = types.slice(1); 
     if ( scope.sagecellInfo ) {
         var outputLocation = $(scope.sageOutput);
         outputLocation.find(".sagecell_output_elements").hide();
@@ -448,7 +454,7 @@ function alustaSage(scope,firstTime) {
             if ( csRunMenuArea && sagecellOptions ) csRunMenuArea.appendChild(sagecellOptions);
             sagecellOptions.style.marginTop = "-2em";
         },
-        languages: sagecell.allLanguages
+        languages: languages // sagecell.allLanguages
     });
 }    
 
@@ -761,6 +767,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	
 	$scope.addText = function (s) {
 	    // $scope.usercode += s;
+        if ( $scope.noeditor ) {
+            $scope.userargs += s + " ";
+            return;
+        }
 	    var tbox = $scope.edit;
 	    var i = tbox.selectionStart || 0;
 	    var uc = $scope.usercode || "";
@@ -984,7 +994,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         var text = $scope.usercode.replace($scope.cursor,"");
         if ( text == $scope.lastMD ) return;
         $scope.lastMD = text;
-        $scope.previewUrl="/preview/1" // 12971"
+        $scope.previewUrl="/preview/" + $scope.taskId.split(".")[0]; // 12971"
         $http.post($scope.previewUrl, {
             "text": text
         }).success(function (data, status, headers, config) {
@@ -1420,3 +1430,67 @@ csConsoleApp.directiveTemplateCS = function (t, isInput) {
      '</div>';
 };
  
+ 
+function truthTable(sentence,topbottomLines) {
+"use strict";  
+  var result = "";
+  try {
+      if ( !sentence ) return "";
+      if ( !sentence.trim() ) return "";
+      var replace = "v |;^ &;~ !;∧ &&;∨ |;∼ !"; 
+      var abcde = "abcdefghijklmnopqrstuxy";
+      var header = "";
+      var vals = '""';
+      var count = 0;
+      var cnt2 = 1;
+      
+      var input = sentence.toLowerCase();
+      for (var i=0; i<abcde.length; i++) {
+          if ( input.indexOf(abcde[i]) >= 0 ) {
+              header += abcde[i] + " ";
+              var zv = "z["+count+"]";
+              input = input.split(abcde[i]).join(zv);
+              vals += '+' + zv + '+" "';
+              count++;
+              cnt2 *= 2;
+          } 
+      }
+      
+      var repls = replace.split(";");
+      for (i in repls) {
+          var r = repls[i].split(" ");
+          input = input.split(r[0]).join(r[1]);
+      }
+      
+      var sents = sentence.split(";");
+      var lens = [];
+      var fills = [];
+      for (i=0; i<sents.length; i++) {
+          sents[i] = sents[i].trim();
+          lens[i] = sents[i].length;
+          fills[i] = "                                                               ".substring(0,lens[i]);
+      }
+      header += "  " + sents.join("  ");
+      var line = "---------------------------------------".substring(0,header.length);
+      // result += input + "\n";
+      if ( topbottomLines )  result += line + "\n";
+      result += header + "\n";
+      result += line + "\n";
+      for (var n = 0; n < cnt2; n++ ) {
+          var z = [];
+          for (i=0; i < count; i++)
+                z[i] = (n >> (count-1-i)) & 1;
+          result += eval(vals) + "= ";  
+          var inp = input.split(";");
+          for (i=0; i<inp.length; i++) {
+            var tulos = " " + (eval(inp[i]) ? 1 : 0) + fills[i];
+            result += tulos;
+          }  
+          result += "\n";
+      } 
+      if ( topbottomLines )  result += line + "\n";
+      return result;
+  } catch (err) {
+      return result + "\n" + err + "\n";
+  }
+}  
