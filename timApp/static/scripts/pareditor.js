@@ -1011,7 +1011,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         dataType: "text",
                         processData: false,
                         success: function (data) {
-                            data.replace(/\\/g, "\\\\");
+                            data.replace(/\\/g, "\\\\\\\\");
                             $scope.insertTemplate(data);
                         },
                         error: function () {
