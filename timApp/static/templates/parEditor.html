@@ -77,14 +77,7 @@
         <button class="editorButton" ng-click="wrapFn(powerClicked)">X&#x207f;</button>
         <button class="editorButton" ng-click="wrapFn(squareClicked)">&radic;</button>
     </div>
-    <div id="pluginButtons" class="extraButtonArea hidden">
-        <button class="editorButton" ng-click="pluginClicked($event, 'csPlugin')">CsPlugin
-        </button>
-        <button class="editorButton" ng-click="getTemplate('showImage', 'template')">ImagePlugin
-        </button>
-        <button class="editorButton" ng-click="getTemplate('showVideo', 'template')">VideoPlugin
-        </button>
-    </div>
+    <div id="pluginButtons" class="extraButtonArea hidden"></div>
     <div id="uploadButtons" class="extraButtonArea hidden">
         <span>
             Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
