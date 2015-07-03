@@ -31,7 +31,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         url: '/' + plugin + '/reqs/',
                         success: function (data, status, headers, config) {
                             console.log(plugin);
-                            data = JSON.parse('{"multihtml": true, "text": ["Programs", "Questions"], "js": ["/cs/js/dir.js", "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js", "/cs/js/embedded_sagecell.js"], "css": ["/cs/css/cs.css"], "angularModule": ["csApp", "csConsoleApp"], "templates": [{"expl": "c# program with only main visible", "text": "c# main", "file": "cs1"}, {"expl": "Tauno with 4 length table", "text": "Tauno table", "file": "tauno"}, {"expl": "Tauno with 2 variables", "text": "Tauno variable", "file": "taunoVar"}, {"expl": "Full Java program", "text": "java", "file": "template"}]}');
                             if (data.templates) {
                                 var tabs = data.text || [plugin];
                                 for (var i = 0; i < tabs.length; i++) {
