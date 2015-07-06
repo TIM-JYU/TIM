@@ -1609,7 +1609,7 @@ img.console {
     position: absolute;
     white-space: nowrap;
     border-radius: 3px;
-    padding: 1em;
+    padding: 12px;
     margin: 0;
     background-color: #f8f8ff;
     z-index: 100;
