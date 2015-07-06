@@ -169,6 +169,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             } else if (e.keyCode === 73) {
                                 $scope.surroundClicked('*', surroundedByItalic);
                                 e.preventDefault();
+                            } else if (e.keyCode === 79) {
+                                $scope.surroundClicked('`');
+                                e.preventDefault();
                             } else if (e.keyCode === 49) {
                                 $scope.headerClicked('#');
                                 e.preventDefault();
@@ -252,6 +255,17 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             },
                             exec: function (env, args, request) {
                                 $scope.surroundClicked('*', $scope.surroundedByItalic);
+                            }
+                        });
+                        editor.commands.addCommand({
+                            name: 'code',
+                            bindKey: {
+                                win: 'Ctrl-O',
+                                mac: 'Command-O',
+                                sender: 'editor|cli'
+                            },
+                            exec: function (env, args, request) {
+                                $scope.surroundClicked('`');
                             }
                         });
                         editor.commands.addCommand({
