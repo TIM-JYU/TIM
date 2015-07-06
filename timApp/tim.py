@@ -406,7 +406,7 @@ def deleteNote():
     if not (timdb.notes.hasEditAccess(group_id, note_id)
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
-    timdb.notes.deleteNote(doc_id, note_id)
+    timdb.notes.deleteNote(note_id)
     return okJsonResponse()
 
 @app.route("/notes/<int:doc_id>")
@@ -418,6 +418,7 @@ def getNotes(doc_id):
     notes = [note for note in timdb.notes.getNotes(group_id, doc)]
     for note in notes:
         note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
+        note.pop('UserGroup_id')
         note['private'] = note['access'] == 'justme'
         tags = note['tags']
         note['tags'] = {}

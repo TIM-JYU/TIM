@@ -5,6 +5,7 @@ from contracts import contract
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from ephemeralclient import EphemeralClient, EPHEMERAL_URL
+from markdownconverter import md_to_html
 from timdb.timdbbase import TimDbBase
 
 
@@ -17,7 +18,6 @@ class Notes(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-        self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
     def __tagstostr(self, tags: 'list(str)') -> 'str':
@@ -68,7 +68,7 @@ class Notes(TimDbBase):
         :param tags: Tags for the note (difficult, unclear).
         """
         cursor = self.db.cursor()
-        note_html = self.ec.to_html([content])
+        note_html = md_to_html(content)
         cursor.execute(
             """
                 INSERT INTO UserNotes
@@ -92,11 +92,11 @@ class Notes(TimDbBase):
         :param new_tags: New tags to set.
         """
         cursor = self.db.cursor()
-        new_html = self.ec.to_html([new_content])
+        new_html = md_to_html(new_content)
         cursor.execute(
             """
                 UPDATE UserNotes
-                SET content = ?, tags = ?, access = ?, html = ?
+                SET content = ?, tags = ?, access = ?, html = ?, modified = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, [new_content, self.__tagstostr(new_tags), access, new_html, note_id])
 
@@ -126,14 +126,14 @@ class Notes(TimDbBase):
         :param doc: The document for which to get the notes.
         """
         result = self.resultAsDictionary(
-            self.db.execute('SELECT id, par_id, par_hash, content, created, modified, access, tags, html '
+            self.db.execute('SELECT id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
                             'FROM UserNotes '
                             'WHERE UserGroup_id = ? AND doc_id = ?', [usergroup_id, doc.doc_id]))
 
         for note in result:
             note["tags"] = self.__strtotags(note["tags"])
             if note['html'] is None:
-                note['html'] = self.ec.to_html([note['content']])
+                note['html'] = md_to_html(note['content'])
                 self.db.execute('UPDATE UserNotes SET html = ? '
                                 'WHERE id = ?', [note['html'], note['id']])
                 self.db.commit()

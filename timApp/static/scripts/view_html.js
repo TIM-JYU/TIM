@@ -601,7 +601,7 @@ timApp.controller("ViewCtrl", [
                 }
                 $noteDiv.append($("<div>", {class: classes.join(" ")})
                     .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].htmlContent})));
+                    .append($("<div>", {class: 'noteContent', html: notes[i].html})));
             }
             return $noteDiv;
         };
