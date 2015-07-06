@@ -836,14 +836,15 @@ a.anchor:hover {
 }
 
 .editorButton {
-    margin-bottom: 0 !important;
     font-size: 14px !important;
     height: 35px;
+    margin: 0 2px 0 2px !important;
 }
 
 .extraButtonArea {
-    margin: 0 0 0.2em 0;
-	padding: 0.5em 1em;
+    font-size: 0;
+    padding: 8px 16px;
+    margin: 0 0 3px 0;
     background: white;
     border-left: 1px solid rgb(183, 183, 183);
     border-right: 1px solid rgb(183, 183, 183);

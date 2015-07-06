@@ -1064,16 +1064,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.pluginClicked = function ($event, plugin, index) {
-                    console.log('plugin klikattu');
                     var data = $scope.plugindata[plugin].templates[index];
                     var buttons = [];
                     for (var i = 0; i < data.length; i++) {
                         var template = data[i];
                         var text = (template.text || template.file);
-                        var file = template.file;
-                        var title = template.expl;
-                        var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\', \'' + index + '\'); wrapFn()';
-                        buttons.push($scope.createMenuButton(text, title, clickfn));
+                        var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + index + '\'); wrapFn()';
+                        buttons.push($scope.createMenuButton(text, template.expl, clickfn));
                     }
                     $scope.createMenu($event, buttons);
                 };
