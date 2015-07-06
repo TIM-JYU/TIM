@@ -442,7 +442,7 @@ def setReadParagraph(doc_id, specifier):
     #version = request.headers.get('Version', 'latest')
     #verify_document_version(doc_id, version)
     doc = Document(doc_id)
-    par = DocParagraph.get(specifier)
+    par = doc.get_paragraph(specifier)
     if par is None:
         return abort(400, 'Non-existent paragraph')
     timdb.readings.setAsRead(getCurrentUserGroup(), doc, par)

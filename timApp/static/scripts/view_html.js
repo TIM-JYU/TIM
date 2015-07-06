@@ -400,7 +400,7 @@ timApp.controller("ViewCtrl", [
                 if ('taskId' in data.texts[i].attrs) {
                     html = $compile(html)(sc);
                 }
-                var $newpar = $("<div>", {class: "par", id: data.texts[i].id})
+                var $newpar = $("<div>", {class: "par", id: data.texts[i].id, t: data.texts[i].par_hash})
                     .append($("<div>", {class: "parContent"}).html(html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {
@@ -649,7 +649,7 @@ timApp.controller("ViewCtrl", [
                     var readPar = data[i];
                     var pi = data[i].par_id;
                     if (!(pi in pars)) {
-                        pars[pi] = {};
+                        pars[pi] = {par_hash: data[i].par_hash};
                     }
                 }
                 sc.forEachParagraph(function (index, elem) {
