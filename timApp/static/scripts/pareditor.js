@@ -22,9 +22,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             controller: function ($scope) {
 
                 var $plugintab = $('#pluginButtons');
-
                 var pluginkeys = Object.keys(plugins);
-                //var plugindata = {};
+                $scope.plugindata = {};
+
                 function getPluginsInOrder() {
                     if (pluginkeys.length === 0) {
                         return;
@@ -38,6 +38,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         url: '/' + plugin + '/reqs/',
                         success: function (data, status, headers, config) {
                             if (data.templates) {
+                                $scope.plugindata[plugin] = data;
                                 var tabs = data.text || [plugin];
                                 for (var i = 0; i < tabs.length; i++) {
                                     var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
@@ -1063,28 +1064,18 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.pluginClicked = function ($event, plugin, index) {
-                    $.ajax({
-                        dataType: "json",
-                        type: 'GET',
-                        url: '/' + plugin + '/reqs/',
-                        success: function (data) {
-                            if (data.templates[index] && data.templates[index].length > 0) {
-                                var buttons = [];
-                                for (var i = 0; i < data.templates[index].length; i++) {
-                                    var template = data.templates[index][i];
-                                    var text = (template.text || template.file);
-                                    var file = template.file;
-                                    var title = template.expl;
-                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\', \'' + index + '\'); wrapFn()';
-                                    buttons.push($scope.createMenuButton(text, title, clickfn));
-                                }
-                                $scope.createMenu($event, buttons);
-                            }
-                        },
-                        error: function () {
-                            console.log("Virhe");
-                        }
-                    });
+                    console.log('plugin klikattu');
+                    var data = $scope.plugindata[plugin].templates[index];
+                    var buttons = [];
+                    for (var i = 0; i < data.length; i++) {
+                        var template = data.templates[index][i];
+                        var text = (template.text || template.file);
+                        var file = template.file;
+                        var title = template.expl;
+                        var clickfn = 'getTemplate(\'' + plugin + '\',\'' + file + '\', \'' + index + '\'); wrapFn()';
+                        buttons.push($scope.createMenuButton(text, title, clickfn));
+                    }
+                    $scope.createMenu($event, buttons);
                 };
 
                 $scope.getTemplate = function (plugin, template, index) {
@@ -1179,5 +1170,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }, 1000
                 )
             }
-        };
-    }]);
+        }
+            ;
+    }])
+;
