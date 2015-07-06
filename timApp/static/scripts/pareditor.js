@@ -1,7 +1,6 @@
 var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
-var plugins = ['csPlugin', 'taunoPlugin', 'csPluginRikki', 'showCode', 'showImage', 'showVideo'];
 
 timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
@@ -23,15 +22,14 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             controller: function ($scope) {
 
                 var $plugintab = $('#pluginButtons');
-                var plugins = ['csPlugin', 'taunoPlugin', 'csPluginRikki', 'showCode', 'showImage', 'showVideo'];
 
+                var pluginkeys = Object.keys(plugins);
+                //var plugindata = {};
                 function getPluginsInOrder() {
-                    if (plugins.length === 0) {
+                    if (pluginkeys.length === 0) {
                         return;
                     }
-                    var plugin = plugins.pop();
-                    console.log(plugin);
-                    var delay = Math.random() * 3;
+                    var plugin = pluginkeys.pop();
 
                     $.ajax({
                         cache: false,
@@ -49,8 +47,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                         title: tabs[i],
                                         'ng-click': clickfunction
                                     });
-                                    button = $compile(button)($scope);
-                                    $plugintab.append(button);
+                                    $plugintab.append($compile(button)($scope));
                                 }
                             }
                             getPluginsInOrder();
@@ -106,6 +103,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     if ($scope.timer) {
                         $window.clearTimeout($scope.timer);
                     }
+
                     $scope.timer = $window.setTimeout(function () {
                         var text = $scope.getEditorText();
                         $http.post($scope.previewUrl, {
@@ -154,18 +152,38 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         var $meta = $("meta[name='viewport']");
                         $scope.oldmeta = $meta[0];
                         $meta.remove();
-                        $('head').append('<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">');
+                        $('head').prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
                     }
 
                     $scope.options.metaset = true;
 
                     $scope.editor.keydown(function (e) {
-                        if (e.keyCode === 9) {
+                        if (e.ctrlKey) {
+                            if (e.keyCode === 83) {
+                                $scope.saveClicked();
+                                e.preventDefault();
+                            } else if (e.keyCode === 66) {
+                                $scope.surroundClicked('**');
+                                e.preventDefault();
+                            } else if (e.keyCode === 73) {
+                                $scope.surroundClicked('*', surroundedByItalic);
+                                e.preventDefault();
+                            } else if (e.keyCode === 49) {
+                                $scope.headerClicked('#');
+                                e.preventDefault();
+                            } else if (e.keyCode === 50) {
+                                $scope.headerClicked('##');
+                                e.preventDefault();
+                            } else if (e.keyCode === 51) {
+                                $scope.headerClicked('###');
+                                e.preventDefault();
+                            } else if (e.keyCode === 52) {
+                                $scope.headerClicked('####');
+                                e.preventDefault();
+                            }
+                        } else if (e.keyCode === 9) {
                             var outdent = e.shiftKey;
                             $scope.indent(outdent);
-                            e.preventDefault();
-                        } else if (e.keyCode === 83 && e.ctrlKey) {
-                            $scope.saveClicked();
                             e.preventDefault();
                         }
                     });
@@ -211,6 +229,72 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             },
                             exec: function (env, args, request) {
                                 $scope.saveClicked();
+                            }
+                        });
+                        editor.commands.addCommand({
+                            name: 'bold',
+                            bindKey: {
+                                win: 'Ctrl-B',
+                                mac: 'Command-B',
+                                sender: 'editor|cli'
+                            },
+                            exec: function (env, args, request) {
+                                $scope.surroundClicked('**');
+                            }
+                        });
+                        editor.commands.addCommand({
+                            name: 'italic',
+                            bindKey: {
+                                win: 'Ctrl-I',
+                                mac: 'Command-I',
+                                sender: 'editor|cli'
+                            },
+                            exec: function (env, args, request) {
+                                $scope.surroundClicked('*', $scope.surroundedByItalic);
+                            }
+                        });
+                        editor.commands.addCommand({
+                            name: 'h1',
+                            bindKey: {
+                                win: 'Ctrl-1',
+                                mac: 'Command-1',
+                                sender: 'editor|cli'
+                            },
+                            exec: function (env, args, request) {
+                                $scope.headerClicked('#');
+                            }
+                        });
+                        editor.commands.addCommand({
+                            name: 'h2',
+                            bindKey: {
+                                win: 'Ctrl-2',
+                                mac: 'Command-2',
+                                sender: 'editor|cli'
+                            },
+                            exec: function (env, args, request) {
+                                $scope.headerClicked('##');
+                            }
+                        });
+                        editor.commands.addCommand({
+                            name: 'h3',
+                            bindKey: {
+                                win: 'Ctrl-3',
+                                mac: 'Command-3',
+                                sender: 'editor|cli'
+                            },
+                            exec: function (env, args, request) {
+                                $scope.headerClicked('###');
+                            }
+                        });
+                        editor.commands.addCommand({
+                            name: 'h4',
+                            bindKey: {
+                                win: 'Ctrl-4',
+                                mac: 'Command-4',
+                                sender: 'editor|cli'
+                            },
+                            exec: function (env, args, request) {
+                                $scope.headerClicked('####');
                             }
                         });
 
@@ -293,7 +377,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.changeMeta = function () {
                     $("meta[name='viewport']").remove();
                     var $meta = $($scope.oldmeta);
-                    $('head').append($meta);
+                    $('head').prepend($meta);
                 };
 
                 $scope.deleteClicked = function () {
@@ -313,11 +397,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         error(function (data, status, headers, config) {
                             $window.alert("Failed to delete: " + data.error);
                         });
-                    if ($scope.options.touchDevide) $scope.changeMeta();
+                    if ($scope.options.touchDevice) $scope.changeMeta();
                 };
 
                 $scope.cancelClicked = function () {
-                    if ($scope.options.touchDevide) $scope.changeMeta();
+                    if ($scope.options.touchDevice) $scope.changeMeta();
                     $element.remove();
                     $scope.afterCancel({
                         extraData: $scope.extraData
@@ -361,7 +445,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to save: " + data.error);
                     });
-                    if ($scope.options.touchDevide) $scope.changeMeta();
+                    if ($scope.options.touchDevice) $scope.changeMeta();
                 };
 
                 if ($scope.options.touchDevice) {
@@ -1089,8 +1173,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }, 2000);
                 }
 
-                var height = window.innerHeight - 15 + 'px';
-                $($element).css('max-height', height);
+                window.setTimeout(function () {
+                        var height = window.innerHeight - 15 + 'px';
+                        $element.css('max-height', height);
+                    }, 1000
+                )
             }
         };
     }]);

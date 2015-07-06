@@ -3,6 +3,7 @@
 from flask import Blueprint, render_template, redirect, url_for
 from .common import *
 from .cache import cache
+from containerLink import PLUGINS
 
 import pluginControl
 
@@ -149,4 +150,5 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                    'can_mark_as_read': hasReadMarkingRight(doc_id),
                                    'can_comment': hasCommentRight(doc_id),
                                    'browse_own_answers': loggedIn()
-                                   })
+                                   },
+                           plugins=PLUGINS)

@@ -83,7 +83,8 @@ class Documents(TimDbBase):
 
         docId = DocIdentifier(document_id, doc_hash)
 
-        self.ec.loadDocument(docId, b'[Ohjeet muokkaamiseen](https://tim.it.jyu.fi/view/tim/TIM-ohjeet)')
+        self.ec.loadDocument(docId, 'Muokataksesi paina vasenta reunaa. [Lisäohjeita muokkaamiseen saat avaamalla' +
+                                    'editorin ja Help-välilehden linkkiä](https://tim.it.jyu.fi/view/tim/TIM-ohjeet)')
 
         cursor = self.db.cursor()
         cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP
