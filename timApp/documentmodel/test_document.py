@@ -172,13 +172,20 @@ class DocumentTest(unittest.TestCase):
         
         par2_id = pars[2].get_id()
         par2_hash = pars[2].get_hash()
-        par2_mod = d.modify_paragraph(par2_id, 'new text')
-        
+        old_md = pars[2].get_markdown()
+        new_text = 'new_text'
+        par2_mod = d.modify_paragraph(par2_id, new_text)
+
         self.assertEqual(par2_id, par2_mod.get_id())
-        self.assertEqual('new text', par2_mod.get_markdown())
+        self.assertEqual(new_text, d.get_paragraph(par2_id).get_markdown())
+        self.assertEqual(new_text, par2_mod.get_markdown())
         self.assertNotEqual(par2_hash, par2_mod.get_hash())
         self.assertEqual((10, 1), d.get_version())
         self.assertEqual(11, len(d.get_changelog()))
+
+        par2_mod = d.modify_paragraph(par2_id, old_md)
+        self.assertEqual(old_md, par2_mod.get_markdown())
+        self.assertEqual(old_md, d.get_paragraph(par2_id).get_markdown())
 
         for i in range(0, 10):
             par2_id = pars[i].get_id()
@@ -188,8 +195,8 @@ class DocumentTest(unittest.TestCase):
             self.assertEqual(par2_id, par2_mod.get_id())
             self.assertEqual(new_text, par2_mod.get_markdown())
             self.assertNotEqual(par2_hash, par2_mod.get_hash())
-            self.assertEqual((10, i + 2), d.get_version())
-            self.assertEqual(12 + i, len(d.get_changelog()))
+            self.assertEqual((10, i + 3), d.get_version())
+            self.assertEqual(13 + i, len(d.get_changelog()))
 
 
     def test_document_remove(self):
