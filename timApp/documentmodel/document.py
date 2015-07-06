@@ -173,7 +173,7 @@ class Document:
         return DocParagraph.get_latest(par_id, self.files_root)
 
     @contract
-    def add_paragraph(self, text: 'str', attrs: 'dict|None'=None) -> 'DocParagraph':
+    def add_paragraph(self, text: 'str', attrs: 'dict' = {}) -> 'DocParagraph':
         """
         Appends a new paragraph into the document.
         :param attrs: The attributes for the paragraph.
@@ -258,10 +258,11 @@ class Document:
         if not self.has_paragraph(par_id):
             raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
         p_src = DocParagraph.get_latest(par_id, files_root=self.files_root)
+        p_src.remove_link(self.doc_id)
         old_hash = p_src.get_hash()
-        p = DocParagraph(new_text, par_id=par_id, links=p_src.get_links(), attrs=p_src.get_attrs(), files_root=self.files_root)
+        p = DocParagraph(new_text, par_id=par_id, attrs=p_src.get_attrs(), files_root=self.files_root)
         new_hash = p.get_hash()
-        p.update_links()
+        p.add_link(self.doc_id)
         self.__increment_version('Modified paragraph {} from hash {} to {}'.format(par_id, old_hash, new_hash), increment_major=False)
         return p
 

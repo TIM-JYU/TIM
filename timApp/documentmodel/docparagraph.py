@@ -9,22 +9,31 @@ class DocParagraph:
     def __init__(
             self,
             md: 'str' = '',
-            html: 'str|None' = None,
             par_id: 'str|None' = None,
             t: 'str|None' = None,
-            links: 'list|None' = None,
-            attrs: 'dict|None' = None,
+            attrs: 'dict' = {},
             src_dict: 'dict|None' = None,
             files_root: 'str|None' = None):
-        self.__data = {
-            'md': md,
-            'html': html,
-            'id': random_id() if par_id is None else par_id,
-            't': hashfunc(md) if t is None else hashfunc(md),
-            'links': [] if links is None else links,
-            'attrs': {} if attrs is None else attrs
-        } if src_dict is None else src_dict
+
         self.files_root = self.get_default_files_root() if files_root is None else files_root
+        if src_dict:
+            # Create from JSON
+            self.__data = src_dict
+            return
+
+        self.__data = {
+            'id': par_id if par_id is not None else random_id(),
+            'md': md,
+            'html': None,
+            't': hashfunc(md) if md is not None else None,
+            'links': [],
+            'attrs': attrs}
+
+        if par_id:
+            # Try to read from file if we know the paragraph id
+            self.__read()
+            for attr in attrs or []:
+                self.__data['attrs'][attr] = attrs[attr]
 
     def __iter__(self):
         return self.__data.__iter__()
@@ -35,8 +44,8 @@ class DocParagraph:
 
     @classmethod
     @contract
-    def from_dict(cls, d: 'dict'):
-        return DocParagraph(src_dict=d)
+    def from_dict(cls, d: 'dict', files_root: 'str|None' = None):
+        return DocParagraph(src_dict=d, files_root=files_root)
 
     @classmethod
     @contract
@@ -61,7 +70,7 @@ class DocParagraph:
     @contract
     def get(cls, par_id: 'str', t: 'str', files_root: 'str|None' = None):
         with open(cls.getPath(par_id, t, files_root), 'r') as f:
-            return cls.from_dict(json.loads(f.read()))
+            return cls.from_dict(json.loads(f.read()), files_root=files_root)
 
     @contract
     def dict(self) -> 'dict':
