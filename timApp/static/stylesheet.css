@@ -852,6 +852,10 @@ a.anchor:hover {
     border-bottom-left-radius: 5px;
 }
 
+.extraButtonArea * {
+    font-size: 14px;
+}
+
 .extraButtonArea.hidden {
 	display: none;
 }
