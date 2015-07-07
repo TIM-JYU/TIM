@@ -158,5 +158,4 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                    'can_comment': hasCommentRight(doc_id),
                                    'browse_own_answers': loggedIn()
                                    },
-                           # reqs=reqs,
                            editortab=editortab)
