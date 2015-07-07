@@ -131,6 +131,10 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
+    try:
+        editortab = session['editortab']
+    except KeyError:
+        editortab = None
     return render_template(template_name,
                            docID=doc['id'],
                            docName=doc['name'],
@@ -151,4 +155,5 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                    'can_comment': hasCommentRight(doc_id),
                                    'browse_own_answers': loggedIn()
                                    },
-                           plugins=PLUGINS)
+                           plugins=PLUGINS,
+                           editortab=editortab)

@@ -20,7 +20,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 initialTextUrl: '@'
             },
             controller: function ($scope) {
-
+                $scope.editortab = $window.editortab;
                 var $plugintab = $('#pluginButtons');
                 var pluginkeys = Object.keys(plugins);
                 $scope.plugindata = {};
@@ -1108,6 +1108,22 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 };
 
                 $scope.tabClicked = function ($event, area) {
+                    var active = $($event.target).parent();
+                    $.ajax({
+                        type: 'POST',
+                        url: '/editortab/' + area,
+                        success: function (data) {
+                            editortab = area;
+                        },
+                        error: function () {
+                            console.log("Virhe");
+                        }
+                    });
+                    $scope.setActiveTab(active, area);
+                    $scope.wrapFn();
+                };
+
+                $scope.setActiveTab = function (active, area) {
                     var naviArea = $('#' + area);
                     var buttons = $('.extraButtonArea');
                     var tabs = $('.tab');
@@ -1117,11 +1133,20 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     for (var i = 0; i < tabs.length; i++) {
                         $(tabs[i]).removeClass('active');
                     }
-                    var active = $($event.target).parent();
                     $(active).attr('class', 'tab active');
                     $(naviArea).attr('class', 'extraButtonArea');
-                    $scope.wrapFn();
                 };
+
+                if ($scope.editortab) {
+                    //Timeout is used to ensure that ng-ifs are executed before this
+                    window.setTimeout(function () {
+                        var tab = $scope.editortab.substring(0, $scope.editortab.lastIndexOf('Buttons'));
+                        var tabelement = $('#' + tab);
+                        if (tabelement.length) {
+                            $scope.setActiveTab(tabelement, $scope.editortab);
+                        }
+                    }, 0);
+                }
 
                 $scope.fullscreenSupported = function () {
                     var div = $($element).get(0);

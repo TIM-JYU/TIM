@@ -1,16 +1,16 @@
 <div id="pareditor">
     <ul class="tabsarea">
-        <li class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a></li>
-        <li class="tab"><a ng-click="tabClicked($event, 'styleButtons')">Style</a></li>
-        <li class="tab"><a ng-click="tabClicked($event, 'insertButtons')">Insert</a></li>
-        <li class="tab"><a ng-click="tabClicked($event, 'specialButtons')">Special characters</a></li>
-        <li class="tab"><a ng-click="tabClicked($event, 'texButtons')">TeX</a></li>
-        <li class="tab" ng-show="options.showPlugins"><a ng-click="tabClicked($event, 'pluginButtons')">Plugins</a>
+        <li id="navigate" class="tab active"><a ng-click="tabClicked($event, 'navigateButtons')">Navigation</a></li>
+        <li id="style" class="tab"><a ng-click="tabClicked($event, 'styleButtons')">Style</a></li>
+        <li id="insert" class="tab"><a ng-click="tabClicked($event, 'insertButtons')">Insert</a></li>
+        <li id="special" class="tab"><a ng-click="tabClicked($event, 'specialButtons')">Special characters</a></li>
+        <li id="tex" class="tab"><a ng-click="tabClicked($event, 'texButtons')">TeX</a></li>
+        <li id="plugin" class="tab" ng-if="options.showPlugins"><a ng-click="tabClicked($event, 'pluginButtons')">Plugins</a>
         </li>
-        <li class="tab" ng-show="options.showImageUpload"><a ng-click="tabClicked($event, 'uploadButtons')">Upload
+        <li id="upload" class="tab" ng-if="options.showImageUpload"><a ng-click="tabClicked($event, 'uploadButtons')">Upload
             file/image</a>
         </li>
-        <li class="tab"><a ng-click="tabClicked($event, 'helpButtons')">Help</a></li>
+        <li id="help" class="tab"><a ng-click="tabClicked($event, 'helpButtons')">Help</a></li>
     </ul>
     <div id="navigateButtons" class="extraButtonArea">
         <button class="editorButton" title="Undo" ng-click="wrapFn(undoClicked)">&#8630;</button>
@@ -77,8 +77,8 @@
         <button class="editorButton" ng-click="wrapFn(powerClicked)">X&#x207f;</button>
         <button class="editorButton" ng-click="wrapFn(squareClicked)">&radic;</button>
     </div>
-    <div id="pluginButtons" class="extraButtonArea hidden"></div>
-    <div id="uploadButtons" class="extraButtonArea hidden">
+    <div id="pluginButtons" class="extraButtonArea hidden" ng-if="options.showPlugins"></div>
+    <div id="uploadButtons" class="extraButtonArea hidden" ng-if="options.showImageUpload">
         <span>
             Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
             <span ng-bind="progress"></span>

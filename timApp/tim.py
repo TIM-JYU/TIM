@@ -375,6 +375,14 @@ def view_template(plugin, template, index):
     except PluginException:
         abort(404)
 
+@app.route("/editortab/<tabid>", methods=['POST'])
+def set_editor_tab(tabid):
+    try:
+        session['editortab'] = tabid
+        return "Success"
+    except PluginException:
+        abort(404)
+
 @app.route("/index/<int:docId>")
 def getIndex(docId):
     timdb = getTimDb()
