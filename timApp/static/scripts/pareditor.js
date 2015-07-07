@@ -49,7 +49,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             }
                         }
                     }
-
                     var tabkeys = Object.keys($scope.pluginButtonList);
                     for (var i = 0; i < tabkeys.length; i++) {
                         var key = tabkeys[i];
@@ -62,26 +61,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         });
                         $plugintab.append($compile(button)($scope));
                     }
-
-                    /*
-                     for (var i = 0; i < pluginkeys.length; i++) {
-                     var plugin = pluginkeys[i];
-                     var data = reqs[pluginkeys[i]];
-                     if (data.templates) {
-                     $scope.plugindata[plugin] = data;
-                     var tabs = data.text || [plugin];
-                     for (var j = 0; j < tabs.length; j++) {
-                     var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + j + '\')';
-                     var button = $("<button>", {
-                     class: 'editorButton',
-                     text: tabs[j],
-                     title: tabs[j],
-                     'ng-click': clickfunction
-                     });
-                     $plugintab.append($compile(button)($scope));
-                     }
-                     }
-                     }*/
                 }
 
                 window.setTimeout(function () {
@@ -1114,20 +1093,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.pluginClicked = function ($event, key) {
                     $scope.createMenu($event, $scope.pluginButtonList[key]);
                 };
-
-
-                /*
-                $scope.pluginClicked = function ($event, plugin, index) {
-                    var data = $scope.plugindata[plugin].templates[index];
-                    var buttons = [];
-                    for (var i = 0; i < data.length; i++) {
-                        var template = data[i];
-                        var text = (template.text || template.file);
-                        var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + index + '\'); wrapFn()';
-                        buttons.push($scope.createMenuButton(text, template.expl, clickfn));
-                    }
-                    $scope.createMenu($event, buttons);
-                };*/
 
                 $scope.getTemplate = function (plugin, template, index) {
                     // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
