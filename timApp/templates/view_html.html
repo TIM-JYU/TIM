@@ -60,6 +60,7 @@
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         var teacherMode = {{teacher_mode|tojson}};
+        var group = {{group|tojson}};
         {% if teacher_mode %}
             var users = {{plugin_users|tojson}};
         {% else %}
