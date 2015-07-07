@@ -23,42 +23,61 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             controller: function ($scope) {
                 $scope.editortab = $window.editortab;
                 var $plugintab;
-                var pluginkeys = Object.keys(plugins);
+                var pluginkeys = Object.keys(reqs);
                 $scope.plugindata = {};
 
-                function getPluginsInOrder() {
-                    if (pluginkeys.length === 0) {
-                        return;
-                    }
-                    var plugin = pluginkeys.pop();
 
-                    $.ajax({
-                        cache: false,
-                        dataType: "json",
-                        type: 'GET',
-                        url: '/' + plugin + '/reqs/',
-                        success: function (data, status, headers, config) {
-                            if (data.templates) {
-                                $scope.plugindata[plugin] = data;
-                                var tabs = data.text || [plugin];
-                                for (var i = 0; i < tabs.length; i++) {
-                                    var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
-                                    var button = $("<button>", {
-                                        class: 'editorButton',
-                                        text: tabs[i],
-                                        title: tabs[i],
-                                        'ng-click': clickfunction
-                                    });
-                                    $plugintab.append($compile(button)($scope));
-                                }
+                function getPluginsInOrder() {
+                    for (var i = 0; i < pluginkeys.length; i++) {
+                        var data = reqs[pluginkeys[i]];
+                        if (data.templates) {
+                            $scope.plugindata[plugin] = data;
+                            var tabs = data.text || [plugin];
+                            for (var i = 0; i < tabs.length; i++) {
+                                var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
+                                var button = $("<button>", {
+                                    class: 'editorButton',
+                                    text: tabs[i],
+                                    title: tabs[i],
+                                    'ng-click': clickfunction
+                                });
+                                $plugintab.append($compile(button)($scope));
                             }
-                            getPluginsInOrder();
-                        },
-                        error: function () {
-                            console.log("Virhe");
-                            getPluginsInOrder();
                         }
-                    });
+                    }
+                    /*
+                     if (pluginkeys.length === 0) {
+                     return;
+                     }
+                     var plugin = pluginkeys.pop();
+
+                     $.ajax({
+                     cache: false,
+                     dataType: "json",
+                     type: 'GET',
+                     url: '/' + plugin + '/reqs/',
+                     success: function (data, status, headers, config) {
+                     if (data.templates) {
+                     $scope.plugindata[plugin] = data;
+                     var tabs = data.text || [plugin];
+                     for (var i = 0; i < tabs.length; i++) {
+                     var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
+                     var button = $("<button>", {
+                     class: 'editorButton',
+                     text: tabs[i],
+                     title: tabs[i],
+                     'ng-click': clickfunction
+                     });
+                     $plugintab.append($compile(button)($scope));
+                     }
+                     }
+                     getPluginsInOrder();
+                     },
+                     error: function () {
+                     console.log("Virhe");
+                     getPluginsInOrder();
+                     }
+                     });*/
                 }
 
                 window.setTimeout(function () {

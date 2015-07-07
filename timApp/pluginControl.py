@@ -10,7 +10,7 @@ from yaml import CLoader
 import yaml.parser
 import yaml.scanner
 
-from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
+from containerLink import call_plugin_html, call_plugin_multihtml, PluginException, PLUGINS
 from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from htmlSanitize import sanitize_html
@@ -326,6 +326,20 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
 
     return final_html_blocks, js_paths, css_paths, modules
 
+
+def get_all_reqs():
+    allreqs = {}
+    for plugin in PLUGINS.keys():
+        try:
+            resp = plugin_reqs(plugin)
+        except PluginException as e:
+            continue
+        try:
+            reqs = json.loads(resp)
+            allreqs[plugin] = reqs
+        except ValueError:
+            continue
+    return allreqs
 
 def make_browse_buttons(user_id, task_id, answer_db):
     states = answer_db.getAnswers(user_id, task_id)

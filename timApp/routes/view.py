@@ -112,6 +112,9 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                                                 doc_id,
                                                                 current_user['id'],
                                                                 sanitize=False)
+
+    reqs = pluginControl.get_all_reqs()
+
     if hide_names_in_teacher(doc_id):
         pass
         if not timdb.users.userIsOwner(current_user['id'], doc_id)\
@@ -155,5 +158,5 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                                    'can_comment': hasCommentRight(doc_id),
                                    'browse_own_answers': loggedIn()
                                    },
-                           plugins=PLUGINS,
+                           reqs=reqs,
                            editortab=editortab)
