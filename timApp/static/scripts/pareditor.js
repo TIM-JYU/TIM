@@ -26,8 +26,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 var pluginkeys = Object.keys(reqs);
                 $scope.plugindata = {};
 
+                $scope.pluginButtonList = {};
+
 
                 function getPluginsInOrder() {
+
                     for (var i = 0; i < pluginkeys.length; i++) {
                         var plugin = pluginkeys[i];
                         var data = reqs[pluginkeys[i]];
@@ -35,50 +38,49 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             $scope.plugindata[plugin] = data;
                             var tabs = data.text || [plugin];
                             for (var j = 0; j < tabs.length; j++) {
-                                var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + j + '\')';
-                                var button = $("<button>", {
-                                    class: 'editorButton',
-                                    text: tabs[j],
-                                    title: tabs[j],
-                                    'ng-click': clickfunction
-                                });
-                                $plugintab.append($compile(button)($scope));
+                                var tab = tabs[j];
+                                if (!$scope.pluginButtonList[tab]) $scope.pluginButtonList[tab] = [];
+                                for (var k = 0; k < data.templates[j]; k++) {
+                                    var template = data.templates[j][k];
+                                    var text = (template.text || template.file);
+                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + index + '\'); wrapFn()';
+                                    $scope.pluginButtonList[tab].push($scope.createMenuButton(text, template.expl, clickfn));
+                                }
                             }
                         }
                     }
-                    /*
-                     if (pluginkeys.length === 0) {
-                     return;
-                     }
-                     var plugin = pluginkeys.pop();
 
-                     $.ajax({
-                     cache: false,
-                     dataType: "json",
-                     type: 'GET',
-                     url: '/' + plugin + '/reqs/',
-                     success: function (data, status, headers, config) {
+                    for (var i = 0; i < $scope.pluginButtonList.length; i++) {
+                        var key = $scope.pluginButtonList[i];
+                        var clickfunction = 'pluginClicked($event, \'' + key + '\')';
+                        var button = $("<button>", {
+                            class: 'editorButton',
+                            text: key,
+                            title: key,
+                            'ng-click': clickfunction
+                        });
+                        $plugintab.append($compile(button)($scope));
+                    }
+
+                    /*
+                     for (var i = 0; i < pluginkeys.length; i++) {
+                     var plugin = pluginkeys[i];
+                     var data = reqs[pluginkeys[i]];
                      if (data.templates) {
                      $scope.plugindata[plugin] = data;
                      var tabs = data.text || [plugin];
-                     for (var i = 0; i < tabs.length; i++) {
-                     var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
+                     for (var j = 0; j < tabs.length; j++) {
+                     var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + j + '\')';
                      var button = $("<button>", {
                      class: 'editorButton',
-                     text: tabs[i],
-                     title: tabs[i],
+                     text: tabs[j],
+                     title: tabs[j],
                      'ng-click': clickfunction
                      });
                      $plugintab.append($compile(button)($scope));
                      }
                      }
-                     getPluginsInOrder();
-                     },
-                     error: function () {
-                     console.log("Virhe");
-                     getPluginsInOrder();
-                     }
-                     });*/
+                     }*/
                 }
 
                 window.setTimeout(function () {
@@ -1108,6 +1110,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.createMenu($event, buttons);
                 };
 
+                $scope.pluginClicked = function ($event, key) {
+                    $scope.createMenu($event, $scope.pluginButtonList[key]);
+                };
+
+
+                /*
                 $scope.pluginClicked = function ($event, plugin, index) {
                     var data = $scope.plugindata[plugin].templates[index];
                     var buttons = [];
@@ -1118,7 +1126,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         buttons.push($scope.createMenuButton(text, template.expl, clickfn));
                     }
                     $scope.createMenu($event, buttons);
-                };
+                };*/
 
                 $scope.getTemplate = function (plugin, template, index) {
                     // $scope.editor.setReadOnly(!$scope.editor.getReadOnly());
