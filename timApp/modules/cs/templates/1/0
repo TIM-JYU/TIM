@@ -1,0 +1,9 @@
+Tekstikysymys
+Kysymys johon käyttäjä voi kirjoittaa tekstiä
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: text
+button: Tallenna
+rows: 1 
+placeholder: "Kirjoita nimesi (sukunimi etunimi)"
+stem: "Vastaajan nimi (sukunimi etunimi):"
+```

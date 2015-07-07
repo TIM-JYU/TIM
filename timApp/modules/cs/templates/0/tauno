@@ -1,0 +1,24 @@
+Tauno table
+Tauno with 4 length table
+``` {#PLUGINNAMEHERE plugin="taunoPlugin"}
+type: cs/comtest
+taunotype: ptauno
+open: true
+header: Tässä on Tauno-tehtävä
+footer: "Kun olet ajanut, kokeile vielä Test.  Saatko vihreän palkin?"
+maxrows: 10
+table: 55, 44, 33, 2
+placeholder: Näytä ensin Tauno, tee tehtävä ja kopioi sitten Taunon koodi tähän
+stem: "Tee Taunolla alkioita raahaamalla ohjelma, jolla käännetään 4-paikkainen 
+taulukko t päinvastaiseen järjestykseen.  Lisää tarvittaessa apumuistipaikkoja."
+file: https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Tauno/Kasittele.cs
+replace: "TODO: Kopioi"
+byCode: ""
+replace1: "TODO: TESTIT TAHAN"
+byCode1: |
+ //
+     ///     55, 44, 33, 2   | 2, 33, 44, 55
+     ///     23, 45, 12, 9   | 9, 12, 45, 23
+replace2: "int.* t ="
+byCode2: "        int[] t = { 55, 44, 33, 2 };"
+```

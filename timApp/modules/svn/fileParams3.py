@@ -8,6 +8,7 @@ import urllib
 import pprint
 import codecs
 import bleach
+import os
 
 
 class QueryClass:
@@ -796,5 +797,74 @@ def replace_scripts(s,scripts,placeholder):
         for s1 in scs:
             sc += '<script src="'+s1+'"></script>\n'
     return s.replace(placeholder,sc)    
+    
+    
+def get_templates(dirname: str) -> object:
+    """
+    Find all templates from dirname.  Each template file should include
+    template text - first line
+    template explanation - second line
+    template content - rest of lines
+    :param dirname: the directory name where to find template files
+    :return: list of template items, one item is file: text: explanation
+    """
+    result = []
+    for filename in os.listdir(dirname):
+        f = open(dirname+"/"+filename).readlines()
+        template = {"file": filename, "text": f[0].strip(),"expl": f[1].strip() }
+        result.append(template)
+
+    return result
+
+
+def get_all_templates(dirname: str) -> object:
+    """
+    Find list of all templates from dirname.  Dir should include
+    file tabs.txt where there is one line for every tab needed for TIM editor.
+    Then there should be directories 0, 1, ... for each corresponding
+    tab-line.  So if tehre is two lines in tabs.txt tehre is directories 0 and 1
+    for first and second tab.
+    :param dirname: the directory name where to find template list file and sub directories for templates
+    :return: dict with list of lif to template items (templates) and texts (text)
+    """
+    templates = []
+    texts = []
+    try:
+        texts = open(dirname+"/tabs.txt").read().splitlines();
+        for i in range(0, len(texts)):
+            templates.append(get_templates(dirname+"/"+str(i)))
+    except Exception as e:
+        return {}
+    return {'templates': templates, 'text': texts}
+
+
+def get_template(dirname: str, idx:str, filename: str) -> str:
+    """
+    Returns the template file from line 2 to end of file
+    :param dirname: from directory (be sure this is valid)
+    :param idx: index for the template  (only numbers allowed)
+    :param filename: from file (validity of this is checked)
+    :return: lines starting from line 2.
+    """
+    try:
+        fname = re.sub(r"[^ A-ZÅÄÖa-zåäö_0-9]","",filename)
+        if not fname: fname = "0"
+        tidx = re.sub(r"[^0-9]","",idx)
+        f = open(dirname+"/"+tidx+"/"+fname).readlines()
+    except Exception as e:
+        return str(e)
+    return "".join(f[2:])
+
+    
+def join_dict(a: dict,b: dict):
+    """
+    Joins two dict and returns a new one
+    :param a: first dict to join
+    :param b: next dict to join
+    :return: "a+b"
+    """
+    result = a.copy()
+    result.update(b)
+    return result
     
     

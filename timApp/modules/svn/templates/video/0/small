@@ -1,0 +1,14 @@
+Small video
+Video with small icon
+``` {#PLUGINNAMEHERE plugin="showVideo"}
+type: list
+stem: "Aliohjelmien kutsuminen"
+videoname: Luento 5
+doctext: 6.1 Aliohjelman kutsuminen
+doclink: "http://tim.it.jyu.fi/view/2#java--kielen-alkeita"
+start: 24:25
+end: 24:30
+width: 400
+height: 300
+file: "http://kurssit.it.jyu.fi/TIEP111/2015/luento/luento03a.mp4"
+```

@@ -509,3 +509,34 @@ def get_surrounding_headers(query, inside):
 def get_clean_param(query, key, default):
     s = get_param(query, key, default)
     return clean(s)
+    
+    
+def get_templates(dirname: str) -> object:
+    """
+    Find all templates from dirname.  Each template file shoud include
+    template name - first line
+    template explanation - second l ine
+    template text - rest of lines
+    :param dirname: the directory name where to find templatefiles
+    :return: list of template items, one item is name: text: explanation
+    """
+    result = []
+    for filename in os.listdir(dirname):
+        f = open(dirname+"/"+filename).readlines()
+        template = {"name": filename, "text": f[0].strip(),"expl": f[1].strip() }
+        result.append(template)
+
+    return result
+
+
+def get_template(dirname: str, filename: str) -> str:
+    """
+    Returns the template file from line 2 to end of file
+    :param dirname: from directory
+    :param filename: from file
+    :return: lines starting from line 2.
+    """
+    f = open(dirname+"/"+filename).readlines()
+    return "".join(f[2:])
+    
+    
