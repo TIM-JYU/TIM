@@ -318,17 +318,6 @@ ul ul  ul, ol ol ol {
     top: 0em;
 }
 
-.actionButtons {
-    position: absolute;
-    padding: 1em;
-    margin: 0;
-    z-index: 100;
-    top: -1px;
-    right: -14em;
-    min-height: 100%;
-    background-color: lightgray;
-}
-
 .headerlink {
     position: absolute;
     right: 0;
@@ -346,6 +335,7 @@ ul ul  ul, ol ol ol {
 
 .previewcontent {
     clear: both;
+    overflow-y: auto;
     border: 1px solid rgb(183, 183, 183);
     border-radius: 5px;
     padding-top: 0.0em;
@@ -821,22 +811,22 @@ a.anchor:hover {
 }
 
 .editorContainer {
-	border-radius: 5px;
-    border: 1px solid rgb(183, 183, 183);
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
 
 .editorArea {
-    z-index: 10;
+    overflow: hidden;
+    z-index: 110;
     position: absolute;
     width: 100%;
     left: 0;
     top: 0;
     min-height:6.5em;
-    border-radius: 15px;
-    padding: 0.5em; 
+    padding: 0.5em;
+    border-radius: 5px;
+    background: #e0e0e0;
 }
 
 .editButtonArea {
@@ -1126,11 +1116,18 @@ p.stem {
 		left: 106%;
 		outline: none;
 	}
-	.editorArea {
-		position: relative;
-		top: 0em;
-		left: 0%;
-	}
+
+    .editorArea {
+        position: absolute;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        max-width: 52em;
+    }
+
+    .previewcontent {
+        max-height: 15em;
+    }
 	
 	.addParButton{
 		left: 106%;
@@ -1370,11 +1367,12 @@ img.console {
 
 
 @media only screen and (max-width: 1600px) {
+    /*
 	.editorArea {
 		position: relative;
 		top: 0em;
 		left: 0%;
-	}
+	}*/
 
 	.notes:hover, .speaker:hover {
         margin-left: -60%;
@@ -1570,6 +1568,7 @@ img.console {
 
 /* =============================== Vesan lisäyksiä ==================================*/
 
+/*
 .editorArea {
     z-index: 110;
     position: absolute;
@@ -1577,7 +1576,7 @@ img.console {
     min-height: 6.5em;
     border-radius: 5px;
     background: #e0e0e0;
-}
+}*/
 
 .ace_editor {
     position: relative;
@@ -1604,7 +1603,7 @@ img.console {
     margin-bottom: 5px;
 }
 
-.actionButtons {
+.actionButtons, .menuButtons {
     display: table;
     position: absolute;
     white-space: nowrap;
@@ -1813,4 +1812,34 @@ button:disabled {
  
 p.plgfooter {
   text-align: center;
+}
+
+.addBottomContainer {
+    position: relative;
+    margin-left: 1em;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    padding-top: 19px;
+    color: #777;
+    border-top: 1px solid #e5e5e5;
+    max-width: 52em;
+    text-align: center;
+    padding-bottom: 1em;
+}
+
+#teksti {
+    font-size: 15px;
+    line-height: 15px;
+    font-family: Consolas, Monaco, Courier New, Courier, monospace;
+    height: auto;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid rgb(183, 183, 183);
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+#teksti:focus {
+    outline: none;
 }
