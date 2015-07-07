@@ -29,6 +29,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 function getPluginsInOrder() {
                     for (var i = 0; i < pluginkeys.length; i++) {
+                        var plugin = pluginkeys[i];
                         var data = reqs[pluginkeys[i]];
                         if (data.templates) {
                             $scope.plugindata[plugin] = data;
