@@ -34,12 +34,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         if (data.templates) {
                             $scope.plugindata[plugin] = data;
                             var tabs = data.text || [plugin];
-                            for (var i = 0; i < tabs.length; i++) {
-                                var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + i + '\')';
+                            for (var j = 0; j < tabs.length; j++) {
+                                var clickfunction = 'pluginClicked($event, \'' + plugin + '\',\'' + j + '\')';
                                 var button = $("<button>", {
                                     class: 'editorButton',
-                                    text: tabs[i],
-                                    title: tabs[i],
+                                    text: tabs[j],
+                                    title: tabs[j],
                                     'ng-click': clickfunction
                                 });
                                 $plugintab.append($compile(button)($scope));
