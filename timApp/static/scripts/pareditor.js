@@ -25,7 +25,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 var $plugintab;
                 $scope.pluginButtonList = {};
 
-
                 function getPluginsInOrder() {
                     for (var plugin in reqs) {
                         var data = reqs[plugin];
@@ -79,7 +78,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
-                            var height = parseInt($('pareditor').css('max-height')) - 15;
+                            var height = parseInt($('pareditor').css('max-height')) * 0.98;
                             var $preview = $('.previewcontent');
                             var offset = $($preview).position().top;
                             $($preview).css('max-height', (height - offset) + 'px');
@@ -1238,7 +1237,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 }
 
                 window.setTimeout(function () {
-                        var height = window.innerHeight - 15 + 'px';
+                        var height = window.innerHeight * 0.99 + 'px';
                         $element.css('max-height', height);
                     }, 1000
                 )

@@ -885,11 +885,11 @@ a.anchor:hover {
 }
 
 
-li.tab.active {
+li.tab.active, li.tab.pinned {
     background: #3CC;
 }
 
-li.tab.active a {
+li.tab.active a, li.tab.pinned a {
     color: white;
 }
 
@@ -903,7 +903,6 @@ li.tab.active a {
 }
 
 input[type="file"] {
-    height: 34px;
     margin: 0;
     padding: 0;
     border: none;
