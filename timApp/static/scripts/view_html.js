@@ -58,6 +58,7 @@ timApp.controller("ViewCtrl", [
         sc.rights = rights;
         sc.startIndex = startIndex;
         sc.users = users;
+        sc.group = group;
         sc.teacherMode = teacherMode;
         sc.sidebarState = 'autohidden';
         if (sc.users.length > 0) {

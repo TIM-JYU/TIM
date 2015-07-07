@@ -1,10 +1,8 @@
 """Routes for document view."""
 
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, url_for
 from .common import *
 from .cache import cache
-from containerLink import PLUGINS
-
 import pluginControl
 
 view_page = Blueprint('view_page',
@@ -17,21 +15,19 @@ view_page = Blueprint('view_page',
 def view_document(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
+        return view(doc_name, 'view_html.html', view_range=view_range)
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
 
-    return view(doc_name, 'view_html.html', view_range)
 
 @view_page.route("/teacher/<path:doc_name>")
 def teacher_view(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        userstr = request.args.get('user')
-        user = int(userstr) if userstr is not None and userstr != '' else None
+        usergroup = request.args.get('group')
+        return view(doc_name, 'view_html.html', view_range=view_range, usergroup=usergroup, teacher=True)
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
-
-    return view(doc_name, 'view_html.html', view_range, user, teacher=True)
 
 
 def parse_range(start_index, end_index):
@@ -39,6 +35,7 @@ def parse_range(start_index, end_index):
         return None
 
     return( int(start_index), int(end_index) )
+
 
 def try_return_folder(doc_name):
     timdb = getTimDb()
@@ -63,7 +60,7 @@ def get_document(document_id):
     return getTimDb().documents.getDocumentAsHtmlBlocksSanitized(document_id)
 
 
-def view(doc_name, template_name, view_range=None, user=None, teacher=False):
+def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
 
@@ -100,7 +97,10 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
     user = getCurrentUserId()
     if teacher:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
-        users = timdb.answers.getUsersForTasks(task_ids)
+        user_list = None
+        if usergroup is not None:
+            user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
+        users = timdb.answers.getUsersForTasks(task_ids, user_list)
         if len(users) > 0:
             user = users[0]['id']
     else:
@@ -153,6 +153,7 @@ def view(doc_name, template_name, view_range=None, user=None, teacher=False):
                            start_index=start_index,
                            teacher_mode=teacher,
                            is_owner=hasOwnership(doc_id),
+                           group=usergroup,
                            rights={'editable': hasEditAccess(doc_id),
                                    'can_mark_as_read': hasReadMarkingRight(doc_id),
                                    'can_comment': hasCommentRight(doc_id),

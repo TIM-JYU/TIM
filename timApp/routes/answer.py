@@ -169,7 +169,11 @@ def get_state():
 def get_task_users(task_id):
     doc_id, task_id_name = parse_task_id(task_id)
     verifyOwnership(doc_id)
+    usergroup = request.args.get('group')
     users = getTimDb().answers.get_users_by_taskid(task_id)
+    if usergroup is not None:
+        timdb = getTimDb()
+        users = [user for user in users if timdb.users.isUserIdInGroup(user['id'], usergroup)]
     if hide_names_in_teacher(doc_id):
         for user in users:
             if should_hide_name(doc_id, user['id']):

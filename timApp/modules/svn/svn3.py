@@ -139,10 +139,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print query
 
         show_html = self.path.find('/html') >= 0
+        is_template = self.path.find('/template') >= 0
         is_css = self.path.find('/css') >= 0
         is_js = self.path.find('/js') >= 0
         is_reqs = self.path.find('/reqs') >= 0
         is_video_reqs = self.path.find('/video/reqs') >= 0
+        is_image = self.path.find('/image') >= 0
+        is_video = self.path.find('/video') >= 0
 
         content_type = 'text/plain'
         if is_reqs: content_type = "application/json"
@@ -157,12 +160,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             clear_cache()
             return
 
-        result_json = {"multihtml": True}
-
-        if is_video_reqs:
-            result_json = {"multihtml": True, "js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]}
-
+        tempdir = "svn"
+        if is_image: tempdir = "image"
+        if is_video: tempdir = "video"
+        tempdir = "templates/"+tempdir
+        
+        if is_template:
+            tempfile = get_param(query, "file", "")
+            tidx = get_param(query, "idx", "0")
+            print("tempfile: ",tempfile, tidx)
+            return self.wout(get_template(tempdir, tidx, tempfile)) 
+        
         if is_reqs:
+            result_json = join_dict({"multihtml": True}, get_all_templates(tempdir))
+            if is_video:
+                result_json.update({"js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]})
             result_str = json.dumps(result_json)
             self.wout(result_str)
             return
@@ -202,7 +214,7 @@ def get_html(self, query, show_html):
     # Was none of special, so print the file(s) in query
 
     cla = get_param(query, "class", "")
-    w = get_param(query, "width", "")
+    w = get_param(query, "width", "") 
     if w: w = ' style="width:' + w + '"'
     if cla: cla = " " + cla
 

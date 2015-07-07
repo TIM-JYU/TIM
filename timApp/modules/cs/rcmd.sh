@@ -33,6 +33,7 @@ chmod 755 ~/$cmd
 #cd $PWD # ei tässä kun kaikki eivät kestä muutosta
 ulimit -f 80000 # -t 1 -v 2000 -s 100 -u 10
 source ~/$cmd
+pwd >~/pwd.txt
 rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
 export >~/.state
 #set >>~/.state

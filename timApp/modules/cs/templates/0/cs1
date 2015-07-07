@@ -1,0 +1,19 @@
+c# main
+c# program with only main visible
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: cs
+program: |!!
+public class HelloWorld
+{
+    public static void Main()
+    {
+        // REPLACE
+    }
+}
+!!
+replace: REPLACE
+byCode: |!!
+//
+WRITE THE MAIN C# PROGRAM HERE
+!!
+```
