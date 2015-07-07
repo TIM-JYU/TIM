@@ -50,7 +50,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }
                     }
 
-                    var tabkeys = Object.key($scope.pluginButtonList);
+                    var tabkeys = Object.keys($scope.pluginButtonList);
                     for (var i = 0; i < tabkeys.length; i++) {
                         var key = tabkeys[i];
                         var clickfunction = 'pluginClicked($event, \'' + key + '\')';
