@@ -30,7 +30,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
 
                 function getPluginsInOrder() {
-
                     for (var i = 0; i < pluginkeys.length; i++) {
                         var plugin = pluginkeys[i];
                         var data = reqs[pluginkeys[i]];
@@ -49,9 +48,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             }
                         }
                     }
-                    var tabkeys = Object.keys($scope.pluginButtonList);
-                    for (var i = 0; i < tabkeys.length; i++) {
-                        var key = tabkeys[i];
+
+                    for (key in $scope.pluginButtonList) {
                         var clickfunction = 'pluginClicked($event, \'' + key + '\')';
                         var button = $("<button>", {
                             class: 'editorButton',
