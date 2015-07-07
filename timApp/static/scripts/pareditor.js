@@ -60,7 +60,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     });
                 }
 
-                window.setTimeout(getPluginsInOrder(), 0);
+                window.setTimeout(function () {
+                    $plugintab = $('#pluginButtons');
+                    getPluginsInOrder()
+                }, 0);
 
                 if ((navigator.userAgent.match(/Trident/i))) {
                     $scope.isIE = true;
