@@ -578,3 +578,11 @@ class Users(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""UPDATE User SET prefs = ? WHERE id = ?""", [prefs, user_id])
         self.db.commit()
+
+    def get_users_for_group(self, usergroup_name):
+        return self.resultAsDictionary(
+            self.db.execute("""SELECT User.id, User.name, real_name, email
+                           FROM User
+                           JOIN UserGroupMember ON User.id = UserGroupMember.User_id
+                           JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
+                           WHERE UserGroup.name = ?""", [usergroup_name]))
