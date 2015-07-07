@@ -43,7 +43,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                 for (var k = 0; k < data.templates[j].length; k++) {
                                     var template = data.templates[j][k];
                                     var text = (template.text || template.file);
-                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + index + '\'); wrapFn()';
+                                    var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + j + '\'); wrapFn()';
                                     $scope.pluginButtonList[tab].push($scope.createMenuButton(text, template.expl, clickfn));
                                 }
                             }
