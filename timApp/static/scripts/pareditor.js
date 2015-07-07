@@ -23,18 +23,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             controller: function ($scope) {
                 $scope.editortab = $window.editortab;
                 var $plugintab;
-                var pluginkeys = Object.keys(reqs);
-                $scope.plugindata = {};
-
                 $scope.pluginButtonList = {};
 
 
                 function getPluginsInOrder() {
-                    for (var i = 0; i < pluginkeys.length; i++) {
-                        var plugin = pluginkeys[i];
-                        var data = reqs[pluginkeys[i]];
+                    for (var plugin in reqs) {
+                        var data = reqs[plugin];
                         if (data.templates) {
-                            $scope.plugindata[plugin] = data;
                             var tabs = data.text || [plugin];
                             for (var j = 0; j < tabs.length; j++) {
                                 var tab = tabs[j];
@@ -49,7 +44,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }
                     }
 
-                    for (key in $scope.pluginButtonList) {
+                    for (var key in $scope.pluginButtonList) {
                         var clickfunction = 'pluginClicked($event, \'' + key + '\')';
                         var button = $("<button>", {
                             class: 'editorButton',
