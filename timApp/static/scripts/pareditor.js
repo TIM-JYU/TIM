@@ -50,8 +50,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }
                     }
 
-                    for (var i = 0; i < $scope.pluginButtonList.length; i++) {
-                        var key = $scope.pluginButtonList[i];
+                    var tabkeys = Object.key($scope.pluginButtonList);
+                    for (var i = 0; i < tabkeys.length; i++) {
+                        var key = tabkeys[i];
                         var clickfunction = 'pluginClicked($event, \'' + key + '\')';
                         var button = $("<button>", {
                             class: 'editorButton',
