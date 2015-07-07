@@ -89,7 +89,7 @@
     </div>
 
     <div class="editorContainer">
-        <div ng-if="!options.touchDevice" class="editor" ui-ace="{
+        <div id="ace_editor" ng-if="!options.touchDevice" class="editor" ui-ace="{
   useWrapMode: false,
   onLoad: aceLoaded,
   onChange: aceChanged
@@ -97,6 +97,7 @@
         </div>
     </div>
     <div class="editButtonArea">
+        <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="changeEditor()">Editor</button>
         <button class="timButton" ng-show="fullscreenSupported()" ng-click="goFullScreen()">Fullscreen</button>
         <button class="timButton savePar" title="Save (Ctrl-S)" ng-click="saveClicked()">Save</button>
         <button class="timButton cancelPar" ng-click="cancelClicked()">Cancel</button>
