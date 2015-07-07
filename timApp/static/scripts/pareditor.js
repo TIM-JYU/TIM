@@ -40,7 +40,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             for (var j = 0; j < tabs.length; j++) {
                                 var tab = tabs[j];
                                 if (!$scope.pluginButtonList[tab]) $scope.pluginButtonList[tab] = [];
-                                for (var k = 0; k < data.templates[j]; k++) {
+                                for (var k = 0; k < data.templates[j].length; k++) {
                                     var template = data.templates[j][k];
                                     var text = (template.text || template.file);
                                     var clickfn = 'getTemplate(\'' + plugin + '\',\'' + template.file + '\', \'' + index + '\'); wrapFn()';
