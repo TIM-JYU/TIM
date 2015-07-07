@@ -215,7 +215,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.createTextArea = function (text) {
                     $scope.isAce = false;
                     var $container = ('.editorContainer');
-                    var $textarea = $.parseHTML('<textarea rows="10" ng-model="editorText" ng-change="aceChanged()" ng-trim="false" id="teksti"></textarea>');
+                    var $textarea = $.parseHTML('<textarea rows="10" ng-model="editorText" ng-change="aceChanged()" ng-trim="false" id="teksti" wrap="off"></textarea>');
                     $compile($textarea)($scope);
                     $($container).append($textarea);
                     $scope.editor = $('#teksti');
