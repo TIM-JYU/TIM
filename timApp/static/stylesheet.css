@@ -1457,7 +1457,6 @@ img.console {
 .sideMenu {
 	position: fixed;
     top: 0;
-    bottom: 0;
     left: 0;
 }
 
@@ -1623,7 +1622,6 @@ img.console {
 .menu{
 	position: fixed;
 	top: 0;
-    bottom: 0;
     left: 0;
     z-index: 500;
 	display: inline-block;
@@ -1673,6 +1671,7 @@ img.console {
 }
 
 .questionAdded img {
+    cursor: pointer;
     z-index: 1;
     position: relative;
 }

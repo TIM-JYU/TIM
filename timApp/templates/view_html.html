@@ -110,334 +110,335 @@
 {% endblock %}
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
-    {% include 'breadcrumbs.html' %}
+        {% include 'breadcrumbs.html' %}
 
-    {% if lecture_mode %}
-        <div ng-controller="LectureController">
-            {% include 'lectureinfo_menu.html' %}
-            <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed resizable>
-                <div class="wall-base" id="wallBase">
-                    {# <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
+        {% if lecture_mode %}
+            <div ng-controller="LectureController">
+                {% include 'lectureinfo_menu.html' %}
+                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed resizable>
+                    <div class="wall-base" id="wallBase">
+                        {# <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
                          ng-click="hideWall()">
                         <span ng-bind="wallName">Wall</span>
                         <span ng-show="!showWall && newMessagesAmount > 0" ng-bind="newMessagesAmountText"></span>
                     </div> #}
-                    <div class="wall-message-area">
-                        <textarea id="wallArea" readonly cols="100">{{ "{{msg}}" }}</textarea>
-                    </div>
-                    <div class="wall-footer">
-                        <div class="wall-buttons">
-                            <input id="messagebox" ng-model="newMsg" width="200"
-                                   ng-keypress="chatEnterPressed($event)">
+                        <div class="wall-message-area">
+                            <textarea id="wallArea" readonly cols="100">{{ "{{msg}}" }}</textarea>
                         </div>
-                        <div class="wall-info-buttons">
-                            <label title="Shows name of the sender">
-                                <input type="checkbox" ng-change="showInfo()" ng-model="messageName"/>Name
-                            </label>
-                            <label title="Shows sending time">
-                                <input type="checkbox" ng-change="showInfo()" ng-model="messageTime"/>Time
-                            </label>
+                        <div class="wall-footer">
+                            <div class="wall-buttons">
+                                <input id="messagebox" ng-model="newMsg" width="200"
+                                       ng-keypress="chatEnterPressed($event)">
+                            </div>
+                            <div class="wall-info-buttons">
+                                <label title="Shows name of the sender">
+                                    <input type="checkbox" ng-change="showInfo()" ng-model="messageName"/>Name
+                                </label>
+                                <label title="Shows sending time">
+                                    <input type="checkbox" ng-change="showInfo()" ng-model="messageTime"/>Time
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <pop-up-dialog show="showLectureOptions">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
+                </pop-up-dialog>
+
+                <pop-up-dialog show="showLectureForm">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
+                </pop-up-dialog>
+
+                <pop-up-dialog show="showStudentAnswers">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
+                </pop-up-dialog>
+
+                <pop-up-dialog show="showAnswerWindow">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/answerToQuestion.html') }}'"></ng-include>
+                </pop-up-dialog>
+
+                <pop-up-dialog show="showLectureEnding">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
+                </pop-up-dialog>
+                <pop-up-dialog show="showQuestionPreview">
+                    <ng-include
+                            src="'{{ url_for('static', filename='templates/questionPreview.html') }}'"></ng-include>
+                </pop-up-dialog>
+                <pop-up-dialog show='questionShown'>
+                    <div>
+                        <ng-include src="'../../question'"></ng-include>
+                    </div>
+                </pop-up-dialog>
+
+
+                <!-- TODO: Refactor the way that there is no duplicates -->
+                <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
+                    <div ng-class="['contents']">
+                        <div id="sidebarMenuButton" ng-click="showSidebar()" title="Show menu">
+                            <img ng-click="" class="smallMenuBtn"
+                                 src="{{ url_for('static', filename='images/small-menu-icon.png') }}" width="50"
+                                 height="75" title="Click to open sidebar-menu"/>
+                        </div>
+                        <div class="showSidebar">
+
+                            <div class="sideMenu">
+                                <div class="invisible" ng-show="indexTable.length > 0"></div>
+                                <div ng-class="['index-sidebar', indexSidebarState]">
+                                    <h1>Index</h1>
+                                    {% raw %}
+                                    <ul>
+                                        <li ng-repeat="entry in indexTable"
+                                            ng-class="entry.state"
+                                            ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+                                            <a class="indexentry" ng-class="entry.style" ng-click=""
+                                               href="{{entry.target}}">{{entry.text}}</a>
+                                            <ul ng-show="entry.state == 'exp'">
+                                                <li ng-repeat="subentry in entry.items">
+                                                    <a ng-class="subentry.style" ng-click=""
+                                                       href="{{subentry.target}}">{{subentry.text}}</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                    {% endraw %}
+                                </div>
+
+                                <div class="invisible"></div>
+                                <div ng-class="['lectures-sidebar', lecturesSidebarState]">
+                                    <h1>Lectures</h1>
+                                    {% raw %}
+                                    <ul>
+                                        <h4>Current Lectures</h4>
+                                        <li ng-repeat="lecture in currentLecturesList">
+                                            <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
+                                        </li>
+                                        <p ng-show="currentLecturesList.length == 0">No current lectures</p>
+                                        <h4>Coming Lectures</h4>
+                                        <li ng-repeat="lecture in futureLecturesList">
+                                            <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
+                                        </li>
+                                        <p ng-show="futureLecturesList.length == 0">No coming lectures</p>
+                                        <h4>Past Lectures</h4>
+                                        <li ng-repeat="lecture in pastLecturesList">
+                                            <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
+                                        </li>
+                                        <p ng-show="pastLecturesList.length == 0">No past lectures</p>
+                                    </ul>
+                                    {% endraw %}
+                                </div>
+
+                                <div class="invisible" ng-show="isLecturer"></div>
+                                <div ng-class="['questions-sidebar', questionSidebarState]">
+                                    <h1>Questions</h1>
+                                    {% raw %}
+                                    <ul>
+                                        <h4>Lecture questions</h4>
+                                        <li ng-repeat="question in lectureQuestions">
+                                            <a ng-click="showQuestionById(question.questionId)">{{
+                                                question.questionTitle
+                                                }}</a>
+                                        </li>
+                                        <p ng-show="lectureQuestions.length == 0">No lecture questions</p>
+                                        <h4>Material questions</h4>
+                                        <li ng-repeat="question in materialQuestions">
+                                            <a>{{ question.question }}</a>
+                                        </li>
+                                        <p ng-show="materialQuestions.length == 0">No material questions</p>
+                                    </ul>
+                                    {% endraw %}
+                                </div>
+
+                                <div class="invisible" ng-show="isLecturer && inLecture"></div>
+                                <div ng-class="['people-sidebar', peopleSidebarState]">
+                                    <h1>People</h1>
+
+                                    <h3>People logged-in: <span
+                                            ng-bind="lecturerTable.length + studentTable.length">None</span></h3>
+                                    {% raw %}
+                                    <ul>
+                                        <h4>Lecturer (<span ng-bind="lecturerTable.length">None</span>)</h4>
+                                        <li ng-repeat="lecturer in lecturerTable">
+                                            {{ lecturer.name }} > {{ lecturer.active }}
+                                        </li>
+                                        <p ng-show="lecturerTable.length == 0">No lecturers</p>
+                                        <h4>Students (<span ng-bind="studentTable.length">None</span>)</h4>
+                                        <li ng-repeat="person in studentTable">
+                                            {{ person.name }} > {{ person.active }}
+                                        </li>
+                                        <p ng-show="studentTable.length == 0">No students</p>
+                                    </ul>
+                                    {% endraw %}
+                                </div>
+
+                                <div class="invisible"></div>
+                                <div ng-class="['settings-sidebar', settingsSidebarState]">
+                                    <h1>Settings</h1>
+
+                                    <h3>Customize</h3>
+                                    <a href="/settings">Customize TIM</a>
+                                    {% raw %}
+                                    <ul ng-show="inLecture">
+                                        <h4>Lecture settings</h4>
+                                        <li>
+                                            <label> Show wall
+                                                <input type="checkbox" ng-model="useWall"
+                                                       ng-change="changeUsingWall(useWall)">
+                                            </label>
+                                        </li>
+                                        <li ng-show="!isLecturer">
+                                            <label> Show questions
+                                                <input type="checkbox" ng-model="useQuestions"
+                                                       ng-change="changeUsingQuestions(useQuestions)">
+                                            </label>
+                                        </li>
+                                        <li ng-show="isLecturer">
+                                            <label> Show answers
+                                                <input type="checkbox" ng-model="useAnswers"
+                                                       ng-change="changeUsingAnswers(useAswers)">
+                                            </label>
+                                        </li>
+                                    </ul>
+                                    {% endraw %}
+                                </div>
+                            </div>
+
+                            <div class="menu">
+                                <div id="sideBarIcons">
+                                    <img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]"
+                                         ng-show="indexTable.length > 0"
+                                         src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+                                         height="50" title="Contents"/>
+                                    <img ng-click="toggleLectures()" ng-class="['menu-icon', lectureIconState]"
+                                         src="{{ url_for('static', filename='images/lectures-icon.png') }}" width="50"
+                                         height="50" title="Lectures-menu"/>
+                                    <img ng-show="isLecturer" ng-click="toggleQuestions()"
+                                         ng-class="['menu-icon', questionIconState]"
+                                         src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
+                                         height="50" title="Questions-menu"/>
+                                    <img ng-show="isLecturer && inLecture" ng-click="togglePeople()"
+                                         ng-class="['menu-icon', peopleIconState]"
+                                         src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
+                                         height="50" title="People logged-in"/>
+                                    <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
+                                         src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
+                                         height="50" title="Settings-menu"/>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
-            <pop-up-dialog show="showLectureOptions">
-                <ng-include
-                        src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
-            </pop-up-dialog>
-
-            <pop-up-dialog show="showLectureForm">
-                <ng-include
-                        src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
-            </pop-up-dialog>
-
-            <pop-up-dialog show="showStudentAnswers">
-                <ng-include
-                        src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
-            </pop-up-dialog>
-
-            <pop-up-dialog show="showAnswerWindow">
-                <ng-include
-                        src="'{{ url_for('static', filename='templates/answerToQuestion.html') }}'"></ng-include>
-            </pop-up-dialog>
-
-            <pop-up-dialog show="showLectureEnding">
-                <ng-include
-                        src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
-            </pop-up-dialog>
-            <pop-up-dialog show="showQuestionPreview">
-                <ng-include
-                        src="'{{ url_for('static', filename='templates/questionPreview.html') }}'"></ng-include>
-            </pop-up-dialog>
-            <pop-up-dialog show='questionShown'>
-                <div>
-                    <ng-include src="'../../question'"></ng-include>
-                </div>
-            </pop-up-dialog>
-
-
-            <!-- TODO: Refactor the way that there is no duplicates -->
+        {% endif %}
+        {% if not lecture_mode %}
             <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
                 <div ng-class="['contents']">
-                    <div id="sidebarMenuButton" ng-click="showSidebar()" title="Show menu">
-                        <img ng-click="" class="smallMenuBtn"
-                             src="{{ url_for('static', filename='images/small-menu-icon.png') }}" width="50"
-                             height="75" title="Click to open sidebar-menu"/>
+                    <img id="sidebarMenuButton" ng-click="showSidebar()"
+                         src="{{ url_for('static', filename='images/small-menu-icon.png') }}" title="Show menu"/>
+
+                    <div class="sideMenu">
+                        <div class="invisible" ng-show="indexTable.length > 0"></div>
+                        <div ng-class="['index-sidebar', indexSidebarState]">
+                            <h1>Index</h1>
+                            {% raw %}
+                            <ul>
+                                <li ng-repeat="entry in indexTable"
+                                    ng-class="entry.state"
+                                    ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+                                    <a class="indexentry" ng-class="entry.style" ng-click=""
+                                       href="{{entry.target}}">{{entry.text}}</a>
+                                    <ul ng-show="entry.state == 'exp'">
+                                        <li ng-repeat="subentry in entry.items">
+                                            <a ng-class="subentry.style" ng-click=""
+                                               href="{{subentry.target}}">{{subentry.text}}</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            {% endraw %}
+                        </div>
+                        <div class="invisible"></div>
+                        <div ng-class="['settings-sidebar', settingsSidebarState]">
+                            <h1>Settings</h1>
+
+                            <h3>Customize</h3>
+                            <a href="/settings">Customize TIM</a>
+                        </div>
                     </div>
-                    <div class="showSidebar">
+                    <div class="menu">
+                        <img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]"
+                             ng-show="indexTable.length > 0"
+                             src="{{ url_for('static', filename='images/contents.png') }}" width="50"
+                             height="50" title="Contents"/>
+                        <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
+                             src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
+                             height="50" title="Settings-menu"/>
 
-                        <div class="sideMenu">
-                            <div class="invisible" ng-show="indexTable.length > 0"></div>
-                            <div ng-class="['index-sidebar', indexSidebarState]">
-                                <h1>Index</h1>
-                                {% raw %}
-                                <ul>
-                                    <li ng-repeat="entry in indexTable"
-                                        ng-class="entry.state"
-                                        ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                                        <a class="indexentry" ng-class="entry.style" ng-click=""
-                                           href="{{entry.target}}">{{entry.text}}</a>
-                                        <ul ng-show="entry.state == 'exp'">
-                                            <li ng-repeat="subentry in entry.items">
-                                                <a ng-class="subentry.style" ng-click=""
-                                                   href="{{subentry.target}}">{{subentry.text}}</a>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                                {% endraw %}
-                            </div>
-
-                            <div class="invisible"></div>
-                            <div ng-class="['lectures-sidebar', lecturesSidebarState]">
-                                <h1>Lectures</h1>
-                                {% raw %}
-                                <ul>
-                                    <h4>Current Lectures</h4>
-                                    <li ng-repeat="lecture in currentLecturesList">
-                                        <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
-                                    </li>
-                                    <p ng-show="currentLecturesList.length == 0">No current lectures</p>
-                                    <h4>Coming Lectures</h4>
-                                    <li ng-repeat="lecture in futureLecturesList">
-                                        <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
-                                    </li>
-                                    <p ng-show="futureLecturesList.length == 0">No coming lectures</p>
-                                    <h4>Past Lectures</h4>
-                                    <li ng-repeat="lecture in pastLecturesList">
-                                        <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
-                                    </li>
-                                    <p ng-show="pastLecturesList.length == 0">No past lectures</p>
-                                </ul>
-                                {% endraw %}
-                            </div>
-
-                            <div class="invisible" ng-show="isLecturer"></div>
-                            <div ng-class="['questions-sidebar', questionSidebarState]">
-                                <h1>Questions</h1>
-                                {% raw %}
-                                <ul>
-                                    <h4>Lecture questions</h4>
-                                    <li ng-repeat="question in lectureQuestions">
-                                        <a ng-click="showQuestionById(question.questionId)">{{ question.questionTitle
-                                            }}</a>
-                                    </li>
-                                    <p ng-show="lectureQuestions.length == 0">No lecture questions</p>
-                                    <h4>Material questions</h4>
-                                    <li ng-repeat="question in materialQuestions">
-                                        <a>{{ question.question }}</a>
-                                    </li>
-                                    <p ng-show="materialQuestions.length == 0">No material questions</p>
-                                </ul>
-                                {% endraw %}
-                            </div>
-
-                            <div class="invisible" ng-show="isLecturer && inLecture"></div>
-                            <div ng-class="['people-sidebar', peopleSidebarState]">
-                                <h1>People</h1>
-
-                                <h3>People logged-in: <span
-                                        ng-bind="lecturerTable.length + studentTable.length">None</span></h3>
-                                {% raw %}
-                                <ul>
-                                    <h4>Lecturer (<span ng-bind="lecturerTable.length">None</span>)</h4>
-                                    <li ng-repeat="lecturer in lecturerTable">
-                                        {{ lecturer.name }} > {{ lecturer.active }}
-                                    </li>
-                                    <p ng-show="lecturerTable.length == 0">No lecturers</p>
-                                    <h4>Students (<span ng-bind="studentTable.length">None</span>)</h4>
-                                    <li ng-repeat="person in studentTable">
-                                        {{ person.name }} > {{ person.active }}
-                                    </li>
-                                    <p ng-show="studentTable.length == 0">No students</p>
-                                </ul>
-                                {% endraw %}
-                            </div>
-
-                            <div class="invisible"></div>
-                            <div ng-class="['settings-sidebar', settingsSidebarState]">
-                                <h1>Settings</h1>
-
-                                <h3>Customize</h3>
-                                <a href="/settings">Customize TIM</a>
-                                {% raw %}
-                                <ul ng-show="inLecture">
-                                    <h4>Lecture settings</h4>
-                                    <li>
-                                        <label> Show wall
-                                            <input type="checkbox" ng-model="useWall"
-                                                   ng-change="changeUsingWall(useWall)">
-                                        </label>
-                                    </li>
-                                    <li ng-show="!isLecturer">
-                                        <label> Show questions
-                                            <input type="checkbox" ng-model="useQuestions"
-                                                   ng-change="changeUsingQuestions(useQuestions)">
-                                        </label>
-                                    </li>
-                                    <li ng-show="isLecturer">
-                                        <label> Show answers
-                                            <input type="checkbox" ng-model="useAnswers"
-                                                   ng-change="changeUsingAnswers(useAswers)">
-                                        </label>
-                                    </li>
-                                </ul>
-                                {% endraw %}
-                            </div>
-                        </div>
-
-                        <div class="menu">
-                            <div id="sideBarIcons">
-                                <img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]"
-                                     ng-show="indexTable.length > 0"
-                                     src="{{ url_for('static', filename='images/contents.png') }}" width="50"
-                                     height="50" title="Contents"/>
-                                <img ng-click="toggleLectures()" ng-class="['menu-icon', lectureIconState]"
-                                     src="{{ url_for('static', filename='images/lectures-icon.png') }}" width="50"
-                                     height="50" title="Lectures-menu"/>
-                                <img ng-show="isLecturer" ng-click="toggleQuestions()"
-                                     ng-class="['menu-icon', questionIconState]"
-                                     src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
-                                     height="50" title="Questions-menu"/>
-                                <img ng-show="isLecturer && inLecture" ng-click="togglePeople()"
-                                     ng-class="['menu-icon', peopleIconState]"
-                                     src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
-                                     height="50" title="People logged-in"/>
-                                <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
-                                     src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
-                                     height="50" title="Settings-menu"/>
-                            </div>
-                        </div>
 
                     </div>
+
+
                 </div>
             </div>
-        </div>
-    {% endif %}
-    {% if not lecture_mode %}
-        <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
-            <div ng-class="['contents']">
-                <img id="sidebarMenuButton" ng-click="showSidebar()"
-                     src="{{ url_for('static', filename='images/small-menu-icon.png') }}" title="Show menu"/>
 
-                <div class="sideMenu">
-                    <div class="invisible" ng-show="indexTable.length > 0"></div>
-                    <div ng-class="['index-sidebar', indexSidebarState]">
-                        <h1>Index</h1>
-                        {% raw %}
-                        <ul>
-                            <li ng-repeat="entry in indexTable"
-                                ng-class="entry.state"
-                                ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                                <a class="indexentry" ng-class="entry.style" ng-click=""
-                                   href="{{entry.target}}">{{entry.text}}</a>
-                                <ul ng-show="entry.state == 'exp'">
-                                    <li ng-repeat="subentry in entry.items">
-                                        <a ng-class="subentry.style" ng-click=""
-                                           href="{{subentry.target}}">{{subentry.text}}</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                        {% endraw %}
-                    </div>
-                    <div class="invisible"></div>
-                    <div ng-class="['settings-sidebar', settingsSidebarState]">
-                        <h1>Settings</h1>
-
-                        <h3>Customize</h3>
-                        <a href="/settings">Customize TIM</a>
-                    </div>
-                </div>
-                <div class="menu">
-                    <img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]"
-                         ng-show="indexTable.length > 0"
-                         src="{{ url_for('static', filename='images/contents.png') }}" width="50"
-                         height="50" title="Contents"/>
-                    <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
-                         src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
-                         height="50" title="Settings-menu"/>
-
-
-                </div>
-
-
-            </div>
-        </div>
-
-    {% endif %}
-    {% if teacher_mode %}
-        <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed>
-            {% if plugin_users %}
-                Users with answers ({{ plugin_users|length }}):<br>
-                {% raw %}
-                <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected"
-                       export-csv="csv">
-                    <tr ng-repeat="user in $data"
-                        ng-click="user.$selected = !user.$selected; changeUser(user)"
-                        ng-class="{'active': user.$selected}">
-                        <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
-                            {{user.real_name}}
-                        </td>
-                        <td data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
-                            {{user.name}}
-                        </td>
-                        <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
-                            {{user.task_count}}
-                        </td>
-                        <td data-title="'Total points'" sortable="'total_points'"
-                            filter="{ 'total_points': 'text' }">
-                            {{user.total_points}}
-                        </td>
-                    </tr>
-                </table>
-                <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ docId }}.csv">Export
-                    to CSV</a>
-                {% endraw %}
-            {% else %}
-                No answerers.
-            {% endif %}
-        </div>
-    {% endif %}
-    <div id="pars">
-    {% for t in text %}
-        {% if 'task_id' in t %}
-                <div class="par">
-        <answerbrowser task-id="{{ t['task_id'] }}"></answerbrowser>
-        <div class="parContent">
-            {{ t['html']|safe }}
-        </div>
-        </div>
-        {% else %}
-                <div class="par" ng-non-bindable>
-        <div class="parContent">
-            {{ t['html']|safe }}
-        </div>
-        </div>
         {% endif %}
-    {% endfor %}
-</div>
-</div>
+        {% if teacher_mode %}
+            <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed>
+                {% if plugin_users %}
+                    Users with answers ({{ plugin_users|length }}):<br>
+                    {% raw %}
+                    <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected"
+                           export-csv="csv">
+                        <tr ng-repeat="user in $data"
+                            ng-click="user.$selected = !user.$selected; changeUser(user)"
+                            ng-class="{'active': user.$selected}">
+                            <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
+                                {{user.real_name}}
+                            </td>
+                            <td data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
+                                {{user.name}}
+                            </td>
+                            <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
+                                {{user.task_count}}
+                            </td>
+                            <td data-title="'Total points'" sortable="'total_points'"
+                                filter="{ 'total_points': 'text' }">
+                                {{user.total_points}}
+                            </td>
+                        </tr>
+                    </table>
+                    <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ docId }}.csv">Export
+                        to CSV</a>
+                    {% endraw %}
+                {% else %}
+                    No answerers.
+                {% endif %}
+            </div>
+        {% endif %}
+        <div id="pars">
+            {% for t in text %}
+                {% if 'task_id' in t %}
+                    <div class="par">
+                        <answerbrowser task-id="{{ t['task_id'] }}"></answerbrowser>
+                        <div class="parContent">
+                            {{ t['html']|safe }}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="par" ng-non-bindable>
+                        <div class="parContent">
+                            {{ t['html']|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
     <p id="test"></p>
 
 {% endblock %}
