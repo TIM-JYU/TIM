@@ -9,12 +9,14 @@ class DocParagraph:
     def __init__(
             self,
             md: 'str' = '',
-            par_id: 'str|None' = None,
-            t: 'str|None' = None,
-            attrs: 'dict' = {},
-            src_dict: 'dict|None' = None,
-            files_root: 'str|None' = None):
+                 par_id: 'str|None'=None,
+                 t: 'str|None'=None,
+                 attrs: 'dict|None'=None,
+                 src_dict: 'dict|None'=None,
+                 files_root: 'str|None'=None):
 
+        if not attrs:
+            attrs = {}
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         if src_dict:
             # Create from JSON

@@ -173,13 +173,15 @@ class Document:
         return DocParagraph.get_latest(par_id, self.files_root)
 
     @contract
-    def add_paragraph(self, text: 'str', attrs: 'dict' = {}) -> 'DocParagraph':
+    def add_paragraph(self, text: 'str', attrs: 'dict|None'=None) -> 'DocParagraph':
         """
         Appends a new paragraph into the document.
         :param attrs: The attributes for the paragraph.
         :param text: New paragraph text.
         :return: The new paragraph object.
         """
+        if not attrs:
+            attrs = {}
         p = DocParagraph(md=text, files_root=self.files_root, attrs=attrs)
         p.get_html()
         p.add_link(self.doc_id)
