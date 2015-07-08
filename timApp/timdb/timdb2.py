@@ -11,7 +11,11 @@ from timdb.files import Files
 from timdb.documents import Documents
 from timdb.answers import Answers
 from timdb.readings import Readings
+from timdb.questions import Questions
+from timdb.messages import Messages
+from timdb.lectures import Lectures
 from timdb.folders import Folders
+from timdb.lectureanswers import LectureAnswers
 import os
 
 
@@ -22,7 +26,11 @@ TABLE_NAMES = ['BlockEditAccess',
                'BlockRelation',
                'Block',
                'User',
-               'UserGroup']
+               'UserGroup',
+               'Question',
+               'Messages',
+               'Lectures',
+               'LectureAnswers']
 
 
 class TimDb(object):
@@ -53,7 +61,11 @@ class TimDb(object):
         self.files = Files(self.db, files_root_path, 'files', current_user_name)
         self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
         self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
+        self.questions = Questions(self.db, files_root_path, 'questions', current_user_name)
+        self.messages = Messages(self.db, files_root_path, 'messages', current_user_name)
+        self.lectures = Lectures(self.db, files_root_path, 'lectures', current_user_name)
         self.folders = Folders(self.db, files_root_path, 'folders', current_user_name)
+        self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name)
 
     def clear(self):
         """Clears the contents of all database tables."""

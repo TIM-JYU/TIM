@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Info{% endblock %}
+{% block head %}
+    {{ super() }}
+
+    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
+    <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
+
+    <script>
+
+        var modules = checkModules([
+            {% for dep in jsMods %}
+                "{{ dep|safe}}",
+            {% endfor %}
+        ]);
+
+    </script>
+
+    <script src="{{ url_for('static', filename='scripts/Chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/directives/showChartDirective.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lectureInfo.css') }}">
+
+    <script>
+        var docId = {{docId|tojson|safe}};
+        var lectureId = {{lectureId|tojson|safe}};
+        var lectureCode = {{lectureCode|tojson|safe}};
+        var lectureStartTime = {{lectureStartTime|tojson|safe}};
+        var lectureEndTime = {{lectureEndTime|tojson|safe}};
+    </script>
+
+{% endblock %}
+{% block content %}
+    <div ng-app="timApp" ng-controller="LectureInfoController">
+        <h1 ng-bind="lectureCode"></h1>
+
+        <h3>Lecture info</h3>
+
+        <div>
+            <strong>Start time:</strong>
+
+            <p ng-bind="lectureStartTime"></p>
+
+            <strong>End time:</strong>
+
+            <p ng-bind="lectureEndTime"></p>
+
+            <div ng-show="isLecturer">
+                <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
+                <strong>Questions asked:</strong>
+                <ul>
+                    <li ng-repeat="question in questions" ng-bind-html="question.question_title">
+                        {{ "{{ question.question_title }}" }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Lecture wall</h3>
+        <label>
+            <textarea data-ng-model="msg" readonly id="lectureInfoWall"></textarea>
+        </label>
+
+        <div>
+            <h3>Find answers <span ng-show="!isLecturer" ng-bind="userName"></span></h3>
+            <label ng-show="isLecturer">UserName
+                <select ng-model="userName" ng-options="user for user in answerers">
+                </select>
+            </label>
+
+            <input type="button" ng-click="drawCharts(userName)" value="Show answers">
+            <input ng-show="isLecturer" type="button" ng-click="drawCharts()" value="Show all">
+
+            <div>
+                <div ng-repeat="question in questions" style="margin-bottom: 2em">
+                    <p class="bold" ng-show="showPoints" ng-bind-html="question.question_title">{{ "{{question.question_title}}" }}</p>
+                    <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
+                                          control='dynamicAnswerShowControls[$index]'
+                                          class="chart"></show-chart-directive>
+                    <canvas id='answerChart{{ "{{question.question_id }}" }}' width='400' height='300'></canvas>
+                    <p ng-show="showPoints">Points: <span ng-bind="points[$index]"> </span></p>
+                </div>
+            </div>
+
+            <div id="answersDiv">
+                <p id="infoBox"></p>
+            </div>
+        </div>
+        <div style="margin-top: 10em" ng-show="isLecturer">
+            <h3>Delete lecture</h3>
+            <input type="button" ng-click="deleteLecture()" value="Delete lecture">
+        </div>
+    </div>
+{% endblock %}
+

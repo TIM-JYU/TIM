@@ -1,0 +1,121 @@
+<div id="matrix" class="matrix">
+    <div id="check" ng-if="question.type == 'matrix'">
+        <label>Answer type:</label>
+        <select name="answerType" ng-model="question.matrixType" ng-dropdown
+                ng-options="item.value as item.label for item in answerFieldTypes ">
+            <option value="" disabled selected> -- select answer type --</option>
+
+        </select>
+    </div>
+    <div class="questionTable">
+        <table id="question-table">
+            <thead>
+            <!----Top "hidden row" with + and - buttons  ---->
+            <tr class="invisibleRow" ng-if="question.type == 'matrix'">
+                <th style="border: none; background-color: inherit">
+                <th style="border: none; background-color: inherit"></th>
+                <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit">
+                    <div style="top:30px; position:relative;">
+                        <button ng-click="addCol($index)" style="float:left; margin-left: -20px;">+</button>
+                        <button class="negative" ng-click="delCol($index)" style="float:right; margin-right: 40px;">-</button>
+                    </div>
+                </th>
+            </tr>
+
+            <!--- ends--->
+            <tr ng-show="question.type == 'matrix' || question.type == 'true-false'">
+                <th style="border-left: none; border-top: none; border-bottom: none; background-color:inherit;">
+                </th>
+                <th>
+                </th>
+
+                <th ng-show="question.type == 'true-false'" class="true-false-title">True</th>
+                <th ng-show="question.type == 'true-false'" class="true-false-title">False</th>
+
+                <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'" id="row-heading">
+                    <div class="cart">
+                        <textarea class="rowHeading" form="question-form" rows="1" cols="20"
+                                  ng-model="columnHeaders[$index].text"></textarea>
+                        <br/>
+                    </div>
+                </th>
+                <th ng-if="question.type == 'matrix'">
+                    <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
+                </th>
+
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="row in rows">
+                <th id="buttons">
+                    <div style="left:18px; position:relative;">
+                        <button ng-click="addRow($index)" style="float:right; margin-top:-42px;">+</button>
+                        <button ng-click="delRow($index)" class="negative" style="float:right">-</button>
+                    </div>
+                </th>
+                <th id="row-heading">
+                        <textarea class="rowHeading" ng-model="row.text" form="question-form" rows="1"
+                                  cols="20"></textarea>
+                </th>
+                <td ng-repeat="column in row.columns" class="answer-columns">
+                    <!-- Horizontal radio-button-->
+                    <div ng-if="(question.matrixType == 'radiobutton-horizontal' && question.type=='matrix') || question.type == 'true-false'">
+                        <!-- ng-model="row.id" -->
+                        <div><input type="radio"
+                               ng-value="column.id"
+                               placeholder=""
+                               disabled/></div>
+                        <div><input type="text"
+                               size="1"
+                               placeholder="pts"
+                               ng-model="column.points" /></div>
+                    </div>
+                    <!-- Vertical radio-button -->
+                    <div ng-if="question.type != 'true-false'">
+                        <div ng-if="(question.matrixType == 'radiobutton-vertical' && question.type=='matrix') || question.type == 'radio-vertical'">
+                            <div><input type="radio"
+                                   name="column.rowId"
+                                   ng-value="column.id"
+                                   placeholder=""
+                                    disabled/></div>
+                            <div><input type="text"
+                                   size="1"
+                                   placeholder="pts"
+                                   ng-model="column.points"/></div>
+                        </div>
+                        <!-- Text area-->
+                        <div ng-if="question.type != 'radio-button'">
+                            <textarea ng-if="question.matrixType == 'textArea' && question.type=='matrix'"
+                                      type="text"
+                                      placeholder=""
+                                      id="matrix-textarea"
+                                    disabled></textarea>
+                            <!-- Checkbox-->
+                            <div ng-if="(question.matrixType == 'checkbox' && question.type=='matrix') || question.type=='checkbox-vertical'">
+                                <div><input type="checkbox"
+                                       ng-model="row.id"
+                                        disabled/></div>
+                                <div><input type="text"
+                                       size="1"
+                                       placeholder="pts"
+                                       ng-model="column.points"/></div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionJson at view_html.js and then displaying them at directives/dynamicanswersheet.js -->
+            </tr>
+            <tr>
+                <td id="emptyBlock"></td>
+                <th>
+                    <div>
+                        <button id="addRow" ng-click="addRow(-1)">+</button>
+                    </div>
+                </th>
+            </tr>
+
+
+            </tbody>
+        </table>
+    </div>
+</div>

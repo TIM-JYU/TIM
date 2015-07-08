@@ -29,6 +29,16 @@ def teacher_view(doc_name):
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
 
+@view_page.route("/lecture/<path:doc_name>")
+def lecture_view(doc_name):
+    try:
+        view_range = parse_range(request.args.get('b'), request.args.get('e'))
+        userstr = request.args.get('user')
+        user = int(userstr) if userstr is not None and userstr != '' else None
+    except (ValueError, TypeError):
+        abort(400, "Invalid start or end index specified.")
+
+    return view(doc_name, 'view_html.html', view_range, user, lecture=True)
 
 def parse_range(start_index, end_index):
     if start_index is None and end_index is None:
@@ -60,7 +70,7 @@ def get_document(document_id):
     return getTimDb().documents.getDocumentAsHtmlBlocksSanitized(document_id)
 
 
-def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False):
+def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False):
     timdb = getTimDb()
     doc_id = timdb.documents.getDocumentId(doc_name)
 
@@ -69,11 +79,11 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         try:
             doc_id = int(doc_name)
             if not timdb.documents.documentExists(doc_id):
-                #abort(404)
+                # abort(404)
                 return try_return_folder(doc_name)
         except ValueError:
             return try_return_folder(doc_name)
-            #abort(404)
+            # abort(404)
 
     if teacher:
         verifyOwnership(doc_id)
@@ -139,6 +149,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     except KeyError:
         editortab = None
     return render_template(template_name,
+                           doc=doc,
                            docID=doc['id'],
                            docName=doc['name'],
                            text=texts,
@@ -152,6 +163,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                            custom_css=custom_css,
                            start_index=start_index,
                            teacher_mode=teacher,
+                           lecture_mode=lecture,
                            is_owner=hasOwnership(doc_id),
                            group=usergroup,
                            rights={'editable': hasEditAccess(doc_id),

@@ -1,0 +1,274 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 50px auto;
+    background: white;
+    padding: 0;
+    margin: 0;
+}
+
+th {
+    background: steelblue;
+    height: 54px;
+    width: 25%;
+    color: #000000;
+    border: 1px solid #38678f;
+    transition: all 0.2s;
+}
+
+tr {
+}
+
+td {
+    border-right: 1px solid #cccccc;
+    padding: 10px;
+    transition: all 0.2s;
+}
+
+td.selected {
+    background: #d7e4ef;
+}
+
+.questions {
+    display: inline-flex;
+    float: left;
+    margin-left: 2em;
+    position: absolute;
+}
+
+.wall-behind {
+    border: 1px solid grey;
+    border-radius: 10px;
+    width: 20em;
+    z-index: 6;
+    position: fixed;
+    top: 5%;
+    right: 5%;
+    border-style: outset;
+    min-width: 20em;
+    min-height: 28px;
+    background-color: white;
+}
+
+.noBullets {
+    list-style-type: none;
+}
+
+.wall-behind div {
+    display: inline-block;
+}
+
+.wall-base {
+    width: 100%;
+    height: 100%;
+}
+
+.wall-topbar {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border: 1px solid #3cc;
+    border-radius: 10px;
+    background-color: #3cc;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    height: 1.75em;
+}
+
+.wall-content {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+    /*position: absolute;*/
+}
+
+.wall-message-area {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+
+    /*padding-bottom: 2.5em;*/
+}
+
+.wall-behind textarea {
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box; /* Firefox, other Gecko */
+    box-sizing: border-box;
+    border: none;
+    width: 100%;
+    height: 80%;
+    resize: none;
+    font-family: "Arial", Verdana, "Arial", Verdana, sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.wall-behind input {
+    margin: 3px;
+}
+
+#messagebox {
+    width: 95%;
+    margin: 10px;
+}
+
+.wall-footer {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid #3cc;
+    background-color: #3cc;
+    width: 100%;
+}
+.wall-buttons {
+    /*position: absolute;*/
+    width: 80%;
+    float:left
+
+}
+
+.wall-info-buttons {
+    width: 20%;
+    font-size: 12px;
+}
+
+.wall-info-buttons label {
+    display: inline-block;
+    text-align: left;
+    vertical-align: 0;
+    width: 100%;
+    min-width: 100%;
+}
+
+#detachButton {
+    float: right;
+    text-align: right;
+    background: url("../images/detach.png") no-repeat;
+
+}
+
+@media (min-width: 768px) {
+    .modal-dialog {
+        width: 600px;
+        margin: 30px auto
+    }
+
+    .modal-content {
+        -webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, .5);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, .5)
+    }
+
+    .modal-sm {
+        width: 300px
+    }
+}
+
+@media (min-width: 992px) {
+    .modal-lg {
+        width: 900px
+    }
+}
+
+.questionAskedWindow {
+    z-index: 10;
+    background-color: snow;
+    width: auto;
+    height: auto;
+    min-width: 300px;
+}
+
+.questionAskedWindow h1 {
+    margin-top: 0;
+}
+
+.answerSheet {
+    min-width: 10em;
+    max-width: 100%;
+}
+
+.answerSheet table {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    font-size: large;
+}
+
+.answerSheet label {
+    width: 100%;
+    height: 100%;
+}
+
+.answerSheet h2 {
+    text-align: center;
+}
+
+#progressLabel {
+    text-align: center;
+}
+
+.answerSheet td,
+.answerSheet tr {
+    border: none;
+    text-align: left;
+}
+
+.answerSheet th {
+    background-color: #3cc;
+    border: none;
+}
+
+.show-answer h2 {
+    margin-top: 0;
+    text-align: center;
+}
+
+.chart {
+    width: 100%;
+    height: 100%;
+    overflow: scroll
+}
+
+.lectureEnding {
+    width: 400px;
+    height: 100px;
+}
+
+.lectureEnding h3 {
+    width: 100%;
+    margin-top: 1em;
+    text-align: center;
+}
+
+.lectureEnding button {
+    margin-top: 1em;
+    width: 75px;
+}
+
+.errorBorder {
+    border: 1px solid red;
+}
+
+.lectureOptions {
+    display: block;
+    min-width: 150px;
+}
+
+/* Special style for mobile devices with width less than 500 px*/
+@media only screen and (max-device-width: 500px) {
+    .answerSheet table {
+        font-size: small;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .answerSheet h2 {
+        font-size: large;
+        margin-top: 0.5em;
+        margin-bottom: 1em;
+    }
+}

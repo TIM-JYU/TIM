@@ -1,4 +1,4 @@
-var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, crumbs;
+var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, crumbs, lectureMode;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
@@ -35,8 +35,6 @@ var timApp = angular.module('timApp', [
             return service;
         }
     ];
-
-    $httpProvider.interceptors.push(interceptor);
 }]);
 
 timApp.controller("ViewCtrl", [
@@ -48,7 +46,8 @@ timApp.controller("ViewCtrl", [
     '$compile',
     '$window',
     '$document',
-    function (sc, http, q, $upload, $injector, $compile, $window, $document) {
+    '$rootScope',
+    function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope) {
         "use strict";
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
@@ -72,6 +71,10 @@ timApp.controller("ViewCtrl", [
         var NOTE_EDITOR_CLASS = "editorArea";
         var DEFAULT_CHECKBOX_CLASS = "defaultCheckbox";
         var ACTION_BUTTON_ROW_CLASS = "actionButtonRow";
+        sc.lectureMode = lectureMode;
+        sc.questionShown = false;
+        sc.firstTimeQuestions = true;
+        var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
         var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
         var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
         var EDITOR_CLASS = "editorArea";
@@ -80,6 +83,8 @@ timApp.controller("ViewCtrl", [
         var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
         var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
+        var QUESTION_ADD_BUTTON_CLASS = "timButton addQuestion";
+        var QUESTION_ADD_BUTTON = "." + QUESTION_ADD_BUTTON_CLASS.replace(" ", ".");
         var PAR_CLOSE_BUTTON_CLASS = "timButton menuClose";
         var PAR_CLOSE_BUTTON = "." + PAR_CLOSE_BUTTON_CLASS.replace(" ", ".");
 
@@ -93,7 +98,7 @@ timApp.controller("ViewCtrl", [
                     sc.defaults[i] = false;
                 }
             }
-            ;
+
             if (selected) {
                 sc.defaultAction = sc.editorFunctions[index];
             } else {
@@ -120,20 +125,6 @@ timApp.controller("ViewCtrl", [
             katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
         };
 
-        sc.toggleSidebar = function () {
-            var visible = angular.element('.sidebar').is(":visible");
-            if (visible) {
-                sc.sidebarState = 'hidden';
-            } else {
-                sc.sidebarState = 'open';
-            }
-        };
-
-        sc.autoHideSidebar = function () {
-            if (sc.sidebarState === 'open') {
-                sc.sidebarState = 'autohidden';
-            }
-        };
 
         sc.changeUser = function (user) {
             sc.$broadcast('userChanged', {user: user});
@@ -209,6 +200,48 @@ timApp.controller("ViewCtrl", [
             }
         };
 
+        sc.showQuestionById = function (questionId) {
+            var question = $("#" + questionId);
+            sc.showQuestion(question);
+
+        };
+
+        sc.showQuestion = function (question) {
+            sc.json = "No data";
+            sc.qId = question[0].getAttribute('id');
+
+            http({
+                url: '/getQuestionById',
+                method: 'GET',
+                params: {'question_id': sc.qId, 'buster': new Date().getTime()}
+            })
+                .success(function (data) {
+                    sc.json = JSON.parse(data.questionJson);
+
+                })
+
+                .error(function () {
+                    $window.console.log("There was some error creating question to database.");
+                });
+
+
+            sc.lectureId = -1;
+            sc.inLecture = false;
+
+            sc.$on('postLectureId', function (event, response) {
+                sc.lectureId = response;
+            });
+
+            sc.$on('postInLecture', function (event, response) {
+                sc.inLecture = response;
+            });
+
+            $rootScope.$broadcast('getLectureId');
+            $rootScope.$broadcast('getInLecture');
+            sc.showQuestionPreview = true;
+            sc.$digest();
+        };
+
         sc.toggleNoteEditor = function ($par, options) {
             if (!sc.rights.can_comment) {
                 return;
@@ -232,6 +265,7 @@ timApp.controller("ViewCtrl", [
                     return;
                 }
             }
+
             var par_id = sc.getParIndex($par),
                 attrs = {
                     "save-url": url,
@@ -317,7 +351,7 @@ timApp.controller("ViewCtrl", [
             });
         };
 
-        sc.showEditWindow = function (e, $par, coords) {
+        sc.showEditWindow = function (e, $par) {
             sc.toggleParEditor($par, {showDelete: true});
         };
 
@@ -325,7 +359,7 @@ timApp.controller("ViewCtrl", [
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
-            sc.showEditWindow(e, $par, null)
+            sc.showEditWindow(e, $par, null);
             return true;
         });
 
@@ -367,6 +401,25 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
+        // Event handler for "Add question below"
+        // Opens pop-up window to create question.
+        sc.onClick(QUESTION_ADD_BUTTON, function ($this, e) {
+            var $par = $(e.target).parent().parent().parent();
+            sc.toggleQuestion();
+            sc.toggleActionButtons(e, $par, false, false, null);
+            sc.par = $par;
+            sc.$apply();
+        });
+
+        // Shows question window
+        sc.toggleQuestion = function () {
+            sc.questionShown = !sc.questionShown;
+        };
+
+        $.fn.slideFadeToggle = function (easing, callback) {
+            return this.animate({opacity: 'toggle', height: 'toggle'}, 'fast', easing, callback);
+        };
+
         sc.onClick("#defaultPrepend", function ($this, e) {
             var $par = $(e.target).parent().parent().parent();
             sc.toggleActionButtons(e, $par, false, false, null);
@@ -381,7 +434,7 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.doNothing = function (e, $par, coords) {
+        sc.doNothing = function (e, $par) {
             sc.toggleActionButtons(e, $par, false, false, null);
         };
 
@@ -468,7 +521,7 @@ timApp.controller("ViewCtrl", [
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
-                }).error(function (data, status, headers, config) {
+                }).error(function () {
                     $window.alert('Could not save the read marking.');
                     $this.attr("class", oldClass);
                 });
@@ -488,7 +541,7 @@ timApp.controller("ViewCtrl", [
             return sc.showOptionsWindow(e, $par, coords);
         });
 
-        sc.showNoteWindow = function (e, $par, coords) {
+        sc.showNoteWindow = function (e, $par) {
             sc.toggleNoteEditor($par, {isNew: true});
         };
 
@@ -506,16 +559,16 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.handleNoteCancel = function (extraData) {
+        sc.handleNoteCancel = function () {
             sc.editing = false;
         };
 
-        sc.handleNoteDelete = function (data, extraData) {
+        sc.handleNoteDelete = function () {
             sc.getNotes();
             sc.editing = false;
         };
 
-        sc.handleNoteSave = function (data, extraData) {
+        sc.handleNoteSave = function () {
             sc.getNotes();
             sc.editing = false;
         };
@@ -525,7 +578,6 @@ timApp.controller("ViewCtrl", [
                 return false;
             }
 
-            sc.autoHideSidebar();
             sc.$apply();
 
             var $target = $(e.target);
@@ -554,6 +606,10 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
+        sc.onClick(".questionAdded", function ($this, e) {
+            sc.showQuestion($(this));
+            sc.par = ($(this.parentNode.parentNode));
+        });
 
         // Note-related functions
 
@@ -604,6 +660,7 @@ timApp.controller("ViewCtrl", [
                     text: 'Add paragraph below',
                     width: button_width
                 }));
+
                 $span.append($("<input>", {
                     class: DEFAULT_CHECKBOX_CLASS,
                     type: 'checkbox',
@@ -611,6 +668,22 @@ timApp.controller("ViewCtrl", [
                     'ng-model': 'defaults[3]'
                 }));
                 $actionDiv.append($span);
+
+                if (sc.lectureMode) {
+                    $span = $("<span>");
+                    $span.append($("<button>", {
+                        class: QUESTION_ADD_BUTTON_CLASS,
+                        text: 'Create question',
+                        width: button_width
+                    }));
+                    $span.append($("<button>", {
+                        id: 'createQuestion',
+                        class: DEFAULT_BUTTON_CLASS,
+                        text: 'Default',
+                        width: default_width
+                    }));
+                    $actionDiv.append($span);
+                }
 
                 var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
                 $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
@@ -621,6 +694,7 @@ timApp.controller("ViewCtrl", [
                     'ng-model': 'defaults[4]'
                 }));
                 $actionDiv.append($span);
+
             }
             /*
              if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
@@ -682,6 +756,7 @@ timApp.controller("ViewCtrl", [
                 sc.lastclicktime = new Date().getTime();
                 sc.lastclickplace = coords;
             } else {
+                $window.console.log("This line is new: " + $par);
                 $par.children().remove(".actionButtons");
                 $par.removeClass("selected");
                 $par.removeClass("lightselect");
@@ -728,10 +803,67 @@ timApp.controller("ViewCtrl", [
              */
         };
 
+        sc.getQuestionHtml = function (questions) {
+            var questionImage = '../../../static/images/show-question-icon.png';
+            var $questionsDiv = $("<div>", {class: 'questions'});
+
+            // TODO: Think better way to get the ID of question.
+            for (var i = 0; i < questions.length; i++) {
+                var img = new Image(30, 30);
+                img.src = questionImage;
+                img.title = questions[i].question_title;
+                var $questionDiv = $("<span>", {
+                    class: 'questionAdded', html: img, id: questions[i].question_id
+                });
+                $questionsDiv.append($questionDiv);
+            }
+            return $questionsDiv;
+        };
+
+
+        sc.getQuestions = function () {
+            var rn = "?_=" + Date.now();
+
+            http.get('/questions/' + sc.docId + rn)
+                .success(function (data) {
+                    var pars = {};
+                    var questionCount = data.length;
+                    for (var i = 0; i < questionCount; i++) {
+                        var pi = data[i].par_index;
+                        if (!(pi in pars)) {
+                            pars[pi] = {questions: []};
+                        }
+
+                        pars[pi].questions.push(data[i]);
+                    }
+
+                    sc.forEachParagraph(function (index) {
+                            if ($(this).children().hasClass("questions")) {
+                                var children = $(this).children();
+                                for (var i = 0; i < children.length; i++) {
+                                    if (children[i].className == "questions") {
+                                        children[i].remove();
+                                    }
+                                }
+                            }
+
+                            var parIndex = index + sc.startIndex;
+                            if (parIndex in pars) {
+                                var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
+                                $(this).append($questionsDiv);
+
+                            }
+                        }
+                    );
+
+                });
+        };
+
+
         sc.getNotes = function () {
             var rn = "?_=" + Date.now();
 
-            http.get('/notes/' + sc.docId + rn).success(function (data, status, headers, config) {
+            http.get('/notes/' + sc.docId + rn).success(function (data) {
                 $('.notes').remove();
                 var pars = {};
 
@@ -766,7 +898,6 @@ timApp.controller("ViewCtrl", [
                      */
                 });
 
-
             }).error(function (data, status, headers, config) {
                 $window.alert("Could not fetch notes.");
             });
@@ -777,7 +908,7 @@ timApp.controller("ViewCtrl", [
                 return;
             }
             var rn = "?_=" + Date.now();
-            http.get('/read/' + sc.docId + rn).success(function (data, status, headers, config) {
+            http.get('/read/' + sc.docId + rn).success(function (data) {
                 var readCount = data.length;
                 $('.readline').remove();
                 var pars = {};
@@ -789,7 +920,7 @@ timApp.controller("ViewCtrl", [
                     }
                     pars[pi].readStatus = readPar.status;
                 }
-                sc.forEachParagraph(function (index, elem) {
+                sc.forEachParagraph(function (index) {
                     var parIndex = index + sc.startIndex;
                     var classes = ["readline"];
                     if (parIndex in pars && 'readStatus' in pars[parIndex]) {
@@ -797,10 +928,13 @@ timApp.controller("ViewCtrl", [
                     } else {
                         classes.push("unread");
                     }
-                    var $div = $("<div>", {class: classes.join(" "), title: "Click to mark this paragraph as read"});
+                    var $div = $("<div>", {
+                        class: classes.join(" "),
+                        title: "Click to mark this paragraph as read"
+                    });
                     $(this).append($div);
                 });
-            }).error(function (data, status, headers, config) {
+            }).error(function () {
                 $window.alert("Could not fetch reading info.");
             });
         };
@@ -848,7 +982,7 @@ timApp.controller("ViewCtrl", [
                 var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
-            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wåäö\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
+            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wÃ¥Ã¤Ã¶\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
         };
 
         sc.findIndexLevel = function (str) {
@@ -862,7 +996,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getIndex = function () {
-            http.get('/index/' + sc.docId).success(function (data, status, headers, config) {
+            http.get('/index/' + sc.docId).success(function (data) {
                 var parentEntry = null;
                 sc.indexTable = [];
 
@@ -901,6 +1035,7 @@ timApp.controller("ViewCtrl", [
                         }
                         parentEntry.items.push(entry);
                     }
+
                 }
 
                 if (parentEntry !== null) {
@@ -909,7 +1044,7 @@ timApp.controller("ViewCtrl", [
                     }
                     sc.indexTable.push(parentEntry);
                 }
-            }).error(function (data, status, headers, config) {
+            }).error(function () {
                 $window.alert("Could not fetch index entries.");
             });
         };
@@ -950,6 +1085,20 @@ timApp.controller("ViewCtrl", [
             return newState;
         };
 
+        if (sc.lectureMode) {
+            sc.$on("getQuestions", function () {
+                if (sc.firstTimeQuestions) {
+                    sc.getQuestions();
+                    sc.firstTimeQuestions = false;
+                }
+            });
+
+            sc.$on("closeQuestionPreview", function () {
+                sc.showQuestionPreview = false;
+                //sc.clearQuestion();
+            });
+        }
+
         // Load index, notes and read markings
         sc.editorFunctions = [sc.showNoteWindow, sc.showEditWindow, sc.showAddParagraphAbove,
             sc.showAddParagraphBelow, sc.doNothing];
@@ -983,6 +1132,706 @@ timApp.controller("ViewCtrl", [
             sc.getEditPars();
         }
         sc.processAllMath($('body'));
-
         sc.defaultAction = sc.showOptionsWindow;
-    }]);
+    }
+])
+;
+
+/**
+ * Controller for creating and editing questions
+ * @module questionController
+ * @author Matias Berg
+ * @author Bek Eljurkaev
+ * @author Minna Lehtomäki
+ * @author Juhani Sihvonen
+ * @author Hannu Viinikainen
+ * @licence MIT
+ * @copyright 2015 Timppa project authors
+ */
+
+timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
+    "use strict";
+    $(function () {
+        $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
+    });
+
+    scope.putBackQuotations = function(x){
+        return x.replace(/&quot;/g, '"');
+    };
+
+    scope.$on("editQuestion", function (event, data) {
+            var id = data.question_id;
+            var json = data.json;
+
+            if (id) scope.question.question_id = id;
+            if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
+            if (json["QUESTION"]) scope.question.question = scope.putBackQuotations(json["QUESTION"]);
+            if (json["TYPE"]) scope.question.type = json["TYPE"];
+            if (json["MATRIXTYPE"]) scope.question.matrixType = json["MATRIXTYPE"];
+            if (json["ANSWERFIELDTYPE"]) scope.question.answerFieldType = (json["ANSWERFIELDTYPE"]);
+
+
+            var jsonData = json["DATA"];
+            var jsonHeaders = jsonData["HEADERS"];
+            var jsonRows = jsonData["ROWS"];
+
+            var columnHeaders = [];
+            for (var i = 0; i < jsonHeaders.length; i++) {
+                columnHeaders[i] = {
+                    id: i,
+                    type: jsonHeaders[i].type,
+                    text: scope.putBackQuotations(jsonHeaders[i].text)
+                };
+            }
+            scope.columnHeaders = columnHeaders;
+
+            var rows = [];
+            for (var i = 0; i < jsonRows.length; i++) {
+                rows[i] = {
+                    id: jsonRows[i].id,
+                    text: scope.putBackQuotations(jsonRows[i].text),
+                    type: jsonRows[i].type,
+                    value: jsonRows[i].value
+                };
+
+
+                var jsonColumns = jsonRows[i]["COLUMNS"];
+                var columns = [];
+                for (var j = 0; j < jsonColumns.length; j++) {
+                    columns[j] = {
+                        id: j,
+                        rowId: i,
+                        text: jsonColumns[j].text,
+                        //points: jsonColumns[j].points,
+                        type: jsonColumns[j].type,
+                        answerFiledType: jsonColumns[j].answerFieldType
+                    };
+                    if (jsonColumns[j].points) {
+                        columns[j].points = jsonColumns[j].points;
+                    } else {
+                        columns[j].points = "";
+                    }
+
+                }
+
+                rows[i].columns = columns;
+
+            }
+            scope.rows = rows;
+
+            if (json["TIMELIMIT"] && json["TIMELIMIT"] > 0) {
+                var time = json["TIMELIMIT"];
+                scope.question.endTimeSelected = true;
+                if (time > 3600) {
+                    scope.question.timeLimit.hours = Math.floor(time / 3600);
+                    time = time % 3600;
+                } else {
+                    scope.question.timeLimit.hours = 0;
+                }
+
+                if (time > 60) {
+                    scope.question.timeLimit.minutes = Math.floor(time / 60);
+                    time = time % 60;
+                } else {
+                    scope.question.timeLimit.minutes = 0;
+                }
+
+                if (time > 0) {
+                    scope.question.timeLimit.seconds = time;
+                } else {
+                    scope.question.timeLimit.seconds = 0;
+                }
+
+            } else {
+                scope.question.endTimeSelected = false;
+            }
+
+            scope.toggleQuestion();
+
+        }
+    );
+
+
+    scope.question = {
+        title: "",
+        question: "",
+        matrixType: "",
+        answerFieldType: "",
+        timeLimit: {hours: "0", minutes: "0", seconds: "30"},
+        endTimeSelected: true
+
+    };
+
+
+    scope.rows = [];
+    scope.columns = [];
+    scope.columnHeaders = [];
+    scope.answerDirection = "horizontal";
+    scope.question.timeLimit.seconds = 30;
+    scope.error_message = "";
+    scope.answerFieldTypes = [
+
+        {label: "Text area", value: "textArea"},
+        {label: "Radio Button horizontal", value: "radiobutton-horizontal"},
+        {label: "Checkbox", value: "checkbox"}
+    ];
+
+    /**
+     * A function for creating a matrix.
+     * @memberof module:questionController
+     * @param rowsCount The number of rows to create for the matrix.
+     * @param columnsCount The number of columns to create for new matrix.
+     * @param type The answer type of the matrix.
+     */
+    scope.createMatrix = function (type) {
+        var rowsCount = 0;
+        var columnsCount = 0;
+        if (type === 'matrix' || type === 'true-false') {
+            rowsCount = 2;
+            columnsCount = 2;
+        } else {
+            rowsCount = 2;
+            columnsCount = 1;
+        }
+
+        if (scope.rows.length < 1) {
+            for (var i = 0; i < rowsCount; i++) {
+                scope.addRow(i);
+            }
+        }
+
+
+        if (type === 'radio-vertical' || 'true-false') scope.question.answerFieldType = 'radio';
+        if (type === 'checkbox-vertical') scope.question.answerFieldType = 'checkbox';
+        if (type === 'matrix') {
+            scope.question.answerFieldType = 'matrix';
+        }
+
+        for (var i = 0; i < scope.rows.length; i++) {
+            if (scope.rows[i].columns.length > columnsCount) scope.rows[i].columns.splice(columnsCount, scope.rows[i].columns.length);
+            if (scope.rows[i].columns.length < columnsCount) scope.addCol(scope.rows[0].columns.length);
+            for (var j = 0; j < scope.rows[i].columns.length; j++) {
+                scope.rows[j].columns.answerFieldType = scope.question.answerFieldType;
+            }
+        }
+
+        scope.columnHeaders = [];
+        if (type === 'matrix') {
+            for (var i = 0; i < scope.rows[0].columns.length; i++) {
+                scope.columnHeaders[i] = {
+                    id: i,
+                    text: "",
+                    type: 'header'
+                };
+            }
+        }
+
+
+        /*        if (scope.question.type != type || scope.rows.length <= 0) {
+         scope.question.type = type;
+
+         if (type === 'radio-vertical' || 'true-false') scope.question.answerFieldType = 'radio';
+         else if (type === 'checkbox-vertical') scope.question.answerFieldType = 'checkbox';
+         else if (type === 'matrix') scope.question.answerFieldType = 'matrix';
+
+
+
+         var i;
+         if (scope.rows.length > 0) {
+         scope.columnHeaders.splice(0, scope.columnHeaders.length);
+         for (i = 0; i < scope.rows.length; i++) {
+         scope.rows[i].columns.splice(0, scope.rows[i].columns.length);
+         }
+
+         for (i = 0; i < columnsCount; i++) {
+         scope.addCol(i);
+         }
+
+         } else {
+
+         var columnHeaders = [];
+         for (i = 0; i < rowsCount; i++) {
+         var columns = [];
+         columnHeaders = [];
+         for (var j = 0; j < columnsCount; j++) {
+         columnHeaders.push({type: "header", id: j, text: ""});
+         columns[j] = {
+         id: j,
+         rowId: i,
+         text: '',
+         points: '',
+         type: "answer",
+         answerFiledType: scope.question.answerFieldType
+         };
+         }
+         scope.rows[i] = {
+         id: i,
+         text: '',
+         type: 'question',
+         value: '',
+         columns: columns
+         };
+
+         }
+         scope.columnHeaders = columnHeaders;
+
+         }
+         scope.columnHeaders.splice(columnsCount, scope.columnHeaders.length);
+         }*/
+    };
+
+    /*    */
+    /**
+     * A function handling rowClick
+     * @memberof module:questionController
+     * @param index FILL WITH SUITABLE TEXT
+     */
+    /*
+     scope.rowClick = function (index) {
+     scope.addRow(index);
+     };*/
+
+    /**
+     * A function to add a column to an existing matrix.
+     * @memberof module:questionController
+     * @param loc The index in the matrix where to add the new column.
+     */
+    scope.addCol = function (loc) {
+        var location = loc;
+        if (loc === -1) {
+            location = scope.rows[0].columns.length;
+            loc = scope.rows[0].columns.length;
+        }
+        scope.columnHeaders.splice(loc, 0, {type: "header", id: loc, text: ""});
+        //add new column to columns
+        for (var i = 0; i < scope.rows.length; i++) {
+
+            scope.rows[i].columns.splice(loc, 0, {
+                id: location,
+                rowId: i,
+                text: '',
+                points: '',
+                type: "answer",
+                answerFiledType: scope.question.answerFieldType
+            });
+        }
+
+
+    };
+
+    /**
+     * The function adds a row to an existing matrix
+     * @memberof module:questionController
+     * @param loc The index in the matrix where to add the new row.
+     */
+    scope.addRow = function (loc) {
+
+        scope.CreateColumnsForRow = function (location) {
+            var columns = [];
+            if (scope.rows.length > 0) {
+                for (var j = 0; j < scope.rows[0].columns.length; j++) {
+                    columns[j] = {
+                        id: j,
+                        rowId: location,
+                        type: "answer",
+                        value: '',
+                        answerFiledType: scope.question.answerFieldType,
+                        points: ""
+                    };
+
+                }
+            }
+            return columns;
+        };
+
+        var location = loc;
+        if (loc === -1) {
+            location = scope.rows.length;
+            loc = scope.rows.length;
+        }
+
+        var columns = scope.CreateColumnsForRow(location);
+        scope.rows.splice(loc, 0,
+            {
+                id: location,
+                text: "",
+                type: "question",
+                value: "",
+                columns: columns
+            });
+
+        for (var i = 0; i < scope.rows.length; i++) {
+            scope.rows[i].id = i;
+        }
+
+
+    };
+
+    /**
+     * A function to delete a row from a matrix.
+     * @memberof module:questionController
+     * @param indexToBeDeleted The index of the row to be deleted.
+     */
+    scope.delRow = function (indexToBeDeleted) {
+        scope.error_message = "";
+        if (scope.rows.length > 1) {
+            if (indexToBeDeleted === -1) {
+                scope.rows.splice(-1, 1);
+            }
+            else {
+                scope.rows.splice(indexToBeDeleted, 1);
+            }
+        } else {
+            scope.errorize("", "You cannot have an empty table.");
+        }
+
+    };
+
+    /**
+     * A function to delete a column from a matrix.
+     * @memberof module:questionController
+     * @param indexToBeDeleted Index of the column to be deleted.
+     */
+    scope.delCol = function (indexToBeDeleted) {
+        for (var i = 0; i < scope.rows.length; i++) {
+            if (indexToBeDeleted === -1) {
+                scope.rows[i].columns.splice(-1, 1);
+            }
+            else {
+                scope.rows[i].columns.splice(indexToBeDeleted, 1);
+            }
+        }
+        if (indexToBeDeleted === -1) {
+            scope.columnHeaders.splice(-1, 1);
+        }
+        else {
+            scope.columnHeaders.splice(indexToBeDeleted, 1);
+        }
+
+    };
+
+    /**
+     * A function to reset the question values.
+     * @memberof module:questionController
+     */
+    scope.clearQuestion = function () {
+        scope.question = {
+            title: "",
+            question: "",
+            matrixType: "",
+            answerFieldType: "",
+            timeLimit: {hours: "0", minutes: "0", seconds: "30"},
+            endTimeSelected: true
+        };
+
+        scope.rows = [];
+        scope.answer = "";
+        scope.columnHeaders = [];
+        //scope.toggleQuestion();
+    };
+
+    /**
+     * A function to close question edition form.
+     * @memberof module:questionController
+     */
+    scope.close = function () {
+        scope.removeErrors();
+        scope.clearQuestion();
+        if (scope.questionShown) scope.toggleQuestion();
+    };
+
+    /**
+     * The function replaces linebreaks with HTML code.
+     * @memberof module:questionController
+     * @param val The input string
+     * @returns {*} The reformatted line.
+     */
+    scope.replaceLinebreaksWithHTML = function (val) {
+        var output = val.replace(/(?:\r\n|\r|\n)/g, '<br />');
+        output = output.replace(/"/g, '&quot;');
+        return output.replace(/\\/g, "\\\\");
+    };
+
+    /**
+     * The function to highlight the source of the errors for a given ID.
+     * @memberof module:questionController
+     * @param div_val ID of the element to be errorized.
+     * @param error_text Description of the occured error.
+     */
+    scope.errorize = function (div_val, error_text) {
+        angular.element("#" + div_val).css('border', "1px solid red");
+        if (error_text.length > 0) {
+            scope.error_message += error_text + "<br />";
+        }
+    };
+
+    /**
+     * The function to highlight the source of the errors for a given class.
+     * @memberof module:questionController
+     * @param div_val Class of the element to be errorized.
+     * @param error_text Description of the occured error.
+     */
+    scope.errorizeClass = function (div_val, error_text) {
+        angular.element("." + div_val).css('border', "1px solid red");
+        if (error_text.length > 0) {
+            scope.error_message += error_text + "<br />";
+        }
+    };
+
+    /**
+     * Removes border of a given element.
+     * @memberof module:questionController
+     * @param element ID of the field whose border will be removed.
+     */
+    scope.defInputStyle = function (element) {
+        if (element !== null || !element.isDefined) {
+            angular.element("#" + element).css("border", "");
+        }
+    };
+
+    /**
+     * Calls defInputStyle for all the form elements.
+     * @memberof module:questionController
+     */
+    scope.removeErrors = function () {
+        scope.error_message = "";
+        var elementsToRemoveErrorsFrom = [
+            "questionName",
+            "questionTiming",
+            "questionStart",
+            "questionTimer",
+            "qType",
+            "matrix",
+            "durationSec",
+            "durationHour",
+            "durationMin",
+            "durationDiv"
+        ];
+        for (var i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
+            if (elementsToRemoveErrorsFrom[i] !== undefined) {
+                scope.defInputStyle(elementsToRemoveErrorsFrom[i]);
+            }
+        }
+        angular.element(".rowHeading").css("border", "");
+    };
+
+    /**
+     * Function for checking if the row headings are empty.
+     * @memberof module:questionController
+     * @param rows The array of rows to be checked.
+     * @returns {boolean} Whether or not the row headings are empty.
+     */
+    scope.rowHeadingsEmpty = function (rows) {
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].text === "" || rows[i].text === null) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    /**
+     * Checks if a value is a positive number and makes the appropriate errors if this is not the case.
+     * @memberof module:questionController
+     * @param element The value to be checked.
+     * @param val The id of the value, which is used in case the number is not positive.
+     */
+    scope.isPositiveNumber = function (element, val) {
+        if (element === "" || isNaN(element) || element < 0) {
+            scope.errorize(val, "Number has to be positive.");
+        }
+    };
+
+    /**
+     * Validates and saves the question into the database.
+     * @memberof module:questionController
+     */
+    scope.createQuestion = function () {
+
+        scope.removeErrors();
+        if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
+            scope.errorize("questionName", "Both title and question are required for a question.");
+        }
+        if (scope.question.type === undefined) {
+            scope.errorize("qType", "Question type must be selected.");
+        } else if (scope.question.type === "matrix" && (scope.question.matrixType === undefined || scope.question.matrixType === "")) {
+            scope.errorize("check", "Answer type must be selected.");
+        } else if ((scope.question.type === "radio-vertical" ||
+            scope.question.type === "checkbox-vertical" ||
+            scope.question.type === "true-false") &&
+            scope.rowHeadingsEmpty(scope.rows)) {
+            scope.errorizeClass("rowHeading", "All rows must be filled in.");
+        }
+        if (scope.rows.length > 0) {
+            if ((scope.question.type === "radio-vertical" || scope.question.type === "checkbox-vertical") && scope.rows.length < 2) {
+                scope.errorize("matrix", "You must have at least two choices.");
+            }
+        } else if (scope.question.type !== undefined) {
+            scope.errorize("matrix", "You must have at least one row.");
+        }
+        var timeLimit = "";
+        if (scope.question.endTimeSelected) {
+            if (scope.question.timeLimit.hours === "") {
+                scope.question.timeLimit.hours = 0;
+            }
+            if (scope.question.timeLimit.minutes === "") {
+                scope.question.timeLimit.minutes = 0;
+            }
+            if (scope.question.timeLimit.seconds === "") {
+                scope.question.timeLimit.seconds = 0;
+            }
+            scope.isPositiveNumber(scope.question.timeLimit.hours, "durationHour");
+            scope.isPositiveNumber(scope.question.timeLimit.minutes, "durationMin");
+            scope.isPositiveNumber(scope.question.timeLimit.seconds, "durationSec");
+            timeLimit = 0;
+            timeLimit = parseInt(timeLimit) + parseInt(scope.question.timeLimit.seconds);
+            if (scope.question.timeLimit.hours) {
+                timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.hours * 60 * 60);
+            }
+            if (scope.question.timeLimit.minutes) {
+                timeLimit = parseInt(timeLimit) + (scope.question.timeLimit.minutes * 60);
+            }
+            if (timeLimit <= 0) {
+                scope.errorize("durationDiv", "Please enter a duration greater then zero or for unending question uncheck the duration box.");
+            }
+        } else {
+            timeLimit = "";
+        }
+
+        if (scope.error_message !== "") {
+            return;
+        }
+
+        if (scope.question.type === 'matrix') {
+
+            if (scope.question.matrixType === "radiobutton-horizontal" || scope.question.matrixType === "radiobutton-vertical") {
+                scope.question.answerFieldType = "radio";
+            }
+
+            if (scope.question.matrixType === "textArea") {
+                scope.question.answerFieldType = "text";
+            }
+            if (scope.question.matrixType === "checkbox") {
+                scope.question.answerFieldType = "checkbox";
+            }
+        }
+        var doc_id = scope.docId;
+        var $par = scope.par;
+        var par_index = scope.getParIndex($par);
+
+        //TODO use  JSON.stringify
+
+
+        scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
+        scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
+
+        var questionJson = '{"QUESTION": "' + scope.question.question + '", "TITLE": "' + scope.question.title + '", "TYPE": "' + scope.question.type + '", "ANSWERFIELDTYPE": "' + scope.question.answerFieldType + '", "MATRIXTYPE": "' + scope.question.matrixType + '", "TIMELIMIT": "' + timeLimit + '", "DATA": {';
+
+        var testJson = JSON.stringify(scope.question);
+        testJson += JSON.stringify(scope.columnHeaders);
+
+        questionJson += '"HEADERS" : [';
+        var i;
+        if (scope.question.type === "matrix") {
+            for (i = 0; i < scope.columnHeaders.length; i++) {
+                questionJson += '{';
+                questionJson += '"type":"' + scope.columnHeaders[i].type + '",';
+                questionJson += '"id":"' + scope.columnHeaders[i].id + '",';
+                questionJson += '"text":"' + scope.replaceLinebreaksWithHTML(scope.columnHeaders[i].text) + '"';
+                questionJson += '},';
+            }
+            if (i > 0) {
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+            }
+            questionJson += ']';
+            questionJson += ',';
+        } else {
+            questionJson += "],";
+        }
+
+        questionJson += '"ROWS": [';
+        for (i = 0; i < scope.rows.length; i++) {
+            questionJson += '{';
+            questionJson += '"id":"' + scope.rows[i].id + '",';
+            questionJson += '"type":"' + scope.rows[i].type + '",';
+            questionJson += '"text":"' + scope.replaceLinebreaksWithHTML(scope.rows[i].text) + '",';
+            questionJson += '"COLUMNS": [';
+            for (var j = 0; j < scope.rows[i].columns.length; j++) {
+                questionJson += '{';
+                questionJson += '"id":"' + scope.rows[i].columns[j].id + '",';
+                questionJson += '"rowId":"' + scope.rows[i].columns[j].rowId + '",';
+                questionJson += '"type":"' + scope.rows[i].columns[j].type + '",';
+                if (scope.question.answerFieldType !== "text") {
+                    questionJson += '"points":"' + scope.rows[i].columns[j].points + '",';
+                } else {
+                    questionJson += '"points":"' + "" + '",';
+                }
+                questionJson += '"answerFieldType":"' + scope.question.answerFieldType + '"';
+                questionJson += '},';
+            }
+
+            if (j > 0) {
+                questionJson = questionJson.substring(0, questionJson.length - 1);
+            }
+            questionJson += ']';
+            questionJson += '},';
+
+        }
+        if (i > 0) {
+            questionJson = questionJson.substring(0, questionJson.length - 1);
+        }
+        questionJson += ']';
+        questionJson += '}}';
+
+        var rn = "?_=" + Date.now();
+
+        http({
+            method: 'POST',
+            url: '/addQuestion/' + rn,
+            params: {
+                'question_id': scope.question.question_id,
+                'question_title': scope.question.title,
+                'answer': "test", //answerVal,
+                'par_index': par_index,
+                'doc_id': doc_id,
+                'questionJson': questionJson
+            }
+        })
+            .success(function () {
+                $window.console.log("The question was successfully added to database");
+                scope.removeErrors();
+                //scope.clearQuestion();
+                //TODO: This can be optimized to get only the new one.
+                scope.$parent.getQuestions();
+                scope.close();
+            })
+            .error(function () {
+                $window.console.log("There was some error creating question to database.");
+            });
+    };
+
+    scope.deleteQuestion = function () {
+        var confirmDi = $window.confirm("Are you sure you want to delete this question?");
+        if (confirmDi) {
+            http({
+                url: '/deleteQuestion',
+                method: 'POST',
+                params: {question_id: scope.qId, doc_id: scope.docId}
+            })
+                .success(function () {
+                    $window.console.log("Deleted question done!");
+                    //location.reload();
+                    scope.close();
+                    //scope.clearQuestion();
+                    scope.getQuestions();
+                })
+                .error(function (error) {
+
+                    $window.console.log(error);
+                    scope.getQuestions();
+
+                });
+
+        }
+    };
+}]);
