@@ -132,10 +132,10 @@
 
         <div id="pars">
             {% for t in text %}
-                {% if 'task_id' in t.get_attrs() %}
+                {% if 'taskId' in t.get_attrs() %}
                 <div class="par" id="{{ t.get_id() }}" t="{{ t.get_hash() }}" attrs="{{ t.get_attrs_str() }}">
                     <answerbrowser
-                            task-id="{{ t.get_attrs()['task_id'] }}">
+                            task-id="{{ docID }}.{{ t.get_attrs()['taskId'] }}">
                     </answerbrowser>
                     <div class="parContent">
                         {{ t.get_html()|safe }}

@@ -290,6 +290,13 @@ class Document:
         
         return log
 
+    def get_paragraph_by_task(self, task_id_name):
+        for p in self:
+            if 'taskId' in p.get_attrs() and p.get_attrs()['taskId'] == task_id_name:
+                return p
+        return None
+
+
 new_contract('Document', Document)
 
 

@@ -240,9 +240,9 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                blocks[idx].html = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
+                blocks[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                    plugin_url,
-                                                                                   html)
+                                                                                   html))
         else:
             for idx, val in plugin_block_map.items():
                 try:

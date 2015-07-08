@@ -59,7 +59,9 @@ def save_answer(plugintype, task_id):
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if loggedIn() and len(old_answers) > 0 else None
 
-    par = DocParagraph('', '', '', '')  # TODO: timdb.documents.get_document(doc_id).get_par_by_task(task_id)
+    par = Document(doc_id).get_paragraph_by_task(task_id_name)
+    if par is None:
+        abort(400, 'Task not found in the document: ' + task_id_name)
     plugin_data = pluginControl.parse_plugin_values(par)
     if 'error' in plugin_data:
         return jsonResponse({'error': plugin_data['error'] + ' Task id: ' + task_id_name}, 400)
@@ -143,7 +145,7 @@ def get_answers(task_id, user_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, int, int, str])
+    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, str, int, str])
     if not timdb.documents.documentExists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
@@ -156,8 +158,8 @@ def get_state():
     if not hasViewAccess(doc_id):
         abort(403, 'Permission denied')
 
-    version = request.headers['Version']
-    block = timdb.documents.getBlockAsHtml(DocIdentifier(doc_id, version), par_id)
+    # version = request.headers['Version']
+    block = Document(doc_id).get_paragraph(par_id)
 
     texts, js_paths, css_paths, modules = pluginControl.pluginify([block],
                                                                   user['name'],
