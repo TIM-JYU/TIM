@@ -68,8 +68,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.useAnswers = true;
         $scope.wallMessages = [];
 
-        var header = $('#header');
-        header.css("display", "none");
+        //var header = $('#header');
+        //header.css("display", "none");
 
         var wall = $('#wall');
         var htmlMessageList = $('#wallMessageList');

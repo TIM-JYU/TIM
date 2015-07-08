@@ -607,7 +607,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.onClick(".questionAdded", function ($this, e) {
-            sc.showQuestion($(this));
+            sc.showQuestion($this);
             sc.par = ($(this.parentNode.parentNode));
         });
 

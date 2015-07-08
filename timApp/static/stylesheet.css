@@ -348,6 +348,7 @@ ul ul ul, ol ol ol {
 }
 
 .draghandle {
+    width: 100%;
     background-color: #3CC;
     position: initial;
     margin-bottom: 10px;

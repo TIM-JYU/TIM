@@ -67,14 +67,19 @@
             {%endif%}
 
             {% if self.title() != "TIM" and is_owner %}
-                |
-                {% if teacher_mode %}
-                   <a href="/view/{{docID}}">Student view</a>
+                {% if lecture_mode %}
+                    |
+                    <a href="/view/{{docID}}">Student view</a>
+                    |
+                    <a href="/teacher/{{docID}}">Teacher view</a>
                 {% else %}
-                   <a href="/teacher/{{docID}}">Teacher view</a>
-                {% endif %}
-                |
-                {% if not lecture_mode %}
+                    |
+                    {% if teacher_mode %}
+                        <a href="/view/{{docID}}">Student view</a>
+                    {% else %}
+                        <a href="/teacher/{{docID}}">Teacher view</a>
+                    {% endif %}
+                    |
                     <a href="/lecture/{{ doc.name }}">Lecture view</a>
                 {% endif %}
             {% elif objName == "folder" %}
