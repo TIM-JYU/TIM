@@ -145,7 +145,8 @@ timApp.controller("ViewCtrl", [
                 "extra-data": JSON.stringify({
                     docId: sc.docId,
                     par: par_id,
-                    par_next: par_next_id
+                    par_next: par_next_id,
+                    attrs: JSON.parse($par.attr('attrs'))
                 }),
                 "options": JSON.stringify({
                     showDelete: options.showDelete,
@@ -312,7 +313,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.createNewPar = function() {
-            return $("<div>", {class: "par new", id: 'NEW_PAR'})
+            return $("<div>", {class: "par new", id: 'NEW_PAR', attrs: '{}'})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
         };
 
@@ -400,7 +401,12 @@ timApp.controller("ViewCtrl", [
                 if ('taskId' in data.texts[i].attrs) {
                     html = $compile(html)(sc);
                 }
-                var $newpar = $("<div>", {class: "par", id: data.texts[i].id, t: data.texts[i].par_hash})
+                var $newpar = $("<div>", {
+                    class: "par",
+                    id: data.texts[i].id,
+                    t: data.texts[i].par_hash,
+                    attrs: JSON.stringify(data.texts[i].attrs)
+                })
                     .append($("<div>", {class: "parContent"}).html(html));
                 var readClass = "unread";
                 if (i === 0 && !$par.hasClass("new")) {

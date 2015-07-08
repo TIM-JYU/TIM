@@ -180,8 +180,6 @@ class Document:
         :param text: New paragraph text.
         :return: The new paragraph object.
         """
-        if not attrs:
-            attrs = {}
         p = DocParagraph(md=text, files_root=self.files_root, attrs=attrs)
         p.get_html()
         p.add_link(self.doc_id)
@@ -222,17 +220,18 @@ class Document:
                         f.write(line)
 
     @contract
-    def insert_paragraph(self, text: 'str', insert_before_id: 'str|None') -> 'DocParagraph':
+    def insert_paragraph(self, text: 'str', insert_before_id: 'str|None', attrs: 'dict|None'=None) -> 'DocParagraph':
         """
         Inserts a paragraph before a given paragraph id.
+        :param attrs: The attributes for the paragraph.
         :param text: New paragraph text.
         :param insert_before_id: Id of the paragraph to insert before, or None if last.
         :return: The inserted paragraph object.
         """
         if not insert_before_id:
-            return self.add_paragraph(text)
+            return self.add_paragraph(text, attrs)
 
-        p = DocParagraph(text, files_root=self.files_root)
+        p = DocParagraph(text, files_root=self.files_root, attrs=attrs)
         p.add_link(self.doc_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version('Inserted paragraph {}'.format(p.get_id()), increment_major=True)
@@ -250,7 +249,7 @@ class Document:
                     f.write(line)
 
     @contract
-    def modify_paragraph(self, par_id: 'str', new_text: 'str') -> 'DocParagraph':
+    def modify_paragraph(self, par_id: 'str', new_text: 'str', new_attrs: 'dict|None'=None) -> 'DocParagraph':
         """
         Modifies the text of the given paragraph.
         :param par_id: Paragraph id.
@@ -262,7 +261,7 @@ class Document:
         p_src = DocParagraph.get_latest(par_id, files_root=self.files_root)
         p_src.remove_link(self.doc_id)
         old_hash = p_src.get_hash()
-        p = DocParagraph(new_text, par_id=par_id, attrs=p_src.get_attrs(), files_root=self.files_root)
+        p = DocParagraph(new_text, par_id=par_id, attrs=new_attrs, files_root=self.files_root)
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
         self.__increment_version('Modified paragraph {} from hash {} to {}'.format(par_id, old_hash, new_hash), increment_major=False)

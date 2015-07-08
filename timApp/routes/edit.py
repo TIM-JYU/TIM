@@ -58,14 +58,14 @@ def modify_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     timdb = getTimDb()
-    doc_id, md, par_id = verify_json_params('docId', 'text', 'par')
+    doc_id, md, par_id, attrs = verify_json_params('docId', 'text', 'par', 'attrs')
     verifyEditAccess(doc_id)
     current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, par_id))
     version = request.headers.get('Version', '')
     # verify_document_version(doc_id, version)
     identifier = get_newest_document(doc_id)
 
-    blocks, doc = timdb.documents.modify_paragraph(identifier, par_id, md)
+    blocks, doc = timdb.documents.modify_paragraph(identifier, par_id, md, attrs)
     # Replace appropriate elements with plugin content, load plugin requirements to template
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
@@ -88,7 +88,7 @@ def preview(doc_id):
     """
     timdb = getTimDb()
     md, = verify_json_params('text')
-    blocks = [DocParagraph(html=md_to_html(md))]
+    blocks = [DocParagraph(md=md)]
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,
@@ -107,11 +107,11 @@ def add_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     timdb = getTimDb()
-    md, doc_id, paragraph_id = verify_json_params('text', 'docId', 'par_next')
+    md, doc_id, paragraph_id, attrs = verify_json_params('text', 'docId', 'par_next', 'attrs')
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
     # verify_document_version(doc_id, version)
-    blocks, new_doc = timdb.documents.add_paragraph(get_newest_document(doc_id), md, paragraph_id)
+    blocks, new_doc = timdb.documents.add_paragraph(get_newest_document(doc_id), md, paragraph_id, attrs)
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,

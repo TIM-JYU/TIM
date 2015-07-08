@@ -19,6 +19,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 initialTextUrl: '@'
             },
             controller: function ($scope) {
+
+                $scope.deleteAttribute = function(key) {
+                    delete $scope.extraData.attrs[key];
+                };
+
                 $scope.aceChanged = function () {
                     $scope.outofdate = true;
                     if ($scope.timer) {

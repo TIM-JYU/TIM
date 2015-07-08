@@ -133,7 +133,7 @@
         <div id="pars">
             {% for t in text %}
                 {% if 'task_id' in t.get_attrs() %}
-                <div class="par" id="{{ t.get_id() }}" t="{{ t.get_hash() }}">
+                <div class="par" id="{{ t.get_id() }}" t="{{ t.get_hash() }}" attrs="{{ t.get_attrs_str() }}">
                     <answerbrowser
                             task-id="{{ t.get_attrs()['task_id'] }}">
                     </answerbrowser>
@@ -142,7 +142,7 @@
                     </div>
                 </div>
                 {% else %}
-                <div class="par" id="{{ t.get_id() }}" t="{{ t.get_hash() }}" ng-non-bindable>
+                <div class="par" id="{{ t.get_id() }}" t="{{ t.get_hash() }}" attrs="{{ t.get_attrs_str() }}" ng-non-bindable>
                     <div class="parContent">
                         {{ t.get_html()|safe }}
                     </div>

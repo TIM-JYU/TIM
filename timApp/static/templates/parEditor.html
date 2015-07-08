@@ -25,6 +25,13 @@
         </label>
     </div>
 </div>
+<div class="attributes">
+    <div ng-repeat="(key, value) in extraData.attrs">
+        <span ng-bind="key"></span>:
+        <input type="text" ng-model="extraData.attrs[key]"> [<a ng-click="deleteAttribute(key)">X</a>]
+    </div>
+    <input type="text" ng-model="newAttr"><button ng-click="extraData.attrs[newAttr] = ''; newAttr = ''">New attribute</button>
+</div>
 <div id="previewDiv" tim-draggable-fixed class="preview" style='z-index:100; top: 0px; right: 0px; position="fixed";'>
     <span>Preview
         (<ng-pluralize count="parCount"

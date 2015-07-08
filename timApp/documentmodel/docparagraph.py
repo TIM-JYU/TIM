@@ -110,6 +110,10 @@ class DocParagraph:
         return self.__data['attrs']
 
     @contract
+    def get_attrs_str(self) -> 'str':
+        return json.dumps(self.get_attrs())
+
+    @contract
     def get_base_path(self) -> 'str':
         return self.getBasePath(self.get_id(), files_root=self.files_root)
 

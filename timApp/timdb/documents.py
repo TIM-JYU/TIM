@@ -44,10 +44,13 @@ class Documents(TimDbBase):
         return DocEntryIterator(self.db)
 
     @contract
-    def add_paragraph(self, doc: 'Document', content: 'str',
-                      prev_par_id: 'str|None') -> 'tuple(list(DocParagraph),Document)':
+    def add_paragraph(self, doc: 'Document',
+                      content: 'str',
+                      prev_par_id: 'str|None',
+                      attrs: 'dict|None'=None) -> 'tuple(list(DocParagraph),Document)':
         """Adds a new markdown block to the specified document.
         
+        :param attrs: The attributes for the paragraph.
         :param doc: The id of the document.
         :param content: The content of the block.
         :param prev_par_id: The id of the previous paragraph. None if this paragraph should become the last.
@@ -56,7 +59,7 @@ class Documents(TimDbBase):
 
         assert doc.exists(), 'document does not exist: %r' % doc.doc_id
         content = self.trim_markdown(content)
-        par = doc.insert_paragraph(content, prev_par_id)
+        par = doc.insert_paragraph(content, prev_par_id, attrs)
         return [par], doc
 
     @contract
@@ -460,9 +463,10 @@ class Documents(TimDbBase):
 
     @contract
     def modify_paragraph(self, doc: 'Document', par_id: 'str',
-                         new_content: 'str') -> 'tuple(list(DocParagraph), Document)':
+                         new_content: 'str', new_attrs: 'dict|None'=None) -> 'tuple(list(DocParagraph), Document)':
         """Modifies a paragraph in a document.
         
+        :param new_attrs: The attributes for the paragraph.
         :param doc: The document.
         :param par_id: The id of the paragraph to be modified.
         :param new_content: The new content of the paragraph.
@@ -471,7 +475,7 @@ class Documents(TimDbBase):
 
         assert Document.doc_exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
         new_content = self.trim_markdown(new_content)
-        par = doc.modify_paragraph(par_id, new_content)
+        par = doc.modify_paragraph(par_id, new_content, new_attrs)
         return [par], doc
 
     @contract
