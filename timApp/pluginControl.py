@@ -111,8 +111,10 @@ def find_task_ids(blocks, doc_id):
     :type blocks: list[DocParagraph]
     """
     task_ids = []
-    for idx, block in enumerate(blocks):
-        task_ids.append("{}.{}".format(doc_id, block.get_attrs()['taskId']))
+    for block in blocks:
+        task_id = block.get_attrs().get('taskId')
+        if task_id:
+            task_ids.append("{}.{}".format(doc_id, task_id))
     return task_ids
 
 
