@@ -32,12 +32,12 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                 $scope.json = $scope.$parent.questionJson;
                 var htmlSheet = "<div class = 'answerSheet'>";
                 if ($scope.json.TYPE !== "true-false") {
-                    htmlSheet += "<h2>" + $scope.json.QUESTION + "<h2>";
+                    htmlSheet += "<h2>" + $scope.json.QUESTION + "</h2>";
                 }
                 if ($scope.json.TIMELIMIT !== "") {
                     htmlSheet += "<progress value='0' max='" + $scope.json.TIMELIMIT + "' id='progressBar'>";
                     htmlSheet += "</progress>";
-                    htmlSheet += "<span id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
+                    htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
                 }
 
                 htmlSheet += "<table id='answer-sheet-table'>";

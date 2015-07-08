@@ -40,7 +40,7 @@ td.selected {
     min-height: 20em;
     overflow: hidden;
     border: 1px solid grey;
-    border-radius: 10px;
+    border-radius: 5px;
     width: 20em;
     z-index: 6;
     position: fixed;
@@ -186,8 +186,6 @@ td.selected {
 }
 
 .answerSheet table {
-    margin-top: 1em;
-    margin-bottom: 1em;
     font-size: large;
 }
 
@@ -197,6 +195,7 @@ td.selected {
 }
 
 .answerSheet h2 {
+    margin: 0;
     text-align: center;
 }
 
@@ -213,6 +212,8 @@ td.selected {
 .answerSheet th {
     background-color: #3cc;
     border: none;
+    height: auto;
+    width: auto;
 }
 
 .show-answer h2 {
@@ -223,7 +224,7 @@ td.selected {
 .chart {
     width: 100%;
     height: 100%;
-    overflow: scroll
+    overflow: auto;
 }
 
 .lectureEnding {
