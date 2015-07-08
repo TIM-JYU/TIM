@@ -51,93 +51,28 @@ body {
 /*=============================================*/
 /* Gather all colors here                      */
 /*=============================================*/
-.ansi_fore {
-    color: #FFFFFF;
-}
-
-.ansi_back {
-    background-color: #000000;
-}
-
-.ansi1 {
-    font-weight: bold;
-}
-
-.ansi3 {
-    font-style: italic;
-}
-
-.ansi4 {
-    text-decoration: underline;
-}
-
-.ansi9 {
-    text-decoration: line-through;
-}
-
-.ansi30 {
-    color: #000000;
-}
-
-.ansi31 {
-    color: #FF0000;
-}
-
-.ansi32 {
-    color: #00FF00;
-}
-
-.ansi33 {
-    color: #FFFF00;
-}
-
-.ansi34 {
-    color: #0000FF;
-}
-
-.ansi35 {
-    color: #FF00FF;
-}
-
-.ansi36 {
-    color: #00FFFF;
-}
-
-.ansi37 {
-    color: #FFFFFF;
-}
-
-.ansi40 {
-    background-color: #000000;
-}
-
-.ansi41 {
-    background-color: #FF0000;
-}
-
-.ansi42 {
-    background-color: #00FF00;
-}
-
-.ansi43 {
-    background-color: #FFFF00;
-}
-
-.ansi44 {
-    background-color: #0000FF;
-}
-
-.ansi45 {
-    background-color: #FF00FF;
-}
-
-.ansi46 {
-    background-color: #00FFFF;
-}
-
-.ansi47 {
-    background-color: #FFFFFF;
-}
+.ansi_fore { color: #FFFFFF; }
+.ansi_back { background-color: #000000; }
+.ansi1 { font-weight: bold; }
+.ansi3 { font-style: italic; }
+.ansi4 { text-decoration: underline; }
+.ansi9 { text-decoration: line-through; }
+.ansi30 { color: #000000; }
+.ansi31 { color: #FF0000; }
+.ansi32 { color: #00FF00; }
+.ansi33 { color: #FFFF00; }
+.ansi34 { color: #0000FF; }
+.ansi35 { color: #FF00FF; }
+.ansi36 { color: #00FFFF; }
+.ansi37 { color: #FFFFFF; }
+.ansi40 { background-color: #000000; }
+.ansi41 { background-color: #FF0000; }
+.ansi42 { background-color: #00FF00; }
+.ansi43 { background-color: #FFFF00; }
+.ansi44 { background-color: #0000FF; }
+.ansi45 { background-color: #FF00FF; }
+.ansi46 { background-color: #00FFFF; }
+.ansi47 { background-color: #FFFFFF; }
 
 .noteButton, .addNoteButton, .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton, .addQuestionButton {
     background-color: #f8f8f8;
@@ -1768,231 +1703,6 @@ img.console {
 	}
 	
 }
-
-/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
-@media only screen and (max-width: 1200px) {
-    .editor {
-        /* height: 5em; */
-    }
-
-    .content {
-        max-width: 45em;
-        text-align: justify;
-        margin-right: 0.5em;
-    }
-
-    .paragraph, .par {
-        position: relative;
-        max-width: 43em;
-        margin-left: 0em;
-        margin-top: 1em;
-    }
-
-    .addNoteButton {
-        position: absolute;
-        top: 0em;
-        left: 106%;
-        outline: none;
-    }
-
-    .readline {
-        position: absolute;
-        top: 0em;
-        /*left: 100%; */
-        margin-left: 0.7em;
-        right: -2em;
-    }
-
-    .notes, .speaker {
-        position: absolute;
-        left: 116%;
-        width: 17em;
-        top: 0em;
-    }
-
-    .editButton {
-        position: absolute;
-        top: 0em;
-        left: 106%;
-        outline: none;
-    }
-
-    .editorArea {
-        position: relative;
-        top: 0em;
-        left: 0%;
-    }
-
-    .addParButton {
-        left: 106%;
-    }
-
-    body {
-        max-width: 45em;
-        margin-left: 5px !important;
-        margin-right: 10px;
-        font-family: Verdana, Arial, sans-serif;
-        font-size: 1em;
-        line-height: 1.2;
-    }
-
-    .material {
-        background-color: white;
-        display: inline-block;
-        width: 100%;
-        margin-left: 0em;
-    }
-
-    .noteeditor {
-        /*
-            position: absolute;
-            top: 0em;
-            left: 0em;
-        */
-    }
-
-    .sidebar.autohidden {
-        display: none;
-    }
-	
-	#largeMenu{
-		margin-left: 80px;		
-	}
-}
-
-/* Kännyköiden erikoistyylit =============================================*/
-
-@media only screen and (max-device-width: 500px) {
-    P {
-        margin-top: 0.0em;
-        margin-bottom: 0.0em;
-        margin-left: 1px;
-        margin-right: 5px;
-    }
-
-    .content {
-        text-align: left;
-    }
-
-    .material {
-        display: inline-block;
-        width: 100%;
-    }
-
-    body {
-        text-align: left;
-        max-width: 50em;
-        margin-left: 0.0cm !important;
-        margin-right: 0.0cm;
-        font-family: Verdana, Arial, sans-serif;
-        font-size: 1em;
-        line-height: 1.2;
-    }
-
-    PRE {
-        margin-left: 0.5em;
-        margin-right: 0.00cm;
-    }
-
-    .csRunCode {
-        margin-left: 1.1em;
-        /*width: 98%;  */
-    }
-
-    .addNoteButton {
-        position: absolute;
-        line-height: 0.8;
-        top: 0em;
-        left: 101%;
-        outline: none;
-    }
-
-    .notes, .speaker {
-        position: absolute;
-        left: 115%;
-        width: 17em;
-        top: 0em;
-    }
-
-    .readline {
-        position: absolute;
-        top: 0em;
-        right: 0em;
-        margin-left: -1.3em;
-        border-right: 0.25em solid red;
-    }
-
-    .huomautus {
-        margin-left: 0.1em;
-        text-align: left;
-    }
-
-    blockquote {
-        margin-left: 0.2em;
-        margin-right: 0.2em;
-    }
-
-    ul, ol {
-        margin-left: 0.1em;
-    }
-
-    .sidebar.autohidden {
-        display: none;
-    }
-}
-
-/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
-@media only screen and (max-device-width: 1200px) {
-    .readline {
-        margin-left: -8.5em;
-    }
-}
-
-/* Kännyköiden erikoistyylit =============================================*/
-@media only screen and (max-device-width: 500px) {
-    .readline {
-        z-index: 30;
-        border-right: 0.7em solid red;
-        margin-left: -10.7em;
-    }
-
-    task, .csRunDiv {
-        margin-left: 0.2em;
-        margin-right: 0em;
-    }
-
-    .csrunEditorDiv .csEditArea {
-        /* margin-left: 1px;  */
-    }
-}
-
-@media only screen and (max-width: 1600px) {
-    .editorArea {
-        position: relative;
-        top: 0em;
-        left: 0%;
-    }
-
-    .notes:hover, .speaker:hover {
-        margin-left: -60%;
-        width: 200em;
-        background-color: white;
-
-        display: block;
-        z-index: 9;
-        /* max-height: 100%; */
-        padding-left: 2em;
-    }
-
-}
-
-
-@media only screen and (min-width: 500px) {
-	.menu {
-		display: block!important;
-	}
-}
-
 
 /* =============================== Vesan lisäyksiä ==================================*/
 

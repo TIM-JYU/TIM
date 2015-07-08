@@ -88,7 +88,7 @@ timApp.controller("ViewCtrl", [
         var PAR_CLOSE_BUTTON_CLASS = "timButton menuClose";
         var PAR_CLOSE_BUTTON = "." + PAR_CLOSE_BUTTON_CLASS.replace(" ", ".");
 
-        sc.defaults = [false, false, false, false, false];
+        sc.defaults = [false, false, false, false, false, false];
 
         sc.updateSelection = function (index) {
             var selected = false;
@@ -670,17 +670,18 @@ timApp.controller("ViewCtrl", [
                 $actionDiv.append($span);
 
                 if (sc.lectureMode) {
-                    $span = $("<span>");
+
+                    var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
                     $span.append($("<button>", {
                         class: QUESTION_ADD_BUTTON_CLASS,
                         text: 'Create question',
                         width: button_width
                     }));
-                    $span.append($("<button>", {
-                        id: 'createQuestion',
-                        class: DEFAULT_BUTTON_CLASS,
-                        text: 'Default',
-                        width: default_width
+                    $span.append($("<input>", {
+                        class: DEFAULT_CHECKBOX_CLASS,
+                        type: 'checkbox',
+                        'ng-click': 'updateSelection(4)',
+                        'ng-model': 'defaults[4]'
                     }));
                     $actionDiv.append($span);
                 }
@@ -690,8 +691,8 @@ timApp.controller("ViewCtrl", [
                 $span.append($("<input>", {
                     class: DEFAULT_CHECKBOX_CLASS,
                     type: 'checkbox',
-                    'ng-click': 'updateSelection(4)',
-                    'ng-model': 'defaults[4]'
+                    'ng-click': 'updateSelection(5)',
+                    'ng-model': 'defaults[5]'
                 }));
                 $actionDiv.append($span);
 
@@ -1101,7 +1102,7 @@ timApp.controller("ViewCtrl", [
 
         // Load index, notes and read markings
         sc.editorFunctions = [sc.showNoteWindow, sc.showEditWindow, sc.showAddParagraphAbove,
-            sc.showAddParagraphBelow, sc.doNothing];
+            sc.showAddParagraphBelow, sc.toggleQuestion, sc.doNothing];
 
         sc.setHeaderLinks();
         sc.indexTable = [];
@@ -1155,7 +1156,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
 
-    scope.putBackQuotations = function(x){
+    scope.putBackQuotations = function (x) {
         return x.replace(/&quot;/g, '"');
     };
 
