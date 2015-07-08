@@ -88,7 +88,8 @@ def preview(doc_id):
     """
     timdb = getTimDb()
     md, = verify_json_params('text')
-    blocks = [DocParagraph(md=md)]
+    attrs = request.get_json().get('attrs')
+    blocks = [DocParagraph(md=md, attrs=attrs)]
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,

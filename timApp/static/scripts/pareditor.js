@@ -31,9 +31,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     }
                     $scope.timer = $window.setTimeout(function () {
                         var text = $scope.editor.getSession().getValue();
-                        $http.post($scope.previewUrl, {
-                            "text": text
-                        }).success(function (data, status, headers, config) {
+                        $http.post($scope.previewUrl, angular.extend({
+                            text: text
+                        }, $scope.extraData)).success(function (data, status, headers, config) {
                             var len = data.texts.length;
 
                             var $previewDiv = angular.element(".previewcontent");
@@ -41,7 +41,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                             for (var i = 0; i < len; i++) {
                                 var html = data.texts[i].html;
-                                if ('task_id' in data.texts[i].attrs) {
+                                if ('taskId' in data.texts[i].attrs) {
                                     html = $compile(html)($scope);
                                 }
                                 $previewDiv.append(angular.element("<div>", {class: "par"})
