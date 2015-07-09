@@ -268,14 +268,4 @@ input[type="submit"], input[type="button"] {
 	.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
 		max-height: 260px;
 	}
-	
-	.contents {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-	width: 50px;
-    z-index: 1;
-}
-	
 }

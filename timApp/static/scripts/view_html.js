@@ -1112,7 +1112,7 @@ timApp.controller("ViewCtrl", [
         sc.getReadPars();
 
 
-        // Tässä jos lisää bindiin 'mousedown' scrollaus menua avattaessa ei toimi Androidilla
+        // Tässä jos lisää bindiin 'mousedown', scrollaus menua avattaessa ei toimi Androidilla
         $('body,html').bind('scroll wheel DOMMouseScroll mousewheel', function (e) {
             if (e.which > 0 || e.type == "mousedown" || e.type == "mousewheel") {
                 $("html,body").stop();

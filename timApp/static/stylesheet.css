@@ -1,5 +1,5 @@
 .content {
-	text-align: justify;
+    text-align: justify;
 }
 
 .paragraph, .par {
@@ -7,9 +7,9 @@
 }
 
 body {
-	text-align: justify;
-	margin: auto;  
-	margin-left: 210px;
+    text-align: justify;
+    margin: auto;
+    margin-left: 210px;
 }
 
 .correct {
@@ -17,7 +17,7 @@ body {
     padding: 0.5em;
 }
 
-.wrong { 
+.wrong {
     background-color: red;
     padding: 0.5em;
 }
@@ -51,28 +51,93 @@ body {
 /*=============================================*/
 /* Gather all colors here                      */
 /*=============================================*/
-.ansi_fore { color: #FFFFFF; }
-.ansi_back { background-color: #000000; }
-.ansi1 { font-weight: bold; }
-.ansi3 { font-style: italic; }
-.ansi4 { text-decoration: underline; }
-.ansi9 { text-decoration: line-through; }
-.ansi30 { color: #000000; }
-.ansi31 { color: #FF0000; }
-.ansi32 { color: #00FF00; }
-.ansi33 { color: #FFFF00; }
-.ansi34 { color: #0000FF; }
-.ansi35 { color: #FF00FF; }
-.ansi36 { color: #00FFFF; }
-.ansi37 { color: #FFFFFF; }
-.ansi40 { background-color: #000000; }
-.ansi41 { background-color: #FF0000; }
-.ansi42 { background-color: #00FF00; }
-.ansi43 { background-color: #FFFF00; }
-.ansi44 { background-color: #0000FF; }
-.ansi45 { background-color: #FF00FF; }
-.ansi46 { background-color: #00FFFF; }
-.ansi47 { background-color: #FFFFFF; }
+.ansi_fore {
+    color: #FFFFFF;
+}
+
+.ansi_back {
+    background-color: #000000;
+}
+
+.ansi1 {
+    font-weight: bold;
+}
+
+.ansi3 {
+    font-style: italic;
+}
+
+.ansi4 {
+    text-decoration: underline;
+}
+
+.ansi9 {
+    text-decoration: line-through;
+}
+
+.ansi30 {
+    color: #000000;
+}
+
+.ansi31 {
+    color: #FF0000;
+}
+
+.ansi32 {
+    color: #00FF00;
+}
+
+.ansi33 {
+    color: #FFFF00;
+}
+
+.ansi34 {
+    color: #0000FF;
+}
+
+.ansi35 {
+    color: #FF00FF;
+}
+
+.ansi36 {
+    color: #00FFFF;
+}
+
+.ansi37 {
+    color: #FFFFFF;
+}
+
+.ansi40 {
+    background-color: #000000;
+}
+
+.ansi41 {
+    background-color: #FF0000;
+}
+
+.ansi42 {
+    background-color: #00FF00;
+}
+
+.ansi43 {
+    background-color: #FFFF00;
+}
+
+.ansi44 {
+    background-color: #0000FF;
+}
+
+.ansi45 {
+    background-color: #FF00FF;
+}
+
+.ansi46 {
+    background-color: #00FFFF;
+}
+
+.ansi47 {
+    background-color: #FFFFFF;
+}
 
 .noteButton, .addNoteButton, .addParButton, .editButton, .cancelButton, .parSaveButton, .deleteButton, .addQuestionButton {
     background-color: #f8f8f8;
@@ -82,7 +147,7 @@ body {
     border-radius: 12px;
     outline: none;
     float: left;
-	
+
     border: 2px none;
     line-height: 0.8;
     width: 5em;
@@ -108,7 +173,7 @@ body {
     text-decoration: none;
 }
 
-input[type="submit"], button, input[type="button"] { 
+input[type="submit"], button, input[type="button"] {
     background: #3CC;
     border: 0;
     border-radius: 3px;
@@ -123,10 +188,10 @@ input[type="submit"], button, input[type="button"] {
 
 .viewLogin .loginButton:hover {
     width: auto;
-} 
- 
+}
+
 .viewLogin .loginButtonRow {
-} 
+}
 
 .viewLogin .loginButtonDiv {
     width: auto;
@@ -164,7 +229,7 @@ input[type="submit"], button, input[type="button"] {
 .viewLogin .loginFieldStatic {
     width: 120px;
 }
- 
+
 .viewLogin .loginButton {
     background: #3CC;
     border: 0;
@@ -179,10 +244,10 @@ input[type="submit"], button, input[type="button"] {
     font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.viewLogin form { 
+.viewLogin form {
     display: inline;
 }
- 
+
 .material {
     background-color: white;
 }
@@ -202,7 +267,7 @@ td p {
 .readline {
     border-color: #F60; /* rgb(236,103,27); */
 }
-	
+
 .readline:hover {
     opacity: 0.5;
     background: #F60; /* rgb(236,103,27); */
@@ -210,9 +275,9 @@ td p {
 
 .editline:hover {
     opacity: 0.5;
-	background: #3CC; /* rgb(236,103,27); */
+    background: #3CC; /* rgb(236,103,27); */
 }
-	
+
 .readline.read {
     display: none;
 }
@@ -236,19 +301,19 @@ td p {
 
 /*=============================================*/
 li p {
-    margin-left: 0; 
+    margin-left: 0;
 }
 
 ul, ol {
-    margin-left: 1.5em;  
+    margin-left: 1.5em;
 }
 
 ul ul, ol ol {
-    margin-left: -1em; 
+    margin-left: -1em;
 }
 
 ul ul ul, ol ol ol {
-    margin-left: -1em; 
+    margin-left: -1em;
 }
 
 .note p {
@@ -423,7 +488,7 @@ ul ul ul, ol ol ol {
 .deleteButton:hover {
     color: black;
 }
- 
+
 .parSaveButton {
     top: 0em;
     left: 0em;
@@ -440,7 +505,7 @@ ul ul ul, ol ol ol {
 }
 
 .cancelButton:hover {
-    background: #999966; 
+    background: #999966;
     color: black;
 }
 
@@ -452,7 +517,7 @@ ul ul ul, ol ol ol {
     z-index: 10;
     left: 0em;
     top: 3em;
-    background: #999966;	
+    background: #999966;
 }
 
 .material {
@@ -472,7 +537,7 @@ ul ul ul, ol ol ol {
 .navigationBar {
     width: auto;
     background-color: #00CC00;
-    
+
 }
 
 .flashEdit {
@@ -499,7 +564,7 @@ ul ul ul, ol ol ol {
     padding-top: 0.5em;
     position: absolute;
 }
- 
+
 .addParButton:hover {
     content: "Add new paragraph here";
     display: block;
@@ -511,21 +576,21 @@ ul ul ul, ol ol ol {
     left: 0em;
     color: black;
 }
- 
+
 PRE {
     /* border-style: solid; */
-	
+
     /* border-width: 1px; */
-	
+
     /* border-radius: 5px; */
-	
+
     padding: 4px;
-	
+
     margin-left: 2.5em;
     margin-right: 0.00cm;
     line-height: 1;
     font-size: 1em;
-	
+
     /* box-shadow: 10px 10px 5px #888888; */
 }
 
@@ -604,9 +669,9 @@ p.kannentiedotoikea-western {
 }
 
 .caption {
-	text-align: center;
-	font-style: italic;
-	margin-top: 1em;
+    text-align: center;
+    font-style: italic;
+    margin-top: 1em;
     margin-left: 5em;
     margin-right: 5em;
 }
@@ -804,9 +869,9 @@ a.anchor:hover {
 
 /*body {font-family: Verdana, Arial, sans-serif}*/
 .editor {
-	width: 100%;
-	padding: 5px 0px;
-	text-align: left;
+    width: 100%;
+    padding: 5px 0px;
+    text-align: left;
     resize: both;
     border-radius: 5px;
 }
@@ -824,16 +889,16 @@ a.anchor:hover {
     width: 100%;
     left: 0;
     top: 0;
-    min-height:6.5em;
+    min-height: 6.5em;
     padding: 0.5em;
     border-radius: 5px;
     background: #e0e0e0;
 }
 
 .editButtonArea {
-	float: left;
-	padding-right: 1em;
-	margin-bottom: 0em;
+    float: left;
+    padding-right: 1em;
+    margin-bottom: 0em;
 }
 
 .editorButton {
@@ -858,7 +923,7 @@ a.anchor:hover {
 }
 
 .extraButtonArea.hidden {
-	display: none;
+    display: none;
 }
 
 .tabsarea, .extraButtonArea {
@@ -884,7 +949,6 @@ a.anchor:hover {
     margin: 0;
     background: rgb(246, 246, 246);
 }
-
 
 li.tab.active, li.tab.pinned {
     background: #3CC;
@@ -912,7 +976,7 @@ input[type="file"] {
 .tabsarea li > a:hover {
     text-decoration: none;
 }
-	
+
 video {
     display: block;
     margin: 0 auto;
@@ -974,15 +1038,15 @@ p.stem {
     font-family: Courier, serif;
     margin-left: 2em;
     /* border-style: solid; */
-	
+
     border-width: 1px;
-	
+
     /* border-radius: 5px; */
     padding: 4px;
     margin-right: 0em;
     line-height: 1;
     font-size: 1em;
-	
+
     /* box-shadow: 10px 10px 5px #888888; */
     /* width: 98%; */
 }
@@ -1010,8 +1074,8 @@ p.stem {
     display: block;
     margin: 0 auto;
 }
- 
-.showVideoHolder { 
+
+.showVideoHolder {
     text-align: center;
     display: block;
     margin: 0 auto;
@@ -1079,46 +1143,52 @@ p.stem {
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 1200px) {
-	.editor {
-		/* height: 5em; */
-	}
-	.content { 
-		/* max-width: 45em; */
-		text-align: justify;
+    .editor {
+        /* height: 5em; */
+    }
+
+    .content {
+        /* max-width: 45em; */
+        text-align: justify;
         margin-right: 0.5em;
-	}
-	.paragraph,  .par {
-		position: relative;
-		/* max-width: 43em; */
-		margin-left: 0em;
-		margin-top: 1em;
-		margin-right: 1em;
-	}
-	.addNoteButton {
-		position: absolute;
-		top: 0em;
-		left: 106%;
-		outline: none;
-	}
-	.readline {
-		position: absolute;
-		top: 0em;
-		/*left: 100%; */
+    }
+
+    .paragraph, .par {
+        position: relative;
+        /* max-width: 43em; */
+        margin-left: 0em;
+        margin-top: 1em;
+        margin-right: 1em;
+    }
+
+    .addNoteButton {
+        position: absolute;
+        top: 0em;
+        left: 106%;
+        outline: none;
+    }
+
+    .readline {
+        position: absolute;
+        top: 0em;
+        /*left: 100%; */
         margin-left: 0.7em;
-		right: -2em;
-	}
-	.notes, .speaker {
-		position: absolute;
-		left: 116%;
-		width: 17em;
-		top: 0em;
-	}
-	.editButton {
-		position: absolute;
-		top: 0em;
-		left: 106%;
-		outline: none;
-	}
+        right: -2em;
+    }
+
+    .notes, .speaker {
+        position: absolute;
+        left: 116%;
+        width: 17em;
+        top: 0em;
+    }
+
+    .editButton {
+        position: absolute;
+        top: 0em;
+        left: 106%;
+        outline: none;
+    }
 
     .editorArea {
         position: absolute;
@@ -1131,106 +1201,117 @@ p.stem {
     .previewcontent {
         max-height: 15em;
     }
-	
-	.addParButton{
-		left: 106%;
-    } 
-	
-	
-	body {
-		/* max-width: 45em; */
-		margin-left: 5px !important;
-		/*margin-right: 10px; */
-		font-family: Verdana, Arial, sans-serif;
-		font-size: 1em;
-		line-height: 1.2;
-	}
-	.material {
-		background-color: white;
-		display: inline-block;
-		width: 100%;
+
+    .addParButton {
+        left: 106%;
+    }
+
+    body {
+        /* max-width: 45em; */
+        margin-left: 5px !important;
+        /*margin-right: 10px; */
+        font-family: Verdana, Arial, sans-serif;
+        font-size: 1em;
+        line-height: 1.2;
+    }
+
+    .material {
+        background-color: white;
+        display: inline-block;
+        width: 100%;
         margin-left: 0em;
-	}
-	.noteeditor {
-	/*
-		position: absolute;
-		top: 0em;
-		left: 0em;
-	*/	
-	}
+    }
+
+    .noteeditor {
+        /*
+            position: absolute;
+            top: 0em;
+            left: 0em;
+        */
+    }
+
     .sidebar.autohidden {
         display: none;
     }
-	
+
 }
 
 /* Kännyköiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 500px) {
 
-	P {
-		margin-top: 0.0em;
-		margin-bottom: 0.0em;
-		margin-left: 1px; 
-		margin-right: 5px;
-	}
-	.content { 
-		text-align: left;
-	}
-	.material {
-		display: inline-block;
-		width: 100%;
-	}
-	body {
-		text-align: left;
-		max-width: 50em;
-		margin-left: 0.0cm !important;
-		margin-right: 0.0cm;
-		font-family: Verdana, Arial, sans-serif;
-		font-size: 1em;
-		line-height: 1.2;
-	}
-	PRE {
-		margin-left: 0.5em;
-		margin-right: 0.00cm;
-	}
+    P {
+        margin-top: 0.0em;
+        margin-bottom: 0.0em;
+        margin-left: 1px;
+        margin-right: 5px;
+    }
+
+    .content {
+        text-align: left;
+    }
+
+    .material {
+        display: inline-block;
+        width: 100%;
+    }
+
+    body {
+        text-align: left;
+        max-width: 50em;
+        margin-left: 0.0cm !important;
+        margin-right: 0.0cm;
+        font-family: Verdana, Arial, sans-serif;
+        font-size: 1em;
+        line-height: 1.2;
+    }
+
+    PRE {
+        margin-left: 0.5em;
+        margin-right: 0.00cm;
+    }
+
     .csRunCode {
         margin-left: 1.1em;
         /*width: 98%;  */
     }
-	.addNoteButton {
-		position: absolute;
-		line-height:0.8;
-		top: 0em;
-		left: 101%;
-		outline: none;
-	}
 
-	.notes, .speaker {  
-		position: absolute;
-		left: 115%;
-		width: 17em;
-		top: 0em;
-	}
+    .addNoteButton {
+        position: absolute;
+        line-height: 0.8;
+        top: 0em;
+        left: 101%;
+        outline: none;
+    }
+
+    .notes, .speaker {
+        position: absolute;
+        left: 115%;
+        width: 17em;
+        top: 0em;
+    }
+
     .readline {
-		position: absolute;
-		top: 0em;
+        position: absolute;
+        top: 0em;
         right: 0em;
         margin-left: -1.3em;
         border-right: 0.25em solid red;
     }
-	
+
     .huomautus {
         margin-left: 0.1em;
         text-align: left;
     }
+
     blockquote {
         margin-left: 0.2em;
         margin-right: 0.2em;
     }
-    
+
     ul, ol {
-      margin-left: 0.1em;
+        margin-left: 0.1em;
     }
+
     .sidebar.autohidden {
         display: none;
     }
@@ -1284,7 +1365,7 @@ pre {
     font-family: "Courier New", Courier, serif;
     font-weight: normal;
     border-left: 4px solid #3CC;
-    padding: 0.5em 0 0.5em 1em; 
+    padding: 0.5em 0 0.5em 1em;
     /* margin: 0 0 1em 1em; */
     font-size: 0.95em;
 }
@@ -1296,12 +1377,12 @@ pre {
 }
 
 .stem {
-    margin-left: 0.3em;	
+    margin-left: 0.3em;
     margin-right: 0.5em;
 }
 
 .csRunMenu {
-    margin-left: 0.3em;	
+    margin-left: 0.3em;
 }
 
 .csRunMenu button {
@@ -1356,12 +1437,11 @@ img.console {
         margin-left: 0.2em;
         margin-right: 0em;
     }
-    
-    .csrunEditorDiv  .csEditArea {
+
+    .csrunEditorDiv .csEditArea {
         /* margin-left: 1px;  */
     }
 }
-
 
 @media only screen and (max-width: 1600px) {
     /*
@@ -1370,8 +1450,7 @@ img.console {
 		top: 0em;
 		left: 0%;
 	}*/
-
-	.notes:hover, .speaker:hover {
+    .notes:hover, .speaker:hover {
         margin-left: -60%;
         width: 200em;
         background-color: white;
@@ -1382,7 +1461,6 @@ img.console {
         padding-left: 2em;
     }
 
-	
 }
 
 /* Opettajanäkymän käyttäjälistaa varten ================================*/
@@ -1433,21 +1511,19 @@ img.console {
 
 /* Sisällysluetteloa varten =============================================*/
 #sidebarMenuButton {
-	display: none;
+    display: none;
 }
 
 .contents {
     position: fixed;
     top: 0;
-    bottom: 0;
     left: 0;
     z-index: 5;
-    /* bottom: 0; */
     overflow-y: auto;
 }
 
 #sidebarIcons {
-	position: fixed;
+    position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
@@ -1455,33 +1531,33 @@ img.console {
 }
 
 .sideMenu {
-	position: fixed;
+    position: fixed;
     top: 0;
     left: 0;
 }
 
-.sidebarMenu h4{
-	margin: 0;
-	margin-top: 15px;
-	color: #3cc;
+.sidebarMenu h4 {
+    margin: 0;
+    margin-top: 15px;
+    color: #3cc;
 }
 
-.sidebarMenu p{
-	margin: 0;
+.sidebarMenu p {
+    margin: 0;
 }
 
 .invisible {
-	height: 50px;
-	width: 50px;
+    height: 50px;
+    width: 50px;
 }
 
 .index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
-	position:relative;
-	left: 50px;
-	top: -50px;
+    position: relative;
+    left: 50px;
+    top: -50px;
     z-index: 500;
     width: 215px;
-	max-height: 500px;
+    max-height: 500px;
     word-wrap: break-word;
     background-color: #e6e6e6;
     /*-webkit-transition: 200ms all ease-in-out;
@@ -1489,8 +1565,8 @@ img.console {
     -o-transition: 200ms all ease-in-out;
     transition: 200ms all ease-in-out;*/
     overflow-x: hidden;
-	overflow-y: auto;
-	border-top: 1px solid #e6e6e6;
+    overflow-y: auto;
+    border-top: 1px solid #e6e6e6;
 }
 
 .index-sidebar.hidden, .index-sidebar.autohidden, .lectures-sidebar.hidden, .lectures-sidebar.autohidden,
@@ -1519,28 +1595,28 @@ img.console {
     font-size: 0.9em;
 }
 
-.lectures-sidebar p, .questions-sidebar p, .people-sidebar p, .people-sidebar li, .settings-sidebar label{
-	text-align: left;
+.lectures-sidebar p, .questions-sidebar p, .people-sidebar p, .people-sidebar li, .settings-sidebar label {
+    text-align: left;
     font-family: "Helvetica", Arial, sans-serif;
     font-size: 0.85em;
 }
 
 .settings-sidebar ul {
-	margin-top: 5px;
-	margin-left: 20px;
-	margin-bottom: 5px;
-	font-size: 15px; 
-	padding: 0;
+    margin-top: 5px;
+    margin-left: 20px;
+    margin-bottom: 5px;
+    font-size: 15px;
+    padding: 0;
     text-align: left;
 }
 
-.index-sidebar li, .lectures-sidebar li , .questions-sidebar li, .settings-sidebar li{
+.index-sidebar li, .lectures-sidebar li, .questions-sidebar li, .settings-sidebar li {
     padding-left: 15px;
     list-style: none;
 }
 
 .people-sidebar li {
-	list-style:none;
+    list-style: none;
 }
 
 .index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
@@ -1554,24 +1630,24 @@ img.console {
 }
 
 .index-sidebar a {
-	margin: 0 0px 0 -15px;
-	text-align: left;  
-	color: #2bb;
+    margin: 0 0px 0 -15px;
+    text-align: left;
+    color: #2bb;
 }
 
 .settings-sidebar a {
-	margin-top: 5px;
-	margin-left: 25px;
-	color: blue;
+    margin-top: 5px;
+    margin-left: 25px;
+    color: blue;
 }
 
-.lectures-sidebar a, .questions-sidebar a, .people-sidebar a{
-	margin: 0 0px 0 -15px;
-	text-align: left;
-	color: black;
+.lectures-sidebar a, .questions-sidebar a, .people-sidebar a {
+    margin: 0 0px 0 -15px;
+    text-align: left;
+    color: black;
 }
 
-.index-sidebar a:hover, .lectures-sidebar a:hover , .questions-sidebar a:hover, .people-sidebar a:hover,
+.index-sidebar a:hover, .lectures-sidebar a:hover, .questions-sidebar a:hover, .people-sidebar a:hover,
 .settings-sidebar a:hover {
     color: #3cc;
     text-decoration: none;
@@ -1611,26 +1687,26 @@ img.console {
     text-align: left;
 }
 
-.people-sidebar h3 , .settings-sidebar h3 {
-	margin-top: 5px;
-	margin-left: 20px;
-	margin-bottom: 5px;
-	color: #3cc;
-	font-size: 15px; 
+.people-sidebar h3, .settings-sidebar h3 {
+    margin-top: 5px;
+    margin-left: 20px;
+    margin-bottom: 5px;
+    color: #3cc;
+    font-size: 15px;
 }
 
-.menu{
-	position: fixed;
-	top: 0;
+.menu {
+    position: fixed;
+    top: 0;
     left: 0;
     z-index: 500;
-	display: inline-block;
+    display: inline-block;
     width: 45px;
 }
 
 .menu-icon {
     z-index: 501;
-	background: #F0F0F0;
+    background: #F0F0F0;
     cursor: pointer;
     filter: brightness(1);
     -webkit-filter: brightness(1);
@@ -1645,11 +1721,11 @@ img.console {
 }
 
 .showSidebar {
-	/*position:fixed;
-	top: 0;
-	left: 50px;
+    /*position:fixed;
+    top: 0;
+    left: 50px;
     width: 215px;
-	max-height: 80%;
+    max-height: 80%;
     z-index: 501;*/
 }
 
@@ -1677,37 +1753,32 @@ img.console {
 }
 
 @media only screen and (max-width: 500px) {
-	#sidebarMenuButton {
-		position: fixed;
-		top: 0;
-		left: 0;
-		z-index: 505;
-		display: block;
-		width: 60px;
-		height: 70px;
-	}
-	
-	#sidebarMenuButton:hover {
-		cursor: pointer;
-	}
-	
-	.menu {
-		display: none;
-		top: 80px;
-		margin-top: 10px;
-	}
-	
-	.sideMenu {
-		top: 80px;
-		margin-top: 10px;
-	}
-	
+    #sidebarMenuButton {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 505;
+        display: block;
+        width: 60px;
+        height: 70px;
+    }
+
+    #sidebarMenuButton:hover {
+        cursor: pointer;
+    }
+
+    .menu, .sideMenu {
+        display: none;
+        top: 80px;
+        margin-top: 10px;
+    }
+
 }
 
 @media only screen and (min-width: 500px) {
-	.menu {
-		display: block!important;
-	}
+    .menu {
+        display: block !important;
+    }
 }
 
 /* =============================== Vesan lisäyksiä ==================================*/
@@ -1725,7 +1796,7 @@ img.console {
 .ace_editor {
     position: relative;
     overflow: hidden;
-    font-family: 'Courier','Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-family: 'Courier', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
     font-size: 14px;
     line-height: 1.1;
     direction: ltr;
@@ -1809,7 +1880,7 @@ img.console {
     margin-left: 0px;
     float: left;
     font-size: 0.96em;
-  
+
 }
 
 .grconsole {
@@ -1860,7 +1931,7 @@ img.console {
         display: none;
     }
 
-    /* Harmaa varjo dokumentilta pois */ 
+    /* Harmaa varjo dokumentilta pois */
     .material {
         box-shadow: none !important;
         border: none !important;
@@ -1895,8 +1966,8 @@ img.console {
     position: absolute;
     top: 0;
     left: -0.5em;
-} 
- 
+}
+
 .sagecell_editor {
     line-height: 13px;
     margin-bottom: 8px;
@@ -1911,7 +1982,6 @@ pre.sagecell_stdout {
     border: none;
 }
 
-
 button:disabled {
     background: #AAA;
     color: #CCC;
@@ -1923,16 +1993,17 @@ button:disabled {
     }
 }
 
-.breadcrumb>li+li:before {
-    padding: 0 0px  !important;
-    color: #ccc  !important;
-    content: "/"  !important;
+.breadcrumb > li + li:before {
+    padding: 0 0px !important;
+    color: #ccc !important;
+    content: "/" !important;
 }
 
 .breadcrumb-div {
     margin-top: 3px !important;
     background-color: #fff !important;
 }
+
 .breadcrumb {
     font-size: 1.0em;
     background-color: #fff !important;
@@ -1955,12 +2026,12 @@ button:disabled {
     text-decoration: bold;
 }
 
-.breadcrumb>li {
+.breadcrumb > li {
     display: inline-block;
 }
- 
+
 p.plgfooter {
-  text-align: center;
+    text-align: center;
 }
 
 .addBottomContainer {
