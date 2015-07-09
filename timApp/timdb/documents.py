@@ -289,7 +289,7 @@ class Documents(TimDbBase):
         If found, an autoimport is performed and a Document object is returned. Otherwise, None is returned.
 
         :param document_id: The id of the document.
-        :returns: The document contents as a list of HTML blocks.
+        :returns: The Document object or None if it doesn't exist.
         """
         d = Document(doc_id=document_id.id)
         if Document.doc_exists(document_id.id):
@@ -304,7 +304,7 @@ class Documents(TimDbBase):
             attrs, index = ap.get_attributes()
             if index is None:
                 attrs = None
-            d.add_paragraph(md=md, attrs=attrs)
+            d.add_paragraph(text=md, attrs=attrs)
         return d
 
     @contract
@@ -542,7 +542,7 @@ class DocEntryIterator:
         if len(self.root_folder) > 0:
             self.cursor.execute(
                 "SELECT id, name FROM DocEntry WHERE name LIKE ?",
-                [blocktypes.DOCUMENT, self.root_folder + '/%'])
+                [self.root_folder + '/%'])
         else:
             self.cursor.execute("SELECT id, name FROM DocEntry")
 
