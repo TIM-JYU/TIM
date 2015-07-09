@@ -422,7 +422,7 @@ ul ul ul, ol ol ol {
 
 .readline {
     position: absolute;
-    right: -1.2em;
+    right: -1em;
     z-index: 3;
     width: 10em;
     height: 100%;
@@ -1826,11 +1826,14 @@ p.plgfooter {
     outline: none;
 }
 
-
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 1200px) {
     .editor {
         /* height: 5em; */
+    }
+
+    div.header {
+        padding: 0 0 0 55px;
     }
 
     .content {
@@ -1993,8 +1996,6 @@ p.plgfooter {
 
     .readline {
         width: 3em;
-        border-right: 0.5em solid;
-        border-color: #F60;
     }
 
     task, .csRunDiv {

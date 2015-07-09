@@ -174,14 +174,12 @@ input[type="submit"], input[type="button"] {
 		
 	.smallMenu {
 		border: 1px solid #3cc;
-		border-radius: 15px;
+		border-radius: 5px;
 		background-color: #3cc;
 		display: flex;
 		color: white;
 		font-size: 0.7em;
-		padding-right: 10px;
-		padding-left: 10px;
-		margin-left: 70px;
+        padding: 0 10px 0 10px;
 		min-width: 230px;
 		margin-top: auto;
 	}
