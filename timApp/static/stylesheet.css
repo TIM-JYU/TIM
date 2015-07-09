@@ -1704,6 +1704,12 @@ img.console {
 	
 }
 
+@media only screen and (min-width: 500px) {
+	.menu {
+		display: block!important;
+	}
+}
+
 /* =============================== Vesan lisäyksiä ==================================*/
 
 /*
