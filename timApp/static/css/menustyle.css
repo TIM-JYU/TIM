@@ -61,6 +61,11 @@
     position: fixed;
 }
 
+.smallMenuBtn {
+    width: 100%;
+    height: 100%;
+}
+
 #smallMenu input[type="submit"] {
     position: relative;
     top: -25px;
@@ -154,9 +159,13 @@ input[type="submit"], input[type="button"] {
 }
 
 /*Pienet resoluutiot*/
-@media only screen and (max-width: 500px) {
+@media only screen and (max-width: 1200px) {
 	.menuSection #largeMenu {
 		display: none;
+	}
+
+	.menuSection {
+		max-width: 52em;
 	}
 	
 	.lecturesList {
