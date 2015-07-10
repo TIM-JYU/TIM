@@ -75,7 +75,7 @@ class Documents(TimDbBase):
             raise TimDbException('Document name cannot contain null characters.')
 
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
-        document = Document(document_id)
+        document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
         document.add_paragraph('Edit me!')
 

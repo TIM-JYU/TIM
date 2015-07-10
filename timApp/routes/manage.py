@@ -1,8 +1,8 @@
 """Routes for manage view."""
-import re
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template
 from .common import *
 from timdb.docidentifier import DocIdentifier
+from documentmodel.document import Document
 
 manage_page = Blueprint('manage_page',
                         __name__,
@@ -30,10 +30,12 @@ def manage(doc_id):
         doc_data['versions'] = []
         doc_data['fulltext'] = ''
     else:
+        doc = Document(doc_id)
         doc_data = timdb.documents.getDocument(doc_id)
-        doc_data['versions'] = timdb.documents.getDocumentVersions(doc_id)
-        hash = doc_data['versions'][0]['hash']
-        doc_data['fulltext'] = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, hash))
+        doc_data['versions'] = [entry for entry in doc.get_changelog()]
+        doc_data['fulltext'] = doc.export_markdown()
+        for ver in doc_data['versions']:
+            ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
     doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
     return render_template('manage.html',

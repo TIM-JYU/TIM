@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 
@@ -11,9 +12,10 @@ from documentmodel.exceptions import DocExistsError
 
 class Document:
     @contract()
-    def __init__(self, doc_id: 'int|None', files_root = None):
+    def __init__(self, doc_id: 'int|None', files_root = None, modifier_group_id: 'int|None' = 0):
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id()
         self.files_root = self.get_default_files_root() if not files_root else files_root
+        self.modifier_group_id = modifier_group_id
 
     @classmethod
     def get_default_files_root(cls):
@@ -64,6 +66,10 @@ class Document:
     def exists(self):
         return Document.doc_exists(self.doc_id, self.files_root)
 
+    @contract
+    def export_markdown(self) -> 'str':
+        return '\n\n'.join([par.get_markdown() for par in self])
+
     @classmethod
     @contract
     def remove(cls, doc_id: 'int', files_root: 'str|None' = None, ignore_exists=False):
@@ -113,7 +119,7 @@ class Document:
         return os.path.join(self.get_document_path(), 'changelog')
 
     @contract
-    def __write_changelog(self, ver: 'tuple(int, int)', msg: 'str'):
+    def __write_changelog(self, ver: 'tuple(int, int)', operation: 'str', par_id: 'str', op_params: 'dict|None' = None):
         logname = self.getlogfilename()
         src = open(logname, 'r') if os.path.exists(logname) else None
         destfd, tmpname = mkstemp()
@@ -121,7 +127,17 @@ class Document:
 
         ts = time()
         timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        dest.write('{} {}.{} {}\n'.format(timestamp, ver[0], ver[1], msg))
+        entry = {
+            'group_id': self.modifier_group_id,
+            'par_id': par_id,
+            'op': operation,
+            'op_params': op_params,
+            'ver': ver,
+            'time': timestamp
+        }
+        dest.write(json.dumps(entry))
+        dest.write('\n')
+        #dest.write('{} {}.{} {}\n'.format(timestamp, ver[0], ver[1], msg))
 
         while src:
             line = src.readline()
@@ -136,7 +152,7 @@ class Document:
         os.unlink(tmpname)
 
     @contract
-    def __increment_version(self, msg: 'str', increment_major: 'bool') -> 'tuple(int, int)':
+    def __increment_version(self, op: 'str', par_id: 'str', increment_major: 'bool', op_params: 'dict|None' = None) -> 'tuple(int, int)':
         ver_exists = True
         while ver_exists:
             old_ver = self.get_version()
@@ -149,7 +165,7 @@ class Document:
         else:
             with open(self.get_version_path(ver), 'w'):
                 pass
-        self.__write_changelog(ver, msg)
+        self.__write_changelog(ver, op, par_id, op_params)
         return ver
 
     @contract
@@ -184,7 +200,7 @@ class Document:
         p.get_html()
         p.add_link(self.doc_id)
         old_ver = self.get_version()
-        new_ver = self.__increment_version('Added paragraph id {}'.format(p.get_id()), increment_major=True)
+        new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
         old_path = self.get_version_path(old_ver)
         new_path = self.get_version_path(new_ver)
         if os.path.exists(old_path):
@@ -205,7 +221,7 @@ class Document:
             return
 
         old_ver = self.get_version()
-        new_ver = self.__increment_version('Deleted paragraph id {}'.format(par_id), increment_major=True)
+        new_ver = self.__increment_version('Deleted', par_id, increment_major=True)
         id_line = par_id + '\n'
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
@@ -234,7 +250,7 @@ class Document:
         p = DocParagraph(text, files_root=self.files_root, attrs=attrs)
         p.add_link(self.doc_id)
         old_ver = self.get_version()
-        new_ver = self.__increment_version('Inserted paragraph {}'.format(p.get_id()), increment_major=True)
+        new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True, op_params={'before_id': insert_before_id})
         id_line = insert_before_id + '\n'
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
@@ -264,7 +280,7 @@ class Document:
         p = DocParagraph(new_text, par_id=par_id, attrs=new_attrs, files_root=self.files_root)
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
-        self.__increment_version('Modified paragraph {} from hash {} to {}'.format(par_id, old_hash, new_hash), increment_major=False)
+        self.__increment_version('Modified', par_id, increment_major=False, op_params={'old_hash': old_hash, 'new_hash': new_hash})
         return p
 
     @contract
@@ -273,7 +289,7 @@ class Document:
         return [par.get_markdown() for par in self if par.get_markdown().startswith('#')]
 
     @contract
-    def get_changelog(self, max_entries : 'int' = -1) -> 'list(str)':
+    def get_changelog(self, max_entries : 'int' = 100) -> 'list(dict)':
         log = []
         logname = self.getlogfilename()
         if not os.path.isfile(logname):
@@ -285,7 +301,10 @@ class Document:
                 line = f.readline()
                 if not line:
                     break
-                log.append(line)
+                try:
+                    log.append(json.loads(line))
+                except ValueError:
+                    print("doc id {}: malformed log line: {}".format(self.doc_id, line))
                 lc -= 1
         
         return log

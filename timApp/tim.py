@@ -336,7 +336,7 @@ def get_document(doc_id, doc_ver):
     :type doc_id: int
     :rtype: Document
     """
-    return Document(doc_id=doc_id)
+    return Document(doc_id=doc_id, modifier_group_id=getCurrentUserGroup())
 
 
 def get_paragraph(doc, par_id):
@@ -456,7 +456,7 @@ def setAllAsRead(doc_id):
     # todo: document versions
     #version = request.headers.get('Version', 'latest')
     #verify_document_version(doc_id, version)
-    doc = Document(doc_id, version)
+    doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
     timdb.readings.setAllAsRead(getCurrentUserGroup(), doc)
     return okJsonResponse()
 

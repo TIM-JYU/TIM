@@ -122,7 +122,7 @@ def get_newest_document(doc_id):
     :return: The Document object.
     """
 
-    return Document(doc_id)
+    return Document(doc_id, modifier_group_id=getCurrentUserGroup())
 
 def verify_document_version(doc_id, version):
     timdb = getTimDb()
