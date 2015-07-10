@@ -1403,7 +1403,6 @@ img.console {
     padding-left: 0;
 }
 
-/*
 .index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
     list-style-image: url("/static/images/minus.png");
     list-style-type: square;
@@ -1412,7 +1411,7 @@ img.console {
 .index-sidebar li.col, .lectures-sidebar li.col, .questions-sidebar li.col, .people-sidebar li.col, .settings-sidebar li.col {
     list-style-image: url("/static/images/plus.png");
     list-style-type: square;
-}*/
+}
 
 .index-sidebar a {
     margin: 0 0 0 -15px;
