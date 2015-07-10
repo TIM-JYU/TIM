@@ -436,7 +436,7 @@ class Documents(TimDbBase):
         doc.create()
         with open(document_file, 'r', encoding='utf-8') as f:
             parser = DocumentParser(f.read())  # todo: use a stream instead
-            for block in parser.parse_document():
+            for block in parser.get_blocks():
                 doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
         return doc
 

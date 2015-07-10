@@ -45,44 +45,53 @@ class DocReader:
 class DocumentParser:
     """Splits documents into paragraphs.
 
-    :type blocks: list[dict]
+    :type _blocks: list[dict]
     :type doc_text: str
     """
+
     def __init__(self, doc_text=''):
         """
 
         :type doc_text: str
         """
-        self.doc_text = doc_text
-        self.blocks = None
-        self.break_on_empty_line = False
+        self._doc_text = doc_text
+        self._blocks = None
+        self._break_on_empty_line = False
+        self._last_parse_setting = None
+        self._parse_document()
+
+    def get_blocks(self, break_on_empty_line=False):
+        if self._last_parse_setting != break_on_empty_line:
+            self._parse_document(break_on_empty_line)
+        return self._blocks
 
     def set_text(self, doc_text):
         """
 
         :type doc_text: str
         """
-        self.doc_text = doc_text
+        self._doc_text = doc_text
+        self._last_parse_setting = None
         return self
 
     def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id):
-        for r in self.blocks:
+        for r in self._blocks:
             r['t'] = hash_func(r['md'])
             if not r.get('id'):
                 r['id'] = id_func()
 
     def validate_ids(self, id_validator_func=is_valid_id):
-        for r in self.blocks:
+        for r in self._blocks:
             curr_id = r.get('id')
             if curr_id is not None:
                 if not id_validator_func(curr_id):
                     raise ValidationException('Invalid paragraph id: ' + curr_id)
         return True
 
-    def parse_document(self, break_on_empty_line=False):
-        self.blocks = []
-        self.break_on_empty_line = break_on_empty_line
-        lines = self.doc_text.split("\n")
+    def _parse_document(self, break_on_empty_line=False):
+        self._blocks = []
+        self._break_on_empty_line = break_on_empty_line
+        lines = self._doc_text.split("\n")
         doc = DocReader(lines)
         funcs = [self.try_parse_code_block,
                  self.try_parse_header_block,
@@ -94,9 +103,9 @@ class DocumentParser:
             for func in funcs:
                 result = func(doc)
                 if result:
-                    self.blocks.append(result)
+                    self._blocks.append(result)
                     break
-        return self.blocks
+        self._last_parse_setting = break_on_empty_line
 
     def is_beginning_of_code_block(self, doc):
         """
@@ -150,7 +159,7 @@ class DocumentParser:
         if not is_atom:
             # noinspection PyUnboundLocalVariable
             block_lines.append(line)
-        result = {'md': '\n'.join(block_lines)}
+        result = {'md': '\n'.join(block_lines), 'type': 'atom' if is_atom else 'code'}
         if len(tokens) > 0:
             result['attrs'] = tokens
         return result
@@ -168,10 +177,12 @@ class DocumentParser:
         header_line = doc.get_line_and_advance()
         block_lines = []
         tokens, start = AttributeParser(header_line).get_attributes()
+        block_type = 'normal'
         if not header_line.startswith('#-'):
+            block_type = 'header'
             block_lines.append(header_line[:start].strip())
         block_lines.append(self.parse_normal_block(doc)['md'])
-        result = {'md': '\n'.join(block_lines)}
+        result = {'md': '\n'.join(block_lines), 'type': block_type}
         if len(tokens) > 0:
             result['attrs'] = tokens
         return result
@@ -185,10 +196,10 @@ class DocumentParser:
         while doc.has_more_lines():
             if self.is_beginning_of_header_block(doc) \
                     or self.is_beginning_of_code_block(doc)[0] \
-                    or (self.break_on_empty_line and self.is_empty_line(doc)):
+                    or (self._break_on_empty_line and self.is_empty_line(doc)):
                 break
             block_lines.append(doc.get_line_and_advance())
-        return {'md': '\n'.join(block_lines)}
+        return {'md': '\n'.join(block_lines), 'type': 'normal'}
 
     def eat_whitespace(self, doc):
         """
