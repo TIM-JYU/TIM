@@ -108,6 +108,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
                 $timeout(function () {
                     $rootScope.$broadcast("createChart", data.json);
+                    $scope.showStudentAnswers = false;
                 }, 1);
 
                 var answer = {"questionId": data.questionId};
@@ -205,7 +206,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         //TODO: Also send event to server to remove getting answers for this question.
         $scope.$on("closeAnswerShow", function () {
             $scope.showStudentAnswers = false;
-            $scope.gettingAnswers = false;
+            //$scope.gettingAnswers = false;
         });
 
         /**

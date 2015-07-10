@@ -239,7 +239,7 @@ timApp.controller("ViewCtrl", [
             $rootScope.$broadcast('getLectureId');
             $rootScope.$broadcast('getInLecture');
             sc.showQuestionPreview = true;
-            sc.$digest();
+            //sc.$digest();
         };
 
         sc.toggleNoteEditor = function ($par, options) {
@@ -1648,7 +1648,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
      * Validates and saves the question into the database.
      * @memberof module:questionController
      */
-    scope.createQuestion = function () {
+    scope.createQuestion = function (question, type, ask) {
 
         scope.removeErrors();
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
@@ -1805,6 +1805,25 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 //scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
+
+                if (ask) {
+                    http({
+                        url: '/askQuestion',
+                        method: 'POST',
+                        params: {
+                            lecture_id: scope.lectureId,
+                            question_id: scope.qId,
+                            doc_id: scope.docId,
+                            buster: new Date().getTime()
+                        }
+                    })
+                        .success(function () {
+                            $rootScope.$broadcast('askQuestion', {"json": scope.json, "questionId": scope.qId});
+                        })
+                        .error(function (error) {
+                            $window.console.log(error);
+                        });
+                }
                 scope.close();
             })
             .error(function () {

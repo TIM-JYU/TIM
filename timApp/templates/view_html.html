@@ -188,19 +188,19 @@
 
                             <div class="sideMenu">
                                 <div class="invisible" ng-show="indexTable.length > 0"></div>
-                                <div ng-class="['index-sidebar', indexSidebarState]">
+                                <div ng-class="['index-sidebar', indexSidebarState, 'sidebar']">
                                     <h1>Index</h1>
                                     {% raw %}
                                     <ul>
                                         <li ng-repeat="entry in indexTable"
                                             ng-class="entry.state"
                                             ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                                            <a class="indexentry" ng-class="entry.style" ng-click=""
-                                               href="{{entry.target}}">{{entry.text}}</a>
+                                            <a class="indexentry" ng-class="entry.style"
+                                               href="{{entry.target}}" target="_self">{{entry.text}}</a>
                                             <ul ng-show="entry.state == 'exp'">
                                                 <li ng-repeat="subentry in entry.items">
-                                                    <a ng-class="subentry.style" ng-click=""
-                                                       href="{{subentry.target}}">{{subentry.text}}</a>
+                                                    <a ng-class="subentry.style"
+                                                       href="{{subentry.target}}" target="_self">{{subentry.text}}</a>
                                                 </li>
                                             </ul>
                                         </li>
@@ -209,7 +209,7 @@
                                 </div>
 
                                 <div class="invisible"></div>
-                                <div ng-class="['lectures-sidebar', lecturesSidebarState]">
+                                <div ng-class="['lectures-sidebar', lecturesSidebarState, 'sidebar']">
                                     <h1>Lectures</h1>
                                     {% raw %}
                                     <ul>
@@ -233,7 +233,7 @@
                                 </div>
 
                                 <div class="invisible" ng-show="isLecturer"></div>
-                                <div ng-class="['questions-sidebar', questionSidebarState]">
+                                <div ng-class="['questions-sidebar', questionSidebarState, 'sidebar']">
                                     <h1>Questions</h1>
                                     {% raw %}
                                     <ul>
@@ -254,7 +254,7 @@
                                 </div>
 
                                 <div class="invisible" ng-show="isLecturer && inLecture"></div>
-                                <div ng-class="['people-sidebar', peopleSidebarState]">
+                                <div ng-class="['people-sidebar', peopleSidebarState, 'sidebar']">
                                     <h1>People</h1>
 
                                     <h3>People logged-in: <span
@@ -276,7 +276,7 @@
                                 </div>
 
                                 <div class="invisible"></div>
-                                <div ng-class="['settings-sidebar', settingsSidebarState]">
+                                <div ng-class="['settings-sidebar', settingsSidebarState, 'sidebar']">
                                     <h1>Settings</h1>
 
                                     <h3>Customize</h3>
@@ -343,7 +343,7 @@
 
                     <div class="sideMenu">
                         <div class="invisible" ng-show="indexTable.length > 0"></div>
-                        <div ng-class="['index-sidebar', indexSidebarState]">
+                        <div ng-class="['index-sidebar', indexSidebarState, 'sidebar']">
                             <h1>Index</h1>
                             {% raw %}
                             <ul>
@@ -363,7 +363,7 @@
                             {% endraw %}
                         </div>
                         <div class="invisible"></div>
-                        <div ng-class="['settings-sidebar', settingsSidebarState]">
+                        <div ng-class="['settings-sidebar', settingsSidebarState, 'sidebar']">
                             <h1>Settings</h1>
 
                             <h3>Customize</h3>

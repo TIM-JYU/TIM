@@ -21,9 +21,9 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
     $scope.questionTitle = "";
     $scope.lecturerAnswered = false;
 
-    $scope.$on("closeAnswerSheetForGood", function() {
+    $scope.$on("closeAnswerSheetForGood", function () {
         $scope.$emit('closeAnswerShow');
-       $scope.dynamicAnswerShowControl.close();
+        $scope.dynamicAnswerShowControl.close();
     });
     /**
      * Closes statistic window
@@ -31,13 +31,14 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$http', func
      */
     $scope.close = function () {
         $scope.$emit('closeAnswerShow');
-        if($scope.lecturerAnswered) {
+        if ($scope.lecturerAnswered) {
             $scope.dynamicAnswerShowControl.close();
         }
     };
 
     $scope.$on("lecturerAnswered", function () {
-       $scope.lecturerAnswered = true;
+        $scope.lecturerAnswered = true;
+        $scope.$emit('showAnswers', true);
     });
 
     /**
