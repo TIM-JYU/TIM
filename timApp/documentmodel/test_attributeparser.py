@@ -25,6 +25,7 @@ class AttributeParserTest(unittest.TestCase):
         self.check_valid('{somekey="someval with spaces"}', {'somekey': 'someval with spaces'})
         self.check_valid(r'{somekey="\""}', {'somekey': '"'})
         self.check_valid(r'{somekey=\}', {'somekey': '\\'})
+        self.check_valid(r'{somekey=\"}', {'somekey': '\\"'})
 
     def test_whitespace(self):
         self.check_valid('  { #asd  }   ', {'taskId': 'asd'}, 2)
