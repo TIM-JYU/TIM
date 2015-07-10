@@ -1805,23 +1805,36 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 //scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
-
                 if (ask) {
+
                     http({
-                        url: '/askQuestion',
-                        method: 'POST',
-                        params: {
-                            lecture_id: scope.lectureId,
-                            question_id: scope.qId,
-                            doc_id: scope.docId,
-                            buster: new Date().getTime()
-                        }
+                        url: '/getQuestionById',
+                        method: 'GET',
+                        params: {'question_id': scope.qId, 'buster': new Date().getTime()}
                     })
-                        .success(function () {
-                            $rootScope.$broadcast('askQuestion', {"json": scope.json, "questionId": scope.qId});
+                        .success(function (data) {
+                            scope.json = JSON.parse(data.questionJson);
+                            http({
+                                url: '/askQuestion',
+                                method: 'POST',
+                                params: {
+                                    lecture_id: scope.lectureId,
+                                    question_id: scope.qId,
+                                    doc_id: scope.docId,
+                                    buster: new Date().getTime()
+                                }
+                            })
+                                .success(function () {
+                                    $rootScope.$broadcast('askQuestion', {"json": scope.json, "questionId": scope.qId});
+                                })
+                                .error(function (error) {
+                                    $window.console.log(error);
+                                });
+
                         })
-                        .error(function (error) {
-                            $window.console.log(error);
+
+                        .error(function () {
+                            $window.console.log("There was some error creating question to database.");
                         });
                 }
                 scope.close();

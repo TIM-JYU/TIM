@@ -26,7 +26,6 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         $scope.editQuestion = function () {
             $scope.close();
             $rootScope.$broadcast("editQuestion", {"question_id": $scope.qId, "json": $scope.json});
-
         };
 
         /**
