@@ -113,7 +113,7 @@ PermApp.controller("PermCtrl", [
             if (confirm('Are you sure you want to delete this document?')) {
                 $http.delete('/documents/' + doc)
                     .success(function (data, status, headers, config) {
-                        location.replace('/');
+                        location.replace('/view/');
                     }).error(function (data, status, headers, config) {
                         alert(data.message);
                     });
@@ -124,7 +124,7 @@ PermApp.controller("PermCtrl", [
             if (confirm('Are you sure you want to delete this folder?')) {
                 $http.delete('/folders/' + folder)
                     .success(function (data, status, headers, config) {
-                        location.replace('/');
+                        location.replace('/view/');
                     }).error(function (data, status, headers, config) {
                         alert(data.message);
                     });

@@ -99,14 +99,12 @@ class Documents(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.DOCUMENT, document_id])
+        cursor.execute('DELETE FROM DocEntry WHERE id = ?', [document_id])
         cursor.execute('DELETE FROM ReadParagraphs where doc_id = ?', [document_id])
         cursor.execute('DELETE FROM UserNotes where doc_id = ?', [document_id])
         self.db.commit()
 
-        os.remove(self.getDocumentPath(document_id))
-
-        self.git.rm(self.getDocumentPathAsRelative(document_id))
-        self.git.commit('Deleted document {}.'.format(document_id))
+        Document.remove(document_id)
 
     @contract
     def delete_paragraph(self, doc: 'Document', par_id: 'str') -> 'Document':
