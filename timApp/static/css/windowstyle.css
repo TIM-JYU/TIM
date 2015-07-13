@@ -121,8 +121,8 @@ input[type="number"] {
 }
 
 
-.createLecture input[type="text"], .createLecture input[type="date"], .createLecture select , .createQuestion input,
-.createQuestion textarea{
+.createLecture input[type="text"], .createLecture input[type="date"], .createLecture input[type="password"],
+.createLecture select , .createQuestion input, .createQuestion textarea{
     border: 1px solid #3cc;
     color: #505050;
     height: 20px;

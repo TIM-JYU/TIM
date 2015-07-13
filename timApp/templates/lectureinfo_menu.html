@@ -85,14 +85,6 @@
                 <h1 ng-click="openFutureLectureMenu()">Show future
                     <br>lectures</h1>
             </div>
-            <div id="smallLogin">
-                {% if session.user_id %}
-                    <span>Logged in as <br>{{ session.user_name }}</span>
-                    <form method="POST" action="/logout">
-                        <input type="submit" value="Logout">
-                    </form>
-                {% endif %}
-            </div>
         </div>
         <div class="smallMenu" ng-show="inLecture">
             <div class="currently">
@@ -108,14 +100,6 @@
                     <img ng-click="editLecture(lectureName)" id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                          title="Edit this lecture" ng-show="canStop">
                 </div>
-            </div>
-            <div id="smallLogin">
-                {% if session.user_id %}
-                    <span>Logged in as <br>{{ session.user_name }}</span>
-                    <form method="POST" action="/logout">
-                        <input type="submit" value="Logout">
-                    </form>
-                {% endif %}
             </div>
         </div>
         <div class="lecturesList">

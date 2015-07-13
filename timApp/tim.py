@@ -624,9 +624,18 @@ def show_lecture_info_given_name():
         abort(400)
 
     lecture = lecture[0]
-    return jsonResponse({"docId": lecture.get("doc_id"), "lectureId": lecture.get("lecture_id"),
+    lecturer = lecture.get("lecturer")
+    current_user = getCurrentUserId()
+
+    response = {"docId": lecture.get("doc_id"), "lectureId": lecture.get("lecture_id"),
                         "lectureCode": lecture.get("lecture_code"), "lectureStartTime": lecture.get("start_time"),
-                        "lectureEndTime": lecture.get("end_time")})
+                        "lectureEndTime": lecture.get("end_time")}
+    if lecturer == current_user:
+        response["password"] = lecture.get("password")
+
+    return jsonResponse(response)
+
+
 
 
 # Gets users from specific lecture
@@ -1018,6 +1027,15 @@ def view_template(plugin, template, index):
 def set_editor_tab(tabid):
     try:
         session['editortab'] = tabid
+        return "Success"
+    except PluginException:
+        abort(404)
+
+
+@app.route("/sessionsetting/<setting>/<value>", methods=['POST'])
+def set_session_setting(setting, value):
+    try:
+        session['settings'][setting] = value
         return "Success"
     except PluginException:
         abort(404)
