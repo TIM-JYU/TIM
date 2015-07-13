@@ -210,7 +210,6 @@ td.selected {
 .answerSheet td,
 .answerSheet tr {
     border: none;
-    text-align: left;
 }
 
 .answerSheet th {

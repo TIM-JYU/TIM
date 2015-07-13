@@ -42,6 +42,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                     htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
                 }
 
+                htmlSheet += "<div style='background-color: white'>";
                 htmlSheet += "<table id='answer-sheet-table'>";
 
                 if ($scope.json.TYPE === "true-false") {
@@ -89,7 +90,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
-                            htmlSheet += "<td class='answer-button'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
+                            htmlSheet += "<td class='answer-button2'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
                             " value='" + row.text + "'" +
                             ">" + row.text + "</label></td>";
                         }

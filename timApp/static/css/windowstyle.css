@@ -121,7 +121,7 @@ input[type="number"] {
 }
 
 
-.createLecture input[type="text"], .createLecture input[type="date"], .createLecture input[type="password"],
+.createLecture input[type="text"], .createLecture input[type="date"],
 .createLecture select , .createQuestion input, .createQuestion textarea{
     border: 1px solid #3cc;
     color: #505050;
@@ -183,12 +183,17 @@ input[type="number"] {
 }
 
 #answer-sheet-table {
-    /* table-layout: fixed; */
-    width: 100%;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 .answer-button {
-    text-align: center !important;
-    width: 100px;
+    text-align: center;
+}
+
+.answer-button2 {
+    text-align: left;
 }
 
 #textarea-answer {
