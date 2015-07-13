@@ -30,11 +30,14 @@ td.selected {
 }
 
 .questions {
-    display: -webkit-inline-flex;
-    display: inline-flex;
+    display: block;
     float: left;
     margin-left: 2em;
     position: absolute;
+}
+
+.questionAdded {
+    float: left;
 }
 
 .wall-behind {

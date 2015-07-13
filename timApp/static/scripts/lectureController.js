@@ -59,7 +59,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.gettingAnswers = false;
         $scope.answeredToLectureEnding = false;
         $scope.showLectureEnding = false;
-        $scope.extendTime = "15";
+        $scope.extend = {};
+        $scope.extend.extendTime = "15";
         $scope.lectureEnded = false;
         $scope.showLectureForm = false;
         $scope.showLectureOptions = false;
@@ -546,7 +547,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             var endMinutes = parseInt(hoursMins[1]);
 
 
-            endMinutes += parseInt($scope.extendTime);
+            endMinutes += parseInt($scope.extend.extendTime);
 
             if (endMinutes >= 60) {
                 endHour += 1;
@@ -604,7 +605,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     $window.console.log("Lecture extended");
                 })
                 .error(function () {
-                    $window.console.log("Failed to delete the lecture");
+                    $window.console.log("Failed to extend the lecture");
                 });
         };
 

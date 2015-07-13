@@ -4,14 +4,13 @@
     <h1 ng-show="lectureEnded">Lecture ends</h1>
     <form class="extendLectureOptions">
         <label> Extend by
-            <select ng-model="extendTime">
+            <select ng-model="extend.extendTime">
                 <option value="5">5</option>
-                <option value="15" selected>15</option>
+                <option value="15">15</option>
                 <option value="30">30</option>
                 <option value="45">45</option>
                 <option value="60">60</option>
             </select>
-            min
         </label>
     </form>
     <div class="buttons">
