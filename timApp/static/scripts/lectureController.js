@@ -68,9 +68,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.useWall = true;
         $scope.useAnswers = true;
         $scope.wallMessages = [];
-
-        //var header = $('#header');
-        //header.css("display", "none");
+        $scope.questionTitle = "";
 
         var wall = $('#wall');
         var htmlMessageList = $('#wallMessageList');
@@ -129,6 +127,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.$on('getLectureId', function () {
             $scope.$emit('postLectureId', $scope.lectureId);
+        });
+
+        $scope.$on('changeQuestionTitle', function (event, data) {
+            $scope.questionTitle = data.title;
         });
 
         /*

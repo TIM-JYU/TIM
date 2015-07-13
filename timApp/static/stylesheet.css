@@ -420,6 +420,12 @@ ul ul ul, ol ol ol {
     margin-top: 0px;
 }
 
+.draghandle p {
+    font-size: 13px;
+    line-height: 13px;
+    cursor: default;
+}
+
 .readline {
     position: absolute;
     right: -1em;
@@ -1482,16 +1488,13 @@ img.console {
     z-index: 501;
     background: #F0F0F0;
     cursor: pointer;
-    filter: brightness(1);
-    -webkit-filter: brightness(1);
-    -moz-filter: brightness(1);
 }
 
 .menu-icon:hover {
     z-index: 501;
-    filter: brightness(1);
-    -webkit-filter: brightness(1);
-    -moz-filter: brightness(1);
+    filter: brightness(0.8);
+    -webkit-filter: brightness(0.8);
+    -moz-filter: brightness(0.8);
 }
 
 .showSidebar {

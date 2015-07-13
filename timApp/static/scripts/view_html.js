@@ -217,7 +217,7 @@ timApp.controller("ViewCtrl", [
             })
                 .success(function (data) {
                     sc.json = JSON.parse(data.questionJson);
-
+                    $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
                 })
 
                 .error(function () {

@@ -115,7 +115,7 @@
         {% if lecture_mode %}
             <div ng-controller="LectureController">
                 {% include 'lectureinfo_menu.html' %}
-                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed resizable>
+                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed caption="Lecture Wall">
                     <div class="wall-base" id="wallBase">
                         {# <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
                          ng-click="hideWall()">
@@ -141,35 +141,35 @@
                         </div>
                     </div>
                 </div>
-                <pop-up-dialog show="showLectureOptions">
+                <pop-up-dialog show="showLectureOptions" caption="'Join the lecture'">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
                 </pop-up-dialog>
 
-                <pop-up-dialog show="showLectureForm">
+                <pop-up-dialog show="showLectureForm" caption="'Create lecture'">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
                 </pop-up-dialog>
 
-                <pop-up-dialog show="showStudentAnswers">
+                <pop-up-dialog show="showStudentAnswers" caption="'Statistics'">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
                 </pop-up-dialog>
 
-                <pop-up-dialog show="showAnswerWindow">
+                <pop-up-dialog show="showAnswerWindow" caption="questionTitle">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/answerToQuestion.html') }}'"></ng-include>
                 </pop-up-dialog>
 
-                <pop-up-dialog show="showLectureEnding">
+                <pop-up-dialog show="showLectureEnding" caption="'Lecture ending'">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
                 </pop-up-dialog>
-                <pop-up-dialog show="showQuestionPreview">
+                <pop-up-dialog show="showQuestionPreview" caption="'Question preview'">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/questionPreview.html') }}'"></ng-include>
                 </pop-up-dialog>
-                <pop-up-dialog show='questionShown'>
+                <pop-up-dialog show='questionShown' caption="'Create question'">
                     <div>
                         <ng-include src="'../../question'"></ng-include>
                     </div>
@@ -388,7 +388,7 @@
 
         {% endif %}
         {% if teacher_mode %}
-            <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed>
+            <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users">
                 {% if plugin_users %}
                     Users with answers ({{ plugin_users|length }}):<br>
                     {% raw %}
