@@ -60,6 +60,7 @@ class Documents(TimDbBase):
         assert doc.exists(), 'document does not exist: %r' % doc.doc_id
         content = self.trim_markdown(content)
         par = doc.insert_paragraph(content, prev_par_id, attrs)
+        self.update_last_modified(doc)
         return [par], doc
 
     @contract
@@ -115,6 +116,7 @@ class Documents(TimDbBase):
         """
 
         doc.delete_paragraph(par_id)
+        self.update_last_modified(doc)
         return doc
 
     @contract
@@ -474,6 +476,7 @@ class Documents(TimDbBase):
         assert Document.doc_exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
         new_content = self.trim_markdown(new_content)
         par = doc.modify_paragraph(par_id, new_content, new_attrs)
+        self.update_last_modified(doc)
         return [par], doc
 
     @contract
@@ -492,27 +495,22 @@ class Documents(TimDbBase):
         self.db.commit()
 
     @contract
-    def updateDocument(self, document_id: 'DocIdentifier', new_content: 'str') -> 'DocIdentifier':
+    def update_document(self, doc: 'Document', new_content: 'str') -> 'Document':
         """Updates a document.
         
-        :param document_id: The id of the document to be updated.
+        :param doc: The id of the document to be updated.
         :param new_content: The new content of the document.
         :returns: The id of the new document.
         """
 
-        assert self.documentExists(document_id.id), 'document does not exist: ' + document_id
+        assert self.documentExists(doc.doc_id), 'document does not exist: ' + str(doc)
 
         new_content = self.trim_markdown(new_content)
-        try:
-            version = self.__commitDocumentChanges(document_id, new_content, "Modified as whole")
-        except NothingToCommitException:
-            return document_id
-        new_id = DocIdentifier(document_id.id, version)
-        self.ec.loadDocument(new_id, new_content.encode('utf-8'))
-        self.updateDocModified(new_id, commit=False)
-        self.update_latest_revision(new_id, commit=False)
+        # TODO: Do the update
+
+        self.update_last_modified(doc, commit=False)
         self.db.commit()
-        return new_id
+        return doc
 
     def trim_markdown(self, text: 'str'):
         """Trims the specified text. Don't trim spaces from left side because they may indicate a code block
@@ -523,10 +521,10 @@ class Documents(TimDbBase):
         return text.rstrip().strip('\r\n')
 
     @contract
-    def updateDocModified(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
+    def update_last_modified(self, doc: 'Document', commit: 'bool'=True):
         cursor = self.db.cursor()
         cursor.execute('UPDATE Block SET modified = CURRENT_TIMESTAMP WHERE type_id = ? and id = ?',
-                       [blocktypes.DOCUMENT, doc_id.id])
+                       [blocktypes.DOCUMENT, doc.doc_id])
         if commit:
             self.db.commit()
 
@@ -554,7 +552,9 @@ class DocEntryIterator:
         name = re.sub('^({})\/'.format(re.escape(self.root_folder))) if len(self.root_folder) > 0 else fullname
 
         cursor = self.db.cursor()
-        cursor.execute("SELECT created, modified, latest_revision_id FROM Block WHERE id = ?", [doc_id])
+        cursor.execute("SELECT datetime(created, 'localtime') as created,"
+                       "datetime(modified, 'localtime') as modified,"
+                       "latest_revision_id FROM Block WHERE id = ?", [doc_id])
         block = cursor.fetchone()
         if block is None:
             print("Block entry missing for document id ")

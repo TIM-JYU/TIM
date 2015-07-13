@@ -46,7 +46,8 @@ def update_document(doc_id, version):
 
     if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-    timdb.documents.updateDocument(doc_identifier, content)
+    abort(400, 'Not implemented yet.')
+    # timdb.documents.update_document(doc_identifier, content)
     return jsonResponse(timdb.documents.getDocumentVersions(doc_id))
 
 

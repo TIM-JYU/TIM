@@ -48,7 +48,7 @@ class DocTest(TimDbTest):
     def test_edit_document(self, new_text):
         debug_print('test_edit_document', new_text)
         doc = self.db.documents.createDocument('test', 0)
-        new_doc = self.db.documents.updateDocument(doc, new_text)
+        new_doc = self.db.documents.update_document(doc, new_text)
         actual_text = self.db.documents.getDocumentMarkdown(new_doc)
         self.assertEqual(new_text, actual_text)
         versions = self.db.documents.getDocumentVersions(doc.id)
@@ -60,7 +60,7 @@ class DocTest(TimDbTest):
         doc = self.db.documents.createDocument('testing notes', 0)
 
         doc_paragraphs = ['Paragraph number {}'.format(num) for num in range(0, doc_length)]
-        doc = self.db.documents.updateDocument(doc, '\n\n'.join(doc_paragraphs))
+        doc = self.db.documents.update_document(doc, '\n\n'.join(doc_paragraphs))
         doc_paragraphs = self.db.documents.getDocumentAsBlocks(doc)
         return doc, doc_paragraphs
 
@@ -91,7 +91,7 @@ class DocTest(TimDbTest):
         self.db.documents.getDocumentAsHtmlBlocks(doc)
 
         print('Updating document...')
-        doc = self.db.documents.updateDocument(doc, '\n\n'.join(doc_paragraphs))
+        doc = self.db.documents.update_document(doc, '\n\n'.join(doc_paragraphs))
         print('Done.')
 
         print('Fetching notes of the document...')
@@ -159,7 +159,7 @@ class DocTest(TimDbTest):
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         self.assertEqual(len(readings), 1)
 
-        doc = self.db.documents.updateDocument(doc, 'cleared')
+        doc = self.db.documents.update_document(doc, 'cleared')
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
         # Document changes so radically that the readings should be gone
         self.assertEqual(len(readings), 0)
@@ -278,7 +278,7 @@ class DocTest(TimDbTest):
         print("test_special_chars")
         special_char_text = self.read_utf8("special_chars.md")
         doc = self.db.documents.createDocument('special_chars', 0)
-        doc = self.db.documents.updateDocument(doc, special_char_text)
+        doc = self.db.documents.update_document(doc, special_char_text)
         doc_paragraphs = self.db.documents.getDocumentAsBlocks(doc)
         num_read = 0
         for i in range(0, len(doc_paragraphs)):
@@ -296,7 +296,7 @@ class DocTest(TimDbTest):
         # Refresh cache for the first document, otherwise it might not be found
         self.db.documents.getDocumentAsHtmlBlocks(doc)
 
-        doc = self.db.documents.updateDocument(doc, '\n\n'.join(doc_paragraphs))
+        doc = self.db.documents.update_document(doc, '\n\n'.join(doc_paragraphs))
         readings = self.db.readings.getReadings(0, doc.id, doc.hash)
 
         # This fails because the special character cannot be mapped properly
@@ -304,7 +304,7 @@ class DocTest(TimDbTest):
 
     def test_trim(self):
         doc = self.db.documents.createDocument('test document', 0)
-        doc = self.db.documents.updateDocument(doc, '  test  ')
+        doc = self.db.documents.update_document(doc, '  test  ')
         text = self.db.documents.getDocumentMarkdown(doc)
         # Leading space shouldn't get stripped here because it may denote a code block
         self.assertEqual(text, '  test')
@@ -327,7 +327,7 @@ class DocTest(TimDbTest):
         doc = self.db.documents.createDocument('test', 0)
         self.check_newest_version(doc)
 
-        doc = self.db.documents.updateDocument(doc, 'edit1')
+        doc = self.db.documents.update_document(doc, 'edit1')
         self.check_newest_version(doc)
 
         _, doc = self.db.documents.modify_paragraph(doc, 0, 'edit2')
@@ -383,14 +383,14 @@ class DocTest(TimDbTest):
         self.check_list_dict_contents(result, 'new_ver', doc3.hash)
         self.check_list_dict_contents(result, 'modified', 'True')
 
-        doc4 = self.db.documents.updateDocument(doc3, 'edited2')
+        doc4 = self.db.documents.update_document(doc3, 'edited2')
         readings = self.db.readings.getReadings(0, doc4.id, doc4.hash)
         result = self.get_mapping(doc3, par_index)
         self.check_list_dict_contents(result, 'new_index', 0)
         self.check_list_dict_contents(result, 'new_ver', doc4.hash)
         self.check_list_dict_contents(result, 'modified', 'False')
 
-        doc5 = self.db.documents.updateDocument(doc4, 'öö')
+        doc5 = self.db.documents.update_document(doc4, 'öö')
 
         readings = self.db.readings.getReadings(0, doc5.id, doc5.hash)
         result = self.get_mapping(doc4, par_index)
