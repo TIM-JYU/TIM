@@ -30,6 +30,7 @@ td.selected {
 }
 
 .questions {
+    display: -webkit-inline-flex;
     display: inline-flex;
     float: left;
     margin-left: 2em;
