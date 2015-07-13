@@ -176,6 +176,7 @@ input[type="submit"], input[type="button"] {
 		border: 1px solid #3cc;
 		border-radius: 5px;
 		background-color: #3cc;
+		display: -webkit-flex;
 		display: flex;
 		color: white;
 		font-size: 0.7em;
