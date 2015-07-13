@@ -47,7 +47,7 @@ class DocumentWriter:
         """
         attr_str = ''
         for k, v in attrs.items():
-            if k in ['md', 'type']:
+            if k in ['md', 'type', 'html', 'links']:
                 continue
             elif k == 'taskId':
                 attr_str += '#' + v

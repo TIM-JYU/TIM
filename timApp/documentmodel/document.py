@@ -8,6 +8,7 @@ from tempfile import mkstemp
 
 from contracts import contract, new_contract
 from documentmodel.docparagraph import DocParagraph
+from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 
 class Document:
@@ -68,7 +69,7 @@ class Document:
 
     @contract
     def export_markdown(self) -> 'str':
-        return '\n\n'.join([par.get_markdown() for par in self])
+        return DocumentWriter([par.dict() for par in self]).get_text()
 
     @classmethod
     @contract
