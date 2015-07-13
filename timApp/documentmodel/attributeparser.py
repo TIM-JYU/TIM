@@ -71,6 +71,8 @@ class AttributeParser:
             if curr == self.attr_list_start_char():
                 return True
             if curr == '\\':
+                if not self.has_chars():
+                    return False
                 self.get_char()
         return False
 

@@ -59,6 +59,7 @@ class AttributeParserTest(unittest.TestCase):
         self.check_invalid('{=}')
         self.check_invalid('{#}')
         self.check_invalid('{#task1 #task2}')  # Only 1 task id allowed
+        self.check_invalid('\\')
 
 if __name__ == '__main__':
     unittest.main()
