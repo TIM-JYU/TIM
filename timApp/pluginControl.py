@@ -157,7 +157,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     for idx, block in enumerate(blocks):
         if sanitize:
             block.set_html(sanitize_html(block.get_html()))
-        if 'taskId' in block.get_attrs():
+        if 'taskId' in block.get_attrs() and 'plugin' in block.get_attrs():
             vals = parse_plugin_values(block)
             plugin_name = block.get_attrs()['plugin']
             if 'error' in vals:
