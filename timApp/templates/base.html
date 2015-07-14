@@ -44,6 +44,7 @@
             <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
                  src="{{url_for('static', filename='images/jyulogo.png')}}"/>
         </a>
+        {% include 'loginlogout.html' %}
     </div>
 
     {% with messages = get_flashed_messages() %}
@@ -61,7 +62,7 @@
             {% if self.title() != "TIM" %}
                 <!-- <div class="doctitle">{{ self.title() }}</div> -->
             {% endif %}
-            {% include 'loginlogout.html' %}
+
             {% if is_owner %}
                 <a href="/manage/{{docID}}">Manage</a>
             {%endif%}

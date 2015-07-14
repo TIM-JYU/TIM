@@ -2,7 +2,7 @@
     text-align: justify;
 }
 
-.paragraph, .par {
+.paragraph, .par, #header, .header, .viewLogin, .menuSection {
     max-width: 52em;
 }
 
@@ -155,15 +155,19 @@ body {
 }
 
 .viewLogin {
+    min-width: 160px;
+    padding: 10px 5px 0 5px;
+    display: table;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
     font-size: 0.7em;
     color: #3cc;
-    text-align: right;
 }
 
 .viewLogin a {
     font-size: 1.0em;
     color: #3cc;
-    text-align: right;
 }
 
 .viewLogin a:hover {
@@ -421,8 +425,9 @@ ul ul ul, ol ol ol {
 }
 
 .draghandle p {
+    height: 15px;
     font-size: 13px;
-    line-height: 13px;
+    line-height: 15px;
     cursor: default;
 }
 
@@ -820,10 +825,29 @@ p.links {
 }
 
 div.header {
+    overflow: auto;
     margin: 0;
-    /*padding: 1em 0 0.4em 0;*/
     padding: 0;
+    border-bottom: 1px solid #e5e5e5;
 }
+
+.clearfix {
+    clear: both;
+}
+
+#header {
+    clear: both;
+}
+
+.pull-left {
+    float: left;
+}
+
+.pull-right {
+    float: right;
+}
+
+
 
 div.header:hover .anchor {
     visibility: visible;
@@ -1810,7 +1834,10 @@ p.plgfooter {
 
     div.header {
         min-height: 46px;
-        padding: 0 0 0 55px;
+    }
+
+    .pull-left {
+        padding-left: 55px;
     }
 
     .content {

@@ -165,7 +165,7 @@
                     <ng-include
                             src="'{{ url_for('static', filename='templates/lectureEnding.html') }}'"></ng-include>
                 </pop-up-dialog>
-                <pop-up-dialog show="showQuestionPreview" caption="'Question preview'">
+                <pop-up-dialog show="showQuestionPreview" caption="'Question preview: ' + questionTitle">
                     <ng-include
                             src="'{{ url_for('static', filename='templates/questionPreview.html') }}'"></ng-include>
                 </pop-up-dialog>

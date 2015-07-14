@@ -21,7 +21,6 @@
     padding: 1px 10px 10px 10px;
     top: 0;
     height: auto;
-    max-width: 810px;
 	display: flex;
 }
 
@@ -116,13 +115,6 @@
 	text-align: left;
 }
 
-.viewLogin {
-    font-size: 0.7em;
-    color: white;
-    text-align: right;
-    line-height: 1.5;
-}
-
 .lectureArea input{
     width: 50%;
     max-width: 50%;
@@ -162,10 +154,6 @@ input[type="submit"], input[type="button"] {
 @media only screen and (max-width: 1200px) {
 	.menuSection #largeMenu {
 		display: none;
-	}
-
-	.menuSection {
-		max-width: 52em;
 	}
 	
 	.lecturesList {

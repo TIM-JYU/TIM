@@ -1,13 +1,10 @@
 <div ng-controller="QuestionPreviewController" class="popUpWindow">
-    <h1>Question preview</h1>
-
     <div class="questionPreview">
-        <h3> <span ng-bind-html="json.TITLE"></span></h3>
-        <h4> <span ng-bind-html="json.QUESTION"></span></h4>
-
         <div id="questionTypeAndTimeLimit">
-            Time limit: <span ng-if="json.TIMELIMIT.length > 0" ng-bind="json.TIMELIMIT">{{ json.TIMELIMIT }} seconds</span>
+            <span>Time limit:</span> <span ng-if="json.TIMELIMIT.length > 0" ng-bind="json.TIMELIMIT">{{ json.TIMELIMIT }} seconds</span>
                         <span ng-if="json.TIMELIMIT.length <= 0">No time limit.</span>
+        <!-- <h3> <span ng-bind-html="json.TITLE"></span></h3> -->
+        <h4> <span ng-bind-html="json.QUESTION"></span></h4>
         </div>
 
         <table>

@@ -1,6 +1,6 @@
-.createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion, .joinLectureOptions ,
-.questionAskedWindow, .statisticsWindow, .questionPreview, .extendLectureOptions  {
-	display: block;
+.createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion, .joinLectureOptions,
+.questionAskedWindow, .statisticsWindow, .questionPreview, .extendLectureOptions {
+    display: block;
     width: 100%;
     height: 100%;
     background: #F0F0F0;
@@ -9,124 +9,136 @@
     color: #505050;
     text-shadow: 1px 1px 1px #FFF;
     border: 1px solid #E4E4E4;
-	text-align: left;
-	-webkit-box-sizing : border-box;
+    text-align: left;
+    -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
-    box-sizing : border-box;
+    box-sizing: border-box;
 }
+
 /* Chrome etc. */
 input:enabled::-webkit-input-placeholder {
     color: #3CC;
 }
+
 input:enabled:-moz-placeholder {
     /* FF 4-18 */
     color: #3CC;
 }
+
 input:enabled::-moz-placeholder {
     /* FF 19+ */
     color: #3CC;
 }
+
 input:enabled:-ms-input-placeholder {
     /* IE 10+ */
     color: #3CC;
 }
-input:disabled::-webkit-input-placeholder { /* WebKit browsers */
+
+input:disabled::-webkit-input-placeholder {
+    /* WebKit browsers */
     display: none;
 }
-input:disabled:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+
+input:disabled:-moz-placeholder {
+    /* Mozilla Firefox 4 to 18 */
     display: none;
 }
-input:disabled::-moz-placeholder { /* Mozilla Firefox 19+ */
+
+input:disabled::-moz-placeholder {
+    /* Mozilla Firefox 19+ */
     display: none;
 }
-input:disabled:-ms-input-placeholder { /* Internet Explorer 10+ */
+
+input:disabled:-ms-input-placeholder {
+    /* Internet Explorer 10+ */
     display: none;
 }
 
 fieldset, form {
-	margin-left: auto;
+    margin-left: auto;
     margin-right: auto;
-	display: inline-block;
+    display: inline-block;
     width: 100%;
     height: 100%;
 }
 
 #studentsJoinEarly {
-    margin-bottom:10px;
-}
-#infoFields input{
-	-webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-	width: 100%;
-	height: 30px;
-	max-width: 250px;
+    margin-bottom: 10px;
 }
 
-#startDate, #endDate, #calendarStart{
-	-webkit-box-sizing : border-box;
-    -moz-box-sizing : border-box;
-    box-sizing : border-box;
-	height: 30px;
-	width: 80px;
+#infoFields input {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    height: 30px;
+    max-width: 250px;
 }
-#startHour, #startMin, #endHour, #endMin, #durationHour, #durationMin, #durationSec{
-	width: 25px;
+
+#startDate, #endDate, #calendarStart {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 30px;
+    width: 80px;
+}
+
+#startHour, #startMin, #endHour, #endMin, #durationHour, #durationMin, #durationSec {
+    width: 25px;
 }
 
 input[type="number"] {
-	width: 30px;
+    width: 30px;
 }
 
 .questionTable .negative {
-	background: #c12e2a;
+    background: #c12e2a;
 }
 
 #infoFields label {
-    display:inline-block;
-	width: 150px;
+    display: inline-block;
+    width: 150px;
 }
 
 .choose label {
-	display: block;
+    display: block;
 }
 
 .icon {
-	width: 35px;
-	height: 35px;
-	cursor: pointer;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
 }
 
 .questionInfo {
-	border: 1px solid #E4E4E4;
-	margin-bottom: 10px;
-	padding: 10px;
+    border: 1px solid #E4E4E4;
+    margin-bottom: 10px;
+    padding: 10px;
 }
 
-.startingTime #startInfo, #endInfo{
-	margin-left: 20px;
+.startingTime #startInfo, #endInfo {
+    margin-left: 20px;
 }
 
 .popUpWindow h1 {
-   font-family: verdana;
-   font-size: 18px;
-   padding: 0;
-   color: #3cc;
-   text-align: left;
-   margin-top: 0cm;
-   margin-bottom: 0cm;
-   border-top: none;
-   border-bottom: none;
-   line-height: 1;    
+    font-family: verdana;
+    font-size: 18px;
+    padding: 0;
+    color: #3cc;
+    text-align: left;
+    margin-top: 0cm;
+    margin-bottom: 0cm;
+    border-top: none;
+    border-bottom: none;
+    line-height: 1;
 }
 
-
 .createLecture input[type="text"], .createLecture input[type="date"],
-.createLecture select , .createQuestion input, .createQuestion textarea{
+.createLecture select, .createQuestion input, .createQuestion textarea {
     border: 1px solid #3cc;
     color: #505050;
-    height: 20px;
-	margin: 2px 6px 10px 2px;
+    margin: 2px 6px 10px 2px;
     outline: 0 none;
     padding: 3px 3px 3px 5px;
     font-size: 12px;
@@ -140,7 +152,7 @@ input[type="number"] {
     border: 1px solid #3cc;
     color: #505050;
     height: 20px;
-	margin: 2px 6px 10px 2px;
+    margin: 2px 6px 10px 2px;
     outline: 0 none;
     padding: 3px 3px 3px 5px;
     font-size: 12px;
@@ -148,18 +160,17 @@ input[type="number"] {
     box-shadow: inset 0px 1px 4px #ECECEC;
     -moz-box-shadow: inset 0px 1px 4px #ECECEC;
     -webkit-box-shadow: inset 0px 1px 4px #ECECEC;
-	height: 30px;
+    height: 30px;
 }
 
 .createQuestion input[type="checkbox"] {
-	margin: 0px;
-	vertical-align: middle;
+    margin: 0px;
+    vertical-align: middle;
 }
 
 .createQuestion textarea {
-    height:100px;
     width: 95%;
-	resize: vertical;
+    resize: vertical;
 }
 
 .rowHeading {
@@ -202,83 +213,83 @@ input[type="number"] {
 
 .buttons {
     border: none;
-	margin: 5px;
-    color: #FFF;   
+    margin: 5px;
+    color: #FFF;
     border-radius: 3px;
     text-shadow: 1px 1px 1px #9E3F3F;
     cursor: pointer;
-	display: inline-block;
+    display: inline-block;
     font-size: 11px;
     line-height: normal;
-    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; 
-	float: right;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    float: right;
 }
 
 .buttons button {
-  background: #3CC;
-  border: 0;
-  border-radius: 3px;
-  color: #FFF;
-  display: inline-block;
-  font-size: 11px;
-  cursor: pointer;
-  line-height: normal;
-  padding: 5px 10px;
-  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #3CC;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    cursor: pointer;
+    line-height: normal;
+    padding: 5px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .createLecture button:disabled, .createLecture input[type="button"]:disabled {
-	cursor: default;
-	background-color: #DCDCDC;
+    cursor: default;
+    background-color: #DCDCDC;
 }
 
 .createLecture input[type="text"]:disabled, .createQuestion input[type="text"]:disabled {
-	background-color: #DCDCDC;
-	border: 1px solid #DCDCDC;
+    background-color: #DCDCDC;
+    border: 1px solid #DCDCDC;
 }
 
 .error_message {
-    color:red;
+    color: red;
     margin-left: 0px;
 }
 
 .createLecture p {
-	color: red;
-	margin-left: 0px;
+    color: red;
+    margin-left: 0px;
 }
 
 .lectureArea {
-    vertical-align:middle;
+    vertical-align: middle;
 }
 
-
 #endDateDiv, #durationDiv {
-	margin-left: 24px;
+    margin-left: 24px;
 }
 
 .questionAskedWindow {
     max-width: 800px;
 }
 
-.answerStatistics select, .questioninfoWindow label , .questionAskedWindow label {
-	display: block;
+.answerStatistics select, .questioninfoWindow label, .questionAskedWindow label {
+    display: block;
 }
+
 .sectionDetails {
-	border: 1px solid #E4E4E4;
+    border: 1px solid #E4E4E4;
 }
 
 .createQuestion td {
-	background: white;
+    background: white;
 }
 
-.createQuestion table{
-	background: #F0F0F0;
+.createQuestion table {
+    background: #F0F0F0;
     width: 98%;
 }
 
-.createQuestion #emptyBlock{
-	border: none;
-	background: #F0F0F0
+.createQuestion #emptyBlock {
+    border: none;
+    background: #F0F0F0
 }
 
 #row-heading {
@@ -297,47 +308,48 @@ input[type="number"] {
     height: 30px;
 }
 
-.negative button{
+.negative button {
     background: #c12e2a;
 }
 
 #questionStartTime, #questionTimer {
-	display: inline;
-	margin-left: 10px;
-	margin-top: 10px;
+    display: inline;
+    margin-left: 10px;
+    margin-top: 10px;
 }
 
 #questionStart {
-	margin-left: 10px;
-	margin-top: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
 }
 
-#questionStart label, #questionTimer label{
-	display: inline;
+#questionStart label, #questionTimer label {
+    display: inline;
 }
 
-.questionTimer, .questionStartTime{
-	display: inline;
+.questionTimer, .questionStartTime {
+    display: inline;
 }
 
- #questionName label{
-	display:block;
- }
- 
- #questionName {
-	margin-bottom: 10px;
- }
- 
- #questionTiming {
-	display: block;
- }
- 
+#questionName label {
+    display: block;
+}
+
+#questionName {
+    margin-bottom: 10px;
+}
+
+#questionTiming {
+    margin-top: 10px;
+    display: block;
+}
+
 .invisibleRow {
-	border: none; 
-	background-color: inherit;
-	height:20px;
- }
- 
+    border: none;
+    background-color: inherit;
+    height: 20px;
+}
+
 .questionPreview {
     font-size: 125%;
 }
@@ -345,36 +357,37 @@ input[type="number"] {
 #questionWindow {
     max-width: 700px;
 }
+
 /*Kännykät*/
 
 /* ----------- Galaxy S3 & iPhone 6 & iPhone 5 & 5S & iPhone 4 & 4S----------- */
 /* Portrait and Landscape */
-@media screen 
-  and (min-device-width: 320px) 
-  and (max-device-width: 667px) 
-  and (-webkit-device-pixel-ratio: 2) {
-	
-	.pop-up-dialog {
-		width: 100%);
-		overflow: auto;
-		z-index: 6;
-		background-color: #fff;
-		box-shadow: 4px 4px 80px #000;
-	}
+@media screen
+and (min-device-width: 320px)
+and (max-device-width: 667px)
+and (-webkit-device-pixel-ratio: 2) {
+
+    .pop-up-dialog {
+        width: 100%);
+        overflow: auto;
+        z-index: 6;
+        background-color: #fff;
+        box-shadow: 4px 4px 80px #000;
+    }
 
 }
 
 /* ----------- Galaxy S4 & S5 & iPhone 6+ ----------- */
 /* Portrait and Landscape */
-@media screen 
-  and (min-device-width: 320px) 
-  and (max-device-width: 736px) 
-  and (-webkit-device-pixel-ratio: 3) {
-		.pop-up-dialog {
-		width: 100%);
-		overflow: auto;
-		z-index: 6;
-		background-color: #fff;
-		box-shadow: 4px 4px 80px #000;
-	}
+@media screen
+and (min-device-width: 320px)
+and (max-device-width: 736px)
+and (-webkit-device-pixel-ratio: 3) {
+    .pop-up-dialog {
+        width: 100%);
+        overflow: auto;
+        z-index: 6;
+        background-color: #fff;
+        box-shadow: 4px 4px 80px #000;
+    }
 }

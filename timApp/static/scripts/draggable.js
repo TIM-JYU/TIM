@@ -8,7 +8,6 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
 
         link: function (scope, element, attr) {
             var handle = $("<div>", {class: "draghandle"});
-            handle.height(13);
             if (attr.caption) handle.append('<p>' + attr.caption + '</p>');
             element.prepend(handle);
 
@@ -63,7 +62,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
                 setTop = (!topSet & !botSet) | topSet;
                 setBottom = botSet;
 
-                console.log(element.css('top'));
+                //console.log(element.css('top'));
 
                 prevTop = getPixels(element.css('top'));
                 prevLeft = getPixels(element.css('left'));
@@ -82,7 +81,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             function move(e) {
                 pos = getPageXY(e);
                 delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
-                console.log(prevTop);
+                //console.log(prevTop);
 
                 if (setTop)
                     element.css('top', prevTop + delta.Y);
