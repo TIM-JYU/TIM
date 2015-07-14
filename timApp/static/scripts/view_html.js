@@ -282,9 +282,7 @@ timApp.controller("ViewCtrl", [
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
-                console.log("tock");
                 if ( downEvent != null ) {
-                    console.log("event!");
                     if ( func($(this), downEvent) ) {
                         e.preventDefault();
                     }
@@ -401,27 +399,35 @@ timApp.controller("ViewCtrl", [
                 if ('taskId' in data.texts[i].attrs) {
                     html = $compile(html)(sc);
                 }
+                var classes = [];
+                if ('classes' in data.texts[i].attrs) {
+                    classes = data.texts[i].attrs.classes;
+                }
                 var $newpar = $("<div>", {
-                    class: "par",
+                    class: ["par"].concat(classes).join(" "),
                     id: data.texts[i].id,
-                    t: data.texts[i].par_hash,
+                    t: data.texts[i].t,
                     attrs: JSON.stringify(data.texts[i].attrs)
                 })
                     .append($("<div>", {class: "parContent"}).html(html));
                 var readClass = "unread";
+                var old_t = "";
                 if (i === 0 && !$par.hasClass("new")) {
+                    old_t = $par.find(".readline").attr("t");
                     $par.find(".notes").appendTo($newpar);
-                    if ($par.find(".read, .modified").length > 0) {
+                    if (old_t !== data.texts[i].t) {
                         readClass = "modified";
+                    } else {
+                        readClass = "read";
                     }
                 }
                 if ('taskId' in data.texts[i].attrs) {
-                    var ab = $('<answerbrowser>').attr('task-id', data.texts[i].attrs.taskId);
+                    var ab = $('<answerbrowser>').attr('task-id', sc.docId + '.' + data.texts[i].attrs.taskId);
                     $compile(ab[0])(sc);
                     ab.prependTo($newpar);
                 }
                 $par.after($newpar.append($("<div>",
-                    {class: "readline " + readClass, title: "Click to mark this paragraph as read"})));
+                    {class: "readline " + readClass, title: "Click to mark this paragraph as read", t: old_t})));
                 sc.processMath($newpar[0]);
             }
             $par.remove();
@@ -672,7 +678,10 @@ timApp.controller("ViewCtrl", [
                     } else {
                         classes.push("unread");
                     }
-                    var $div = $("<div>", {class: classes.join(" "), title: "Click to mark this paragraph as read"});
+                    var $div = $("<div>", {
+                        class: classes.join(" "),
+                        title: "Click to mark this paragraph as read",
+                        t: pars[par_id].par_hash});
                     $(this).append($div);
                 });
             }).error(function (data, status, headers, config) {

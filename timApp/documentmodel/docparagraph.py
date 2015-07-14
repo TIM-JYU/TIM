@@ -114,6 +114,10 @@ class DocParagraph:
         return json.dumps(self.get_attrs())
 
     @contract
+    def get_class_str(self) -> 'str':
+        return ' '.join(self.get_attrs().get('classes', []))
+
+    @contract
     def get_base_path(self) -> 'str':
         return self.getBasePath(self.get_id(), files_root=self.files_root)
 

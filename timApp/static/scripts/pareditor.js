@@ -24,6 +24,23 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     delete $scope.extraData.attrs[key];
                 };
 
+                $scope.deleteClass = function(classIndex) {
+                    $scope.extraData.attrs.classes.splice(classIndex, 1);
+                };
+
+                $scope.addClass = function() {
+                    $scope.extraData.attrs.classes.push('');
+                };
+
+                $scope.addAttribute = function() {
+                    if ($scope.newAttr === 'classes') {
+                        $scope.extraData.attrs[$scope.newAttr] = [];
+                    } else {
+                        $scope.extraData.attrs[$scope.newAttr] = '';
+                    }
+                    $scope.newAttr = '';
+                };
+
                 $scope.aceChanged = function () {
                     $scope.outofdate = true;
                     if ($scope.timer) {
