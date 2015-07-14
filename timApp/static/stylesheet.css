@@ -2,7 +2,7 @@
     text-align: justify;
 }
 
-.paragraph, .par, #header, .header, .viewLogin, .menuSection {
+.paragraph, .par, #header, .header, .viewLogin, .menuSection, .addBottomContainer, .editorArea {
     max-width: 52em;
 }
 
@@ -417,6 +417,7 @@ ul ul ul, ol ol ol {
 }
 
 .draghandle {
+    min-height: 13px;
     width: 100%;
     background-color: #3CC;
     position: initial;
@@ -825,18 +826,14 @@ p.links {
 }
 
 div.header {
-    overflow: auto;
     margin: 0;
     padding: 0;
     border-bottom: 1px solid #e5e5e5;
 }
 
 .clearfix {
-    clear: both;
-}
-
-#header {
-    clear: both;
+    display: inline-block;
+    width: 100%;
 }
 
 .pull-left {
@@ -846,8 +843,6 @@ div.header {
 .pull-right {
     float: right;
 }
-
-
 
 div.header:hover .anchor {
     visibility: visible;
@@ -1797,14 +1792,10 @@ p.plgfooter {
 }
 
 .addBottomContainer {
+    margin: 0.25em 0 0.25em 1em;
     position: relative;
-    margin-left: 1em;
-    margin-top: 0.25em;
-    margin-bottom: 0.25em;
     padding-top: 19px;
-    color: #777;
     border-top: 1px solid #e5e5e5;
-    max-width: 52em;
     text-align: center;
     padding-bottom: 1em;
 }
@@ -1841,17 +1832,19 @@ p.plgfooter {
     }
 
     .content {
-        /* max-width: 45em; */
         text-align: justify;
         margin-right: 0.5em;
     }
 
     .paragraph, .par {
         position: relative;
-        /* max-width: 43em; */
         margin-left: 0em;
         margin-top: 1em;
         margin-right: 1em;
+    }
+
+    .addBottomContainer {
+        margin-left: 0;
     }
 
     .addNoteButton {
@@ -1884,7 +1877,6 @@ p.plgfooter {
         -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box;
         box-sizing: border-box;
-        max-width: 52em;
     }
 
     .previewcontent {
@@ -1896,9 +1888,8 @@ p.plgfooter {
     }
 
     body {
-        /* max-width: 45em; */
-        margin-left: 5px !important;
-        /*margin-right: 10px; */
+        margin-left: 2px;
+        margin-right: 2px;
         font-family: Verdana, Arial, sans-serif;
         font-size: 1em;
         line-height: 1.2;
