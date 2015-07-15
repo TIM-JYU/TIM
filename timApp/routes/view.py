@@ -1,17 +1,13 @@
 """Routes for document view."""
 
 from contracts import contract, new_contract
-from flask import Blueprint, render_template, url_for
 
-from .common import *
-from documentmodel.document import Document, DocParagraph
-import pluginControl
+from documentmodel.document import DocParagraph
 
 new_contract('range', 'tuple(int, int)')
 
 from flask import Blueprint, render_template, url_for
 from .common import *
-from .cache import cache
 import pluginControl
 
 view_page = Blueprint('view_page',
@@ -68,11 +64,9 @@ def teacher_view(doc_name):
 def lecture_view(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        userstr = request.args.get('user')
-        user = int(userstr) if userstr is not None and userstr != '' else None
+        return view(doc_name, 'view_html.html', view_range, lecture=True)
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
-    return view(doc_name, 'view_html.html', view_range, user, lecture=True)
 
 
 @contract

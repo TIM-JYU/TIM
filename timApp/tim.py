@@ -499,14 +499,14 @@ def add_question():
     question_title = request.args.get('question_title')
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
-    par_index = int(request.args.get('par_index'))
+    par_id = request.args.get('par_id')
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
     questions = None
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_index, question_title, answer, questionJson)
+        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, questionJson)
     else:
-        questions = timdb.questions.update_question(question_id, doc_id, par_index, question_title, answer, questionJson)
+        questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, questionJson)
     return jsonResponse(timdb.questions.get_question(questions)[0])
 
 

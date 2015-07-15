@@ -81,7 +81,7 @@
                         <a href="/teacher/{{docID}}">Teacher view</a>
                     {% endif %}
                     |
-                    <a href="/lecture/{{ doc.name }}">Lecture view</a>
+                    <a href="/lecture/{{ docName }}">Lecture view</a>
                 {% endif %}
             {% elif objName == "folder" %}
                 |
@@ -89,12 +89,12 @@
             {% elif doc %}
                 |
                 {% if lecture_mode %}
-                    <a href="/view/{{ doc.name }}">Student view</a>
+                    <a href="/view/{{ docName }}">Student view</a>
                 {% else %}
-                    <a href="/lecture/{{ doc.name }}">Lecture view</a>
+                    <a href="/lecture/{{ docName }}">Lecture view</a>
                 {% endif %}
                 |
-                <a href="/teacher/{{doc.name}}">Teacher view</a>
+                <a href="/teacher/{{docName}}">Teacher view</a>
             {% endif %}
         {% endblock %}
     </div>

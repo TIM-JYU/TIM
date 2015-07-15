@@ -503,9 +503,8 @@ timApp.controller("ViewCtrl", [
                 })
                     .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
-                var old_t = "";
-                if (i === 0 && !$par.hasClass("new")) {
-                    old_t = $par.find(".readline").attr("t");
+                var old_t = $par.find(".readline").attr("t");
+                if (i === 0 && !$par.hasClass("new") && old_t !== null && typeof old_t !== 'undefined') {
                     $par.find(".notes").appendTo($newpar);
                     if (old_t !== data.texts[i].t) {
                         readClass = "modified";
@@ -854,7 +853,7 @@ timApp.controller("ViewCtrl", [
                     var pars = {};
                     var questionCount = data.length;
                     for (var i = 0; i < questionCount; i++) {
-                        var pi = data[i].par_index;
+                        var pi = data[i].par_id;
                         if (!(pi in pars)) {
                             pars[pi] = {questions: []};
                         }
@@ -862,25 +861,12 @@ timApp.controller("ViewCtrl", [
                         pars[pi].questions.push(data[i]);
                     }
 
-                    sc.forEachParagraph(function (index) {
-                            if ($(this).children().hasClass("questions")) {
-                                var children = $(this).children();
-                                for (var i = 0; i < children.length; i++) {
-                                    if (children[i].className == "questions") {
-                                        children[i].remove();
-                                    }
-                                }
-                            }
-
-                            var parIndex = index + sc.startIndex;
-                            if (parIndex in pars) {
-                                var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
-                                $(this).append($questionsDiv);
-
-                            }
-                        }
-                    );
-
+                    Object.keys(pars).forEach(function (par_id, index) {
+                        var $par = sc.getElementByParId(par_id);
+                        $par.remove(".questions");
+                        var $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
+                        $par.append($questionsDiv);
+                    });
                 });
         };
 
@@ -936,19 +922,21 @@ timApp.controller("ViewCtrl", [
                     var hash = $par.attr('t');
                     var par_id = $par.attr('id');
                     var classes = ["readline"];
+                    var curr_hash = null;
                     if (par_id in pars) {
                         var status = 'read';
                         if (hash !== pars[par_id].par_hash) {
                             status = 'modified';
                         }
                         classes.push(status);
+                        curr_hash = pars[par_id].par_hash;
                     } else {
                         classes.push("unread");
                     }
                     var $div = $("<div>", {
                         class: classes.join(" "),
                         title: "Click to mark this paragraph as read",
-                        t: pars[par_id].par_hash});
+                        t: curr_hash});
                     $(this).append($div);
                 });
             }).error(function () {
@@ -1734,7 +1722,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
         var doc_id = scope.docId;
         var $par = scope.par;
-        var par_index = scope.getParIndex($par);
+        var par_id = scope.getParId($par);
 
         //TODO use  JSON.stringify
 
@@ -1809,7 +1797,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 'question_id': scope.question.question_id,
                 'question_title': scope.question.title,
                 'answer': "test", //answerVal,
-                'par_index': par_index,
+                'par_id': par_id,
                 'doc_id': doc_id,
                 'questionJson': questionJson
             }

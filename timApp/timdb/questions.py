@@ -17,7 +17,7 @@ class Questions(TimDbBase):
         cursor.execute("""
                           SELECT question_id, question, answer
                           FROM Question
-                          WHERE doc_id = ? AND par_index = ?
+                          WHERE doc_id = ? AND par_id = ?
                        """, [doc_id, par_index])
         return self.resultAsDictionary(cursor)
 
@@ -70,7 +70,7 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def add_questions(self, doc_id: 'int', par_index: 'int', question_title: 'str', answer: 'str', questionJson: 'str',
+    def add_questions(self, doc_id: 'int', par_id: 'str', question_title: 'str', answer: 'str', questionJson: 'str',
                       commit: 'bool'=True) -> 'int':
         """
         Creates a new questions
@@ -82,9 +82,9 @@ class Questions(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       INSERT INTO Question (doc_id, par_index, question_title, answer, questionJson)
+                       INSERT INTO Question (doc_id, par_id, question_title, answer, questionJson)
                        VALUES(?,?,?,?,?)
-                       """, [doc_id, par_index, question_title, answer, questionJson])
+                       """, [doc_id, par_id, question_title, answer, questionJson])
         if commit:
             self.db.commit()
         question_id = cursor.lastrowid
@@ -100,7 +100,7 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Question
-                       SET doc_id = ?, par_index = ?, question_title = ?, answer = ?, questionJson = ?
+                       SET doc_id = ?, par_id = ?, question_title = ?, answer = ?, questionJson = ?
                        WHERE question_id = ?
                        """, [doc_id, par_index, question_title, answer, questionJson, question_id])
 

@@ -128,19 +128,18 @@ CREATE TABLE Block (
 );
 
 CREATE TABLE DocEntry (
-id INTEGER NOT NULL,
-name VARCHAR(512) NOT NULL,
-public INTEGER NOT NULL default 1,
+  id     INTEGER      NOT NULL,
+  name   VARCHAR(512) NOT NULL,
+  public INTEGER      NOT NULL DEFAULT 1,
 
-CONSTRAINT DocEntry_PK
-    PRIMARY KEY (name),
-CONSTRAINT DocEntry_id
-    FOREIGN KEY (id)
-    REFERENCES Block (id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-)
-;
+  CONSTRAINT DocEntry_PK
+  PRIMARY KEY (name),
+  CONSTRAINT DocEntry_id
+  FOREIGN KEY (id)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
 
 CREATE TABLE BlockRelation (
   parent_block_specifier   INTEGER NOT NULL,
@@ -232,42 +231,42 @@ CREATE TABLE BlockEditAccess (
 );
 
 
-CREATE TABLE UserNotes(
-id INTEGER NOT NULL,
-UserGroup_id INTEGER NOT NULL,
-doc_id INTEGER NOT NULL,
-par_id TEXT NOT NULL,
-par_hash TEXT NOT NULL,
-content VARCHAR(255) NOT NULL,
-created TIMESTAMP NOT NULL,
-modified TIMESTAMP,
-access VARCHAR(20) NOT NULL,
-tags VARCHAR(20) NOT NULL,
-html TEXT,
+CREATE TABLE UserNotes (
+  id           INTEGER      NOT NULL,
+  UserGroup_id INTEGER      NOT NULL,
+  doc_id       INTEGER      NOT NULL,
+  par_id       TEXT         NOT NULL,
+  par_hash     TEXT         NOT NULL,
+  content      VARCHAR(255) NOT NULL,
+  created      TIMESTAMP    NOT NULL,
+  modified     TIMESTAMP,
+  access       VARCHAR(20)  NOT NULL,
+  tags         VARCHAR(20)  NOT NULL,
+  html         TEXT,
 
-CONSTRAINT UserNotes_PK
-	PRIMARY KEY (id)
+  CONSTRAINT UserNotes_PK
+  PRIMARY KEY (id)
 );
 
 
-CREATE TABLE ReadParagraphs(
-UserGroup_id	INTEGER NOT NULL,
-doc_id INTEGER NOT NULL,
-par_id INTEGER NOT NULL,
-par_hash TEXT NOT NULL,
-timestamp TIMESTAMP NOT NULL,
+CREATE TABLE ReadParagraphs (
+  UserGroup_id INTEGER   NOT NULL,
+  doc_id       INTEGER   NOT NULL,
+  par_id       INTEGER   NOT NULL,
+  par_hash     TEXT      NOT NULL,
+  timestamp    TIMESTAMP NOT NULL,
 
-CONSTRAINT ReadParagraphs_PK
-	PRIMARY KEY (UserGroup_id, doc_id, par_id)
+  CONSTRAINT ReadParagraphs_PK
+  PRIMARY KEY (UserGroup_id, doc_id, par_id)
 );
 
 CREATE TABLE Question (
-  question_id  INTEGER NOT NULL PRIMARY KEY,
-  doc_id       INTEGER NOT NULL,
-  par_index    INTEGER NOT NULL,
-  question_title    TEXT NOT NULL,
-  answer       TEXT,
-  questionJson TEXT
+  question_id    INTEGER NOT NULL PRIMARY KEY,
+  doc_id         INTEGER NOT NULL,
+  par_id         TEXT    NOT NULL,
+  question_title TEXT    NOT NULL,
+  answer         TEXT,
+  questionJson   TEXT
 );
 
 CREATE TABLE Lecture (
