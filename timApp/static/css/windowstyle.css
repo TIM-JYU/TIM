@@ -276,16 +276,19 @@ input[type="number"] {
 }
 
 .createQuestion td {
+    border: 1px solid #cccccc;
     background: white;
 }
 
 .createQuestion table {
     margin-top: 2em;
+    margin-left: 2em;
     background: #F0F0F0;
-    width: 98%;
+    width: auto;
 }
 
-.createQuestion table th {
+.createQuestion th {
+    border: 1px solid #cccccc;
     width: auto;
 }
 
@@ -295,7 +298,6 @@ input[type="number"] {
 }
 
 #row-heading {
-    position: relative;
     text-align: center;
 }
 
@@ -312,6 +314,7 @@ tr.invisibleRow th {
 
 
 .matrixButtons, .buttonsTop {
+    position: absolute;
     opacity: 0;
     -webkit-transition: opacity 0.2s ease-in-out;
     -moz-transition: opacity 0.2s ease-in-out;
@@ -322,17 +325,16 @@ tr.invisibleRow th {
 
 .matrixButtons {
     padding: 0;
-    border: none;
-    background-color: inherit;
+    top: -21px;
+    left: -26px;
 }
 
 .buttonsTop {
-    position: absolute;
-    margin-top: -86px;
-    margin-left: -10px;
+    top: -25px;
+    left: -21px;
 }
 
-tr:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop:hover {
+th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop:hover {
     opacity: 1;
 }
 
@@ -376,12 +378,6 @@ tr:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop
 #questionTiming {
     margin-top: 10px;
     display: block;
-}
-
-.invisibleRow {
-    border: none;
-    background-color: inherit;
-    height: 20px;
 }
 
 #questionTypeAndTimeLimit {
