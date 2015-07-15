@@ -350,8 +350,9 @@ input[type="number"] {
     height: 20px;
 }
 
-.questionPreview {
-    font-size: 125%;
+#questionTypeAndTimeLimit {
+    font-size: 15px;
+    margin-bottom: 8px;
 }
 
 #questionWindow {
