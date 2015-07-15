@@ -19,6 +19,21 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
 
+        $scope.questionHeaders = [];
+        $scope.answerTypes = [];
+        $scope.dynamicAnswerSheetControl = {};
+        $scope.isLecturer = false;
+        $scope.questionTitle = "";
+
+        $scope.$on("setPreviewJson", function (event, args) {
+            $scope.questionId = args.questionId;
+            $scope.isLecturer = args.isLecturer;
+            $scope.questionJson = args.questionJson;
+            $scope.questionTitle = args.questionJson.TITLE;
+
+            $scope.dynamicAnswerSheetControl.createAnswer();
+        });
+
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
@@ -45,10 +60,10 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             })
                 .success(function () {
                     $rootScope.$broadcast('askQuestion', {"json": $scope.json, "questionId": $scope.qId});
-                    $scope.$emit('closeQuestionPreview');
+                    $scope.close();
                 })
                 .error(function (error) {
-                    $scope.$emit('closeQuestionPreview');
+                    $scope.close();
                     $window.console.log(error);
                 });
         };
@@ -58,6 +73,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
          * @memberof module:questionPreviewController
          */
         $scope.close = function () {
+            $scope.dynamicAnswerSheetControl.closePreview();
             $scope.$emit('closeQuestionPreview');
         };
 

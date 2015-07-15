@@ -20,19 +20,23 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
         restrict: 'E',
         replace: "true",
         scope: {
-            control: '='
+            control: '=',
+            preview: '@'
         },
         transclude: true,
         link: function ($scope, $element) {
             var promise;
             var timeLeft;
             var barFilled;
+            var disabled = '';
+            if ($scope.preview) disabled = ' disabled ';
             $scope.internalControl = $scope.control || {};
+
             $scope.internalControl.createAnswer = function () {
                 $scope.json = $scope.$parent.questionJson;
                 var htmlSheet = "<div class = 'answerSheet'>";
 
-                if ($scope.json.TIMELIMIT !== "") {
+                if ($scope.json.TIMELIMIT !== "" && !$scope.preview) {
                     htmlSheet += "<progress value='0' max='" + $scope.json.TIMELIMIT + "' id='progressBar'>";
                     htmlSheet += "</progress>";
                     htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
@@ -78,7 +82,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                         if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                             if (row.COLUMNS[i].answerFieldType === "text") {
                                 group = "group" + i;
-                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'"
+                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'" + disabled ;
                                 if($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1 && $scope.json.DATA.ROWS.length ===1) {
                                     htmlSheet += "style='height:200px'";
                                 }
@@ -87,14 +91,14 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
                                 htmlSheet += "<td class='answer-button'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
-                                " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
+                                disabled + " value='"  + $scope.json.DATA.HEADERS[header].text + "'" +
                                 "></label></td>";
                                 header++;
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
                             htmlSheet += "<td class='answer-button2'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
-                            " value='" + row.text + "'" +
+                            disabled + " value='" + row.text + "'" +
                             ">" + row.text + "</label></td>";
                         }
                     }
@@ -106,18 +110,20 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                 $element.append(htmlSheet);
                 $compile($scope);
 
-                var fakeTime = $scope.json.TIMELIMIT * 1000;
-                timeLeft = $scope.json.TIMELIMIT;
-                barFilled = 0;
-                var timeBetween = 100;
-                var intervalTimes = fakeTime / timeBetween;
-                $scope.valChange = fakeTime / 1000 / intervalTimes;
-                $scope.progressElem = $("#progressBar");
-                $scope.progressText = $("#progressLabel");
-                $scope.start = function () {
-                    promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
-                };
-                $scope.start();
+                if (!$scope.preview) {
+                    var fakeTime = $scope.json.TIMELIMIT * 1000;
+                    timeLeft = $scope.json.TIMELIMIT;
+                    barFilled = 0;
+                    var timeBetween = 100;
+                    var intervalTimes = fakeTime / timeBetween;
+                    $scope.valChange = fakeTime / 1000 / intervalTimes;
+                    $scope.progressElem = $("#progressBar");
+                    $scope.progressText = $("#progressLabel");
+                    $scope.start = function () {
+                        promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
+                    };
+                    $scope.start();
+                }
 
             }
             ;
@@ -215,6 +221,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                 $element.empty();
                 $scope.$emit('closeQuestion');
                 $rootScope.$broadcast('closeAnswerSheetForGood');
+            };
+
+            $scope.internalControl.closePreview = function () {
+                $element.empty();
             };
         }
 

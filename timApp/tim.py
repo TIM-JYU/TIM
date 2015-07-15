@@ -500,11 +500,12 @@ def add_question():
     par_index = int(request.args.get('par_index'))
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
+    questions = None
     if not question_id:
         questions = timdb.questions.add_questions(doc_id, par_index, question_title, answer, questionJson)
     else:
         questions = timdb.questions.update_question(question_id, doc_id, par_index, question_title, answer, questionJson)
-    return jsonResponse(questions)
+    return jsonResponse(timdb.questions.get_question(questions)[0])
 
 
 # Route to check if the current user is in some lecture in specific document

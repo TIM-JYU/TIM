@@ -218,6 +218,11 @@ timApp.controller("ViewCtrl", [
                 .success(function (data) {
                     sc.json = JSON.parse(data.questionJson);
                     $rootScope.$broadcast('changeQuestionTitle', {'title': sc.json.TITLE});
+                    $rootScope.$broadcast("setPreviewJson", {
+                        questionJson: sc.json,
+                        questionId: sc.qId,
+                        isLecturer: sc.isLecturer
+                    });
                 })
 
                 .error(function () {
@@ -1799,49 +1804,35 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 'questionJson': questionJson
             }
         })
-            .success(function () {
+            .success(function (data) {
                 $window.console.log("The question was successfully added to database");
                 scope.removeErrors();
                 //scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
                 if (ask) {
-
+                    scope.json = JSON.parse(data.questionJson);
+                    scope.qId = data.question_id;
                     http({
-                        url: '/getQuestionById',
-                        method: 'GET',
-                        params: {'question_id': scope.qId, 'buster': new Date().getTime()}
-                    })
-                        .success(function (data) {
-                            scope.json = JSON.parse(data.questionJson);
-                            http({
-                                url: '/askQuestion',
-                                method: 'POST',
-                                params: {
-                                    lecture_id: scope.lectureId,
-                                    question_id: scope.qId,
-                                    doc_id: scope.docId,
-                                    buster: new Date().getTime()
-                                }
-                            })
-                                .success(function () {
-                                    $rootScope.$broadcast('askQuestion', {"json": scope.json, "questionId": scope.qId});
-                                })
-                                .error(function (error) {
-                                    $window.console.log(error);
-                                });
-
-                        })
-
-                        .error(function () {
-                            $window.console.log("There was some error creating question to database.");
-                        });
+                        url: '/askQuestion',
+                        method: 'POST',
+                        params: {
+                            lecture_id: scope.lectureId,
+                            question_id: scope.qId,
+                            doc_id: scope.docId,
+                            buster: new Date().getTime()
+                        }
+                    }).success(function () {
+                        $rootScope.$broadcast('askQuestion', {"json": scope.json, "questionId": scope.qId});
+                    }).error(function (error) {
+                        $window.console.log(error);
+                    });
                 }
-                scope.close();
-            })
-            .error(function () {
+            }).error(function () {
                 $window.console.log("There was some error creating question to database.");
             });
+
+        scope.close();
     };
 
     scope.deleteQuestion = function () {

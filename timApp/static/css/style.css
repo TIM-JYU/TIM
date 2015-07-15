@@ -30,10 +30,8 @@ td.selected {
 }
 
 .questions {
-    display: block;
-    float: left;
+    display: inline-block;
     margin-left: 2em;
-    position: absolute;
 }
 
 .questionAdded {
