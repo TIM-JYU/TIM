@@ -295,6 +295,7 @@ input[type="number"] {
 }
 
 #row-heading {
+    position: relative;
     text-align: center;
 }
 
