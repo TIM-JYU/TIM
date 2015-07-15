@@ -1,13 +1,5 @@
 <div id="matrix" class="matrix">
-    <div id="check" ng-if="question.type == 'matrix'">
-        <label>Answer type:</label>
-        <select name="answerType" ng-model="question.matrixType" ng-dropdown
-                ng-options="item.value as item.label for item in answerFieldTypes ">
-            <option value="" disabled selected> -- select answer type --</option>
-
-        </select>
-    </div>
-    <div class="questionTable">
+    <div class="questionTable" ng-style="{true: {}, false: {'margin-top': '2em'}}[question.type == 'matrix']">
         <table id="question-table">
             <thead>
             <!----Top "hidden row" with + and - buttons  ---->
@@ -15,8 +7,8 @@
                 <th style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
                 <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit">
-                    <div style="top:30px; position:relative;">
-                        <button ng-click="addCol($index)" style="float:left; margin-left: -20px;">+</button>
+                    <div style="top:8px; position:relative;">
+                        <button ng-click="addCol($index)" style="float:left; margin-left: -13px;">+</button>
                         <button class="negative" ng-click="delCol($index)" style="float:right; margin-right: 40px;">-</button>
                     </div>
                 </th>
@@ -34,13 +26,13 @@
 
                 <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'" id="row-heading">
                     <div class="cart">
-                        <textarea class="rowHeading" form="question-form" rows="1" cols="20"
+                        <textarea class="rowHeading" form="question-form" rows="1" cols="10"
                                   ng-model="columnHeaders[$index].text"></textarea>
                         <br/>
                     </div>
                 </th>
                 <th ng-if="question.type == 'matrix'">
-                    <button style="width: 150px; height: 50px;" ng-click="addCol(-1)">+</button>
+                    <button style="width: 50px; height: 50px;" ng-click="addCol(-1)">+</button>
                 </th>
 
             </tr>
@@ -48,7 +40,7 @@
             <tbody>
             <tr ng-repeat="row in rows">
                 <th id="buttons">
-                    <div style="left:18px; position:relative;">
+                    <div style="left:8px; position:relative;">
                         <button ng-click="addRow($index)" style="float:right; margin-top:-42px;">+</button>
                         <button ng-click="delRow($index)" class="negative" style="float:right">-</button>
                     </div>
@@ -113,8 +105,6 @@
                     </div>
                 </th>
             </tr>
-
-
             </tbody>
         </table>
     </div>

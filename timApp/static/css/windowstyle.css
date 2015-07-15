@@ -175,7 +175,6 @@ input[type="number"] {
 
 .rowHeading {
     height: 50px !important;
-    width: 95% !important;
 }
 
 .true-false-title {
@@ -184,7 +183,6 @@ input[type="number"] {
 }
 
 .answer-columns {
-    width: 5% !important;
     text-align: center;
 }
 
@@ -287,22 +285,39 @@ input[type="number"] {
     width: 98%;
 }
 
+.createQuestion table th {
+    width: auto;
+}
+
 .createQuestion #emptyBlock {
     border: none;
     background: #F0F0F0
 }
 
 #row-heading {
-    min-width: 100px;
+    /* min-width: 100px; */
+    text-align: center;
 }
+
+#row-heading textarea {
+    resize: horizontal;
+    width: auto;
+    margin: auto;
+}
+
+tr.invisibleRow th {
+  height: auto;
+  padding: 0;
+}
+
 
 #buttons {
+    padding: 0;
     border: none;
     background-color: inherit;
-    width: 5%;
 }
 
-.answer-columns
+.answer-columns,
 #matrix-textarea {
     width: 90px;
     height: 30px;
@@ -353,10 +368,6 @@ input[type="number"] {
 #questionTypeAndTimeLimit {
     font-size: 15px;
     margin-bottom: 8px;
-}
-
-#questionWindow {
-    max-width: 700px;
 }
 
 /*Kännykät*/

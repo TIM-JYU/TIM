@@ -22,7 +22,14 @@
                         </select>
                     </label>
                 </div>
-                <div ng-if="question.type" >
+                <div id="check" ng-if="question.type == 'matrix'">
+                    <label>Answer type:</label>
+                    <select name="answerType" ng-model="question.matrixType" ng-dropdown
+                        ng-options="item.value as item.label for item in answerFieldTypes ">
+                        <option value="" disabled selected> -- select answer type --</option>
+                    </select>
+                </div>
+                <div ng-if="question.type" style="overflow-x: auto">
                     {% include 'matrix.html' %}
                 </div>
 
