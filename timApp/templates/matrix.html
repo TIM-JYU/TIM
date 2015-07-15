@@ -1,25 +1,24 @@
 <div id="matrix" class="matrix">
-    <div class="questionTable" ng-style="{true: {}, false: {'margin-top': '2em'}}[question.type == 'matrix']">
+    <div class="questionTable">
         <table id="question-table">
             <thead>
             <!----Top "hidden row" with + and - buttons  ---->
+            <!--
             <tr class="invisibleRow" ng-if="question.type == 'matrix'">
                 <th style="border: none; background-color: inherit">
                 <th style="border: none; background-color: inherit"></th>
                 <th ng-repeat="item in columnHeaders" style="border: none; background-color: inherit">
-                    <div style="top:8px; position:relative;">
+                    <div class="buttonsTop">
                         <button ng-click="addCol($index)" style="float:left; margin-left: -13px;">+</button>
                         <button class="negative" ng-click="delCol($index)" style="float:right; margin-right: 40px;">-</button>
                     </div>
                 </th>
-            </tr>
+            </tr> -->
 
             <!--- ends--->
             <tr ng-show="question.type == 'matrix' || question.type == 'true-false'">
-                <th style="border-left: none; border-top: none; border-bottom: none; background-color:inherit;">
-                </th>
-                <th>
-                </th>
+                <th class="emptyBlock"></th>
+                <th class="emptyBlock"></th>
 
                 <th ng-show="question.type == 'true-false'" class="true-false-title">True</th>
                 <th ng-show="question.type == 'true-false'" class="true-false-title">False</th>
@@ -30,6 +29,10 @@
                                   ng-model="columnHeaders[$index].text"></textarea>
                         <br/>
                     </div>
+                    <div class="buttonsTop">
+                        <button ng-click="addCol($index)" style="margin-left: -12px;">+</button>
+                        <button class="negative" ng-click="delCol($index)" style="margin-left: 28px; margin-right: 30px;">-</button>
+                    </div>
                 </th>
                 <th ng-if="question.type == 'matrix'">
                     <button style="width: 50px; height: 50px;" ng-click="addCol(-1)">+</button>
@@ -39,7 +42,7 @@
             </thead>
             <tbody>
             <tr ng-repeat="row in rows">
-                <th id="buttons">
+                <th class="matrixButtons">
                     <div style="left:8px; position:relative;">
                         <button ng-click="addRow($index)" style="float:right; margin-top:-42px;">+</button>
                         <button ng-click="delRow($index)" class="negative" style="float:right">-</button>
@@ -98,7 +101,7 @@
                 <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionJson at view_html.js and then displaying them at directives/dynamicanswersheet.js -->
             </tr>
             <tr>
-                <td id="emptyBlock"></td>
+                <td class="emptyBlock"></td>
                 <th>
                     <div>
                         <button id="addRow" ng-click="addRow(-1)">+</button>
