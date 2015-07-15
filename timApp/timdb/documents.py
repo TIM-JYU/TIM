@@ -78,7 +78,7 @@ class Documents(TimDbBase):
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
-        document.add_paragraph('Edit me!')
+        document.add_paragraph('Click right side to edit. You can get help with editing from editors Help tab.')
 
         cursor = self.db.cursor()
         cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP

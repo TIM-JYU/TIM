@@ -1,0 +1,11 @@
+Show code
+Show selected part of program code 
+``` {#c1 plugin="showCode"}
+file: https://svn.cc.jyu.fi/srv/svn/ohj2ht/k2015/vesal/branches/tietokantaVaihe6/src/kerho/Jasen.java
+start: public String annaLuontilauseke()
+startscan: "-/\\*\\*"
+end: "/\\*"
+endn: -3
+linefmt: "{0:03d} "
+stem: "Laita hakemiston c:\norsu"
+```

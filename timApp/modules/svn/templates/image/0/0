@@ -1,0 +1,7 @@
+Image
+Image with width and height
+``` {#PLUGINNAMEHERE plugin="showImage"}
+width: 300
+height: 200
+file: IMAGEURLHERE
+```

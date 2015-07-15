@@ -1,0 +1,89 @@
+/*Turns off browser's default styling*/
+progress,          /* All HTML5 progress enabled browsers */
+progress[role]     /* polyfill */
+{
+
+	/* Turns off styling - not usually needed, but good to know. */
+	appearance: none;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+
+	/* gets rid of default border in Firefox and Opera. */ 
+	border: none;
+
+	/* Needs to be in here for Safari polyfill so background images work as expected. */
+	background-size: auto;
+	
+	/* Dimensions */
+	width: 100%;
+	height: 30px;
+	
+}
+
+/* Polyfill */
+progress[role]:after {
+	background-image: none; /* removes default background from polyfill */
+}
+
+/* Ensure fallback text doesn't appear in polyfill */
+progress[role] strong {
+	display: none;
+}
+/*-----------------------------------*/
+
+/*Color of progress bar's background*/
+progress,                          /* Firefox  */ 
+progress[role][aria-valuenow] {    /* Polyfill */
+   background: #F0F0F0 !important; /* !important is needed by the polyfill */
+   border: 1px solid #696969;
+   border-radius: 5px;
+}
+
+/* Chrome */
+progress::-webkit-progress-bar {
+    background: #F0F0F0;
+	border-radius: 5px;
+}
+/*--------------------------------*/
+
+/*Color of progress bar's value */
+/* IE10 */
+progress {
+    color: #3cc;
+}
+
+/* Firefox */
+progress::-moz-progress-bar { 
+    background: #3cc;	
+	background-image: -moz-linear-gradient(#3cc, #3EAAB3, #3cc);
+	border-radius: 5px;
+}
+
+/* Chrome */
+progress::-webkit-progress-value {
+    background: #3cc;
+	background-image: -webkit-linear-gradient(#3cc, #3EAAB3, #3cc);
+	border-radius: 5px;
+}
+
+/* Polyfill */
+progress[aria-valuenow]:before  {
+	border-radius: 5px;
+    background: #3cc;
+	background-image: -moz-linear-gradient(#3cc, #3EAAB3, #3cc);
+	background-image: -ms-linear-gradient(#3cc, #3EAAB3, #3cc);
+	background-image: -o-linear-gradient(#3cc, #3EAAB3, #3cc);
+}
+/*-------------------------------*/
+
+/*Label in the progress bar*/
+.progresslabel {
+    display: block;
+    text-align: center;
+    position: relative;
+	top: -25px;
+    margin-left: auto;
+	margin-right: auto;
+    font-size: small;
+}
+/*-------------------------*/

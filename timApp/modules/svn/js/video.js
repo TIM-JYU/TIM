@@ -3,7 +3,7 @@ videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	videoApp.s
 videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('listvideo'); }]);
 
-
+  
 videoApp.nr = 0;
  
 videoApp.getHeading = function(a,key,$scope,deftype) {
@@ -200,7 +200,13 @@ videoApp.Controller = function($scope,$http,$transclude) {
 			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
 		else   
-			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';
+            t = ""
+            if ( $scope.start ) {
+                t = "#t="+$scope.start; // iPad ei tottele 'loadedmetadata'
+                if ( $scope.end ) t += "," + $scope.end;
+            }    
+			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + t + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';
+        // IE ei tietenkään taas tottele t-attribuuttia...            
 		$scope.videoOn = true;	
 		$scope.myvid = document.getElementById(vid);
 		if ( !$scope.myvid ) return;
@@ -215,6 +221,7 @@ videoApp.Controller = function($scope,$http,$transclude) {
 				$scope.watchEnd = 1000000;
 			}
 			}, false);
+            
 		/*
 		$scope.videoHtml.addEventListener('loadedmetadata', function() {
 			this.currentTime = 50;

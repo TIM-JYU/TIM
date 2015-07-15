@@ -1,0 +1,25 @@
+Tauno variable
+Tauno with 2 variables
+``` {#PLUGINNAMEHERE plugin="taunoPlugin"}
+type: cs
+header: Esimerkki muuttujista
+height: 330
+taunotype: ptauno 
+open: true
+table: s0&mi=2&msumma
+indent: 8
+maxrows: 10
+placeholder: Näytä ensin Tauno, tee tehtävä ja kopioi sitten Taunon koodi tähän
+stem: "Sijoita i:n arvo summa-muuttujaan raahaamalla i:n arvo.  Kasvata i:n arvoa vetämälle sen päälle +1 'laatikko'.  Muuttuuko summa-muuttujan arvo kun kasvatat i:tä? "
+replace: "TODO: Kopioi"
+program: |
+ public class Kasvata
+ {
+     public static void Main()
+     {
+         // TODO: Kopioi 
+         System.Console.WriteLine("i = {0}, summa = {1}",i,summa);
+     }
+ }
+byCode: ""
+```

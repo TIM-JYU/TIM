@@ -1,0 +1,48 @@
+<div ng-controller="QuestionPreviewController" class="popUpWindow">
+    <div class="questionPreview">
+        <div id="questionTypeAndTimeLimit">
+            <span>Time limit:</span>
+            <span ng-if="json.TIMELIMIT.length > 0"
+                  ng-bind="json.TIMELIMIT">{{ json.TIMELIMIT }} seconds</span>
+            <span ng-if="json.TIMELIMIT.length <= 0">No time limit.</span>
+        </div>
+        <dynamic-answer-sheet preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+    </div>
+    <!--
+    <div class="questionPreview answerSheet">
+        <div id="questionTypeAndTimeLimit">
+            <span>Time limit:</span> <span ng-if="json.TIMELIMIT.length > 0" ng-bind="json.TIMELIMIT">{{ json.TIMELIMIT }} seconds</span>
+                        <span ng-if="json.TIMELIMIT.length <= 0">No time limit.</span>
+        <h2 ng-bind-html="json.QUESTION"></h2>
+        </div>
+
+        <table>
+            <div>
+                <tr ng-if="(json.TYPE == 'true-false')">
+                    <th class="answer-button2"></th>
+                    <th class="answer-button2">True</th>
+                    <th class="answer-button2">False</th>
+                </tr>
+                <tr ng-if="json.TYPE == 'matrix'">
+                    <th class="answer-button"></th>
+                    <th class="answer-button" ng-repeat="header in json.DATA.HEADERS" ng-bind-html="header.text" ng-show="header.text.length > 0"><p>{{ header.text }}</p></th>
+                </tr>
+            </div>
+
+            <tr ng-repeat="row in json.DATA.ROWS">
+                <td ng-bind-html="row.text" ng-show="row.text.length > 0"> {{ row.text }} </td>
+                <td ng-repeat="column in row.COLUMNS">
+                    <div ng-if="(column.answerFieldType == 'radio')"><input type="radio" disabled> </div>
+                    <div ng-if="(column.answerFieldType == 'checkbox')"><input type="checkbox" disabled></div>
+                    <div ng-if="(column.answerFieldType == 'text')"><textarea disabled></textarea></div>
+                </td>
+            </tr>
+        </table>
+    </div> -->
+    <div class="buttons">
+        <button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>
+        <button ng-click='editQuestion()' class='timButton questionButton'>Edit</button>
+        <!--        <button ng-click='deleteQuestion()' class="timButton questionButton">Delete</button> -->
+        <button ng-click='close()' class='timButton questionButton'>Close</button>
+    </div>
+</div>

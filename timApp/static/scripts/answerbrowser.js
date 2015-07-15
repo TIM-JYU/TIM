@@ -86,7 +86,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.getAvailableUsers = function () {
                     $scope.loading++;
-                    $http.get('/getTaskUsers/' + $scope.taskId)
+                    $http.get('/getTaskUsers/' + $scope.taskId, {params: {group: $scope.$parent.group}})
                         .success(function (data, status, headers, config) {
                             $scope.users = data;
                         }).error(function (data, status, headers, config) {

@@ -9,3 +9,7 @@
 @kopioi *.bat e:   /q
 @kopioi *. e:      /q
 
+cd E:\kurssit\tim\timApp\modules\svn\templates
+cd templates
+@kopioi *.* e:     /q /s
+cd ..

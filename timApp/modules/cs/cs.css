@@ -28,7 +28,7 @@
     margin-right:3px;
 }
 .web-console .console-input {
-    width:86%; 
+    width:75%; 
     margin-left:auto; 
     margin-right:auto;
     display: inline;
@@ -102,7 +102,7 @@ color:#69d2e7;
 
 .console-in {
 color:#e0e4cc;
-width:9ex;
+/* width:9ex; */
 display: inline-block;
 }
 
@@ -166,4 +166,8 @@ height:85%;
 
 .htmlresult {
   text-align: center;
+}
+
+.console-buttons {
+  float: right;
 }

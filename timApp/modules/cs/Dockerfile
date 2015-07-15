@@ -21,13 +21,13 @@ run apt-get install -y wget
 run locale-gen en_US.UTF-8 
 run locale-gen fi_FI.UTF-8 
 
-# Poistetaan pip. Sit‰ ei tarvitse en‰‰ ja saadaan
-# hitusen pienempi image ja v‰hemm‰n ohjelmia potentiaalisen
-# hyˆkk‰‰j‰n k‰yttˆˆn. (Periaate ok. k‰yt‰nnˆss‰ tosi marginaalinen
+# Poistetaan pip. Sit√§ ei tarvitse en√§√§ ja saadaan
+# hitusen pienempi image ja v√§hemm√§n ohjelmia potentiaalisen
+# hy√∂kk√§√§j√§n k√§ytt√∂√∂n. (Periaate ok. k√§yt√§nn√∂ss√§ tosi marginaalinen
 # toimenpide)
 # run apt-get -y --purge remove python3-pip
 
-# Lis‰t‰‰n alkuper‰inen hakemisto polkuun /service
+# Lis√§t√§√§n alkuper√§inen hakemisto polkuun /service
 run mkdir /service
 
 #
@@ -103,7 +103,7 @@ RUN apt-get install -y postgresql-client
 # RUN sudo /usr/local/bin/wrapdocker
 
 
-# Lis‰t‰‰n k‰ytt‰j‰ `agent` -- Emme halua ajaa containerissakaan
+# Lis√§t√§√§n k√§ytt√§j√§ `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 # run useradd -M agent 
 run useradd -m agent
@@ -113,17 +113,17 @@ run chown -R agent /service
 #run gpasswd -a agent docker
 #run usermod -a -G sudo agent
 
-# testej‰ varten
+# testej√§ varten
 ENV MYPASSWORD password
 RUN echo root:kissa | chpasswd
 #RUN echo agent:kissa | chpasswd
 
-# Varmuudeksi estet‰‰n root login ja poistetaan rootin salasana,
+# Varmuudeksi estet√§√§n root login ja poistetaan rootin salasana,
 # jos sellainen on.
 # run usermod -p '!' root
 # run passwd -l root
 
-# Asetetaan container k‰ynnistym‰‰n tunnuksella agent.
+# Asetetaan container k√§ynnistym√§√§n tunnuksella agent.
 user agent
 
 # Avataan portti 5000 ulos containerista.

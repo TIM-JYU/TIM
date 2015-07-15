@@ -18,13 +18,54 @@ csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$co
 var TESTWITHOUTPLUGINS = true && false;
 csApp.taunoNr = 0;
 
+//==============================================================
+// Global object to store every plugin that wants to
+// know when pwd changes.  plugin must implement (or scope)
+// setPWD method.  Also it should have property path = "user"
+// to be able to register.
+var ConsolePWD = {};
+
+ConsolePWD.pwdHolders = [];
+
+ConsolePWD.currentPWD = "/home/agent";
+
+ConsolePWD.register = function(scope) {
+    if ( !ConsolePWD.isUser(scope) ) return;
+    ConsolePWD.pwdHolders.push(scope);
+}    
+
+ConsolePWD.isUser = function(scope) {
+    return ( scope.path === "user" );
+ 
+}    
+
+ConsolePWD.setPWD = function(pwd,scope) {
+    if ( !ConsolePWD.isUser(scope) ) {
+        scope.setPWD("/home/agent");
+        return;
+    }
+    
+    ConsolePWD.currentPWD = pwd;
+    for (var i = 0; i <ConsolePWD.pwdHolders.length; i++) {
+        var pwdHolder = ConsolePWD.pwdHolders[i];
+        pwdHolder.setPWD(pwd);
+    }
+}
+
+ConsolePWD.getPWD = function() {
+    return ConsolePWD.currentPWD;
+}
+//==============================================================
+
+
+
 // =================================================================================================================
-// Things for konwn langueges
+// Things for known languages
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage"];
-languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python"];
+languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","r"];
+languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","r"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -205,7 +246,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   : "") + // end of isInput
                   
                   
-				  '<p class="csRunSnippets" ng-if="buttons && viewCode">' +
+				  '<p class="csRunSnippets" ng-if="buttons">' + // && viewCode">' +
 				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
                   '</p>' +
                   '<div class="csRunMenuArea">'+
@@ -268,9 +309,11 @@ csApp.directiveFunction = function(t,isInput) {
             scope.taskId  = element.parent().attr("id");
 
 			csApp.set(scope,attrs,"type","cs");
+            scope.isText = languageTypes.getRunType(scope.type,false) == "text";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
             
 			csApp.set(scope,attrs,"file");
+			csApp.set(scope,attrs,"filename");
 			csApp.set(scope,attrs,"lang");
 			csApp.set(scope,attrs,"width");
 			csApp.set(scope,attrs,"height");
@@ -290,10 +333,10 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder","Write your code here");
 			csApp.set(scope,attrs,"inputplaceholder","Write your input here");
-			csApp.set(scope,attrs,"argsplaceholder","Write your program args here");
-			csApp.set(scope,attrs,"argsstem","Args:");
+			csApp.set(scope,attrs,"argsplaceholder",scope.isText ? "Write file name here" : "Write your program args here");
+			csApp.set(scope,attrs,"argsstem",scope.isText ? "File name:" : "Args:");
 			csApp.set(scope,attrs,"userinput","");
-			csApp.set(scope,attrs,"userargs","");
+			csApp.set(scope,attrs,"userargs",scope.isText ? scope.filename : "");
 			csApp.set(scope,attrs,"inputstem","");
 			csApp.set(scope,attrs,"inputrows",1);
 			csApp.set(scope,attrs,"toggleEditor",false);
@@ -301,7 +344,6 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"user_id");
             csApp.set(scope,attrs,"isHtml",false);
             csApp.set(scope,attrs,"autoupdate",false);
-            csApp.set(scope,attrs,"button","");
             csApp.set(scope,attrs,"canvasWidth",700);
             csApp.set(scope,attrs,"canvasHeight",300);
             csApp.set(scope,attrs,"button","");
@@ -348,7 +390,10 @@ csApp.directiveFunction = function(t,isInput) {
                 scope.isRun = true;
                 scope.buttonText = "Tallenna";
             }            
-            if ( scope.button ) scope.buttonText = scope.button;
+            if ( scope.button ) {
+                scope.isRun = true;
+                scope.buttonText = scope.button;
+            }
             
 			scope.indent = csApp.getInt(scope.indent);
             if ( scope.indent < 0 )
@@ -416,7 +461,11 @@ csApp.directiveFunction = function(t,isInput) {
 function alustaSage(scope,firstTime) {
 // TODO: lisää kentätkin vasta kun 1. kerran alustetaan.
 // TODO: kielien valinnan tallentaminen
-// TODO: kielien valinta kunnolla float.    
+// TODO: kielien valinta kunnolla float.  
+// ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
+    var types = scope.type.split("/");
+    var languages = sagecell.allLanguages;
+    if ( types.length > 1 ) languages = types.slice(1); 
     if ( scope.sagecellInfo ) {
         var outputLocation = $(scope.sageOutput);
         outputLocation.find(".sagecell_output_elements").hide();
@@ -448,7 +497,7 @@ function alustaSage(scope,firstTime) {
             if ( csRunMenuArea && sagecellOptions ) csRunMenuArea.appendChild(sagecellOptions);
             sagecellOptions.style.marginTop = "-2em";
         },
-        languages: sagecell.allLanguages
+        languages: languages // sagecell.allLanguages
     });
 }    
 
@@ -761,6 +810,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	
 	$scope.addText = function (s) {
 	    // $scope.usercode += s;
+        if ( $scope.noeditor ) {
+            $scope.userargs += s + " ";
+            return;
+        }
 	    var tbox = $scope.edit;
 	    var i = tbox.selectionStart || 0;
 	    var uc = $scope.usercode || "";
@@ -984,7 +1037,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         var text = $scope.usercode.replace($scope.cursor,"");
         if ( text == $scope.lastMD ) return;
         $scope.lastMD = text;
-        $scope.previewUrl="/preview/1" // 12971"
+        $scope.previewUrl="/preview/" + $scope.taskId.split(".")[0]; // 12971"
         $http.post($scope.previewUrl, {
             "text": text
         }).success(function (data, status, headers, config) {
@@ -1239,7 +1292,18 @@ csConsoleApp.directiveFunction = function (t, isInput, $timeout) {
          //    return "http://" + elem.parent().attr('data-plugin') + "/" + 'NewConsole/Console.template.html';
          // },
          transclude: true,
-         replace: true
+         replace: true,
+         link: function (scope, element, attrs) {
+			csApp.set(scope,attrs,"usercode","");
+  			csApp.set(scope,attrs,"type","cs");
+  			csApp.set(scope,attrs,"path");
+            scope.pwd = ConsolePWD.getPWD(scope);
+            scope.oldpwd = scope.pwd;
+            scope.isShell = languageTypes.getRunType(scope.type,false) == "shell";
+  			if ( scope.usercode === "" && scope.byCode )  scope.usercode = scope.byCode.split("\n")[0];
+            scope.currentInput = scope.usercode;
+            if ( scope.isShell ) ConsolePWD.register(scope);
+         }
      };
 };
 
@@ -1282,7 +1346,12 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
         $scope.examples = JSON.parse(s);
     }
 
-
+    
+    $scope.setPWD = function(pwd) {
+        $scope.pwd = pwd;
+    }
+    
+    
     $scope.history = [];
 
     $scope.loadExample = function (i) {
@@ -1322,6 +1391,8 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
         })
          .success(function (data) {
              var s = "";
+             $scope.oldpwd = $scope.pwd;
+             if ( data.web.pwd ) ConsolePWD.setPWD(data.web.pwd,$scope);
              if (data.web.error ) {
                  s = data.web.error;
                  s = "<pre>" + s + "</pre>";
@@ -1351,6 +1422,8 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
     $scope.submit = function (result) {
 
         $scope.history.push({
+            istem: $scope.isShell ? $scope.history.length + " " + $scope.oldpwd + "$": "in_"+ $scope.history.length+": ",
+            ostem: $scope.isShell ?  "" : "out_"+ $scope.history.length+": ",
             input: $scope.currentInput,
             response: result
         });
@@ -1370,10 +1443,19 @@ csConsoleApp.Controller = function ($scope, $http, $transclude, $element, $timeo
     };
 
 
+    $scope.up = function() {
+        if ( !$scope.cursor ) return;
+        $scope.cursor--; $scope.load();
+    }
+    
+    $scope.down = function() {
+        $scope.cursor++; $scope.load();
+    }
+    
     $scope.handleKey = function (ev) {
         if (ev.which === 13) $scope.handler();// submit();
-        if (ev.which === 40) { $scope.cursor++; $scope.load(); }
-        if (ev.which === 38) { $scope.cursor--; $scope.load(); }
+        if (ev.which === 40) { $scope.down(); }
+        if (ev.which === 38) { $scope.up(); }
     };
 };
  
@@ -1388,12 +1470,14 @@ csConsoleApp.directiveTemplateCS = function (t, isInput) {
      ' <div class="console-output-elem" '+
      '    ng-repeat="item in history track by $index">'+
      '<span class="console-oldinput">'+
-     '  <span class="console-in">in_{{$index}}: </span>'+
+     '  <span class="console-in">{{item.istem}}</span>'+
      '  <span class="console-userInput">{{item.input}}</span>'+
      ' </span>'+
-     ' <br/>'+
-     ' <span class="console-oldresponse">'+
-     '  <span class="console-out">out_{{$index}}: </span>'+
+     ' <span  class="console-oldresponse">'+
+     '<span ng_if="!isShell">'+
+     '  <br />' +
+     '  <span class="console-out">{{item.ostem}}</span>'+
+     '</span>'+
      '  <span class="console-response" ng-class="{error:item.error}"><span ng-bind-html="item.response"></span></span> <!-- Double span since ng-bind eats the innermost one --!>'+
      ' </span>'+
      '</div>'+
@@ -1412,11 +1496,81 @@ csConsoleApp.directiveTemplateCS = function (t, isInput) {
      '<ul>'+
      '</div>'+
      ''+
+     '<div class="console-curIndex" ng-if="isShell">{{pwd}}</div>'+
      '<span class="console-curIndex">in_{{cursor}}</span>'+
      '<input type="text" '+
      '    placeholder="type expressions here"'+
      '        class="console-input"'+
-     '        ng-model="currentInput" />'+
+     '        ng-model="currentInput" />&nbsp;'+
+     '<div class="console-buttons">'+
+     '<button ng-click="up()">↑</button>&nbsp;' +
+     '<button ng-click="down()">↓</button>&nbsp;' +
+	 '<button ng-click="handler()">Enter</button>&nbsp;'+
+     '</div>'+
      '</div>';
 };
  
+ 
+function truthTable(sentence,topbottomLines) {
+"use strict";  
+  var result = "";
+  try {
+      if ( !sentence ) return "";
+      if ( !sentence.trim() ) return "";
+      var replace = "v |;^ &;~ !;∧ &&;∨ |;∼ !"; 
+      var abcde = "abcdefghijklmnopqrstuxy";
+      var header = "";
+      var vals = '""';
+      var count = 0;
+      var cnt2 = 1;
+      
+      var input = sentence.toLowerCase();
+      for (var i=0; i<abcde.length; i++) {
+          if ( input.indexOf(abcde[i]) >= 0 ) {
+              header += abcde[i] + " ";
+              var zv = "z["+count+"]";
+              input = input.split(abcde[i]).join(zv);
+              vals += '+' + zv + '+" "';
+              count++;
+              cnt2 *= 2;
+          } 
+      }
+      
+      var repls = replace.split(";");
+      for (i in repls) {
+          var r = repls[i].split(" ");
+          input = input.split(r[0]).join(r[1]);
+      }
+      
+      var sents = sentence.split(";");
+      var lens = [];
+      var fills = [];
+      for (i=0; i<sents.length; i++) {
+          sents[i] = sents[i].trim();
+          lens[i] = sents[i].length;
+          fills[i] = "                                                               ".substring(0,lens[i]);
+      }
+      header += "  " + sents.join("  ");
+      var line = "---------------------------------------".substring(0,header.length);
+      // result += input + "\n";
+      if ( topbottomLines )  result += line + "\n";
+      result += header + "\n";
+      result += line + "\n";
+      for (var n = 0; n < cnt2; n++ ) {
+          var z = [];
+          for (i=0; i < count; i++)
+                z[i] = (n >> (count-1-i)) & 1;
+          result += eval(vals) + "= ";  
+          var inp = input.split(";");
+          for (i=0; i<inp.length; i++) {
+            var tulos = " " + (eval(inp[i]) ? 1 : 0) + fills[i];
+            result += tulos;
+          }  
+          result += "\n";
+      } 
+      if ( topbottomLines )  result += line + "\n";
+      return result;
+  } catch (err) {
+      return result + "\n" + err + "\n";
+  }
+}  

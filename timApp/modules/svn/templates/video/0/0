@@ -1,0 +1,9 @@
+Big video
+Video with big icon
+``` {#PLUGINNAMEHERE plugin="showVideo"}
+footer: "Video footer here"
+#iframe: true
+width: 400
+height: 300
+file: VIDEOURLHERE
+```

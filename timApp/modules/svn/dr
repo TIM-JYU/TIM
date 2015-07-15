@@ -1,3 +1,5 @@
 #!/bin/sh
-docker rm  showFile
+docker stop showFile
+docker rm showFile
+
 docker run --name showFile -t -i -p 55000:5000 -v /opt/svn:/svn/ svn /bin/bash  

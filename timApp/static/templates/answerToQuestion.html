@@ -1,0 +1,10 @@
+<div class="popUpWindow" ng-controller="AnswerToQuestionController">
+    <div class="questionAskedWindow">
+        <dynamic-answer-sheet control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+    </div>
+    <div class="buttons">
+        <button ng-click="answer()">Answer</button>
+        <button ng-show="isLecturer" ng-click="close()">Close</button>
+        <button ng-show="isLecturer" ng-click="showAnswers()">Show answers</button>
+    </div>
+</div>

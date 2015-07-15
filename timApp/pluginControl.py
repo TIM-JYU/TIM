@@ -9,7 +9,7 @@ from yaml import CLoader
 import yaml.parser
 import yaml.scanner
 
-from containerLink import call_plugin_html, call_plugin_multihtml, PluginException
+from containerLink import call_plugin_html, call_plugin_multihtml, PluginException, PLUGINS
 from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from documentmodel.docparagraph import DocParagraph
@@ -257,6 +257,21 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                                                                                     html))
 
     return blocks, js_paths, css_paths, modules
+
+
+def get_all_reqs():
+    allreqs = {}
+    for plugin in PLUGINS.keys():
+        try:
+            resp = plugin_reqs(plugin)
+        except PluginException as e:
+            continue
+        try:
+            reqs = json.loads(resp)
+            allreqs[plugin] = reqs
+        except ValueError:
+            continue
+    return allreqs
 
 
 def plugin_deps(p):

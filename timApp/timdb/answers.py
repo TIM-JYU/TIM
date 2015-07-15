@@ -6,7 +6,8 @@ from contracts import contract
 class Answers(TimDbBase):
     @contract
     def saveAnswer(self, user_ids: 'list(int)', task_id: 'str', content: 'str', points: 'str|int|float|None', tags: 'list(str)'):
-        """Saves an answer to the database.
+        """
+        Saves an answer to the database.
         
         :param user_ids: The id of the usergroup to which the answer belongs.
         :param task_id: The id of the task.
@@ -104,10 +105,12 @@ class Answers(TimDbBase):
         return common_answers
 
     @contract
-    def getUsersForTasks(self, task_ids: 'list(str)') -> 'list(dict)':
+    def getUsersForTasks(self, task_ids: 'list(str)', user_ids: 'list(int)|None'=None) -> 'list(dict)':
         cursor = self.db.cursor()
-        placeholder = '?'
-        placeholders = ', '.join(placeholder for unused in task_ids)
+        task_id_template = ','.join('?'*len(task_ids))
+        user_restrict_sql = '' if user_ids is None else 'AND User.id IN (%s)' % ','.join('?'*len(user_ids))
+        if user_ids is None:
+            user_ids = []
         cursor.execute(
             """
                 SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, SUM(points) as total_points
@@ -120,9 +123,10 @@ class Answers(TimDbBase):
                       GROUP BY UserAnswer.user_id, Answer.task_id
                       )tmp ON tmp.id = Answer.id
                 WHERE task_id IN (%s)
+                %s
                 GROUP BY User.id
                 ORDER BY real_name ASC
-            """ % placeholders, task_ids)
+            """ % (task_id_template, user_restrict_sql), task_ids + user_ids)
             
         return self.resultAsDictionary(cursor)
 

@@ -1,0 +1,64 @@
+<div class="ng-scope" style="text-align:left" ng-controller="QuestionController">
+    <div class="popUpWindow" id="questionWindow">
+        <form class="createQuestion" id="question-form">
+                <div id="questionName">
+                    <label>
+                        Question title:
+                        <input id="qTitle" name="question.title" type="text" ng-model="question.title"/>
+                    </label>
+                </div>
+                <div id="question-textarea-div">
+                    <div>Question:</div>
+                    <textarea id="question-textarea" name="question" rows="3" ng-model="question.question"></textarea>
+                </div>
+                <div id="qType">
+                    <label>Question type:
+                        <select name="question.type" ng-model="question.type" ng-dropdown required ng-change="createMatrix(question.type)" >
+                            <option value="" ng-option disabled selected> -- select question type --</option>
+                            <option ng-option value="radio-vertical">Multiple choice (radio button) </option>
+                            <option ng-option value="checkbox-vertical">Multiple choice (checkbox)</option>
+                            <option ng-option value="true-false">True/False</option>
+                            <option ng-option value="matrix">Many rows and columns</option>
+                        </select>
+                    </label>
+                </div>
+                <div ng-if="question.type" >
+                    {% include 'matrix.html' %}
+                </div>
+
+                <div id="questionTiming">
+                    <div><label>Set question  timing:</label></div>
+					<div id="questionStart">
+							<label>Starting time:</label>
+							<input type="checkbox" ng-model="question.startTimeSelected" />
+							<div class="questionStartTime">
+                                <label>Date:<input type="text" id="calendarStart" ng-disabled="!question.startTimeSelected"></label>
+                                Time:
+                                <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
+                                       is-valid-change="" ng-model="question.startHour" ng-disabled="!question.startTimeSelected">
+                                :
+                                <input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
+                                       is-valid-change="" ng-model="question.startMin" ng-disabled="!question.startTimeSelected">
+                            </div>
+					</div>
+					<div id="questionTimer">
+						<label>Duration:</label>
+						 <input type="checkbox" ng-model="question.endTimeSelected" />
+						 <div id="durationDiv" class="questionTimer">
+                             <input id="durationHour" type="text" name="hours" maxlength="2" size="2" ng-model="question.timeLimit.hours" ng-disabled="!question.endTimeSelected"> h
+                             <input id="durationMin" type="text" name="minutes" maxlength="2" size="2" ng-model="question.timeLimit.minutes" ng-disabled="!question.endTimeSelected"> m
+                             <input id="durationSec" type="text" name="seconds" maxlength="2" size="2" ng-model="question.timeLimit.seconds" ng-disabled="!question.endTimeSelected"> s
+                         </div>
+					</div>
+                </div>
+
+        </form>
+        <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
+        <div class="buttons" id="question_buttons">
+            <button ng-if="inLecture" ng-click="createQuestion(question.question, question.type, true)">Save and ask</button>
+            <button ng-click="createQuestion(question.question, question.type)">Save</button>
+            <button ng-click="close()">Cancel</button>
+            <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
+        </div>
+    </div>
+</div>
