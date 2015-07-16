@@ -1,13 +1,43 @@
 """Routes for document view."""
 
+from contracts import contract, new_contract
+
+from documentmodel.document import DocParagraph
+
+new_contract('range', 'tuple(int, int)')
+
 from flask import Blueprint, render_template, url_for
 from .common import *
-from .cache import cache
 import pluginControl
 
 view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
+
+
+# @cache.memoize(3600)
+def get_whole_document(document_id):
+    pars = [par for par in getTimDb().documents.get_document_with_autoimport(DocIdentifier(id=document_id, hash=''))]
+    return pars
+
+@contract
+def get_partial_document(document_id: 'int', view_range: 'range') -> 'list(DocParagraph)':
+    i = 0
+    pars = []
+    for par in Document(document_id):
+        if i >= view_range[1]:
+            break
+        if i >= view_range[0]:
+            pars.append(par)
+        i += 1
+    return pars
+
+@contract
+def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'list(DocParagraph)':
+    # Separated into 2 functions for optimization
+    # (don't cache partial documents and don't check ranges in the loop for whole ones)
+    return get_whole_document(doc_id) if view_range is None else get_partial_document(doc_id, view_range)
+
 
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
@@ -29,18 +59,18 @@ def teacher_view(doc_name):
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
 
+
 @view_page.route("/lecture/<path:doc_name>")
 def lecture_view(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        userstr = request.args.get('user')
-        user = int(userstr) if userstr is not None and userstr != '' else None
+        return view(doc_name, 'view_html.html', view_range, lecture=True)
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
 
-    return view(doc_name, 'view_html.html', view_range, user, lecture=True)
 
-def parse_range(start_index, end_index):
+@contract
+def parse_range(start_index: 'int|None', end_index: 'int|None') -> 'range|None':
     if start_index is None and end_index is None:
         return None
 
@@ -65,25 +95,18 @@ def try_return_folder(doc_name):
                            docName=folder_name)
 
 
-@cache.memoize(3600)
-def get_document(document_id):
-    return getTimDb().documents.getDocumentAsHtmlBlocksSanitized(document_id)
-
-
 def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False):
     timdb = getTimDb()
-    doc_id = timdb.documents.getDocumentId(doc_name)
-
+    doc_id = timdb.documents.get_document_id(doc_name)
     if doc_id is None or not timdb.documents.documentExists(doc_id):
         # Backwards compatibility: try to use as document id
         try:
             doc_id = int(doc_name)
             if not timdb.documents.documentExists(doc_id):
-                # abort(404)
                 return try_return_folder(doc_name)
+            doc_name = timdb.documents.get_first_document_name(doc_id)
         except ValueError:
             return try_return_folder(doc_name)
-            # abort(404)
 
     if teacher:
         verifyOwnership(doc_id)
@@ -95,16 +118,10 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         else:
             abort(403)
 
-    version = {'hash': timdb.documents.getNewestVersionHash(doc_id)}
-    xs = get_document(DocIdentifier(doc_id, version['hash']))
-    doc = timdb.documents.getDocument(doc_id)
-    start_index = 0
-    if view_range is not None:
-        start_index = max(view_range[0], 0)
-        end_index = min(view_range[1], len(xs))
-        xs = xs[start_index:end_index + 1]
-
+    start_index = max(view_range[0], 0) if view_range else 0
+    xs = get_document(doc_id, view_range)
     user = getCurrentUserId()
+
     if teacher:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
@@ -148,14 +165,14 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         editortab = session['editortab']
     except KeyError:
         editortab = None
+    # TODO: Check if doc variable is needed
     return render_template(template_name,
-                           doc=doc,
-                           docID=doc['id'],
-                           docName=doc['name'],
+                           docID=doc_id,
+                           docName=doc_name,
                            text=texts,
                            plugin_users=users,
                            current_user=current_user,
-                           version=version,
+                           version=Document(doc_id).get_version(),
                            js=jsPaths,
                            cssFiles=cssPaths,
                            jsMods=modules,

@@ -1,0 +1,5 @@
+FROM        phadej/stackage:2.9 
+ADD         Dumbo.cabal /build/Dumbo.cabal
+RUN         cd /build/ && cabal install --only-dependencies
+ADD         buildScript.sh /build/buildScript.sh
+ENTRYPOINT  ["bash", "/build/buildScript.sh"]

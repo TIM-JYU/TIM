@@ -29,6 +29,7 @@ run pip3 install lxml
 run pip3 install pyaml
 run pip3 install ansi2html
 run pip3 install cssutils
+run pip3 install mmh3
 
 # Install pygit2 and dependencies
 run apt-get install -y wget

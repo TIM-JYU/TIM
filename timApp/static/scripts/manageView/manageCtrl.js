@@ -24,7 +24,7 @@ PermApp.controller("PermCtrl", [
     function (sc, $http, $upload, $window) {
         $http.defaults.headers.common.Version = function() {
             if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
-                return sc.doc.versions[0].hash;
+                return sc.doc.versions[0];
             }
             return "";
         };
@@ -113,7 +113,7 @@ PermApp.controller("PermCtrl", [
             if (confirm('Are you sure you want to delete this document?')) {
                 $http.delete('/documents/' + doc)
                     .success(function (data, status, headers, config) {
-                        location.replace('/');
+                        location.replace('/view/');
                     }).error(function (data, status, headers, config) {
                         alert(data.message);
                     });
@@ -124,7 +124,7 @@ PermApp.controller("PermCtrl", [
             if (confirm('Are you sure you want to delete this folder?')) {
                 $http.delete('/folders/' + folder)
                     .success(function (data, status, headers, config) {
-                        location.replace('/');
+                        location.replace('/view/');
                     }).error(function (data, status, headers, config) {
                         alert(data.message);
                     });
@@ -160,18 +160,18 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.updateDocument = function (doc, $files) {
-            sc.onFileSelect('/update/' + doc.id + '/' + doc.versions[0].hash, $files);
+            sc.onFileSelect('/update/' + doc.id + '/' + doc.versions[0], $files);
         };
 
         sc.saveDocument = function (doc) {
             sc.saving = true;
-            $http.post('/update/' + doc.id + '/' + doc.versions[0].hash, {'fulltext': sc.fulltext}).success(
+            $http.post('/update/' + doc.id + '/' + doc.versions[0], {'fulltext': sc.fulltext}).success(
                 function (data, status, headers, config) {
                     sc.doc.fulltext = sc.fulltext;
                     sc.doc.versions = data;
                 }).error(function (data, status, headers, config) {
                     alert(data.error);
-                }).then(function () {
+                }).finally(function () {
                     sc.saving = false;
                 });
         };

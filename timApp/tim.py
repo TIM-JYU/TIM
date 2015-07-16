@@ -22,6 +22,8 @@ from bs4 import UnicodeDammit
 
 from ReverseProxied import ReverseProxied
 import containerLink
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
 from routes.cache import cache
 from routes.answer import answers
 from routes.edit import edit_page
@@ -138,7 +140,7 @@ def documentHistory(doc_id, doc_hash):
 
 @app.route('/download/<int:doc_id>')
 def downloadDocument(doc_id):
-    return documentHistory(doc_id, getNewest(doc_id).hash)
+    return documentHistory(doc_id, get_newest_document(doc_id).hash)
 
 
 @app.route('/upload/', methods=['POST'])
@@ -497,14 +499,14 @@ def add_question():
     question_title = request.args.get('question_title')
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
-    par_index = int(request.args.get('par_index'))
+    par_id = request.args.get('par_id')
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
     questions = None
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_index, question_title, answer, questionJson)
+        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, questionJson)
     else:
-        questions = timdb.questions.update_question(question_id, doc_id, par_index, question_title, answer, questionJson)
+        questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, questionJson)
     return jsonResponse(timdb.questions.get_question(questions)[0])
 
 
@@ -860,6 +862,15 @@ def uploaded_file(filename):
 
 @app.route("/getDocuments")
 def getDocuments():
+    timdb = getTimDb()
+    user_id = getCurrentUserId()
+    docs = [doc for doc in timdb.documents if timdb.users.userHasViewAccess(user_id, doc['id'])]
+    for doc in docs:
+        doc['canEdit'] = timdb.users.userHasEditAccess(user_id, doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(user_id, doc['id']) or timdb.users.userHasAdminAccess(user_id)
+        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
+    return jsonResponse(docs)
+
     versions = 1
     if request.args.get('versions'):
         ver_str = request.args.get('versions')
@@ -921,36 +932,6 @@ def getFolders():
     return jsonResponse(allowedFolders)
 
 
-@app.route("/getJSON/<int:doc_id>/")
-def getJSON(doc_id):
-    timdb = getTimDb()
-    verifyViewAccess(doc_id)
-    try:
-        texts = timdb.documents.getDocumentBlocks(getNewest(doc_id))
-        doc = timdb.documents.getDocument(doc_id.id)
-        return jsonResponse({"name": doc['name'], "text": texts})
-    except IOError as err:
-        print(err)
-        return "No data found"
-
-
-@app.route("/getJSON-HTML/<int:doc_id>")
-def getJSON_HTML(doc_id):
-    timdb = getTimDb()
-    verifyViewAccess(doc_id)
-    try:
-        newest = getNewest(doc_id)
-        blocks = timdb.documents.getDocumentAsHtmlBlocks(newest)
-        doc = timdb.documents.getDocument(doc_id)
-        return jsonResponse({"name": doc['name'], "text": blocks})
-    except ValueError as err:
-        print(err)
-        return "[]"
-    except TimDbException as err:
-        print(err)
-        return "[]"
-
-
 def createItem(itemName, itemType, createFunction):
     if not loggedIn():
         abort(403, 'You have to be logged in to create a {}.'.format(itemType))
@@ -965,7 +946,7 @@ def createItem(itemName, itemType, createFunction):
 
     userName = getCurrentUserName()
 
-    if timdb.documents.getDocumentId(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
+    if timdb.documents.get_document_id(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
         abort(403, 'Item with a same name already exists.')
 
     if not canWriteToFolder(itemName):
@@ -980,7 +961,7 @@ def createDocument():
     jsondata = request.get_json()
     docName = jsondata['doc_name']
     timdb = getTimDb()
-    createFunc = lambda docName: timdb.documents.createDocument(docName, getCurrentUserGroup())
+    createFunc = lambda docName: timdb.documents.create_document(docName, getCurrentUserGroup())
     return createItem(docName, 'document', createFunc)
 
 
@@ -994,18 +975,18 @@ def createFolder():
     return createItem(folderName, 'folder', createFunc)
 
 
-@app.route("/getBlock/<int:docId>/<int:blockId>")
-def getBlockMd(docId, blockId):
+@app.route("/getBlock/<int:docId>/<par_id>")
+def getBlockMd(docId, par_id):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlock(getNewest(docId), blockId)
-    return jsonResponse({"text": block})
+    par = Document(docId).get_paragraph(par_id)
+    return jsonResponse({"text": par.get_markdown()})
 
 @app.route("/getBlockHtml/<int:docId>/<int:blockId>")
 def getBlockHtml(docId, blockId):
     timdb = getTimDb()
     verifyViewAccess(docId)
-    block = timdb.documents.getBlockAsHtml(getNewest(docId), blockId)
+    block = timdb.documents.getBlockAsHtml(get_newest_document(docId), blockId)
     return block
 
 @app.route("/<plugin>/<path:fileName>")
@@ -1016,6 +997,15 @@ def pluginCall(plugin, fileName):
     except PluginException:
         abort(404)
 
+
+@app.route("/index/<int:doc_id>")
+def getIndex(doc_id):
+    timdb = getTimDb()
+    verifyViewAccess(doc_id)
+    index = Document(doc_id).get_index()
+    return jsonResponse(index)
+
+
 @app.route("/<plugin>/template/<template>/<index>")
 def view_template(plugin, template, index):
     try:
@@ -1023,6 +1013,7 @@ def view_template(plugin, template, index):
         return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
     except PluginException:
         abort(404)
+
 
 @app.route("/editortab/<tabid>", methods=['POST'])
 def set_editor_tab(tabid):
@@ -1041,17 +1032,33 @@ def set_session_setting(setting, value):
     except PluginException:
         abort(404)
 
-@app.route("/index/<int:docId>")
-def getIndex(docId):
-    timdb = getTimDb()
-    verifyViewAccess(docId)
-    index = timdb.documents.getIndex(getNewest(docId))
-    return jsonResponse(index)
+
+def get_document(doc_id, doc_ver):
+    """
+
+    :type doc_ver: str
+    :type doc_id: int
+    :rtype: Document
+    """
+    return Document(doc_id=doc_id, modifier_group_id=getCurrentUserGroup())
+
+
+def get_paragraph(doc, par_id):
+    """
+
+    :type doc: Document
+    :type par_id: str
+    :rtype: DocParagraph
+    """
+    if not doc.has_paragraph(par_id):
+        return None
+    return DocParagraph(par_id=par_id)
+
 
 @app.route("/postNote", methods=['POST'])
 def postNote():
     jsondata = request.get_json()
-    noteText = jsondata['text']
+    note_text = jsondata['text']
     access = jsondata['access']
     sent_tags = jsondata.get('tags', {})
     tags = []
@@ -1062,11 +1069,16 @@ def postNote():
     doc_ver = request.headers.get('Version')
     paragraph_id = jsondata['par']
     verifyCommentRight(doc_id)
+    # verify_document_version(doc_id, doc_ver)
+    doc = get_document(doc_id, doc_ver)
+    par = get_paragraph(doc, paragraph_id)
+    if par is None:
+        abort(400, 'Non-existent paragraph')
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    timdb.notes.addNote(group_id, doc_id, doc_ver, int(paragraph_id), noteText, access, tags)
-    # TODO: Handle error.
-    return "Success"
+    timdb.notes.addNote(group_id, doc, par, note_text, access, tags)
+    return okJsonResponse()
+
 
 @app.route("/editNote", methods=['POST'])
 def editNote():
@@ -1074,42 +1086,34 @@ def editNote():
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
     doc_id = int(jsondata['docId'])
-    doc_ver = request.headers.get('Version')
-    paragraph_id = int(jsondata['par'])
-    noteText = jsondata['text']
+    note_text = jsondata['text']
     access = jsondata['access']
-    note_index = int(jsondata['note_index'])
+    note_id = int(jsondata['id'])
     sent_tags = jsondata.get('tags', {})
     tags = []
     for tag in KNOWN_TAGS:
         if sent_tags[tag]:
             tags.append(tag)
     timdb = getTimDb()
-
-    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+    if not (timdb.notes.hasEditAccess(group_id, note_id)
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
-
-    timdb.notes.modifyNote(doc_id, doc_ver, paragraph_id, note_index, noteText, access, tags)
-    return "Success"
+    timdb.notes.modifyNote(note_id, note_text, access, tags)
+    return okJsonResponse()
 
 
 @app.route("/deleteNote", methods=['POST'])
 def deleteNote():
-    verifyLoggedIn()
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
-    doc_id = int(jsondata['docId'])
-    paragraph_id = int(jsondata['par'])
-    note_index = int(jsondata['note_index'])
+    doc_id = int(jsondata['docId'])  # TODO: maybe not needed
+    note_id = int(jsondata['id'])
     timdb = getTimDb()
-
-    if not (timdb.notes.hasEditAccess(group_id, doc_id, paragraph_id, note_index)
+    if not (timdb.notes.hasEditAccess(group_id, note_id)
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
-
-    timdb.notes.deleteNote(doc_id, paragraph_id, note_index)
-    return "Success"
+    timdb.notes.deleteNote(note_id)
+    return okJsonResponse()
 
 
 @app.route("/questions/<int:doc_id>")
@@ -1301,10 +1305,11 @@ def getNotes(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    notes = [note for note in timdb.notes.getNotes(group_id, doc_id, doc_ver)]
+    doc = Document(doc_id)
+    notes = [note for note in timdb.notes.getNotes(group_id, doc)]
     for note in notes:
         note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
+        note.pop('UserGroup_id')
         note['private'] = note['access'] == 'justme'
         tags = note['tags']
         note['tags'] = {}
@@ -1317,37 +1322,36 @@ def getNotes(doc_id):
 def getReadParagraphs(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    readings = timdb.readings.getReadings(getCurrentUserGroup(), doc_id, doc_ver)
-    for r in readings:
-        r.pop('doc_ver', None)
+    doc = Document(doc_id)
+    readings = timdb.readings.getReadings(getCurrentUserGroup(), doc)
     return jsonResponse(readings)
 
 
-@app.route("/read/<int:doc_id>/<int:specifier>", methods=['PUT'])
+@app.route("/read/<int:doc_id>/<specifier>", methods=['PUT'])
 def setReadParagraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
-    version = request.headers.get('Version', '')
-    verify_document_version(doc_id, version)
-    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    if len(blocks) <= specifier:
-        return jsonResponse({'error': 'Invalid paragraph specifier.'}, 400)
-    timdb.readings.setAsRead(getCurrentUserGroup(), doc_id, doc_ver, specifier)
-    return "Success"
+    # todo: document versions
+    #version = request.headers.get('Version', 'latest')
+    #verify_document_version(doc_id, version)
+    doc = Document(doc_id)
+    par = doc.get_paragraph(specifier)
+    if par is None:
+        return abort(400, 'Non-existent paragraph')
+    timdb.readings.setAsRead(getCurrentUserGroup(), doc, par)
+    return okJsonResponse()
 
 
 @app.route("/read/<int:doc_id>", methods=['PUT'])
 def setAllAsRead(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
-    version = request.headers.get('Version', '')
-    verify_document_version(doc_id, version)
-    blocks = timdb.documents.getDocumentAsBlocks(getNewest(doc_id))
-    doc_ver = timdb.documents.getNewestVersionHash(doc_id)
-    timdb.readings.setAllAsRead(getCurrentUserGroup(), doc_id, doc_ver, len(blocks))
-    return "Success"
+    # todo: document versions
+    #version = request.headers.get('Version', 'latest')
+    #verify_document_version(doc_id, version)
+    doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
+    timdb.readings.setAllAsRead(getCurrentUserGroup(), doc)
+    return okJsonResponse()
 
 
 @app.route("/")

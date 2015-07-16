@@ -156,15 +156,23 @@ var crumbs = getBreadcrumbs(doc.name);
             <table>
                 <thead>
                     <tr>
-                        <td>Time</td>
+                        <!--<td>Time</td>
                         <td>User</td>
-                        <td>Difference</td>
+                        <td>Difference</td>-->
+                        <td>Time</td>
+                        <td>User / group</td>
+                        <td>Paragraph</td>
+                        <td>Event</td>
                     </tr>
                 </thead>
                 <tr ng-repeat="version in doc.versions">
-                    <td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
+                    <td>{{ '{{ version.time }}' }}</td>
+                    <td>{{ '{{ version.group }}' }}</td>
+                    <td>{{ '{{ version.par_id }}' }}</td>
+                    <td>{{ '{{ version.op }}' }}</td>
+                    <!--<td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
                     <td>{{ '{{ version.user }}' }}</td>
-                    <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>
+                    <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
                 </tr>
             </table>
         </div>

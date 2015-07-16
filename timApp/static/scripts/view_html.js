@@ -130,29 +130,36 @@ timApp.controller("ViewCtrl", [
             sc.$broadcast('userChanged', {user: user});
         };
 
-        sc.getParIndex = function ($par) {
-            return $par.index() + sc.startIndex;
+        sc.getParId = function ($par) {
+            if ($par.length === 0) {
+                return null;
+            }
+            return $par.attr("id");
         };
 
-        sc.getElementByParIndex = function (index) {
-            return $("#pars").children().eq(index - sc.startIndex);
+        sc.getElementByParId = function (id) {
+            return $("#" + id);
         };
 
         sc.toggleParEditor = function ($par, options) {
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
             var url;
+            var par_id = sc.getParId($par);
+            var par_next_id = sc.getParId($par.next());
             if ($par.hasClass("new")) {
                 url = '/newParagraph/';
             } else {
                 url = '/postParagraph/';
             }
-            var par_id = sc.getParIndex($par);
+
             var attrs = {
                 "save-url": url,
                 "extra-data": JSON.stringify({
                     docId: sc.docId,
-                    par: par_id
+                    par: par_id,
+                    par_next: par_next_id,
+                    attrs: JSON.parse($par.attr('attrs'))
                 }),
                 "options": JSON.stringify({
                     showDelete: options.showDelete,
@@ -270,8 +277,7 @@ timApp.controller("ViewCtrl", [
                     return;
                 }
             }
-
-            var par_id = sc.getParIndex($par),
+            var par_id = sc.getParId($par),
                 attrs = {
                     "save-url": url,
                     "extra-data": JSON.stringify(angular.extend({
@@ -375,16 +381,19 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.showAddParagraphAbove = function (e, $par, coords) {
-            var $newpar = $("<div>", {class: "par new"})
+        sc.createNewPar = function() {
+            return $("<div>", {class: "par new", id: 'NEW_PAR', attrs: '{}'})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
+        };
+
+        sc.showAddParagraphAbove = function(e, $par, coords) {
+            var $newpar = sc.createNewPar();
             $par.before($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
-        sc.showAddParagraphBelow = function (e, $par, coords) {
-            var $newpar = $("<div>", {class: "par new"})
-                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+        sc.showAddParagraphBelow = function(e, $par, coords) {
+            var $newpar = sc.createNewPar();
             $par.after($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
@@ -393,8 +402,7 @@ timApp.controller("ViewCtrl", [
             var $par = $(e.target).parent().parent().parent();
             $(".par.new").remove();
             sc.toggleActionButtons(e, $par, false, false, null);
-            var $newpar = $("<div>", {class: "par new"})
-                .append($("<div>", {class: "parContent"}).html('New paragraph'));
+            var $newpar = sc.createNewPar();
 
             if ($(e.target).hasClass("above")) {
                 $par.before($newpar);
@@ -458,7 +466,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.handleCancel = function (extraData) {
-            var $par = sc.getElementByParIndex(extraData.par);
+            var $par = sc.getElementByParId(extraData.par);
             if ($par.hasClass("new")) {
                 $par.remove();
             }
@@ -466,36 +474,46 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.handleDelete = function (data, extraData) {
-            var $par = sc.getElementByParIndex(extraData.par);
+            var $par = sc.getElementByParId(extraData.par);
             http.defaults.headers.common.Version = data.version;
             $par.remove();
             sc.editing = false;
         };
 
         sc.addSavedParToDom = function (data, extraData) {
-            var $par = sc.getElementByParIndex(extraData.par),
+            var $par = sc.getElementByParId(extraData.par),
                 len = data.texts.length;
             http.defaults.headers.common.Version = data.version;
             for (var i = len - 1; i >= 0; i--) {
                 var html = data.texts[i].html;
-                if ('task_id' in data.texts[i]) {
+                if ('taskId' in data.texts[i].attrs) {
                     html = $compile(html)(sc);
                 }
-
                 var $mathdiv = $.parseHTML(html);
                 if ($mathdiv) sc.processMath($mathdiv[0]);
-
-                var $newpar = $("<div>", {class: "par"})
+                var classes = [];
+                if ('classes' in data.texts[i].attrs) {
+                    classes = data.texts[i].attrs.classes;
+                }
+                var $newpar = $("<div>", {
+                    class: ["par"].concat(classes).join(" "),
+                    id: data.texts[i].id,
+                    t: data.texts[i].t,
+                    attrs: JSON.stringify(data.texts[i].attrs)
+                })
                     .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
-                if (i === 0 && !$par.hasClass("new")) {
+                var old_t = $par.find(".readline").attr("t");
+                if (i === 0 && !$par.hasClass("new") && old_t !== null && typeof old_t !== 'undefined') {
                     $par.find(".notes").appendTo($newpar);
-                    if ($par.find(".read, .modified").length > 0) {
+                    if (old_t !== data.texts[i].t) {
                         readClass = "modified";
+                    } else {
+                        readClass = "read";
                     }
                 }
-                if ('task_id' in data.texts[i]) {
-                    var ab = $('<answerbrowser>').attr('task-id', data.texts[i].task_id);
+                if ('taskId' in data.texts[i].attrs) {
+                    var ab = $('<answerbrowser>').attr('task-id', sc.docId + '.' + data.texts[i].attrs.taskId);
                     $compile(ab[0])(sc);
                     ab.prependTo($newpar);
                 }
@@ -505,14 +523,13 @@ timApp.controller("ViewCtrl", [
                  editDiv = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
                  */
                 $par.after($newpar.append($("<div>",
-                        {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
+                        {class: "readline " + readClass, title: "Click to mark this paragraph as read", t: old_t}),
                     $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
 
                 if (extraData.tags) {
                     if (extraData.tags['markread']) {
                         var $newread = $newpar.find("div.readline");
-                        var par_id = sc.getParIndex($par) + i;
-                        sc.markParRead($newread, par_id);
+                        sc.markParRead($newread, data.texts[i].id);
                     }
                 }
             }
@@ -534,7 +551,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.onClick(".readline", function ($this, e) {
-            var par_id = sc.getParIndex($this.parents('.par'));
+            var par_id = sc.getParId($this.parents('.par'));
             return sc.markParRead($this, par_id);
         });
 
@@ -781,7 +798,7 @@ timApp.controller("ViewCtrl", [
                 }
                 $noteDiv.append($("<div>", {class: classes.join(" ")})
                     .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].htmlContent})));
+                    .append($("<div>", {class: 'noteContent', html: notes[i].html})));
             }
             return $noteDiv;
         };
@@ -836,7 +853,7 @@ timApp.controller("ViewCtrl", [
                     var pars = {};
                     var questionCount = data.length;
                     for (var i = 0; i < questionCount; i++) {
-                        var pi = data[i].par_index;
+                        var pi = data[i].par_id;
                         if (!(pi in pars)) {
                             pars[pi] = {questions: []};
                         }
@@ -844,25 +861,12 @@ timApp.controller("ViewCtrl", [
                         pars[pi].questions.push(data[i]);
                     }
 
-                    sc.forEachParagraph(function (index) {
-                            if ($(this).children().hasClass("questions")) {
-                                var children = $(this).children();
-                                for (var i = 0; i < children.length; i++) {
-                                    if (children[i].className == "questions") {
-                                        children[i].remove();
-                                    }
-                                }
-                            }
-
-                            var parIndex = index + sc.startIndex;
-                            if (parIndex in pars) {
-                                var $questionsDiv = sc.getQuestionHtml(pars[parIndex].questions);
-                                $(this).append($questionsDiv);
-
-                            }
-                        }
-                    );
-
+                    Object.keys(pars).forEach(function (par_id, index) {
+                        var $par = sc.getElementByParId(par_id);
+                        $par.remove(".questions");
+                        var $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
+                        $par.append($questionsDiv);
+                    });
                 });
         };
 
@@ -876,7 +880,7 @@ timApp.controller("ViewCtrl", [
 
                 var noteCount = data.length;
                 for (var i = 0; i < noteCount; i++) {
-                    var pi = data[i].par_index;
+                    var pi = data[i].par_id;
                     if (!(pi in pars)) {
                         pars[pi] = {notes: []};
 
@@ -886,25 +890,12 @@ timApp.controller("ViewCtrl", [
                     }
                     pars[pi].notes.push(data[i]);
                 }
-
-                sc.forEachParagraph(function (index, elem) {
-                    var parIndex = index + sc.startIndex;
-                    if (parIndex in pars) {
-                        var $notediv = sc.getNoteHtml(pars[parIndex].notes);
-                        var $this = $(this);
-                        $this.append($notediv);
-                        sc.processAllMath($this);
-                    }
-                    /*
-                     var speakernotes = $(this).children('div').find('.speaker');
-                     if (speakernotes.length > 0) {
-                     var $notediv = sc.getSpeakerNoteHtml(speakernotes[0]);
-                     $(this).append($notediv);
-                     MathJax.Hub.Queue(["Typeset", MathJax.Hub, "pars"]); // TODO queue only the paragraph
-                     }
-                     */
+                Object.keys(pars).forEach(function(par_id, index) {
+                    var $par = sc.getElementByParId(par_id);
+                    var $notediv = sc.getNoteHtml(pars[par_id].notes);
+                    $par.append($notediv);
+                    sc.processAllMath($par);
                 });
-
             }).error(function (data, status, headers, config) {
                 $window.alert("Could not fetch notes.");
             });
@@ -921,24 +912,31 @@ timApp.controller("ViewCtrl", [
                 var pars = {};
                 for (var i = 0; i < readCount; i++) {
                     var readPar = data[i];
-                    var pi = data[i].par_index;
+                    var pi = data[i].par_id;
                     if (!(pi in pars)) {
-                        pars[pi] = {};
+                        pars[pi] = {par_hash: data[i].par_hash};
                     }
-                    pars[pi].readStatus = readPar.status;
                 }
-                sc.forEachParagraph(function (index) {
-                    var parIndex = index + sc.startIndex;
+                sc.forEachParagraph(function (index, elem) {
+                    var $par = $(elem);
+                    var hash = $par.attr('t');
+                    var par_id = $par.attr('id');
                     var classes = ["readline"];
-                    if (parIndex in pars && 'readStatus' in pars[parIndex]) {
-                        classes.push(pars[parIndex].readStatus);
+                    var curr_hash = null;
+                    if (par_id in pars) {
+                        var status = 'read';
+                        if (hash !== pars[par_id].par_hash) {
+                            status = 'modified';
+                        }
+                        classes.push(status);
+                        curr_hash = pars[par_id].par_hash;
                     } else {
                         classes.push("unread");
                     }
                     var $div = $("<div>", {
                         class: classes.join(" "),
-                        title: "Click to mark this paragraph as read"
-                    });
+                        title: "Click to mark this paragraph as read",
+                        t: curr_hash});
                     $(this).append($div);
                 });
             }).error(function () {
@@ -1724,7 +1722,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
         var doc_id = scope.docId;
         var $par = scope.par;
-        var par_index = scope.getParIndex($par);
+        var par_id = scope.getParId($par);
 
         //TODO use  JSON.stringify
 
@@ -1799,7 +1797,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 'question_id': scope.question.question_id,
                 'question_title': scope.question.title,
                 'answer': "test", //answerVal,
-                'par_index': par_index,
+                'par_id': par_id,
                 'doc_id': doc_id,
                 'questionJson': questionJson
             }

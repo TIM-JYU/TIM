@@ -116,8 +116,25 @@
             </label>
         </div>
     </div>
+    <div class="attributes">
+        <div ng-repeat="(key, value) in extraData.attrs">
+            <span ng-bind="key"></span>:
+        <span ng-show="key !== 'classes'">
+            <input type="text" ng-model="extraData.attrs[key]"> [<a ng-click="deleteAttribute(key)">X</a>]
+        </span>
+        <span ng-show="key === 'classes'">
+        <span ng-repeat="value in extraData.attrs[key] track by $index">
+            <input type="text" ng-model="extraData.attrs[key][$index]">
+            [<a ng-click="deleteClass($index)">X</a>]
+        </span>
+            [<a ng-click="addClass()">+</a>]
+        </span>
+        </div>
+        <input type="text" ng-model="newAttr">
+        <button ng-click="addAttribute()">New attribute</button>
+    </div>
     <div id="previewDiv" tim-draggable-fixed caption="Preview" class="preview"
-         style='z-index:100; top: 0px; right: 0px; position="fixed";'>
+         style='z-index:100; top: 0px; right: 0px;'>
     <span>Preview
         (<ng-pluralize count="parCount"
                        when="{'0': 'empty',

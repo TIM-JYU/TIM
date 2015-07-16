@@ -34,7 +34,17 @@ TABLE_NAMES = ['BlockEditAccess',
 
 
 class TimDb(object):
-    """Handles saving and retrieving information from TIM database."""
+    """Handles saving and retrieving information from TIM database.
+
+    :type readings: Readings
+    :type notes: Notes
+    :type users: Users
+    :type images: Images
+    :type documents: Documents
+    :type answers: Answers
+    :type folders: Folders
+    :type db: sqlite3.Connection
+    """
 
     @contract
     def __init__(self, db_path: 'str', files_root_path: 'str', current_user_name='Anonymous'):
@@ -81,7 +91,7 @@ class TimDb(object):
         self.db.commit()
         self.db.close()
 
-    def initializeTables(self, schema_file='schema2.sql'):
+    def initialize_tables(self, schema_file='schema2.sql'):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
         with open(schema_file, 'r') as schema_file:

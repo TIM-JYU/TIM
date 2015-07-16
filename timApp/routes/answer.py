@@ -3,6 +3,7 @@
 from flask import Blueprint
 
 from .common import *
+from documentmodel.docparagraph import DocParagraph
 import pluginControl
 import containerLink
 
@@ -12,18 +13,14 @@ answers = Blueprint('answers',
                     url_prefix='')
 
 
-def get_plugin_markup(doc_id, plugintype, task_id):
-    timdb = getTimDb()
-    doc_markdown = timdb.documents.getDocumentAsHtmlBlocks(getNewest(doc_id))
-    for block in doc_markdown:
-        if 'plugin="{}"'.format(plugintype) in block and "<pre" in block and 'id="{}"'.format(task_id) in block:
-            markup = pluginControl.get_block_yaml(block)
-            return markup
-    return None
-
-
 def parse_task_id(task_id):
-    # Assuming task_id is of the form "22.palindrome"
+    """
+
+    :rtype: tuple[int, str]
+    :type task_id: str
+    :param task_id: task_id that is of the form "22.palindrome"
+    :return: tuple of the form (22, "palindrome")
+    """
     pieces = task_id.split('.')
     if len(pieces) != 2:
         abort(400, 'The format of task_id is invalid. Expected exactly one dot character.')
@@ -33,13 +30,22 @@ def parse_task_id(task_id):
 
 
 @answers.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
-def saveAnswer(plugintype, task_id):
+def save_answer(plugintype, task_id):
+    """
+    Saves the answer submitted by user for a plugin in the database.
+
+    :type task_id: str
+    :type plugintype: str
+    :param plugintype: The type of the plugin, e.g. csPlugin.
+    :param task_id: The task id of the form "22.palidrome".
+    :return: JSON
+    """
     timdb = getTimDb()
 
     doc_id, task_id_name = parse_task_id(task_id)
     verifyViewAccess(doc_id)
     if 'input' not in request.get_json():
-        return jsonResponse({'error' : 'The key "input" was not found from the request.'}, 400)
+        return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)
     answerdata = request.get_json()['input']
 
     answer_browser_data = request.get_json().get('abData', {})
@@ -53,15 +59,14 @@ def saveAnswer(plugintype, task_id):
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if loggedIn() and len(old_answers) > 0 else None
 
-    markup = get_plugin_markup(doc_id, plugintype, task_id_name)
-    if markup is None:
-        return jsonResponse({'error': 'The task was not found in the document. '
-                                      + str(doc_id)
-                                      + ' ' + task_id_name}, 404)
-    if markup == "YAMLERROR: Malformed string":
-        return jsonResponse({'error': 'Plugin markup YAML is malformed.'}, 400)
+    par = Document(doc_id).get_paragraph_by_task(task_id_name)
+    if par is None:
+        abort(400, 'Task not found in the document: ' + task_id_name)
+    plugin_data = pluginControl.parse_plugin_values(par)
+    if 'error' in plugin_data:
+        return jsonResponse({'error': plugin_data['error'] + ' Task id: ' + task_id_name}, 400)
 
-    answer_call_data = {'markup': markup, 'state': state, 'input': answerdata, 'taskID': task_id}
+    answer_call_data = {'markup': plugin_data['markup'], 'state': state, 'input': answerdata, 'taskID': task_id}
 
     plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
 
@@ -140,7 +145,7 @@ def get_answers(task_id, user_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, int, int, str])
+    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, str, int, str])
     if not timdb.documents.documentExists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
@@ -153,8 +158,8 @@ def get_state():
     if not hasViewAccess(doc_id):
         abort(403, 'Permission denied')
 
-    version = request.headers['Version']
-    block = timdb.documents.getBlockAsHtml(DocIdentifier(doc_id, version), par_id)
+    # version = request.headers['Version']
+    block = Document(doc_id).get_paragraph(par_id)
 
     texts, js_paths, css_paths, modules = pluginControl.pluginify([block],
                                                                   user['name'],

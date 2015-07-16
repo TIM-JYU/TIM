@@ -106,7 +106,6 @@ function(sc, controller, http, q, $upload, $window) {
     sc.getFolders();
     sc.getDocs();
     sc.displayIndex = 0;
-    sc.displayTimes = false;
     sc.m = {};
     
     sc.selectedFile = "";

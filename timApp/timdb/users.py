@@ -271,15 +271,27 @@ class Users(TimDbBase):
 
 
     @contract
-    def groupExists(self, user_id : 'int') -> 'bool':
+    def groupExists(self, group_id : 'int') -> 'bool':
         """Checks if the group with the specified id. exists
 
+        :param group_id: The id of the group.
         :returns: Boolean.
         """
 
         cursor = self.db.cursor()
-        cursor.execute('select id from UserGroup where id = ?', [user_id])
+        cursor.execute('select id from UserGroup where id = ?', [group_id])
         return cursor.fetchone() is not None
+
+    @contract
+    def get_user_group_name(self, group_id: 'int') -> 'str|None':
+        """Gets the user group name.
+        :param group_id: The id of the group.
+        :returns: The name of the group.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('select name from UserGroup where id = ?', [group_id])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
 
     @contract
     def getUserGroupsByName(self, name: 'str'):
