@@ -823,7 +823,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 log(self)
 
                 if ttype == "jypeli":
-                    cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
+                    #cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
+                    cmdline = "mcs /out:%s /r:/tmp/jypeli/Jypeli.dll /r:/tmp/jypeli/MonoGame.Framework.dll /r:/tmp/jypeli/Jypeli.Physics2d.dll /r:/tmp/jypeli/OpenTK.dll /r:/tmp/jypeli/Tao.Sdl.dll /r:System.Drawing /tmp/jypeli/Ohjelma.cs %s" % (
                         exename, csfname)
                 elif ttype == "comtest":
                     cmdline = "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
