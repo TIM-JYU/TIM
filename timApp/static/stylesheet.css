@@ -1511,9 +1511,11 @@ img.console {
 
 .menu-icon:hover {
     z-index: 501;
+    background: rgb(149, 149, 149) !important;
+    /* Filter disabled because it doesn't work with IE. It has been replaced with background color change.
     filter: brightness(0.8);
     -webkit-filter: brightness(0.8);
-    -moz-filter: brightness(0.8);
+    -moz-filter: brightness(0.8);*/
 }
 
 .showSidebar {
