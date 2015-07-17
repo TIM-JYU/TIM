@@ -15,7 +15,10 @@ slide_page = Blueprint('slide_page',
 
 @slide_page.route("/getslidestatus/<path:doc_name>")
 def getslidestatus(doc_name):
-    status = slidestatuses[doc_name]
+    try:
+        status = slidestatuses[doc_name]
+    except KeyError:
+        abort(400, "Could not get slide status.")
     return jsonify(status)
 
 @slide_page.route("/setslidestatus/<path:doc_name>", methods=['POST'])
