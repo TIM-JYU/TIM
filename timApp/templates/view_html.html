@@ -115,7 +115,7 @@
         {% if lecture_mode %}
             <div ng-controller="LectureController">
                 {% include 'lectureinfo_menu.html' %}
-                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed caption="Lecture Wall">
+                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed caption="Lecture Wall" resize="true">
                     <div class="wall-base" id="wallBase">
                         {# <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
                          ng-click="hideWall()">
