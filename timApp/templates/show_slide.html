@@ -31,8 +31,6 @@
         ]);
 
     </script>
-
-
     <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
     <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
     <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
@@ -57,15 +55,15 @@
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         var teacherMode = {{teacher_mode|tojson}};
+        var group = {{group|tojson}};
         {% if teacher_mode %}
             var users = {{plugin_users|tojson}};
         {% else %}
             var users = [{{current_user|tojson}}];
         {% endif %}
+        var crumbs = getBreadcrumbs(docName);
+        {% include 'breadcrumbs.js' %}
     </script>
-
-
-
     <script>
         if (window.location.search.match(/print-pdf/gi)) {
             var link = document.createElement('link');
@@ -79,20 +77,20 @@
     <!-- <script src="reveal.js/lib/js/html5shiv.js"></script> -->
 </head>
 <body>
-<div class="reveal" ng-app="timApp" ng-controller="ViewCtrl">
+<div class="reveal">
     <div class="slides">
         <section>
         {% if text %}
-            {{ text[0]['html']|safe }}
+            {{ text[0].get_html()|safe }}
             {% set ignore=False %}
             {% for t in text[1:] %}
-                {% if t['html'] == "<div></div>" %}
+                {% if t.get_html()|safe == "<div></div>" %}
                     </section><section>
                 {% else %}
-                    {% if t['html'].startswith("<h1") or t['html'].startswith("<h2") or t['html'].startswith("<h3") %}
+                    {% if (t.get_html()|safe).startswith("<h1") or (t.get_html()|safe).startswith("<h2") or (t.get_html()|safe).startswith("<h3") %}
                         </section><section>
                     {% endif %}
-                    {{ t['html']|safe }}
+                    {{ t.get_html()|safe }}
                 {% endif %}
             {% endfor %}
         {% endif %}
