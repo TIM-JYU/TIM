@@ -11,8 +11,8 @@
 }
 
 .pop-up-dialog {
-    max-height: calc(100% - 100px);
-    max-width: calc(100% - 100px);
+    max-height: 100%;
+    max-width: 100%;
     overflow: auto;
     z-index: 6;
     position: fixed;
