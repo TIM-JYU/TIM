@@ -863,29 +863,7 @@ def uploaded_file(filename):
 @app.route("/getDocuments")
 def getDocuments():
     timdb = getTimDb()
-    user_id = getCurrentUserId()
-    docs = [doc for doc in timdb.documents if timdb.users.userHasViewAccess(user_id, doc['id'])]
-    for doc in docs:
-        doc['canEdit'] = timdb.users.userHasEditAccess(user_id, doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(user_id, doc['id']) or timdb.users.userHasAdminAccess(user_id)
-        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
-    return jsonResponse(docs)
-
-    versions = 1
-    if request.args.get('versions'):
-        ver_str = request.args.get('versions')
-        if re.match('^\d+$', ver_str) is None:
-            return "Invalid version argument."
-        else:
-            ver_int = int(ver_str)
-            if ver_int > 10:
-                # DoS prevention
-                return "Version limit is currently capped at 10."
-            else:
-                versions = ver_int
-
-    timdb = getTimDb()
-    docs = timdb.documents.getDocuments(historylimit=versions)
+    docs = timdb.documents.get_documents()
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
 
     req_folder = request.args.get('folder')

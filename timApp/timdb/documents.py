@@ -180,38 +180,21 @@ class Documents(TimDbBase):
         return self.resultAsDictionary(cursor)[0]
 
     @contract
-    def getDocuments(self, historylimit: 'int'=100) -> 'list(dict)':
-        # To be deleted (use iterator)
+    def get_documents(self, historylimit: 'int'=100, include_nonpublic: 'bool' = False) -> 'list(dict)':
         """Gets all the documents in the database.
-        
+
+        :historylimit Maximum depth in version history.
+        :param include_nonpublic: Whether to include non-public document names or not.
         :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT id,description AS name,modified,latest_revision_id FROM Block WHERE type_id = ?', [blocktypes.DOCUMENT])
+        public_clause = '' if include_nonpublic else ' WHERE public > 0'
+        cursor.execute('SELECT id, name FROM DocEntry' + public_clause)
         results = self.resultAsDictionary(cursor)
-        zombies = []
+
         for result in results:
-            if not self.blockExists(result['id'], blocktypes.DOCUMENT):
-                print('getDocuments: document {} does not exist on the disk!'.format(result['id']))
-                zombies.append(result)
-                continue
-            else:
-                result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
-            if result['modified'] is None or result['latest_revision_id'] is None:
-                latest_version = self.getDocumentVersions(result['id'], limit=1, date_format='iso')
-                time_str = latest_version[0]['timestamp'].rsplit(' ', 1)[0]
-                cursor.execute("""UPDATE Block SET modified = strftime("%Y-%m-%d %H:%M:%S", ?)
-                                  WHERE type_id = ? and id = ?""", [time_str, blocktypes.DOCUMENT, result['id']])
-                result['modified'] = time_str
-                if result['latest_revision_id'] is None:
-                    cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?)",
-                        [result['id'], latest_version[0]['hash']])
-                    cursor.execute("UPDATE Block SET latest_revision_id = ? WHERE type_id = ? and id = ?",
-                        [cursor.lastrowid, blocktypes.DOCUMENT, result['id']])
-            result['modified'] = date_to_relative(datetime.strptime(result['modified'], "%Y-%m-%d %H:%M:%S"))
-        self.db.commit()
-        for zombie in zombies:
-            results.remove(zombie)
+            doc = Document(result['id'])
+            result['modified'] = doc.get_last_modified()
 
         return results
 

@@ -316,6 +316,10 @@ class Document:
                 return p
         return None
 
+    def get_last_modified(self):
+        log = self.get_changelog(max_entries=1)
+        return log[0]['time'] if log is not None and len(log) > 0 else ''
+
 
 new_contract('Document', Document)
 
