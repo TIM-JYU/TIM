@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import requests
+import time
 
 DUMBO_URL = 'http://127.0.0.1:8000'
 DUMBO_PATH = os.path.join("..", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
@@ -24,6 +25,7 @@ def launch_dumbo():
     os.chdir(path)
     p = subprocess.Popen([os.path.join(".", "Dumbo"), "-p", "8000"])
     os.chdir(old)
+    time.sleep(0.1)
     return p
 
 
