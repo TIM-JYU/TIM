@@ -399,6 +399,13 @@ ul ul ul, ol ol ol {
     position: relative;
 }
 
+#previewDiv {
+    padding: 10px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: inherit;
+}
+
 .previewcontent {
     clear: both;
     overflow-y: auto;
@@ -915,6 +922,10 @@ a.anchor:hover {
     padding: 0.5em;
     border-radius: 5px;
     background: #e0e0e0;
+}
+
+#pareditor {
+    background: inherit;
 }
 
 .editButtonArea {
