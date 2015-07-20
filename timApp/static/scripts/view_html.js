@@ -142,6 +142,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleParEditor = function ($par, options) {
+            var caption = 'Add paragraph';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
             var mobile = touch && (window.screen.width < 1200);
             var url;
@@ -178,12 +179,13 @@ timApp.controller("ViewCtrl", [
                 "delete-url": '/deleteParagraph/' + sc.docId + "/" + par_id
             };
             if (options.showDelete) {
+                caption = 'Edit paragraph';
                 attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
             }
-            sc.toggleEditor($par, options, attrs);
+            sc.toggleEditor($par, options, attrs, caption);
         };
 
-        sc.toggleEditor = function ($par, options, attrs) {
+        sc.toggleEditor = function ($par, options, attrs, caption) {
             if ($par.children(EDITOR_CLASS_DOT).length) {
                 $par.children().remove(EDITOR_CLASS_DOT);
                 sc.editing = false;
@@ -193,6 +195,7 @@ timApp.controller("ViewCtrl", [
                 var createEditor = function (attrs) {
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
                     $div.attr('tim-draggable-fixed', '');
+                    if (caption) $div.attr('caption', caption);
                     $par.append($div);
                     $compile($div[0])(sc);
                     //$div = $compile($div)(sc);
@@ -255,12 +258,14 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.toggleNoteEditor = function ($par, options) {
+            var caption = 'Edit comment';
             if (!sc.rights.can_comment) {
                 return;
             }
             var url,
                 data;
             if (options.isNew) {
+                caption = 'Add comment';
                 url = '/postNote';
                 data = {
                     access: 'everyone',
@@ -311,7 +316,7 @@ timApp.controller("ViewCtrl", [
                     "delete-url": '/deleteNote',
                     "editor-text": data.content
                 };
-            sc.toggleEditor($par, options, attrs);
+            sc.toggleEditor($par, options, attrs, caption);
         };
 
         sc.forEachParagraph = function (func) {
