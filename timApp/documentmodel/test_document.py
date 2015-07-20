@@ -2,8 +2,11 @@
 # python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py
 
 import os
+import random
 import unittest
 import shutil
+from documentmodel.documentparser import DocumentParser
+from documentmodel.documentwriter import DocumentWriter
 
 import dumboclient
 import documentmodel.randutils
@@ -233,6 +236,26 @@ class DocumentTest(unittest.TestCase):
         Document.remove(doc_id=4, files_root=self.files_root)
         self.assertFalse(Document.doc_exists(doc_id=4, files_root=self.files_root))
         self.assertEqual(1, Document.get_next_free_id(files_root=self.files_root))
+
+    def test_update(self):
+        self.maxDiff = None
+        random.seed(0)
+        for i in range(1, 5):
+            d = Document(files_root=self.files_root)
+            d.create()
+            for _ in range(0, i):
+                d.add_paragraph(random_paragraph())
+            fulltext = d.export_markdown()
+            d.update(fulltext)
+            self.assertEqual(fulltext, d.export_markdown())
+            dp = DocumentParser(fulltext)
+            blocks = dp.get_blocks()
+            random.shuffle(blocks)
+            blocks[0]['md'] = 'modified'
+            new_text = DocumentWriter(blocks).get_text()
+            d.update(new_text)
+            blocks = DocumentParser(new_text).add_missing_attributes().get_blocks()
+            self.assertListEqual(blocks, DocumentParser(d.export_markdown()).get_blocks())
 
     @classmethod
     def tearDownClass(cls):

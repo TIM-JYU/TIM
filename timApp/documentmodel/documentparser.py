@@ -79,6 +79,7 @@ class DocumentParser:
             r['t'] = hash_func(r['md'])
             if not r.get('id'):
                 r['id'] = id_func()
+        return self
 
     def validate_ids(self, id_validator_func=is_valid_id):
         for r in self._blocks:
@@ -86,7 +87,7 @@ class DocumentParser:
             if curr_id is not None:
                 if not id_validator_func(curr_id):
                     raise ValidationException('Invalid paragraph id: ' + curr_id)
-        return True
+        return self
 
     def _parse_document(self, break_on_empty_line=False):
         self._blocks = []
@@ -160,8 +161,7 @@ class DocumentParser:
             # noinspection PyUnboundLocalVariable
             block_lines.append(line)
         result = {'md': '\n'.join(block_lines), 'type': 'atom' if is_atom else 'code'}
-        if len(tokens) > 0:
-            result['attrs'] = tokens
+        self.extract_attrs(result, tokens)
         return result
 
     def try_parse_header_block(self, doc):
@@ -183,8 +183,7 @@ class DocumentParser:
             block_lines.append(header_line[:start].strip())
         block_lines.append(self.parse_normal_block(doc)['md'])
         result = {'md': '\n'.join(block_lines), 'type': block_type}
-        if len(tokens) > 0:
-            result['attrs'] = tokens
+        self.extract_attrs(result, tokens)
         return result
 
     def parse_normal_block(self, doc):
@@ -200,6 +199,13 @@ class DocumentParser:
                 break
             block_lines.append(doc.get_line_and_advance())
         return {'md': '\n'.join(block_lines), 'type': 'normal'}
+
+    def extract_attrs(self, result, tokens):
+        for builtin in ('id', 't'):
+            if builtin in tokens:
+                result[builtin] = tokens.pop(builtin)
+        if len(tokens) > 0:
+            result['attrs'] = tokens
 
     def eat_whitespace(self, doc):
         """
