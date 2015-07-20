@@ -861,31 +861,9 @@ def uploaded_file(filename):
 
 
 @app.route("/getDocuments")
-def getDocuments():
+def get_documents():
     timdb = getTimDb()
-    user_id = getCurrentUserId()
-    docs = [doc for doc in timdb.documents if timdb.users.userHasViewAccess(user_id, doc['id'])]
-    for doc in docs:
-        doc['canEdit'] = timdb.users.userHasEditAccess(user_id, doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(user_id, doc['id']) or timdb.users.userHasAdminAccess(user_id)
-        doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
-    return jsonResponse(docs)
-
-    versions = 1
-    if request.args.get('versions'):
-        ver_str = request.args.get('versions')
-        if re.match('^\d+$', ver_str) is None:
-            return "Invalid version argument."
-        else:
-            ver_int = int(ver_str)
-            if ver_int > 10:
-                # DoS prevention
-                return "Version limit is currently capped at 10."
-            else:
-                versions = ver_int
-
-    timdb = getTimDb()
-    docs = timdb.documents.getDocuments(historylimit=versions)
+    docs = timdb.documents.get_documents()
     allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
 
     req_folder = request.args.get('folder')
@@ -918,10 +896,10 @@ def getDocuments():
 
 
 @app.route("/getFolders")
-def getFolders():
+def get_folders():
     root_path = request.args.get('root_path')
     timdb = getTimDb()
-    folders = timdb.folders.getFolders(root_path, getCurrentUserGroup())
+    folders = timdb.folders.get_folders(root_path)
     allowedFolders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
     uid = getCurrentUserId()
 
@@ -932,47 +910,47 @@ def getFolders():
     return jsonResponse(allowedFolders)
 
 
-def createItem(itemName, itemType, createFunction):
+def create_item(item_name, itemType, createFunction, owner_group_id):
     if not loggedIn():
         abort(403, 'You have to be logged in to create a {}.'.format(itemType))
 
-    if itemName.startswith('/') or itemName.endswith('/'):
+    if item_name.startswith('/') or item_name.endswith('/'):
         abort(400, 'The {} name cannot start or end with /.'.format(itemType))
 
-    if re.match('^(\d)*$', itemName) is not None:
+    if re.match('^(\d)*$', item_name) is not None:
         abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(itemType))
 
     timdb = getTimDb()
-
     userName = getCurrentUserName()
 
-    if timdb.documents.get_document_id(itemName) is not None or timdb.folders.getFolderId(itemName) is not None:
+    if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
         abort(403, 'Item with a same name already exists.')
 
-    if not canWriteToFolder(itemName):
+    if not canWriteToFolder(item_name):
         abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName))
 
-    itemId = createFunction(itemName)
-    return jsonResponse({'id': itemId, 'name': itemName})
+    item_path, _ = timdb.folders.split_location(item_name)
+    folder_id = timdb.folders.create(item_path, owner_group_id)
+    item_id = createFunction(item_name, owner_group_id)
+
+    return jsonResponse({'id': item_id, 'name': item_name})
 
 
 @app.route("/createDocument", methods=["POST"])
-def createDocument():
+def create_document():
     jsondata = request.get_json()
-    docName = jsondata['doc_name']
+    doc_name = jsondata['doc_name']
     timdb = getTimDb()
-    createFunc = lambda docName: timdb.documents.create_document(docName, getCurrentUserGroup())
-    return createItem(docName, 'document', createFunc)
+    return create_item(doc_name, 'document', timdb.documents.create, getCurrentUserGroup())
 
 
 @app.route("/createFolder", methods=["POST"])
-def createFolder():
+def create_folder():
     jsondata = request.get_json()
-    folderName = jsondata['name']
+    folder_name = jsondata['name']
     ownerId = jsondata['owner']
     timdb = getTimDb()
-    createFunc = lambda folderName: timdb.folders.createFolder(folderName, ownerId)
-    return createItem(folderName, 'folder', createFunc)
+    return create_item(folder_name, 'folder', timdb.folders.create, ownerId)
 
 
 @app.route("/getBlock/<int:docId>/<par_id>")

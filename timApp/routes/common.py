@@ -91,11 +91,11 @@ def canWriteToFolder(folderName):
         if folder == userFolder:
             return True
 
-        folderId = timdb.folders.getFolderId(folder)
+        folderId = timdb.folders.get_folder_id(folder)
         if folderId is not None:
             return hasEditAccess(folderId)
 
-        folder = timdb.folders.getContainingFolderName(folder)
+        folder, _ = timdb.folders.split_location(folder)
 
     return timdb.users.isUserInGroup(getCurrentUserName(), 'Administrators')
 

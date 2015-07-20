@@ -13,7 +13,7 @@ def manage(doc_id):
     timdb = getTimDb()
     isFolder = False
     if not timdb.documents.documentExists(doc_id):
-        if timdb.folders.folderExists(doc_id):
+        if timdb.folders.exists(doc_id):
             isFolder = True
         else:
             abort(404)
@@ -26,7 +26,7 @@ def manage(doc_id):
     viewers = timdb.users.getViewers(doc_id)
 
     if isFolder:
-        doc_data = timdb.folders.getFolder(doc_id)
+        doc_data = timdb.folders.get(doc_id)
         doc_data['versions'] = []
         doc_data['fulltext'] = ''
     else:
@@ -50,7 +50,7 @@ def manage(doc_id):
 @manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
 def changeOwner(doc_id, new_owner):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id) and not timdb.folders.folderExists(doc_id):
+    if not timdb.documents.documentExists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     verifyOwnership(doc_id)
     possible_groups = timdb.users.getUserGroups(getCurrentUserId())
@@ -62,7 +62,7 @@ def changeOwner(doc_id, new_owner):
 @manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
 def addPermission(doc_id, group_name, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id) and not timdb.folders.folderExists(doc_id):
+    if not timdb.documents.documentExists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404, 'This document does not exist.')
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to add permissions to this document.")
@@ -84,7 +84,7 @@ def addPermission(doc_id, group_name, perm_type):
 @manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def removePermission(doc_id, group_id, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id) and not timdb.folders.folderExists(doc_id):
+    if not timdb.documents.documentExists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -108,11 +108,11 @@ def renameDocument(doc_id):
     if new_name.endswith('/'):
         return jsonResponse({'message': 'The document name cannot end with /'}, 404)
 
-    if timdb.documents.get_document_id(new_name) is not None or timdb.folders.getFolderId(new_name) is not None:
+    if timdb.documents.get_document_id(new_name) is not None or timdb.folders.get_folder_id(new_name) is not None:
         return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
 
     if not timdb.documents.documentExists(doc_id):
-        if timdb.folders.folderExists(doc_id):
+        if timdb.folders.exists(doc_id):
             isFolder = True
         else:
             return jsonResponse({'message': 'The document or folder does not exist!'}, 404)
@@ -120,18 +120,19 @@ def renameDocument(doc_id):
         return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
 
     if isFolder:
-        old_name = timdb.folders.getFolder(doc_id)['name']
+        old_name = timdb.folders.get(doc_id)['fullname']
     else:
         old_name = timdb.documents.getDocument(doc_id)['name']
 
     userName = getCurrentUserName()
 
     if not timdb.users.isUserInGroup(userName, 'Administrators'):
-        if not canWriteToFolder(timdb.folders.getContainingFolderName(new_name)):
+        parent, _ = timdb.folders.split_location(new_name)
+        if not canWriteToFolder(parent):
             return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     if isFolder:
-        timdb.folders.renameFolder(doc_id, new_name)
+        timdb.folders.rename(doc_id, new_name)
     else:
         timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
 
@@ -142,14 +143,20 @@ def getPermissions(doc_id):
     timdb = getTimDb()
     isFolder = False
     if not timdb.documents.documentExists(doc_id):
-        if timdb.folders.folderExists(doc_id):
+        if timdb.folders.exists(doc_id):
             isFolder = True
         else:
             abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
 
-    doc_data = timdb.folders.getFolder(doc_id) if isFolder else timdb.documents.getDocument(doc_id)
+    if isFolder:
+        doc_data = timdb.folders.get(doc_id)
+        doc_data['name'] = doc_data.pop('fullname')
+        doc_data.pop('location')
+    else:
+        doc_data = timdb.documents.getDocument(doc_id)
+
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
     return jsonResponse({'doc' : doc_data, 'editors' : editors, 'viewers' : viewers})
@@ -161,19 +168,19 @@ def deleteDocument(doc_id):
         return jsonResponse({'message': 'Document does not exist.'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
-    timdb.documents.deleteDocument(doc_id)
+    timdb.documents.delete(doc_id)
     return "Success"
 
 @manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
 def deleteFolder(doc_id):
     timdb = getTimDb()
-    if not timdb.folders.folderExists(doc_id):
+    if not timdb.folders.exists(doc_id):
         return jsonResponse({'message': 'Folder does not exist.'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this folder."}, 403)
-    if not timdb.folders.isEmpty(doc_id):
+    if not timdb.folders.is_empty(doc_id):
         return jsonResponse({'message': "The folder is not empty. Only empty folders can be deleted."}, 403)
 
-    timdb.folders.deleteFolder(doc_id)
+    timdb.folders.delete(doc_id)
     return "Success"
 
