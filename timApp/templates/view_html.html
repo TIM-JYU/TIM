@@ -333,6 +333,7 @@
                         </div>
                     </div>
                 </div>
+                <button class="showContent">Show content</button>
             </div>
         {% endif %}
         {% if not lecture_mode %}
@@ -420,33 +421,9 @@
                 {% endif %}
             </div>
         {% endif %}
-        <div id="pars">
-            {% for t in text %}
-                {% if 'taskId' in t.get_attrs() %}
-                <div class="par {{ t.get_class_str() }}"
-                     id="{{ t.get_id() }}"
-                     t="{{ t.get_hash() }}"
-                     attrs="{{ t.get_attrs_str() }}">
-                    <answerbrowser
-                            task-id="{{ docID }}.{{ t.get_attrs()['taskId'] }}">
-                    </answerbrowser>
-                    <div class="parContent">
-                        {{ t.get_html()|safe }}
-                    </div>
-                </div>
-                {% else %}
-                <div class="par {{ t.get_class_str() }}"
-                     id="{{ t.get_id() }}"
-                     t="{{ t.get_hash() }}"
-                     attrs="{{ t.get_attrs_str() }}"
-                     ng-non-bindable>
-                    <div class="parContent">
-                        {{ t.get_html()|safe }}
-                    </div>
-                </div>
-                {% endif %}
-            {% endfor %}
-        </div>
+        {% if not lecture_mode %}
+            {% include 'view_content.html' %}
+        {% endif %}
     </div>
     <p id="test"></p>
 

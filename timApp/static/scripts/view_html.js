@@ -386,18 +386,18 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.createNewPar = function() {
+        sc.createNewPar = function () {
             return $("<div>", {class: "par new", id: 'NEW_PAR', attrs: '{}'})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
         };
 
-        sc.showAddParagraphAbove = function(e, $par, coords) {
+        sc.showAddParagraphAbove = function (e, $par, coords) {
             var $newpar = sc.createNewPar();
             $par.before($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
-        sc.showAddParagraphBelow = function(e, $par, coords) {
+        sc.showAddParagraphBelow = function (e, $par, coords) {
             var $newpar = sc.createNewPar();
             $par.after($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
@@ -895,7 +895,7 @@ timApp.controller("ViewCtrl", [
                     }
                     pars[pi].notes.push(data[i]);
                 }
-                Object.keys(pars).forEach(function(par_id, index) {
+                Object.keys(pars).forEach(function (par_id, index) {
                     var $par = sc.getElementByParId(par_id);
                     var $notediv = sc.getNoteHtml(pars[par_id].notes);
                     $par.append($notediv);
@@ -941,7 +941,8 @@ timApp.controller("ViewCtrl", [
                     var $div = $("<div>", {
                         class: classes.join(" "),
                         title: "Click to mark this paragraph as read",
-                        t: curr_hash});
+                        t: curr_hash
+                    });
                     $(this).append($div);
                 });
             }).error(function () {
@@ -1109,10 +1110,10 @@ timApp.controller("ViewCtrl", [
             });
         }
 
-        // Load index, notes and read markings
         sc.editorFunctions = [sc.showNoteWindow, sc.showEditWindow, sc.showAddParagraphAbove,
             sc.showAddParagraphBelow, sc.toggleQuestion, sc.doNothing];
 
+        // Load index, notes and read markings
         sc.setHeaderLinks();
         sc.indexTable = [];
         sc.getIndex();
@@ -1128,11 +1129,6 @@ timApp.controller("ViewCtrl", [
         });
 
         if (sc.rights.editable) {
-            var $material = $('.material');
-            $material.append($("<div>", {class: "addBottomContainer"}).append($("<a>", {
-                class: "addBottom",
-                text: 'Add paragraph'
-            })));
             sc.onClick(".addBottom", function ($this, e) {
                 $(".actionButtons").remove();
                 var $par = $('#pars').children().last();
@@ -1143,6 +1139,47 @@ timApp.controller("ViewCtrl", [
         }
         sc.processAllMath($('body'));
         sc.defaultAction = sc.showOptionsWindow;
+        sc.onClick(".showContent", function ($this, e) {
+
+            var $pars = $('#pars');
+            if ($pars.length > 0) {
+                if ($pars.css('display') == 'none') {
+                    $pars.css('display', '');
+                    $('.showContent').text('Hide content');
+                } else {
+                    $pars.css('display', 'none');
+                    $('.showContent').text('Show content');
+                }
+
+                return;
+            }
+
+            var $loading = $('<img>', {id: "loading", src: "/static/images/loading.gif"});
+            $('.paragraphs').append($loading);
+            $.ajax({
+                type: 'GET', url: '/view_content/' + docName,
+                dataType: "html",
+                processData: false,
+                success: function (data) {
+                    var $loading = $('#loading');
+                    $loading.remove();
+                    $('.paragraphs').append(data);
+                    sc.getIndex();
+                    sc.getNotes();
+                    sc.getReadPars();
+                    sc.processAllMath($('body'));
+                    if (sc.rights.editable) {
+                        sc.getEditPars();
+                    }
+                    $('.showContent').text('Hide content');
+                },
+                error: function () {
+                    var $loading = $('#loading');
+                    $loading.remove();
+                    console.log("Virhe");
+                }
+            });
+        });
     }
 ])
 ;

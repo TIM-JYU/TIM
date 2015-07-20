@@ -39,6 +39,15 @@ def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'list(DocPar
     return get_whole_document(doc_id) if view_range is None else get_partial_document(doc_id, view_range)
 
 
+@view_page.route("/view_content/<path:doc_name>")
+def view_content(doc_name):
+    try:
+        view_range = parse_range(request.args.get('b'), request.args.get('e'))
+        return view_content(doc_name, 'view_content.html', view_range=view_range)
+    except (ValueError, TypeError):
+        abort(400, "Invalid start or end index specified.")
+
+
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")
@@ -93,6 +102,65 @@ def try_return_folder(doc_name):
                            userGroups=possible_groups,
                            is_owner=hasOwnership(block_id),
                            docName=folder_name)
+
+
+def view_content(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False):
+    timdb = getTimDb()
+    doc_id = timdb.documents.get_document_id(doc_name)
+    if doc_id is None or not timdb.documents.documentExists(doc_id):
+        # Backwards compatibility: try to use as document id
+        try:
+            doc_id = int(doc_name)
+            if not timdb.documents.documentExists(doc_id):
+                return try_return_folder(doc_name)
+            doc_name = timdb.documents.get_first_document_name(doc_id)
+        except ValueError:
+            return try_return_folder(doc_name)
+
+    if teacher:
+        verifyOwnership(doc_id)
+
+    if not hasViewAccess(doc_id):
+        if not loggedIn():
+            session['came_from'] = request.url
+            return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
+        else:
+            abort(403)
+
+    start_index = max(view_range[0], 0) if view_range else 0
+    xs = get_document(doc_id, view_range)
+    user = getCurrentUserId()
+
+    if teacher:
+        task_ids = pluginControl.find_task_ids(xs, doc_id)
+        user_list = None
+        if usergroup is not None:
+            user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
+        users = timdb.answers.getUsersForTasks(task_ids, user_list)
+        if len(users) > 0:
+            user = users[0]['id']
+    else:
+        users = []
+    current_user = timdb.users.getUser(user)
+    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
+                                                                current_user['name'],
+                                                                timdb.answers,
+                                                                doc_id,
+                                                                current_user['id'],
+                                                                sanitize=False)
+    # TODO: Check if doc variable is needed
+    return render_template(template_name,
+                           text=texts,
+                           plugin_users=users,
+                           current_user=current_user,
+                           js=jsPaths,
+                           cssFiles=cssPaths,
+                           jsMods=modules,
+                           start_index=start_index,
+                           group=usergroup,
+                           rights={'editable': hasEditAccess(doc_id),
+                                   'can_mark_as_read': hasReadMarkingRight(doc_id)
+                                   })
 
 
 def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False):
