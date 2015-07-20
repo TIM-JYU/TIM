@@ -1,0 +1,32 @@
+<div id="pars">
+    {% for t in text %}
+        {% if 'taskId' in t.get_attrs() %}
+            <div class="par {{ t.get_class_str() }}"
+                 id="{{ t.get_id() }}"
+                 t="{{ t.get_hash() }}"
+                 attrs="{{ t.get_attrs_str() }}">
+                <answerbrowser
+                        task-id="{{ docID }}.{{ t.get_attrs()['taskId'] }}">
+                </answerbrowser>
+                <div class="parContent">
+                    {{ t.get_html()|safe }}
+                </div>
+            </div>
+        {% else %}
+            <div class="par {{ t.get_class_str() }}"
+                 id="{{ t.get_id() }}"
+                 t="{{ t.get_hash() }}"
+                 attrs="{{ t.get_attrs_str() }}"
+                 ng-non-bindable>
+                <div class="parContent">
+                    {{ t.get_html()|safe }}
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+    {% if rights.editable %}
+        <div class="addBottomContainer">
+            <a class="addBottom">Add paragraph</a>
+        </div>
+    {% endif %}
+</div>
