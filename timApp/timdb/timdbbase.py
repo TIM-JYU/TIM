@@ -54,7 +54,9 @@ class TimDbBase(object):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO Block (description, UserGroup_id, type_id) VALUES (?,?,?)',
+        cursor.execute("""
+            INSERT INTO Block (description, UserGroup_id, type_id, created, modified)
+            VALUES (?,?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
                        [name, owner_group_id, block_type])
         block_id = cursor.lastrowid
         self.db.commit()

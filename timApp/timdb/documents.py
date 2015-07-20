@@ -40,9 +40,6 @@ class Documents(TimDbBase):
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
         self.ec = EphemeralClient(EPHEMERAL_URL)
 
-    def __iter__(self):
-        return DocEntryIterator(self.db)
-
     @contract
     def add_paragraph(self, doc: 'Document',
                       content: 'str',
@@ -64,7 +61,7 @@ class Documents(TimDbBase):
         return [par], doc
 
     @contract
-    def create_document(self, name: 'str', owner_group_id: 'int') -> 'Document':
+    def create(self, name: 'str', owner_group_id: 'int') -> 'Document':
         """Creates a new document with the specified name.
         
         :param name: The name of the document to be created.
@@ -80,17 +77,19 @@ class Documents(TimDbBase):
         document.create()
         document.add_paragraph('Click right side to edit. You can get help with editing from editors Help tab.')
 
-        cursor = self.db.cursor()
-        cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP
-                          WHERE type_id = ? and id = ?""",
-                       [blocktypes.DOCUMENT, document_id])
-        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
-                       [document_id, name, True])
-        self.db.commit()
+        self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
+        self.add_name(document_id, name)
         return document
 
     @contract
-    def deleteDocument(self, document_id: 'int'):
+    def add_name(self, doc_id: 'int', name: 'str', public: 'bool' = True):
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
+                       [doc_id, name, public])
+        self.db.commit()
+
+    @contract
+    def delete(self, document_id: 'int'):
         """Deletes the specified document.
         
         :param document_id: The id of the document to be deleted.
@@ -180,7 +179,7 @@ class Documents(TimDbBase):
         return self.resultAsDictionary(cursor)[0]
 
     @contract
-    def get_documents(self, historylimit: 'int'=100, include_nonpublic: 'bool' = False) -> 'list(dict)':
+    def get_documents(self, include_nonpublic: 'bool' = False) -> 'list(dict)':
         """Gets all the documents in the database.
 
         :historylimit Maximum depth in version history.
@@ -510,37 +509,3 @@ class Documents(TimDbBase):
                        [blocktypes.DOCUMENT, doc.doc_id])
         if commit:
             self.db.commit()
-
-class DocEntryIterator:
-    @contract
-    def __init__(self, db: 'Connection', root_folder: 'str' = ''):
-        self.db = db
-        self.cursor = db.cursor()
-        self.root_folder = re.sub('^\/+', '', root_folder)
-
-        if len(self.root_folder) > 0:
-            self.cursor.execute(
-                "SELECT id, name FROM DocEntry WHERE name LIKE ?",
-                [self.root_folder + '/%'])
-        else:
-            self.cursor.execute("SELECT id, name FROM DocEntry")
-
-    @contract
-    def __next__(self) -> 'dict':
-        row = self.cursor.fetchone()
-        if row is None:
-            raise StopIteration()
-        doc_id = int(row[0])
-        fullname = row[1]
-        name = re.sub('^({})\/'.format(re.escape(self.root_folder))) if len(self.root_folder) > 0 else fullname
-
-        cursor = self.db.cursor()
-        cursor.execute("SELECT datetime(created, 'localtime') as created,"
-                       "datetime(modified, 'localtime') as modified,"
-                       "latest_revision_id FROM Block WHERE id = ?", [doc_id])
-        block = cursor.fetchone()
-        if block is None:
-            print("Block entry missing for document id ")
-            return {'id': doc_id, 'name': name, 'fullname': fullname}
-
-        return {'id': doc_id, 'name': name, 'fullname': fullname, 'created': block[0], 'modified': block[1], 'latest_revision_id': block[2]}

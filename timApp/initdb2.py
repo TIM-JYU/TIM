@@ -1,11 +1,9 @@
 
 """Initializes the TIM database."""
 
-from timdb.timdb2 import TimDb
 import os
-from timdb.gitclient import GitClient
-import ephemeralclient
-import sys
+
+from timdb.timdb2 import TimDb
 from timdb.users import ANONYMOUS_GROUPNAME
 
 
@@ -31,8 +29,8 @@ def initialize_database():
     timdb.users.createAnonymousAndLoggedInUserGroups()
     anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
     (vesa_id, vesa_group) = create_admin(timdb, 'vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
-    doc_id = timdb.documents.create_document('Testaus 1', anon_group)
-    timdb.documents.create_document('Testaus 2', anon_group)
+    doc_id = timdb.documents.create('Testaus 1', anon_group)
+    timdb.documents.create('Testaus 2', anon_group)
     timdb.documents.import_document_from_file('example_docs/programming_examples.md',
                                                      'Programming examples',
                                                      anon_group)

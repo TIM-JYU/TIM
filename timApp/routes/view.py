@@ -80,7 +80,7 @@ def parse_range(start_index: 'int|None', end_index: 'int|None') -> 'range|None':
 def try_return_folder(doc_name):
     timdb = getTimDb()
     folder_name = doc_name.rstrip('/')
-    block_id = timdb.folders.getFolderId(folder_name)
+    block_id = timdb.folders.get_folder_id(folder_name)
 
     if block_id is None:
         abort(404)
