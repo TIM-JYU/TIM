@@ -1163,7 +1163,7 @@ timApp.controller("ViewCtrl", [
                 success: function (data) {
                     var $loading = $('#loading');
                     $loading.remove();
-                    $('.paragraphs').append(data);
+                    $('.paragraphs').append($compile(data)(sc));
                     sc.getIndex();
                     sc.getNotes();
                     sc.getReadPars();

@@ -40,7 +40,7 @@ def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'list(DocPar
 
 
 @view_page.route("/view_content/<path:doc_name>")
-def view_content(doc_name):
+def view_document_content(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
         return view_content(doc_name, 'view_content.html', view_range=view_range)
