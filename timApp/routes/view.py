@@ -117,9 +117,6 @@ def view_content(doc_name, template_name, view_range=None, usergroup=None, teach
         except ValueError:
             return try_return_folder(doc_name)
 
-    if teacher:
-        verifyOwnership(doc_id)
-
     if not hasViewAccess(doc_id):
         if not loggedIn():
             session['came_from'] = request.url
@@ -131,16 +128,6 @@ def view_content(doc_name, template_name, view_range=None, usergroup=None, teach
     xs = get_document(doc_id, view_range)
     user = getCurrentUserId()
 
-    if teacher:
-        task_ids = pluginControl.find_task_ids(xs, doc_id)
-        user_list = None
-        if usergroup is not None:
-            user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
-        users = timdb.answers.getUsersForTasks(task_ids, user_list)
-        if len(users) > 0:
-            user = users[0]['id']
-    else:
-        users = []
     current_user = timdb.users.getUser(user)
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
                                                                 current_user['name'],
@@ -148,16 +135,15 @@ def view_content(doc_name, template_name, view_range=None, usergroup=None, teach
                                                                 doc_id,
                                                                 current_user['id'],
                                                                 sanitize=False)
-    # TODO: Check if doc variable is needed
+
     return render_template(template_name,
+                           docID=doc_id,
                            text=texts,
-                           plugin_users=users,
                            current_user=current_user,
                            js=jsPaths,
                            cssFiles=cssPaths,
                            jsMods=modules,
                            start_index=start_index,
-                           group=usergroup,
                            rights={'editable': hasEditAccess(doc_id),
                                    'can_mark_as_read': hasReadMarkingRight(doc_id)
                                    })
