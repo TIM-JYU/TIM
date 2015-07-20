@@ -11,8 +11,9 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
 
         link: function (scope, element, attr) {
 
+            /*
             element.css('top', element.position().top);
-            element.css('left', element.position().left);
+            element.css('left', element.position().left); */
 
             if (attr.resize) {
                 $window.setTimeout(function () {
@@ -68,30 +69,29 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
                 // to keep the element dimensions (X).
                 // Prefer left over right.
 
-                /*
                 var leftSet = element.css('left') != 'auto';
                 var rightSet = element.css('right') != 'auto';
                 setLeft = (!leftSet & !rightSet) | leftSet;
-                setRight = rightSet;*/
+                setRight = rightSet;
 
                 // Rules for what we should set in CSS
                 // to keep the element dimensions (Y).
                 // Prefer top over bottom.
 
-                /*
                 var topSet = element.css('top') != 'auto';
                 var botSet = element.css('bottom') != 'auto';
                 setTop = (!topSet & !botSet) | topSet;
-                setBottom = botSet;*/
+                setBottom = botSet;
 
-                //console.log(element.css('top'));
+                console.log(element.css('top'));
 
-                //prevTop = getPixels(element.css('top'));
-                prevTop = element.position().top;
-                //prevLeft = getPixels(element.css('left'));
-                prevLeft = element.position().left;
-                // prevBottom = getPixels(element.css('bottom'));
-                // prevRight = getPixels(element.css('right'));
+                prevTop = getPixels(element.css('top'));
+                prevLeft = getPixels(element.css('left'));
+                prevBottom = getPixels(element.css('bottom'));
+                prevRight = getPixels(element.css('right'));
+
+                //prevTop = element.position().top;
+                //prevLeft = element.position().left;
 
                 $document.on('mouseup touchend', release);
                 $document.on('mousemove touchmove', move);
@@ -107,9 +107,10 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
                 delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
                 //console.log(prevTop);
 
-                element.css('top', prevTop + delta.Y);
-                element.css('left', prevLeft + delta.X);
                 /*
+                element.css('top', prevTop + delta.Y);
+                element.css('left', prevLeft + delta.X);*/
+
                 if (setTop)
                     element.css('top', prevTop + delta.Y);
                 if (setLeft)
@@ -117,7 +118,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
                 if (setBottom)
                     element.css('bottom', prevBottom - delta.Y);
                 if (setRight)
-                    element.css('right', prevRight - delta.X);*/
+                    element.css('right', prevRight - delta.X);
 
                 e.preventDefault();
                 e.stopPropagation();
