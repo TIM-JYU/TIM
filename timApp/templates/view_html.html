@@ -44,6 +44,19 @@
         $(function () {
             $("#question").load("../../question");
         });
+
+        window.setsetting = function (setting, value) {
+            $.ajax({
+                type: 'POST',
+                url: '/sessionsetting/' + setting + '/' + value,
+                success: function (data) {
+                    settings[setting] = value;
+                },
+                error: function () {
+                    console.log("Could not set setting.");
+                }
+            });
+        };
     </script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/popUp.css') }}">
@@ -91,6 +104,7 @@
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};
         var reqs = {{reqs|tojson}};
+        var settings = {{settings|tojson}};
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         var teacherMode = {{teacher_mode|tojson}};
@@ -267,7 +281,7 @@
                                         </li>
                                         <p ng-show="lecturerTable.length == 0">No lecturers</p>
                                         <h4>Students (<span ng-bind="studentTable.length">None</span>)</h4>
-                                        <li ng-repeat="person in studentTable">
+                                        <li ng-repeat="person in studentTable track by $index">
                                             {{ person.name }} > {{ person.active }}
                                         </li>
                                         <p ng-show="studentTable.length == 0">No students</p>

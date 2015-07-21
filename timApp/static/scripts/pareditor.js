@@ -42,7 +42,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $scope.newAttr = '';
                 };
 
-                $scope.editortab = $window.editortab;
+                $scope.settings = $window.settings;
                 var $plugintab;
                 $scope.pluginButtonList = {};
 
@@ -1127,16 +1127,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.tabClicked = function ($event, area) {
                     var active = $($event.target).parent();
-                    $.ajax({
-                        type: 'POST',
-                        url: '/editortab/' + area,
-                        success: function (data) {
-                            editortab = area;
-                        },
-                        error: function () {
-                            console.log("Virhe");
-                        }
-                    });
+                    setsetting('editortab', area);
                     $scope.setActiveTab(active, area);
                     $scope.wrapFn();
                 };
@@ -1160,13 +1151,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $(naviArea).attr('class', 'extraButtonArea');
                 };
 
-                if ($scope.editortab) {
+                if ($scope.settings['editortab']) {
                     //Timeout is used to ensure that ng-ifs are executed before this
                     window.setTimeout(function () {
-                        var tab = $scope.editortab.substring(0, $scope.editortab.lastIndexOf('Buttons'));
+                        var tab = $scope.settings['editortab'].substring(0, $scope.settings['editortab'].lastIndexOf('Buttons'));
                         var tabelement = $('#' + tab);
                         if (tabelement.length) {
-                            $scope.setActiveTab(tabelement, $scope.editortab);
+                            $scope.setActiveTab(tabelement, $scope.settings['editortab']);
                         }
                     }, 0);
                 }
