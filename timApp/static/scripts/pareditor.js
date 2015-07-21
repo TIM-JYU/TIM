@@ -124,7 +124,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             sender: 'editor|cli'
                         },
                         exec: function (env, args, request) {
-                            $scope.surroundClicked('**');
+                            $scope.surroundClicked('**', '**');
                         }
                     });
                     editor.commands.addCommand({
@@ -135,7 +135,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             sender: 'editor|cli'
                         },
                         exec: function (env, args, request) {
-                            $scope.surroundClicked('*', $scope.surroundedByItalic);
+                            $scope.surroundClicked('*', '*', $scope.surroundedByItalic);
                         }
                     });
                     editor.commands.addCommand({
@@ -146,7 +146,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             sender: 'editor|cli'
                         },
                         exec: function (env, args, request) {
-                            $scope.surroundClicked('`');
+                            $scope.surroundClicked('`', '`');
                         }
                     });
                     editor.commands.addCommand({
@@ -220,13 +220,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                                 $scope.saveClicked();
                                 e.preventDefault();
                             } else if (e.keyCode === 66) {
-                                $scope.surroundClicked('**');
+                                $scope.surroundClicked('**', '**');
                                 e.preventDefault();
                             } else if (e.keyCode === 73) {
-                                $scope.surroundClicked('*', surroundedByItalic);
+                                $scope.surroundClicked('*', '*', surroundedByItalic);
                                 e.preventDefault();
                             } else if (e.keyCode === 79) {
-                                $scope.surroundClicked('`');
+                                $scope.surroundClicked('`', '`');
                                 e.preventDefault();
                             } else if (e.keyCode === 49) {
                                 $scope.headerClicked('#');
@@ -650,20 +650,20 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.indent(true);
                     };
 
-                    $scope.surroundClicked = function (str, func) {
+                    $scope.surroundClicked = function (before, after, func) {
                         if ($scope.editor.getSelection().text == "") {
                             $scope.selectWord();
                         }
-                        var surrounded = (func) ? func() : $scope.surroundedBy(str);
+                        var surrounded = (func) ? func() : $scope.surroundedBy(before, after);
                         if (surrounded) {
                             var selection = $scope.editor.getSelection();
                             var word = selection.text;
-                            var start = selection.start - str.length;
-                            var end = selection.end + str.length;
+                            var start = selection.start - before.length;
+                            var end = selection.end + after.length;
                             $scope.editor.setSelection(start, end);
                             $scope.editor.replaceSelectedText(word, 'select');
                         } else {
-                            $scope.editor.surroundSelectedText(str, str, 'select');
+                            $scope.editor.surroundSelectedText(before, after, 'select');
                         }
                     };
 
@@ -714,11 +714,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         return false;
                     };
 
-                    $scope.surroundedBy = function (string) {
+                    $scope.surroundedBy = function (before, after) {
                         var value = $scope.editor.val();
                         var selection = $scope.editor.getSelection();
-                        var word = value.substring(selection.start - string.length, selection.end + string.length);
-                        return (word.indexOf(string) === 0 && word.lastIndexOf(string) === (word.length - string.length));
+                        var word = value.substring(selection.start - before.length, selection.end + after.length);
+                        return (word.indexOf(before) === 0 && word.lastIndexOf(after) === (word.length - after.length));
                     };
                     //Style
                     //Insert
@@ -878,20 +878,20 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.editor.blockOutdent();
                     };
 
-                    $scope.surroundClicked = function (str, func) {
+                    $scope.surroundClicked = function (before, after, func) {
                         if (($scope.editor.session.getTextRange($scope.editor.getSelectionRange()) === "")) {
                             $scope.selectWord();
                         }
                         var text = $scope.editor.session.getTextRange($scope.editor.getSelectionRange());
-                        var surrounded = (func) ? func() : $scope.surroundedBy(str);
+                        var surrounded = (func) ? func() : $scope.surroundedBy(before, after);
                         if (surrounded) {
                             var range = $scope.editor.getSelectionRange();
-                            range.start.column -= str.length;
-                            range.end.column += str.length;
+                            range.start.column -= before.length;
+                            range.end.column += after.length;
                             $scope.editor.selection.setRange(range);
                             $scope.snippetManager.insertSnippet($scope.editor, "${0:" + text + "}");
                         } else {
-                            $scope.snippetManager.insertSnippet($scope.editor, str + "${0:$SELECTION}" + str);
+                            $scope.snippetManager.insertSnippet($scope.editor, before + "${0:$SELECTION}" + after);
                         }
                     };
 
@@ -907,12 +907,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         return true;
                     }
 
-                    $scope.surroundedBy = function (string) {
+                    $scope.surroundedBy = function (before, after) {
                         var range = $scope.editor.getSelectionRange();
-                        range.start.column -= string.length;
-                        range.end.column += string.length;
+                        range.start.column -= before.length;
+                        range.end.column += after.length;
                         var word = ($scope.editor.session.getTextRange(range));
-                        return (word.indexOf(string) === 0 && word.lastIndexOf(string) === (word.length - string.length));
+                        return (word.indexOf(before) === 0 && word.lastIndexOf(after) === (word.length - after.length));
                     };
 
                     $scope.codeBlockClicked = function () {
@@ -1003,7 +1003,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 }
 
                 $scope.surroundedByItalic = function () {
-                    return (($scope.surroundedBy('*') && !$scope.surroundedBy('**')) || $scope.surroundedBy('***'));
+                    return (($scope.surroundedBy('*', '*') && !$scope.surroundedBy('**', '**')) || $scope.surroundedBy('***', '***'));
                 };
 
                 $scope.onFileSelect = function (url, $files) {
