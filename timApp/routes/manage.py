@@ -32,6 +32,7 @@ def manage(doc_id):
     else:
         doc = Document(doc_id)
         doc_data = timdb.documents.getDocument(doc_id)
+        doc_data['fullname'] = doc_data['name']
         doc_data['versions'] = [entry for entry in doc.get_changelog()]
         doc_data['fulltext'] = doc.export_markdown()
         for ver in doc_data['versions']:
@@ -96,46 +97,115 @@ def removePermission(doc_id, group_id, perm_type):
         abort(400)
     return "Success"
 
-@manage_page.route("/rename/<int:doc_id>", methods=["PUT"])
-def renameDocument(doc_id):
+@manage_page.route("/alias/<int:doc_id>/", methods=["GET"])
+def getDocNames(doc_id):
     timdb = getTimDb()
-    new_name = request.get_json()['new_name']
-    isFolder = False
+    names = timdb.documents.get_names(doc_id, include_nonpublic=True)
+    return jsonResponse(names)
 
-    while new_name.startswith('/'):
-        new_name = new_name[1:]
+@manage_page.route("/alias/<int:doc_id>/<path:new_alias>", methods=["PUT"])
+def add_alias(doc_id, new_alias):
+    timdb = getTimDb()
+    is_public = bool(request.get_json()['public'])
 
-    if new_name.endswith('/'):
-        return jsonResponse({'message': 'The document name cannot end with /'}, 404)
-
-    if timdb.documents.get_document_id(new_name) is not None or timdb.folders.get_folder_id(new_name) is not None:
-        return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+    new_alias = new_alias.strip('/')
 
     if not timdb.documents.documentExists(doc_id):
-        if timdb.folders.exists(doc_id):
-            isFolder = True
-        else:
-            return jsonResponse({'message': 'The document or folder does not exist!'}, 404)
+        return jsonResponse({'message': 'The document does not exist!'}, 404)
+
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
 
-    if isFolder:
-        old_name = timdb.folders.get(doc_id)['fullname']
-    else:
-        old_name = timdb.documents.getDocument(doc_id)['name']
-
     userName = getCurrentUserName()
 
-    if not timdb.users.isUserInGroup(userName, 'Administrators'):
-        parent, _ = timdb.folders.split_location(new_name)
+    if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
+        return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+
+    parent_folder, _ = timdb.folders.split_location(new_alias)
+
+    if not timdb.users.isUserInGroup(userName, 'Administrators') and not canWriteToFolder(parent_folder):
+        return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
+
+    timdb.folders.create(parent_folder, getCurrentUserGroup())
+    timdb.documents.add_name(doc_id, new_alias, is_public)
+    return "Success"
+
+@manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["POST"])
+def change_alias(doc_id, alias):
+    timdb = getTimDb()
+    alias = alias.strip('/')
+
+    doc_id2 = timdb.documents.get_document_id(alias)
+    if doc_id2 is None:
+        return jsonResponse({'message': 'The document does not exist!'}, 404)
+    if doc_id2 != doc_id:
+        return jsonResponse({'message': 'The document name does not match the id!'}, 404)
+
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        return jsonResponse({'message': "You don't have permission to modify this object."}, 403)
+
+    jsondata = request.get_json()
+    new_name = jsondata['new_name'].strip('/')
+    is_public = bool(jsondata['public'])
+    timdb.documents.change_name(doc_id, alias, new_name, is_public)
+    return "Success"
+
+@manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["DELETE"])
+def remove_alias(doc_id, alias):
+    timdb = getTimDb()
+    alias = alias.strip('/')
+
+    doc_id2 = timdb.documents.get_document_id(alias)
+    if doc_id2 is None:
+        return jsonResponse({'message': 'The document does not exist!'}, 404)
+    if doc_id2 != doc_id:
+        return jsonResponse({'message': 'The document name does not match the id!'}, 404)
+
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        return jsonResponse({'message': "You don't have permission to delete this object."}, 403)
+
+    userName = getCurrentUserName()
+    is_admin = timdb.users.isUserInGroup(userName, 'Administrators')
+
+    if not is_admin and len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
+        return jsonResponse({'message': "You can't delete the only name the document has."}, 403)
+
+    parent_folder, _ = timdb.folders.split_location(alias)
+
+    if not is_admin and not canWriteToFolder(parent_folder):
+        return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
+
+    timdb.documents.delete_name(doc_id, alias)
+    return "Success"
+
+@manage_page.route("/rename/<int:doc_id>", methods=["PUT"])
+def rename_folder(doc_id):
+    timdb = getTimDb()
+    new_name = request.get_json()['new_name'].strip('/')
+
+    if timdb.documents.documentExists(doc_id):
+        return jsonResponse({'message': 'Rename route is no longer supported for documents.'}, 403)
+
+    if not timdb.folders.exists(doc_id):
+        return jsonResponse({'message': 'The folder does not exist!'}, 404)
+
+    if timdb.documents.get_document_id(new_name) is not None or timdb.folders.get_folder_id(new_name) is not None:
+        return jsonResponse({'message': 'Item with the same name already exists.'}, 403)
+
+    if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
+        return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
+
+    parent, _ = timdb.folders.split_location(new_name)
+
+    if timdb.folders.get_folder_id(parent) is None:
+        # Maybe do a recursive create with permission checks here later?
+        return jsonResponse({'message': "The location does not exist."}, 403)
+
+    if not timdb.users.isUserInGroup(getCurrentUserName(), 'Administrators'):
         if not canWriteToFolder(parent):
             return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
-    if isFolder:
-        timdb.folders.rename(doc_id, new_name)
-    else:
-        timdb.documents.renameDocument(DocIdentifier(doc_id, ''), new_name)
-
+    timdb.folders.rename(doc_id, new_name)
     return "Success"
 
 @manage_page.route("/getPermissions/<int:doc_id>")

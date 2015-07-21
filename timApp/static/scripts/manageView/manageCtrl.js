@@ -36,7 +36,18 @@ PermApp.controller("PermCtrl", [
 
         sc.getFolderName = function(fullName) {
             i = fullName.lastIndexOf('/');
-            return i < 0 ? '' : doc.name.substring(0, doc.name.lastIndexOf('/'));
+            return i < 0 ? '' : fullName.substring(0, fullName.lastIndexOf('/'));
+        };
+
+        sc.getAliases = function() {
+            $http.get('/alias/' + sc.doc.id, {
+            }).success(function (data, status, headers, config) {
+                sc.aliases = data;
+            }).error(function (data, status, headers, config) {
+                alert(data.message);
+            });
+
+            return [];
         };
 
         sc.changeOwner = function() {
@@ -87,23 +98,69 @@ PermApp.controller("PermCtrl", [
             sc.showAddViewer = false;
         };
 
-        sc.renameDocument = function (newName) {
+        sc.renameFolder = function (newName) {
             $http.put('/rename/' + sc.doc.id, {
                 'new_name': sc.oldFolderName + '/' + newName
             }).success(function (data, status, headers, config) {
-                sc.doc.name = sc.oldFolderName + '/' + newName;
-                sc.oldName = newName;
+                // This is needed to update the breadcrumbs
+                location.reload();
+                //sc.doc.fullname = sc.oldFolderName + '/' + newName;
+                //sc.doc.name = newName;
+                //sc.oldName = newName;
             }).error(function (data, status, headers, config) {
                 alert(data.message);
             });
         };
 
-        sc.moveDocument = function (newLocation) {
+        sc.moveFolder = function (newLocation) {
             $http.put('/rename/' + sc.doc.id, {
                 'new_name': newLocation + '/' + sc.oldName
             }).success(function (data, status, headers, config) {
-                sc.doc.name = newLocation + '/' + sc.oldName;
-                sc.oldFolderName = newLocation;
+                // This is needed to update the breadcrumbs
+                location.reload();
+                //sc.doc.fullname = newLocation + '/' + sc.oldName;
+                //sc.doc.location = newLocation;
+                //sc.oldFolderName = newLocation;
+            }).error(function (data, status, headers, config) {
+                alert(data.message);
+            });
+        };
+
+        sc.combine = function(folder, name) {
+            return (folder + '/' + name).replace(/(^\/+)|(\/+$)/, '')
+        };
+
+        sc.aliasChanged = function(alias) {
+            return alias.publicChanged || alias.fullname != sc.combine(alias.location, alias.name);
+        };
+
+        sc.addAlias = function(newAlias) {
+            $http.put('/alias/' + sc.doc.id + '/' + sc.combine(newAlias.location, newAlias.name), {
+                'public': Boolean(newAlias.public)
+            }).success(function (data, status, headers, config) {
+                sc.getAliases();
+            }).error(function (data, status, headers, config) {
+                alert(data.message);
+            });
+
+            sc.newAlias = {location: sc.oldFolderName};
+        };
+
+        sc.removeAlias = function(alias) {
+            $http.delete('/alias/' + sc.doc.id + '/' + alias.fullname, {
+            }).success(function (data, status, headers, config) {
+                sc.getAliases();
+            }).error(function (data, status, headers, config) {
+                alert(data.message);
+            });
+        };
+
+        sc.updateAlias = function(alias) {
+            $http.post('/alias/' + sc.doc.id + '/' + alias.fullname, {
+                'public': Boolean(alias.public),
+                'new_name': sc.combine(alias.location, alias.name)
+            }).success(function (data, status, headers, config) {
+                sc.getAliases();
             }).error(function (data, status, headers, config) {
                 alert(data.message);
             });
@@ -194,11 +251,19 @@ PermApp.controller("PermCtrl", [
         sc.doc = doc;
         sc.crumbs = crumbs;
         sc.isFolder = isFolder;
-        sc.newName = sc.getJustDocName(doc.name);
-        sc.newFolderName = sc.getFolderName(doc.name);
-        sc.oldName = sc.newName;
-        sc.oldFolderName = sc.newFolderName;
+        //sc.newName = sc.getJustDocName(doc.name);
+        //sc.newFolderName = sc.getFolderName(doc.name);
+        //sc.oldName = sc.newName;
+        //sc.oldFolderName = sc.newFolderName;
+        sc.newAlias = {location: sc.newFolderName};
         doc.fulltext = doc.fulltext.trim();
         sc.fulltext = doc.fulltext;
+        sc.aliases = sc.getAliases();
 
+        if (isFolder) {
+            sc.newName = doc.name;
+            sc.newFolderName = doc.location;
+            sc.oldName = sc.newName;
+            sc.oldFolderName = sc.newFolderName;
+        }
     }]);

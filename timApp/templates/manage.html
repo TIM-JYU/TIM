@@ -45,8 +45,13 @@ var editors = {{editors|tojson|safe}};
 var viewers = {{viewers|tojson|safe}};
 var groups = {{user_groups|tojson|safe}};
 
-var crumbs = getBreadcrumbs(doc.name);
-{% include 'breadcrumbs.js' %}
+if (isFolder) {
+    var crumbs = getBreadcrumbs(doc.fullname);
+}
+
+{% if isFolder %}
+    {% include 'breadcrumbs.js' %}
+{% endif %}
 
 </script>
 {% endblock %}
@@ -68,114 +73,155 @@ var crumbs = getBreadcrumbs(doc.name);
     </div>
 
     
-        <div class="margin">
-            {{objNameC}} owner: <select ng-model="doc.owner"
-                                  ng-options="group.name for group in userGroups track by group.id"
-                ng-change="changeOwner()">
+    <div class="margin">
+        {{objNameC}} owner: <select ng-model="doc.owner"
+                              ng-options="group.name for group in userGroups track by group.id"
+            ng-change="changeOwner()">
 
-        </select>
-            <span ng-show="ownerUpdating">Updating...</span>
-        </div>
-        <div class="margin">
-            Editors:
-            <p ng-show="editors.length == 0">This {{objName}} doesn't have editors.</p>
-            <ul>
-                <li ng-repeat="editor in editors">{{ '{{editor.name}}' }} (<a ng-click="removeConfirm(editor, 'edit')">remove</a>)
-                </li>
-            </ul>
-            <button ng-show="!showAddEditor" ng-click="showAddEditor = true; focusEditor = true">Add editor</button>
-            <div ng-show="showAddEditor">
-                <form ng-submit="addPermission(editorName, 'edit')">
-                    <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
-                    <input type="submit" value="Add" ng-disabled="!editorName">
-                    <input type="button" value="Cancel" ng-click="showAddEditor = false">
-                    <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'edit')">
-                    <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'edit')">
-                    <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'edit')">
-                </form>
-            </div>
-        </div>
-        <div class="margin">
-            Viewers:
-            <p ng-show="viewers.length == 0">This {{objName}} doesn't have viewers.</p>
-            <ul>
-                <li ng-repeat="viewer in viewers">{{ '{{viewer.name}}' }} (<a ng-click="removeConfirm(viewer, 'view')">remove</a>)
-                </li>
-            </ul>
-            <button ng-show="!showAddViewer" ng-click="showAddViewer = true; focusViewer = true">Add viewer</button>
-            <div ng-show="showAddViewer">
-                <form ng-submit="addPermission(viewerName, 'view')">
-                    <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
-                    <input type="submit" value="Add" ng-disabled="!viewerName">
-                    <input type="button" value="Cancel" ng-click="showAddViewer = false">
-                    <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'view')">
-                    <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'view')">
-                    <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'view')">
-                </form>
-            </div>
-        </div>
-        <form ng-submit="renameDocument(newName)">
-            <label>{{objNameC}} name: <input type="text" ng-model="newName">
-            </label>
-            <input type="submit" value="Update" ng-disabled="newName === oldName">
-        </form>
-        <form ng-submit="moveDocument(newFolderName)">
-            <label>Location: <input type="text" ng-model="newFolderName">
-            </label>
-            <input type="submit" value="Update" ng-disabled="newFolderName === oldFolderName">
-        </form>
-        <button ng-show="!isFolder" ng-click="markAllAsRead()">Mark document as read</button>
-        <span ng-show="readUpdating">Loading...</span>
-        <form class="uploadForm margin" ng-show="!isFolder">
-            Upload a new version for this {{objName}}
-            <div>
-                <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
-                <span ng-bind="progress"></span>
-                <button id="reset" type="reset" value="Reset">Clear</button>
-            </div>
-        </form>
-        <form class="uploadForm" ng-show="!isFolder">
-            Edit the full document
-            <div>
-                <textarea class="docEditor" ng-model="fulltext"></textarea>
-                <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument(doc)">Save</button>
-                <span ng-show="saving">Saving...</span>
-            </div>
-        </form>
-        <div ng-show="!isFolder">
-            <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
-        </div>
-        <div class="margin" ng-show="!isFolder">
-            <button ng-click="deleteDocument(doc.id)">Delete document</button>
-        </div>
-        <div class="margin" ng-show="isFolder">
-            <button ng-click="deleteFolder(doc.id)">Delete folder</button>
-        </div>
-        <div ng-show="!isFolder">
-            <p>Document version history</p>
-            <table>
-                <thead>
-                    <tr>
-                        <!--<td>Time</td>
-                        <td>User</td>
-                        <td>Difference</td>-->
-                        <td>Time</td>
-                        <td>User / group</td>
-                        <td>Paragraph</td>
-                        <td>Event</td>
-                    </tr>
-                </thead>
-                <tr ng-repeat="version in doc.versions">
-                    <td>{{ '{{ version.time }}' }}</td>
-                    <td>{{ '{{ version.group }}' }}</td>
-                    <td>{{ '{{ version.par_id }}' }}</td>
-                    <td>{{ '{{ version.op }}' }}</td>
-                    <!--<td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
-                    <td>{{ '{{ version.user }}' }}</td>
-                    <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
-                </tr>
-            </table>
-        </div>
-        <a href="{{url_for('indexPage')}}">Return to the index page</a>
+    </select>
+        <span ng-show="ownerUpdating">Updating...</span>
     </div>
+    <div class="margin">
+        Editors:
+        <p ng-show="editors.length == 0">This {{objName}} doesn't have editors.</p>
+        <ul>
+            <li ng-repeat="editor in editors">{{ '{{editor.name}}' }} (<a ng-click="removeConfirm(editor, 'edit')">remove</a>)
+            </li>
+        </ul>
+        <button ng-show="!showAddEditor" ng-click="showAddEditor = true; focusEditor = true">Add editor</button>
+        <div ng-show="showAddEditor">
+            <form ng-submit="addPermission(editorName, 'edit')">
+                <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
+                <input type="submit" value="Add" ng-disabled="!editorName">
+                <input type="button" value="Cancel" ng-click="showAddEditor = false">
+                <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'edit')">
+                <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'edit')">
+                <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'edit')">
+            </form>
+        </div>
+    </div>
+    <div class="margin">
+        Viewers:
+        <p ng-show="viewers.length == 0">This {{objName}} doesn't have viewers.</p>
+        <ul>
+            <li ng-repeat="viewer in viewers">{{ '{{viewer.name}}' }} (<a ng-click="removeConfirm(viewer, 'view')">remove</a>)
+            </li>
+        </ul>
+        <button ng-show="!showAddViewer" ng-click="showAddViewer = true; focusViewer = true">Add viewer</button>
+        <div ng-show="showAddViewer">
+            <form ng-submit="addPermission(viewerName, 'view')">
+                <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
+                <input type="submit" value="Add" ng-disabled="!viewerName">
+                <input type="button" value="Cancel" ng-click="showAddViewer = false">
+                <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'view')">
+                <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'view')">
+                <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'view')">
+            </form>
+        </div>
+    </div>
+
+    <div ng-show="isFolder">
+        Name and location
+        <table class="borderless">
+            <form ng-submit="renameFolder(newName)"><tr>
+                <td>{{objNameC}} name:</td>
+                <td><input type="text" ng-model="newName"></td>
+                <td><input type="submit" value="Update" ng-disabled="newName === oldName"></td>
+            </tr></form>
+            <form ng-submit="moveFolder(newFolderName)"><tr>
+                <td>Location:</td>
+                <td><input type="text" ng-model="newFolderName"></td>
+                <td><input type="submit" value="Update" ng-disabled="newFolderName === oldFolderName"></td>
+            </tr></form>
+        </table>
+    </div>
+
+    <div ng-show="!isFolder">
+        Names:
+        <table class="borderless">
+            <tr>
+                <th>Visible in index</th>
+                <th>Location</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+            <tr ng-repeat="alias in aliases">
+                <td class="checkbox-td" ng-click="alias.publicChanged = !alias.publicChanged"><input type="checkbox" ng-checked="alias.public" ng-model="alias.public"/></td>
+                <td><input type="text" ng-model="alias.location"/></td>
+                <td><input type="text" ng-model="alias.name" placeholder="{{objNameC}} name"/></td>
+                <td>
+                    <input type="submit" value="Update" ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)"/>
+                    <button ng-click="removeAlias(alias)">Remove</button>
+                </td>
+            </tr>
+            <tr>
+                <form>
+                    <td class="checkbox-td"><input type="checkbox" ng-model="newAliasPublic"/></td>
+                    <td><input type="text" ng-model="newAlias.location"/></td>
+                    <td><input type="text" placeholder="Click to add" ng-model="newAlias.name"/></td>
+                    <td><input type="submit" value="Add" class="fullwidth" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name"></td>
+                </form>
+            </tr>
+        </table>
+    </div>
+
+    <button ng-show="!isFolder" ng-click="markAllAsRead()">Mark document as read</button>
+    <span ng-show="readUpdating">Loading...</span>
+    <form class="uploadForm margin" ng-show="!isFolder">
+        Upload a new version for this {{objName}}
+        <div>
+            <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
+            <span ng-bind="progress"></span>
+            <button id="reset" type="reset" value="Reset">Clear</button>
+        </div>
+    </form>
+
+    <form class="uploadForm" ng-show="!isFolder">
+        Edit the full document
+        <div>
+            <textarea class="docEditor" ng-model="fulltext"></textarea>
+            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument(doc)">Save</button>
+            <span ng-show="saving">Saving...</span>
+        </div>
+    </form>
+
+    <div ng-show="!isFolder">
+        <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
+    </div>
+
+    <div class="margin" ng-show="!isFolder">
+        <button ng-click="deleteDocument(doc.id)">Delete document</button>
+    </div>
+
+    <div class="margin" ng-show="isFolder">
+        <button ng-click="deleteFolder(doc.id)">Delete folder</button>
+    </div>
+
+    <div ng-show="!isFolder">
+        <p>Document version history</p>
+        <table>
+            <thead>
+                <tr>
+                    <!--<td>Time</td>
+                    <td>User</td>
+                    <td>Difference</td>-->
+                    <td>Time</td>
+                    <td>User / group</td>
+                    <td>Paragraph</td>
+                    <td>Event</td>
+                </tr>
+            </thead>
+            <tr ng-repeat="version in doc.versions">
+                <td>{{ '{{ version.time }}' }}</td>
+                <td>{{ '{{ version.group }}' }}</td>
+                <td>{{ '{{ version.par_id }}' }}</td>
+                <td>{{ '{{ version.op }}' }}</td>
+                <!--<td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
+                <td>{{ '{{ version.user }}' }}</td>
+                <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
+            </tr>
+        </table>
+    </div>
+    <a href="{{url_for('indexPage')}}">Return to the index page</a>
+</div>
 {% endblock %}

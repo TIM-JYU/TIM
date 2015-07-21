@@ -1742,7 +1742,7 @@ pre.sagecell_stdout {
     border: none;
 }
 
-button:disabled {
+button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled {
     background: #AAA;
     color: #CCC;
 }
@@ -1788,6 +1788,23 @@ button:disabled {
 
 .breadcrumb > li {
     display: inline-block;
+}
+
+.borderless {
+    border-collapse: collapse;
+}
+
+.borderless td {
+    border: none;
+    outline: none;
+}
+
+.fullwidth {
+    width: 100%;
+}
+
+.checkbox-td {
+    text-align: center;
 }
 
 p.plgfooter {

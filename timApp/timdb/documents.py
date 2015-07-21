@@ -43,7 +43,7 @@ class Documents(TimDbBase):
     @contract
     def add_paragraph(self, doc: 'Document',
                       content: 'str',
-                      prev_par_id: 'str|None',
+                      prev_par_id: 'str|None'=None,
                       attrs: 'dict|None'=None) -> 'tuple(list(DocParagraph),Document)':
         """Adds a new markdown block to the specified document.
         
@@ -82,13 +82,6 @@ class Documents(TimDbBase):
         return document
 
     @contract
-    def add_name(self, doc_id: 'int', name: 'str', public: 'bool' = True):
-        cursor = self.db.cursor()
-        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
-                       [doc_id, name, public])
-        self.db.commit()
-
-    @contract
     def delete(self, document_id: 'int'):
         """Deletes the specified document.
         
@@ -105,6 +98,49 @@ class Documents(TimDbBase):
         self.db.commit()
 
         Document.remove(document_id)
+
+
+    @contract
+    def get_names(self, document_id: 'int', return_json: 'bool' = False, include_nonpublic: 'bool' = False) -> 'list':
+        """Gets the list of all names a document is known by.
+
+        :param document_id: The id of the document to be retrieved.
+        :param include_nonpublic: Whether to include non-public document names or not.
+        :returns: A list of dictionaries with items {name, location, fullname, public}
+        """
+        cursor = self.db.cursor()
+        public_clause = '' if include_nonpublic else ' AND public > 0'
+        cursor.execute('SELECT name, public FROM DocEntry WHERE id = ?' + public_clause, [document_id])
+        names = self.resultAsDictionary(cursor)
+
+        for item in names:
+            name = item['name']
+            item['fullname'] = name
+            item['location'], item['name'] = self.split_location(name)
+
+        return names
+
+    @contract
+    def add_name(self, doc_id: 'int', name: 'str', public: 'bool' = True):
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
+                       [doc_id, name, public])
+        self.db.commit()
+
+    @contract
+    def delete_name(self, doc_id: 'int', name: 'str'):
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM DocEntry WHERE id = ? AND name = ?",
+                       [doc_id, name])
+        self.db.commit()
+
+    @contract
+    def change_name(self, doc_id: 'int', old_name: 'str', new_name: 'str', public: 'bool' = True):
+        cursor = self.db.cursor()
+        cursor.execute("UPDATE DocEntry SET name = ?, public = ? WHERE id = ? AND name = ?",
+                       [new_name, public, doc_id, old_name])
+        self.db.commit()
+
 
     @contract
     def delete_paragraph(self, doc: 'Document', par_id: 'str') -> 'Document':
@@ -375,24 +411,6 @@ class Documents(TimDbBase):
         return self.git.getLatestVersionDetails(self.getDocumentPathAsRelative(document_id))
 
     @contract
-    def getNewestVersionHash(self, doc_id: 'int') -> 'str|None':
-        """Gets the hash of the newest version for a document.
-        
-        :param document_id: The id of the document.
-        :returns: The hash string, or None if not found.
-        """
-        cursor = self.db.cursor()
-        cursor.execute("SELECT latest_revision_id FROM Block WHERE id = ?", [doc_id])
-        revid = cursor.fetchone()
-        if revid is None:
-            doc_ver = self.git.getLatestVersion(self.getDocumentPathAsRelative(doc_id))
-            self.update_latest_revision(DocIdentifier(doc_id, doc_ver))
-            return doc_ver
-        else:
-            cursor.execute("SELECT Hash FROM ReadRevision WHERE revision_id = ?", [revid[0]])
-            return cursor.fetchone()[0]
-
-    @contract
     def import_document_from_file(self, document_file: 'str', document_name: 'str',
                                owner_group_id: 'int') -> 'Document':
         """Imports the specified document in the database.
@@ -402,34 +420,17 @@ class Documents(TimDbBase):
         :param owner_group_id: The owner group of the document.
         :returns: The created document object.
         """
-
-        # Assuming the document file is markdown-formatted, importing a document is very straightforward.
-        doc_id = self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT)
-        copyfile(document_file, self.getDocumentPath(doc_id))
-
-        cursor = self.db.cursor()
-        cursor.execute("""UPDATE Block SET created = CURRENT_TIMESTAMP, modified = CURRENT_TIMESTAMP
-                          WHERE type_id = ? and id = ?""",
-                       [blocktypes.DOCUMENT, doc_id])
-        cursor.execute("INSERT INTO DocEntry (id, name, public) VALUES (?, ?, ?)",
-                       [doc_id, document_name, True])
-        self.db.commit()
-        doc = Document(doc_id)
-        doc.create()
         with open(document_file, 'r', encoding='utf-8') as f:
-            parser = DocumentParser(f.read())  # todo: use a stream instead
-            for block in parser.get_blocks():
-                doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
-        return doc
+            content = f.read()  # todo: use a stream instead
+        return self.import_document(content, document_name, owner_group_id)
 
     @contract
-    def importDocument(self, content: 'str', document_name: 'str', owner_group_id: 'int') -> 'DocIdentifier':
-        doc_id = DocIdentifier(self.insertBlockToDb(document_name, owner_group_id, blocktypes.DOCUMENT), '')
-        doc_hash = self.__commitDocumentChanges(doc_id, content,
-                                                'Imported document: %s (id = %d)' % (document_name, doc_id.id))
-        doc_id = DocIdentifier(doc_id.id, doc_hash)
-        self.ec.loadDocument(doc_id, content.encode('utf-8'))
-        return doc_id
+    def import_document(self, content: 'str', document_name: 'str', owner_group_id: 'int') -> 'Document':
+        doc = self.create(document_name, owner_group_id)
+        parser = DocumentParser(content)
+        for block in parser.get_blocks():
+            doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
+        return doc
 
     def __commitDocumentChanges(self, document_id: 'DocIdentifier', doc_content: 'str', msg: 'str') -> 'str':
         """Commits the changes of the specified document to Git.

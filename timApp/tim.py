@@ -170,7 +170,7 @@ def upload_file():
         content = UnicodeDammit(file.read()).unicode_markup
         if not content:
             abort(400, 'Failed to convert the file to UTF-8.')
-        timdb.documents.importDocument(content, filename, getCurrentUserGroup())
+        timdb.documents.import_document(content, filename, getCurrentUserGroup())
         return "Successfully uploaded document"
     else:
         abort(400, 'Invalid document extension')

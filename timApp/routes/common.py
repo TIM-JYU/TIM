@@ -126,9 +126,8 @@ def get_newest_document(doc_id):
 
 def verify_document_version(doc_id, version):
     timdb = getTimDb()
-    #newestVersion = timdb.documents.getDocumentVersions(doc_id, 1)[0]['hash']
-    newestVersion = timdb.documents.getNewestVersionHash(doc_id)
-    if newestVersion != version:
+    latest = Document(doc_id).get_version()
+    if version != latest:
         abort(400, 'The document version you edited is no longer the latest version. '
                    'Please refresh the page and try again.')
 
