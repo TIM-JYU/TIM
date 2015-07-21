@@ -42,7 +42,8 @@ TIM_SAFE_TAGS = ['a',
                  'colgroup',
                  'col',
                  'sub',
-                 'sup']
+                 'sup',
+                 'u']
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
                       'video': ['src', 'controls'],
