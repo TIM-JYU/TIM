@@ -11,7 +11,7 @@ from ansi2html import Ansi2HTMLConverter
 from documentmodel.attributeparser import AttributeParser
 
 from documentmodel.docparagraph import DocParagraph
-from documentmodel.documentparser import DocumentParser
+from documentmodel.documentparser import DocumentParser, ValidationException
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralException, EphemeralClient, EPHEMERAL_URL
@@ -489,8 +489,10 @@ class Documents(TimDbBase):
         assert self.documentExists(doc.doc_id), 'document does not exist: ' + str(doc)
 
         new_content = self.trim_markdown(new_content)
-        # TODO: Do the update
-
+        try:
+            doc.update(new_content)
+        except ValidationException as e:
+            raise TimDbException(e)
         self.update_last_modified(doc, commit=False)
         self.db.commit()
         return doc

@@ -7,6 +7,7 @@ from documentmodel.docparagraph import DocParagraph
 from markdownconverter import md_to_html
 import pluginControl
 from timdb.docidentifier import DocIdentifier
+from timdb.timdbbase import TimDbException
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -46,9 +47,16 @@ def update_document(doc_id, version):
 
     if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-    abort(400, 'Not implemented yet.')
-    # timdb.documents.update_document(doc_identifier, content)
-    return jsonResponse(timdb.documents.getDocumentVersions(doc_id))
+    doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
+    try:
+        d = timdb.documents.update_document(doc, content)
+    except TimDbException as e:
+        abort(400, str(e))
+        return
+    chg = d.get_changelog()
+    for ver in chg:
+        ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
+    return jsonResponse({'versions': chg, 'fulltext': d.export_markdown()})
 
 
 @edit_page.route("/postParagraph/", methods=['POST'])
