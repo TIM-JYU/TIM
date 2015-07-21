@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using Jypeli;
 
 /// <summary>
@@ -16,12 +14,8 @@ public static class Program
     {
        using (var peli = new Peli())
        {
+            peli.Run();
             peli.RunOneFrame();
-
-            string imgfile = args.Length > 0 ? args[0] : "screen.bmp";
-            FileStream screenFile = new FileStream( imgfile, FileMode.Create );
-            Screencap.WriteBmp( screenFile, Peli.Screen.Image );
-            screenFile.Close();
        }
     }
 }

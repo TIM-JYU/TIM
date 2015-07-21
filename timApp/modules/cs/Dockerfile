@@ -2,6 +2,9 @@
 from ubuntu
 maintainer vesal "vesal@jyu.fi"
 
+# Workaround PAM: system error -messagelle
+run ln -fs /bin/true /usr/bin/chfn
+
 # Asennetaan python, pip ja flask
 
 run apt-get update
@@ -107,6 +110,7 @@ RUN apt-get install -y postgresql-client
 # palveluja roottina.
 # run useradd -M agent 
 run useradd -m agent
+ENV HOME /home/agent
 run chown -R agent /service
 
 # run groupadd docker
@@ -115,7 +119,7 @@ run chown -R agent /service
 
 # testejä varten
 ENV MYPASSWORD password
-RUN echo root:kissa | chpasswd
+#RUN echo root:kissa | chpasswd
 #RUN echo agent:kissa | chpasswd
 
 # Varmuudeksi estetään root login ja poistetaan rootin salasana,
