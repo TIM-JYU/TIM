@@ -131,7 +131,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getParId = function ($par) {
-            if ($par.length === 0) {
+            if ($par.length === 0 || !$par.hasClass('par')) {
                 return null;
             }
             return $par.attr("id");

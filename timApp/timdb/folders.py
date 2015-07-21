@@ -15,16 +15,6 @@ class Folders(TimDbBase):
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
 
-    @classmethod
-    @contract
-    def split_location(cls, path: 'str') -> 'tuple(str, str)':
-        rs = path.rfind('/')
-        return ('', path) if rs < 0 else (path[:rs], path[rs+1:])
-
-    @classmethod
-    @contract
-    def join_location(cls, location: 'str', name: 'str') -> 'str':
-        return name if location == '' else location + '/' + name
 
     @contract
     def create(self, name: 'str', owner_group_id: 'int') -> 'int':
@@ -137,7 +127,7 @@ class Folders(TimDbBase):
 
         # Rename folder itself
         cursor = self.db.cursor()
-        cursor.execute('UPDATE Folder SET name = ? AND location = ? WHERE id = ?',
+        cursor.execute('UPDATE Folder SET name = ?, location = ? WHERE id = ?',
                        [new_rel_name, new_rel_path, block_id])
 
         # Rename contents
@@ -147,6 +137,15 @@ class Folders(TimDbBase):
             new_docname = old_docname.replace(old_name, new_name)
             cursor.execute('UPDATE DocEntry SET name = ? WHERE name = ?',
                            [new_docname, old_docname])
+
+        cursor.execute('UPDATE Folder SET location = ? WHERE location = ?', [new_name, old_name])
+        cursor.execute('SELECT location FROM Folder WHERE location LIKE ?', [old_name + '/%'])
+        for row in cursor.fetchall():
+            old_docname = row[0]
+            new_docname = old_docname.replace(old_name, new_name)
+            cursor.execute('UPDATE Folder SET location = ? WHERE location = ?',
+                           [new_docname, old_docname])
+
 
         self.db.commit()
 

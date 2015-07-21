@@ -21,7 +21,7 @@ class DocumentWriter:
         text = ''
         for p in self.pars:
             blocks = DocumentParser(p['md']).get_blocks()
-
+            text += '\n'
             if len(blocks) > 1:
                 atomized = p.copy()
                 atomized['atom'] = 'true'
@@ -36,7 +36,7 @@ class DocumentWriter:
                     else:
                         first_line, rest = blocks[0]['md'].split('\n', 1)
                         text += first_line + ' {' + attrs_str + '}\n' + rest + '\n'
-            text += '\n'
+
         return text
 
     @staticmethod

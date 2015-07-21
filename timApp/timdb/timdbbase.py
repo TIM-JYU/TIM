@@ -139,3 +139,15 @@ class TimDbBase(object):
                              (SELECT Block_id FROM BlockRelation WHERE parent_block_id = ?)
                           AND type_id = ?""", [block_id, relation_type])
         return self.resultAsDictionary(cursor)
+
+    @classmethod
+    @contract
+    def split_location(cls, path: 'str') -> 'tuple(str, str)':
+        rs = path.rfind('/')
+        return ('', path) if rs < 0 else (path[:rs], path[rs+1:])
+
+    @classmethod
+    @contract
+    def join_location(cls, location: 'str', name: 'str') -> 'str':
+        return name if location == '' else location + '/' + name
+
