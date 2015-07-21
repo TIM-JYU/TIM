@@ -224,8 +224,9 @@ PermApp.controller("PermCtrl", [
             sc.saving = true;
             $http.post('/update/' + doc.id + '/' + doc.versions[0], {'fulltext': sc.fulltext}).success(
                 function (data, status, headers, config) {
+                    sc.fulltext = data.fulltext;
                     sc.doc.fulltext = sc.fulltext;
-                    sc.doc.versions = data;
+                    sc.doc.versions = data.versions;
                 }).error(function (data, status, headers, config) {
                     alert(data.error);
                 }).finally(function () {

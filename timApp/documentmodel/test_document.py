@@ -255,7 +255,7 @@ class DocumentTest(unittest.TestCase):
             new_text = DocumentWriter(blocks).get_text()
             d.update(new_text)
             blocks = DocumentParser(new_text).add_missing_attributes().get_blocks()
-            self.assertListEqual(blocks, DocumentParser(d.export_markdown()).get_blocks())
+            self.assertListEqual(blocks, DocumentParser(d.export_markdown(export_hashes=True)).get_blocks())
 
     @classmethod
     def tearDownClass(cls):

@@ -70,8 +70,8 @@ class Document:
         return Document.doc_exists(self.doc_id, self.files_root)
 
     @contract
-    def export_markdown(self) -> 'str':
-        return DocumentWriter([par.dict() for par in self]).get_text()
+    def export_markdown(self, export_hashes=False) -> 'str':
+        return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
 
     @classmethod
     @contract
@@ -326,7 +326,7 @@ class Document:
                                           insert_before_id=old_ids[before_i] if i2 < len(old_ids) else None)
             elif tag == 'equal':
                 for new_par, old_par in zip(new_pars[j1:j2], old_pars[i1:i2]):
-                    if new_par['t'] != old_par.get_hash() or new_par.get('attrs') != old_par.get_attrs():
+                    if new_par['t'] != old_par.get_hash() or new_par.get('attrs', {}) != old_par.get_attrs():
                         self.modify_paragraph(old_par.get_id(),
                                               new_par['md'],
                                               new_attrs=new_par.get('attrs'))
