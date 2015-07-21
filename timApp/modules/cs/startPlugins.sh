@@ -29,20 +29,23 @@ sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/user
 # Oikeudet käyttää dockeria niin saadaan docker in docker
 sudo chmod 766 /var/run/docker.sock
 
+mkdir /opt/cs/jypeli
+cd /opt/cs/jypeli
+curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | sudo tar -xz --overwrite
+
 cd /opt/cs/java
-rm comtest*.jar*
+rm -f comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
 
-
-rm Graphics.jar*
+rm -f Graphics.jar*
 wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
-rm Ali*.jar
+rm -f Ali*.jar
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
 
 mkdir cs
 cd cs
-rm ComTest.jar*
+rm -f ComTest.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar
 
 

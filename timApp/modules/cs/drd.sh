@@ -3,14 +3,15 @@
 docker stop csPlugin
 docker rm csPlugin
 
+
 cd /opt/cs/java
-rm comtest*.jar*
+rm -f comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
 
-rm Graphics.jar*
+rm -f Graphics.jar*
 wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
-rm Ali*.jar
+rm -f Ali*.jar
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar 
 
 # Copy Jypeli dll's to temp directory

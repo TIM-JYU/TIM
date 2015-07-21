@@ -704,9 +704,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if "jypeli" in ttype:
                 # Jypeli game
+                mainfile = "/cs/jypeli/Ohjelma.cs"
                 csfname = "/tmp/%s/%s.cs" % (basename, filename)
                 exename = "/tmp/%s/%s.exe" % (basename, filename)
-                bmpname = "/tmp/%s/%s.bmp" % (basename, filename)
+                bmpname = "/tmp/%s/output.bmp" % (basename)
                 pure_bmpname = "./%s.bmp" % filename
                 pngname = "/csimages/%s.png" % rndname
                 pure_exename = u"{0:s}.exe".format(filename)
@@ -823,8 +824,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 log(self)
 
                 if ttype == "jypeli":
-                    cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
-                        exename, csfname)
+                    if s.find(" Main(") >= 0: mainfile = ""
+                    #cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
+                    cmdline = "mcs /out:%s /r:/tmp/jypeli/Jypeli.dll /r:/tmp/jypeli/MonoGame.Framework.dll /r:/tmp/jypeli/Jypeli.Physics2d.dll /r:/tmp/jypeli/OpenTK.dll /r:/tmp/jypeli/Tao.Sdl.dll /r:System.Drawing %s %s" % (
+                        exename, mainfile, csfname)
                 elif ttype == "comtest":
                     cmdline = "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
                         csfname, testdll, csfname, testcs)
@@ -934,9 +937,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             pwd = ""
             
             if ttype == "jypeli":
-                # code, out, err = run(["mono", exename, pure_bmpname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
-                # code, out, err = run2(["mono", pure_exename, pure_bmpname], cwd="/tmp/cs", timeout=10, env=env, stdin=stdin,
-                code, out, err, pwd = run2(["mono", pure_exename, pure_bmpname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                       uargs=userargs, ulimit = "ulimit -f 80000")
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
