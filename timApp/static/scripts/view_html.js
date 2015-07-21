@@ -1140,7 +1140,6 @@ timApp.controller("ViewCtrl", [
         sc.processAllMath($('body'));
         sc.defaultAction = sc.showOptionsWindow;
         sc.onClick(".showContent", function ($this, e) {
-
             var $pars = $('#pars');
             if ($pars.length > 0) {
                 if ($pars.css('display') == 'none') {
@@ -1170,9 +1169,9 @@ timApp.controller("ViewCtrl", [
                     sc.getReadPars();
                     sc.processAllMath($('body'));
                     /*
-                    if (sc.rights.editable) {
-                        sc.getEditPars();
-                    }*/
+                     if (sc.rights.editable) {
+                     sc.getEditPars();
+                     }*/
                     if (sc.lectureMode) {
                         sc.getQuestions();
                     }
@@ -1214,7 +1213,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.settings = $window.settings;
 
     scope.setTime = function () {
-        console.log(scope.settings);
         scope.question.timeLimit = {hours: 0, minutes: 0, seconds: 30};
         if (scope.settings['timelimit'] && scope.settings['timelimit'] > 0) {
             var time = scope.settings['timelimit'];
@@ -1769,9 +1767,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
             if (timeLimit <= 0) {
                 scope.errorize("durationDiv", "Please enter a duration greater then zero or for unending question uncheck the duration box.");
-            } else {
-                $window.settings['timelimit'] = timeLimit;
-                setsetting('timelimit', timeLimit);
             }
         } else {
             timeLimit = "";
@@ -1862,6 +1857,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         questionJson += ']';
         questionJson += '}}';
 
+        $window.settings['timelimit'] = timeLimit.toString();
+        setTimeout(function () {
+            setsetting('timelimit', timeLimit.toString());
+        }, 1000);
+
         var rn = "?_=" + Date.now();
 
         http({
@@ -1902,7 +1902,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }).error(function () {
                 $window.console.log("There was some error creating question to database.");
             });
-
         scope.close();
     };
 

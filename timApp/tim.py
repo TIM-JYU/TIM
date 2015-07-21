@@ -11,6 +11,7 @@ from time import mktime
 import posixpath
 from datetime import timedelta
 import threading
+from random import randint
 
 from flask import Flask, Blueprint
 from flask import stream_with_context
@@ -996,12 +997,16 @@ def view_template(plugin, template, index):
 @app.route("/sessionsetting/<setting>/<value>", methods=['POST'])
 def set_session_setting(setting, value):
     try:
-        session['settings']
-    except (NameError, KeyError):
-        session['settings'] = {}
-    try:
+        if 'settings' not in session:
+            session['settings'] = {}
         session['settings'][setting] = value
-        return "Success"
+        session.modified = True
+        session.modified = True
+        session.modified = True
+        session.modified = True
+        session.modified = True
+        session.modified = True
+        return jsonResponse(session['settings'])
     except (NameError, KeyError):
         abort(404)
 

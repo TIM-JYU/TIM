@@ -92,7 +92,7 @@ class Questions(TimDbBase):
 
 
     @contract
-    def update_question(self, question_id: 'int', doc_id: 'int', par_index:'int', question_title: 'str', answer: 'str', questionJson: 'str') -> 'int':
+    def update_question(self, question_id: 'int', doc_id: 'int', par_id: 'str', question_title: 'str', answer: 'str', questionJson: 'str') -> 'int':
         """
         Updates the question with particular id
         """
@@ -102,7 +102,7 @@ class Questions(TimDbBase):
                        UPDATE Question
                        SET doc_id = ?, par_id = ?, question_title = ?, answer = ?, questionJson = ?
                        WHERE question_id = ?
-                       """, [doc_id, par_index, question_title, answer, questionJson, question_id])
+                       """, [doc_id, par_id, question_title, answer, questionJson, question_id])
 
         self.db.commit()
         return question_id

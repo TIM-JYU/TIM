@@ -50,6 +50,7 @@
                 type: 'POST',
                 url: '/sessionsetting/' + setting + '/' + value,
                 success: function (data) {
+                    console.log(data);
                     settings[setting] = value;
                 },
                 error: function () {
@@ -105,6 +106,7 @@
         var rights = {{rights|tojson}};
         var reqs = {{reqs|tojson}};
         var settings = {{settings|tojson}};
+        console.log(settings);
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         var teacherMode = {{teacher_mode|tojson}};
