@@ -29,18 +29,20 @@ def correct_yaml(text):
     lines = text.splitlines()
     s = ""
     p = re.compile("^[^ :]*:[^ ]")  # kissa:istuu
-    pm = re.compile("^[^ :]*:[ ]+\|[^ a-zA-Z]+$")  # program: ||| or  program: |!!!
+    pm = re.compile("^[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
     multiline = False
     for line in lines:
+        line = line.rstrip()
         if p.match(line) and not multiline:
             line = line.replace(':', ': ', 1)
         if pm.match(line):
             multiline = True
             n = 0
             line, end_str = line.split("|", 1)
+            end_str = end_str.rstrip()
             s = s + line + "|\n"
             continue
-        if multiline:
+        if multiline: 
             if line == end_str:
                 multiline = False
                 continue
