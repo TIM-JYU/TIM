@@ -993,21 +993,16 @@ def view_template(plugin, template, index):
         abort(404)
 
 
-@app.route("/editortab/<tabid>", methods=['POST'])
-def set_editor_tab(tabid):
-    try:
-        session['editortab'] = tabid
-        return "Success"
-    except PluginException:
-        abort(404)
-
-
 @app.route("/sessionsetting/<setting>/<value>", methods=['POST'])
 def set_session_setting(setting, value):
     try:
+        session['settings']
+    except (NameError, KeyError):
+        session['settings'] = {}
+    try:
         session['settings'][setting] = value
         return "Success"
-    except PluginException:
+    except (NameError, KeyError):
         abort(404)
 
 

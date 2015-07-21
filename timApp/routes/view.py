@@ -145,7 +145,9 @@ def view_content(doc_name, template_name, view_range=None, usergroup=None, teach
                            jsMods=modules,
                            start_index=start_index,
                            rights={'editable': hasEditAccess(doc_id),
-                                   'can_mark_as_read': hasReadMarkingRight(doc_id)
+                                   'can_mark_as_read': hasReadMarkingRight(doc_id),
+                                   'can_comment': hasCommentRight(doc_id),
+                                   'browse_own_answers': loggedIn()
                                    })
 
 
@@ -215,10 +217,12 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
+
     try:
-        editortab = session['editortab']
+        settings = session['settings']
     except KeyError:
-        editortab = None
+        settings = {}
+
     # TODO: Check if doc variable is needed
     return render_template(template_name,
                            docID=doc_id,
@@ -243,4 +247,4 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                                    'browse_own_answers': loggedIn()
                                    },
                            reqs=reqs,
-                           editortab=editortab)
+                           settings=settings)

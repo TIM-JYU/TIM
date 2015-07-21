@@ -11,6 +11,9 @@
                 <div class="parContent">
                     {{ t.get_html()|safe }}
                 </div>
+                {% if rights.editable or rights.can_comment %}
+                    <div class="editline" title="Click to edit this paragraph"></div>
+                {% endif %}
             </div>
         {% else %}
             <div class="par {{ t.get_class_str() }}"
@@ -21,6 +24,9 @@
                 <div class="parContent">
                     {{ t.get_html()|safe }}
                 </div>
+                {% if rights.editable or rights.can_comment %}
+                    <div class="editline" title="Click to edit this paragraph"></div>
+                {% endif %}
             </div>
         {% endif %}
     {% endfor %}

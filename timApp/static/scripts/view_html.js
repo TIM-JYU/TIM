@@ -868,7 +868,7 @@ timApp.controller("ViewCtrl", [
 
                     Object.keys(pars).forEach(function (par_id, index) {
                         var $par = sc.getElementByParId(par_id);
-                        $par.remove(".questions");
+                        $par.find(".questions").remove();
                         var $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
                         $par.append($questionsDiv);
                     });
@@ -1135,7 +1135,7 @@ timApp.controller("ViewCtrl", [
                 var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top - 1000};
                 return sc.showAddParagraphBelow(e, $par, coords);
             });
-            sc.getEditPars();
+            //sc.getEditPars();
         }
         sc.processAllMath($('body'));
         sc.defaultAction = sc.showOptionsWindow;
@@ -1154,7 +1154,8 @@ timApp.controller("ViewCtrl", [
                 return;
             }
 
-            var $loading = $('<img>', {id: "loading", src: "/static/images/loading.gif"});
+            var $loading = $('<div>', {class: 'par', id: 'loading'});
+            $loading.append($('<img>', {src: "/static/images/loading.gif"}));
             $('.paragraphs').append($loading);
             $.ajax({
                 type: 'GET', url: '/view_content/' + docName,
@@ -1168,8 +1169,12 @@ timApp.controller("ViewCtrl", [
                     sc.getNotes();
                     sc.getReadPars();
                     sc.processAllMath($('body'));
+                    /*
                     if (sc.rights.editable) {
                         sc.getEditPars();
+                    }*/
+                    if (sc.lectureMode) {
+                        sc.getQuestions();
                     }
                     $('.showContent').text('Hide content');
                 },
@@ -1204,6 +1209,32 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     scope.putBackQuotations = function (x) {
         return x.replace(/&quot;/g, '"');
+    };
+
+    scope.settings = $window.settings;
+
+    scope.setTime = function () {
+        console.log(scope.settings);
+        scope.question.timeLimit = {hours: 0, minutes: 0, seconds: 30};
+        if (scope.settings['timelimit'] && scope.settings['timelimit'] > 0) {
+            var time = scope.settings['timelimit'];
+            if (time > 3600) {
+                scope.question.timeLimit.hours = Math.floor(time / 3600);
+            } else {
+                scope.question.timeLimit.hours = 0;
+            }
+            if (time > 60) {
+                scope.question.timeLimit.minutes = Math.floor(time / 60);
+                time = time % 60;
+            } else {
+                scope.question.timeLimit.minutes = 0;
+            }
+            if (time > 0) {
+                scope.question.timeLimit.seconds = time;
+            } else {
+                scope.question.timeLimit.seconds = 0;
+            }
+        }
     };
 
     scope.$on("editQuestion", function (event, data) {
@@ -1298,15 +1329,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
     );
 
-
     scope.question = {
         title: "",
         question: "",
         matrixType: "",
         answerFieldType: "",
-        timeLimit: {hours: "0", minutes: "0", seconds: "30"},
+        timeLimit: {hours: 0, minutes: 0, seconds: 30},
         endTimeSelected: true
-
     };
 
 
@@ -1314,7 +1343,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.columns = [];
     scope.columnHeaders = [];
     scope.answerDirection = "horizontal";
-    scope.question.timeLimit.seconds = 30;
+    scope.setTime();
     scope.error_message = "";
     scope.answerFieldTypes = [
 
@@ -1567,9 +1596,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             question: "",
             matrixType: "",
             answerFieldType: "",
-            timeLimit: {hours: "0", minutes: "0", seconds: "30"},
             endTimeSelected: true
         };
+        scope.setTime();
 
         scope.rows = [];
         scope.answer = "";
@@ -1740,6 +1769,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
             if (timeLimit <= 0) {
                 scope.errorize("durationDiv", "Please enter a duration greater then zero or for unending question uncheck the duration box.");
+            } else {
+                $window.settings['timelimit'] = timeLimit;
+                setsetting('timelimit', timeLimit);
             }
         } else {
             timeLimit = "";
@@ -1847,7 +1879,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             .success(function (data) {
                 $window.console.log("The question was successfully added to database");
                 scope.removeErrors();
-                //scope.clearQuestion();
                 //TODO: This can be optimized to get only the new one.
                 scope.$parent.getQuestions();
                 if (ask) {
