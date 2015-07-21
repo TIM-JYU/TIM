@@ -199,13 +199,14 @@ videoApp.Controller = function($scope,$http,$transclude) {
 			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + $scope.file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
 			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
-		else   
+		else  { 
             t = ""
             if ( $scope.start ) {
                 t = "#t="+$scope.start; // iPad ei tottele 'loadedmetadata'
                 if ( $scope.end ) t += "," + $scope.end;
             }    
 			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + t + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';
+        }    
         // IE ei tietenkään taas tottele t-attribuuttia...            
 		$scope.videoOn = true;	
 		$scope.myvid = document.getElementById(vid);

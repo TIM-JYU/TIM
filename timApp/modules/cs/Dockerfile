@@ -5,7 +5,7 @@ maintainer vesal "vesal@jyu.fi"
 # Workaround PAM: system error -messagelle
 run ln -fs /bin/true /usr/bin/chfn
 
-# Asennetaan python, pip ja flask
+# Asennetaan python, pip ja flask 
 
 run apt-get update
 run apt-get install -y python3
