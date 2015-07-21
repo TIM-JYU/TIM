@@ -34,10 +34,11 @@
         </button>
         <button class="editorButton" title="Outdent selection/line" ng-click="wrapFn(outdentClicked)">&#8647;
         </button>
-        <button class="editorButton" title="Bold (Ctrl-B)" ng-click="surroundClicked('**'); wrapFn()"><b>B</b></button>
-        <button class="editorButton" title="Italic (Ctrl-I)" ng-click="surroundClicked('*', surroundedByItalic); wrapFn()">
+        <button class="editorButton" title="Bold (Ctrl-B)" ng-click="surroundClicked('**', '**'); wrapFn()"><b>B</b></button>
+        <button class="editorButton" title="Italic (Ctrl-I)" ng-click="surroundClicked('*', '*', surroundedByItalic); wrapFn()">
             <i>I</i></button>
-        <button class="editorButton" title="Code (Ctrl-O)" ng-click="surroundClicked('`'); wrapFn()">Code</button>
+        <button class="editorButton" title="Underline" ng-click="surroundClicked('<u>', '</u>'); wrapFn()"><u>U</u></button>
+        <button class="editorButton" title="Code (Ctrl-O)" ng-click="surroundClicked('`', '`'); wrapFn()">Code</button>
         <button class="editorButton" title="Code block" ng-click="wrapFn(codeBlockClicked)">Code block</button>
         <button class="editorButton" title="Heading 1 (Ctrl-1)" ng-click="headerClicked('#')">H1</button>
         <button class="editorButton" title="Heading 2 (Ctrl-2)" ng-click="headerClicked('##')">H2</button>
@@ -71,8 +72,8 @@
         <button class="editorButton" ng-click="charClicked($event)">\</button>
     </div>
     <div id="texButtons" class="extraButtonArea hidden">
-        <button class="editorButton" ng-click="surroundClicked('$'); wrapFn()">TeX equation</button>
-        <button class="editorButton" ng-click="surroundClicked('$$'); wrapFn()">TeX block</button>
+        <button class="editorButton" ng-click="surroundClicked('$', '$'); wrapFn()">TeX equation</button>
+        <button class="editorButton" ng-click="surroundClicked('$$', '$$'); wrapFn()">TeX block</button>
         <button class="editorButton" ng-click="wrapFn(indexClicked)">X&#x2093;</button>
         <button class="editorButton" ng-click="wrapFn(powerClicked)">X&#x207f;</button>
         <button class="editorButton" ng-click="wrapFn(squareClicked)">&radic;</button>
