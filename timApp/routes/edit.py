@@ -24,7 +24,7 @@ def update_document(doc_id, version):
     """
     timdb = getTimDb()
     doc_identifier = DocIdentifier(doc_id, version)
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404)
     if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
         abort(403)

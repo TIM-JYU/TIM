@@ -12,7 +12,7 @@ manage_page = Blueprint('manage_page',
 def manage(doc_id):
     timdb = getTimDb()
     isFolder = False
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         if timdb.folders.exists(doc_id):
             isFolder = True
         else:
@@ -31,7 +31,7 @@ def manage(doc_id):
         doc_data['fulltext'] = ''
     else:
         doc = Document(doc_id)
-        doc_data = timdb.documents.getDocument(doc_id)
+        doc_data = timdb.documents.get_document(doc_id)
         doc_data['fullname'] = doc_data['name']
         doc_data['versions'] = [entry for entry in doc.get_changelog()]
         doc_data['fulltext'] = doc.export_markdown()
@@ -51,7 +51,7 @@ def manage(doc_id):
 @manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
 def changeOwner(doc_id, new_owner):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id) and not timdb.folders.exists(doc_id):
+    if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     verifyOwnership(doc_id)
     possible_groups = timdb.users.getUserGroups(getCurrentUserId())
@@ -63,7 +63,7 @@ def changeOwner(doc_id, new_owner):
 @manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
 def addPermission(doc_id, group_name, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id) and not timdb.folders.exists(doc_id):
+    if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404, 'This document does not exist.')
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403, "You don't have permission to add permissions to this document.")
@@ -85,7 +85,7 @@ def addPermission(doc_id, group_name, perm_type):
 @manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def removePermission(doc_id, group_id, perm_type):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id) and not timdb.folders.exists(doc_id):
+    if not timdb.documents.exists(doc_id) and not timdb.folders.exists(doc_id):
         abort(404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         abort(403)
@@ -110,7 +110,7 @@ def add_alias(doc_id, new_alias):
 
     new_alias = new_alias.strip('/')
 
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         return jsonResponse({'message': 'The document does not exist!'}, 404)
 
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
@@ -183,7 +183,7 @@ def rename_folder(doc_id):
     timdb = getTimDb()
     new_name = request.get_json()['new_name'].strip('/')
 
-    if timdb.documents.documentExists(doc_id):
+    if timdb.documents.exists(doc_id):
         return jsonResponse({'message': 'Rename route is no longer supported for documents.'}, 403)
 
     if not timdb.folders.exists(doc_id):
@@ -212,7 +212,7 @@ def rename_folder(doc_id):
 def getPermissions(doc_id):
     timdb = getTimDb()
     isFolder = False
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         if timdb.folders.exists(doc_id):
             isFolder = True
         else:
@@ -225,7 +225,7 @@ def getPermissions(doc_id):
         doc_data['name'] = doc_data.pop('fullname')
         doc_data.pop('location')
     else:
-        doc_data = timdb.documents.getDocument(doc_id)
+        doc_data = timdb.documents.get_document(doc_id)
 
     editors = timdb.users.getEditors(doc_id)
     viewers = timdb.users.getViewers(doc_id)
@@ -234,7 +234,7 @@ def getPermissions(doc_id):
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
 def deleteDocument(doc_id):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         return jsonResponse({'message': 'Document does not exist.'}, 404)
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this document."}, 403)

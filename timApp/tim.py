@@ -116,7 +116,7 @@ def notFound(error):
 @app.route('/diff/<int:doc_id>/<doc_hash>')
 def documentDiff(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404)
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
@@ -129,7 +129,7 @@ def documentDiff(doc_id, doc_hash):
 @app.route('/download/<int:doc_id>/<doc_hash>')
 def documentHistory(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404)
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
@@ -609,7 +609,7 @@ def show_lecture_info(lecture_id):
         abort(400)
 
     lecture = lecture[0]
-    doc = timdb.documents.getDocument(lecture.get('doc_id'))
+    doc = timdb.documents.get_document(lecture.get('doc_id'))
     return render_template("lectureInfo.html",
                            doc=doc,
                            docId=lecture.get("doc_id"),
@@ -953,23 +953,8 @@ def create_folder():
     timdb = getTimDb()
     return create_item(folder_name, 'folder', timdb.folders.create, ownerId)
 
-
-@app.route("/getBlock/<int:docId>/<par_id>")
-def getBlockMd(docId, par_id):
-    timdb = getTimDb()
-    verifyViewAccess(docId)
-    par = Document(docId).get_paragraph(par_id)
-    return jsonResponse({"text": par.get_markdown()})
-
-@app.route("/getBlockHtml/<int:docId>/<int:blockId>")
-def getBlockHtml(docId, blockId):
-    timdb = getTimDb()
-    verifyViewAccess(docId)
-    block = timdb.documents.getBlockAsHtml(get_newest_document(docId), blockId)
-    return block
-
 @app.route("/<plugin>/<path:fileName>")
-def pluginCall(plugin, fileName):
+def plugin_call(plugin, fileName):
     try:
         req = containerLink.call_plugin_resource(plugin, fileName)
         return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
@@ -978,7 +963,7 @@ def pluginCall(plugin, fileName):
 
 
 @app.route("/index/<int:doc_id>")
-def getIndex(doc_id):
+def get_index(doc_id):
     timdb = getTimDb()
     verifyViewAccess(doc_id)
     index = Document(doc_id).get_index()
