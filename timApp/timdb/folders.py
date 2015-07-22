@@ -45,6 +45,10 @@ class Folders(TimDbBase):
         cursor.execute("INSERT INTO Folder (id, name, location) VALUES (?, ?, ?)", [block_id, rel_name, rel_path])
         self.db.commit()
 
+        # Make sure that the parent folder exists
+        # Note that get_folder_id calls create if it doesn't so there's implicit recursivity
+        self.get_folder_id(rel_path, owner_group_id)
+
         return block_id
 
     @contract
