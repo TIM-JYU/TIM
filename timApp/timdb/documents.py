@@ -204,7 +204,7 @@ class Documents(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute("SELECT id, name FROM DocEntry WHERE id = ?", [document_id])
-        rows = self.resultAsDictionary()
+        rows = self.resultAsDictionary(cursor)
         return rows[0] if len(rows) > 0 else None
 
     @contract
