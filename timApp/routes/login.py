@@ -55,7 +55,7 @@ def logout():
     session.pop('appcookie', None)
     session.pop('altlogin', None)
     session['user_name'] = 'Anonymous'
-    return redirect(url_for('startPage'))
+    return redirect(url_for('start_page'))
 
 @login_page.route("/login")
 def login():
@@ -265,7 +265,7 @@ def altLogin():
 @login_page.route("/testuser/<path:anything>")
 def testuser(anything=None):
     flash("Testuser route has been removed; please sign up using email.")
-    return redirect(url_for('indexPage'))
+    return redirect(url_for('index_page'))
 
 
 def saveCameFrom():
@@ -306,4 +306,4 @@ def quickLogin(username):
     session['real_name'] = user['real_name']
     session['email'] = user['email']
     flash("Logged in as: {}".format(username))
-    return redirect(url_for('indexPage'))
+    return redirect(url_for('index_page'))

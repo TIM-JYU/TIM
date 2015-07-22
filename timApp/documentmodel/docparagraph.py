@@ -51,13 +51,13 @@ class DocParagraph:
 
     @classmethod
     @contract
-    def getPath(cls, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_path(cls, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.join(froot, 'pars', par_id, t)
 
     @classmethod
     @contract
-    def getBasePath(cls, par_id: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_base_path(cls, par_id: 'str', files_root: 'str|None' = None) -> 'str':
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.join(froot, 'pars', par_id)
 
@@ -65,13 +65,13 @@ class DocParagraph:
     @contract
     def get_latest(cls, par_id: 'str', files_root: 'str|None' = None):
         froot = cls.get_default_files_root() if files_root is None else files_root
-        t = os.readlink(cls.getPath(par_id, 'current', froot))
+        t = os.readlink(cls._get_path(par_id, 'current', froot))
         return cls.get(par_id, t, files_root=froot)
 
     @classmethod
     @contract
     def get(cls, par_id: 'str', t: 'str', files_root: 'str|None' = None):
-        with open(cls.getPath(par_id, t, files_root), 'r') as f:
+        with open(cls._get_path(par_id, t, files_root), 'r') as f:
             return cls.from_dict(json.loads(f.read()), files_root=files_root)
 
     @contract
@@ -119,11 +119,11 @@ class DocParagraph:
 
     @contract
     def get_base_path(self) -> 'str':
-        return self.getBasePath(self.get_id(), files_root=self.files_root)
+        return self._get_base_path(self.get_id(), files_root=self.files_root)
 
     @contract
     def get_path(self) -> 'str':
-        return self.getPath(self.get_id(), self.get_hash(), files_root=self.files_root)
+        return self._get_path(self.get_id(), self.get_hash(), files_root=self.files_root)
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
@@ -156,7 +156,7 @@ class DocParagraph:
             f.write(json.dumps(self.__data))
 
     def __set_latest(self):
-        linkpath = self.getPath(self.get_id(), 'current', files_root=self.files_root)
+        linkpath = self._get_path(self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
         if os.path.isfile(linkpath):
