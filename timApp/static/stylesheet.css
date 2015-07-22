@@ -105,10 +105,11 @@ body {
     font-size: 1.0em;
     color: #4dd;
     text-align: right;
-    text-decoration: none;
+    text-decoration: none;   
 }
 
 input[type="submit"], button, input[type="button"] { 
+    margin-right: 1px;
     background: #3CC;
     border: 0;
     border-radius: 3px;

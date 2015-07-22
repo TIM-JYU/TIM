@@ -247,7 +247,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   
                   
 				  '<p class="csRunSnippets" ng-if="buttons">' + // && viewCode">' +
-				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button>&nbsp&nbsp' +
+				  '<button ng-repeat="item in buttons" ng-click="addText(item);">{{addTextHtml(item)}}</button> &nbsp;&nbsp;' +
                   '</p>' +
                   '<div class="csRunMenuArea">'+
 				  '<p class="csRunMenu" >' +
@@ -423,6 +423,8 @@ csApp.directiveFunction = function(t,isInput) {
                 b = b.replace('$hellobuttons$', helloButtons);
                 b = b.replace('$typebuttons$' , typeButtons);
                 b = b.replace('$charbuttons$' , charButtons);
+                b = b.trim();
+                b = b.replace('$space$' , " ");
                 scope.buttons = b.split("\n");
             }
             /*
