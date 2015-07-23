@@ -194,7 +194,7 @@
 
 
                 <!-- TODO: Refactor the way that there is no duplicates -->
-                <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
+                <div ng-controller="SidebarMenuCtrl" class="sidebarMenu" ng-cloak>
                     <div ng-class="['contents']">
                         <div id="sidebarMenuButton" ng-click="showSidebar()" title="Show menu">
                             <img class="smallMenuBtn"
@@ -359,7 +359,7 @@
             </div>
         {% endif %}
         {% if not lecture_mode %}
-            <div ng-controller="SidebarMenuCtrl" class="sidebarMenu">
+            <div ng-controller="SidebarMenuCtrl" class="sidebarMenu" ng-cloak>
                 <div ng-class="['contents']">
                     <img id="sidebarMenuButton" ng-click="showSidebar()"
                          src="{{ url_for('static', filename='images/small-menu-icon.png') }}" title="Show menu"/>
