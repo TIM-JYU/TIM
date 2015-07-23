@@ -400,6 +400,7 @@ ul ul ul, ol ol ol {
 }
 
 #previewDiv {
+    clear: both;
     padding: 10px;
     overflow: hidden;
     border-radius: 5px;
