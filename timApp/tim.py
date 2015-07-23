@@ -954,7 +954,7 @@ def create_folder():
     return create_item(folder_name, 'folder', timdb.folders.create, owner_id)
 
 
-@app.route("/getBlock/<doc_id>/<par_id>")
+@app.route("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
     timdb = getTimDb()
     verifyEditAccess(doc_id)
