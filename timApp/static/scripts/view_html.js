@@ -1008,57 +1008,51 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getIndex = function () {
-            http.get('/index/' + sc.docId).success(function (data) {
-                var parentEntry = null;
-                sc.indexTable = [];
 
-                for (var i = 0; i < data.length; i++) {
-                    var lvl = sc.findIndexLevel(data[i]);
-                    if (lvl < 1 || lvl > 3) {
-                        continue;
-                    }
+            sc.indexTable = [];
+            var parentEntry = null;
+            $(".par h1, .par h2, .par h3").each(function () {
+                var id = '#' + $(this).attr('id');
+                var header = $(this).prop('tagName');
+                var lvl = parseInt(header.substring(1));
 
-                    var astyle = "a" + lvl;
-                    var txt = data[i].substr(lvl);
-                    txt = txt.trim().replace(/\\#/g, "#");
-                    var entry = {
-                        text: sc.totext(txt),
-                        target: sc.tolink(txt),
-                        style: astyle,
-                        level: lvl,
-                        items: [],
-                        state: ""
-                    };
+                var astyle = "a" + lvl;
+                var txt = $(this).text();
+                txt = txt.trim().replace(/\\#/g, "#");
+                var entry = {
+                    text: sc.totext(txt),
+                    target: id,
+                    style: astyle,
+                    level: lvl,
+                    items: [],
+                    state: ""
+                };
 
-                    if (lvl === 1) {
-                        if (parentEntry !== null) {
-                            if ("items" in parentEntry && parentEntry.items.length > 0) {
-                                parentEntry.state = 'col';
-                            }
-                            sc.indexTable.push(parentEntry);
+                if (lvl === 1) {
+                    if (parentEntry !== null) {
+                        if ("items" in parentEntry && parentEntry.items.length > 0) {
+                            parentEntry.state = 'col';
                         }
-
-                        parentEntry = entry;
+                        sc.indexTable.push(parentEntry);
                     }
-                    else if (parentEntry !== null) {
-                        if (!("items" in parentEntry)) {
-                            // For IE
-                            parentEntry.items = [];
-                        }
-                        parentEntry.items.push(entry);
-                    }
-
+                    parentEntry = entry;
                 }
-
-                if (parentEntry !== null) {
-                    if (parentEntry.items.length > 0) {
-                        parentEntry.state = 'col';
+                else if (parentEntry !== null) {
+                    if (!("items" in parentEntry)) {
+                        // For IE
+                        parentEntry.items = [];
                     }
-                    sc.indexTable.push(parentEntry);
+                    parentEntry.items.push(entry);
                 }
-            }).error(function () {
-                $window.alert("Could not fetch index entries.");
             });
+
+            if (parentEntry !== null) {
+                if (parentEntry.items.length > 0) {
+                    parentEntry.state = 'col';
+                }
+                sc.indexTable.push(parentEntry);
+            }
+            console.log(sc.indexTable);
         };
 
         sc.invertState = function (state) {
@@ -1092,7 +1086,7 @@ timApp.controller("ViewCtrl", [
 
             if (event.target)
 
-            var newState = sc.invertState(state);
+                var newState = sc.invertState(state);
             if (newState !== state) {
                 sc.clearSelection();
             }
