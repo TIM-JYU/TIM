@@ -19,8 +19,8 @@ paliApp.directiveTemplate = function () {
 				  ' <span class="unitTestGreen"  ng-show="runTestGreen" >&nbsp;ok&nbsp;</span>' +
 				  ' <span class="unitTestRed"  ng-show="!runTestGreen">&nbsp;not&nbsp;</span>' +
                   '</div>' +
-				  '<button ng-if="button"  ng-disabled="isRunning" ng-click="run(paliApp.runCode)">{{button}}</button>&nbsp&nbsp' +
-				  '<a href="" ng-if="muokattu" ng-click="run(paliApp.initCode)">{{resetText}}</a>' +
+				  '<button ng-if="button"  ng-disabled="isRunning" ng-click="paliScope.runCode">{{button}}</button>&nbsp&nbsp' +
+				  '<a href="" ng-if="muokattu" ng-click="paliScope.initCode">{{resetText}}</a>' +
                   '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
 				  '<pre class="" ng-if="error">{{error}}</pre>' +
 				  '<pre  class="" ng-show="result">{{result}}</pre>' +
@@ -52,7 +52,7 @@ paliApp.directiveFunction = function() {
 paliApp.Controller = function($scope, $http, $transclude, $interval) {
 "use strict";
     if (paliApp.TESTWITHOUTPLUGINS) return;
-    $scope.paliApp = paliApp;
+    $scope.paliScope = new PaliScope($scope);
     $scope.attrs = {};
     $scope.http = $http;
     $scope.interval = $interval;
@@ -63,9 +63,7 @@ paliApp.Controller = function($scope, $http, $transclude, $interval) {
 	$scope.muokattu = false;
     $scope.result = "";
 
-    $scope.$watch('userword', function () { paliApp.watchWord($scope); }, true);
-
-    $scope.run = function(f) { f($scope);  }
+    $scope.$watch('userword', $scope.paliScope.watchWord, true);
 };
 
 
@@ -91,16 +89,21 @@ paliApp.initScope = function (scope, element, attrs) {
     element[0].childNodes[0].outerHTML = timHelper.getHeading(attrs, "header", scope, "h4");
     var n = element[0].childNodes.length;
     if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(attrs, "footer", scope, 'p class="footer"');
-    paliApp.checkPalindrome(scope);
+    scope.paliScope.checkPalindrome();
     scope.attrs = {}; // not needed any more
 };
 
 
-paliApp.watchWord = function($scope) {
+function PaliScope(scope) {
+    this.scope = scope;
+}
+
+
+PaliScope.prototype.watchWord = function() {
 "use strict";
-    $scope.interval.cancel($scope.runTimer);
-    $scope.runTimer = $scope.interval(function() { paliApp.checkPalindrome($scope); }, $scope.autoupdate);
-    $scope.muokattu = ( $scope.initword !== $scope.userword );
+    this.scope.interval.cancel(this.scope.runTimer);
+    this.scope.runTimer = this.scope.interval(this.checkPalindrome, this.scope.autoupdate);
+    this.scope.muokattu = ( this.scope.initword !== this.scope.userword );
 };
 
 
@@ -114,8 +117,9 @@ function isPalindrome(s) {
 }
 
 
-paliApp.checkPalindrome = function($scope) {
+PaliScope.prototype.checkPalindrome = function() {
 "use strict";
+    var $scope = this.scope;
     $scope.interval.cancel($scope.runTimer);
     var pali = isPalindrome($scope.userword);
     $scope.runTestGreen = pali;
@@ -123,8 +127,9 @@ paliApp.checkPalindrome = function($scope) {
 };
 
 
-paliApp.initCode = function($scope) {
+PaliScope.prototype.initCode = function() {
 "use strict";
+    var $scope = this.scope;
     $scope.muokattu = false;
     $scope.userword = $scope.initword;
     $scope.error = "";
@@ -132,13 +137,13 @@ paliApp.initCode = function($scope) {
 };
 
 
-paliApp.runCode = function($scope) {
+PaliScope.prototype.runCode = function() {
 "use strict";
-    paliApp.doRunCode($scope, false);
+    paliScope.doRunCode(this.scope, false);
 };
 
 
-paliApp.doRunCode = function($scope, nosave) {
+PaliScope.prototype.doRunCode = function($scope, nosave) {
 "use strict";
     $scope.error = "... running ...";
     $scope.isRunning = true;
@@ -153,7 +158,7 @@ paliApp.doRunCode = function($scope, nosave) {
         'input': {
             'userword': uword,
             'markup': {'taskId': $scope.taskId, 'user_id': $scope.user_id},
-            'paliOK': paliApp.checkPalindrome($scope)
+            'paliOK': $scope.paliScope.checkPalindrome()
         }
     };
 
