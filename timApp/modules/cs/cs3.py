@@ -20,9 +20,8 @@ import datetime
 # cs3.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
 # Ensin käynistettävä 
-# ./csdaemon.sh    - demoni joka valvoo /tmp/uhome/run hakemistoon tulevia ajokomentoja
-# ./dr             - käynnistää dockerin cs3.py varten
-# ./r              - ajetaan dockerin sisällä cs3.py
+# ./startPlugins.sh             - käynnistää dockerin cs3.py varten
+# ./startAll.sh                 - ajetaan dockerin sisällä cs3.py (ajetaan edellisestä)
 # Muut tarvittavat skriptit:
 # rcmd.sh          - käynistetään ajettavan ohjelman kontin sisälle ajamaan
 # cs3.py tuottama skripti
@@ -30,6 +29,7 @@ import datetime
 # Hakemistot:
 #  tim-koneessa
 #     /opt/cs               - varsinainen csPluginin hakemisto, skirptit yms
+#     /opt/cs/templates     - pluginin templatet editoria varten 
 #     /opt/cs/java          - javan tarvitsemat tavarat
 #     /opt/cs/images/cs     - kuvat jotka syntyvät csPlugin ajamista ohjelmista
 #     /opt/cs/jypeli        - jypelin tarvitsemat tiedostot  
@@ -39,7 +39,7 @@ import datetime
 #     /tmp/uhone/run        - tänne kirjoitetaan käynnistyskomento demonia varten
 #     /tmp/uhome/cs:        - c#-jypeli tiedostot
 #
-# tim-koneesta käynnistetään cs3 docker-kontti nimelle csPlugin (./dr), jossa
+# tim-koneesta käynnistetään cs3 docker-kontti nimelle csPlugin (./startPlugins.sh), jossa
 # mountataan em. hakemistoja seuraavasti:
 #
 #   /opt/cs  ->          /cs/          read only
