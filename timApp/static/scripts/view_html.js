@@ -1113,7 +1113,10 @@ timApp.controller("ViewCtrl", [
         // Load index, notes and read markings
         sc.setHeaderLinks();
         sc.indexTable = [];
+
+        var now = new Date();
         sc.getIndex();
+        console.log(now - new Date());
         sc.getNotes();
         sc.getReadPars();
 
