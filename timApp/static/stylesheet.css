@@ -401,6 +401,13 @@ ul ul ul, ol ol ol {
 
 #previewDiv {
     clear: both;
+    overflow: hidden;
+    border-radius: 5px;
+    background: inherit;
+}
+
+.released {
+    clear: both;
     padding: 10px;
     overflow: hidden;
     border-radius: 5px;
@@ -1397,7 +1404,7 @@ img.console {
 
 .index-sidebar ul, .lectures-sidebar ul, .questions-sidebar ul, .people-sidebar ul, .settings-sidebar ul {
     margin: 0;
-    padding-left: 5px;
+    padding-left: 10px;
     text-align: left;
     font-family: "Helvetica", Arial, sans-serif;
     font-size: 0.9em;
@@ -1421,6 +1428,13 @@ img.console {
     padding-left: 0;
 }
 
+.collapse {
+    display: inline !important;
+    cursor: pointer;
+    margin-left: -16px !important;
+}
+
+/*
 .index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
     list-style-image: url("/static/images/minus.png");
     cursor: pointer;
@@ -1429,20 +1443,11 @@ img.console {
 .index-sidebar li.col, .lectures-sidebar li.col, .questions-sidebar li.col, .people-sidebar li.col, .settings-sidebar li.col {
     list-style-image: url("/static/images/plus.png");
     cursor: pointer;
-}
+}*/
 
 .index-sidebar a {
-    margin: 0 0 0 -5px;
     text-align: left;
     color: #2bb;
-}
-
-.index-sidebar ul {
-    margin: 0 0 0 12px;
-}
-
-.index-sidebar ul ul {
-    margin: 0 0 0 6px;
 }
 
 .settings-sidebar a {
@@ -1472,7 +1477,7 @@ img.console {
 
 .sidebar a.a3 {
     font-size: 100%;
-    padding-left: 5pt;
+    padding-left: 15px;
 }
 
 .sidebar h3, .sidebar h4 {

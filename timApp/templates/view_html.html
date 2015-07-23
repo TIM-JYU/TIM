@@ -131,7 +131,8 @@
         {% if lecture_mode %}
             <div ng-controller="LectureController">
                 {% include 'lectureinfo_menu.html' %}
-                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed caption="Lecture Wall" resize="true">
+                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed caption="Lecture Wall"
+                     resize="true">
                     <div class="wall-base" id="wallBase">
                         {# <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
                          ng-click="hideWall()">
@@ -209,8 +210,13 @@
                                     {% raw %}
                                     <ul>
                                         <li ng-repeat="entry in indexTable"
-                                            ng-class="entry.state"
-                                            ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
+                                            ng-class="entry.state">
+                                            <img class="collapse"
+                                                 ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)"
+                                                 ng-show="entry.state == 'exp'" src="/static/images/minus.png"/>
+                                            <img class="collapse"
+                                                 ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)"
+                                                 ng-show="entry.state == 'col'" src="/static/images/plus.png"/>
                                             <a class="indexentry" ng-class="entry.style"
                                                href="{{entry.target}}" target="_self">{{entry.text}}</a>
                                             <ul ng-show="entry.state == 'exp'">
@@ -365,14 +371,19 @@
                             {% raw %}
                             <ul>
                                 <li ng-repeat="entry in indexTable"
-                                    ng-class="entry.state"
-                                    ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                                    <a class="indexentry" ng-class="entry.style" ng-click=""
-                                       href="{{entry.target}}">{{entry.text}}</a>
+                                    ng-class="entry.state">
+                                    <img class="collapse"
+                                         ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)"
+                                         ng-show="entry.state == 'exp'" src="/static/images/minus.png"/>
+                                    <img class="collapse"
+                                         ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)"
+                                         ng-show="entry.state == 'col'" src="/static/images/plus.png"/>
+                                    <a class="indexentry" ng-class="entry.style"
+                                       href="{{entry.target}}" target="_self">{{entry.text}}</a>
                                     <ul ng-show="entry.state == 'exp'">
                                         <li ng-repeat="subentry in entry.items">
-                                            <a ng-class="subentry.style" ng-click=""
-                                               href="{{subentry.target}}">{{subentry.text}}</a>
+                                            <a ng-class="subentry.style"
+                                               href="{{subentry.target}}" target="_self">{{subentry.text}}</a>
                                         </li>
                                     </ul>
                                 </li>
