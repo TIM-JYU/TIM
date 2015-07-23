@@ -126,7 +126,7 @@ def get_answers(task_id, user_id):
     verifyLoggedIn()
     timdb = getTimDb()
     doc_id, task_id_name = parse_task_id(task_id)
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
     if user_id != getCurrentUserId():
@@ -146,14 +146,14 @@ def get_answers(task_id, user_id):
 def get_state():
     timdb = getTimDb()
     doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, str, int, str])
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
     if user_id != getCurrentUserId():
         verifyOwnership(doc_id)
     if user is None:
         abort(400, 'Non-existent user')
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     if not hasViewAccess(doc_id):
         abort(403, 'Permission denied')

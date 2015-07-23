@@ -47,7 +47,7 @@ if __name__ == '__main__':
             ephemeral_started = True
             dumbo_started = True
         initdb2.initialize_database()
-        tim.startApp()
+        tim.start_app()
     finally:
         if ephemeral_started:
             p.kill()

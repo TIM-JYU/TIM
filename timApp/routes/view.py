@@ -107,11 +107,11 @@ def try_return_folder(doc_name):
 def view_content(doc_name, template_name, view_range=None):
     timdb = getTimDb()
     doc_id = timdb.documents.get_document_id(doc_name)
-    if doc_id is None or not timdb.documents.documentExists(doc_id):
+    if doc_id is None or not timdb.documents.exists(doc_id):
         # Backwards compatibility: try to use as document id
         try:
             doc_id = int(doc_name)
-            if not timdb.documents.documentExists(doc_id):
+            if not timdb.documents.exists(doc_id):
                 return try_return_folder(doc_name)
             doc_name = timdb.documents.get_first_document_name(doc_id)
         except ValueError:
@@ -154,11 +154,11 @@ def view_content(doc_name, template_name, view_range=None):
 def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False):
     timdb = getTimDb()
     doc_id = timdb.documents.get_document_id(doc_name)
-    if doc_id is None or not timdb.documents.documentExists(doc_id):
+    if doc_id is None or not timdb.documents.exists(doc_id):
         # Backwards compatibility: try to use as document id
         try:
             doc_id = int(doc_name)
-            if not timdb.documents.documentExists(doc_id):
+            if not timdb.documents.exists(doc_id):
                 return try_return_folder(doc_name)
             doc_name = timdb.documents.get_first_document_name(doc_id)
         except ValueError:

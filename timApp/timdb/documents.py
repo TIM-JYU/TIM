@@ -1,9 +1,6 @@
 """Defines the Documents class."""
 
 import os
-import re
-from shutil import copyfile
-from datetime import datetime
 from sqlite3 import Connection
 
 from contracts import contract
@@ -15,8 +12,6 @@ from documentmodel.documentparser import DocumentParser, ValidationException
 from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralException, EphemeralClient, EPHEMERAL_URL
-from timdb.gitclient import NothingToCommitException
-from utils import date_to_relative
 from documentmodel.document import Document
 
 
@@ -88,7 +83,7 @@ class Documents(TimDbBase):
         :param document_id: The id of the document to be deleted.
         """
 
-        assert self.documentExists(document_id), 'document does not exist: %d' % document_id
+        assert self.exists(document_id), 'document does not exist: %d' % document_id
 
         cursor = self.db.cursor()
         cursor.execute('DELETE FROM Block WHERE type_id = ? AND id = ?', [blocktypes.DOCUMENT, document_id])
@@ -155,7 +150,7 @@ class Documents(TimDbBase):
         return doc
 
     @contract
-    def documentExists(self, document_id: 'int') -> 'bool':
+    def exists(self, document_id: 'int') -> 'bool':
         """Checks whether a document with the specified id exists.
         
         :param document_id: The id of the document.
@@ -201,18 +196,16 @@ class Documents(TimDbBase):
         return aliases[0]['name'] if len[aliases] > 0 else 'Untitled document'
 
     @contract
-    def getDocument(self, document_id: 'int') -> 'dict':
+    def get_document(self, document_id: 'int') -> 'dict|None':
         """Gets the metadata information of the specified document.
         
         :param document_id: The id of the document to be retrieved.
         :returns: A row representing the document.
         """
-        # To be deleted (use get_document_names)
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, description AS name FROM Block WHERE id = ? AND type_id = ?',
-                       [document_id, blocktypes.DOCUMENT])
-
-        return self.resultAsDictionary(cursor)[0]
+        cursor.execute("SELECT id, name FROM DocEntry WHERE id = ?", [document_id])
+        rows = self.resultAsDictionary(cursor)
+        return rows[0] if len(rows) > 0 else None
 
     @contract
     def get_documents(self, include_nonpublic: 'bool' = False) -> 'list(dict)':
@@ -234,74 +227,6 @@ class Documents(TimDbBase):
         return results
 
     @contract
-    def update_latest_revision(self, doc_id: 'DocIdentifier', commit: 'bool'=True):
-        cursor = self.db.cursor()
-        cursor.execute('SELECT latest_revision_id FROM Block WHERE id = ?', [doc_id.id])
-        revid = cursor.fetchone()[0]
-        if revid is None:
-            cursor.execute("INSERT INTO ReadRevision (Block_id, Hash) VALUES (?, ?)",
-                [doc_id.id, doc_id.hash])
-            cursor.execute("UPDATE Block SET latest_revision_id = ? WHERE type_id = ? and id = ?",
-                [cursor.lastrowid, blocktypes.DOCUMENT, doc_id.id])
-        else:
-            cursor.execute("UPDATE ReadRevision SET Hash = ? WHERE revision_id = ?",
-                [doc_id.hash, revid])
-
-        if commit:
-            self.db.commit()
-
-    @contract
-    def getDocumentsForGroup(self, group_id : 'int', historylimit: 'int'=100) -> 'list(dict)':
-        """Gets all the documents owned by a group.
-
-        :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
-        """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT id,description AS name FROM Block WHERE type_id = ? AND UserGroup_id = ?', [blocktypes.DOCUMENT, group_id])
-        results = self.resultAsDictionary(cursor)
-        for result in results:
-            result['versions'] = self.getDocumentVersions(result['id'], limit=historylimit)
-        return results
-
-    @contract
-    def getDocumentsByIds(self, document_ids: 'list(int)') -> 'seq(row)':
-        """Gets all the documents in the database."""
-        cursor = self.db.cursor()
-        cursor.execute('select id,description as name from Block where id in (%s)' %
-                       ','.join('?' * len(document_ids)), document_ids)
-        return cursor.fetchall()
-
-    @contract
-    def getBlock(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
-        """Gets a block of a document.
-        
-        :param document_id: The id of the document.
-        :param block_id: The id (index) of the block in the document.
-        """
-
-        content = self.ephemeralCall(document_id, self.ec.getBlock, block_id)
-        return self.trim_markdown(content)
-
-    def getBlockAsHtml(self, document_id: 'DocIdentifier', block_id: 'int') -> 'str':
-        """Gets a block of a document in HTML.
-        
-        :param document_id: The id of the document.
-        :param block_id: The id (index) of the block in the document.
-        """
-
-        return self.ephemeralCall(document_id, self.ec.getBlockAsHtml, block_id)
-
-    @contract
-    def getDocumentAsBlocks(self, document_id: 'DocIdentifier') -> 'list(str)':
-        """Gets all the blocks of the specified document in markdown format.
-        
-        :param document_id: The id of the document.
-        :returns: The blocks of the document in markdown format.
-        """
-
-        return [self.trim_markdown(block) for block in self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)]
-
-    @contract
     def get_document_with_autoimport(self, document_id: 'DocIdentifier') -> 'Document|None':
         """Attempts to load a document from the new model. If it doesn't exist, attempts to load from old model.
         If found, an autoimport is performed and a Document object is returned. Otherwise, None is returned.
@@ -312,7 +237,7 @@ class Documents(TimDbBase):
         d = Document(doc_id=document_id.id)
         if Document.doc_exists(document_id.id):
             return d
-        if not self.documentExists(document_id.id):
+        if not self.exists(document_id.id):
             return None
         md_blocks = self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)
         d.create()
@@ -337,7 +262,7 @@ class Documents(TimDbBase):
         try:
             result = ephemeral_function(document_id, *args)
         except EphemeralException:
-            if self.documentExists(document_id.id):
+            if self.exists(document_id.id):
                 with open(self.getBlockPath(document_id.id), 'rb') as f:
                     self.ec.loadDocument(document_id, f.read())
                 result = ephemeral_function(document_id, *args)
@@ -377,40 +302,6 @@ class Documents(TimDbBase):
         return html
 
     @contract
-    def getDocumentVersions(self, document_id: 'int', limit: 'int'=100, date_format: 'str'='relative') -> 'list(dict(str:str))':
-        """Gets the versions of a document.
-        
-        :param date_format: The date format.
-        :param limit: Maximum number of versions to get.
-        :param document_id: The id of the document whose versions will be fetched.
-        :returns: A list of the versions of the document.
-        """
-
-        if limit <= 0:
-            return []
-
-        if not self.documentExists(document_id):
-            raise TimDbException('The specified document does not exist.')
-
-        file_path = self.getDocumentPathAsRelative(document_id)
-        output, _ = self.git.command('log --format=%H|%ad|%an|%s --date={} -n {} {}'.format(date_format, limit, file_path))
-        lines = output.splitlines()
-        versions = []
-        for line in lines:
-            pieces = line.split('|')
-            versions.append({'hash': pieces[0], 'timestamp': pieces[1], 'user': pieces[2], 'message': pieces[3]})
-        return versions
-
-    @contract
-    def getNewestVersion(self, document_id: 'int') -> 'dict(str:str)|None':
-        """Gets the hash of the newest version for a document.
-
-        :param document_id: The id of the document.
-        :returns: A version dictionary, or none if not found.
-        """
-        return self.git.getLatestVersionDetails(self.getDocumentPathAsRelative(document_id))
-
-    @contract
     def import_document_from_file(self, document_file: 'str', document_name: 'str',
                                owner_group_id: 'int') -> 'Document':
         """Imports the specified document in the database.
@@ -432,18 +323,6 @@ class Documents(TimDbBase):
             doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
         return doc
 
-    def __commitDocumentChanges(self, document_id: 'DocIdentifier', doc_content: 'str', msg: 'str') -> 'str':
-        """Commits the changes of the specified document to Git.
-        
-        :param document_id: The document identifier.
-        :param msg: The commit message.
-        :returns: The hash of the commit.
-        """
-
-        self.writeUtf8(doc_content, self.getDocumentPath(document_id.id))
-        self.git.add(self.getDocumentPathAsRelative(document_id.id))
-        return self.git.commit('Document {}: {}'.format(document_id.id, msg), author=self.current_user_name)
-
     @contract
     def modify_paragraph(self, doc: 'Document', par_id: 'str',
                          new_content: 'str', new_attrs: 'dict|None'=None) -> 'tuple(list(DocParagraph), Document)':
@@ -463,21 +342,6 @@ class Documents(TimDbBase):
         return [par], doc
 
     @contract
-    def renameDocument(self, document_id: 'DocIdentifier', new_name: 'str') -> 'None':
-        """Renames a document.
-        
-        :param document_id: The id of the document to be renamed.
-        :param new_name: The new name for the document.
-        """
-
-        assert self.documentExists(document_id.id), 'document does not exist: ' + str(document_id)
-
-        cursor = self.db.cursor()
-        cursor.execute('UPDATE Block SET description = ? WHERE type_id = ? AND id = ?',
-                       [new_name, blocktypes.DOCUMENT, document_id.id])
-        self.db.commit()
-
-    @contract
     def update_document(self, doc: 'Document', new_content: 'str') -> 'Document':
         """Updates a document.
         
@@ -486,7 +350,7 @@ class Documents(TimDbBase):
         :returns: The id of the new document.
         """
 
-        assert self.documentExists(doc.doc_id), 'document does not exist: ' + str(doc)
+        assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc)
 
         new_content = self.trim_markdown(new_content)
         try:

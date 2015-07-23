@@ -114,9 +114,9 @@ def notFound(error):
 
 
 @app.route('/diff/<int:doc_id>/<doc_hash>')
-def documentDiff(doc_id, doc_hash):
+def document_diff(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404)
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
@@ -127,9 +127,9 @@ def documentDiff(doc_id, doc_hash):
 
 
 @app.route('/download/<int:doc_id>/<doc_hash>')
-def documentHistory(doc_id, doc_hash):
+def document_history(doc_id, doc_hash):
     timdb = getTimDb()
-    if not timdb.documents.documentExists(doc_id):
+    if not timdb.documents.exists(doc_id):
         abort(404)
     verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
     try:
@@ -140,8 +140,8 @@ def documentHistory(doc_id, doc_hash):
 
 
 @app.route('/download/<int:doc_id>')
-def downloadDocument(doc_id):
-    return documentHistory(doc_id, get_newest_document(doc_id).hash)
+def download_document(doc_id):
+    return document_history(doc_id, get_newest_document(doc_id).hash)
 
 
 @app.route('/upload/', methods=['POST'])
@@ -209,7 +209,7 @@ def upload_image_or_file(image_file):
         return jsonResponse({"file": str(file_id) + '/' + file_filename})
 
 @app.route('/images/<int:image_id>/<image_filename>')
-def getImage(image_id, image_filename):
+def get_image(image_id, image_filename):
     timdb = getTimDb()
     if not timdb.images.imageExists(image_id, image_filename):
         abort(404)
@@ -221,7 +221,7 @@ def getImage(image_id, image_filename):
 
 
 @app.route('/files/<int:file_id>/<file_filename>')
-def getFile(file_id, file_filename):
+def get_file(file_id, file_filename):
     timdb = getTimDb()
     if not timdb.files.fileExists(file_id, file_filename):
         abort(404)
@@ -232,7 +232,7 @@ def getFile(file_id, file_filename):
 
 
 @app.route('/images')
-def getAllImages():
+def get_all_images():
     timdb = getTimDb()
     images = timdb.images.getImages()
     allowedImages = [image for image in images if timdb.users.userHasViewAccess(getCurrentUserId(), image['id'])]
@@ -473,7 +473,7 @@ def show_question_without_view():
 
 # Route to get specific question
 @app.route('/getQuestion')
-def get_quesition():
+def get_question():
     doc_id = request.args.get('doc_id')
     par_index = request.args.get('par_index')
     timdb = getTimDb()
@@ -483,7 +483,7 @@ def get_quesition():
 
 # Route to get all questions
 @app.route('/getQuestions', methods=['GET'])
-def get_questions():
+def get_all_questions():
     timdb = getTimDb()
     questions = timdb.questions.get_questions()
     return jsonResponse(questions)
@@ -609,7 +609,7 @@ def show_lecture_info(lecture_id):
         abort(400)
 
     lecture = lecture[0]
-    doc = timdb.documents.getDocument(lecture.get('doc_id'))
+    doc = timdb.documents.get_document(lecture.get('doc_id'))
     return render_template("lectureInfo.html",
                            doc=doc,
                            docId=lecture.get("doc_id"),
@@ -757,7 +757,7 @@ def end_lecture():
     return get_running_lectures(doc_id)
 
 
-# Cleans dictionaries from lecture that isn't runnin anymore
+# Cleans dictionaries from lecture that isn't running anymore
 def clean_dictionaries_by_lecture(lecture_id):
     entries_to_remove = []
     pulls_to_remove = []
@@ -865,14 +865,14 @@ def uploaded_file(filename):
 def get_documents():
     timdb = getTimDb()
     docs = timdb.documents.get_documents()
-    allowedDocs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    allowed_docs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
 
     req_folder = request.args.get('folder')
     if req_folder is not None and len(req_folder) == 0:
         req_folder = None
-    finalDocs = []
+    final_docs = []
 
-    for doc in allowedDocs:
+    for doc in allowed_docs:
         fullname = doc['name']
 
         if req_folder:
@@ -891,9 +891,9 @@ def get_documents():
         doc['canEdit'] = timdb.users.userHasEditAccess(uid, doc['id'])
         doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.userHasAdminAccess(uid)
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
-        finalDocs.append(doc)
+        final_docs.append(doc)
 
-    return jsonResponse(finalDocs)
+    return jsonResponse(final_docs)
 
 
 @app.route("/getFolders")
@@ -901,14 +901,14 @@ def get_folders():
     root_path = request.args.get('root_path')
     timdb = getTimDb()
     folders = timdb.folders.get_folders(root_path)
-    allowedFolders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
+    allowed_folders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
     uid = getCurrentUserId()
 
-    for f in allowedFolders:
+    for f in allowed_folders:
         f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.userHasAdminAccess(uid)
         f['owner'] = timdb.users.getOwnerGroup(f['id'])
 
-    return jsonResponse(allowedFolders)
+    return jsonResponse(allowed_folders)
 
 
 def create_item(item_name, itemType, createFunction, owner_group_id):
@@ -922,13 +922,13 @@ def create_item(item_name, itemType, createFunction, owner_group_id):
         abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(itemType))
 
     timdb = getTimDb()
-    userName = getCurrentUserName()
+    username = getCurrentUserName()
 
     if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
         abort(403, 'Item with a same name already exists.')
 
     if not canWriteToFolder(item_name):
-        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, userName))
+        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, username))
 
     item_path, _ = timdb.folders.split_location(item_name)
     folder_id = timdb.folders.create(item_path, owner_group_id)
@@ -949,27 +949,12 @@ def create_document():
 def create_folder():
     jsondata = request.get_json()
     folder_name = jsondata['name']
-    ownerId = jsondata['owner']
+    owner_id = jsondata['owner']
     timdb = getTimDb()
-    return create_item(folder_name, 'folder', timdb.folders.create, ownerId)
-
-
-@app.route("/getBlock/<int:docId>/<par_id>")
-def getBlockMd(docId, par_id):
-    timdb = getTimDb()
-    verifyViewAccess(docId)
-    par = Document(docId).get_paragraph(par_id)
-    return jsonResponse({"text": par.get_markdown()})
-
-@app.route("/getBlockHtml/<int:docId>/<int:blockId>")
-def getBlockHtml(docId, blockId):
-    timdb = getTimDb()
-    verifyViewAccess(docId)
-    block = timdb.documents.getBlockAsHtml(get_newest_document(docId), blockId)
-    return block
+    return create_item(folder_name, 'folder', timdb.folders.create, owner_id)
 
 @app.route("/<plugin>/<path:fileName>")
-def pluginCall(plugin, fileName):
+def plugin_call(plugin, fileName):
     try:
         req = containerLink.call_plugin_resource(plugin, fileName)
         return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
@@ -978,7 +963,7 @@ def pluginCall(plugin, fileName):
 
 
 @app.route("/index/<int:doc_id>")
-def getIndex(doc_id):
+def get_index(doc_id):
     timdb = getTimDb()
     verifyViewAccess(doc_id)
     index = Document(doc_id).get_index()
@@ -1034,7 +1019,7 @@ def get_paragraph(doc, par_id):
 
 
 @app.route("/postNote", methods=['POST'])
-def postNote():
+def post_note():
     jsondata = request.get_json()
     note_text = jsondata['text']
     access = jsondata['access']
@@ -1059,7 +1044,7 @@ def postNote():
 
 
 @app.route("/editNote", methods=['POST'])
-def editNote():
+def edit_note():
     verifyLoggedIn()
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
@@ -1081,7 +1066,7 @@ def editNote():
 
 
 @app.route("/deleteNote", methods=['POST'])
-def deleteNote():
+def delete_note():
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
     doc_id = int(jsondata['docId'])  # TODO: maybe not needed
@@ -1095,7 +1080,7 @@ def deleteNote():
 
 
 @app.route("/questions/<int:doc_id>")
-def getQuestions(doc_id):
+def get_questions(doc_id):
     verifyOwnership(doc_id)
     timdb = getTimDb()
     questions = timdb.questions.get_doc_questions(doc_id)
@@ -1103,7 +1088,7 @@ def getQuestions(doc_id):
 
 
 @app.route("/getLectureWithName", methods=['POST'])
-def getLectureWithName(lecture_code,doc_id):
+def get_lecture_with_name(lecture_code,doc_id):
     verifyOwnership(doc_id)
     timdb = getTimDb()
     lecture = timdb.lectures.get_lecture_by_code(lecture_code,doc_id)
@@ -1128,10 +1113,10 @@ def ask_question():
         question_timelimit = 0
     else:
         question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"])
-    threadToStopQuestion = threading.Thread(target=stop_question_from_running,
+    thread_to_stop_question = threading.Thread(target=stop_question_from_running,
                                             args=(lecture_id, question_id, question_timelimit))
 
-    threadToStopQuestion.start()
+    thread_to_stop_question.start()
 
     verifyOwnership(int(doc_id))
     __question_to_be_asked.append((lecture_id, question_id, []))
@@ -1155,7 +1140,7 @@ def stop_question_from_running(lecture_id, question_id, question_timelimit):
 
 
 @app.route("/getQuestionById", methods=['GET'])
-def get_question():
+def get_question_by_id():
     if not request.args.get("question_id"):
         abort("400")
     # doc_id = int(request.args.get('doc_id'))
@@ -1279,7 +1264,7 @@ def answer_to_question():
 
 
 @app.route("/notes/<int:doc_id>")
-def getNotes(doc_id):
+def get_notes(doc_id):
     verifyViewAccess(doc_id)
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
@@ -1297,7 +1282,7 @@ def getNotes(doc_id):
 
 
 @app.route("/read/<int:doc_id>", methods=['GET'])
-def getReadParagraphs(doc_id):
+def get_read_paragraphs(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     doc = Document(doc_id)
@@ -1306,7 +1291,7 @@ def getReadParagraphs(doc_id):
 
 
 @app.route("/read/<int:doc_id>/<specifier>", methods=['PUT'])
-def setReadParagraph(doc_id, specifier):
+def set_read_paragraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     # todo: document versions
@@ -1321,7 +1306,7 @@ def setReadParagraph(doc_id, specifier):
 
 
 @app.route("/read/<int:doc_id>", methods=['PUT'])
-def setAllAsRead(doc_id):
+def mark_all_read(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     # todo: document versions
@@ -1333,11 +1318,11 @@ def setAllAsRead(doc_id):
 
 
 @app.route("/")
-def startPage():
+def start_page():
     return render_template('start.html')
 
 @app.route("/view/")
-def indexPage():
+def index_page():
     timdb = getTimDb()
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
     return render_template('index.html',
@@ -1351,7 +1336,7 @@ def make_session_permanent():
     session.permanent = True
 
 
-def startApp():
+def start_app():
     # TODO: Think if it is truly necessary to have threaded=True here
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)

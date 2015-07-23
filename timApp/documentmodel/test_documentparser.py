@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from documentmodel.documentparser import DocumentParser, SplitterException
+from documentmodel.documentparser import DocumentParser, SplitterException, ValidationException
 from documentmodel.documentwriter import DocumentWriter
 
 
@@ -75,6 +75,8 @@ text 4
         self.assertEqual([], dp.set_text('').get_blocks())
         with self.assertRaises(SplitterException):
             dp.set_text('```').get_blocks()
+        with self.assertRaises(ValidationException):
+            dp.set_text('#- {id=SoMUq2gZwvpI}\n\n#- {id=SoMUq2gZwvpI}').validate_ids()
         result = dp.set_text(doc_text).get_blocks(break_on_empty_line=True)
         self.assertListEqual([{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
                               {'md': 'text1', 'type': 'normal'},

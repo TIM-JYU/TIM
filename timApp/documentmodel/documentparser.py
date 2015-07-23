@@ -82,9 +82,15 @@ class DocumentParser:
         return self
 
     def validate_ids(self, id_validator_func=is_valid_id):
+        if self._last_parse_setting != self._break_on_empty_line:
+            self._parse_document(self._break_on_empty_line)
+        found_ids = set()
         for r in self._blocks:
             curr_id = r.get('id')
             if curr_id is not None:
+                if curr_id in found_ids:
+                    raise ValidationException('Duplicate paragraph id: ' + curr_id)
+                found_ids.add(curr_id)
                 if not id_validator_func(curr_id):
                     raise ValidationException('Invalid paragraph id: ' + curr_id)
         return self

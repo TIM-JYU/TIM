@@ -156,7 +156,7 @@ if (isFolder) {
             </tr>
             <tr>
                 <form>
-                    <td class="checkbox-td"><input type="checkbox" ng-model="newAliasPublic"/></td>
+                    <td class="checkbox-td"><input type="checkbox" ng-model="newAlias.public"/></td>
                     <td><input type="text" ng-model="newAlias.location"/></td>
                     <td><input type="text" placeholder="Click to add" ng-model="newAlias.name"/></td>
                     <td><input type="submit" value="Add" class="fullwidth" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name"></td>
@@ -222,6 +222,6 @@ if (isFolder) {
             </tr>
         </table>
     </div>
-    <a href="{{url_for('indexPage')}}">Return to the index page</a>
+    <a href="{{url_for('index_page')}}">Return to the index page</a>
 </div>
 {% endblock %}
