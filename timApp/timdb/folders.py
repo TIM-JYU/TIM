@@ -157,7 +157,7 @@ class Folders(TimDbBase):
     def is_empty(self, block_id: 'int') -> 'bool':
         folder_info = self.get(block_id)
         assert folder_info is not None, 'folder does not exist: ' + str(block_id)
-        folder_name = folder_info['name']
+        folder_name = folder_info['fullname']
 
         cursor = self.db.cursor()
         cursor.execute('SELECT exists(SELECT name FROM DocEntry WHERE name LIKE ?)', [folder_name + '/%'])

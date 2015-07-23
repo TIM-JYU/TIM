@@ -1,6 +1,7 @@
 import os
 
 from contracts import contract, new_contract
+from documentmodel.documentwriter import DocumentWriter
 from markdownconverter import md_to_html
 from .randutils import *
 
@@ -83,12 +84,20 @@ class DocParagraph:
         return self.__data['id']
 
     @contract
+    def is_different_from(self, par) -> 'bool':
+        return self.get_hash() != par.get_hash() or self.get_attrs() != par.get_attrs()
+
+    @contract
     def get_hash(self) -> 'str':
         return self.__data['t']
 
     @contract
     def get_markdown(self) -> 'str':
         return self.__data['md']
+
+    @contract
+    def get_exported_markdown(self) -> 'str':
+        return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
 
     @contract
     def get_html(self) -> 'str':

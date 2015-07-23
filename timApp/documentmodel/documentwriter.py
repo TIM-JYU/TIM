@@ -6,15 +6,19 @@ class DocumentWriter:
     """Converts a sequence of document blocks to text.
     """
 
-    def __init__(self, pars, export_hashes=False):
+    def __init__(self, pars, export_hashes=False, export_ids=True):
         """Initializes a DocumentWriter object.
 
+        :param export_hashes: Whether to include hash attributes in the exported markdown.
+        :param export_ids: Whether to include id attributes in the exported markdown.
         :param pars: A sequence of paragraphs representing the document.
         """
         self.pars = pars
         self.ignored_attrs = ['md', 'type', 'html', 'links']
         if not export_hashes:
             self.ignored_attrs.append('t')
+        if not export_ids:
+            self.ignored_attrs.append('id')
 
     def get_text(self):
         """Gets the full text for the document.
@@ -34,12 +38,13 @@ class DocumentWriter:
                 if not attrs_str:
                     text += p['md']
                 else:
-                    if blocks[0]['type'] == 'normal':
+                    if blocks[0]['type'] == 'normal' or blocks[0]['type'] == 'autonormal':
                         text += '#-' + ' {' + attrs_str + '}\n' + p['md']
                     else:
                         first_line, rest = blocks[0]['md'].split('\n', 1)
                         text += first_line + ' {' + attrs_str + '}\n' + rest
-
+            if text[-1] != '\n':
+                text += '\n'
         return text[1:]
 
     def attrs_to_str(self, attrs):

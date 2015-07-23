@@ -173,14 +173,15 @@ class Documents(TimDbBase):
         return row[0] if row else None
 
     @contract
-    def get_document_names(self, document_id: 'int') -> 'list(dict)':
+    def get_document_names(self, document_id: 'int', include_nonpublic=True) -> 'list(dict)':
         """Gets the document's names by its id.
 
         :param document_id: The id of the document.
         :returns: A list of dictionaries in format [{'name': (str), 'public': (bool)}, ...].
         """
         cursor = self.db.cursor()
-        cursor.execute('SELECT name, public FROM DocEntry WHERE id = ?', [document_id])
+        public_clause = '' if include_nonpublic else ' WHERE public = True'
+        cursor.execute('SELECT name, public FROM DocEntry WHERE id = ?' + public_clause, [document_id])
         return self.resultAsDictionary(cursor)
 
     def get_first_document_name(self, document_id: 'int') -> 'str':

@@ -46,7 +46,8 @@ class DocumentParser:
     """Splits documents into paragraphs.
 
     :type _blocks: list[dict]
-    :type doc_text: str
+    :type _doc_text: str
+    :type _last_setting: tuple
     """
 
     def __init__(self, doc_text=''):
@@ -57,24 +58,20 @@ class DocumentParser:
         self._doc_text = doc_text
         self._blocks = None
         self._break_on_empty_line = False
-        self._last_parse_setting = None
-        self._parse_document()
+        self._last_setting = ()
 
-    def get_blocks(self, break_on_empty_line=False):
-        if self._last_parse_setting != break_on_empty_line:
-            self._parse_document(break_on_empty_line)
+    def get_blocks(self, break_on_empty_line=False,
+                   break_on_code_block=True,
+                   break_on_header=True,
+                   break_on_normal=True):
+        self._parse_document(break_on_empty_line=break_on_empty_line,
+                             break_on_code_block=break_on_code_block,
+                             break_on_header=break_on_header,
+                             break_on_normal=break_on_normal)
         return self._blocks
 
-    def set_text(self, doc_text):
-        """
-
-        :type doc_text: str
-        """
-        self._doc_text = doc_text
-        self._last_parse_setting = None
-        return self
-
     def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id):
+        self._parse_document(*self._last_setting)
         for r in self._blocks:
             r['t'] = hash_func(r['md'])
             if not r.get('id'):
@@ -82,8 +79,7 @@ class DocumentParser:
         return self
 
     def validate_ids(self, id_validator_func=is_valid_id):
-        if self._last_parse_setting != self._break_on_empty_line:
-            self._parse_document(self._break_on_empty_line)
+        self._parse_document(*self._last_setting)
         found_ids = set()
         for r in self._blocks:
             curr_id = r.get('id')
@@ -95,9 +91,15 @@ class DocumentParser:
                     raise ValidationException('Invalid paragraph id: ' + curr_id)
         return self
 
-    def _parse_document(self, break_on_empty_line=False):
+    def _parse_document(self, break_on_empty_line=False,
+                        break_on_code_block=True,
+                        break_on_header=True,
+                        break_on_normal=True):
+        if self._last_setting == (break_on_empty_line, break_on_code_block, break_on_header, break_on_normal):
+            return
         self._blocks = []
         self._break_on_empty_line = break_on_empty_line
+        self._last_setting = (break_on_empty_line, break_on_code_block, break_on_header, break_on_normal)
         lines = self._doc_text.split("\n")
         doc = DocReader(lines)
         funcs = [self.try_parse_code_block,
@@ -110,9 +112,17 @@ class DocumentParser:
             for func in funcs:
                 result = func(doc)
                 if result:
-                    self._blocks.append(result)
+                    result['md'] = result['md'].rstrip().strip('\r\n')
+                    if ((result['type'] == 'code' and not break_on_code_block)
+                        or (result['type'] == 'header' and not break_on_header)
+                        or (result['type'] == 'autonormal' and not break_on_normal)) \
+                            and not result.get('attrs') and len(self._blocks) > 0 \
+                            and not self._blocks[-1].get('attrs', {}).get('plugin') \
+                            and self._blocks[-1]['type'] != 'atom':
+                        self._blocks[-1]['md'] += '\n\n' + result['md']
+                    else:
+                        self._blocks.append(result)
                     break
-        self._last_parse_setting = break_on_empty_line
 
     def is_beginning_of_code_block(self, doc):
         """
@@ -156,15 +166,15 @@ class DocumentParser:
         else:
             first_line = start_line[:start].strip()
             block_lines.append(first_line)
+        line = None
         while True:
             if not doc.has_more_lines():
-                raise SplitterException("Missing end of code block")
+                break
             line = doc.get_line_and_advance()
             if line.startswith(code_block_marker):
                 break
             block_lines.append(line)
-        if not is_atom:
-            # noinspection PyUnboundLocalVariable
+        if not is_atom and line is not None:
             block_lines.append(line)
         result = {'md': '\n'.join(block_lines), 'type': 'atom' if is_atom else 'code'}
         self.extract_attrs(result, tokens)
@@ -204,7 +214,7 @@ class DocumentParser:
                     or (self._break_on_empty_line and self.is_empty_line(doc)):
                 break
             block_lines.append(doc.get_line_and_advance())
-        return {'md': '\n'.join(block_lines), 'type': 'normal'}
+        return {'md': '\n'.join(block_lines), 'type': 'autonormal'}
 
     def extract_attrs(self, result, tokens):
         for builtin in ('id', 't'):

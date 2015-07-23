@@ -959,7 +959,7 @@ def get_block(doc_id, par_id):
     timdb = getTimDb()
     verifyEditAccess(doc_id)
     par = Document(doc_id).get_paragraph(par_id)
-    return jsonResponse({"text": par.get_markdown()})
+    return jsonResponse({"text": par.get_exported_markdown()})
 
 
 @app.route("/<plugin>/<path:fileName>")
