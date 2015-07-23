@@ -49,7 +49,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                 }*/
 
 
-                htmlSheet += "<div style='background-color: white'>";
+                htmlSheet += "<div>";
                 htmlSheet += "<table id='answer-sheet-table'>";
 
                 if ($scope.json.TYPE === "true-false") {

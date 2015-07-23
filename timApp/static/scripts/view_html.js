@@ -993,7 +993,8 @@ timApp.controller("ViewCtrl", [
                 var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
-            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wÃ¥Ã¤Ã¶\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
+            //return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wÃ¥Ã¤Ã¶\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
+            return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").trim().replace(/ +/g, '-').toLowerCase();
         };
 
         sc.findIndexLevel = function (str) {
@@ -1088,6 +1089,8 @@ timApp.controller("ViewCtrl", [
                 // Do not collapse/expand if a subentry is clicked
                 return state;
             }
+
+            if (event.target)
 
             var newState = sc.invertState(state);
             if (newState !== state) {

@@ -1371,7 +1371,7 @@ img.console {
     z-index: 500;
     width: 180px;
     padding: 0 10px 10px 10px;
-    max-height: 100vh;
+    max-height: 98vh;
     word-wrap: break-word;
     background-color: #e6e6e6;
     overflow-x: hidden;
@@ -1394,7 +1394,7 @@ img.console {
     border-bottom: solid 4px #CCC;
 }*/
 
-.index-sidebar ul, .lectures-sidebar ul, .questions-sidebar ul, .people-sidebar ul {
+.index-sidebar ul, .lectures-sidebar ul, .questions-sidebar ul, .people-sidebar ul, .settings-sidebar ul {
     margin: 0;
     padding-left: 5px;
     text-align: left;
@@ -1409,19 +1409,11 @@ img.console {
 }
 
 .settings-sidebar ul {
-    margin: 0;
     font-size: 15px;
-    padding: 0;
-    text-align: left;
-}
-
-.settings-sidebar h4 {
-    margin-left: 5px;
 }
 
 .sidebar li {
     list-style: none;
-    padding-left: 15px;
 }
 
 .people-sidebar li {
@@ -1430,18 +1422,26 @@ img.console {
 
 .index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
     list-style-image: url("/static/images/minus.png");
-    list-style-type: square;
+    cursor: pointer;
 }
 
 .index-sidebar li.col, .lectures-sidebar li.col, .questions-sidebar li.col, .people-sidebar li.col, .settings-sidebar li.col {
     list-style-image: url("/static/images/plus.png");
-    list-style-type: square;
+    cursor: pointer;
 }
 
 .index-sidebar a {
-    margin: 0 0 0 -15px;
+    margin: 0 0 0 -5px;
     text-align: left;
     color: #2bb;
+}
+
+.index-sidebar ul {
+    margin: 0 0 0 12px;
+}
+
+.index-sidebar ul ul {
+    margin: 0 0 0 6px;
 }
 
 .settings-sidebar a {
@@ -1451,7 +1451,7 @@ img.console {
 }
 
 .lectures-sidebar a, .questions-sidebar a, .people-sidebar a {
-    margin: 0 0 0 -15px;
+    margin: 0;
     text-align: left;
     color: black;
 }
@@ -1474,6 +1474,10 @@ img.console {
     padding-left: 5pt;
 }
 
+.sidebar h3, .sidebar h4 {
+    margin: 10px 0 0 0;
+}
+
 .sidebar h1{
     font-size: 120%;
     background-color: #3cc;
@@ -1488,7 +1492,7 @@ img.console {
 }
 
 .people-sidebar h3, .settings-sidebar h3 {
-    margin: 0 0 5px 5px;
+    padding-left: 5px;
     color: #3cc;
     font-size: 15px;
 }
