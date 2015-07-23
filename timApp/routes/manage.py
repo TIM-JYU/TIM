@@ -134,6 +134,8 @@ def add_alias(doc_id, new_alias):
 def change_alias(doc_id, alias):
     timdb = getTimDb()
     alias = alias.strip('/')
+    new_alias = request.get_json()['new_name'].strip('/')
+    is_public = bool(request.get_json()['public'])
 
     doc_id2 = timdb.documents.get_document_id(alias)
     if doc_id2 is None:
@@ -142,13 +144,27 @@ def change_alias(doc_id, alias):
         return jsonResponse({'message': 'The document name does not match the id!'}, 404)
 
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
-        return jsonResponse({'message': "You don't have permission to modify this object."}, 403)
+        return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
 
-    jsondata = request.get_json()
-    new_name = jsondata['new_name'].strip('/')
-    is_public = bool(jsondata['public'])
-    timdb.documents.change_name(doc_id, alias, new_name, is_public)
+    userName = getCurrentUserName()
+
+    is_admin = timdb.users.isUserInGroup(userName, 'Administrators')
+    new_parent, _ = timdb.folders.split_location(new_alias)
+
+    if alias != new_alias:
+        if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
+            return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
+        parent, _ = timdb.folders.split_location(alias)
+        if not is_admin and not canWriteToFolder(parent):
+            return jsonResponse({'message': "You don't have permission to write to the source folder."}, 403)
+
+    if not is_admin and not canWriteToFolder(new_parent):
+        return jsonResponse({'message': "You don't have permission to write to the destination folder."}, 403)
+
+    timdb.folders.create(new_parent, getCurrentUserGroup())
+    timdb.documents.change_name(doc_id, alias, new_alias, is_public)
     return "Success"
+
 
 @manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["DELETE"])
 def remove_alias(doc_id, alias):
