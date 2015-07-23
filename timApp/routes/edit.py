@@ -4,6 +4,7 @@ from flask import Blueprint
 
 from .common import *
 from documentmodel.docparagraph import DocParagraph
+from documentmodel.documentparser import DocumentParser
 from markdownconverter import md_to_html
 import pluginControl
 from timdb.docidentifier import DocIdentifier
@@ -67,16 +68,32 @@ def modify_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     timdb = getTimDb()
-    doc_id, md, par_id, attrs = verify_json_params('docId', 'text', 'par', 'attrs')
+    doc_id, md, par_id, par_next_id, attrs = verify_json_params('docId', 'text', 'par', 'par_next', 'attrs')
     verifyEditAccess(doc_id)
+
     current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, par_id))
     version = request.headers.get('Version', '')
     # verify_document_version(doc_id, version)
-    identifier = get_newest_document(doc_id)
+    doc = get_newest_document(doc_id)
+    if not doc.has_paragraph(par_id):
+        abort(400, 'Paragraph not found: ' + par_id)
 
-    blocks, doc = timdb.documents.modify_paragraph(identifier, par_id, md, attrs)
+    editor_pars = get_pars_from_editor_text(md)
+    original_par = DocParagraph(par_id=par_id)
+    pars = []
+    if editor_pars[0].is_different_from(original_par):
+        [par], _ = timdb.documents.modify_paragraph(doc,
+                                                    par_id,
+                                                    editor_pars[0].get_markdown(),
+                                                    editor_pars[0].get_attrs())
+        pars.append(par)
+
+    for p in editor_pars[1:]:
+        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
+        pars.append(par)
+
     # Replace appropriate elements with plugin content, load plugin requirements to template
-    pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
+    pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,
                                                                  doc_id,
@@ -96,9 +113,8 @@ def preview(doc_id):
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     timdb = getTimDb()
-    md, = verify_json_params('text')
-    attrs = request.get_json().get('attrs')
-    blocks = [DocParagraph(md=md, attrs=attrs)]
+    text, = verify_json_params('text')
+    blocks = get_pars_from_editor_text(text)
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,
@@ -110,6 +126,14 @@ def preview(doc_id):
                          'angularModule': modules})
 
 
+def get_pars_from_editor_text(text):
+    blocks = [DocParagraph(md=par['md'], attrs=par.get('attrs'))
+              for par in DocumentParser(text).get_blocks(break_on_code_block=False,
+                                                         break_on_header=False,
+                                                         break_on_normal=False)]
+    return blocks
+
+
 @edit_page.route("/newParagraph/", methods=["POST"])
 def add_paragraph():
     """Route for adding a new paragraph to a document.
@@ -117,12 +141,18 @@ def add_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     timdb = getTimDb()
-    md, doc_id, paragraph_id, attrs = verify_json_params('text', 'docId', 'par_next', 'attrs')
+    md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
+    editor_pars = get_pars_from_editor_text(md)
+
     # verify_document_version(doc_id, version)
-    blocks, new_doc = timdb.documents.add_paragraph(get_newest_document(doc_id), md, paragraph_id, attrs)
-    pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
+    doc = get_newest_document(doc_id)
+    pars = []
+    for p in editor_pars:
+        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
+        pars.append(par)
+    pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,
                                                                  doc_id,
@@ -131,7 +161,7 @@ def add_paragraph():
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
-                         'version': new_doc.get_version()})
+                         'version': doc.get_version()})
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>/<par_id>", methods=["POST"])
