@@ -146,7 +146,7 @@ input[type="submit"], input[type="button"] {
 .menu-icon.clicked {
 	z-index: 501;
 	opacity: 0.99;
-	padding: 5px;
+	/* padding: 5px; */
 	background:#e6e6e6;
 }
 
@@ -262,6 +262,6 @@ input[type="submit"], input[type="button"] {
 	}
 	
 	.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
-		max-height: 260px;
+		max-height: calc(100vh - 60px);
 	}
 }

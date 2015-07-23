@@ -8,7 +8,7 @@
 
 body {
     text-align: justify;
-    margin: auto auto auto 210px;
+    margin: auto auto auto 250px;
 }
 
 .correct {
@@ -536,10 +536,6 @@ ul ul ul, ol ol ol {
     left: 0;
     top: 3em;
     background: #999966;
-}
-
-.material {
-    width: 90%;
 }
 
 #topBar {
@@ -1370,16 +1366,16 @@ img.console {
 
 .sidebar {
     position: relative;
-    left: 50px;
+    left: 44px;
     top: -50px;
     z-index: 500;
-    width: 215px;
-    max-height: 500px;
+    width: 180px;
+    padding: 0 10px 10px 10px;
+    max-height: 100vh;
     word-wrap: break-word;
     background-color: #e6e6e6;
     overflow-x: hidden;
     overflow-y: auto;
-    border-top: 1px solid #e6e6e6;
 }
 
 .hidden, .autohidden {
@@ -1399,7 +1395,8 @@ img.console {
 }*/
 
 .index-sidebar ul, .lectures-sidebar ul, .questions-sidebar ul, .people-sidebar ul {
-    padding-left: 20px;
+    margin: 0;
+    padding-left: 5px;
     text-align: left;
     font-family: "Helvetica", Arial, sans-serif;
     font-size: 0.9em;
@@ -1412,12 +1409,14 @@ img.console {
 }
 
 .settings-sidebar ul {
-    margin-top: 5px;
-    margin-left: 20px;
-    margin-bottom: 5px;
+    margin: 0;
     font-size: 15px;
     padding: 0;
     text-align: left;
+}
+
+.settings-sidebar h4 {
+    margin-left: 5px;
 }
 
 .sidebar li {
@@ -1447,7 +1446,7 @@ img.console {
 
 .settings-sidebar a {
     margin-top: 5px;
-    margin-left: 25px;
+    margin-left: 15px;
     color: blue;
 }
 
@@ -1479,7 +1478,7 @@ img.console {
     font-size: 120%;
     background-color: #3cc;
     color: white;
-    margin: 0 20px;
+    margin: 0 0 15px 0;
     border: none;
     padding-top: 10pt;
     padding-bottom: 10pt;
@@ -1489,9 +1488,7 @@ img.console {
 }
 
 .people-sidebar h3, .settings-sidebar h3 {
-    margin-top: 5px;
-    margin-left: 20px;
-    margin-bottom: 5px;
+    margin: 0 0 5px 5px;
     color: #3cc;
     font-size: 15px;
 }
@@ -2039,7 +2036,7 @@ p.plgfooter {
 }
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
-@media only screen and (min-width: 1200px) {
+@media only screen and (min-width: 1201px) {
     .menu, .sideMenu {
         display: block !important;
     }
