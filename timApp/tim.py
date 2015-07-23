@@ -953,6 +953,15 @@ def create_folder():
     timdb = getTimDb()
     return create_item(folder_name, 'folder', timdb.folders.create, owner_id)
 
+
+@app.route("/getBlock/<doc_id>/<par_id>")
+def get_block(doc_id, par_id):
+    timdb = getTimDb()
+    verifyEditAccess(doc_id)
+    par = Document(doc_id).get_paragraph(par_id)
+    return jsonResponse({"text": par.get_markdown()})
+
+
 @app.route("/<plugin>/<path:fileName>")
 def plugin_call(plugin, fileName):
     try:
