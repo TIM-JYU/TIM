@@ -1079,14 +1079,8 @@ timApp.controller("ViewCtrl", [
                 // Listen only to the left mouse button
                 return state;
             }
-            if (event.target.className === 'a2' || event.target.className === 'a3') {
-                // Do not collapse/expand if a subentry is clicked
-                return state;
-            }
 
-            if (event.target)
-
-                var newState = sc.invertState(state);
+            var newState = sc.invertState(state);
             if (newState !== state) {
                 sc.clearSelection();
             }
