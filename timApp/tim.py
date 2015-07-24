@@ -371,7 +371,7 @@ def get_updates():
 
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
-
+        lecturers, students = get_lecture_users(timdb, lecture_id)
         # Gets new messages if the wall is in use.
         if use_wall:
             last_message = timdb.messages.get_last_message(lecture_id)
