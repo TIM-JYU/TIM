@@ -27,7 +27,7 @@
                 </label><br>
             {% endfor %}
             <label>Custom CSS:<br><textarea class="docEditor" ng-model="settings.custom_css"></textarea></label><br>
-            <input type="submit" value="Save custom CSS" ng-disabled="saving">
+            <button type="submit" ng-disabled="saving">Save custom CSS</button>
             <span ng-show="saving">Saving...</span>
         </form>
     </div>

@@ -92,7 +92,7 @@ if (isFolder) {
         <div ng-show="showAddEditor">
             <form ng-submit="addPermission(editorName, 'edit')">
                 <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
-                <input type="submit" value="Add" ng-disabled="!editorName">
+                <button type="submit" ng-disabled="!editorName">Add</button>
                 <button type="button" ng-click="showAddEditor = false">Cancel</button>
                 <button type="button" ng-click="addPermission('Korppi users', 'edit')">Add Korppi users</button>
                 <button type="button" ng-click="addPermission('Logged-in users', 'edit')">Add logged-in users</button>
@@ -111,7 +111,7 @@ if (isFolder) {
         <div ng-show="showAddViewer">
             <form ng-submit="addPermission(viewerName, 'view')">
                 <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
-                <input type="submit" value="Add" ng-disabled="!viewerName">
+                <button type="submit" ng-disabled="!viewerName">Add</button>
                 <button type="button" ng-click="showAddViewer = false">Cancel</button>
                 <button type="button" ng-click="addPermission('Korppi users', 'view')">Add Korppi users</button>
                 <button type="button" ng-click="addPermission('Logged-in users', 'view')">Add logged-in users</button>
