@@ -83,8 +83,6 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
                 setTop = (!topSet & !botSet) | topSet;
                 setBottom = botSet;
 
-                console.log(element.css('top'));
-
                 prevTop = getPixels(element.css('top'));
                 prevLeft = getPixels(element.css('left'));
                 prevBottom = getPixels(element.css('bottom'));

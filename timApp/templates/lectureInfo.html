@@ -21,7 +21,13 @@
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/directives/showChartDirective.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/directives/popUpDialog.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/lectureInfo.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/popUp.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/windowstyle.css') }}">
 
     <script>
         var docId = {{docId|tojson|safe}};
@@ -34,6 +40,10 @@
 {% endblock %}
 {% block content %}
     <div ng-app="timApp" ng-controller="LectureInfoController">
+        <pop-up-dialog show="showLectureForm" caption="'Edit lecture'">
+            <ng-include
+                    src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
+        </pop-up-dialog>
         <h1 ng-bind="lectureCode"></h1>
 
         <h3>Lecture info</h3>
@@ -75,7 +85,8 @@
 
             <div>
                 <div ng-repeat="question in questions" style="margin-bottom: 2em">
-                    <p class="bold" ng-show="showPoints" ng-bind-html="question.question_title">{{ "{{question.question_title}}" }}</p>
+                    <p class="bold" ng-show="showPoints"
+                       ng-bind-html="question.question_title">{{ "{{question.question_title}}" }}</p>
                     <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
                                           control='dynamicAnswerShowControls[$index]'
                                           class="chart"></show-chart-directive>
@@ -91,6 +102,7 @@
         <div style="margin-top: 10em" ng-show="isLecturer">
             <h3>Delete lecture</h3>
             <input type="button" ng-click="deleteLecture()" value="Delete lecture">
+            <button title="Edit this lecture" ng-click="editLecture(lectureName)">Edit</button>
         </div>
     </div>
 {% endblock %}

@@ -18,6 +18,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     "use strict";
     $scope.docId = docId;
     $scope.lectureId = lectureId;
+    $scope.code = lectureCode;
     $scope.lectureCode = "Lecture info: " + lectureCode;
     $scope.lectureStartTime = lectureStartTime;
     $scope.lectureEndTime = lectureEndTime;
@@ -31,6 +32,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     $scope.answerers = [];
     $scope.showPoints = false;
     $scope.points = [];
+    $scope.showLectureForm = false;
 
     /**
      * Sends http request to get info about the specific lecture.
@@ -87,6 +89,53 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
                 });
         }
     };
+
+    $scope.editLecture = function () {
+        $('#currentList').hide();
+        $('#futureList').hide();
+        $http({
+            url: '/showLectureInfoGivenName',
+            method: 'GET',
+            params: {'lecture_code': $scope.code, 'doc_id': $scope.docId}
+        })
+            .success(function (lecture) {
+                $scope.$broadcast("editLecture", {
+                    "lecture_id": lecture.lectureId,
+                    "lecture_name": lecture.lectureCode,
+                    "start_date": lecture.lectureStartTime,
+                    "end_date": lecture.lectureEndTime,
+                    "password": lecture.password || "",
+                    "editMode": true
+                });
+                $scope.showLectureForm = true;
+            })
+            .error(function () {
+                $window.console.log("Failed to fetch lecture.");
+            });
+    };
+
+    $scope.$on("lectureUpdated", function (event, data) {
+        $http({
+            url: '/showLectureInfoGivenName',
+            method: 'GET',
+            params: {'lecture_id': $scope.lectureId}
+        })
+            .success(function (lecture) {
+                console.log(lecture);
+                $scope.code = lecture['lectureCode'];
+                $scope.lectureCode = "Lecture info: " + lecture['lectureCode'];
+                $scope.lectureEndTime = lecture['lectureEndTime'];
+                $scope.lectureStartTime = lecture['lectureStartTime'];
+            })
+            .error(function () {
+                $window.console.log("Failed to fetch lecture.");
+            });
+        $scope.showLectureForm = false;
+    });
+
+    $scope.$on("closeLectureForm", function (event, data) {
+        $scope.showLectureForm = false;
+    });
 
     /**
      * Draws charts from the answer of the current lecture.

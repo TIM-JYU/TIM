@@ -623,7 +623,10 @@ def show_lecture_info(lecture_id):
 @app.route('/showLectureInfoGivenName/', methods=['GET'])
 def show_lecture_info_given_name():
     timdb = getTimDb()
-    lecture = timdb.lectures.get_lecture_by_name(request.args.get('lecture_code'),int(request.args.get('doc_id')))
+    if 'lecture_id' in request.args:
+        lecture = timdb.lectures.get_lecture(int(request.args.get('lecture_id')))
+    else:
+        lecture = timdb.lectures.get_lecture_by_name(request.args.get('lecture_code'), int(request.args.get('doc_id')))
     if len(lecture) <= 0:
         abort(400)
 
@@ -632,8 +635,8 @@ def show_lecture_info_given_name():
     current_user = getCurrentUserId()
 
     response = {"docId": lecture.get("doc_id"), "lectureId": lecture.get("lecture_id"),
-                        "lectureCode": lecture.get("lecture_code"), "lectureStartTime": lecture.get("start_time"),
-                        "lectureEndTime": lecture.get("end_time")}
+                "lectureCode": lecture.get("lecture_code"), "lectureStartTime": lecture.get("start_time"),
+                "lectureEndTime": lecture.get("end_time")}
     if lecturer == current_user:
         response["password"] = lecture.get("password")
 

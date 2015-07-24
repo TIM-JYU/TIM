@@ -886,10 +886,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             }
                         }
 
-                        console.log(answer.students);
                         $scope.addPeopleToList(answer.students, $scope.studentTable);
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
-                        console.log($scope.studentTable);
 
                         if (answer.question && !$scope.isLecturer) {
                             $scope.showAnswerWindow = true;
