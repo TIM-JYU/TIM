@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from documentmodel.documentparser import DocumentParser, SplitterException, ValidationException
+from documentmodel.documentparser import DocumentParser, ValidationException
 from documentmodel.documentwriter import DocumentWriter
 
 
@@ -57,6 +57,8 @@ code
 ```
 
 test
+
+# Test {a=b}
 """.strip()
         dp = DocumentParser(doc_text)
         result = dp.get_blocks()
@@ -70,7 +72,8 @@ test
                         {'classes': ['someClass']}, 'type': 'normal'},
                     {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom'},
                     {'md': '```\ncode\n```', 'type': 'code'},
-                    {'md': 'test', 'type': 'autonormal'}]
+                    {'md': 'test', 'type': 'autonormal'},
+                    {'type': 'header', 'attrs': {'a': 'b'}, 'md': '# Test'}]
         self.assertListEqual(expected, result)
         exported = DocumentWriter(result).get_text()
         self.assertListEqual(expected, DocumentParser(exported).get_blocks())
@@ -85,7 +88,8 @@ test
                               {'id': 'zW05KRpJQOG9', 't': 'MHg3NDExMDQ3NA=='},
                               {'id': 'E0DvQTlfKkJd', 't': 'LTB4MzFkNmM4N2Y='},
                               {'id': 'T4cWAefPZ9Po', 't': 'LTB4ODkxMjE0Nw=='},
-                              {'id': 'ys55kUwXv6jY', 't': 'LTB4NDU5NDJkZWQ='}],
+                              {'id': 'ys55kUwXv6jY', 't': 'LTB4NDU5NDJkZWQ='},
+                              {'id': 'ziJ7zlQXydZE', 't': 'LTB4YTU1MWNkMQ=='}],
                              [{'id': block['id'], 't': block['t']} for block in dp.get_blocks()])
         dp.validate_ids()
         self.assertEqual([], DocumentParser('').get_blocks())
@@ -110,7 +114,8 @@ test
                               {'md': 'text 4', 'type': 'autonormal'},
                               {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom'},
                               {'md': '```\ncode\n```', 'type': 'code'},
-                              {'md': 'test', 'type': 'autonormal'}], result)
+                              {'md': 'test', 'type': 'autonormal'},
+                              {'md': '# Test', 'type': 'header', 'attrs': {'a': 'b'}}], result)
 
         result = DocumentParser(doc_text).get_blocks(break_on_code_block=False,
                                                      break_on_header=False,
@@ -125,7 +130,8 @@ test
                               {'md': 'text 3\n\n\ntext 4', 'attrs':
                                   {'classes': ['someClass']}, 'type': 'normal'},
                               {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom'},
-                              {'md': '```\ncode\n```\n\ntest', 'type': 'code'}], result)
+                              {'md': '```\ncode\n```\n\ntest', 'type': 'code'},
+                              {'md': '# Test', 'attrs': {'a': 'b'}, 'type': 'header'}], result)
 
 
 if __name__ == '__main__':
