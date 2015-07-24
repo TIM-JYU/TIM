@@ -14,7 +14,7 @@
 var angular;
 
 var timApp = angular.module('timApp');
-timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', function ($interval, $compile, $rootScope) {
+timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', function ($interval, $compile, $rootScope, $http) {
     "use strict";
     return {
         restrict: 'E',
@@ -39,14 +39,14 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                 if ($scope.json.TIMELIMIT !== "" && !$scope.preview) {
                     htmlSheet += "<progress value='0' max='" + $scope.json.TIMELIMIT + "' id='progressBar'>";
                     htmlSheet += "</progress>";
-                    htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + "</span>";
+                    htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + " s</span>";
                 }
 
                 htmlSheet += "<h2>" + $scope.json.QUESTION + "</h2>";
                 /*
-                if ($scope.json.TYPE !== "true-false") {
-                    htmlSheet += "<h2>" + $scope.json.QUESTION + "</h2>";
-                }*/
+                 if ($scope.json.TYPE !== "true-false") {
+                 htmlSheet += "<h2>" + $scope.json.QUESTION + "</h2>";
+                 }*/
 
 
                 htmlSheet += "<div>";
@@ -59,7 +59,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
 
                 if ($scope.json.DATA.HEADERS.length > 0 && !($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1)) {
                     htmlSheet += "<tr>";
-                    if($scope.json.DATA.HEADERS.length > 1) {
+                    if ($scope.json.DATA.HEADERS.length > 1) {
                         htmlSheet += "<th></th>";
                     }
                     angular.forEach($scope.json.DATA.HEADERS, function (header) {
@@ -82,8 +82,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                         if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                             if (row.COLUMNS[i].answerFieldType === "text") {
                                 group = "group" + i;
-                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'" + disabled ;
-                                if($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1 && $scope.json.DATA.ROWS.length ===1) {
+                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'" + disabled;
+                                if ($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1 && $scope.json.DATA.ROWS.length === 1) {
                                     htmlSheet += "style='height:200px'";
                                 }
                                 htmlSheet += "></textarea></label></td>";
@@ -91,15 +91,15 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
                                 htmlSheet += "<td class='answer-button'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
-                                disabled + " value='"  + $scope.json.DATA.HEADERS[header].text + "'" +
-                                "></label></td>";
+                                    disabled + " value='" + $scope.json.DATA.HEADERS[header].text + "'" +
+                                    "></label></td>";
                                 header++;
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
                             htmlSheet += "<td class='answer-button2'><label> <input type='" + row.COLUMNS[i].answerFieldType + "' name='" + group + "'" +
-                            disabled + " value='" + row.text + "'" +
-                            ">" + row.text + "</label></td>";
+                                disabled + " value='" + row.text + "'" +
+                                ">" + row.text + "</label></td>";
                         }
                     }
                     htmlSheet += "</tr>";
@@ -120,13 +120,29 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                     $scope.progressElem = $("#progressBar");
                     $scope.progressText = $("#progressLabel");
                     $scope.start = function () {
-                        promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
+                        $scope.getTimeLeft();
+                        //promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
                     };
                     $scope.start();
                 }
+            };
 
-            }
-            ;
+            $scope.getTimeLeft = function () {
+                $http({
+                    url: '/getTimeLeft',
+                    method: 'GET',
+                    params: {'lecture_id': $scope.$parent.lectureId, 'question_id': $scope.$parent.questionId}
+                }).success(function (data) {
+                    var left = 0;
+                    if (data === '') left = 0;
+                    else left = parseInt(data);
+                    $scope.internalControl.updateBar2(left);
+                    if (data !== '')
+                        $scope.getTimeLeft();
+                }).error(function (data) {
+                    console.log('Error in getting time left');
+                });
+            };
 
             /**
              * FILL WITH SUITABLE TEXT
@@ -144,7 +160,21 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                     if (!$scope.$parent.isLecturer) {
                         $scope.internalControl.answerToQuestion();
                     } else {
-                        clearInterval(promise);
+                        //clearInterval(promise);
+                        $scope.progressText.text("Time's up");
+                    }
+                }
+
+            };
+
+            $scope.internalControl.updateBar2 = function (value) {
+                //TODO: Problem with inactive tab.
+                $scope.progressElem.attr("value", ($scope.json.TIMELIMIT - value));
+                $scope.progressText.text(value + " s");
+                if (Math.abs(($scope.json.TIMELIMIT - value) - $scope.progressElem.attr("max")) < 0.02) {
+                    if (!$scope.$parent.isLecturer) {
+                        $scope.internalControl.answerToQuestion();
+                    } else {
                         $scope.progressText.text("Time's up");
                     }
                 }
@@ -167,7 +197,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
                             groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z0-9]/g, '');
 
                             if ($scope.json.DATA.ROWS[0].COLUMNS[0].answerFieldType === "text") {
-                                matrixInputs = $('textarea[name=' +"group"+i + ']');
+                                matrixInputs = $('textarea[name=' + "group" + i + ']');
                                 for (var c = 0; c < matrixInputs.length; c++) {
                                     answer.push(matrixInputs[c].value);
                                 }
