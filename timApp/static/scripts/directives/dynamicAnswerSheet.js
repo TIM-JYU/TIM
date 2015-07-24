@@ -217,6 +217,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', f
              * @memberof module:dynamicAnswerSheet
              */
             $scope.internalControl.closeQuestion = function () {
+                $interval.cancel(promise);
                 clearInterval(promise);
                 $element.empty();
                 $scope.$emit('closeQuestion');
