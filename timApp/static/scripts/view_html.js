@@ -1086,6 +1086,52 @@ timApp.controller("ViewCtrl", [
             return newState;
         };
 
+
+
+
+        //sc.showContent = function ($this, e) {
+        sc.onClick('.showContent', function($this, e) {
+            sc.contentShown = !sc.contentShown;
+            var $pars = $('#pars');
+            if (sc.contentLoaded) {
+                if (sc.contentShown) {
+                    $pars.css('display', '');
+                    $('.showContent').text('Hide content');
+                } else {
+                    $pars.css('display', 'none');
+                    $('.showContent').text('Show content');
+                }
+                return true;
+            }
+            var $loading = $('<div>', {class: 'par', id: 'loading'});
+            $loading.append($('<img>', {src: "/static/images/loading.gif"}));
+            $('.paragraphs').append($loading);
+            http.get('/view_content/' + sc.docName)
+                .success(function (data) {
+                    var $loading = $('#loading');
+                    $loading.remove();
+                    $('.paragraphs').append($compile(data)(sc));
+                    sc.getIndex();
+                    sc.getNotes();
+                    sc.getReadPars();
+                    sc.processAllMath($('body'));
+                    /*
+                     if (sc.rights.editable) {
+                     sc.getEditPars();
+                     }*/
+                    if (sc.lectureMode) {
+                        sc.getQuestions();
+                    }
+                    $('.showContent').text('Hide content');
+                }).error(function (data) {
+                    var $loading = $('#loading');
+                    $loading.remove();
+                    console.log("Virhe");
+                });
+            sc.contentLoaded = true;
+            return true;
+        });
+
         if (sc.lectureMode) {
             sc.$on("getQuestions", function () {
                 if (sc.firstTimeQuestions) {
@@ -1129,51 +1175,6 @@ timApp.controller("ViewCtrl", [
         }
         sc.processAllMath($('body'));
         sc.defaultAction = sc.showOptionsWindow;
-        sc.onClick(".showContent", function ($this, e) {
-            var $pars = $('#pars');
-            if ($pars.length > 0) {
-                if ($pars.css('display') == 'none') {
-                    $pars.css('display', '');
-                    $('.showContent').text('Hide content');
-                } else {
-                    $pars.css('display', 'none');
-                    $('.showContent').text('Show content');
-                }
-
-                return;
-            }
-
-            var $loading = $('<div>', {class: 'par', id: 'loading'});
-            $loading.append($('<img>', {src: "/static/images/loading.gif"}));
-            $('.paragraphs').append($loading);
-            $.ajax({
-                type: 'GET', url: '/view_content/' + docName,
-                dataType: "html",
-                processData: false,
-                success: function (data) {
-                    var $loading = $('#loading');
-                    $loading.remove();
-                    $('.paragraphs').append($compile(data)(sc));
-                    sc.getIndex();
-                    sc.getNotes();
-                    sc.getReadPars();
-                    sc.processAllMath($('body'));
-                    /*
-                     if (sc.rights.editable) {
-                     sc.getEditPars();
-                     }*/
-                    if (sc.lectureMode) {
-                        sc.getQuestions();
-                    }
-                    $('.showContent').text('Hide content');
-                },
-                error: function () {
-                    var $loading = $('#loading');
-                    $loading.remove();
-                    console.log("Virhe");
-                }
-            });
-        });
     }
 ])
 ;
