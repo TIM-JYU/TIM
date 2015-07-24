@@ -1052,7 +1052,6 @@ timApp.controller("ViewCtrl", [
                 }
                 sc.indexTable.push(parentEntry);
             }
-            console.log(sc.indexTable);
         };
 
         sc.invertState = function (state) {

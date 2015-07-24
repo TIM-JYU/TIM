@@ -53,6 +53,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
                 for (var i = 0; i < answer.questions.length; i++) {
                     $scope.dynamicAnswerShowControls.push({});
                     $scope.points.push(0);
+                    answer.questions[i]['json'] = JSON.parse(answer.questions[i].questionJson);
                 }
                 $scope.questions = answer.questions;
                 $scope.isLecturer = answer.isLecturer;
@@ -155,7 +156,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         }
         var questionIndexes = [];
         for (var i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
-            $scope.dynamicAnswerShowControls[i].createChart(JSON.parse($scope.questions[i].questionJson));
+            $scope.dynamicAnswerShowControls[i].createChart($scope.questions[i].json);
             questionIndexes.push($scope.questions[i].question_id);
         }
 

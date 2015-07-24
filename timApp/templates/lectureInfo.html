@@ -80,13 +80,15 @@
                 </select>
             </label>
 
-            <input type="button" ng-click="drawCharts(userName)" value="Show answers">
-            <input ng-show="isLecturer" type="button" ng-click="drawCharts()" value="Show all">
+            <button ng-click="drawCharts(userName)">Show answers</button>
+            <button ng-show="isLecturer" ng-click="drawCharts()">Show all</button>
 
             <div>
                 <div ng-repeat="question in questions" style="margin-bottom: 2em">
                     <p class="bold" ng-show="showPoints"
                        ng-bind-html="question.question_title">{{ "{{question.question_title}}" }}</p>
+                    <p ng-show="showPoints"
+                       ng-bind-html="question.json.QUESTION">{{ "{{question.json.QUESTION}}" }}</p>
                     <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
                                           control='dynamicAnswerShowControls[$index]'
                                           class="chart"></show-chart-directive>
@@ -101,7 +103,7 @@
         </div>
         <div style="margin-top: 10em" ng-show="isLecturer">
             <h3>Delete lecture</h3>
-            <input type="button" ng-click="deleteLecture()" value="Delete lecture">
+            <button ng-click="deleteLecture()">Delete lecture</button>
             <button title="Edit this lecture" ng-click="editLecture(lectureName)">Edit</button>
         </div>
     </div>
