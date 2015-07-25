@@ -136,7 +136,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 questionJson: data.json,
                 questionId: data.questionId,
                 isLecturer: $scope.isLecturer,
-                askedTime: new Date().valueOf() - $scope.clockOffset,
+                askedTime: new Date().valueOf() + $scope.clockOffset,
                 clockOffset: $scope.clockOffset
             });
             $scope.showAnswerWindow = true;
