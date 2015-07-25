@@ -34,11 +34,12 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
             $scope.internalControl.createAnswer = function () {
                 $scope.json = $scope.$parent.questionJson;
-                $scope.endTime = $scope.$parent.askedTime + $scope.$parent.clockOffset + $scope.json.TIMELIMIT * 1000;
+                $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
+                $scope.endTime = $scope.$parent.askedTime + $scope.json.TIMELIMIT * 1000 - $scope.$parent.clockOffset;
                 var htmlSheet = "<div class = 'answerSheet'>";
 
                 if ($scope.json.TIMELIMIT !== "" && !$scope.preview) {
-                    htmlSheet += "<progress value='0' max='" + ($scope.endTime - new Date().valueOf()) + "' id='progressBar'>";
+                    htmlSheet += "<progress value='0' max='" + ($scope.endTime - $scope.askedTime) + "' id='progressBar'>";
                     htmlSheet += "</progress>";
                     htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + " s</span>";
                 }
