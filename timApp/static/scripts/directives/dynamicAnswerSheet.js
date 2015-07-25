@@ -34,10 +34,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
             $scope.internalControl.createAnswer = function () {
                 $scope.json = $scope.$parent.questionJson;
+                $scope.endTime = $scope.$parent.askedTime + $scope.$parent.clockOffset + $scope.json.TIMELIMIT * 1000;
                 var htmlSheet = "<div class = 'answerSheet'>";
 
                 if ($scope.json.TIMELIMIT !== "" && !$scope.preview) {
-                    htmlSheet += "<progress value='0' max='" + $scope.json.TIMELIMIT + "' id='progressBar'>";
+                    htmlSheet += "<progress value='0' max='" + ($scope.endTime - new Date().valueOf()) + "' id='progressBar'>";
                     htmlSheet += "</progress>";
                     htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + " s</span>";
                 }
@@ -111,17 +112,17 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $compile($scope);
 
                 if (!$scope.preview) {
-                    var fakeTime = $scope.json.TIMELIMIT * 1000;
-                    timeLeft = $scope.json.TIMELIMIT;
+                    var now = new Date().valueOf();
+                    var fakeTime = $scope.endTime - now;
+                    timeLeft = $scope.endTime - now;
                     barFilled = 0;
                     var timeBetween = 100;
                     var intervalTimes = fakeTime / timeBetween;
-                    $scope.valChange = fakeTime / 1000 / intervalTimes;
                     $scope.progressElem = $("#progressBar");
                     $scope.progressText = $("#progressLabel");
                     $scope.start = function () {
-                        $scope.getTimeLeft();
-                        //promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
+                        //$scope.getTimeLeft();
+                        promise = $interval($scope.internalControl.updateBar, timeBetween, intervalTimes);
                     };
                     $scope.start();
                 }
@@ -150,21 +151,20 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
              */
             $scope.internalControl.updateBar = function () {
                 //TODO: Problem with inactive tab.
-                timeLeft -= $scope.valChange;
-                barFilled += $scope.valChange;
+                var now = new Date().valueOf();
+                timeLeft = $scope.endTime - now;
+                barFilled = $scope.progressElem.attr("max") - ($scope.endTime - now);
+                console.log(barFilled);
                 $scope.progressElem.attr("value", (barFilled));
-
-                $scope.progressText.text(timeLeft.toFixed(0) + " s");
-                if (Math.abs(barFilled - $scope.progressElem.attr("max")) < 0.02) {
-
+                $scope.progressText.text(Math.max((timeLeft / 1000), 0).toFixed(0) + " s");
+                if (barFilled >= $scope.progressElem.attr("max")) {
                     if (!$scope.$parent.isLecturer) {
                         $scope.internalControl.answerToQuestion();
                     } else {
-                        //clearInterval(promise);
+                        clearInterval(promise);
                         $scope.progressText.text("Time's up");
                     }
                 }
-
             };
 
             $scope.internalControl.updateBar2 = function (value) {

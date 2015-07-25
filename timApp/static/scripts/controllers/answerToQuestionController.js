@@ -27,7 +27,8 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', functio
         $scope.isLecturer = args.isLecturer;
         $scope.questionJson = args.questionJson;
         $scope.questionTitle = args.questionJson.TITLE;
-
+        $scope.askedTime = args.askedTime;
+        $scope.clockOffset = args.clockOffset;
         $scope.dynamicAnswerSheetControl.createAnswer();
     });
 

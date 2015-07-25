@@ -69,6 +69,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.useAnswers = true;
         $scope.wallMessages = [];
         $scope.questionTitle = "";
+        $scope.clockOffset = 0;
 
         var wall = $('#wall');
         var htmlMessageList = $('#wallMessageList');
@@ -97,6 +98,22 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.checkIfInLecture();
 
+        /**
+         * Checks time offset between client server. Used to set question end time right.
+         */
+        $scope.getClockOffset = function () {
+            var t1 = new Date().valueOf();
+            http({
+                url: '/getServerTime',
+                method: 'GET'
+            }).success(function (t2) {
+                var t3 = new Date().valueOf();
+                $scope.clockOffset = ((t2-t1)+(t2-t3))/2;
+            });
+        };
+
+        $scope.getClockOffset();
+
 
         /*
          Listener of askQuestion event. Opens the question view and answer view for the lecturer.
@@ -117,7 +134,9 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $rootScope.$broadcast("setQuestionJson", {
                 questionJson: data.json,
                 questionId: data.questionId,
-                isLecturer: $scope.isLecturer
+                isLecturer: $scope.isLecturer,
+                askedTime: new Date().valueOf(),
+                clockOffset: $scope.clockOffset
             });
             $scope.showAnswerWindow = true;
         });
@@ -894,7 +913,9 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             $rootScope.$broadcast("setQuestionJson", {
                                 questionJson: JSON.parse(answer.questionJson),
                                 questionId: answer.questionId,
-                                isLecturer: $scope.isLecturer
+                                isLecturer: $scope.isLecturer,
+                                askedTime: answer.asked,
+                                clockOffset: $scope.clockOffset
                             });
                         }
 

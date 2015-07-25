@@ -400,7 +400,7 @@ def get_updates():
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                         "lectureId": lecture_id, "question": True, "questionId": pair[1],
+                         "lectureId": lecture_id, "question": True, "questionId": pair[1], "asked": pair[4],
                          "questionJson": question_json,
                          "isLecture": True, "lecturers": lecturers, "students": students,
                          "lectureEnding": lecture_ending})
@@ -1091,6 +1091,11 @@ def delete_note():
     return okJsonResponse()
 
 
+@app.route("/getServerTime", methods=['GET'])
+def get_server_time():
+    return jsonResponse(int(time.time() * 1000))
+
+
 @app.route("/questions/<int:doc_id>")
 def get_questions(doc_id):
     verifyOwnership(doc_id)
@@ -1131,7 +1136,7 @@ def ask_question():
     thread_to_stop_question.start()
 
     verifyOwnership(int(doc_id))
-    __question_to_be_asked.append((lecture_id, question_id, [], question_timelimit))
+    __question_to_be_asked.append((lecture_id, question_id, [], question_timelimit, int(time.time() * 1000)))
 
     return jsonResponse("")
 
@@ -1171,8 +1176,6 @@ def get_question_time_left():
         return jsonResponse(str(question[0][3]))
     else:
         return jsonResponse('')
-
-
 
 
 @app.route("/getQuestionById", methods=['GET'])
