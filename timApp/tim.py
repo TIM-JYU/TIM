@@ -400,7 +400,7 @@ def get_updates():
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                         "lectureId": lecture_id, "question": True, "questionId": pair[1], "asked": pair[4],
+                         "lectureId": lecture_id, "question": True, "questionId": pair[1], "asked": pair[3],
                          "questionJson": question_json,
                          "isLecture": True, "lecturers": lecturers, "students": students,
                          "lectureEnding": lecture_ending})
@@ -1136,7 +1136,7 @@ def ask_question():
     thread_to_stop_question.start()
 
     verifyOwnership(int(doc_id))
-    __question_to_be_asked.append((lecture_id, question_id, [], question_timelimit, int(time.time() * 1000)))
+    __question_to_be_asked.append((lecture_id, question_id, [], int(time.time() * 1000)))
 
     return jsonResponse("")
 
@@ -1149,33 +1149,11 @@ def stop_question_from_running(lecture_id, question_id, question_timelimit):
     # TODO: If current implementation changes the way that the question last 10 seconds and after that you can't
     # TODO: answer. Remove this part
     extra_time = 3
-    interval = 1
-    elapsed = 0
-    while elapsed < question_timelimit + extra_time:
-        time.sleep(interval)
-        elapsed += interval
-        for q in __question_to_be_asked:
-            if q[0] == lecture_id and q[1] == question_id:
-                question = (q[0], q[1], q[2], max(question_timelimit - elapsed, 0))
-                __question_to_be_asked.remove(q)
-                __question_to_be_asked.append(question)
-                break
+    time.sleep(question_timelimit + extra_time)
 
     for question in __question_to_be_asked:
         if question[0] == lecture_id and question[1] == question_id:
             __question_to_be_asked.remove(question)
-
-
-@app.route("/getTimeLeft/", methods=['GET'])
-def get_question_time_left():
-    time.sleep(1)
-    lecture_id = int(request.args.get('lecture_id'))
-    question_id = int(request.args.get('question_id'))
-    question = [q for q in __question_to_be_asked if q[0] == lecture_id and q[1] == question_id]
-    if question:
-        return jsonResponse(str(question[0][3]))
-    else:
-        return jsonResponse('')
 
 
 @app.route("/getQuestionById", methods=['GET'])
@@ -1261,7 +1239,6 @@ def answer_to_question():
 
     if question_ended:
         return jsonResponse({"questionLate": "The question has already finished. Your answer was not saved."})
-
 
     single_answers = []
     answers = answer.split('|')

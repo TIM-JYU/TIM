@@ -109,7 +109,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             }).success(function (t2) {
                 var t3 = new Date().valueOf();
                 $scope.clockOffset = ((t2-t1)+(t2-t3))/2;
-                console.log($scope.clockOffset);
             });
         };
 

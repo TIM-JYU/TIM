@@ -3,8 +3,9 @@
         <dynamic-answer-sheet control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
     </div>
     <div class="buttons">
+        <button ng-show="isLecturer && questionEnded" ng-click="askAgain()">Ask again</button>
         <button ng-click="answer()">Answer</button>
-        <button ng-show="isLecturer" ng-click="close()">Close</button>
         <button ng-show="isLecturer" ng-click="showAnswers()">Show answers</button>
+        <button ng-show="isLecturer" ng-click="close()">Close</button>
     </div>
 </div>

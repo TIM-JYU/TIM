@@ -129,23 +129,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 }
             };
 
-            $scope.getTimeLeft = function () {
-                $http({
-                    url: '/getTimeLeft',
-                    method: 'GET',
-                    params: {'lecture_id': $scope.$parent.lectureId, 'question_id': $scope.$parent.questionId}
-                }).success(function (data) {
-                    var left = 0;
-                    if (data === '') left = 0;
-                    else left = parseInt(data);
-                    $scope.internalControl.updateBar2(left);
-                    if (data !== '')
-                        $scope.getTimeLeft();
-                }).error(function (data) {
-                    console.log('Error in getting time left');
-                });
-            };
-
             /**
              * FILL WITH SUITABLE TEXT
              * @memberof module:dynamicAnswerSheet
@@ -154,32 +137,18 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 //TODO: Problem with inactive tab.
                 var now = new Date().valueOf();
                 timeLeft = $scope.endTime - now;
-                barFilled = $scope.progressElem.attr("max") - ($scope.endTime - now);
-                console.log(barFilled);
+                barFilled = ($scope.endTime - $scope.askedTime) - ($scope.endTime - now);
                 $scope.progressElem.attr("value", (barFilled));
                 $scope.progressText.text(Math.max((timeLeft / 1000), 0).toFixed(0) + " s");
                 if (barFilled >= $scope.progressElem.attr("max")) {
                     if (!$scope.$parent.isLecturer) {
                         $scope.internalControl.answerToQuestion();
                     } else {
+                        $scope.$parent.questionEnded = true;
                         clearInterval(promise);
                         $scope.progressText.text("Time's up");
                     }
                 }
-            };
-
-            $scope.internalControl.updateBar2 = function (value) {
-                //TODO: Problem with inactive tab.
-                $scope.progressElem.attr("value", ($scope.json.TIMELIMIT - value));
-                $scope.progressText.text(value + " s");
-                if (Math.abs(($scope.json.TIMELIMIT - value) - $scope.progressElem.attr("max")) < 0.02) {
-                    if (!$scope.$parent.isLecturer) {
-                        $scope.internalControl.answerToQuestion();
-                    } else {
-                        $scope.progressText.text("Time's up");
-                    }
-                }
-
             };
 
             /**
