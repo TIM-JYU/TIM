@@ -1,0 +1,12 @@
+Viisi kirjainta
+Palindromi viidellä kirjaimella
+``` {#ekapali plugin="pali"}
+header: Kirjoita palindromi
+stem: Kirjoita palindromi jossa 5 kirjainta
+-points_array: [[0, 0.1], [0.6, 1]]
+inputstem: "Palindromisi:"
+needed_len: 5
+max_tries: 3
+initword: muikku
+cols: 20
+```

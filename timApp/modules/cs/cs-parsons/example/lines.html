@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Simple js-parsons example assignment</title>
+        <link href="../csparsons.css" rel="stylesheet" />
+    </head>
+    <body>
+        <h2>Rivien järjestely</h2>
+        <div id="sortableTrash" ></div>
+        <div id="sortable" ></div>
+        <pre id="code"></pre>
+        <h2>Sanojen järjestely</h2>
+        <div style="display: -webkit-box;">
+            <div id="sortableWords"></div>
+        </div>
+        <pre id="sanat"></pre>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+        <script src="../csparsons.js"></script>
+        <script>
+        var initial = 'public class Hello\n' +
+                      '{\n' +
+                      '    public static void Main()\n' +
+                      '    {\n' +
+                      '         System.Console.WriteLine("Hello!);\n'+ 
+                      '  \n' +
+                      '    }\n' +
+                      '}';
+
+        $(document).ready(function(){
+            var sortable = document.getElementById("sortable");              
+            var code = document.getElementById("code");              
+            var parson = new CsParsonsWidget({
+                'sortable': sortable,
+                'trashId': 'sortableTrash',
+                'onChange': function(p) {
+                    var s = p.join("\n");
+                    code.innerText = s;
+                }
+            });
+            parson.init(initial);
+            parson.show();
+
+            var sortable2 = document.getElementById("sortableWords");              
+            var sanat = document.getElementById("sanat");              
+            var parson2 = new CsParsonsWidget({
+                'sortable': sortable2,
+                'trashId': 'sortableTrash',
+                'words': true,
+                'onChange': function(p) {
+                    var s = p.join(" ");
+                    sanat.innerText = s;
+                }
+            });
+            parson2.init("kissa\n\puussa\nistuu\nja\nnaukuu\n");
+            parson2.show();
+        });
+        </script>
+    </body>
+</html>

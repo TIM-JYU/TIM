@@ -1,0 +1,12 @@
+7 kirjainta
+Palindromi seitsemällä kirjaimella
+``` {#tokapali plugin="pali"}
+header: Kirjoita palindromi
+stem: Kirjoita palindromi jossa 7 kirjainta
+-points_array: [[0, 0.1], [0.6, 1]]
+inputstem: "Palindromisi:"
+needed_len: 7
+max_tries: 4
+initword: muikku
+cols: 20
+```
