@@ -1,4 +1,8 @@
 <div id="pars">
+    {% set editline = '' %}
+    {% if rights.editable or rights.can_comment %}
+        {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
+    {% endif %}
     {% for t in text %}
         {% if 'taskId' in t.get_attrs() %}
             <div class="par {{ t.get_class_str() }}"
@@ -11,9 +15,7 @@
                 <div class="parContent">
                     {{ t.get_html()|safe }}
                 </div>
-                {% if rights.editable or rights.can_comment %}
-                    <div class="editline" title="Click to edit this paragraph"></div>
-                {% endif %}
+                {{ editline|safe }}
             </div>
         {% else %}
             <div class="par {{ t.get_class_str() }}"
@@ -24,9 +26,7 @@
                 <div class="parContent">
                     {{ t.get_html()|safe }}
                 </div>
-                {% if rights.editable or rights.can_comment %}
-                    <div class="editline" title="Click to edit this paragraph"></div>
-                {% endif %}
+                {{ editline|safe }}
             </div>
         {% endif %}
     {% endfor %}
