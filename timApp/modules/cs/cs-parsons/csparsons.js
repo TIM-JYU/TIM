@@ -12,7 +12,7 @@
    };
 
    CsParsonsWidget.prototype.show = function() {
-        var classes = "csrunEditorDiv sortable-code sortable-output";
+        var classes = "sortable-code sortable-output";
         var parsonsEditDiv = this.options.sortable;
         var type = "div";
         if ( this.options.words ) {
@@ -36,7 +36,7 @@
             parsonsEditDiv.appendChild(div);
         }    
         parsonsEditDiv.setAttribute('class',classes);
-        parsonsEditDiv.setAttribute('style',"float: none;");
+        parsonsEditDiv.setAttribute('style',"float: left; width: 100%");
         a = $(parsonsEditDiv);
         a.sortable();
         var parson = this;

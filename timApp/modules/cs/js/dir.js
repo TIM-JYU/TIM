@@ -12,8 +12,19 @@ csApp.directive('csJypeliRunnerInput', ['$sanitize','$compile', function ($sanit
 csApp.directive('csComtestRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('comtest',true); }]);
 csApp.directive('csTaunoRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',false); }]);
 csApp.directive('csTaunoRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
+csApp.directive('csParsonsRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
 csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
+
+
+function csLogTime(msg) {
+   var d = new Date();       
+   var diff = d - csPluginStartTime;
+   console.log("cs: " + d.toLocaleTimeString()+ " " + diff.valueOf() + " - " + msg);          
+}   
+
+csLogTime("directives done");
+
 
 var TESTWITHOUTPLUGINS = true && false;
 csApp.taunoNr = 0;
@@ -122,6 +133,12 @@ var removeXML = function(s) {
     return s;
 };
 
+var iotaPermutation = function(n) {
+    var permutation = [];
+    for (var i = 0; i < n; i++) permutation.push(i);
+    return permutation;
+};    
+    
 
 
 csApp.directive('contenteditable', ['$sce', function($sce) {
@@ -200,6 +217,7 @@ csApp.getHeading = function(a,key,$scope,defElem) {
 csApp.directiveTemplateCS = function(t,isInput) {
 "use strict";
 	csApp.taunoPHIndex = 3;
+    csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
 	return  '<div class="csRunDiv no-popup-menu">' + 
     
@@ -216,8 +234,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
 				  '<div class="csRunCode">'+'<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
-                  '<div>'+
-
+                  '<div class="csEditorAreaDiv">'+
                   '<div  class="csrunEditorDiv">'+
 				  '<textarea class="csRunArea csEditArea no-popup-menu" ng-hide="noeditor && !viewCode" rows="{{rows}}" ng-model="usercode" ng-trim="false" ng-attr-placeholder="{{placeholder}}"></textarea>'+
                   '</div>'+
@@ -256,14 +273,14 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
-				  ' <a href="" ng-if="!noeditor" ng-click="showAceEditor();">{{editorText[editorMode]}}</a>' +
+				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
                   '</p>'+
                   '</div>'+
                   (t=="sage" ? '<div class="outputSage no-popup-menu"></div>' :"")+ 
 
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
-				  (t === "comtest" || t === "tauno" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
-				  (t === "comtest" || t === "tauno"? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
+				  (t === "comtest" || t === "tauno" || t === "parsons" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
+				  (t === "comtest" || t === "tauno" || t === "parsons" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
@@ -283,6 +300,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   //  'Raahattava' +
                   //  '</div>' +  
 				  '<p class="plgfooter">Here comes footer</p>'+
+                  //'<p ng-show="logTime()"></p>'+
 				  '</div>';
 };
 
@@ -349,25 +367,39 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"button","");
             csApp.set(scope,attrs,"noeditor",false);
             csApp.set(scope,attrs,"norun",false);
+            csApp.set(scope,attrs,"normal","Normal");
             csApp.set(scope,attrs,"highlight","Highlight");
+            csApp.set(scope,attrs,"parsons","Parsons");
+            csApp.set(scope,attrs,"jsparsons","JS-Parsons");
             csApp.set(scope,attrs,"editorMode",0);
             csApp.set(scope,attrs,"showCodeOn","Näytä koko koodi");
             csApp.set(scope,attrs,"showCodeOff","Piilota muu koodi");
             csApp.set(scope,attrs,"resetText","Alusta");
             csApp.set(scope,attrs,"blind",false);
+            csApp.set(scope,attrs,"words",false);
+            csApp.set(scope,attrs,"editorModes","01");
             // csApp.set(scope,attrs,"program");
 
+            scope.editorMode = parseInt(scope.editorMode);
+            scope.editorText = [scope.normal,scope.highlight,scope.parsons,scope.jsparsons];
+            scope.editorModeIndecies =[];
+            for (var i=0; i<scope.editorModes.length; i++) scope.editorModeIndecies.push(parseInt(scope.editorModes[i]));
+            scope.editorModeIndecies.push(parseInt(scope.editorModes[0]));
+            if ( scope.editorModes.length <= 1 ) scope.editorText = ["","","","","","",""];
+            
             scope.showCodeLink = scope.showCodeOn;
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
-            scope.editorText = [scope.highlight,"Normal"];
             
             scope.toggleEditorText = ["Muokkaa","Piilota"];
 
             if ( scope.toggleEditor && scope.toggleEditor != "True" ) scope.toggleEditorText =  scope.toggleEditor.split("|");
             
 			csApp.set(scope,attrs,"usercode","");
-			if ( scope.usercode === "" && scope.byCode )  scope.usercode = scope.byCode;
+			if ( scope.usercode === "" && scope.byCode )  {
+                scope.usercode = scope.byCode;
+                scope.initUserCode = true;
+            }    
 			scope.usercode = csApp.commentTrim(scope.usercode);
 			if (scope.blind) scope.usercode = scope.usercode.replace(/@author.*/,"@author XXXX"); // blind
 			scope.byCode = csApp.commentTrim(scope.byCode);
@@ -402,6 +434,7 @@ csApp.directiveFunction = function(t,isInput) {
             
 			scope.edit = element.find("textarea")[0]; // angular.element(e); // $("#"+scope.editid);
 			scope.preview = element.find(".csrunPreview")[0]; // angular.element(e); // $("#"+scope.editid);
+            scope.element0 = element[0];
 			element[0].childNodes[0].outerHTML = csApp.getHeading(attrs,"header",scope,"h4");
 			var n = element[0].childNodes.length;
 			if ( n > 1 ) element[0].childNodes[n-1].outerHTML = csApp.getHeading(attrs,"footer",scope,'p class="footer"');
@@ -409,7 +442,7 @@ csApp.directiveFunction = function(t,isInput) {
         //    scope.header = head;
 		//	scope.getHeader = function() { return head; };
 		//	csApp.updateEditSize(scope);
-            if (scope.open) scope.showTauno();
+            if (scope.open && t == "tauno" ) scope.showTauno();
 
             //attrs.buttons = "$hellobuttons$\nMunOhjelma\n$typebuttons$\n$charbuttons$";
             var b = attrs.buttons || scope.attrs.buttons;
@@ -434,13 +467,10 @@ csApp.directiveFunction = function(t,isInput) {
             editor.getSession().setMode("ace/mode/javascript");
             */
             //scope.out = element[0].getElementsByClassName('console');
-            scope.element0 = element[0];
             if ( scope.attrs.autorun ) scope.runCodeLink();
-            if ( scope.editorMode != 0 ) scope.showAceEditor(scope.editorMode);
+            if ( scope.editorMode != 0 || scope.editorModes !== "01" ) scope.showOtherEditor(scope.editorMode);
             scope.mode = languageTypes.getAceModeType(scope.type,"");
-            var d = new Date();
-            var diff = d - csPluginStartTime;
-            console.log("cs: " + d.toLocaleTimeString()+ " " + diff.valueOf() + " - " + scope.taskId);          
+            csLogTime(scope.taskId);
             
             // if ( scope.isSage ) alustaSage(scope);
             
@@ -568,6 +598,7 @@ csApp.Hex2Str = function (s) {
 
 csApp.Controller = function($scope,$http,$transclude,$sce) {
 "use strict";
+    csLogTime("controller");
 	$scope.byCode ="";
 	$scope.attrs = {};
     $scope.svgImageSnippet = function() {
@@ -624,6 +655,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		*/
 	}, true);
     
+    
 	$scope.$watch('userargs', function() {
         window.clearInterval($scope.runTimer);
         if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
@@ -634,6 +666,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         if ( $scope.autoupdate ) $scope.runTimer = setInterval($scope.runCodeAuto,$scope.autoupdate);
 	}, true);
     
+    $scope.logTime = function(msg) {
+        csLogTime(msg + " " + $scope.taskId);
+        return true;
+    }
     $scope.runCodeAuto = function() {
         window.clearInterval($scope.runTimer);
 		var t = languageTypes.getRunType($scope.type,"cs");  
@@ -690,6 +726,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
     }
     */
     
+
+    
 	$scope.doRunCode = function(runType, nosave) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
@@ -697,6 +735,16 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         
         if ( $scope.sageButton ) $scope.sageButton.click();
         if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
+        
+        if ( $scope.parson ) {
+            var fb = $scope.parson.getFeedback();
+            $scope.usercode = $scope.getJsParsonsCode();
+        }
+        
+        if ( $scope.csparson ) {
+            // var fb = $scope.parson.getFeedback();
+            $scope.usercode = $scope.csparson.join("\n");
+        }
         
         // if ( runType == "md" ) { $scope.showMD(); return; }
 		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
@@ -911,6 +959,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		$scope.runError = false;
 		$scope.result = "";
 		$scope.viewCode = false;
+        if ( $scope.parson || $scope.editorModeIndecies[$scope.editorMode] > 1 ) {
+            $scope.initUserCode = true;
+            $scope.showOtherEditor($scope.editorMode);
+        }
         if ( $scope.isSage ) alustaSage($scope);
 
 	};
@@ -1061,7 +1113,83 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         });
     };
     
-    $scope.showAceEditor = function(editorMode) {
+    
+    $scope.getJsParsonsCode = function() {
+        /*
+        var parson = $scope.parson;
+        var elemId = parson.options.sortableId;
+        var student_code = parson.normalizeIndents(parson.getModifiedCode("#ul-" + elemId));
+        var result = "";
+        
+        // Find the line objects for the student's code
+        for (i = 0; i < student_code.length; i++) {
+            var line = parson.getLineById(student_code[i].id);
+            result += line.code + "\n";
+        }
+        return result;
+        */
+        var gr = new ParsonsWidget._graders.VariableCheckGrader($scope.parson);
+        var result = gr._codelinesAsString();
+        var len = result.length;
+        if ( result[len-1] === "\n" ) result = result.slice(0,-1);
+        return result;
+    }
+    
+    $scope.showJsParsons = function(parsonsEditDiv) {
+        var v = this.getVid();
+        parsonsEditDiv.setAttribute('id',v.vid);
+        var classes = "csrunEditorDiv sortable-code";
+        var can_indent = true;
+        if ( $scope.words ) {
+            classes += " sortable-words";
+            can_indent = false;
+            var a = $("#"+v.vid);
+        }
+        parsonsEditDiv.setAttribute('class',classes);
+        parsonsEditDiv.setAttribute('style',"float: none;");
+
+        
+        // parsonsEditDiv.innerHTML = "";
+        $scope.parson = new ParsonsWidget({
+                'sortableId': v.vid,
+                'max_wrong_lines': 1,
+                //'x_indent': 0,
+                'can_indent' : can_indent,
+                //'vartests': [{initcode: "output = ''", code: "", message: "Testing...", variables: {output: "I am a Java program I am a Java program I am a Java program "}},
+                //    ],
+                //'grader': ParsonsWidget._graders.LanguageTranslationGrader,
+            });
+        $scope.parson.init($scope.usercode);
+        if ( !$scope.initUserCode )
+            $scope.parson.options.permutation = iotaPermutation; 
+        
+        $scope.parson.shuffleLines();
+    }
+    
+    $scope.showCsParsons = function(sortable) {
+        var parson = new CsParsonsWidget({
+            'sortable': sortable,
+            'trashId': 'sortableTrash',
+            'words': $scope.words,
+            'onChange': function(p) {
+                var s = p.join("\n");
+                $scope.usercode = s; 
+                }
+            });
+        parson.init($scope.usercode);
+        parson.show();
+        $scope.csparson = parson;
+    }
+
+
+    
+    $scope.showOtherEditor = function(editorMode) {
+        if ( $scope.parson ) {
+            $scope.usercode = $scope.getJsParsonsCode();
+        }
+        $scope.parson = null;
+        $scope.csparson = null;
+        
         var editorHtml = '<textarea class="csRunArea csrunEditorDiv" ng-hide="noeditor" rows={{rows}} ng-model="usercode" ng-trim="false" placeholder="{{placeholder}}"></textarea>';
 
         var aceHtml = '<div class="no-popup-menu"><div ng-show="mode" ui-ace="{onLoad:aceLoaded,  mode: \'{{mode}}\', require: [\'ace/ext/language_tools\'],  advanced: {enableSnippets: true,enableBasicAutocompletion: true,enableLiveAutocompletion: true}}"'+
@@ -1077,20 +1205,26 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                    '</div>'+
                    */
                    '</div>';
-        var html = [editorHtml,aceHtml];                    
+        var parsonsHtml = '<div class="no-popup-menu"></div>';
+        var html = [editorHtml,aceHtml,parsonsHtml,parsonsHtml];                    
         $scope.mode = languageTypes.getAceModeType($scope.type,"");
         if (typeof editorMode !== 'undefined') $scope.editorMode = editorMode;
         else $scope.editorMode++; 
-        if ( $scope.editorMode > 1 ) $scope.editorMode = 0; 
+        if ( $scope.editorMode >= $scope.editorModeIndecies.length-1 ) $scope.editorMode = 0; 
+        var eindex = $scope.editorModeIndecies[$scope.editorMode];
         
-        var aceEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
-        var editorDiv = angular.element(aceEditDiv); 
-        editorDiv.html(csApp.compile(html[$scope.editorMode])($scope));
-        $scope.aceEditor.setFontSize(15);
-        $scope.aceEditor.setOptions({
-            maxLines: $scope.maxRows
-        });
-        $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
+        var otherEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
+        var editorDiv = angular.element(otherEditDiv); 
+        editorDiv.html(csApp.compile(html[eindex])($scope));
+        if ( eindex == 1 ) {
+            $scope.aceEditor.setFontSize(15);
+            $scope.aceEditor.setOptions({
+                maxLines: $scope.maxRows
+            });
+            $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
+        }
+        if ( eindex == 2 ) $scope.showCsParsons(otherEditDiv.children[0]);
+        if ( eindex == 3 ) $scope.showJsParsons(otherEditDiv.children[0]);
     };
     
     $scope.moveCursor = function(dx,dy) {

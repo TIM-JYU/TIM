@@ -171,3 +171,9 @@ height:85%;
 .console-buttons {
   float: right;
 }
+
+.csEditorAreaDiv {
+  display: -webkit-box;
+  margin-right: 5%;
+  width: 95%;
+}  

@@ -58,9 +58,6 @@ import datetime
 # täydellinen ajokomento run/URNDFILE.sh
 # Tämä jälkeen tehdään /tmp/run -hakemistoon tiedosto
 # RNDNAME johon on kirjoitettu "USERPATH run/URNDFILE.sh" 
-# Tätä hakemistoa (tim-puolella /tmp/uhome/run) seuraa demoni, 
-# joka uuden tiedoston ilmestyessä
-# käynnistää uuden docker-kontin ohjelman ajamiseksi.
 # Tähän ajokonttiin mountataan tim-koneesta
 #
 #   /opt/cs  ->            /cs/          read only
@@ -296,6 +293,7 @@ def get_html(ttype, query):
     if "input" in ttype or "args" in ttype: is_input = '-input'
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
+    if "parsons" in ttype: runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
     if "sage" in ttype: runner = 'cs-sage-runner'
     r = runner + is_input
@@ -412,6 +410,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         querys = multi_post_params(self)
         do_headers(self, "application/json")
         is_tauno = self.path.find('/tauno') >= 0
+        is_parsons = self.path.find('/parsons') >= 0
         htmls = []
         self.user_id = get_param(querys[0], "user_id", "--")
         print("UserId:", self.user_id)
@@ -429,6 +428,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if userargs: query.query["userargs"] = [userargs]
             ttype = get_param(query, "type", "cs").lower()
             if is_tauno: ttype = 'tauno'
+            if is_parsons: ttype = 'parsons'
             s = get_html(ttype, query)
             # print(s)
             htmls.append(s)
@@ -490,6 +490,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_iframe = (self.path.find('/iframe') >= 0) or is_iframe_param
         is_answer = self.path.find('/answer') >= 0
         is_tauno = self.path.find('/tauno') >= 0
+        is_parsons = self.path.find('/parsons') >= 0
         is_ptauno = self.path.find('/ptauno') >= 0
         is_rikki = self.path.find('rikki') >= 0
         print_file = get_param(query, "print", "")
@@ -541,10 +542,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
             templs = { }
-            if not (is_tauno or is_rikki): templs = get_all_templates('templates')
-            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js"],
+            if not (is_tauno or is_rikki or is_parsons): templs = get_all_templates('templates')
+            result_json = {"js": ["/cs/js/dir.js",
+                           "/static/scripts/jquery.ui.touch-punch.min.js",
+                           "/cs/cs-parsons/csparsons.js",
+                           "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
+            if is_parsons:
+                result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js",
+                               "/static/scripts/jquery.ui.touch-punch.min.js",
+                               "/cs/cs-parsons/csparsons.js",
+                               "/cs/js-parsons/lib/underscore-min.js",
+                               "/cs/js-parsons/lib/lis.js",
+                               "/cs/js-parsons/parsons.js",
+                               "/cs/js-parsons/lib/skulpt.js",
+                               "/cs/js-parsons/lib/skulpt-stdlib.js",
+                               "/cs/js-parsons/lib/prettify.js"
+                               ],
+                               "angularModule": ["csApp", "csConsoleApp"],
+                               "css": ["/cs/css/cs.css","/cs/js-parsons/parsons.css","/cs/js-parsons/lib/prettify.css"], "multihtml": True}
             result_json.update(templs)                            
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
@@ -572,7 +589,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # pprint(query.__dict__, indent=2)
 
             if is_css:
-                return self.wout(file_to_string('cs.css'))
+                # return self.wout(file_to_string('cs.css'))
+                return self.wout(file_to_string(self.path))
 
 
             if is_js:
