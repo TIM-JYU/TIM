@@ -1,4 +1,4 @@
-table {
+table.timppa {
     width: 100%;
     border-collapse: collapse;
     background: white;
@@ -6,7 +6,7 @@ table {
     margin: 0;
 }
 
-th {
+.timppa th {
     background: steelblue;
     height: 54px;
     width: 25%;
@@ -15,16 +15,13 @@ th {
     transition: all 0.2s;
 }
 
-tr {
-}
-
-td {
+.timppa td {
     border-right: 1px solid #cccccc;
     padding: 10px;
     transition: all 0.2s;
 }
 
-td.selected {
+.timppa td.selected {
     background: #d7e4ef;
 }
 
