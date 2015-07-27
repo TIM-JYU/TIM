@@ -257,6 +257,27 @@ class DocumentTest(unittest.TestCase):
             blocks = DocumentParser(new_text).add_missing_attributes().get_blocks()
             self.assertListEqual(blocks, DocumentParser(d.export_markdown(export_hashes=True)).get_blocks())
 
+    def test_update_section(self):
+        self.maxDiff = None
+        random.seed(0)
+        for i in range(6, 10):
+            d = Document(files_root=self.files_root)
+            d.create()
+            for _ in range(0, i):
+                d.add_paragraph(random_paragraph())
+            ids = [par.get_id() for par in d]
+            new_pars = DocumentParser('#-\none\n\n#-\ntwo\n\n#-\nthree').add_missing_attributes().get_blocks()
+            start_repl_index = 1
+            end_repl_index = 4
+            repl_length = len(new_pars)
+            length_diff = repl_length - (end_repl_index - start_repl_index + 1)
+            section_text = DocumentWriter(new_pars).get_text()
+            d.update_section(section_text, ids[start_repl_index], ids[end_repl_index])
+            new_ids = [par.get_id() for par in d]
+            self.assertListEqual([par['id'] for par in new_pars],
+                                 new_ids[start_repl_index:start_repl_index + repl_length])
+            self.assertEqual(length_diff, len(new_ids) - len(ids))
+
     @classmethod
     def tearDownClass(cls):
         DocumentTest.dumbo.kill()
