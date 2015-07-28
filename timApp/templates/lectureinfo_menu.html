@@ -15,7 +15,8 @@
                     <img id="join-icon" src="{{ url_for('static', filename='images/join-icon3.png') }}" class="icon"
                          ng-click="joinLecture(_,chosenLecture.is_access_code)" title="Join the lecture">
                     <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
-                        title="Edit this lecture" ng-click="editLecture(chosenLecture.lecture_code)" ng-show="isLecturer">
+                         title="Edit this lecture" ng-click="editLecture(chosenLecture.lecture_code)"
+                         ng-show="isLecturer">
                     <img id="add-icon1" src="{{ url_for('static', filename='images/add-icon3.png') }}" class="icon"
                          ng-show="isLecturer"
                          ng-click="toggleLecture()" title="Add new lecture">
@@ -63,9 +64,11 @@
                     </select>
                 </div>
                 <div class="iconSection" ng-show="futureLectures.length > 0">
-                    <img ng-show="isLecturer" id="start-icon" src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
+                    <img ng-show="isLecturer" id="start-icon"
+                         src="{{ url_for('static', filename='images/play-icon3.png') }}" class="icon"
                          title="Start lecture now" ng-click="startFutureLecture()">
-                    <img ng-show="isLecturer" id="edit-icon2" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
+                    <img ng-show="isLecturer" id="edit-icon2"
+                         src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                          title="Edit this lecture" ng-click="editLecture(futureLecture.lecture_code)">
                 </div>
             </div>
@@ -93,7 +96,8 @@
                          ng-click="leaveLecture()" title="Leave this lecture" ng-show="inLecture">
                     <img id="stop-icon" src="{{ url_for('static', filename='images/stop-icon3.png') }}" class="icon"
                          ng-click="endLecture()" title="End this lecture" ng-show="canStop">
-                    <img ng-click="editLecture(lectureName)" id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
+                    <img ng-click="editLecture(lectureName)" id="edit-icon"
+                         src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                          title="Edit this lecture" ng-show="canStop">
                 </div>
             </div>
@@ -103,8 +107,10 @@
                 {% raw %}
                 <ul>
                     <li ng-show="currentLecturesList.length > 0" ng-repeat="lecture in currentLecturesList">
-                        <p ng-click="selectCurrentLecture()">{{ lecture.lecture_code }}<input style="margin-left: 5px;" type="submit"
-                                                                                              value="Join" ng-click="joinLecture(lecture.lecture_code,lecture.is_access_code)"></p>
+                        <p ng-click="selectCurrentLecture()">{{ lecture.lecture_code }}
+                            <button style="margin-left: 5px;" value="Join"
+                                   ng-click="joinLecture(lecture.lecture_code,lecture.is_access_code)">Join</button>
+                        </p>
                     </li>
                     <li ng-show="currentLecturesList.length == 0">
                         <p>No lectures</p>
@@ -118,7 +124,9 @@
                 {% raw %}
                 <ul>
                     <li ng-repeat="lecture in futureLecturesList">
-                        <p> {{ lecture.lecture_code }}<input type="submit" ng-show="isLecturer" value="Start"></p>
+                        <p> {{ lecture.lecture_code }}
+                            <button ng-show="isLecturer" value="Start">Start</button>
+                        </p>
                     </li>
                     <li ng-show="futureLecturesList.length == 0">
                         <p>No lectures</p>

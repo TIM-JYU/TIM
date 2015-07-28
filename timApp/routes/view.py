@@ -9,6 +9,8 @@ new_contract('range', 'tuple(int, int)')
 from flask import Blueprint, render_template, url_for
 from .common import *
 import pluginControl
+import time
+import datetime
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -150,8 +152,19 @@ def view_content(doc_name, template_name, view_range=None):
                                    'browse_own_answers': loggedIn()
                                    })
 
+debug_time = time.time()
+
+
+def show_time(s):
+    global debug_time
+    nyt = time.time()
+    print(s, nyt - debug_time)
+    debug_time = nyt
+
 
 def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False):
+    show_time('view alku')
+
     timdb = getTimDb()
     doc_id = timdb.documents.get_document_id(doc_name)
     if doc_id is None or not timdb.documents.exists(doc_id):
@@ -175,7 +188,9 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
             abort(403)
 
     start_index = max(view_range[0], 0) if view_range else 0
+    show_time('document alku')
     xs = get_document(doc_id, view_range)
+    show_time('document loppu')
     user = getCurrentUserId()
 
     if teacher:
@@ -189,12 +204,14 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     else:
         users = []
     current_user = timdb.users.getUser(user)
+    show_time('plugin alku')
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
                                                                 current_user['name'],
                                                                 timdb.answers,
                                                                 doc_id,
                                                                 current_user['id'],
                                                                 sanitize=False)
+    show_time('plugin loppu')
 
     reqs = pluginControl.get_all_reqs()
 
@@ -223,8 +240,9 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     except KeyError:
         settings = {}
 
+    show_time('render alku')
     # TODO: Check if doc variable is needed
-    return render_template(template_name,
+    result = render_template(template_name,
                            docID=doc_id,
                            docName=doc_name,
                            text=texts,
@@ -248,3 +266,5 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                                    },
                            reqs=reqs,
                            settings=settings)
+    show_time('render loppu')
+    return result

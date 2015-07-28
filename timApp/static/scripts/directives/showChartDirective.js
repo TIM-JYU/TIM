@@ -165,7 +165,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
-                if (typeof question.DATA.ROWS[0].COLUMNS[0].answerFieldType !== "undefined" && question.DATA.ROWS[0].COLUMNS[0].answerFieldType === "text") {
+                if (typeof question.ANSWERFIELDTYPE !== "undefined" && question.ANSWERFIELDTYPE === "text") {
                     $scope.isText = true;
                     return;
                 }
@@ -256,13 +256,15 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                             }
                             if (datasets.length === 1) {
                                 for (var b = 0; b < datasets[0].bars.length; b++) {
-                                    if (datasets[0].bars[b].label === singleAnswer) {
+                                    // Jos muutetaan niin, että käytetään vastauksen valuea,
+                                    // voi datasets[0].bars[b].label kohdasta poistaa labelin. b === singleAnswer
+                                    if ((b + 1) === parseInt(singleAnswer)) {
                                         datasets[0].bars[b].value += 1;
                                     }
                                 }
                             } else {
                                 for (var d = 0; d < datasets.length; d++) {
-                                    if (datasets[d].label === singleAnswer) {
+                                    if ((d + 1) === parseInt(singleAnswer)) {
                                         datasets[d].bars[a].value += 1;
                                     }
                                 }

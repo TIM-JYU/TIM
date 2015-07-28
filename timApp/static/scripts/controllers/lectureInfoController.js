@@ -18,6 +18,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     "use strict";
     $scope.docId = docId;
     $scope.lectureId = lectureId;
+    $scope.code = lectureCode;
     $scope.lectureCode = "Lecture info: " + lectureCode;
     $scope.lectureStartTime = lectureStartTime;
     $scope.lectureEndTime = lectureEndTime;
@@ -31,6 +32,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     $scope.answerers = [];
     $scope.showPoints = false;
     $scope.points = [];
+    $scope.showLectureForm = false;
 
     /**
      * Sends http request to get info about the specific lecture.
@@ -51,6 +53,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
                 for (var i = 0; i < answer.questions.length; i++) {
                     $scope.dynamicAnswerShowControls.push({});
                     $scope.points.push(0);
+                    answer.questions[i]['json'] = JSON.parse(answer.questions[i].questionJson);
                 }
                 $scope.questions = answer.questions;
                 $scope.isLecturer = answer.isLecturer;
@@ -88,6 +91,53 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         }
     };
 
+    $scope.editLecture = function () {
+        $('#currentList').hide();
+        $('#futureList').hide();
+        $http({
+            url: '/showLectureInfoGivenName',
+            method: 'GET',
+            params: {'lecture_code': $scope.code, 'doc_id': $scope.docId}
+        })
+            .success(function (lecture) {
+                $scope.$broadcast("editLecture", {
+                    "lecture_id": lecture.lectureId,
+                    "lecture_name": lecture.lectureCode,
+                    "start_date": lecture.lectureStartTime,
+                    "end_date": lecture.lectureEndTime,
+                    "password": lecture.password || "",
+                    "editMode": true
+                });
+                $scope.showLectureForm = true;
+            })
+            .error(function () {
+                $window.console.log("Failed to fetch lecture.");
+            });
+    };
+
+    $scope.$on("lectureUpdated", function (event, data) {
+        $http({
+            url: '/showLectureInfoGivenName',
+            method: 'GET',
+            params: {'lecture_id': $scope.lectureId}
+        })
+            .success(function (lecture) {
+                console.log(lecture);
+                $scope.code = lecture['lectureCode'];
+                $scope.lectureCode = "Lecture info: " + lecture['lectureCode'];
+                $scope.lectureEndTime = lecture['lectureEndTime'];
+                $scope.lectureStartTime = lecture['lectureStartTime'];
+            })
+            .error(function () {
+                $window.console.log("Failed to fetch lecture.");
+            });
+        $scope.showLectureForm = false;
+    });
+
+    $scope.$on("closeLectureForm", function (event, data) {
+        $scope.showLectureForm = false;
+    });
+
     /**
      * Draws charts from the answer of the current lecture.
      * @param userName Which users answers to shows. If undefined shows from every user.
@@ -106,7 +156,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         }
         var questionIndexes = [];
         for (var i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
-            $scope.dynamicAnswerShowControls[i].createChart(JSON.parse($scope.questions[i].questionJson));
+            $scope.dynamicAnswerShowControls[i].createChart($scope.questions[i].json);
             questionIndexes.push($scope.questions[i].question_id);
         }
 

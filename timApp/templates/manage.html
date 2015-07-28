@@ -92,11 +92,11 @@ if (isFolder) {
         <div ng-show="showAddEditor">
             <form ng-submit="addPermission(editorName, 'edit')">
                 <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
-                <input type="submit" value="Add" ng-disabled="!editorName">
-                <input type="button" value="Cancel" ng-click="showAddEditor = false">
-                <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'edit')">
-                <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'edit')">
-                <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'edit')">
+                <button type="submit" ng-disabled="!editorName">Add</button>
+                <button type="button" ng-click="showAddEditor = false">Cancel</button>
+                <button type="button" ng-click="addPermission('Korppi users', 'edit')">Add Korppi users</button>
+                <button type="button" ng-click="addPermission('Logged-in users', 'edit')">Add logged-in users</button>
+                <button type="button"  ng-click="addPermission('Anonymous users', 'edit')">Add anonymous users</button>
             </form>
         </div>
     </div>
@@ -111,11 +111,11 @@ if (isFolder) {
         <div ng-show="showAddViewer">
             <form ng-submit="addPermission(viewerName, 'view')">
                 <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
-                <input type="submit" value="Add" ng-disabled="!viewerName">
-                <input type="button" value="Cancel" ng-click="showAddViewer = false">
-                <input type="button" value="Add Korppi users" ng-click="addPermission('Korppi users', 'view')">
-                <input type="button" value="Add logged-in users" ng-click="addPermission('Logged-in users', 'view')">
-                <input type="button" value="Add anonymous users" ng-click="addPermission('Anonymous users', 'view')">
+                <button type="submit" ng-disabled="!viewerName">Add</button>
+                <button type="button" ng-click="showAddViewer = false">Cancel</button>
+                <button type="button" ng-click="addPermission('Korppi users', 'view')">Add Korppi users</button>
+                <button type="button" ng-click="addPermission('Logged-in users', 'view')">Add logged-in users</button>
+                <button type="button" ng-click="addPermission('Anonymous users', 'view')">Add anonymous users</button>
             </form>
         </div>
     </div>

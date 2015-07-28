@@ -14,7 +14,7 @@
 var angular;
 
 var timApp = angular.module('timApp');
-timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', function ($scope, $rootScope) {
+timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http', function ($scope, $rootScope, $http) {
     "use strict";
     $scope.questionHeaders = [];
     $scope.answerTypes = [];
@@ -27,7 +27,9 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', functio
         $scope.isLecturer = args.isLecturer;
         $scope.questionJson = args.questionJson;
         $scope.questionTitle = args.questionJson.TITLE;
-
+        $scope.askedTime = args.askedTime;
+        $scope.clockOffset = args.clockOffset;
+        $scope.questionEnded = false;
         $scope.dynamicAnswerSheetControl.createAnswer();
     });
 
@@ -37,7 +39,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', functio
      */
     $scope.answer = function () {
         $scope.dynamicAnswerSheetControl.answerToQuestion();
-        if($scope.isLecturer) {
+        if ($scope.isLecturer) {
             $rootScope.$broadcast("lecturerAnswered");
         }
 
@@ -56,5 +58,24 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', functio
      */
     $scope.showAnswers = function () {
         $scope.$emit('showAnswers', true);
+    };
+
+    $scope.askAgain = function () {
+        $http({
+            url: '/askQuestion',
+            method: 'POST',
+            params: {
+                lecture_id: $scope.lectureId,
+                question_id: $scope.questionId,
+                doc_id: $scope.docId,
+                buster: new Date().getTime()
+            }
+        }).success(function () {
+            $scope.close();
+            $rootScope.$broadcast('askQuestion', {"json": $scope.questionJson, "questionId": $scope.questionId});
+        }).error(function (error) {
+            $scope.close();
+            $window.console.log(error);
+        });
     };
 }]);

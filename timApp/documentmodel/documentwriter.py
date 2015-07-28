@@ -41,7 +41,8 @@ class DocumentWriter:
                     if blocks[0]['type'] == 'normal' or blocks[0]['type'] == 'autonormal':
                         text += '#-' + ' {' + attrs_str + '}\n' + p['md']
                     else:
-                        first_line, rest = blocks[0]['md'].split('\n', 1)
+                        parts = blocks[0]['md'].split('\n', 1)
+                        first_line, rest = parts[0], parts[1] if len(parts) > 1 else ''
                         text += first_line + ' {' + attrs_str + '}\n' + rest
             if text[-1] != '\n':
                 text += '\n'

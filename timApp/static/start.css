@@ -126,7 +126,7 @@ body {
     border-bottom: 1px solid #7b7b7b;
 }
 
-.loginbutton input {
+.loginbutton button {
     color: #fff;
     background-color: #3cc;
 	border: 1px solid #c8c8c8;

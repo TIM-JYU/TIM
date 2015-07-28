@@ -12,6 +12,8 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
+from timdb.timdbbase import TimDbException
+
 
 class Document:
     @contract()
@@ -291,20 +293,50 @@ class Document:
         self.__increment_version('Modified', par_id, increment_major=False, op_params={'old_hash': old_hash, 'new_hash': new_hash})
         return p
 
-    def update(self, text):
-        """"""
+    @contract
+    def update_section(self, text: 'str', par_id_first: 'str', par_id_last: 'str'):
+        """Updates a section of the document.
+
+        :param text: The text of the section.
+        :param par_id_first: The id of the paragraph that denotes the start of the section.
+        :param par_id_last: The id of the paragraph that denotes the end of the section.
+        """
+        new_pars = DocumentParser(text).add_missing_attributes().validate_ids().get_blocks()
+        new_par_id_set = set([par['id'] for par in new_pars])
+        all_pars = [par for par in self]
+        all_par_ids = [par.get_id() for par in all_pars]
+        start_index, end_index = all_par_ids.index(par_id_first), all_par_ids.index(par_id_last)
+        old_pars = all_pars[start_index:end_index + 1]
+        other_par_ids = all_par_ids[:]
+        del other_par_ids[start_index:end_index + 1]
+        intersection = new_par_id_set & set(other_par_ids)
+        if intersection:
+            raise TimDbException('Duplicate id(s): ' + str(intersection))
+        self._perform_update(new_pars,
+                             old_pars,
+                             last_par_id=all_par_ids[end_index + 1] if end_index + 1 < len(all_par_ids) else None)
+
+    @contract
+    def update(self, text: 'str'):
+        """Replaces the document's contents with the specified text.
+
+        :param text: The new text for the document.
+        """
         new_pars = DocumentParser(text).add_missing_attributes().validate_ids().get_blocks()
         old_pars = [par for par in self]
+
+        self._perform_update(new_pars, old_pars)
+
+    @contract
+    def _perform_update(self, new_pars: 'list(dict)', old_pars: 'list(DocParagraph)', last_par_id=None):
         old_ids = [par.get_id() for par in old_pars]
         new_ids = [par['id'] for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
         opcodes = s.get_opcodes()
-
         # Do delete operations first to avoid duplicate ids
         for tag, i1, i2, j1, j2 in [opcode for opcode in opcodes if opcode[0] in ['delete', 'replace']]:
             for par_id in old_ids[i1:i2]:
                 self.delete_paragraph(par_id)
-
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == 'replace':
                 for par in new_pars[j1:j2]:
@@ -314,7 +346,7 @@ class Document:
                     self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
-                                          insert_before_id=old_ids[before_i] if before_i < len(old_ids) else None)
+                                          insert_before_id=old_ids[before_i] if before_i < len(old_ids) else last_par_id)
             elif tag == 'insert':
                 for par in new_pars[j1:j2]:
                     before_i = i2
@@ -323,7 +355,7 @@ class Document:
                     self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
-                                          insert_before_id=old_ids[before_i] if i2 < len(old_ids) else None)
+                                          insert_before_id=old_ids[before_i] if i2 < len(old_ids) else last_par_id)
             elif tag == 'equal':
                 for new_par, old_par in zip(new_pars[j1:j2], old_pars[i1:i2]):
                     if new_par['t'] != old_par.get_hash() or new_par.get('attrs', {}) != old_par.get_attrs():
