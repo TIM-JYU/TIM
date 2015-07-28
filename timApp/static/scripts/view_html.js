@@ -231,6 +231,7 @@ timApp.controller("ViewCtrl", [
                     $rootScope.$broadcast("setPreviewJson", {
                         questionJson: sc.json,
                         questionId: sc.qId,
+                        points: data.points,
                         isLecturer: sc.isLecturer
                     });
                 })
@@ -1008,7 +1009,6 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getIndex = function () {
-
             sc.indexTable = [];
             var parentEntry = null;
             $(".par h1, .par h2, .par h3").each(function () {
