@@ -5,16 +5,26 @@ from documentmodel.documentwriter import DocumentWriter
 from markdownconverter import md_to_html
 from .randutils import *
 
-class DocParagraph:
+
+class DocParagraphBase:
+    pass
+
+
+# This is so the DocParagraph contract can be used in the class itself
+new_contract('DocParagraph', DocParagraphBase)
+
+
+class DocParagraph(DocParagraphBase):
     @contract
     def __init__(
             self,
             md: 'str' = '',
-                 par_id: 'str|None'=None,
-                 t: 'str|None'=None,
-                 attrs: 'dict|None'=None,
-                 src_dict: 'dict|None'=None,
-                 files_root: 'str|None'=None):
+            doc_id: 'int|None'=None,
+            par_id: 'str|None'=None,
+            t: 'str|None'=None,
+            attrs: 'dict|None'=None,
+            src_dict: 'dict|None'=None,
+            files_root: 'str|None'=None):
 
         if not attrs:
             attrs = {}
@@ -24,7 +34,9 @@ class DocParagraph:
             self.__data = src_dict
             return
 
+        assert doc_id is not None
         self.__data = {
+            'doc_id': str(doc_id),
             'id': par_id if par_id is not None else random_id(),
             'md': md,
             'html': None,
@@ -52,32 +64,36 @@ class DocParagraph:
 
     @classmethod
     @contract
-    def _get_path(cls, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_path(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.join(froot, 'pars', par_id, t)
+        return os.path.join(froot, 'pars', str(doc_id), par_id, t)
 
     @classmethod
     @contract
-    def _get_base_path(cls, par_id: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_base_path(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'str':
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.join(froot, 'pars', par_id)
+        return os.path.join(froot, 'pars', str(doc_id), par_id)
 
     @classmethod
     @contract
-    def get_latest(cls, par_id: 'str', files_root: 'str|None' = None):
+    def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         froot = cls.get_default_files_root() if files_root is None else files_root
-        t = os.readlink(cls._get_path(par_id, 'current', froot))
-        return cls.get(par_id, t, files_root=froot)
+        t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
+        return cls.get(doc_id, par_id, t, files_root=froot)
 
     @classmethod
     @contract
-    def get(cls, par_id: 'str', t: 'str', files_root: 'str|None' = None):
-        with open(cls._get_path(par_id, t, files_root), 'r') as f:
+    def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
             return cls.from_dict(json.loads(f.read()), files_root=files_root)
 
     @contract
     def dict(self) -> 'dict':
         return self.__data
+
+    @contract
+    def get_doc_id(self) -> 'int':
+        return int(self.__data['doc_id'])
 
     @contract
     def get_id(self) -> 'str':
@@ -111,7 +127,7 @@ class DocParagraph:
         self.__data['html'] = new_html
 
     @contract
-    def get_links(self) -> 'list(int)':
+    def get_links(self) -> 'list(str)':
         return self.__data['links']
 
     @contract
@@ -128,11 +144,11 @@ class DocParagraph:
 
     @contract
     def get_base_path(self) -> 'str':
-        return self._get_base_path(self.get_id(), files_root=self.files_root)
+        return self._get_base_path(self.get_doc_id(), self.get_id(), files_root=self.files_root)
 
     @contract
     def get_path(self) -> 'str':
-        return self._get_path(self.get_id(), self.get_hash(), files_root=self.files_root)
+        return self._get_path(self.get_doc_id(), self.get_id(), self.get_hash(), files_root=self.files_root)
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
@@ -165,7 +181,7 @@ class DocParagraph:
             f.write(json.dumps(self.__data))
 
     def __set_latest(self):
-        linkpath = self._get_path(self.get_id(), 'current', files_root=self.files_root)
+        linkpath = self._get_path(self.get_doc_id(), self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
         if os.path.isfile(linkpath):
@@ -175,17 +191,16 @@ class DocParagraph:
     @contract
     def add_link(self, doc_id: 'int'):
         self.__read()
-        self.__data['links'].append(doc_id)
+        self.__data['links'].append(str(doc_id))
         self.__write()
 
     @contract
     def remove_link(self, doc_id: 'int'):
         self.__read()
-        self.__data['links'].remove(doc_id)
+        self.__data['links'].remove(str(doc_id))
         self.__write()
 
     def update_links(self):
         self.__read()
         self.__write()
 
-new_contract('DocParagraph', DocParagraph)

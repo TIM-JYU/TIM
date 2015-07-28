@@ -98,7 +98,9 @@ class Document:
         :return:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return 1 + cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=0)
+        res = 1 + cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=0)
+        print("get_next_free_id() = {}".format(res))
+        return res
 
     @contract
     def get_version(self) -> 'tuple(int, int)':
@@ -191,7 +193,7 @@ class Document:
 
     @contract
     def get_paragraph(self, par_id: 'str') -> 'DocParagraph':
-        return DocParagraph.get_latest(par_id, self.files_root)
+        return DocParagraph.get_latest(self.doc_id, par_id, self.files_root)
 
     @contract
     def add_paragraph(self, text: 'str', attrs: 'dict|None'=None, par_id: 'str|None'=None) -> 'DocParagraph':
@@ -202,7 +204,7 @@ class Document:
         :param text: New paragraph text.
         :return: The new paragraph object.
         """
-        p = DocParagraph(md=text, files_root=self.files_root, attrs=attrs, par_id=par_id)
+        p = DocParagraph(md=text, files_root=self.files_root, attrs=attrs, par_id=par_id, doc_id=self.doc_id)
         p.get_html()
         p.add_link(self.doc_id)
         old_ver = self.get_version()
@@ -236,7 +238,7 @@ class Document:
                     if not line:
                         return
                     if line == id_line:
-                        p = DocParagraph.get_latest(par_id, files_root=self.files_root)
+                        p = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
                         p.remove_link(self.doc_id)
                     else:
                         f.write(line)
@@ -257,7 +259,7 @@ class Document:
         if not insert_before_id:
             return self.add_paragraph(text, attrs, par_id=par_id)
 
-        p = DocParagraph(text, files_root=self.files_root, attrs=attrs, par_id=par_id)
+        p = DocParagraph(text, files_root=self.files_root, attrs=attrs, par_id=par_id, doc_id=self.doc_id)
         p.add_link(self.doc_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True, op_params={'before_id': insert_before_id})
@@ -284,10 +286,10 @@ class Document:
         """
         if not self.has_paragraph(par_id):
             raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
-        p_src = DocParagraph.get_latest(par_id, files_root=self.files_root)
+        p_src = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
         p_src.remove_link(self.doc_id)
         old_hash = p_src.get_hash()
-        p = DocParagraph(new_text, par_id=par_id, attrs=new_attrs, files_root=self.files_root)
+        p = DocParagraph(new_text, doc_id=self.doc_id, par_id=par_id, attrs=new_attrs, files_root=self.files_root)
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
         self.__increment_version('Modified', par_id, increment_major=False, op_params={'old_hash': old_hash, 'new_hash': new_hash})
@@ -419,7 +421,7 @@ class DocParagraphIter:
                 self.__close()
                 raise StopIteration
             if line != '\n':
-                return DocParagraph.get_latest(line.replace('\n', ''), self.doc.files_root)
+                return DocParagraph.get_latest(self.doc.doc_id, line.replace('\n', ''), self.doc.files_root)
 
     def __close(self):
         if self.f:

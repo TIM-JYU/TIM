@@ -78,8 +78,8 @@ def modify_paragraph():
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
 
-    editor_pars = get_pars_from_editor_text(md)
-    original_par = DocParagraph(par_id=par_id)
+    editor_pars = get_pars_from_editor_text(doc_id, md)
+    original_par = DocParagraph(doc_id=doc_id, par_id=par_id)
     pars = []
     if editor_pars[0].is_different_from(original_par):
         [par], _ = timdb.documents.modify_paragraph(doc,
@@ -114,7 +114,7 @@ def preview(doc_id):
     """
     timdb = getTimDb()
     text, = verify_json_params('text')
-    blocks = get_pars_from_editor_text(text)
+    blocks = get_pars_from_editor_text(doc_id, text)
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,
@@ -126,8 +126,8 @@ def preview(doc_id):
                          'angularModule': modules})
 
 
-def get_pars_from_editor_text(text):
-    blocks = [DocParagraph(md=par['md'], attrs=par.get('attrs'))
+def get_pars_from_editor_text(doc_id, text):
+    blocks = [DocParagraph(doc_id=doc_id, md=par['md'], attrs=par.get('attrs'))
               for par in DocumentParser(text).get_blocks(break_on_code_block=False,
                                                          break_on_header=False,
                                                          break_on_normal=False)]
@@ -144,7 +144,7 @@ def add_paragraph():
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
-    editor_pars = get_pars_from_editor_text(md)
+    editor_pars = get_pars_from_editor_text(doc_id, md)
 
     # verify_document_version(doc_id, version)
     doc = get_newest_document(doc_id)
