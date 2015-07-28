@@ -89,6 +89,8 @@ __question_to_be_asked = []
 __pull_answer = {}
 # Dictionary to activities of different users
 __user_activity = {}
+# Dictionary for extending question time
+__extend_question = {}
 
 
 def error_generic(error, code):
@@ -396,6 +398,7 @@ def get_updates():
             for pair in __question_to_be_asked:
                 if pair[0] == lecture_id and current_user not in pair[2]:
                     question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
+                    # jos oppilas, poista points question_json.points = null
                     pair[2].append(getCurrentUserId())
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
@@ -501,13 +504,14 @@ def add_question():
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     par_id = request.args.get('par_id')
+    points = request.args.get('points')
     questionJson = request.args.get('questionJson')
     timdb = getTimDb()
     questions = None
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, questionJson)
+        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, questionJson, points)
     else:
-        questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, questionJson)
+        questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, questionJson, points)
     return jsonResponse(timdb.questions.get_question(questions)[0])
 
 
@@ -1112,6 +1116,20 @@ def get_lecture_with_name(lecture_code,doc_id):
     return jsonResponse(lecture)
 
 
+@app.route("/extendQuestion", methods=['PUT', 'GET'])
+def extend_question():
+    lecture_id = int(request.args.get('lecture_id'))
+    question_id = int(request.args.get('question_id'))
+    extend = int(request.args.get('extend'))
+    for q in __question_to_be_asked:
+        if q[0] == lecture_id and q[1] == question_id:
+            question = (q[0], q[1], q[2], q[3], q[4] + extend * 1000)
+            __question_to_be_asked.append(question)
+            __question_to_be_asked.remove(q)
+            __extend_question[question[0], question[1]].set()
+    return jsonResponse('Extended')
+
+
 @app.route("/askQuestion", methods=['POST'])
 def ask_question():
     if not request.args.get('doc_id') or not request.args.get('question_id') or not request.args.get('lecture_id'):
@@ -1126,22 +1144,24 @@ def ask_question():
         abort(400, "Not valid lecture id")
 
     timdb = getTimDb()
-    if not json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"]  :
+    if not json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"]:
         question_timelimit = 0
     else:
         question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"])
+    ask_time = int(time.time() * 1000)
+    end_time = ask_time + question_timelimit * 1000
     thread_to_stop_question = threading.Thread(target=stop_question_from_running,
-                                            args=(lecture_id, question_id, question_timelimit))
+                                               args=(lecture_id, question_id, question_timelimit, ask_time, end_time))
 
     thread_to_stop_question.start()
 
     verifyOwnership(int(doc_id))
-    __question_to_be_asked.append((lecture_id, question_id, [], int(time.time() * 1000)))
+    __question_to_be_asked.append((lecture_id, question_id, [], ask_time, end_time))
 
     return jsonResponse("")
 
 
-def stop_question_from_running(lecture_id, question_id, question_timelimit):
+def stop_question_from_running(lecture_id, question_id, question_timelimit, ask_time, end_time):
     if question_timelimit == 0:
         return
 
@@ -1149,7 +1169,12 @@ def stop_question_from_running(lecture_id, question_id, question_timelimit):
     # TODO: If current implementation changes the way that the question last 10 seconds and after that you can't
     # TODO: answer. Remove this part
     extra_time = 3
-    time.sleep(question_timelimit + extra_time)
+    end_time += extra_time * 1000
+    while int(time.time() * 1000) < end_time:
+        time.sleep(1)
+        for question in __question_to_be_asked:
+            if question[0] == lecture_id and question[1] == question_id:
+                end_time = extra_time * 1000 + question[4]
 
     for question in __question_to_be_asked:
         if question[0] == lecture_id and question[1] == question_id:
@@ -1183,6 +1208,36 @@ def delete_question():
     timdb.lecture_answers.delete_answers_from_question(question_id)
 
     return jsonResponse("")
+
+
+# Tämän muuttaminen long polliksi vaatii threadien poistamisen
+@app.route("/getExtendQuestion", methods=['GET'])
+def get_extend_question():
+    if not request.args.get('question_id') or not request.args.get('lecture_id'):
+        abort(400, "Bad request")
+
+    question_id = int(request.args.get('question_id'))
+    lecture_id = int(request.args.get('lecture_id'))
+
+    __extend_question[lecture_id, question_id] = threading.Event()
+
+    for extend in __extend_question:
+        lecture, question = extend
+        if lecture == lecture_id and question != question_id:
+            __extend_question[extend].set()
+
+    if not request.args.get("time"):
+        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+    else:
+        time_now = request.args.get('time')
+
+    __extend_question[lecture_id, question_id].wait()
+    endtime = None
+    for q in __question_to_be_asked:
+        if q[0] == lecture_id and q[1] == question_id:
+            endtime = q[4]
+            break
+    return jsonResponse(endtime)
 
 
 # Tämän muuttaminen long polliksi vaatii threadien poistamisen
