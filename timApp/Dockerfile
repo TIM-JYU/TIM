@@ -83,6 +83,7 @@ run bower --allow-root install katex-build#~0.2
 run bower --allow-root install ng-table#~0.5
 run bower --allow-root install ng-table-export
 run bower --allow-root install rangyinputs
+run bower --allow-root install ngstorage#~0.3
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js

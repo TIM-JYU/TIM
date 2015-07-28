@@ -3,7 +3,8 @@ var katex, $, angular, modules, version, refererPath, docId, docName, rights, st
 var timApp = angular.module('timApp', [
     'ngSanitize',
     'angularFileUpload',
-    'ui.ace'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
+    'ui.ace',
+    'ngStorage'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
     var interceptor = [
         '$q',
         '$rootScope',
@@ -47,7 +48,9 @@ timApp.controller("ViewCtrl", [
     '$window',
     '$document',
     '$rootScope',
-    function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope) {
+    '$localStorage',
+    '$filter',
+    function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter) {
         "use strict";
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
@@ -74,37 +77,8 @@ timApp.controller("ViewCtrl", [
         sc.lectureMode = lectureMode;
         sc.questionShown = false;
         sc.firstTimeQuestions = true;
-        var DEFAULT_BUTTON_CLASS = "timButton defaultButton";
-        var NOTE_ADD_BUTTON_CLASS = "timButton addNote";
-        var NOTE_ADD_BUTTON = "." + NOTE_ADD_BUTTON_CLASS.replace(" ", ".");
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
-        var PAR_ADD_BUTTON_CLASS = "timButton addPar";
-        var PAR_ADD_BUTTON = "." + PAR_ADD_BUTTON_CLASS.replace(" ", ".");
-        var PAR_EDIT_BUTTON_CLASS = "timButton editPar";
-        var PAR_EDIT_BUTTON = "." + PAR_EDIT_BUTTON_CLASS.replace(" ", ".");
-        var QUESTION_ADD_BUTTON_CLASS = "timButton addQuestion";
-        var QUESTION_ADD_BUTTON = "." + QUESTION_ADD_BUTTON_CLASS.replace(" ", ".");
-        var PAR_CLOSE_BUTTON_CLASS = "timButton menuClose";
-        var PAR_CLOSE_BUTTON = "." + PAR_CLOSE_BUTTON_CLASS.replace(" ", ".");
-
-        sc.defaults = [false, false, false, false, false, false];
-
-        sc.updateSelection = function (index) {
-            var selected = false;
-            for (var i = 0; i < sc.defaults.length; i++) {
-                if (sc.defaults[i]) selected = true;
-                if (i != index) {
-                    sc.defaults[i] = false;
-                }
-            }
-
-            if (selected) {
-                sc.defaultAction = sc.editorFunctions[index];
-            } else {
-                sc.defaultAction = sc.showOptionsWindow;
-            }
-        };
 
         sc.processAllMath = function ($elem) {
             $elem.find('.math').each(function () {
@@ -198,7 +172,6 @@ timApp.controller("ViewCtrl", [
                     if (caption) $div.attr('caption', caption);
                     $par.append($div);
                     $compile($div[0])(sc);
-                    //$div = $compile($div)(sc);
                     sc.editing = true;
                 };
 
@@ -254,7 +227,6 @@ timApp.controller("ViewCtrl", [
             $rootScope.$broadcast('getLectureId');
             $rootScope.$broadcast('getInLecture');
             sc.showQuestionPreview = true;
-            //sc.$digest();
         };
 
         sc.toggleNoteEditor = function ($par, options) {
@@ -368,66 +340,33 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.showEditWindow = function (e, $par) {
+            $(".par.new").remove();
             sc.toggleParEditor($par, {showDelete: true});
         };
-
-        sc.onClick(PAR_EDIT_BUTTON, function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            $(".par.new").remove();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            sc.showEditWindow(e, $par, null);
-            return true;
-        });
-
-        sc.onClick("#defaultEdit", function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            sc.defaultAction = sc.showEditWindow;
-            return true;
-        });
 
         sc.createNewPar = function () {
             return $("<div>", {class: "par new", id: 'NEW_PAR', attrs: '{}'})
                 .append($("<div>", {class: "parContent"}).html('New paragraph'));
         };
 
-        sc.showAddParagraphAbove = function (e, $par, coords) {
+        sc.showAddParagraphAbove = function (e, $par) {
             var $newpar = sc.createNewPar();
             $par.before($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
-        sc.showAddParagraphBelow = function (e, $par, coords) {
+        sc.showAddParagraphBelow = function (e, $par) {
             var $newpar = sc.createNewPar();
             $par.after($newpar);
             sc.toggleParEditor($newpar, {showDelete: false});
         };
 
-        sc.onClick(PAR_ADD_BUTTON, function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            $(".par.new").remove();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            var $newpar = sc.createNewPar();
-
-            if ($(e.target).hasClass("above")) {
-                $par.before($newpar);
-            } else if ($(e.target).hasClass("below")) {
-                $par.after($newpar);
-            }
-
-            sc.toggleParEditor($newpar, {showDelete: false});
-            return true;
-        });
-
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
-        sc.onClick(QUESTION_ADD_BUTTON, function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
+        sc.addQuestion = function (e, $par) {
             sc.toggleQuestion();
-            sc.toggleActionButtons(e, $par, false, false, null);
             sc.par = $par;
-            sc.$apply();
-        });
+        };
 
         // Shows question window
         sc.toggleQuestion = function () {
@@ -437,38 +376,6 @@ timApp.controller("ViewCtrl", [
         $.fn.slideFadeToggle = function (easing, callback) {
             return this.animate({opacity: 'toggle', height: 'toggle'}, 'fast', easing, callback);
         };
-
-        sc.onClick("#defaultPrepend", function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            sc.defaultAction = sc.showAddParagraphAbove;
-            return true;
-        });
-
-        sc.onClick("#defaultAppend", function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            sc.defaultAction = sc.showAddParagraphBelow;
-            return true;
-        });
-
-        sc.doNothing = function (e, $par) {
-            sc.toggleActionButtons(e, $par, false, false, null);
-        };
-
-        sc.onClick(PAR_CLOSE_BUTTON, function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            $(".par.new").remove();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            return true;
-        });
-
-        sc.onClick("#defaultClose", function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            sc.defaultAction = sc.doNothing;
-            return true;
-        });
 
         sc.handleCancel = function (extraData) {
             var $par = sc.getElementByParId(extraData.par);
@@ -572,20 +479,6 @@ timApp.controller("ViewCtrl", [
             sc.toggleNoteEditor($par, {isNew: true});
         };
 
-        sc.onClick(NOTE_ADD_BUTTON, function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            sc.showNoteWindow(e, $par, null);
-            return true;
-        });
-
-        sc.onClick("#defaultAdd", function ($this, e) {
-            var $par = $(e.target).parent().parent().parent();
-            sc.toggleActionButtons(e, $par, false, false, null);
-            sc.defaultAction = sc.showNoteWindow;
-            return true;
-        });
-
         sc.handleNoteCancel = function () {
             sc.editing = false;
         };
@@ -642,102 +535,12 @@ timApp.controller("ViewCtrl", [
         // Note-related functions
 
         sc.showOptionsWindow = function (e, $par, coords) {
-            //var default_width = $par.outerWidth() / 16;
-            var button_width = 130;
-            //var button_width = $par.outerWidth() / 4 - 1.7 * default_width;
-            var $actionDiv = $("<div>", {class: 'actionButtons'});
-            if (sc.rights.can_comment) {
-                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
-                $span.append($("<button>", {class: NOTE_ADD_BUTTON_CLASS, text: 'Comment/note', width: button_width}));
-                $span.append($("<input>", {
-                    class: DEFAULT_CHECKBOX_CLASS,
-                    type: 'checkbox',
-                    'ng-click': 'updateSelection(0)',
-                    'ng-model': 'defaults[0]'
-                }));
-                $actionDiv.append($span);
-            }
-            if (sc.rights.editable) {
-                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
-                $span.append($("<button>", {class: PAR_EDIT_BUTTON_CLASS, text: 'Edit', width: button_width}));
-                $span.append($("<input>", {
-                    class: DEFAULT_CHECKBOX_CLASS,
-                    type: 'checkbox',
-                    'ng-click': 'updateSelection(1)',
-                    'ng-model': 'defaults[1]'
-                }));
-                $actionDiv.append($span);
-
-                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
-                $span.append($("<button>", {
-                    class: PAR_ADD_BUTTON_CLASS + ' above',
-                    text: 'Add paragraph above',
-                    width: button_width
-                }));
-                $span.append($("<input>", {
-                    class: DEFAULT_CHECKBOX_CLASS,
-                    type: 'checkbox',
-                    'ng-click': 'updateSelection(2)',
-                    'ng-model': 'defaults[2]'
-                }));
-                $actionDiv.append($span);
-
-                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
-                $span.append($("<button>", {
-                    class: PAR_ADD_BUTTON_CLASS + ' below',
-                    text: 'Add paragraph below',
-                    width: button_width
-                }));
-
-                $span.append($("<input>", {
-                    class: DEFAULT_CHECKBOX_CLASS,
-                    type: 'checkbox',
-                    'ng-click': 'updateSelection(3)',
-                    'ng-model': 'defaults[3]'
-                }));
-                $actionDiv.append($span);
-
-                if (sc.lectureMode) {
-
-                    var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
-                    $span.append($("<button>", {
-                        class: QUESTION_ADD_BUTTON_CLASS,
-                        text: 'Create question',
-                        width: button_width
-                    }));
-                    $span.append($("<input>", {
-                        class: DEFAULT_CHECKBOX_CLASS,
-                        type: 'checkbox',
-                        'ng-click': 'updateSelection(4)',
-                        'ng-model': 'defaults[4]'
-                    }));
-                    $actionDiv.append($span);
-                }
-
-                var $span = $("<span>", {class: ACTION_BUTTON_ROW_CLASS});
-                $span.append($("<button>", {class: PAR_CLOSE_BUTTON_CLASS, text: 'Close menu', width: button_width}));
-                $span.append($("<input>", {
-                    class: DEFAULT_CHECKBOX_CLASS,
-                    type: 'checkbox',
-                    'ng-click': 'updateSelection(5)',
-                    'ng-model': 'defaults[5]'
-                }));
-                $actionDiv.append($span);
-
-            }
-            /*
-             if ('ontouchstart' in window || navigator.msMaxTouchPoints) {
-             coords = {left: 0, top: 0};
-             }*/
-            ;
-            $actionDiv.offset(coords);
-            $actionDiv.css('position', 'absolute'); // IE needs this
-            $actionDiv.attr('tim-draggable-fixed', '');
-            $actionDiv = $compile($actionDiv)(sc);
-            $par.prepend($actionDiv);
-
-
-            var element = $('.actionButtons');
+            var $popup = $('<popup-menu>');
+            $popup.attr('tim-draggable-fixed', '');
+            $par.prepend($popup); // need to prepend to DOM before compiling
+            $compile($popup[0])(sc);
+            // TODO: Set offset for the popup
+            var element = $popup;
             var viewport = {};
             viewport.top = $(window).scrollTop();
             viewport.bottom = viewport.top + $(window).height();
@@ -773,7 +576,7 @@ timApp.controller("ViewCtrl", [
                 }
                 else if (clicktime < 500) {
                     // Double click
-                    sc.defaultAction(e, $par, coords);
+                    sc.defaultAction.func(e, $par, coords);
                 }
                 else {
                     // Two clicks
@@ -993,7 +796,6 @@ timApp.controller("ViewCtrl", [
                 var cb = str.indexOf('}');
                 return str.substring(ob + 1, cb);
             }
-            //return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").replace(/[^\d\wÃ¥Ã¤Ã¶\.\- ]/gi, "").trim().replace(/ +/g, '-').toLowerCase();
             return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").trim().replace(/ +/g, '-').toLowerCase();
         };
 
@@ -1089,7 +891,6 @@ timApp.controller("ViewCtrl", [
 
 
 
-        //sc.showContent = function ($this, e) {
         sc.onClick('.showContent', function($this, e) {
             sc.contentShown = !sc.contentShown;
             var $pars = $('#pars');
@@ -1142,12 +943,8 @@ timApp.controller("ViewCtrl", [
 
             sc.$on("closeQuestionPreview", function () {
                 sc.showQuestionPreview = false;
-                //sc.clearQuestion();
             });
         }
-
-        sc.editorFunctions = [sc.showNoteWindow, sc.showEditWindow, sc.showAddParagraphAbove,
-            sc.showAddParagraphBelow, sc.toggleQuestion, sc.doNothing];
 
         // Load index, notes and read markings
         sc.setHeaderLinks();
@@ -1168,13 +965,33 @@ timApp.controller("ViewCtrl", [
             sc.onClick(".addBottom", function ($this, e) {
                 $(".actionButtons").remove();
                 var $par = $('#pars').children().last();
-                var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top - 1000};
-                return sc.showAddParagraphBelow(e, $par, coords);
+                return sc.showAddParagraphBelow(e, $par);
             });
-            //sc.getEditPars();
         }
         sc.processAllMath($('body'));
-        sc.defaultAction = sc.showOptionsWindow;
+
+        sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
+
+        sc.editorFunctions = [
+            {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+            {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
+            {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
+            {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
+            {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode}
+        ];
+
+        sc.$storage = $localStorage.$default({
+            defaultAction: null
+        });
+
+        try {
+            var found = $filter('filter')(sc.editorFunctions,
+                {desc: sc.$storage.defaultAction}, true);
+            if (found.length) {
+                sc.defaultAction = found[0];
+            }
+        } catch (e) {
+        }
     }
 ])
 ;
