@@ -9,9 +9,7 @@ import time
 import datetime
 from time import mktime
 import posixpath
-from datetime import timedelta
 import threading
-from random import randint
 
 from flask import Flask, Blueprint
 from flask import stream_with_context
@@ -209,6 +207,7 @@ def upload_image_or_file(image_file):
                                                       getCurrentUserGroup())
         timdb.users.grantViewAccess(0, file_id)  # So far everyone can see all files
         return jsonResponse({"file": str(file_id) + '/' + file_filename})
+
 
 @app.route('/images/<int:image_id>/<image_filename>')
 def get_image(image_id, image_filename):
@@ -498,20 +497,21 @@ def add_question():
     # TODO: Only lecturers should be able to create questions.
     # verifyOwnership(doc_id)
     question_id = None
-    if (request.args.get('question_id')):
+    if request.args.get('question_id'):
         question_id = int(request.args.get('question_id'))
     question_title = request.args.get('question_title')
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     par_id = request.args.get('par_id')
     points = request.args.get('points')
-    questionJson = request.args.get('questionJson')
+    question_json = request.args.get('questionJson')
     timdb = getTimDb()
     questions = None
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, questionJson, points)
+        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, question_json, points)
     else:
-        questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, questionJson, points)
+        questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, question_json,
+                                                    points)
     return jsonResponse(timdb.questions.get_question(questions)[0])
 
 
@@ -592,7 +592,7 @@ def get_all_lectures():
     for lecture in lectures:
         lecture_info = {"lecture_id": lecture.get("lecture_id"), "lecture_code": lecture.get('lecture_code'),
                         "target": "/showLectureInfo/" + str(lecture.get("lecture_id")),
-                        "is_access_code": not (lecture.get("password") == "")};
+                        "is_access_code": not (lecture.get("password") == "")}
         if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lectures.append(lecture_info)
         elif lecture.get("end_time") <= time_now:
@@ -645,8 +645,6 @@ def show_lecture_info_given_name():
         response["password"] = lecture.get("password")
 
     return jsonResponse(response)
-
-
 
 
 # Gets users from specific lecture
@@ -732,8 +730,9 @@ def create_lecture():
     current_user = getCurrentUserId()
     if not timdb.lectures.check_if_correct_name(doc_id, lecture_code, lecture_id):
             abort(400, "Can't create two or more lectures with the same name to the same document.")
-    if lecture_id <0:
-        lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password, True)
+    if lecture_id < 0:
+        lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password,
+                                                   True)
     else:
         timdb.lectures.update_lecture(lecture_id, doc_id, current_user, start_time, end_time, lecture_code, password)
 
@@ -918,15 +917,15 @@ def get_folders():
     return jsonResponse(allowed_folders)
 
 
-def create_item(item_name, itemType, createFunction, owner_group_id):
+def create_item(item_name, item_type, create_function, owner_group_id):
     if not loggedIn():
-        abort(403, 'You have to be logged in to create a {}.'.format(itemType))
+        abort(403, 'You have to be logged in to create a {}.'.format(item_type))
 
     if item_name.startswith('/') or item_name.endswith('/'):
-        abort(400, 'The {} name cannot start or end with /.'.format(itemType))
+        abort(400, 'The {} name cannot start or end with /.'.format(item_type))
 
     if re.match('^(\d)*$', item_name) is not None:
-        abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(itemType))
+        abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
 
     timdb = getTimDb()
     username = getCurrentUserName()
@@ -935,11 +934,11 @@ def create_item(item_name, itemType, createFunction, owner_group_id):
         abort(403, 'Item with a same name already exists.')
 
     if not canWriteToFolder(item_name):
-        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(itemType, username))
+        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
 
     item_path, _ = timdb.folders.split_location(item_name)
     folder_id = timdb.folders.create(item_path, owner_group_id)
-    item_id = createFunction(item_name, owner_group_id)
+    item_id = create_function(item_name, owner_group_id)
 
     return jsonResponse({'id': item_id, 'name': item_name})
 
@@ -963,24 +962,22 @@ def create_folder():
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
-    timdb = getTimDb()
     verifyEditAccess(doc_id)
     par = Document(doc_id).get_paragraph(par_id)
     return jsonResponse({"text": par.get_exported_markdown()})
 
 
-@app.route("/<plugin>/<path:fileName>")
-def plugin_call(plugin, fileName):
+@app.route("/<plugin>/<filename>")
+def plugin_call(plugin, filename):
     try:
-        req = containerLink.call_plugin_resource(plugin, fileName)
-        return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
+        req = containerLink.call_plugin_resource(plugin, filename)
+        return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
     except PluginException:
         abort(404)
 
 
 @app.route("/index/<int:doc_id>")
 def get_index(doc_id):
-    timdb = getTimDb()
     verifyViewAccess(doc_id)
     index = Document(doc_id).get_index()
     return jsonResponse(index)
@@ -990,7 +987,7 @@ def get_index(doc_id):
 def view_template(plugin, template, index):
     try:
         req = containerLink.call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
-        return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
+        return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
     except PluginException:
         abort(404)
 
@@ -1109,10 +1106,10 @@ def get_questions(doc_id):
 
 
 @app.route("/getLectureWithName", methods=['POST'])
-def get_lecture_with_name(lecture_code,doc_id):
+def get_lecture_with_name(lecture_code, doc_id):
     verifyOwnership(doc_id)
     timdb = getTimDb()
-    lecture = timdb.lectures.get_lecture_by_code(lecture_code,doc_id)
+    lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     return jsonResponse(lecture)
 
 
@@ -1147,11 +1144,12 @@ def ask_question():
     if not json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"]:
         question_timelimit = 0
     else:
-        question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"])
+        question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))
+                                 ["TIMELIMIT"])
     ask_time = int(time.time() * 1000)
     end_time = ask_time + question_timelimit * 1000
     thread_to_stop_question = threading.Thread(target=stop_question_from_running,
-                                               args=(lecture_id, question_id, question_timelimit, ask_time, end_time))
+                                               args=(lecture_id, question_id, question_timelimit, end_time))
 
     thread_to_stop_question.start()
 
@@ -1161,7 +1159,7 @@ def ask_question():
     return jsonResponse("")
 
 
-def stop_question_from_running(lecture_id, question_id, question_timelimit, ask_time, end_time):
+def stop_question_from_running(lecture_id, question_id, question_timelimit, end_time):
     if question_timelimit == 0:
         return
 
@@ -1226,11 +1224,12 @@ def get_extend_question():
         if lecture == lecture_id and question != question_id:
             __extend_question[extend].set()
 
+    """
     if not request.args.get("time"):
         time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
     else:
         time_now = request.args.get('time')
-
+    """
     __extend_question[lecture_id, question_id].wait()
     endtime = None
     for q in __question_to_be_asked:
@@ -1265,13 +1264,13 @@ def get_lecture_answers():
     __pull_answer[question_id, lecture_id].wait()
 
     timdb = getTimDb()
-    answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
-    if len(answers) <= 0:
+    lecture_answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
+    if len(lecture_answers) <= 0:
         return jsonResponse({"noAnswer": True})
 
-    latest_answer = answers[-1].get("answered_on")
+    latest_answer = lecture_answers[-1].get("answered_on")
 
-    return jsonResponse({"answers": answers, "questionId": question_id, "latestAnswer": latest_answer})
+    return jsonResponse({"answers": lecture_answers, "questionId": question_id, "latestAnswer": latest_answer})
 
 
 def create_points_table(points):
@@ -1307,15 +1306,15 @@ def answer_to_question():
 
     question_ended = True
     for question in __question_to_be_asked:
-         if question[0] == lecture_id and question[1] == question_id:
+        if question[0] == lecture_id and question[1] == question_id:
             question_ended = False
 
     if question_ended:
         return jsonResponse({"questionLate": "The question has already finished. Your answer was not saved."})
 
     single_answers = []
-    answers = answer.split('|')
-    for answer in answers:
+    all_answers = answer.split('|')
+    for answer in all_answers:
         single_answers.append(answer.split(','))
 
     question_points = timdb.questions.get_question(question_id)[0].get("points")
@@ -1391,6 +1390,7 @@ def mark_all_read(doc_id):
 @app.route("/")
 def start_page():
     return render_template('start.html')
+
 
 @app.route("/view/")
 def index_page():
