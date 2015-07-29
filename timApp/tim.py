@@ -1274,6 +1274,24 @@ def get_lecture_answers():
     return jsonResponse({"answers": answers, "questionId": question_id, "latestAnswer": latest_answer})
 
 
+def create_points_table(points):
+    points_table = []
+    if points and points != '':
+        points_split = points.split('|')
+        for row in points_split:
+            row_points = row.split(';')
+            row_points_dict = {}
+            for col in row_points:
+                if col != '':
+                    col_points = col.split(':', 2)
+                    if len(col_points) == 1:
+                        row_points_dict[col_points[0]] = 1
+                    else:
+                        row_points_dict[col_points[0]] = float(col_points[1])
+            points_table.append(row_points_dict)
+    return points_table
+
+
 @app.route("/answerToQuestion", methods=['PUT'])
 def answer_to_question():
     if not request.args.get("question_id") or not request.args.get('answers') or not request.args.get('lecture_id'):
@@ -1300,33 +1318,14 @@ def answer_to_question():
     for answer in answers:
         single_answers.append(answer.split(','))
 
-    question_json = json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))
+    question_points = timdb.questions.get_question(question_id)[0].get("points")
+    points_table = create_points_table(question_points)
 
     points = 0.0
-    for oneAnswer in single_answers:
-        question_number = 0
+    for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
-            header_number = 0
-            if question_json['TYPE'] == "matrix" or question_json['TYPE'] == "true-false":
-                for header in question_json['DATA']['HEADERS']:
-                    if header['text'] == oneLine:
-                        try:
-                            points += float(
-                                question_json['DATA']['ROWS'][question_number]['COLUMNS'][header_number]['points'])
-                            break
-                        except ValueError:
-                            points += 0
-                    header_number += 1
-            else:
-                for row in question_json['DATA']['ROWS']:
-                    if row['text'] == oneLine:
-                        try:
-                            points += float(row['COLUMNS'][0]['points'])
-                            break
-                        except ValueError:
-                            points += 0
-
-        question_number += 1
+            if oneLine in point_row:
+                points += point_row[oneLine]
 
     timdb.lecture_answers.add_answer(getCurrentUserId(), question_id, lecture_id, whole_answer, time_now, points)
 
