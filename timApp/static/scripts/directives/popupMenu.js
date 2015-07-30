@@ -18,8 +18,6 @@ timApp.directive('popupMenu', ['$window', '$filter', function ($window, $filter)
         controller: function ($scope, $element) {
             $scope.closePopup = function () {
                 $scope.$destroy();
-                $scope.$par.removeClass("selected");
-                $scope.$par.removeClass("lightselect");
                 $element.remove();
             };
 

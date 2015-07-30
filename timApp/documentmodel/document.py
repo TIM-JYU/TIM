@@ -75,6 +75,18 @@ class Document:
     def export_markdown(self, export_hashes=False) -> 'str':
         return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
 
+    @contract
+    def export_section(self, par_id_start: 'str', par_id_end: 'str', export_hashes=False) -> 'str':
+        return DocumentWriter([par.dict() for par in self.get_section(par_id_start, par_id_end)],
+                              export_hashes=export_hashes).get_text()
+
+    @contract
+    def get_section(self, par_id_start: 'str', par_id_end: 'str') -> 'list(DocParagraph)':
+        all_pars = [par for par in self]
+        all_par_ids = [par.get_id() for par in all_pars]
+        start_index, end_index = all_par_ids.index(par_id_start), all_par_ids.index(par_id_end)
+        return all_pars[start_index:end_index + 1]
+
     @classmethod
     @contract
     def remove(cls, doc_id: 'int', files_root: 'str|None' = None, ignore_exists=False):
@@ -296,7 +308,7 @@ class Document:
         return p
 
     @contract
-    def update_section(self, text: 'str', par_id_first: 'str', par_id_last: 'str'):
+    def update_section(self, text: 'str', par_id_first: 'str', par_id_last: 'str') -> 'tuple(str,str)':
         """Updates a section of the document.
 
         :param text: The text of the section.
@@ -314,9 +326,10 @@ class Document:
         intersection = new_par_id_set & set(other_par_ids)
         if intersection:
             raise TimDbException('Duplicate id(s): ' + str(intersection))
-        self._perform_update(new_pars,
-                             old_pars,
-                             last_par_id=all_par_ids[end_index + 1] if end_index + 1 < len(all_par_ids) else None)
+        return self._perform_update(new_pars,
+                                    old_pars,
+                                    last_par_id=all_par_ids[end_index + 1]
+                                    if end_index + 1 < len(all_par_ids) else None)
 
     @contract
     def update(self, text: 'str'):
@@ -330,7 +343,9 @@ class Document:
         self._perform_update(new_pars, old_pars)
 
     @contract
-    def _perform_update(self, new_pars: 'list(dict)', old_pars: 'list(DocParagraph)', last_par_id=None):
+    def _perform_update(self, new_pars: 'list(dict)',
+                        old_pars: 'list(DocParagraph)',
+                        last_par_id=None) -> 'tuple(str,str)':
         old_ids = [par.get_id() for par in old_pars]
         new_ids = [par['id'] for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
@@ -364,6 +379,7 @@ class Document:
                         self.modify_paragraph(old_par.get_id(),
                                               new_par['md'],
                                               new_attrs=new_par.get('attrs'))
+        return new_ids[0], new_ids[-1]
 
     @contract
     def get_index(self) -> 'list(str)':

@@ -963,8 +963,13 @@ def create_folder():
 @app.route("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
     verifyEditAccess(doc_id)
-    par = Document(doc_id).get_paragraph(par_id)
-    return jsonResponse({"text": par.get_exported_markdown()})
+    area_start = request.args.get('area_start')
+    area_end = request.args.get('area_end')
+    if area_start and area_end:
+        return jsonResponse({"text": Document(doc_id).export_section(area_start, area_end)})
+    else:
+        par = Document(doc_id).get_paragraph(par_id)
+        return jsonResponse({"text": par.get_exported_markdown()})
 
 
 @app.route("/<plugin>/<filename>")

@@ -122,19 +122,39 @@ timApp.controller("ViewCtrl", [
             var url;
             var par_id = sc.getParId($par);
             var par_next_id = sc.getParId($par.next());
+
+            // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
             if ($par.hasClass("new")) {
                 url = '/newParagraph/';
             } else {
                 url = '/postParagraph/';
             }
 
+            var area_start;
+            var area_end;
+
+            if (options.area) {
+                if (sc.selection.reversed) {
+                    area_start = sc.selection.end;
+                    area_end = sc.selection.start;
+                } else {
+                    area_end = sc.selection.end;
+                    area_start = sc.selection.start;
+                }
+            } else {
+                area_start = null;
+                area_end = null;
+            }
+
             var attrs = {
                 "save-url": url,
                 "extra-data": JSON.stringify({
-                    docId: sc.docId,
-                    par: par_id,
-                    par_next: par_next_id,
-                    attrs: JSON.parse($par.attr('attrs'))
+                    docId: sc.docId, // current document id
+                    par: par_id, // the id of paragraph on which the editor was opened
+                    par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
+                    area_start: area_start,
+                    area_end: area_end,
+                    attrs: JSON.parse($par.attr('attrs')) // TODO: Take attrs away; not needed
                 }),
                 "options": JSON.stringify({
                     showDelete: options.showDelete,
@@ -342,7 +362,13 @@ timApp.controller("ViewCtrl", [
 
         sc.showEditWindow = function (e, $par) {
             $(".par.new").remove();
-            sc.toggleParEditor($par, {showDelete: true});
+            sc.toggleParEditor($par, {showDelete: true, area: false});
+        };
+
+        sc.beginAreaEditing = function (e, $par) {
+            $(".par.new").remove();
+            sc.selection.end = sc.getParId($par);
+            sc.toggleParEditor($par, {showDelete: true, area: true});
         };
 
         sc.createNewPar = function () {
@@ -353,13 +379,13 @@ timApp.controller("ViewCtrl", [
         sc.showAddParagraphAbove = function (e, $par) {
             var $newpar = sc.createNewPar();
             $par.before($newpar);
-            sc.toggleParEditor($newpar, {showDelete: false});
+            sc.toggleParEditor($newpar, {showDelete: false, area: false});
         };
 
         sc.showAddParagraphBelow = function (e, $par) {
             var $newpar = sc.createNewPar();
             $par.after($newpar);
-            sc.toggleParEditor($newpar, {showDelete: false});
+            sc.toggleParEditor($newpar, {showDelete: false, area: false});
         };
 
         // Event handler for "Add question below"
@@ -396,6 +422,16 @@ timApp.controller("ViewCtrl", [
         sc.addSavedParToDom = function (data, extraData) {
             var $par = sc.getElementByParId(extraData.par),
                 len = data.texts.length;
+
+            // check if we were editing an area
+            if (extraData.area_start !== null && extraData.area_end !== null) {
+                $par = sc.getElementByParId(extraData.area_start);
+
+                // remove all but the first element of the area because it'll be removed later
+                // and is required to insert the new ones in the document
+                var $endpar = sc.getElementByParId(extraData.area_end);
+                $par.nextUntil($endpar).add($endpar).remove();
+            }
             http.defaults.headers.common.Version = data.version;
             for (var i = len - 1; i >= 0; i--) {
                 var html = data.texts[i].html;
@@ -448,6 +484,8 @@ timApp.controller("ViewCtrl", [
             }
             $par.remove();
             sc.editing = false;
+            sc.selection.start = null;
+            sc.selection.end = null;
         };
 
         sc.markParRead = function ($this, par_id) {
@@ -499,8 +537,6 @@ timApp.controller("ViewCtrl", [
                 return false;
             }
 
-            sc.$apply();
-
             var $target = $(e.target);
             var tag = $target.prop("tagName");
 
@@ -511,14 +547,21 @@ timApp.controller("ViewCtrl", [
             }
 
             var $par = $this.parent();
-            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            var toggle1 = $par.find(".actionButtons").length === 0;
-            var toggle2 = $par.hasClass("lightselect");
+            if (sc.selection.start !== null) {
+                sc.selection.end = sc.getParId($par);
+            }
+            else
+            {
+                var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+                var toggle1 = $par.find(".actionButtons").length === 0;
+                var toggle2 = $par.hasClass("lightselect");
 
-            $(".par.selected").removeClass("selected");
-            $(".par.lightselect").removeClass("lightselect");
-            $(".actionButtons").remove();
-            sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
+                $(".par.selected").removeClass("selected");
+                $(".par.lightselect").removeClass("lightselect");
+                $(".actionButtons").remove();
+                sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
+            }
+            sc.$apply();
             return true;
         });
 
@@ -971,14 +1014,52 @@ timApp.controller("ViewCtrl", [
         sc.processAllMath($('body'));
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
+        sc.selection = {start: null, end: null};
+        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end'], function (newValues, oldValues, scope) {
+            sc.editorFunctions = sc.getEditorFunctions();
+        });
 
-        sc.editorFunctions = [
-            {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
-            {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
-            {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
-            {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-            {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode}
-        ];
+        sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
+            $('.par.selected').removeClass('selected');
+            if (sc.selection.start !== null) {
+                var $start = sc.getElementByParId(sc.selection.start);
+                $start.addClass('selected');
+                if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
+                    var $end = sc.getElementByParId(sc.selection.end);
+                    if ($end.prevAll().filter($start).length !== 0) {
+                        sc.selection.reversed = false;
+                        $start.nextUntil($end).add($end).addClass('selected');
+                    } else {
+                        sc.selection.reversed = true;
+                        $start.prevUntil($end).add($end).addClass('selected');
+                    }
+
+                }
+            }
+        });
+
+        sc.startArea = function (e, $par) {
+            sc.selection.start = sc.getParId($par);
+        };
+
+        sc.cancelArea = function (e, $par) {
+            sc.selection.start = null;
+        };
+
+        sc.getEditorFunctions = function () {
+            return [
+                {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+                {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
+                {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
+                {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
+                {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode},
+                {func: sc.startArea, desc: 'Start selecting area', show: sc.selection.start === null},
+                {func: sc.beginAreaEditing, desc: 'Edit area', show: sc.selection.start !== null},
+                {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null}
+            ];
+        };
+
+        sc.editorFunctions = sc.getEditorFunctions();
 
         sc.$storage = $localStorage.$default({
             defaultAction: null

@@ -78,19 +78,27 @@ def modify_paragraph():
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
 
-    editor_pars = get_pars_from_editor_text(doc_id, md)
-    original_par = DocParagraph(doc_id=doc_id, par_id=par_id)
-    pars = []
-    if editor_pars[0].is_different_from(original_par):
-        [par], _ = timdb.documents.modify_paragraph(doc,
-                                                    par_id,
-                                                    editor_pars[0].get_markdown(),
-                                                    editor_pars[0].get_attrs())
-        pars.append(par)
+    area_start = request.get_json().get('area_start')
+    area_end = request.get_json().get('area_end')
+    editing_area = area_start and area_end
+    editor_pars = get_pars_from_editor_text(doc_id, md, break_on_elements=editing_area)
 
-    for p in editor_pars[1:]:
-        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
-        pars.append(par)
+    if editing_area:
+        new_start, new_end = doc.update_section(md, area_start, area_end)
+        pars = doc.get_section(new_start, new_end)
+    else:
+        original_par = DocParagraph(doc_id=doc_id, par_id=par_id)
+        pars = []
+        if editor_pars[0].is_different_from(original_par):
+            [par], _ = timdb.documents.modify_paragraph(doc,
+                                                        par_id,
+                                                        editor_pars[0].get_markdown(),
+                                                        editor_pars[0].get_attrs())
+            pars.append(par)
+
+        for p in editor_pars[1:]:
+            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
+            pars.append(par)
 
     # Replace appropriate elements with plugin content, load plugin requirements to template
     pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
@@ -114,7 +122,8 @@ def preview(doc_id):
     """
     timdb = getTimDb()
     text, = verify_json_params('text')
-    blocks = get_pars_from_editor_text(doc_id, text)
+    editing_area = request.get_json().get('area_start') is not None and request.get_json().get('area_end') is not None
+    blocks = get_pars_from_editor_text(doc_id, text, break_on_elements=editing_area)
     pars, js_paths, css_paths, modules = pluginControl.pluginify(blocks,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,
@@ -126,11 +135,11 @@ def preview(doc_id):
                          'angularModule': modules})
 
 
-def get_pars_from_editor_text(doc_id, text):
+def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
     blocks = [DocParagraph(doc_id=doc_id, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(text).get_blocks(break_on_code_block=False,
-                                                         break_on_header=False,
-                                                         break_on_normal=False)]
+              for par in DocumentParser(text).get_blocks(break_on_code_block=break_on_elements,
+                                                         break_on_header=break_on_elements,
+                                                         break_on_normal=break_on_elements)]
     return blocks
 
 
