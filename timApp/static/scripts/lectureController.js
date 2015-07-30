@@ -108,37 +108,55 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 method: 'GET'
             }).success(function (t2) {
                 var t3 = new Date().valueOf();
-                $scope.clockOffset = ((t2-t1)+(t2-t3))/2;
+                $scope.clockOffset = ((t2 - t1) + (t2 - t3)) / 2;
             });
         };
 
         $scope.getClockOffset();
 
-
-        /*
-         Listener of askQuestion event. Opens the question view and answer view for the lecturer.
+        /**
+         * Use question_id in data to ask question as new.
+         * Use asked_id to reask question already asked.
          */
         $scope.$on("askQuestion", function (event, data) {
-            $scope.showStudentAnswers = true;
-            if ($scope.useAnswers) {
-                // Because of dynamic creation needs to wait 1ms to ensure that the directice is made(maybe?)
-                $timeout(function () {
-                    $rootScope.$broadcast("createChart", data.json);
-                    $scope.showStudentAnswers = false;
-                }, 1);
+            $scope.json = data.json;
+            var args = {
+                lecture_id: data.lecture_id,
+                doc_id: data.doc_id,
+                buster: new Date().getTime()
+            };
+            if (data.asked_id) args['asked_id'] = data.asked_id;
+            else if (data.question_id) args['question_id'] = data.question_id;
+            http({
+                url: '/askQuestion',
+                method: 'POST',
+                params: args
+            })
+                .success(function (id) {
+                    $scope.showStudentAnswers = true;
+                    if ($scope.useAnswers) {
+                        // Because of dynamic creation needs to wait 1ms to ensure that the directive is made(maybe?)
+                        $timeout(function () {
+                            $rootScope.$broadcast("createChart", $scope.json);
+                            $scope.showStudentAnswers = false;
+                        }, 1);
 
-                var answer = {"questionId": data.questionId};
-                $scope.getLectureAnswers(answer);
-            }
-
-            $rootScope.$broadcast("setQuestionJson", {
-                questionJson: data.json,
-                questionId: data.questionId,
-                isLecturer: $scope.isLecturer,
-                askedTime: new Date().valueOf() + $scope.clockOffset,
-                clockOffset: $scope.clockOffset
-            });
-            $scope.showAnswerWindow = true;
+                        var answer = {"askedId": id};
+                        $scope.getLectureAnswers(answer);
+                    }
+                    $rootScope.$broadcast("setQuestionJson", {
+                        questionJson: $scope.json,
+                        questionId: data.question_id,
+                        askedId: id,
+                        isLecturer: $scope.isLecturer,
+                        askedTime: new Date().valueOf() + $scope.clockOffset,
+                        clockOffset: $scope.clockOffset
+                    });
+                    $scope.showAnswerWindow = true;
+                })
+                .error(function (error) {
+                    $window.console.log(error);
+                });
         });
 
         /*
@@ -205,14 +223,14 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 url: '/answerToQuestion',
                 method: 'PUT',
                 params: {
-                    'question_id': answer.questionId,
+                    'question_id': answer.askedId,
                     'lecture_id': $scope.lectureId,
                     'answers': answerString,
                     'buster': new Date().getTime()
                 }
             })
                 .success(function (answer) {
-                    if(angular.isDefined(answer.questionLate)) {
+                    if (angular.isDefined(answer.questionLate)) {
                         $window.alert(answer.questionLate);
                     }
                 })
@@ -307,7 +325,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @param name Name of the lecture to be joined.
          */
         $scope.joinLecture = function (name, code_required) {
-            if(code_required) $scope.passwordQuess = $window.prompt("Please enter a password:", "");
+            if (code_required) $scope.passwordQuess = $window.prompt("Please enter a password:", "");
             if ($scope.chosenLecture === "" && name === "") {
                 $window.alert("Choose lecture to join");
                 return;
@@ -531,11 +549,11 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
             var addLecture = true;
-            for( var i = 0; i < answer.lectures.length; i++) {
+            for (var i = 0; i < answer.lectures.length; i++) {
                 $scope.lectures.push(answer.lectures[i]);
             }
 
-            for(  i = 0; i < answer.futureLectures.length; i++) {
+            for (i = 0; i < answer.futureLectures.length; i++) {
                 $scope.futureLectures.push(answer.futureLectures[i]);
             }
 
@@ -651,11 +669,18 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 method: 'GET',
                 params: {'lecture_code': lecture_code, 'doc_id': $scope.docId}
             })
-                .success(function(lecture) {
-                    $rootScope.$broadcast("editLecture", {"lecture_id": lecture.lectureId, "lecture_name": lecture.lectureCode, "start_date": lecture.lectureStartTime, "end_date": lecture.lectureEndTime, "password": lecture.password || "", "editMode": true});
+                .success(function (lecture) {
+                    $rootScope.$broadcast("editLecture", {
+                        "lecture_id": lecture.lectureId,
+                        "lecture_name": lecture.lectureCode,
+                        "start_date": lecture.lectureStartTime,
+                        "end_date": lecture.lectureEndTime,
+                        "password": lecture.password || "",
+                        "editMode": true
+                    });
                     $scope.showLectureForm = true;
                 })
-                .error(function() {
+                .error(function () {
                     $window.console.log("Failed to fetch lecture.");
                 });
         };
@@ -719,7 +744,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             //TODO: better confirm dialog
             var confirmAnswer = false;
             if ($scope.isLecturer) {
-                 confirmAnswer = $window.confirm("Do you really want to leave this lecture?");
+                confirmAnswer = $window.confirm("Do you really want to leave this lecture?");
             }
 
             if (!$scope.isLecturer || confirmAnswer) {
@@ -838,7 +863,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 url: '/getLectureAnswers',
                 type: 'GET',
                 params: {
-                    'question_id': answer.questionId,
+                    'asked_id': answer.askedId,
                     'doc_id': $scope.docId,
                     'lecture_id': $scope.lectureId,
                     'time': answer.latestAnswer,
@@ -912,7 +937,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             $scope.showAnswerWindow = true;
                             $rootScope.$broadcast("setQuestionJson", {
                                 questionJson: JSON.parse(answer.questionJson),
-                                questionId: answer.questionId,
+                                askedId: answer.askedId,
                                 isLecturer: $scope.isLecturer,
                                 askedTime: answer.asked,
                                 clockOffset: $scope.clockOffset

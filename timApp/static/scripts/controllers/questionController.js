@@ -659,19 +659,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 if (ask) {
                     scope.json = JSON.parse(data.questionJson);
                     scope.qId = data.question_id;
-                    http({
-                        url: '/askQuestion',
-                        method: 'POST',
-                        params: {
-                            lecture_id: scope.lectureId,
-                            question_id: scope.qId,
-                            doc_id: scope.docId,
-                            buster: new Date().getTime()
-                        }
-                    }).success(function () {
-                        $rootScope.$broadcast('askQuestion', {"json": scope.json, "questionId": scope.qId});
-                    }).error(function (error) {
-                        $window.console.log(error);
+                    scope.$emit('askQuestion', {
+                        "lecture_id": scope.lectureId,
+                        "question_id": scope.qId,
+                        "doc_id": scope.docId,
+                        "json": scope.json
                     });
                 }
             }).error(function () {

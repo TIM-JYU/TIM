@@ -40,7 +40,11 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
          */
         $scope.editQuestion = function () {
             $scope.close();
-            $rootScope.$broadcast("editQuestion", {"question_id": $scope.qId, "json": $scope.json, "points":$scope.points});
+            $rootScope.$broadcast("editQuestion", {
+                "question_id": $scope.questionId,
+                "json": $scope.json,
+                "points": $scope.points
+            });
         };
 
         /**
@@ -48,24 +52,13 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
          * @memberof module:questionPreviewController
          */
         $scope.ask = function () {
-            http({
-                url: '/askQuestion',
-                method: 'POST',
-                params: {
-                    lecture_id: $scope.lectureId,
-                    question_id: $scope.qId,
-                    doc_id: $scope.docId,
-                    buster: new Date().getTime()
-                }
-            })
-                .success(function () {
-                    $rootScope.$broadcast('askQuestion', {"json": $scope.json, "questionId": $scope.qId});
-                    $scope.close();
-                })
-                .error(function (error) {
-                    $scope.close();
-                    $window.console.log(error);
-                });
+            $scope.$emit('askQuestion', {
+                "lecture_id": $scope.lectureId,
+                "question_id": $scope.questionId,
+                "doc_id": $scope.docId,
+                "json": $scope.json
+            });
+            $scope.close();
         };
 
         /**

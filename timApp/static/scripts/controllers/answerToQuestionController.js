@@ -23,6 +23,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
     $scope.questionTitle = "";
 
     $scope.$on("setQuestionJson", function (event, args) {
+        $scope.askedId = args.askedId;
         $scope.questionId = args.questionId;
         $scope.isLecturer = args.isLecturer;
         $scope.questionJson = args.questionJson;
@@ -49,8 +50,30 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
      * FILL WITH SUITABLE TEXT
      * @memberof module:answerToQuestionController
      */
-    $scope.close = function () {
+    $scope.close = function (callback) {
+        $scope.stopQuestion(callback);
         $scope.dynamicAnswerSheetControl.closeQuestion();
+    };
+
+    $scope.stopQuestion = function (callback) {
+        $http({
+            url: '/stopQuestion',
+            method: 'POST',
+            params: {
+                'asked_id': $scope.askedId,
+                'lecture_id': $scope.lectureId,
+                'buster': new Date().getTime()
+            }
+        })
+            .success(function () {
+                $scope.questionEnded = true;
+                $scope.dynamicAnswerSheetControl.questionEnded();
+                console.log("Question ", $scope.askedId, " stopped");
+                if (callback) callback();
+            })
+            .error(function () {
+                console.log("Failed to stop question");
+            });
     };
 
     /**
@@ -60,22 +83,31 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.$emit('showAnswers', true);
     };
 
-    $scope.askAgain = function () {
-        $http({
-            url: '/askQuestion',
-            method: 'POST',
-            params: {
-                lecture_id: $scope.lectureId,
-                question_id: $scope.questionId,
-                doc_id: $scope.docId,
-                buster: new Date().getTime()
-            }
-        }).success(function () {
-            $scope.close();
-            $rootScope.$broadcast('askQuestion', {"json": $scope.questionJson, "questionId": $scope.questionId});
-        }).error(function (error) {
-            $scope.close();
-            $window.console.log(error);
+    $scope.reAsk = function () {
+        $scope.close($scope.reAskEmit);
+    };
+
+    $scope.askAsNew = function () {
+        $scope.close($scope.askAsNewEmit);
+    };
+
+    $scope.reAskEmit = function () {
+        console.log($scope.json);
+        $scope.$emit('askQuestion', {
+            "lecture_id": $scope.lectureId,
+            "asked_id": $scope.askedId,
+            "question_id": $scope.questionId,
+            "doc_id": $scope.docId,
+            "json": $scope.questionJson
+        });
+    };
+
+    $scope.askAsNewEmit = function () {
+        $scope.$emit('askQuestion', {
+            "lecture_id": $scope.lectureId,
+            "question_id": $scope.questionId,
+            "doc_id": $scope.docId,
+            "json": $scope.questionJson
         });
     };
 }]);

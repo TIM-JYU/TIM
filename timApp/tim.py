@@ -35,7 +35,7 @@ from timdb.timdbbase import TimDbException
 from containerLink import PluginException
 from routes.settings import settings_page
 from routes.common import *
-
+from documentmodel.randutils import hashfunc
 
 app = Flask(__name__)
 app.config.from_pyfile('defaultconfig.py', silent=False)
@@ -159,8 +159,8 @@ def upload_file():
     filename = posixpath.join(folder, secure_filename(file.filename))
 
     user_name = getCurrentUserName()
-    if not timdb.users.userHasAdminAccess(getCurrentUserId())\
-            and not timdb.users.isUserInGroup(user_name, "Timppa-projektiryhmä")\
+    if not timdb.users.userHasAdminAccess(getCurrentUserId()) \
+            and not timdb.users.isUserInGroup(user_name, "Timppa-projektiryhmä") \
             and re.match('^users/' + user_name + '/', filename) is None:
         abort(403, "You're not authorized to write here.")
 
@@ -323,7 +323,7 @@ def get_all_messages(param_lecture_id=-1):
 def get_updates():
     if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
             'doc_id') or not request.args.get('is_lecturer'):
-        abort(400, "Bad requst")
+        abort(400, "Bad request")
     client_last_id = int(request.args.get('client_message_id'))
 
     use_wall = False
@@ -729,7 +729,7 @@ def create_lecture():
         password = ""
     current_user = getCurrentUserId()
     if not timdb.lectures.check_if_correct_name(doc_id, lecture_code, lecture_id):
-            abort(400, "Can't create two or more lectures with the same name to the same document.")
+        abort(400, "Can't create two or more lectures with the same name to the same document.")
     if lecture_id < 0:
         lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password,
                                                    True)
@@ -1129,11 +1129,17 @@ def extend_question():
 
 @app.route("/askQuestion", methods=['POST'])
 def ask_question():
-    if not request.args.get('doc_id') or not request.args.get('question_id') or not request.args.get('lecture_id'):
+    if not request.args.get('doc_id') or not \
+            (request.args.get('question_id') or request.args.get('asked_id')) or not request.args.get('lecture_id'):
         abort(400, "Bad request")
     doc_id = int(request.args.get('doc_id'))
-    question_id = int(request.args.get('question_id'))
     lecture_id = int(request.args.get('lecture_id'))
+    question_id = None
+    asked_id = None
+    if 'question_id' in request.args:
+        question_id = int(request.args.get('question_id'))
+    else:
+        asked_id = int(request.args.get('asked_id'))
 
     verifyOwnership(doc_id)
 
@@ -1141,25 +1147,44 @@ def ask_question():
         abort(400, "Not valid lecture id")
 
     timdb = getTimDb()
-    if not json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))["TIMELIMIT"]:
+    if question_id:
+        question = timdb.questions.get_question(question_id)[0]
+        question_json_str = question.get("questionJson")
+        question_hash = hashfunc(question.get("questionJson"))
+        asked_hash = timdb.questions.get_asked_json_by_hash(question_hash)
+        if asked_hash:
+            asked_json_id = asked_hash[0].get("asked_json_id")
+        else:
+            asked_json_id = timdb.questions.add_asked_json(question_json_str, question_hash)
+        asked_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+        asked_id = timdb.questions.add_asked_questions(lecture_id, doc_id, None, asked_time, question.get("points"),
+                                                       asked_json_id)
+    else:
+        question = timdb.questions.get_asked_question(asked_id)[0]
+        asked_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]
+        asked_json_id = asked_json["asked_json_id"]
+        question_json_str = asked_json["json"]
+    question_json = json.loads(question_json_str)
+
+    if not question_json["TIMELIMIT"]:
         question_timelimit = 0
     else:
-        question_timelimit = int(json.loads(timdb.questions.get_question(question_id)[0].get("questionJson"))
-                                 ["TIMELIMIT"])
+        question_timelimit = int(question_json["TIMELIMIT"])
+
     ask_time = int(time.time() * 1000)
     end_time = ask_time + question_timelimit * 1000
     thread_to_stop_question = threading.Thread(target=stop_question_from_running,
-                                               args=(lecture_id, question_id, question_timelimit, end_time))
+                                               args=(lecture_id, asked_id, question_timelimit, end_time))
 
     thread_to_stop_question.start()
 
     verifyOwnership(int(doc_id))
-    __question_to_be_asked.append((lecture_id, question_id, [], ask_time, end_time))
+    __question_to_be_asked.append((lecture_id, asked_id, [], ask_time, end_time))
 
-    return jsonResponse("")
+    return jsonResponse(asked_id)
 
 
-def stop_question_from_running(lecture_id, question_id, question_timelimit, end_time):
+def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_time):
     if question_timelimit == 0:
         return
 
@@ -1170,12 +1195,17 @@ def stop_question_from_running(lecture_id, question_id, question_timelimit, end_
     end_time += extra_time * 1000
     while int(time.time() * 1000) < end_time:
         time.sleep(1)
+        stopped = True
         for question in __question_to_be_asked:
-            if question[0] == lecture_id and question[1] == question_id:
+            if question[0] == lecture_id and question[1] == asked_id:
                 end_time = extra_time * 1000 + question[4]
+                stopped = False
+                break
+        if stopped:
+            return
 
     for question in __question_to_be_asked:
-        if question[0] == lecture_id and question[1] == question_id:
+        if question[0] == lecture_id and question[1] == asked_id:
             __question_to_be_asked.remove(question)
 
 
@@ -1190,6 +1220,24 @@ def get_question_by_id():
     timdb = getTimDb()
     question = timdb.questions.get_question(question_id)
     return jsonResponse(question[0])
+
+
+@app.route("/stopQuestion", methods=['POST'])
+def stop_question():
+    if not request.args.get("asked_id") or not request.args.get("lecture_id"):
+        abort("400")
+    asked_id = int(request.args.get('asked_id'))
+    lecture_id = int(request.args.get('lecture_id'))
+    timdb = getTimDb()
+    current_user = getCurrentUserId()
+    lecture = timdb.lectures.get_lecture(lecture_id)
+    if lecture:
+        if lecture[0].get("lecturer") != current_user:
+            abort("400", "You cannot stop questions on someone elses lecturer.")
+        for question in __question_to_be_asked:
+            if question[0] == lecture_id and question[1] == asked_id:
+                __question_to_be_asked.remove(question)
+    return jsonResponse("")
 
 
 @app.route("/deleteQuestion", methods=['POST'])
@@ -1230,7 +1278,7 @@ def get_extend_question():
     else:
         time_now = request.args.get('time')
     """
-    __extend_question[lecture_id, question_id].wait()
+    __extend_question[lecture_id, question_id].wait(5)
     endtime = None
     for q in __question_to_be_asked:
         if q[0] == lecture_id and q[1] == question_id:
@@ -1242,18 +1290,18 @@ def get_extend_question():
 # Tämän muuttaminen long polliksi vaatii threadien poistamisen
 @app.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
-    if not request.args.get('question_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
+    if not request.args.get('asked_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
     verifyOwnership(int(request.args.get('doc_id')))
-    question_id = int(request.args.get('question_id'))
+    asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
 
-    __pull_answer[question_id, lecture_id] = threading.Event()
+    __pull_answer[asked_id, lecture_id] = threading.Event()
 
     for pull in __pull_answer:
         question, lecture = pull
-        if lecture == lecture_id and question != question_id:
+        if lecture == lecture_id and question != asked_id:
             __pull_answer[pull].set()
 
     if not request.args.get("time"):
@@ -1261,16 +1309,16 @@ def get_lecture_answers():
     else:
         time_now = request.args.get('time')
 
-    __pull_answer[question_id, lecture_id].wait()
+    __pull_answer[asked_id, lecture_id].wait()
 
     timdb = getTimDb()
-    lecture_answers = timdb.lecture_answers.get_answers_to_question(question_id, time_now)
+    lecture_answers = timdb.lecture_answers.get_answers_to_question(asked_id, time_now)
     if len(lecture_answers) <= 0:
         return jsonResponse({"noAnswer": True})
 
     latest_answer = lecture_answers[-1].get("answered_on")
 
-    return jsonResponse({"answers": lecture_answers, "questionId": question_id, "latestAnswer": latest_answer})
+    return jsonResponse({"answers": lecture_answers, "questionId": asked_id, "latestAnswer": latest_answer})
 
 
 def create_points_table(points):
@@ -1298,7 +1346,7 @@ def answer_to_question():
 
     timdb = getTimDb()
 
-    question_id = int(request.args.get("question_id"))
+    asked_id = int(request.args.get("question_id"))
     answer = request.args.get("answers")
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
@@ -1306,7 +1354,7 @@ def answer_to_question():
 
     question_ended = True
     for question in __question_to_be_asked:
-        if question[0] == lecture_id and question[1] == question_id:
+        if question[0] == lecture_id and question[1] == asked_id:
             question_ended = False
 
     if question_ended:
@@ -1317,7 +1365,7 @@ def answer_to_question():
     for answer in all_answers:
         single_answers.append(answer.split(','))
 
-    question_points = timdb.questions.get_question(question_id)[0].get("points")
+    question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
     points_table = create_points_table(question_points)
 
     points = 0.0
@@ -1326,9 +1374,8 @@ def answer_to_question():
             if oneLine in point_row:
                 points += point_row[oneLine]
 
-    timdb.lecture_answers.add_answer(getCurrentUserId(), question_id, lecture_id, whole_answer, time_now, points)
-
-    __pull_answer[question_id, lecture_id].set()
+    timdb.lecture_answers.add_answer(getCurrentUserId(), asked_id, lecture_id, whole_answer, time_now, points)
+    __pull_answer[asked_id, lecture_id].set()
 
     return jsonResponse("")
 
@@ -1365,8 +1412,8 @@ def set_read_paragraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     # todo: document versions
-    #version = request.headers.get('Version', 'latest')
-    #verify_document_version(doc_id, version)
+    # version = request.headers.get('Version', 'latest')
+    # verify_document_version(doc_id, version)
     doc = Document(doc_id)
     par = doc.get_paragraph(specifier)
     if par is None:
@@ -1380,8 +1427,8 @@ def mark_all_read(doc_id):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
     # todo: document versions
-    #version = request.headers.get('Version', 'latest')
-    #verify_document_version(doc_id, version)
+    # version = request.headers.get('Version', 'latest')
+    # verify_document_version(doc_id, version)
     doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
     timdb.readings.setAllAsRead(getCurrentUserGroup(), doc)
     return okJsonResponse()

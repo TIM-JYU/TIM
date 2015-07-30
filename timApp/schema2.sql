@@ -34,6 +34,10 @@ DROP TABLE IF EXISTS ReadParagraphs;
 
 DROP TABLE IF EXISTS Question;
 
+DROP TABLE IF EXISTS AskedQuestion;
+
+DROP TABLE IF EXISTS AskedJson;
+
 DROP TABLE IF EXISTS Lecture;
 
 DROP TABLE IF EXISTS LectureUsers;
@@ -284,6 +288,22 @@ CREATE TABLE Question (
   answer         TEXT,
   questionJson   TEXT,
   points         TEXT
+);
+
+CREATE TABLE AskedQuestion (
+  asked_id       INTEGER NOT NULL PRIMARY KEY,
+  lecture_id     INTEGER NOT NULL,
+  doc_id         INTEGER,
+  par_id         INTEGER,
+  asked_time     TEXT    NOT NULL,
+  points         TEXT    NOT NULL,
+  asked_json_id  INTEGER NOT NULL
+);
+
+CREATE TABLE AskedJson (
+  asked_json_id  INTEGER NOT NULL PRIMARY KEY,
+  json           TEXT    NOT NULL,
+  hash           TEXT    NOT NULL
 );
 
 CREATE TABLE Lecture (

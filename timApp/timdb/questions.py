@@ -70,6 +70,96 @@ class Questions(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def add_asked_questions(self, lecture_id: 'int', doc_id: 'int', par_id: 'str|None', asked_time: 'str',
+                            points: 'str', asked_json_id: 'int', commit: 'bool'=True) -> 'int':
+
+        """
+        Creates a new asked questions
+        :param lecture_id: Lecture where question was asked
+        :param doc_id: Document, where the question belongs
+        :param par_id: Paragraph, where the question belongs
+        :param asked_json_id: Json of asked question
+        :param commit: Commit or not to commit
+        :return: The id of the newly created asked question
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       INSERT INTO AskedQuestion (lecture_id, doc_id, par_id, asked_time, points, asked_json_id)
+                       VALUES(?,?,?,?,?,?)
+                       """, [lecture_id, doc_id, par_id, asked_time, points, asked_json_id])
+        if commit:
+            self.db.commit()
+        question_id = cursor.lastrowid
+        return question_id
+
+    @contract
+    def get_asked_question(self, asked_id: 'int') -> 'list(dict)':
+        """
+        Gets the asked question by id
+        :return: Questions as a list
+        """
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            SELECT *
+            FROM AskedQuestion
+            WHERE asked_id = ?
+            """, [asked_id])
+
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def add_asked_json(self, json: 'str', hash: 'str', commit: 'bool'=True) -> 'int':
+        """
+        Gets the asked question by id
+        :return: Questions as a list
+        """
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            INSERT INTO AskedJson (json, hash)
+            VALUES (?, ?)
+            """, [json, hash])
+
+        if commit:
+            self.db.commit()
+        asked_json_id = cursor.lastrowid
+        return asked_json_id
+
+    @contract
+    def get_asked_json_by_id(self, asked_json_id: 'int') -> 'list(dict)':
+        """
+        Gets the asked question by id
+        :return: Questions as a list
+        """
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            SELECT *
+            FROM AskedJson
+            WHERE asked_json_id = ?
+            """, [asked_json_id])
+
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def get_asked_json_by_hash(self, asked_hash: 'str') -> 'list(dict)':
+        """
+        Gets the asked question by id
+        :return: Questions as a list
+        """
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            SELECT *
+            FROM AskedJson
+            WHERE hash = ?
+            """, [asked_hash])
+
+        return self.resultAsDictionary(cursor)
+
+    @contract
     def add_questions(self, doc_id: 'int', par_id: 'str', question_title: 'str', answer: 'str', questionJson: 'str',
                       points: 'str', commit: 'bool'=True) -> 'int':
         """

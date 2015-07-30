@@ -36,23 +36,18 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $scope.json = $scope.$parent.questionJson;
                 $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
                 $scope.endTime = $scope.$parent.askedTime + $scope.json.TIMELIMIT * 1000 - $scope.$parent.clockOffset;
-                var htmlSheet = "<div class = 'answerSheet'>";
 
+                var htmlSheet = $('<div>', {class: 'answerSheet'});
                 if ($scope.json.TIMELIMIT !== "" && !$scope.preview) {
-                    htmlSheet += "<progress value='0' max='" + ($scope.endTime - $scope.askedTime) + "' id='progressBar'>";
-                    htmlSheet += "</progress>";
-                    htmlSheet += "<span class='progresslabel' id='progressLabel'>" + $scope.json.TIMELIMIT + " s</span>";
+                    htmlSheet.append($('<progress>', {max: ($scope.endTime - $scope.askedTime), id: 'progressBar'}));
+                    htmlSheet.append($('<span>', {
+                        class: 'progresslabel',
+                        id: 'progressLabel',
+                        text: $scope.json.TIMELIMIT + " s"
+                    }));
                 }
-
-                htmlSheet += "<h2>" + $scope.json.QUESTION + "</h2>";
-                /*
-                 if ($scope.json.TYPE !== "true-false") {
-                 htmlSheet += "<h2>" + $scope.json.QUESTION + "</h2>";
-                 }*/
-
-
-                htmlSheet += "<div>";
-                htmlSheet += "<table id='answer-sheet-table'>";
+                htmlSheet.append($('<h2>', {text: $scope.json.QUESTION}));
+                var table = $('<table>', {id: 'answer-sheet-table'});
 
                 if ($scope.json.TYPE === "true-false") {
                     $scope.json.DATA.HEADERS[0] = {"type": "header", "id": 0, "text": "True"};
@@ -60,21 +55,21 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 }
 
                 if ($scope.json.DATA.HEADERS.length > 0 && !($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1)) {
-                    htmlSheet += "<tr>";
+                    var tr = $('<tr>');
                     if ($scope.json.DATA.HEADERS.length > 1) {
-                        htmlSheet += "<th></th>";
+                        tr.append($('<th>'));
                     }
                     angular.forEach($scope.json.DATA.HEADERS, function (header) {
-                        htmlSheet += "<th class='answer-button'>" + header.text + "</th>";
+                        tr.append($('<th>', {class: 'answer-button', text: header.text}));
                     });
-                    htmlSheet += "</tr>";
+                    table.append(tr);
                 }
 
                 angular.forEach($scope.json.DATA.ROWS, function (row) {
-                    htmlSheet += "<tr>";
+                    var tr = $('<tr>');
                     if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                         if (row.text.length >= 1) {
-                            htmlSheet += "<td>" + row.text + "</td>";
+                            tr.append($('<td>', {text: row.text}));
                         }
                     }
                     var header = 0;
@@ -84,31 +79,44 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
                             if ($scope.json.ANSWERFIELDTYPE === "text") {
                                 group = "group" + i;
-                                htmlSheet += "<td><label> <textarea id='textarea-answer' name='" + group + "'" + disabled;
+                                var textArea = $('<textarea>', {
+                                    id: 'textarea-answer',
+                                    name: group
+                                });
+                                if (disabled !== '') textArea.attr('disabled', true);
                                 if ($scope.json.DATA.HEADERS[0].text === "" && $scope.json.DATA.HEADERS.length === 1 && $scope.json.DATA.ROWS.length === 1) {
-                                    htmlSheet += "style='height:200px'";
+                                    textArea.attr('style', 'height:200px');
                                 }
-                                htmlSheet += "></textarea></label></td>";
+                                tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(textArea)));
                                 header++;
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
-                                htmlSheet += "<td class='answer-button'><label> <input type='" + $scope.json.ANSWERFIELDTYPE + "' name='" + group + "'" +
-                                    disabled + " value='" + (parseInt(row.COLUMNS[i].id) + 1) + "'" +
-                                    "></label></td>";
+                                var input = $('<input>', {
+                                    type: $scope.json.ANSWERFIELDTYPE,
+                                    name: group,
+                                    value: parseInt(row.COLUMNS[i].id) + 1
+                                });
+                                if (disabled !== '') input.attr('disabled', true);
+                                tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(input)));
                                 header++;
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
-                            htmlSheet += "<td class='answer-button2'><label> <input type='" + $scope.json.ANSWERFIELDTYPE + "' name='" + group + "'" +
-                                disabled + " value='" + (parseInt(row.id) + 1) + "'" +
-                                ">" + row.text + "</label></td>";
+                            var input = $('<input>', {
+                                type: $scope.json.ANSWERFIELDTYPE,
+                                name: group,
+                                value: parseInt(row.id) + 1
+                            });
+                            if (disabled !== '') input.attr('disabled', true);
+                            var label = $('<label>');
+                            label.append(input).append(row.text);
+                            tr.append($('<td>', {class: 'answer-button2'}).append(label));
                         }
                     }
-                    htmlSheet += "</tr>";
+                    table.append(tr);
                 });
 
-
-                htmlSheet += "</div>";
+                htmlSheet.append($('<div>').append(table));
                 $element.append(htmlSheet);
                 $compile($scope);
 
@@ -118,7 +126,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
                     var timeBetween = 100;
-                    var intervalTimes = fakeTime / timeBetween;
                     $scope.progressElem = $("#progressBar");
                     $scope.progressText = $("#progressLabel");
                     $scope.start = function () {
@@ -136,14 +143,16 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     url: '/getExtendQuestion',
                     type: 'GET',
                     params: {
-                        'question_id': $scope.$parent.questionId,
+                        'question_id': $scope.$parent.askedId,
                         'lecture_id': $scope.$parent.lectureId,
                         'buster': new Date().getTime()
                     }
                 }).success(function (answer) {
-                    $scope.endTime = answer - $scope.$parent.clockOffset;
-                    $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
-                    $scope.internalControl.getExtendTime();
+                    if (answer !== null) {
+                        $scope.endTime = answer - $scope.$parent.clockOffset;
+                        $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
+                        $scope.internalControl.getExtendTime();
+                    }
                 }).error(function () {
                     console.log("Couldn't get extend time");
                 });
@@ -174,6 +183,14 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 }
             };
 
+            $scope.internalControl.questionEnded = function () {
+                clearInterval(promise);
+                $interval.cancel(promise);
+                var max = $scope.progressElem.attr("max");
+                $scope.progressElem.attr("value", max);
+                $scope.progressText.text("Time's up");
+            };
+
             /**
              * FILL WITH SUITABLE TEXT
              * @memberof module:dynamicAnswerSheet
@@ -189,7 +206,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             var matrixInputs;
                             groupName = "group" + $scope.json.DATA.ROWS[i].text.replace(/[^a-zA-Z0-9]/g, '');
 
-                            if ($scope.json.ANSWERFIELDTYPE=== "text") {
+                            if ($scope.json.ANSWERFIELDTYPE === "text") {
                                 matrixInputs = $('textarea[name=' + "group" + i + ']');
                                 for (var c = 0; c < matrixInputs.length; c++) {
                                     answer.push(matrixInputs[c].value);
@@ -231,7 +248,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 }
 
                 $element.empty();
-                $scope.$emit('answerToQuestion', {answer: answers, questionId: $scope.$parent.questionId});
+                $scope.$emit('answerToQuestion', {answer: answers, askedId: $scope.$parent.askedId});
                 clearInterval(promise);
             };
 
