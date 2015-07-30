@@ -1323,7 +1323,7 @@ def get_lecture_answers():
 
     latest_answer = lecture_answers[-1].get("answered_on")
 
-    return jsonResponse({"answers": lecture_answers, "questionId": asked_id, "latestAnswer": latest_answer})
+    return jsonResponse({"answers": lecture_answers, "askedId": asked_id, "latestAnswer": latest_answer})
 
 
 def create_points_table(points):
