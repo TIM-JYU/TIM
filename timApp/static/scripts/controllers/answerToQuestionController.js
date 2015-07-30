@@ -92,7 +92,6 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
     };
 
     $scope.reAskEmit = function () {
-        console.log($scope.json);
         $scope.$emit('askQuestion', {
             "lecture_id": $scope.lectureId,
             "asked_id": $scope.askedId,

@@ -143,7 +143,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     url: '/getExtendQuestion',
                     type: 'GET',
                     params: {
-                        'question_id': $scope.$parent.askedId,
+                        'asked_id': $scope.$parent.askedId,
                         'lecture_id': $scope.$parent.lectureId,
                         'buster': new Date().getTime()
                     }

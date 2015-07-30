@@ -396,8 +396,8 @@ def get_updates():
         if use_quesitions:
             for pair in __question_to_be_asked:
                 if pair[0] == lecture_id and current_user not in pair[2]:
-                    question_json = timdb.questions.get_question(pair[1])[0].get("questionJson")
-                    # jos oppilas, poista points question_json.points = null
+                    question = timdb.questions.get_asked_question(pair[1])
+                    question_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]["json"]
                     pair[2].append(getCurrentUserId())
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
@@ -1121,10 +1121,10 @@ def get_lecture_with_name(lecture_code, doc_id):
 @app.route("/extendQuestion", methods=['PUT', 'GET'])
 def extend_question():
     lecture_id = int(request.args.get('lecture_id'))
-    question_id = int(request.args.get('question_id'))
+    asked_id = int(request.args.get('asked_id'))
     extend = int(request.args.get('extend'))
     for q in __question_to_be_asked:
-        if q[0] == lecture_id and q[1] == question_id:
+        if q[0] == lecture_id and q[1] == asked_id:
             question = (q[0], q[1], q[2], q[3], q[4] + extend * 1000)
             __question_to_be_asked.append(question)
             __question_to_be_asked.remove(q)
@@ -1264,17 +1264,17 @@ def delete_question():
 # Tämän muuttaminen long polliksi vaatii threadien poistamisen
 @app.route("/getExtendQuestion", methods=['GET'])
 def get_extend_question():
-    if not request.args.get('question_id') or not request.args.get('lecture_id'):
+    if not request.args.get('asked_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
-    question_id = int(request.args.get('question_id'))
+    asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
 
-    __extend_question[lecture_id, question_id] = threading.Event()
+    __extend_question[lecture_id, asked_id] = threading.Event()
 
     for extend in __extend_question:
         lecture, question = extend
-        if lecture == lecture_id and question != question_id:
+        if lecture == lecture_id and question != asked_id:
             __extend_question[extend].set()
 
     """
@@ -1283,10 +1283,10 @@ def get_extend_question():
     else:
         time_now = request.args.get('time')
     """
-    __extend_question[lecture_id, question_id].wait(5)
+    __extend_question[lecture_id, asked_id].wait(5)
     endtime = None
     for q in __question_to_be_asked:
-        if q[0] == lecture_id and q[1] == question_id:
+        if q[0] == lecture_id and q[1] == asked_id:
             endtime = q[4]
             break
     return jsonResponse(endtime)
