@@ -402,7 +402,7 @@ def get_updates():
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                         "lectureId": lecture_id, "question": True, "questionId": pair[1], "asked": pair[3],
+                         "lectureId": lecture_id, "question": True, "askedId": pair[1], "asked": pair[3],
                          "questionJson": question_json,
                          "isLecture": True, "lecturers": lecturers, "students": students,
                          "lectureEnding": lecture_ending})
