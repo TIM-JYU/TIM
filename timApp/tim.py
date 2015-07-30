@@ -396,7 +396,7 @@ def get_updates():
         if use_quesitions:
             for pair in __question_to_be_asked:
                 if pair[0] == lecture_id and current_user not in pair[2]:
-                    question = timdb.questions.get_asked_question(pair[1])
+                    question = timdb.questions.get_asked_question(pair[1])[0]
                     question_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]["json"]
                     pair[2].append(getCurrentUserId())
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
