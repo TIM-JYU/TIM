@@ -1346,12 +1346,12 @@ def create_points_table(points):
 
 @app.route("/answerToQuestion", methods=['PUT'])
 def answer_to_question():
-    if not request.args.get("question_id") or not request.args.get('answers') or not request.args.get('lecture_id'):
+    if not request.args.get("asked_id") or not request.args.get('answers') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
     timdb = getTimDb()
 
-    asked_id = int(request.args.get("question_id"))
+    asked_id = int(request.args.get("asked_id"))
     answer = request.args.get("answers")
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))

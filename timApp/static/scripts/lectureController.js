@@ -223,7 +223,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 url: '/answerToQuestion',
                 method: 'PUT',
                 params: {
-                    'question_id': answer.askedId,
+                    'asked_id': answer.askedId,
                     'lecture_id': $scope.lectureId,
                     'answers': answerString,
                     'buster': new Date().getTime()
@@ -996,7 +996,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $window.clearTimeout(timeout);
                         //Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.
                         timeout = setTimeout(function () {
-                            message_longPolling();
+                            message_longPolling($scope.lastID);
                         }, 30000);
                     });
             }
