@@ -54,11 +54,12 @@ def view_document_content(doc_name):
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")
 def view_document(doc_name):
+    view_range = None
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        return view(doc_name, 'view_html.html', view_range=view_range)
     except (ValueError, TypeError):
         abort(400, "Invalid start or end index specified.")
+    return view(doc_name, 'view_html.html', view_range=view_range)
 
 
 @view_page.route("/teacher/<path:doc_name>")
