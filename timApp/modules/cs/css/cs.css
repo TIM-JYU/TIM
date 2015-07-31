@@ -266,6 +266,8 @@ ul.output {
     cursor: move;
     float: left;
     white-space: pre !important;
+    min-height: 40px;
+    /*min-width: 20px; */
 }
 
 .sortable-words div {

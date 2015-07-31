@@ -18,6 +18,9 @@ sudo mkdir /tmp/uhome/tmp
 sudo chmod 777 /tmp/uhome/tmp
 sudo mkdir /tmp/uhome/user
 sudo chmod 777 /tmp/uhome/user
+sudo mkdir /opt/cs/images
+sudo mkdir /opt/cs/images/cs
+sudo chmod 777 /opt/cs/images/cs
 
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome
 # sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/cs

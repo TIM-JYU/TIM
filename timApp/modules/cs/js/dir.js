@@ -744,6 +744,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         if ( $scope.csparson ) {
             // var fb = $scope.parson.getFeedback();
             $scope.usercode = $scope.csparson.join("\n");
+            $scope.csparson.check($scope.usercode);
         }
         
         // if ( runType == "md" ) { $scope.showMD(); return; }
@@ -1136,33 +1137,45 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
     }
     
     $scope.showJsParsons = function(parsonsEditDiv) {
-        var v = this.getVid();
+        var v = $scope.parsonsId;
+        if ( !v ) { 
+            v = this.getVid();;
+            $scope.parsonsId = v;
+        }    
         parsonsEditDiv.setAttribute('id',v.vid);
+        if ( $("#"+v.vid).length == 0 ) {         
+           setTimeout(function() { 
+             $scope.showJsParsons(parsonsEditDiv); } 
+            , 300);
+            console.log("wait 300 ms " + v.vid);
+            return;
+        }   
         var classes = "csrunEditorDiv sortable-code";
         var can_indent = true;
         if ( $scope.words ) {
-            classes += " sortable-words";
+            classes += " jssortable-words";
             can_indent = false;
             var a = $("#"+v.vid);
         }
         parsonsEditDiv.setAttribute('class',classes);
-        parsonsEditDiv.setAttribute('style',"float: none;");
+        // parsonsEditDiv.setAttribute('style',"float: none;");
 
         
         // parsonsEditDiv.innerHTML = "";
         $scope.parson = new ParsonsWidget({
                 'sortableId': v.vid,
                 'max_wrong_lines': 1,
+                //'prettyPrint': false,
                 //'x_indent': 0,
                 'can_indent' : can_indent,
                 //'vartests': [{initcode: "output = ''", code: "", message: "Testing...", variables: {output: "I am a Java program I am a Java program I am a Java program "}},
                 //    ],
                 //'grader': ParsonsWidget._graders.LanguageTranslationGrader,
             });
+        // $scope.parson.init($scope.byCode,$scope.usercode);
         $scope.parson.init($scope.usercode);
         if ( !$scope.initUserCode )
             $scope.parson.options.permutation = iotaPermutation; 
-        
         $scope.parson.shuffleLines();
     }
     
@@ -1171,12 +1184,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             'sortable': sortable,
             'trashId': 'sortableTrash',
             'words': $scope.words,
+            'minWidth': "40px",
+            'shuffle' : $scope.initUserCode,
             'onChange': function(p) {
                 var s = p.join("\n");
                 $scope.usercode = s; 
                 }
             });
-        parson.init($scope.usercode);
+        parson.init($scope.byCode,$scope.usercode);
         parson.show();
         $scope.csparson = parson;
     }
