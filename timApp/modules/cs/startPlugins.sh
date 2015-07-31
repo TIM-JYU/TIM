@@ -30,24 +30,26 @@ sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/user
 # Oikeudet käyttää dockeria niin saadaan docker in docker
 sudo chmod 766 /var/run/docker.sock
 
+sudo chmod 777 r
+
 mkdir /opt/cs/jypeli
 cd /opt/cs/jypeli
 curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | sudo tar -xz --overwrite
 
 cd /opt/cs/java
 rm -f comtest*.jar*
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
+wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar -O comtest.jar -nv
+wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar -O comtestcpp.jar -nv
 
 rm -f Graphics.jar*
-wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
-rm -f Ali*.jar
-wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
+wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar -O Graphics.jar - nv
+wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar -O Ali.jar -nv
 
-mkdir cs
+
+sudo mkdir cs
+sudo chmod 777 cs
 cd cs
-rm -f ComTest.jar*
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar
+wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
 
 
 # Copy Jypeli dll's to temp directory
