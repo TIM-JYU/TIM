@@ -5,6 +5,7 @@ from sqlite3 import Connection
 
 from contracts import contract
 from ansi2html import Ansi2HTMLConverter
+import sqlite3
 from documentmodel.attributeparser import AttributeParser
 
 from documentmodel.docparagraph import DocParagraph
@@ -240,6 +241,14 @@ class Documents(TimDbBase):
         if not self.exists(document_id.id):
             return None
         md_blocks = self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)
+        cursor = self.db.execute('SELECT description FROM Block WHERE id = ? AND type_id = ?',
+                                 [document_id.id, blocktypes.DOCUMENT])
+        name = cursor.fetchone()[0]
+        try:
+            self.add_name(document_id.id, name)
+        except sqlite3.IntegrityError:
+            # name already exists; it was migrated earlier
+            pass
         d.create()
         ap = AttributeParser()
         for md in md_blocks:
