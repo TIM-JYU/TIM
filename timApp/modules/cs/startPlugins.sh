@@ -1,8 +1,11 @@
 #!/bin/bash
 # Restart csPlugin 
 # run with option i to get interactive mode
-docker stop csPlugin
-docker rm csPlugin
+dockername="csPlugin"
+dockerOptions="--name $dockername -p 56000:5000 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
+
+docker stop $dockername
+docker rm $dockername
 
 
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
@@ -29,8 +32,8 @@ sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/user
 # Oikeudet käyttää dockeria niin saadaan docker in docker
 sudo chmod 766 /var/run/docker.sock
 
-sudo chmod 777 r
 
+# Copy Jypeli dll's  
 sudo mkdir -p /opt/cs/jypeli
 cd /opt/cs/jypeli
 curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | sudo tar -xz --overwrite --warning=none
@@ -40,7 +43,6 @@ rm -f comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar -O comtest.jar -nv
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar -O comtestcpp.jar -nv
 
-rm -f Graphics.jar*
 wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar -O Graphics.jar -nv
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar -O Ali.jar -nv
 
@@ -51,17 +53,13 @@ cd cs
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
 
 
-# Copy Jypeli dll's to temp directory
-# sudo cp /opt/cs/jypeli/* /tmp/uhome/cs
-
 cd /opt/cs
+sudo chmod 777 r
 
-# nohup /opt/cs/csdaemon.sh &
-# docker run --name csPlugin -d -p 56000:5000 -v /opt/cs:/cs/  -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash -c '/cs/startAll.sh ; /bin/bash'
 if [ "$1" = "i" ]
 then
     # interactive
-    docker run  --name csPlugin --rm=true  -t -i -p 56000:5000 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash 
+    docker run  --rm=true  -t -i $dockerOptions 
 else
-    docker run --name csPlugin -d -p 56000:5000 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash -c '/cs/startAll.sh ; /bin/bash'
+    docker run -d $dockerOptions -c './startAll.sh ; /bin/bash' 
 fi

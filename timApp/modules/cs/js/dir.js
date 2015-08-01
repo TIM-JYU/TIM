@@ -1317,7 +1317,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                 $scope.irrotaKiinnita = "Irrota";
                 $scope.canvas = angular.element('<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px;" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a></div></span>'+
-                  '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html?scripts='+$scope.attrs.scripts + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
+                  '<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html?scripts='+($scope.attrs.scripts||"") + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin"></iframe>'+
                   '</div>');
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;

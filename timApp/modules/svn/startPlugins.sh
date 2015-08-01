@@ -1,14 +1,17 @@
 #!/bin/bash
 # Restart showFile
 
-docker stop showFile
-docker rm showFile
+dockername="showFile"
 
-# Start showFile-plugin
+docker stop $dockername
+docker rm $dockername
+
+dockerOptions="--name $dockername -p 55000:5000 -v /opt/svn:/svn/:ro -w /svn svn /bin/bash"
+
 if [ "$1" = "i" ]
 then
     # interactive
-    docker run  --name showFile --rm=true  -t -i -p 55000:5000 -v /opt/svn:/svn/:ro -w /svn svn /bin/bash 
+    docker run  --rm=true  -t -i $dockerOptions 
 else
-    docker run --name showFile -p 55000:5000 -v /opt/svn:/svn/ -d -t -i svn /bin/bash -c '/svn/startAll.sh ; /bin/bash' 
+    docker run -d $dockerOptions -c './startAll.sh ; /bin/bash' 
 fi

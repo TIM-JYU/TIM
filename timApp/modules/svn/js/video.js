@@ -79,7 +79,9 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 				  '<div ><p></p></div>' + 
 				  //'<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
+                  '<div class="no-popup-menu">' +
 				  '<img src="/csimages/video.png" ng-if="!videoOn" ng-click="showVideo()" width="200" alt="Click here to show the video" />' +
+                  '</div>' + 
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docoicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
