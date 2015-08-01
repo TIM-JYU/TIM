@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build --tag="svn" .
+docker build --tag="svn" . 
