@@ -8,9 +8,8 @@ class LectureAnswers(TimDbBase):
     LectureAnswer class to handle database for lecture answers
     """
     @contract
-    def add_answer(self, user_id: "int", question_id: "int", lecture_id:"int", answer: "string", answered_on: "string",
-                   points: "float",
-                   commit: 'bool'=True):
+    def add_answer(self, user_id: "int", question_id: "int", lecture_id: "int", answer: "str", answered_on: "str",
+                   points: "float", commit: 'bool'=True):
         """
         Adds answer to lecture question
         :param user_id: user id
@@ -32,6 +31,32 @@ class LectureAnswers(TimDbBase):
         if commit:
             self.db.commit()
 
+    @contract
+    def update_answer(self, answer_id: 'int', user_id: "int", question_id: "int", lecture_id: "int", answer: "str",
+                      answered_on: "str", points: "float", commit: 'bool'=True):
+        """
+        Update users answer to question
+        :param answer_id: answer id
+        :param user_id: user id
+        :param question_id: question id
+        :param lecture_id: lecture id
+        :param answer: answer
+        :param answered_on: time of the answer
+        :param points: points from the anwer
+        :param commit: commit the database
+        :return:
+        """
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+            UPDATE LectureAnswer
+            SET user_id = ?, question_id = ?, lecture_id = ?, answer = ?, answered_on = ?, points = ?
+            WHERE answer_id = ?
+        """, [user_id, question_id, lecture_id, answer, answered_on, points, answer_id])
+
+        if commit:
+            self.db.commit()
+
     def get_answers_to_question(self, question_id: "int", timestamp: "string") -> 'list(dict)':
         """
         Gets answers from specific question
@@ -46,6 +71,23 @@ class LectureAnswers(TimDbBase):
             FROM LectureAnswer
             WHERE question_id = ? AND answered_on > ?
         """, [question_id, timestamp])
+
+        return self.resultAsDictionary(cursor)
+
+    def get_user_answer_to_question(self, asked_id: "int", user_id: "int") -> 'list(dict)':
+        """
+        Gets users answer to specific question
+        :param asked_id: asked question id
+        :param user_id: user id
+        :return:
+        """
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+            SELECT answer_id, answer
+            FROM LectureAnswer
+            WHERE question_id = ? AND user_id = ?
+        """, [asked_id, user_id])
 
         return self.resultAsDictionary(cursor)
 

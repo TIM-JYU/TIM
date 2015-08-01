@@ -1355,7 +1355,8 @@ def answer_to_question():
     answer = request.args.get("answers")
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
-    time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+
+    lecture_answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, getCurrentUserId())
 
     question_ended = True
     for question in __question_to_be_asked:
@@ -1365,22 +1366,28 @@ def answer_to_question():
     if question_ended:
         return jsonResponse({"questionLate": "The question has already finished. Your answer was not saved."})
 
-    single_answers = []
-    all_answers = answer.split('|')
-    for answer in all_answers:
-        single_answers.append(answer.split(','))
+    if (not lecture_answer) or (lecture_answer and answer != lecture_answer[0]["answer"]):
+        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
+        single_answers = []
+        all_answers = answer.split('|')
+        for answer in all_answers:
+            single_answers.append(answer.split(','))
 
-    question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
-    points_table = create_points_table(question_points)
+        question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
+        points_table = create_points_table(question_points)
 
-    points = 0.0
-    for (oneAnswer, point_row) in zip(single_answers, points_table):
-        for oneLine in oneAnswer:
-            if oneLine in point_row:
-                points += point_row[oneLine]
+        points = 0.0
+        for (oneAnswer, point_row) in zip(single_answers, points_table):
+            for oneLine in oneAnswer:
+                if oneLine in point_row:
+                    points += point_row[oneLine]
 
-    timdb.lecture_answers.add_answer(getCurrentUserId(), asked_id, lecture_id, whole_answer, time_now, points)
-    __pull_answer[asked_id, lecture_id].set()
+        if lecture_answer:
+            timdb.lecture_answers.update_answer(lecture_answer[0]["answer_id"], getCurrentUserId(), asked_id,
+                                                lecture_id, whole_answer, time_now, points)
+        else:
+            timdb.lecture_answers.add_answer(getCurrentUserId(), asked_id, lecture_id, whole_answer, time_now, points)
+        __pull_answer[asked_id, lecture_id].set()
 
     return jsonResponse("")
 

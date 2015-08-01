@@ -169,7 +169,6 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
 
         }
 
-
         if ($scope.answers.length <= 0) {
             var elem = $("#infoBox");
             elem.empty();

@@ -31,6 +31,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.askedTime = args.askedTime;
         $scope.clockOffset = args.clockOffset;
         $scope.questionEnded = false;
+        $scope.answered = false;
         $scope.dynamicAnswerSheetControl.createAnswer();
     });
 
@@ -40,10 +41,10 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
      */
     $scope.answer = function () {
         $scope.dynamicAnswerSheetControl.answerToQuestion();
+        $scope.answered = true;
         if ($scope.isLecturer) {
             $rootScope.$broadcast("lecturerAnswered");
         }
-
     };
 
     /**

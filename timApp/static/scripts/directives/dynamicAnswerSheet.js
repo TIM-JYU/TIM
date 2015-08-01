@@ -197,7 +197,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
              */
             $scope.internalControl.answerToQuestion = function () {
                 var answers = [];
-                $interval.cancel(promise);
                 if (angular.isDefined($scope.json.DATA.ROWS)) {
                     var groupName = "";
                     if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
@@ -247,9 +246,12 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     });
                 }
 
-                $element.empty();
+                if (!$scope.$parent.isLecturer) {
+                    $element.empty();
+                    $interval.cancel(promise);
+                    clearInterval(promise);
+                }
                 $scope.$emit('answerToQuestion', {answer: answers, askedId: $scope.$parent.askedId});
-                clearInterval(promise);
             };
 
             /**

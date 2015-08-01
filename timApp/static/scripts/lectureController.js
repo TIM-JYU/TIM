@@ -211,7 +211,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Event listener for answerToQuesion. Closes the answer pop-up and sends answer to server.
          */
         $scope.$on("answerToQuestion", function (event, answer) {
-            $scope.showAnswerWindow = false;
+            if (!$scope.isLecturer) $scope.showAnswerWindow = false;
             var mark = "";
             var answerString = "";
             angular.forEach(answer.answer, function (singleAnswer) {
