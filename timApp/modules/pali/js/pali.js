@@ -62,7 +62,7 @@ paliApp.Controller = function($scope, $http, $transclude, $interval) {
     if (paliApp.TESTWITHOUTPLUGINS) return;
     $scope.paliScope = new PaliScope($scope);
     $scope.attrs = {};
-    $scope.http = $http;
+    $scope.http = $http; 
     $scope.interval = $interval;
 
     // Luodaan $scope.attrs joka on avattuna sisällössä olev JSON tai HEX

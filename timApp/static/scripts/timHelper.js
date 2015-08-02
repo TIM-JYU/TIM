@@ -31,7 +31,7 @@ timHelper.getHeading = function($scope,attrs,key,defElem) {
 	var ea = [elem];
 	if ( i >= 0 ) ea = [elem.substring(0,i),elem.substring(i)];
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
-	try {
+	try { 
 	  val = decodeURIComponent(encodeURI(val));
 	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";
