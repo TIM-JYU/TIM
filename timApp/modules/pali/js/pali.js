@@ -4,38 +4,20 @@ paliApp.TESTWITHOUTPLUGINS = false; // if one wants to test without pali plugins
 
 paliApp.directive('paliRunner',['$sanitize','$compile',
                   function ($sanitize,$compile1) {"use strict";
+                      // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
                       timHelper.sanitize = paliApp.sanitize = $sanitize;
                       paliApp.compile = $compile1;
                       return paliApp.directiveFunction(); }]
 );
 
 
-paliApp.directiveTemplate = function () {
-"use strict";
-    if ( paliApp.TESTWITHOUTPLUGINS ) return '';
-	return  '<div class="csRunDiv no-popup-menu">' +
-				  '<p>Here comes header</p>' +
-				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-				  '<div><label>{{inputstem}} <span><input type ="text" class="paliInput" ng-model="userword" ng-trim="false" placeholder="{{inputplaceholder}}" size="{{cols}}"></span></label>' +
-				  ' <span class="unitTestGreen"  ng-show="runTestGreen" >&nbsp;ok&nbsp;</span>' +
-				  ' <span class="unitTestRed"  ng-show="!runTestGreen">&nbsp;not&nbsp;</span>' +
-                  '</div>' +
-				  '<button ng-if="button"  ng-disabled="isRunning" ng-click="paliScope.runCode();">{{button}}</button>&nbsp&nbsp' +
-				  '<a href="" ng-if="muokattu" ng-click="paliScope.initCode()">{{resetText}}</a>' +
-                  '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
-				  '<pre class="" ng-if="error">{{error}}</pre>' +
-				  '<pre  class="" ng-show="result">{{result}}</pre>' +
-    		      '<p class="plgfooter">Here comes footer</p>' +
-              '</div>';
-};
-
-
 paliApp.directiveFunction = function() {
 "use strict";
+// Koska tätä kutsutaan direktiivistä, tätä kutsutaan yhden kerran
     return {
-		link: paliApp.initScope,
 		scope: {},
 		controller: paliApp.Controller,
+		link: paliApp.initScope,
 		restrict: 'AE',
 		/*
 		compile: function(tElement, attrs) {
@@ -50,31 +32,57 @@ paliApp.directiveFunction = function() {
 };
 
 
+paliApp.directiveTemplate = function () {
+"use strict";
+// Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
+    if ( paliApp.TESTWITHOUTPLUGINS ) return '';
+	return  '<div class="csRunDiv no-popup-menu">' +
+				  '<p>Here comes header</p>' +
+				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
+				  '<div><label>{{inputstem}} <span><input type ="text" class="paliInput" ng-model="userword" ng-trim="false" placeholder="{{inputplaceholder}}" size="{{cols}}"></span></label>' +
+				  ' <span class="unitTestGreen"  ng-show="runTestGreen" >&nbsp;ok&nbsp;</span>' +
+				  ' <span class="unitTestRed"  ng-show="!runTestGreen">&nbsp;not&nbsp;</span>' +
+                  '</div>' +
+				  '<button ng-if="button"  ng-disabled="isRunning" ng-click="paliScope.saveText();">{{button}}</button>&nbsp&nbsp' +
+				  '<a href="" ng-if="muokattu" ng-click="paliScope.initCode()">{{resetText}}</a>' +
+                  '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
+				  '<pre class="" ng-if="error">{{error}}</pre>' +
+				  '<pre  class="" ng-show="result">{{result}}</pre>' +
+    		      '<p class="plgfooter">Here comes footer</p>' +
+              '</div>';
+};
+
+
 paliApp.Controller = function($scope, $http, $transclude, $interval) {
 "use strict";
+// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
+// Tähän tullaan ensin ja sitten initScope-metodiin
+// Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
     if (paliApp.TESTWITHOUTPLUGINS) return;
     $scope.paliScope = new PaliScope($scope);
     $scope.attrs = {};
     $scope.http = $http;
     $scope.interval = $interval;
 
+    // Luodaan $scope.attrs joka on avattuna sisällössä olev JSON tai HEX
     $transclude(function(clone,scope) { timHelper.initAttributes(clone,$scope);  });
 
     $scope.errors = [];
 	$scope.muokattu = false;
     $scope.result = "";
-
-    // $scope.$watch('userword', function() { $scope.paliScope.watchWord() }, true);
-    $scope.$watch('userword', function() { $scope.paliScope.watchWord() }, true);
 };
 
 
 paliApp.initScope = function (scope, element, attrs) {
 "use strict";
+// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
     scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
     scope.plugin = element.parent().attr("data-plugin");
     scope.taskId = element.parent().attr("id");
 
+    // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, käytetään oletusta.
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "inputstem");
     timHelper.set(scope, attrs, "inputplaceholder", "Write your input here");
@@ -88,14 +96,22 @@ paliApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "cols", 20);
     timHelper.set(scope, attrs, "autoupdate", 500);
     timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
-    element[0].childNodes[0].outerHTML = timHelper.getHeading(attrs, "header", scope, "h4");
+
+    // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
+    element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
     var n = element[0].childNodes.length;
-    if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(attrs, "footer", scope, 'p class="footer"');
+    if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="footer"');
     scope.paliScope.checkPalindrome();
     scope.attrs = {}; // not needed any more
+
+    // seurataan userword-muuttujan muuttumista.  Angular myös päivittää näyttöä
+    // automaattisesti koska on sanottu että ng-model="userword"
+    scope.$watch('userword', function() { scope.paliScope.watchWord(); }, true);
 };
 
 
+// Tehdään kaikista toiminnallisista funktoista oma luokka, jotta
+// niitä ei erikseen lisätä jokaisen pluginin esiintymän kohdalla uudelleen.
 function PaliScope(scope) {
 "use strict";
     this.scope = scope;
@@ -106,7 +122,7 @@ PaliScope.prototype.watchWord = function() {
 "use strict";
     var $scope = this.scope;
     $scope.interval.cancel($scope.runTimer);
-    $scope.runTimer = $scope.interval(this.checkPalindrome(), $scope.autoupdate);
+    $scope.runTimer = $scope.interval(function() { $scope.paliScope.checkPalindrome(); }, $scope.autoupdate);
     $scope.muokattu = ( $scope.initword !== $scope.userword );
 };
 
@@ -141,16 +157,16 @@ PaliScope.prototype.initCode = function() {
 };
 
 
-PaliScope.prototype.runCode = function() {
+PaliScope.prototype.saveText = function() {
 "use strict";
-    this.doRunCode(false);
+    this.doSaveText(false);
 };
 
 
-PaliScope.prototype.doRunCode = function(nosave) {
+PaliScope.prototype.doSaveText = function(nosave) {
 "use strict";
     var $scope = this.scope;
-    $scope.error = "... running ...";
+    $scope.error = "... saving ...";
     $scope.isRunning = true;
 
     $scope.result = "";
@@ -178,14 +194,14 @@ PaliScope.prototype.doRunCode = function(nosave) {
 
     $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
     ).success(function (data, status, headers, config) {
-            $scope.isRunning = false;
-            $scope.error = data.web.error;
-            $scope.result = data.web.result;
-            $scope.tries = data.web.tries;
-        }).error(function (data, status) {
-            $scope.isRunning = false;
-            $scope.errors.push(status);
-            $scope.error = "Ikuinen silmukka tai jokin muu vika?";
-            // $scope.error = data;
-        });
+        $scope.isRunning = false;
+        $scope.error = data.web.error;
+        $scope.result = data.web.result;
+        $scope.tries = data.web.tries;
+    }).error(function (data, status) {
+        $scope.isRunning = false;
+        $scope.errors.push(status);
+        $scope.error = "Ikuinen silmukka tai jokin muu vika?";
+        // $scope.error = data;
+    });
 };
