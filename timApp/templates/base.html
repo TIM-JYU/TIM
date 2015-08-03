@@ -85,13 +85,17 @@
             {% elif objName == "folder" %}
                 <a href="/view/{{docName}}">View</a>
             {% elif doc %}
-                {% if lecture_mode %}
-                    <a href="/view/{{doc.name}}">Student view</a>
-                {% else %}
-                    <a href="/lecture/{{doc.name}}">Lecture view</a>
-                {% endif %}
+                <a href="/view/{{doc.name}}">Student view</a>
                 |
                 <a href="/teacher/{{doc.name}}">Teacher view</a>
+                |
+                <a href="/lecture/{{doc.name}}">Lecture view</a>
+            {% elif docName %}
+                {% if lecture_mode %}
+                    <a href="/view/{{docName}}">Student view</a>
+                {% else %}
+                    <a href="/lecture/{{docName}}">Lecture view</a>
+                {% endif %}
             {% endif %}
         {% endblock %}
     </div>
