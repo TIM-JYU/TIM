@@ -29,6 +29,8 @@ class DocParagraph(DocParagraphBase):
         if not attrs:
             attrs = {}
         self.files_root = self.get_default_files_root() if files_root is None else files_root
+        self.doc_id = doc_id
+        assert doc_id is not None
         if src_dict:
             # Create from JSON
             self.__data = src_dict
@@ -36,7 +38,6 @@ class DocParagraph(DocParagraphBase):
 
         assert doc_id is not None
         self.__data = {
-            'doc_id': str(doc_id),
             'id': par_id if par_id is not None else random_id(),
             'md': md,
             'html': None,
@@ -59,8 +60,8 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     @contract
-    def from_dict(cls, d: 'dict', files_root: 'str|None' = None):
-        return DocParagraph(src_dict=d, files_root=files_root)
+    def from_dict(cls, doc_id: 'int', d: 'dict', files_root: 'str|None' = None):
+        return DocParagraph(doc_id=doc_id, src_dict=d, files_root=files_root)
 
     @classmethod
     @contract
@@ -85,7 +86,7 @@ class DocParagraph(DocParagraphBase):
     @contract
     def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
-            return cls.from_dict(json.loads(f.read()), files_root=files_root)
+            return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
 
     @contract
     def dict(self) -> 'dict':
@@ -93,7 +94,7 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_doc_id(self) -> 'int':
-        return int(self.__data['doc_id'])
+        return self.doc_id
 
     @contract
     def get_id(self) -> 'str':
