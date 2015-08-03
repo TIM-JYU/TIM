@@ -170,7 +170,7 @@ timApp.controller("ViewCtrl", [
                 "after-cancel": 'handleCancel(extraData)',
                 "after-delete": 'handleDelete(saveData, extraData)',
                 "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteParagraph/' + sc.docId + "/" + par_id
+                "delete-url": '/deleteParagraph/' + sc.docId
             };
             if (options.showDelete) {
                 caption = 'Edit paragraph';
@@ -361,7 +361,6 @@ timApp.controller("ViewCtrl", [
 
         sc.beginAreaEditing = function (e, $par) {
             $(".par.new").remove();
-            sc.selection.end = sc.getParId($par);
             sc.toggleParEditor($par, {showDelete: true, area: true});
         };
 
@@ -409,6 +408,13 @@ timApp.controller("ViewCtrl", [
         sc.handleDelete = function (data, extraData) {
             var $par = sc.getElementByParId(extraData.par);
             http.defaults.headers.common.Version = data.version;
+            if (extraData.area_start !== null && extraData.area_end !== null) {
+                $par = sc.getElementByParId(extraData.area_start);
+                var $endpar = sc.getElementByParId(extraData.area_end);
+                if (extraData.area_start !== extraData.area_end) {
+                    $par.nextUntil($endpar).add($endpar).remove();
+                }
+            }
             $par.remove();
             sc.editing = false;
         };
@@ -500,10 +506,16 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, par_id);
         });
 
+        sc.isParWithinArea = function ($par) {
+            return sc.selection.pars.filter($par).length > 0;
+        };
 
         sc.onClick(".editline", function ($this, e) {
             $(".actionButtons").remove();
             var $par = $this.parent();
+            if (sc.selection.start !== null && (sc.selection.end === null || !sc.isParWithinArea($par))) {
+                sc.selection.end = sc.getParId($par);
+            }
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
             return sc.showOptionsWindow(e, $par, coords);
         });
@@ -613,7 +625,7 @@ timApp.controller("ViewCtrl", [
                     $par.removeClass("selected");
                     $par.removeClass("lightselect");
                 }
-                else if (clicktime < 500) {
+                else if (clicktime < 500 && sc.defaultAction !== null) {
                     // Double click
                     sc.defaultAction.func(e, $par, coords);
                 }
@@ -1018,18 +1030,21 @@ timApp.controller("ViewCtrl", [
             $('.par.selected').removeClass('selected');
             if (sc.selection.start !== null) {
                 var $start = sc.getElementByParId(sc.selection.start);
-                $start.addClass('selected');
                 if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
                     var $end = sc.getElementByParId(sc.selection.end);
                     if ($end.prevAll().filter($start).length !== 0) {
                         sc.selection.reversed = false;
-                        $start.nextUntil($end).add($end).addClass('selected');
+                        sc.selection.pars = $start.nextUntil($end);
+
                     } else {
                         sc.selection.reversed = true;
-                        $start.prevUntil($end).add($end).addClass('selected');
+                        sc.selection.pars = $start.prevUntil($end);
                     }
-
+                    sc.selection.pars = sc.selection.pars.add($start).add($end);
+                } else {
+                    sc.selection.pars = $start;
                 }
+                sc.selection.pars.addClass('selected');
             }
         });
 
@@ -1039,6 +1054,7 @@ timApp.controller("ViewCtrl", [
 
         sc.cancelArea = function (e, $par) {
             sc.selection.start = null;
+            sc.selection.end = null;
         };
 
         sc.getEditorFunctions = function () {
@@ -1053,6 +1069,8 @@ timApp.controller("ViewCtrl", [
                 {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null}
             ];
         };
+
+        sc.nothing = function(){};
 
         sc.editorFunctions = sc.getEditorFunctions();
 

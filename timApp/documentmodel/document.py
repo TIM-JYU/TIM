@@ -417,6 +417,12 @@ class Document:
         log = self.get_changelog(max_entries=1)
         return log[0]['time'] if log is not None and len(log) > 0 else ''
 
+    def delete_section(self, area_start, area_end):
+        all_par_ids = [par.get_id() for par in self]
+        start_index, end_index = all_par_ids.index(area_start), all_par_ids.index(area_end)
+        old_pars = all_par_ids[start_index:end_index + 1]
+        for par in old_pars:
+            self.delete_paragraph(par)
 
 new_contract('Document', Document)
 

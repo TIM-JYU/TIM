@@ -4,7 +4,7 @@ from flask import Blueprint
 
 from .common import *
 from documentmodel.docparagraph import DocParagraph
-from documentmodel.documentparser import DocumentParser
+from documentmodel.documentparser import DocumentParser, ValidationException
 from markdownconverter import md_to_html
 import pluginControl
 from timdb.docidentifier import DocIdentifier
@@ -84,8 +84,11 @@ def modify_paragraph():
     editor_pars = get_pars_from_editor_text(doc_id, md, break_on_elements=editing_area)
 
     if editing_area:
-        new_start, new_end = doc.update_section(md, area_start, area_end)
-        pars = doc.get_section(new_start, new_end)
+        try:
+            new_start, new_end = doc.update_section(md, area_start, area_end)
+            pars = doc.get_section(new_start, new_end)
+        except ValidationException as e:
+            abort(400, str(e))
     else:
         original_par = DocParagraph(doc_id=doc_id, par_id=par_id)
         pars = []
@@ -173,17 +176,22 @@ def add_paragraph():
                          'version': doc.get_version()})
 
 
-@edit_page.route("/deleteParagraph/<int:doc_id>/<par_id>", methods=["POST"])
-def delete_paragraph(doc_id, par_id):
+@edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
+def delete_paragraph(doc_id):
     """Route for deleting a paragraph from a document.
 
     :param doc_id: The id of the document.
-    :param par_id: The id of the paragraph.
     :return: A JSON object containing the version of the new document.
     """
     timdb = getTimDb()
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
+    area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
     # verify_document_version(doc_id, version)
-    new_doc = timdb.documents.delete_paragraph(get_newest_document(doc_id), par_id)
+    if area_end and area_start:
+        new_doc = Document(doc_id)
+        new_doc.delete_section(area_start, area_end)
+    else:
+        par_id, = verify_json_params('par')
+        new_doc = timdb.documents.delete_paragraph(get_newest_document(doc_id), par_id)
     return jsonResponse({'version': new_doc.get_version()})
