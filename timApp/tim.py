@@ -286,10 +286,10 @@ def get_all_messages(param_lecture_id=-1):
         lecture_id = param_lecture_id
 
     # Prevents previously asked question to be asked from user and new questions from people who just came to lecture
-    current_user = getCurrentUserId()
-    for triple in __question_to_be_asked:
-        if triple[0] == lecture_id and current_user not in triple[2]:
-            triple[2].append(current_user)
+    # current_user = getCurrentUserId()
+    # for triple in __question_to_be_asked:
+    #     if triple[0] == lecture_id and current_user not in triple[2]:
+    #         triple[2].append(current_user)
 
     messages = timdb.messages.get_messages(lecture_id)
     if len(messages) > 0:
@@ -398,7 +398,7 @@ def get_updates():
                 if pair[0] == lecture_id and current_user not in pair[2]:
                     question = timdb.questions.get_asked_question(pair[1])[0]
                     question_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]["json"]
-                    pair[2].append(getCurrentUserId())
+                    pair[2].append(current_user)
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
@@ -463,6 +463,7 @@ def send_message():
 
 # Route to render question
 @app.route('/lecture/question')
+@app.route('/view/question')
 def show_question():
     return render_template('question.html')
 
@@ -518,40 +519,46 @@ def add_question():
 # Route to check if the current user is in some lecture in specific document
 @app.route('/checkLecture', methods=['GET'])
 def check_lecture():
+    if 'in_lecture' in session:
+        print(session['in_lecture'])
     if not request.args.get('doc_id'):
         abort(400)
 
     doc_id = int(request.args.get('doc_id'))
     timdb = getTimDb()
     current_user = getCurrentUserId()
-    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_lecture(doc_id, current_user)
+    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
     lecture = timdb.lectures.get_lecture(lecture_id)
     lecturers = []
     students = []
     if lecture:
-        lecture_code = lecture[0].get("lecture_code")
-        if lecture[0].get("lecturer") == current_user:
-            is_lecturer = True
-            lecturers, students = get_lecture_users(timdb, lecture_id)
-        else:
-            is_lecturer = False
+        if check_if_lecture_is_running(lecture_id):
+            lecture_code = lecture[0].get("lecture_code")
+            if lecture[0].get("lecturer") == current_user:
+                is_lecturer = True
+                lecturers, students = get_lecture_users(timdb, lecture_id)
+            else:
+                is_lecturer = False
 
-        if "use_wall" in session:
-            use_wall = session['use_wall']
-        else:
-            use_wall = False
+            if "use_wall" in session:
+                use_wall = session['use_wall']
+            else:
+                use_wall = False
 
-        if "use_questions" in session:
-            use_question = session['use_wall']
-        else:
-            use_question = False
+            if "use_questions" in session:
+                use_question = session['use_questions']
+            else:
+                use_question = False
 
-        return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
-                             "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
-                             "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
-                             "useWall": use_wall, "useQuestions": use_question})
-    else:
-        return get_running_lectures(doc_id)
+            return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
+                                 "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
+                                 "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
+                                 "useWall": use_wall, "useQuestions": use_question})
+        else:
+            leave_lecture_function(lecture_id)
+            timdb.lectures.delete_users_from_lecture(lecture_id)
+            clean_dictionaries_by_lecture(lecture_id)
+    return get_running_lectures(doc_id)
 
 
 # Route to start lecture that's start time is in future
@@ -830,6 +837,16 @@ def join_lecture():
     password_quess = request.args.get("password_quess")
     lecture_id = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     current_user = getCurrentUserId()
+
+    if current_user == 0:
+        user_name = 'Anonymous'
+        user_real_name = 'Guest'
+        user_id = timdb.users.createAnonymousUser(user_name, user_real_name)
+        session['user_id'] = user_id
+        session['user_name'] = user_name
+        session['real_name'] = user_real_name
+        current_user = user_id
+
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture[0].get("password") != password_quess:
         return jsonResponse({"correctPassword": False})
@@ -837,6 +854,8 @@ def join_lecture():
 
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
     __user_activity[getCurrentUserId(), lecture_id] = time_now
+
+    session['in_lecture'] = [lecture_id]
 
     lecturers = []
     students = []
@@ -851,15 +870,26 @@ def join_lecture():
          "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
 
 
-# Route to leace lecture
+# Route to leave lecture
 @app.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
-    timdb = getTimDb()
     lecture_id = int(request.args.get("lecture_id"))
     doc_id = int(request.args.get("doc_id"))
-    timdb.lectures.leave_lecture(lecture_id, getCurrentUserId(), True)
-    del __user_activity[getCurrentUserId(), lecture_id]
+    leave_lecture_function(lecture_id)
     return get_running_lectures(doc_id)
+
+
+def leave_lecture_function(lecture_id):
+    timdb = getTimDb()
+    current_user = getCurrentUserId()
+    if 'in_lecture' in session:
+        lecture_list = session['in_lecture']
+        if lecture_id in lecture_list:
+            lecture_list.remove(lecture_id)
+        session['in_lecture'] = lecture_list
+    timdb.lectures.leave_lecture(lecture_id, current_user, True)
+    if __user_activity[current_user, lecture_id]:
+        del __user_activity[current_user, lecture_id]
 
 
 @app.route('/uploads/<filename>')
@@ -1004,11 +1034,6 @@ def set_session_setting(setting, value):
             session['settings'] = {}
         session['settings'][setting] = value
         session.modified = True
-        session.modified = True
-        session.modified = True
-        session.modified = True
-        session.modified = True
-        session.modified = True
         return jsonResponse(session['settings'])
     except (NameError, KeyError):
         abort(404)
@@ -1118,7 +1143,7 @@ def get_lecture_with_name(lecture_code, doc_id):
     return jsonResponse(lecture)
 
 
-@app.route("/extendQuestion", methods=['PUT', 'GET'])
+@app.route("/extendQuestion", methods=['POST'])
 def extend_question():
     lecture_id = int(request.args.get('lecture_id'))
     asked_id = int(request.args.get('asked_id'))
@@ -1382,11 +1407,12 @@ def answer_to_question():
                 if oneLine in point_row:
                     points += point_row[oneLine]
 
-        if lecture_answer:
-            timdb.lecture_answers.update_answer(lecture_answer[0]["answer_id"], getCurrentUserId(), asked_id,
+        current_user = getCurrentUserId()
+        if lecture_answer and current_user != 0:
+            timdb.lecture_answers.update_answer(lecture_answer[0]["answer_id"], current_user, asked_id,
                                                 lecture_id, whole_answer, time_now, points)
         else:
-            timdb.lecture_answers.add_answer(getCurrentUserId(), asked_id, lecture_id, whole_answer, time_now, points)
+            timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, whole_answer, time_now, points)
         __pull_answer[asked_id, lecture_id].set()
 
     return jsonResponse("")

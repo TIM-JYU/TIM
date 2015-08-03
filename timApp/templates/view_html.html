@@ -74,7 +74,7 @@
         <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
     {% endif %}
 
-    {% if lecture_mode %}
+    {% if in_lecture or lecture_mode %}
         <script src="{{ url_for('static', filename='scripts/lectureController.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/jsDatePick.min.1.3.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/controllers/answerToQuestionController.js') }}"></script>
@@ -109,12 +109,12 @@
         var rights = {{rights|tojson}};
         var reqs = {{reqs|tojson}};
         var settings = {{settings|tojson}};
-        console.log(settings);
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         var teacherMode = {{teacher_mode|tojson}};
         var group = {{group|tojson}};
         var lectureMode = {{lecture_mode|tojson}};
+        var in_lecture = {{in_lecture|tojson}};
         var users;
         {% if teacher_mode %}
             users = {{plugin_users|tojson}};
@@ -131,10 +131,10 @@
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
         {% include 'breadcrumbs.html' %}
 
-        {% if lecture_mode %}
+        {% if lecture_mode or in_lecture %}
             <div ng-controller="LectureController">
                 {% include 'lectureinfo_menu.html' %}
-                <div class="wall-behind" id="wall" ng-show="useWall" tim-draggable-fixed caption="Lecture Wall"
+                <div class="wall-behind" id="wall" ng-show="useWall" ng-cloak tim-draggable-fixed caption="Lecture Wall"
                      resize="true">
                     <div class="wall-base" id="wallBase">
                         {# <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
@@ -264,7 +264,7 @@
                                     <ul>
                                         <h4>Lecture questions</h4>
                                         <li ng-repeat="question in lectureQuestions">
-                                            <a ng-click="showQuestionById(question.questionId)">{{
+                                            <a ng-click="showQuestion(question.questionId)">{{
                                                 question.questionTitle
                                                 }}</a>
                                         </li>
@@ -360,8 +360,7 @@
                 </div>
                 <button class="showContent">Show content</button>
             </div>
-        {% endif %}
-        {% if not lecture_mode %}
+        {% else %}
             <div ng-controller="SidebarMenuCtrl" class="sidebarMenu" ng-cloak>
                 <div ng-class="['contents']">
                     <img id="sidebarMenuButton" ng-click="showSidebar()"
@@ -409,14 +408,9 @@
                         <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
                              src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"
                              height="50" title="Settings-menu"/>
-
-
                     </div>
-
-
                 </div>
             </div>
-
         {% endif %}
         {% if teacher_mode %}
             <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users">
@@ -451,7 +445,7 @@
                 {% endif %}
             </div>
         {% endif %}
-        {% if not lecture_mode %}
+        {% if not lecture_mode and not in_lecture %}
             {% include 'view_content.html' %}
         {% endif %}
     </div>

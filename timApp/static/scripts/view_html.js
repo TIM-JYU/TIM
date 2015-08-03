@@ -203,15 +203,9 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-        sc.showQuestionById = function (questionId) {
-            var question = $("#" + questionId);
-            sc.showQuestion(question);
-
-        };
-
-        sc.showQuestion = function (question) {
+        sc.showQuestion = function (questionId) {
             sc.json = "No data";
-            sc.qId = question[0].getAttribute('id');
+            sc.qId = questionId;
 
             http({
                 url: '/getQuestionById',
@@ -572,7 +566,8 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick(".questionAdded", function ($this, e) {
             var question = $this;
-            sc.showQuestion(question);
+            var questionId = question[0].getAttribute('id');
+            sc.showQuestion(questionId);
             sc.par = ($(question).parent().parent());
         });
 

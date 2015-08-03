@@ -10,7 +10,7 @@ from flask import Blueprint, render_template, url_for
 from .common import *
 import pluginControl
 import time
-import datetime
+import tim
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -235,36 +235,41 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
 
-    try:
+    if 'settings' in session:
         settings = session['settings']
-    except KeyError:
+    else:
         settings = {}
+
+    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
+    if is_in_lecture:
+        is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
     show_time('render alku')
     # TODO: Check if doc variable is needed
     result = render_template(template_name,
-                           docID=doc_id,
-                           docName=doc_name,
-                           text=texts,
-                           plugin_users=users,
-                           current_user=current_user,
-                           version=Document(doc_id).get_version(),
-                           js=jsPaths,
-                           cssFiles=cssPaths,
-                           jsMods=modules,
-                           custom_css_files=custom_css_files,
-                           custom_css=custom_css,
-                           start_index=start_index,
-                           teacher_mode=teacher,
-                           lecture_mode=lecture,
-                           is_owner=hasOwnership(doc_id),
-                           group=usergroup,
-                           rights={'editable': hasEditAccess(doc_id),
-                                   'can_mark_as_read': hasReadMarkingRight(doc_id),
-                                   'can_comment': hasCommentRight(doc_id),
-                                   'browse_own_answers': loggedIn()
-                                   },
-                           reqs=reqs,
-                           settings=settings)
+                             docID=doc_id,
+                             docName=doc_name,
+                             text=texts,
+                             plugin_users=users,
+                             current_user=current_user,
+                             version=Document(doc_id).get_version(),
+                             js=jsPaths,
+                             cssFiles=cssPaths,
+                             jsMods=modules,
+                             custom_css_files=custom_css_files,
+                             custom_css=custom_css,
+                             start_index=start_index,
+                             teacher_mode=teacher,
+                             lecture_mode=lecture,
+                             in_lecture=is_in_lecture,
+                             is_owner=hasOwnership(doc_id),
+                             group=usergroup,
+                             rights={'editable': hasEditAccess(doc_id),
+                                     'can_mark_as_read': hasReadMarkingRight(doc_id),
+                                     'can_comment': hasCommentRight(doc_id),
+                                     'browse_own_answers': loggedIn()
+                                     },
+                             reqs=reqs,
+                             settings=settings)
     show_time('render loppu')
     return result

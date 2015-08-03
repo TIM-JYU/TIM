@@ -58,6 +58,37 @@ class Users(TimDbBase):
         user_id = cursor.lastrowid
         return user_id
 
+
+    def createAnonymousUser(self, name: 'str', real_name: 'str', commit: 'bool'=True) -> 'int':
+        """Creates a new user anonymous user.
+        :param id: id of anonymous user
+        :param name: The name of the user to be created.
+        :param real_name: The real name of the user.
+        :returns: The id of the newly created user.
+        """
+
+        next_id = self.getNextAnonymousUserId()
+
+        cursor = self.db.cursor()
+        cursor.execute('INSERT INTO User (id, name, real_name) VALUES (?, ?, ?)', [next_id, name, real_name])
+        if commit:
+            self.db.commit()
+        user_id = cursor.lastrowid
+        self.addUserToGroup(2, user_id)
+        return user_id
+
+
+    @contract
+    def getNextAnonymousUserId(self) -> 'int':
+        """
+        :returns: Tnext unused negative id.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('SELECT MIN(id) AS next_id FROM User')
+        user_id = min(self.resultAsDictionary(cursor)[0]['next_id'], 0)
+        return user_id - 1
+
+
     def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str', password: 'str' = '', commit : 'bool' = True):
         """Updates user information.
 

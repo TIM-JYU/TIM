@@ -250,6 +250,29 @@ class Lectures(TimDbBase):
             return False, -1
 
     @contract
+    def check_if_in_any_lecture(self, user_id: "int") -> "tuple":
+        """
+        Check if user is in lecture from specific document
+        :param doc_id: document id
+        :param user_id: user id
+        :return:
+        """
+
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+                           SELECT lecture_id, user_id
+                           FROM LectureUsers
+                           WHERE user_id = ?
+                            """, [user_id])
+
+        result = cursor.fetchall()
+        if len(result) > 0:
+            return True, result[0][0]
+        else:
+            return False, -1
+
+    @contract
     def get_users_from_leture(self, lecture_id: "int") -> "list(dict)":
         cursor = self.db.cursor()
 
