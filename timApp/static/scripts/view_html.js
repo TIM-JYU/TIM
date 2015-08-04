@@ -458,7 +458,7 @@ timApp.controller("ViewCtrl", [
                 })
                     .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
-                if (!$par.hasClass("new") && data.texts[i].id in data.read_statuses) {
+                if (data.texts[i].id in data.read_statuses) {
                     readClass = data.read_statuses[data.texts[i].id];
                 }
                 if ('taskId' in data.texts[i].attrs) {
@@ -474,13 +474,6 @@ timApp.controller("ViewCtrl", [
                 $par.after($newpar.append($("<div>",
                         {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
                     $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
-
-                if (extraData.tags) {
-                    if (extraData.tags.markread) {
-                        var $newread = $newpar.find("div.readline");
-                        sc.markParRead($newread, data.texts[i].id);
-                    }
-                }
             }
             $par.remove();
             sc.editing = false;
@@ -1017,7 +1010,7 @@ timApp.controller("ViewCtrl", [
         if (sc.rights.editable) {
             sc.onClick(".addBottom", function ($this, e) {
                 $(".actionButtons").remove();
-                var $par = $('#pars').children().last();
+                var $par = $('.par').last();
                 return sc.showAddParagraphBelow(e, $par);
             });
         }

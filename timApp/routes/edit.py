@@ -4,6 +4,7 @@ from flask import Blueprint
 
 from .common import *
 from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException
 import pluginControl
 from timdb.docidentifier import DocIdentifier
@@ -101,7 +102,7 @@ def modify_paragraph():
         for p in editor_pars[1:]:
             [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
             pars.append(par)
-
+    mark_pars_as_read_if_chosen(pars, doc)
     pars, js_paths, css_paths, modules, read_statuses = post_process_pars(pars, doc_id)
     return jsonResponse({'texts': pars,
                          'js': js_paths,
@@ -137,6 +138,21 @@ def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
     return blocks
 
 
+def mark_pars_as_read_if_chosen(pars, doc):
+    """Marks the specified paragraphs as read if tags.markread is true in request's JSON data.
+
+    :type doc: Document
+    :type pars: list[DocParagraph]
+    :param pars: The paragraphs to be marked as read
+    :param doc: The document to which the paragraphs belong.
+    """
+    mark_read = request.get_json().get('tags', {}).get('markread')
+    timdb = getTimDb()
+    if mark_read:
+        for p in pars:
+            timdb.readings.setAsRead(getCurrentUserGroup(), doc, p)
+
+
 @edit_page.route("/newParagraph/", methods=["POST"])
 def add_paragraph():
     """Route for adding a new paragraph to a document.
@@ -155,12 +171,14 @@ def add_paragraph():
     for p in editor_pars:
         [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
         pars.append(par)
-    pars, js_paths, css_paths, modules, _ = post_process_pars(pars, doc_id)
+    mark_pars_as_read_if_chosen(pars, doc)
+    pars, js_paths, css_paths, modules, read_statuses = post_process_pars(pars, doc_id)
     return jsonResponse({'texts': pars,
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
-                         'version': doc.get_version()})
+                         'version': doc.get_version(),
+                         'read_statuses': read_statuses})
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
