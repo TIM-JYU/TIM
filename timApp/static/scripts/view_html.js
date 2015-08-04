@@ -417,6 +417,7 @@ timApp.controller("ViewCtrl", [
             }
             $par.remove();
             sc.editing = false;
+            sc.cancelArea();
         };
 
         sc.addSavedParToDom = function (data, extraData) {
@@ -484,8 +485,7 @@ timApp.controller("ViewCtrl", [
             }
             $par.remove();
             sc.editing = false;
-            sc.selection.start = null;
-            sc.selection.end = null;
+            sc.cancelArea();
         };
 
         sc.markParRead = function ($this, par_id) {
