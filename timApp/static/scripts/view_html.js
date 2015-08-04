@@ -1,4 +1,4 @@
-var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, crumbs, lectureMode;
+var katex, $, angular, modules;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
@@ -8,11 +8,12 @@ var timApp = angular.module('timApp', [
     var interceptor = [
         '$q',
         '$rootScope',
-        function ($q, $rootScope) {
+        '$window',
+        function ($q, $rootScope, $window) {
             var re = /\/[^/]+\/([^/]+)\/answer\/$/;
             var service = {
                 'request': function (config) {
-                    if (teacherMode && re.test(config.url)) {
+                    if ($window.teacherMode && re.test(config.url)) {
                         var match = re.exec(config.url);
                         var taskId = match[1];
                         var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
@@ -36,6 +37,7 @@ var timApp = angular.module('timApp', [
             return service;
         }
     ];
+    $httpProvider.interceptors.push(interceptor);
 }]);
 
 timApp.controller("ViewCtrl", [
@@ -52,17 +54,18 @@ timApp.controller("ViewCtrl", [
     '$filter',
     function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter) {
         "use strict";
-        http.defaults.headers.common.Version = version.hash;
-        http.defaults.headers.common.RefererPath = refererPath;
-        sc.docId = docId;
-        sc.docName = docName;
-        sc.crumbs = crumbs;
-        sc.rights = rights;
-        sc.startIndex = startIndex;
-        sc.users = users;
-        sc.group = group;
-        sc.teacherMode = teacherMode;
+        http.defaults.headers.common.Version = $window.version.hash;
+        http.defaults.headers.common.RefererPath = $window.refererPath;
+        sc.docId = $window.docId;
+        sc.docName = $window.docName;
+        sc.crumbs = $window.crumbs;
+        sc.rights = $window.rights;
+        sc.startIndex = $window.startIndex;
+        sc.users = $window.users;
+        sc.group = $window.group;
+        sc.teacherMode = $window.teacherMode;
         sc.sidebarState = 'autohidden';
+        sc.lectureMode = $window.lectureMode;
         if (sc.users.length > 0) {
             sc.selectedUser = sc.users[0];
         } else {
@@ -71,10 +74,7 @@ timApp.controller("ViewCtrl", [
 
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
-        var NOTE_EDITOR_CLASS = "editorArea";
-        var DEFAULT_CHECKBOX_CLASS = "defaultCheckbox";
-        var ACTION_BUTTON_ROW_CLASS = "actionButtonRow";
-        sc.lectureMode = lectureMode;
+
         sc.questionShown = false;
         sc.firstTimeQuestions = true;
         var EDITOR_CLASS = "editorArea";
@@ -170,7 +170,7 @@ timApp.controller("ViewCtrl", [
                 "after-cancel": 'handleCancel(extraData)',
                 "after-delete": 'handleDelete(saveData, extraData)',
                 "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteParagraph/' + sc.docId + "/" + par_id
+                "delete-url": '/deleteParagraph/' + sc.docId
             };
             if (options.showDelete) {
                 caption = 'Edit paragraph';
@@ -189,7 +189,9 @@ timApp.controller("ViewCtrl", [
                 var createEditor = function (attrs) {
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
                     $div.attr('tim-draggable-fixed', '');
-                    if (caption) $div.attr('caption', caption);
+                    if (caption) {
+                        $div.attr('caption', caption);
+                    }
                     $par.append($div);
                     $compile($div[0])(sc);
                     sc.editing = true;
@@ -313,7 +315,7 @@ timApp.controller("ViewCtrl", [
         // Event handlers
 
         sc.fixPageCoords = function (e) {
-            if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
+            if (!('pageX' in e) || (e.pageX === 0 && e.pageY === 0)) {
                 e.pageX = e.originalEvent.touches[0].pageX;
                 e.pageY = e.originalEvent.touches[0].pageY;
             }
@@ -329,8 +331,9 @@ timApp.controller("ViewCtrl", [
                 downCoords = {left: downEvent.pageX, top: downEvent.pageY};
             });
             $document.on('mousemove touchmove', className, function (e) {
-                if (downEvent == null)
+                if (downEvent === null) {
                     return;
+                }
 
                 var e2 = sc.fixPageCoords(e);
                 if (sc.dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
@@ -339,13 +342,13 @@ timApp.controller("ViewCtrl", [
                 }
             });
             $document.on('touchcancel', className, function (e) {
-                console.log("cancel");
+                $window.console.log("cancel");
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
-                console.log("tock");
-                if (downEvent != null) {
-                    console.log("event!");
+                $window.console.log("tock");
+                if (downEvent !== null) {
+                    $window.console.log("event!");
                     if (func($(this), downEvent)) {
                         e.preventDefault();
                     }
@@ -361,7 +364,6 @@ timApp.controller("ViewCtrl", [
 
         sc.beginAreaEditing = function (e, $par) {
             $(".par.new").remove();
-            sc.selection.end = sc.getParId($par);
             sc.toggleParEditor($par, {showDelete: true, area: true});
         };
 
@@ -409,8 +411,16 @@ timApp.controller("ViewCtrl", [
         sc.handleDelete = function (data, extraData) {
             var $par = sc.getElementByParId(extraData.par);
             http.defaults.headers.common.Version = data.version;
+            if (extraData.area_start !== null && extraData.area_end !== null) {
+                $par = sc.getElementByParId(extraData.area_start);
+                var $endpar = sc.getElementByParId(extraData.area_end);
+                if (extraData.area_start !== extraData.area_end) {
+                    $par.nextUntil($endpar).add($endpar).remove();
+                }
+            }
             $par.remove();
             sc.editing = false;
+            sc.cancelArea();
         };
 
         sc.addSavedParToDom = function (data, extraData) {
@@ -433,7 +443,9 @@ timApp.controller("ViewCtrl", [
                     html = $compile(html)(sc);
                 }
                 var $mathdiv = $.parseHTML(html);
-                if ($mathdiv) sc.processMath($mathdiv[0]);
+                if ($mathdiv) {
+                    sc.processMath($mathdiv[0]);
+                }
                 var classes = [];
                 if ('classes' in data.texts[i].attrs) {
                     classes = data.texts[i].attrs.classes;
@@ -446,14 +458,8 @@ timApp.controller("ViewCtrl", [
                 })
                     .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
-                var old_t = $par.find(".readline").attr("t");
-                if (i === 0 && !$par.hasClass("new") && old_t !== null && typeof old_t !== 'undefined') {
-                    $par.find(".notes").appendTo($newpar);
-                    if (old_t !== data.texts[i].t) {
-                        readClass = "modified";
-                    } else {
-                        readClass = "read";
-                    }
+                if (!$par.hasClass("new") && data.texts[i].id in data.read_statuses) {
+                    readClass = data.read_statuses[data.texts[i].id];
                 }
                 if ('taskId' in data.texts[i].attrs) {
                     var ab = $('<answerbrowser>').attr('task-id', sc.docId + '.' + data.texts[i].attrs.taskId);
@@ -466,11 +472,11 @@ timApp.controller("ViewCtrl", [
                  editDiv = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
                  */
                 $par.after($newpar.append($("<div>",
-                        {class: "readline " + readClass, title: "Click to mark this paragraph as read", t: old_t}),
+                        {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
                     $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
 
                 if (extraData.tags) {
-                    if (extraData.tags['markread']) {
+                    if (extraData.tags.markread) {
                         var $newread = $newpar.find("div.readline");
                         sc.markParRead($newread, data.texts[i].id);
                     }
@@ -478,8 +484,7 @@ timApp.controller("ViewCtrl", [
             }
             $par.remove();
             sc.editing = false;
-            sc.selection.start = null;
-            sc.selection.end = null;
+            sc.cancelArea();
         };
 
         sc.markParRead = function ($this, par_id) {
@@ -500,10 +505,16 @@ timApp.controller("ViewCtrl", [
             return sc.markParRead($this, par_id);
         });
 
+        sc.isParWithinArea = function ($par) {
+            return sc.selection.pars.filter($par).length > 0;
+        };
 
         sc.onClick(".editline", function ($this, e) {
             $(".actionButtons").remove();
             var $par = $this.parent();
+            if (sc.selection.start !== null && (sc.selection.end === null || !sc.isParWithinArea($par))) {
+                sc.selection.end = sc.getParId($par);
+            }
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
             return sc.showOptionsWindow(e, $par, coords);
         });
@@ -587,8 +598,12 @@ timApp.controller("ViewCtrl", [
             bounds.top = element.offset().top;
             bounds.bottom = bounds.top + element.outerHeight();
             var y = $(window).scrollTop();
-            if (bounds.bottom > viewport.bottom) y += (bounds.bottom - viewport.bottom);
-            else if (bounds.top < viewport.top) y += (bounds.top - viewport.top);
+            if (bounds.bottom > viewport.bottom) {
+                y += (bounds.bottom - viewport.bottom);
+            }
+            else if (bounds.top < viewport.top) {
+                y += (bounds.top - viewport.top);
+            }
             $('html, body').animate({
                 scrollTop: y
             }, 500);
@@ -613,7 +628,7 @@ timApp.controller("ViewCtrl", [
                     $par.removeClass("selected");
                     $par.removeClass("lightselect");
                 }
-                else if (clicktime < 500) {
+                else if (clicktime < 500 && sc.defaultAction !== null) {
                     // Double click
                     sc.defaultAction.func(e, $par, coords);
                 }
@@ -965,7 +980,7 @@ timApp.controller("ViewCtrl", [
                 }).error(function (data) {
                     var $loading = $('#loading');
                     $loading.remove();
-                    console.log("Virhe");
+                    $window.console.log("Error occurred when fetching view_content");
                 });
             sc.contentLoaded = true;
             return true;
@@ -992,9 +1007,9 @@ timApp.controller("ViewCtrl", [
         sc.getReadPars();
 
 
-        // Tässä jos lisää bindiin 'mousedown', scrollaus menua avattaessa ei toimi Androidilla
+        // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
         $('body,html').bind('scroll wheel DOMMouseScroll mousewheel', function (e) {
-            if (e.which > 0 || e.type == "mousedown" || e.type == "mousewheel") {
+            if (e.which > 0 || e.type === "mousedown" || e.type === "mousewheel") {
                 $("html,body").stop();
             }
         });
@@ -1018,18 +1033,21 @@ timApp.controller("ViewCtrl", [
             $('.par.selected').removeClass('selected');
             if (sc.selection.start !== null) {
                 var $start = sc.getElementByParId(sc.selection.start);
-                $start.addClass('selected');
                 if (sc.selection.end !== null && sc.selection.end !== sc.selection.start) {
                     var $end = sc.getElementByParId(sc.selection.end);
                     if ($end.prevAll().filter($start).length !== 0) {
                         sc.selection.reversed = false;
-                        $start.nextUntil($end).add($end).addClass('selected');
+                        sc.selection.pars = $start.nextUntil($end);
+
                     } else {
                         sc.selection.reversed = true;
-                        $start.prevUntil($end).add($end).addClass('selected');
+                        sc.selection.pars = $start.prevUntil($end);
                     }
-
+                    sc.selection.pars = sc.selection.pars.add($start).add($end);
+                } else {
+                    sc.selection.pars = $start;
                 }
+                sc.selection.pars.addClass('selected');
             }
         });
 
@@ -1039,6 +1057,7 @@ timApp.controller("ViewCtrl", [
 
         sc.cancelArea = function (e, $par) {
             sc.selection.start = null;
+            sc.selection.end = null;
         };
 
         sc.getEditorFunctions = function () {
@@ -1053,6 +1072,8 @@ timApp.controller("ViewCtrl", [
                 {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null}
             ];
         };
+
+        sc.nothing = function(){};
 
         sc.editorFunctions = sc.getEditorFunctions();
 

@@ -8,6 +8,15 @@
            type="radio"
            ng-change="saveChoice()">
     </span>
-    <button style="width: 100%;" class="timButton" ng-click="closePopup()">Close menu
+    <span class="actionButtonRow">
+        <button style="width: 150px;" class="timButton" ng-click="closePopup()">Close menu
+    </button>
+    <input ng-model="$parent.defaultAction"
+           ng-value="{func: nothing, desc: 'Close'}"
+           class="defaultCheckbox"
+           type="radio"
+           ng-change="saveChoice()">
+    </span>
+    <button style="width: 150px;" class="timButton" ng-click="$parent.defaultAction = null">Clear default action
     </button>
 </div>
