@@ -36,15 +36,6 @@ def setslidestatus(doc_name):
     return jsonify(data)
 
 
-@view_page.route("/slide/<path:doc_name>")
-def slide_document(doc_name):
-    try:
-        view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    except (ValueError, TypeError):
-        abort(400, "Invalid start or end index specified.")
-    return slide(doc_name, 'slide.html', view_range)
-
-
 @view_page.route("/show_slide/<path:doc_name>")
 def slide_iframe(doc_name):
     try:

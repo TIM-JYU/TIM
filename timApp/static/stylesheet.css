@@ -406,6 +406,17 @@ ul ul ul, ol ol ol {
     background: inherit;
 }
 
+#slideFrame {
+    width: 100%;
+    max-width: 52em;
+    height: 30em;
+    margin-top: 1em;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border: 1px solid #cccccc;
+}
+
 .released {
     clear: both;
     padding: 10px;
@@ -1484,7 +1495,7 @@ img.console {
     margin: 10px 0 0 0;
 }
 
-.sidebar h1{
+.sidebar h1 {
     font-size: 120%;
     background-color: #3cc;
     color: white;

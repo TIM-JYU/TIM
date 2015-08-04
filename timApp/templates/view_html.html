@@ -114,7 +114,13 @@
                 {% endif %}
             </div>
         {% endif %}
-        {% include 'view_content.html' %}
+        {% if slide_mode %}
+            <div class="paragraphs">
+                <iframe id="slideFrame" src="/show_slide/{{ docName }}" allowfullscreen></iframe>
+            </div>
+        {% else %}
+            {% include 'view_content.html' %}
+        {% endif %}
     </div>
     <p id="test"></p>
 

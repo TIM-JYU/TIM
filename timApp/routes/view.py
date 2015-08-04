@@ -81,6 +81,16 @@ def lecture_view(doc_name):
         abort(400, "Invalid start or end index specified.")
 
 
+@view_page.route("/slide/<path:doc_name>")
+def slide_document(doc_name):
+    view_range = None
+    try:
+        view_range = parse_range(request.args.get('b'), request.args.get('e'))
+    except (ValueError, TypeError):
+        abort(400, "Invalid start or end index specified.")
+    return view(doc_name, 'view_html.html', view_range=view_range, slide=True)
+
+
 @contract
 def parse_range(start_index: 'int|None', end_index: 'int|None') -> 'range|None':
     if start_index is None and end_index is None:
@@ -109,6 +119,7 @@ def try_return_folder(doc_name):
                            userGroups=possible_groups,
                            is_owner=hasOwnership(block_id),
                            docName=folder_name,
+                           folder=True,
                            in_lecture=is_in_lecture)
 
 
@@ -168,7 +179,7 @@ def show_time(s):
     debug_time = nyt
 
 
-def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False):
+def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False, slide=False):
     show_time('view alku')
 
     timdb = getTimDb()
@@ -267,6 +278,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                              start_index=start_index,
                              teacher_mode=teacher,
                              lecture_mode=lecture,
+                             slide_mode=slide,
                              in_lecture=is_in_lecture,
                              is_owner=hasOwnership(doc_id),
                              group=usergroup,

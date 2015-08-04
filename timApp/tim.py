@@ -856,7 +856,10 @@ def join_lecture():
 def leave_lecture():
     lecture_id = int(request.args.get("lecture_id"))
     leave_lecture_function(lecture_id)
-    return get_running_lectures()
+    if 'doc_id' in request.args:
+        return get_running_lectures(int(request.args['doc_id']))
+    else:
+        return jsonResponse("")
 
 
 def leave_lecture_function(lecture_id):
