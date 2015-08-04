@@ -248,28 +248,32 @@ def get_lecture_info():
     lecture_id = int(request.args.get("lecture_id"))
     messages = get_all_messages(lecture_id)
     timdb = getTimDb()
-    answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
     question_ids = []
     answerers = []
-    for singleDict in answer_dicts:
-        singleDict['user_name'] = timdb.users.getUser(singleDict['user_id']).get("name")
-        if singleDict['question_id'] not in question_ids:
-            question_ids.append(singleDict['question_id'])
-        if singleDict['user_name'] not in answerers:
-            answerers.append(singleDict['user_name'])
-
-    lecture_questions = timdb.questions.get_multiple_asked_questions(question_ids)
 
     is_lecturer = False
     current_user = getCurrentUserId()
     if timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user:
         is_lecturer = True
 
-    user_name = timdb.users.getUser(current_user).get("name")
+    if is_lecturer:
+        answer_dicts = timdb.lecture_answers.get_answers_to_questions_from_lecture(lecture_id)
+    else:
+        answer_dicts = timdb.lecture_answers.get_user_answers_to_questions_from_lecture(lecture_id, current_user)
+
+    for singleDict in answer_dicts:
+        singleDict['user_name'] = timdb.users.getUser(singleDict['user_id']).get("name")
+        if singleDict['question_id'] not in question_ids:
+            question_ids.append(singleDict['question_id'])
+        if singleDict['user_name'] not in answerers:
+            answerers.append({'user_name': singleDict['user_name'], 'user_id': singleDict['user_id']})
+
+    lecture_questions = timdb.questions.get_multiple_asked_questions(question_ids)
 
     return jsonResponse(
         {"messages": messages, "answerers": answerers, "answers": answer_dicts, "questions": lecture_questions,
-         "isLecturer": is_lecturer, "userName": user_name})
+         "isLecturer": is_lecturer, "user": {'user_name': timdb.users.getUser(current_user)['name'],
+                                             'user_id': current_user}})
 
 
 # Route to get all the messages from some lecture.

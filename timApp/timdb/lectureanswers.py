@@ -110,6 +110,23 @@ class LectureAnswers(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def get_user_answers_to_questions_from_lecture(self, lecture_id: "int", user_id: "int") -> "list(dict)":
+        """
+        Gets all the naswers to questions from specific lecture
+        :param lecture_id: lecture ID
+        :return:
+        """
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+                        SELECT *
+                        FROM LectureAnswer
+                        WHERE lecture_id = ? AND user_id = ?
+        """, [lecture_id, user_id])
+
+        return self.resultAsDictionary(cursor)
+
+    @contract
     def delete_answers_from_question(self, question_id: "int", commit:"bool"=True):
         """
         Deletes answers from question

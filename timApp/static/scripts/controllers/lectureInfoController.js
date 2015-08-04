@@ -23,8 +23,6 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     $scope.lectureStartTime = lectureStartTime;
     $scope.lectureEndTime = lectureEndTime;
     $scope.msg = "";
-    $scope.answers = "";
-    $scope.userName = "";
     $scope.dynamicAnswerShowControls = [];
     $scope.dynamicAnswerShowControl = {};
     $scope.index = 0;
@@ -58,7 +56,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
                 $scope.questions = answer.questions;
                 $scope.isLecturer = answer.isLecturer;
                 $scope.answerers = answer.answerers;
-                $scope.userName = answer.userName;
+                $scope.selectedUser = answer.user;
             })
             .error(function () {
                 $window.console.log("fail");
@@ -140,19 +138,19 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
 
     /**
      * Draws charts from the answer of the current lecture.
-     * @param userName Which users answers to shows. If undefined shows from every user.
+     * @param userToShow Which users answers to shows. If undefined shows from every user.
      * @memberof module:lectureInfoController
      */
-    $scope.drawCharts = function (userName) {
+    $scope.drawCharts = function (userToShow) {
         for (var p = 0; p < $scope.points.length; p++) {
             $scope.points[p] = 0;
         }
         $scope.showPoints = true;
         var user;
-        if (typeof userName === 'undefined') {
+        if (typeof userToShow === 'undefined') {
             user = "";
         } else {
-            user = userName;
+            user = userToShow.user_id;
         }
         var questionIndexes = [];
         for (var i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
@@ -161,12 +159,11 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
         }
 
         for (var j = 0; j < $scope.answers.length; j++) {
-            if (($scope.isLecturer && user === "") || $scope.answers[j].user_name === user) {
+            if (($scope.isLecturer && user === "") || $scope.answers[j].user_id === user) {
                 $scope.dynamicAnswerShowControls[questionIndexes.indexOf($scope.answers[j].question_id)]
                     .addAnswer([{"answer": $scope.answers[j].answer}]);
                 $scope.points[questionIndexes.indexOf($scope.answers[j].question_id)] += $scope.answers[j].points;
             }
-
         }
 
         if ($scope.answers.length <= 0) {

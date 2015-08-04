@@ -77,13 +77,13 @@
         </label>
 
         <div>
-            <h3>Find answers <span ng-show="!isLecturer" ng-bind="userName"></span></h3>
+            <h3>Find answers <span ng-show="!isLecturer" ng-bind="selectedUser"></span></h3>
             <label ng-show="isLecturer">UserName
-                <select ng-model="userName" ng-options="user for user in answerers">
+                <select ng-model="selectedUser" ng-options="user.user_name for user in answerers track by user.user_id">
                 </select>
             </label>
 
-            <button ng-click="drawCharts(userName)">Show answers</button>
+            <button ng-click="drawCharts(selectedUser)">Show answers</button>
             <button ng-show="isLecturer" ng-click="drawCharts()">Show all</button>
 
             <div>
@@ -104,7 +104,7 @@
                 <p id="infoBox"></p>
             </div>
         </div>
-        <div style="margin-top: 10em" ng-show="isLecturer">
+        <div ng-show="isLecturer">
             <h3>Delete lecture</h3>
             <button ng-click="deleteLecture()">Delete lecture</button>
             <button title="Edit this lecture" ng-click="editLecture(lectureName)">Edit</button>
