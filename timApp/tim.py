@@ -537,8 +537,10 @@ def check_lecture():
             leave_lecture_function(lecture_id)
             timdb.lectures.delete_users_from_lecture(lecture_id)
             clean_dictionaries_by_lecture(lecture_id)
-    return get_running_lectures()
-
+    if 'doc_id' in request.args:
+        return get_running_lectures(int(request.args['doc_id']))
+    else:
+        return jsonResponse("")
 
 # Route to start lecture that's start time is in future
 @app.route("/startFutureLecture", methods=['POST'])
@@ -674,17 +676,15 @@ def check_if_lecture_is_running(lecture_id):
 
 
 # Gets all lectures that are currently running. Also gives the ones that are in the future
-def get_running_lectures():
+def get_running_lectures(doc_id):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     lecture_code = "Not running"
-    list_of_lectures = timdb.lectures.get_all_lectures(time_now)
+    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
     current_lecture_codes = []
     future_lectures = []
-    is_lecturer = False
+    is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
-        if lecture.get("lecturer") == getCurrentUserId():
-            is_lecturer = True
         if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lecture_codes.append({"lecture_code": lecture.get("lecture_code"),
                                           "is_access_code": not (lecture.get("password") == "")})
