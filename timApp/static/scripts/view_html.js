@@ -37,6 +37,7 @@ var timApp = angular.module('timApp', [
             return service;
         }
     ];
+    $httpProvider.interceptors.push(interceptor);
 }]);
 
 timApp.controller("ViewCtrl", [
