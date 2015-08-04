@@ -1,4 +1,4 @@
-var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, crumbs, lectureMode;
+var katex, $, angular, modules;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
@@ -8,11 +8,12 @@ var timApp = angular.module('timApp', [
     var interceptor = [
         '$q',
         '$rootScope',
-        function ($q, $rootScope) {
+        '$window',
+        function ($q, $rootScope, $window) {
             var re = /\/[^/]+\/([^/]+)\/answer\/$/;
             var service = {
                 'request': function (config) {
-                    if (teacherMode && re.test(config.url)) {
+                    if ($window.teacherMode && re.test(config.url)) {
                         var match = re.exec(config.url);
                         var taskId = match[1];
                         var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
@@ -52,17 +53,18 @@ timApp.controller("ViewCtrl", [
     '$filter',
     function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter) {
         "use strict";
-        http.defaults.headers.common.Version = version.hash;
-        http.defaults.headers.common.RefererPath = refererPath;
-        sc.docId = docId;
-        sc.docName = docName;
-        sc.crumbs = crumbs;
-        sc.rights = rights;
-        sc.startIndex = startIndex;
-        sc.users = users;
-        sc.group = group;
-        sc.teacherMode = teacherMode;
+        http.defaults.headers.common.Version = $window.version.hash;
+        http.defaults.headers.common.RefererPath = $window.refererPath;
+        sc.docId = $window.docId;
+        sc.docName = $window.docName;
+        sc.crumbs = $window.crumbs;
+        sc.rights = $window.rights;
+        sc.startIndex = $window.startIndex;
+        sc.users = $window.users;
+        sc.group = $window.group;
+        sc.teacherMode = $window.teacherMode;
         sc.sidebarState = 'autohidden';
+        sc.lectureMode = $window.lectureMode;
         if (sc.users.length > 0) {
             sc.selectedUser = sc.users[0];
         } else {
@@ -71,10 +73,7 @@ timApp.controller("ViewCtrl", [
 
         sc.noteClassAttributes = ["difficult", "unclear", "editable", "private"];
         sc.editing = false;
-        var NOTE_EDITOR_CLASS = "editorArea";
-        var DEFAULT_CHECKBOX_CLASS = "defaultCheckbox";
-        var ACTION_BUTTON_ROW_CLASS = "actionButtonRow";
-        sc.lectureMode = lectureMode;
+
         sc.questionShown = false;
         sc.firstTimeQuestions = true;
         var EDITOR_CLASS = "editorArea";
@@ -189,7 +188,9 @@ timApp.controller("ViewCtrl", [
                 var createEditor = function (attrs) {
                     var $div = $("<pareditor>", {class: EDITOR_CLASS}).attr(attrs);
                     $div.attr('tim-draggable-fixed', '');
-                    if (caption) $div.attr('caption', caption);
+                    if (caption) {
+                        $div.attr('caption', caption);
+                    }
                     $par.append($div);
                     $compile($div[0])(sc);
                     sc.editing = true;
@@ -313,7 +314,7 @@ timApp.controller("ViewCtrl", [
         // Event handlers
 
         sc.fixPageCoords = function (e) {
-            if (!('pageX' in e) || (e.pageX == 0 && e.pageY == 0)) {
+            if (!('pageX' in e) || (e.pageX === 0 && e.pageY === 0)) {
                 e.pageX = e.originalEvent.touches[0].pageX;
                 e.pageY = e.originalEvent.touches[0].pageY;
             }
@@ -329,8 +330,9 @@ timApp.controller("ViewCtrl", [
                 downCoords = {left: downEvent.pageX, top: downEvent.pageY};
             });
             $document.on('mousemove touchmove', className, function (e) {
-                if (downEvent == null)
+                if (downEvent === null) {
                     return;
+                }
 
                 var e2 = sc.fixPageCoords(e);
                 if (sc.dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
@@ -339,13 +341,13 @@ timApp.controller("ViewCtrl", [
                 }
             });
             $document.on('touchcancel', className, function (e) {
-                console.log("cancel");
+                $window.console.log("cancel");
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
-                console.log("tock");
-                if (downEvent != null) {
-                    console.log("event!");
+                $window.console.log("tock");
+                if (downEvent !== null) {
+                    $window.console.log("event!");
                     if (func($(this), downEvent)) {
                         e.preventDefault();
                     }
@@ -440,7 +442,9 @@ timApp.controller("ViewCtrl", [
                     html = $compile(html)(sc);
                 }
                 var $mathdiv = $.parseHTML(html);
-                if ($mathdiv) sc.processMath($mathdiv[0]);
+                if ($mathdiv) {
+                    sc.processMath($mathdiv[0]);
+                }
                 var classes = [];
                 if ('classes' in data.texts[i].attrs) {
                     classes = data.texts[i].attrs.classes;
@@ -477,7 +481,7 @@ timApp.controller("ViewCtrl", [
                     $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
 
                 if (extraData.tags) {
-                    if (extraData.tags['markread']) {
+                    if (extraData.tags.markread) {
                         var $newread = $newpar.find("div.readline");
                         sc.markParRead($newread, data.texts[i].id);
                     }
@@ -599,8 +603,12 @@ timApp.controller("ViewCtrl", [
             bounds.top = element.offset().top;
             bounds.bottom = bounds.top + element.outerHeight();
             var y = $(window).scrollTop();
-            if (bounds.bottom > viewport.bottom) y += (bounds.bottom - viewport.bottom);
-            else if (bounds.top < viewport.top) y += (bounds.top - viewport.top);
+            if (bounds.bottom > viewport.bottom) {
+                y += (bounds.bottom - viewport.bottom);
+            }
+            else if (bounds.top < viewport.top) {
+                y += (bounds.top - viewport.top);
+            }
             $('html, body').animate({
                 scrollTop: y
             }, 500);
@@ -977,7 +985,7 @@ timApp.controller("ViewCtrl", [
                 }).error(function (data) {
                     var $loading = $('#loading');
                     $loading.remove();
-                    console.log("Virhe");
+                    $window.console.log("Error occurred when fetching view_content");
                 });
             sc.contentLoaded = true;
             return true;
@@ -1004,9 +1012,9 @@ timApp.controller("ViewCtrl", [
         sc.getReadPars();
 
 
-        // Tässä jos lisää bindiin 'mousedown', scrollaus menua avattaessa ei toimi Androidilla
+        // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
         $('body,html').bind('scroll wheel DOMMouseScroll mousewheel', function (e) {
-            if (e.which > 0 || e.type == "mousedown" || e.type == "mousewheel") {
+            if (e.which > 0 || e.type === "mousedown" || e.type === "mousewheel") {
                 $("html,body").stop();
             }
         });
