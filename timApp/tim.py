@@ -261,11 +261,13 @@ def get_lecture_info():
     else:
         answer_dicts = timdb.lecture_answers.get_user_answers_to_questions_from_lecture(lecture_id, current_user)
 
+    added_users = []
     for singleDict in answer_dicts:
         singleDict['user_name'] = timdb.users.getUser(singleDict['user_id']).get("name")
         if singleDict['question_id'] not in question_ids:
             question_ids.append(singleDict['question_id'])
-        if singleDict['user_name'] not in answerers:
+        if singleDict['user_id'] not in added_users:
+            added_users.append(singleDict['user_id'])
             answerers.append({'user_name': singleDict['user_name'], 'user_id': singleDict['user_id']})
 
     lecture_questions = timdb.questions.get_multiple_asked_questions(question_ids)
