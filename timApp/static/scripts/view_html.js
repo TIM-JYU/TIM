@@ -458,14 +458,8 @@ timApp.controller("ViewCtrl", [
                 })
                     .append($("<div>", {class: "parContent"}).append($mathdiv || html));
                 var readClass = "unread";
-                var old_t = $par.find(".readline").attr("t");
-                if (i === 0 && !$par.hasClass("new") && old_t !== null && typeof old_t !== 'undefined') {
-                    $par.find(".notes").appendTo($newpar);
-                    if (old_t !== data.texts[i].t) {
-                        readClass = "modified";
-                    } else {
-                        readClass = "read";
-                    }
+                if (!$par.hasClass("new") && data.texts[i].id in data.read_statuses) {
+                    readClass = data.read_statuses[data.texts[i].id];
                 }
                 if ('taskId' in data.texts[i].attrs) {
                     var ab = $('<answerbrowser>').attr('task-id', sc.docId + '.' + data.texts[i].attrs.taskId);
@@ -478,7 +472,7 @@ timApp.controller("ViewCtrl", [
                  editDiv = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
                  */
                 $par.after($newpar.append($("<div>",
-                        {class: "readline " + readClass, title: "Click to mark this paragraph as read", t: old_t}),
+                        {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
                     $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
 
                 if (extraData.tags) {
