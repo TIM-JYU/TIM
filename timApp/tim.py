@@ -322,7 +322,7 @@ def get_all_messages(param_lecture_id=-1):
 @app.route('/getUpdates')
 def get_updates():
     if not request.args.get('client_message_id') or not request.args.get("lecture_id") or not request.args.get(
-            'doc_id') or not request.args.get('is_lecturer'):
+            'is_lecturer'):
         abort(400, "Bad request")
     client_last_id = int(request.args.get('client_message_id'))
 
@@ -349,12 +349,10 @@ def get_updates():
     timdb = getTimDb()
     step = 0
 
-    doc_id = int(request.args.get('doc_id'))
-
     if not check_if_lecture_is_running(lecture_id):
         timdb.lectures.delete_users_from_lecture(lecture_id)
         clean_dictionaries_by_lecture(lecture_id)
-        return get_running_lectures(doc_id)
+        return get_running_lectures()
 
     list_of_new_messages = []
     last_message_id = -1
@@ -461,19 +459,6 @@ def send_message():
     return jsonResponse(msg_id)
 
 
-# Route to render question
-@app.route('/lecture/question')
-@app.route('/view/question')
-def show_question():
-    return render_template('question.html')
-
-
-# Route to render question
-@app.route('/question')
-def show_question_without_view():
-    return render_template('question.html')
-
-
 # Route to get specific question
 @app.route('/getQuestion')
 def get_question():
@@ -519,12 +504,6 @@ def add_question():
 # Route to check if the current user is in some lecture in specific document
 @app.route('/checkLecture', methods=['GET'])
 def check_lecture():
-    if 'in_lecture' in session:
-        print(session['in_lecture'])
-    if not request.args.get('doc_id'):
-        abort(400)
-
-    doc_id = int(request.args.get('doc_id'))
     timdb = getTimDb()
     current_user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
@@ -558,7 +537,7 @@ def check_lecture():
             leave_lecture_function(lecture_id)
             timdb.lectures.delete_users_from_lecture(lecture_id)
             clean_dictionaries_by_lecture(lecture_id)
-    return get_running_lectures(doc_id)
+    return get_running_lectures()
 
 
 # Route to start lecture that's start time is in future
@@ -695,15 +674,17 @@ def check_if_lecture_is_running(lecture_id):
 
 
 # Gets all lectures that are currently running. Also gives the ones that are in the future
-def get_running_lectures(doc_id):
+def get_running_lectures():
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     lecture_code = "Not running"
-    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
+    list_of_lectures = timdb.lectures.get_all_lectures(time_now)
     current_lecture_codes = []
     future_lectures = []
-    is_lecturer = hasOwnership(doc_id)
+    is_lecturer = False
     for lecture in list_of_lectures:
+        if lecture.get("lecturer") == getCurrentUserId():
+            is_lecturer = True
         if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lecture_codes.append({"lecture_code": lecture.get("lecture_code"),
                                           "is_access_code": not (lecture.get("password") == "")})
@@ -874,9 +855,8 @@ def join_lecture():
 @app.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
     lecture_id = int(request.args.get("lecture_id"))
-    doc_id = int(request.args.get("doc_id"))
     leave_lecture_function(lecture_id)
-    return get_running_lectures(doc_id)
+    return get_running_lectures()
 
 
 def leave_lecture_function(lecture_id):
@@ -1480,11 +1460,16 @@ def start_page():
 @app.route("/view/")
 def index_page():
     timdb = getTimDb()
-    possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
-    return render_template('index.html',
+    current_user = getCurrentUserId()
+    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
+    if is_in_lecture:
+        is_in_lecture = check_if_lecture_is_running(lecture_id)
+    possible_groups = timdb.users.getUserGroupsPrintable(current_user)
+    return render_template('tempindex.html',
                            userName=getCurrentUserName(),
-                           userId=getCurrentUserId(),
-                           userGroups=possible_groups)
+                           userId=current_user,
+                           userGroups=possible_groups,
+                           in_lecture=is_in_lecture)
 
 
 @app.before_request

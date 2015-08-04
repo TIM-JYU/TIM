@@ -31,7 +31,7 @@
                 </select>
             </div>
             <div ng-if="question.type" style="overflow-x: auto">
-                {% include 'matrix.html' %}
+                <ng-include src="'/static/templates/matrix.html'"></ng-include>
             </div>
 
             <div id="questionTiming">

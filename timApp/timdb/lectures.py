@@ -147,6 +147,19 @@ class Lectures(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
+    def get_all_lectures(self, time: 'str'):
+        cursor = self.db.cursor()
+
+        cursor.execute("""
+                        SELECT lecture_code, start_time,end_time, password, lecturer
+                        FROM Lecture
+                        WHERE end_time > ?
+                        ORDER BY lecture_code
+                        """, [time])
+
+        return self.resultAsDictionary(cursor)
+
+    @contract
     def get_lecture_by_code(self, lecture_code: 'string', doc_id: 'int') -> 'int':
         cursor = self.db.cursor()
 

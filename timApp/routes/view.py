@@ -96,15 +96,20 @@ def try_return_folder(doc_name):
 
     if block_id is None:
         abort(404)
+    user = getCurrentUserId()
+    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
+    if is_in_lecture:
+        is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
-    return render_template('index.html',
+    return render_template('tempindex.html',
                            docID=block_id,
                            userName=getCurrentUserName(),
                            userId=getCurrentUserId(),
                            userGroups=possible_groups,
                            is_owner=hasOwnership(block_id),
-                           docName=folder_name)
+                           docName=folder_name,
+                           in_lecture=is_in_lecture)
 
 
 def view_content(doc_name, template_name, view_range=None):

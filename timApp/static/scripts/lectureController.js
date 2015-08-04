@@ -82,7 +82,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             http({
                 url: '/checkLecture',
                 method: 'GET',
-                params: {'doc_id': $scope.docId, 'buster': new Date().getTime()}
+                params: {'buster': new Date().getTime()}
             })
                 .success(function (answer) {
                     if (answer.isInLecture) {
