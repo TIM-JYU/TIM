@@ -256,8 +256,6 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                             }
                             if (datasets.length === 1) {
                                 for (var b = 0; b < datasets[0].bars.length; b++) {
-                                    // Jos muutetaan niin, että käytetään vastauksen valuea,
-                                    // voi datasets[0].bars[b].label kohdasta poistaa labelin. b === singleAnswer
                                     if ((b + 1) === parseInt(singleAnswer)) {
                                         datasets[0].bars[b].value += 1;
                                     }

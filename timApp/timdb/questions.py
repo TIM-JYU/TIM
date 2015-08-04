@@ -230,3 +230,24 @@ class Questions(TimDbBase):
                       """)
 
         return self.resultAsDictionary(cursor)
+
+    def get_multiple_asked_questions(self, asked_ids: 'int[]') -> 'list(dict)':
+        """
+        Gets multiple questions
+        :param question_ids: quesitons ids as integet array
+        :return: list of dictionaries of the matching questions.
+        """
+
+        cursor = self.db.cursor()
+        for_db = str(asked_ids)
+        for_db = for_db.replace("[", "")
+        for_db = for_db.replace("]", "")
+        cursor.execute("""
+                      SELECT *
+                      FROM AskedQuestion q
+                      INNER JOIN AskedJson j
+                      ON q.asked_json_id == j.asked_json_id
+                      WHERE q.asked_id IN (""" + for_db + """)
+                      """)
+
+        return self.resultAsDictionary(cursor)

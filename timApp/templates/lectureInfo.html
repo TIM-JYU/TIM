@@ -20,14 +20,14 @@
     <script src="{{ url_for('static', filename='scripts/Chart.min.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/showChartDirective.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/createLectureCtrl.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/directives/popUpDialog.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/lectureInfo.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/popUp.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/windowstyle.css') }}">
+
+    {% include 'common_head.html' %}
+
+    {% include 'lecture_head.html' %}
 
     <script>
         var docId = {{docId|tojson|safe}};
@@ -40,6 +40,9 @@
 {% endblock %}
 {% block content %}
     <div ng-app="timApp" ng-controller="LectureInfoController">
+        {% if in_lecture %}
+            {% include 'lecture.html' %}
+        {% endif %}
         <pop-up-dialog show="showLectureForm" caption="'Edit lecture'">
             <ng-include
                     src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
@@ -61,8 +64,8 @@
                 <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
                 <strong>Questions asked:</strong>
                 <ul>
-                    <li ng-repeat="question in questions" ng-bind-html="question.question_title">
-                        {{ "{{ question.question_title }}" }}
+                    <li ng-repeat="question in questions" ng-bind-html="question.json.TITLE">
+                        {{ "{{ question.json.TITLE }}" }}
                     </li>
                 </ul>
             </div>
@@ -86,13 +89,13 @@
             <div>
                 <div ng-repeat="question in questions" style="margin-bottom: 2em">
                     <p class="bold" ng-show="showPoints"
-                       ng-bind-html="question.question_title">{{ "{{question.question_title}}" }}</p>
+                       ng-bind-html="question.json.TITLE">{{ "{{question.json.TITLE}}" }}</p>
                     <p ng-show="showPoints"
                        ng-bind-html="question.json.QUESTION">{{ "{{question.json.QUESTION}}" }}</p>
-                    <show-chart-directive canvas='answerChart{{ "{{question.question_id }}" }}'
+                    <show-chart-directive canvas='answerChart{{ "{{question.asked_id }}" }}'
                                           control='dynamicAnswerShowControls[$index]'
                                           class="chart"></show-chart-directive>
-                    <canvas id='answerChart{{ "{{question.question_id }}" }}' width='400' height='300'></canvas>
+                    <canvas id='answerChart{{ "{{question.asked_id }}" }}' width='400' height='300'></canvas>
                     <p ng-show="showPoints">Points: <span ng-bind="points[$index]"> </span></p>
                 </div>
             </div>

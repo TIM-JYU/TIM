@@ -258,7 +258,7 @@ def get_lecture_info():
         if singleDict['user_name'] not in answerers:
             answerers.append(singleDict['user_name'])
 
-    lecture_questions = timdb.questions.get_multiple_questions(question_ids)
+    lecture_questions = timdb.questions.get_multiple_asked_questions(question_ids)
 
     is_lecturer = False
     current_user = getCurrentUserId()
@@ -269,8 +269,7 @@ def get_lecture_info():
 
     return jsonResponse(
         {"messages": messages, "answerers": answerers, "answers": answer_dicts, "questions": lecture_questions,
-         "isLecturer": is_lecturer,
-         "userName": user_name})
+         "isLecturer": is_lecturer, "userName": user_name})
 
 
 # Route to get all the messages from some lecture.
@@ -602,13 +601,15 @@ def show_lecture_info(lecture_id):
 
     lecture = lecture[0]
     doc = timdb.documents.get_document(lecture.get('doc_id'))
+    in_lecture, lecture_ids = timdb.lectures.check_if_in_any_lecture(getCurrentUserId())
     return render_template("lectureInfo.html",
                            doc=doc,
                            docId=lecture.get("doc_id"),
                            lectureId=lecture_id,
                            lectureCode=lecture.get("lecture_code"),
                            lectureStartTime=lecture.get("start_time"),
-                           lectureEndTime=lecture.get("end_time"))
+                           lectureEndTime=lecture.get("end_time"),
+                           in_lecture=in_lecture)
 
 
 # Route to get show lecture info of some specific lecture
