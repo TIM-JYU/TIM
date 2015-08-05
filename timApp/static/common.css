@@ -1,0 +1,127 @@
+.clearfix {
+    display: inline-block;
+    width: 100%;
+}
+
+div.header {
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.pull-left {
+    float: left;
+}
+
+.pull-right {
+    float: right;
+}
+
+div.header:hover .anchor {
+    visibility: visible;
+}
+
+a {
+    text-decoration: none;
+}
+
+.viewLogin {
+    min-width: 160px;
+    padding: 10px 5px 0 5px;
+    display: table;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    color: #3cc;
+}
+
+.viewLogin a {
+    font-size: 11px;
+    color: #3cc;
+}
+
+.viewLogin a:hover {
+    color: #4dd;
+    text-align: right;
+    text-decoration: none;
+}
+
+.viewLogin .loginButton:hover {
+    width: auto;
+}
+
+.viewLogin .loginButtonRow {
+}
+
+.viewLogin .loginButtonDiv {
+    width: auto;
+    height: 2em;
+    margin-top: 0.2em;
+    margin-left: 7em;
+    z-index: 300;
+    font-size: 2em;
+    text-align: left;
+}
+
+.viewLogin .loginwelcome {
+    margin-top: 2em;
+}
+
+.viewLogin .loginFieldDiv {
+    font-size: 12px;
+    margin-top: 1.5em;
+    margin-left: 3em;
+    line-height: 20px;
+    text-align: left;
+}
+
+.viewLogin .loginFieldLabel {
+    float: left;
+    width: 120px;
+    text-align: right;
+    margin-right: 20px;
+}
+
+.viewLogin .loginFieldInput {
+    width: 200px;
+}
+
+.viewLogin .loginFieldStatic {
+    width: 120px;
+}
+
+.viewLogin .loginButton {
+    background: #3CC;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: normal;
+    padding: 8px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.viewLogin form {
+    display: inline;
+}
+
+.draghandle {
+    min-height: 13px;
+    width: 100%;
+    background-color: #3CC;
+    position: initial;
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.draghandle p {
+    margin-top: 0;
+    padding-left: 1em;
+    height: 15px;
+    font-size: 13px;
+    line-height: 15px;
+    cursor: default;
+}
