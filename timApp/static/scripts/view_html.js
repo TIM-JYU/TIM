@@ -96,7 +96,13 @@ timApp.controller("ViewCtrl", [
             else if (math[1] !== '(') {
                 return;
             }
-            katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
+            try {
+                katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
+            }
+            catch(ParseError) {
+                $this.text(math);
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $this[0]]);
+            }
         };
 
 
