@@ -14,6 +14,10 @@
 	display:none;
 }
 
+.menuSection {
+    margin-top: 1em;
+}
+
 .menuSection #largeMenu {
     background-color: #3cc;
     border: 1px solid #3cc;
@@ -65,16 +69,9 @@
 
 .menuSection .lectureSection h1 {
     font-family: verdana;
-    padding-right: 10px;
-    padding-left: 10px;
     color: white;
     text-align: left;
-    margin-top: 0cm;
-    margin-bottom: 0cm;
-    border-top: none;
-    border-bottom: none;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    margin: 0 0 10px 0;
     line-height: 1;
 }
 
@@ -87,8 +84,7 @@
 
 .lectureSection p {
     float: left;
-    padding-left: 10px;
-    margin-left: 0;
+    margin: 0;
 	text-align: left;
 }
 
@@ -127,15 +123,243 @@
 	background:#e6e6e6;
 }
 
+
+/* Sisällysluetteloa varten =============================================*/
+
+
+
+.menu img {
+    max-width: 95%;
+    display: block;
+    margin: 0 auto;
+}
+
+#sidebarMenuButton {
+    display: none;
+}
+
+.contents {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 5;
+}
+
+#sidebarIcons {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+}
+
+.sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.sidebarMenu h4 {
+    margin: 15px 0 0 0;
+    color: #3cc;
+}
+
+.sidebarMenu p {
+    margin: 0;
+}
+
+.invisible {
+    height: 50px;
+    width: 50px;
+}
+
+.sidebar {
+    position: relative;
+    left: 44px;
+    top: -50px;
+    z-index: 500;
+    width: 180px;
+    padding: 0 10px 10px 10px;
+    max-height: 98vh;
+    word-wrap: break-word;
+    background-color: #e6e6e6;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.hidden, .autohidden {
+    display: none;
+}
+
+/*
+.index-sidebar-buttons, .lectures-sidebar-buttons, .questions-sidebar-buttons, .people-sidebar-buttons,
+.settings-sidebar-buttons {
+    width: 100%;
+    padding: 20px;
+    padding-top: 50px;
+    background: #e6e6e6;
+    z-index: 502;
+    position: fixed;
+    border-bottom: solid 4px #CCC;
+}*/
+
+.index-sidebar ul, .lectures-sidebar ul, .questions-sidebar ul, .people-sidebar ul, .settings-sidebar ul {
+    margin: 0;
+    padding-left: 10px;
+    text-align: left;
+    font-family: "Helvetica", Arial, sans-serif;
+    font-size: 0.9em;
+}
+
+.lectures-sidebar p, .questions-sidebar p, .people-sidebar p, .people-sidebar li, .settings-sidebar label {
+    text-align: left;
+    font-family: "Helvetica", Arial, sans-serif;
+    font-size: 0.85em;
+}
+
+.settings-sidebar ul {
+    font-size: 15px;
+}
+
+.sidebar li {
+    list-style: none;
+}
+
+.people-sidebar li {
+    padding-left: 0;
+}
+
+.collapse {
+    display: inline !important;
+    cursor: pointer;
+    margin-left: -16px !important;
+}
+
+/*
+.index-sidebar li.exp, .lectures-sidebar li.exp, .questions-sidebar li.exp, .people-sidebar li.exp {
+    list-style-image: url("/static/images/minus.png");
+    cursor: pointer;
+}
+
+.index-sidebar li.col, .lectures-sidebar li.col, .questions-sidebar li.col, .people-sidebar li.col, .settings-sidebar li.col {
+    list-style-image: url("/static/images/plus.png");
+    cursor: pointer;
+}*/
+
+.index-sidebar a {
+    text-align: left;
+    color: #2bb;
+}
+
+.settings-sidebar a {
+    margin-top: 5px;
+    margin-left: 15px;
+    color: blue;
+}
+
+.lectures-sidebar a, .questions-sidebar a, .people-sidebar a {
+    margin: 0;
+    text-align: left;
+    color: black;
+}
+
+.sidebar a:hover {
+    color: #3cc;
+    text-decoration: none;
+}
+
+.sidebar a.a1 {
+    font-size: 110%;
+}
+
+.sidebar a.a2 {
+    font-size: 100%;
+}
+
+.sidebar a.a3 {
+    font-size: 100%;
+    padding-left: 15px;
+}
+
+.sidebar h3, .sidebar h4 {
+    margin: 10px 0 0 0;
+}
+
+.sidebar h1 {
+    font-size: 120%;
+    background-color: #3cc;
+    color: white;
+    margin: 0 0 15px 0;
+    border: none;
+    padding-top: 10pt;
+    padding-bottom: 10pt;
+    padding-left: 10pt;
+    line-height: 1.3;
+    text-align: left;
+}
+
+.people-sidebar h3, .settings-sidebar h3 {
+    padding-left: 5px;
+    color: #3cc;
+    font-size: 15px;
+}
+
+.menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 500;
+    width: 45px;
+}
+
+.menu-icon {
+    z-index: 501;
+    background: #F0F0F0;
+    cursor: pointer;
+}
+
+.menu-icon:hover {
+    z-index: 501;
+    background: rgb(149, 149, 149) !important;
+    /* Filter disabled because it doesn't work with IE. It has been replaced with background color change.
+    filter: brightness(0.8);
+    -webkit-filter: brightness(0.8);
+    -moz-filter: brightness(0.8);*/
+}
+
 /*Pienet resoluutiot*/
 @media only screen and (max-width: 1200px) {
 	.menuSection #largeMenu {
 		display: none;
 	}
-	
+
 	.lecturesList {
 		display: block;
 	}
+
+    .sidebar.autohidden {
+        display: none;
+    }
+
+    #sidebarMenuButton {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 505;
+        display: block;
+        width: 46px;
+        height: 46px;
+    }
+
+    #sidebarMenuButton:hover {
+        cursor: pointer;
+    }
+
+    .menu, .sideMenu {
+        display: none;
+        top: 46px;
+        margin-top: 3px;
+    }
 
 	.smallMenu {
 		border: 1px solid #3cc;
@@ -176,25 +400,25 @@
 		width: 100%;
 		overflow: hidden;
 	}
-	
+
 	.lecturesList div {
 		margin-left: auto;
 		margin-right: auto;
 		width: 80%;
 	}
-	
+
 	.lecturesList img {
-		
+
 	}
-	
+
 	.lecturesList div ul {
 		display: block;
 	}
-	
+
 	.lecturesList div ul li{
         display:block;
     }
-	
+
 	.lecturesList div ul li p{
 		font-family: verdana;
 		font-size: 0.8em;
@@ -206,30 +430,36 @@
 		color: white;
 		width: 90%;
     }
-	
+
 	.currently  p{
 		color: black;
 		font-family: verdana;
 		font-size: 15px;
 		margin: 0;
 	}
-	
+
 	.currently  h2{
 		color: white;
 		font-family: verdana;
 		font-size: 20px;
 		margin: 0;
 	}
-	
+
 	#addLecture1, #addLecture2 {
 		cursor: pointer;
 	}
-	
+
 	.smallIconSection img{
 		display: inline;
 	}
-	
+
 	.index-sidebar, .lectures-sidebar, .questions-sidebar, .people-sidebar, .settings-sidebar {
 		max-height: calc(100vh - 60px);
 	}
+}
+
+@media only screen and (min-width: 1201px) {
+    .menu, .sideMenu {
+        display: block !important;
+    }
 }

@@ -1464,22 +1464,32 @@ def mark_all_read(doc_id):
 
 @app.route("/")
 def start_page():
-    return render_template('start.html')
+    timdb = getTimDb()
+    in_lecture = user_in_lecture()
+    return render_template('start.html',
+                           in_lecture=in_lecture)
 
 
 @app.route("/view/")
 def index_page():
     timdb = getTimDb()
     current_user = getCurrentUserId()
-    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
-    if is_in_lecture:
-        is_in_lecture = check_if_lecture_is_running(lecture_id)
+    in_lecture = user_in_lecture()
     possible_groups = timdb.users.getUserGroupsPrintable(current_user)
     return render_template('tempindex.html',
                            userName=getCurrentUserName(),
                            userId=current_user,
                            userGroups=possible_groups,
-                           in_lecture=is_in_lecture)
+                           in_lecture=in_lecture)
+
+
+def user_in_lecture():
+    timdb = getTimDb()
+    current_user = getCurrentUserId()
+    in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
+    if in_lecture:
+        in_lecture = check_if_lecture_is_running(lecture_id)
+    return in_lecture
 
 
 @app.before_request

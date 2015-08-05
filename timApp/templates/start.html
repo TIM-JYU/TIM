@@ -12,7 +12,6 @@
     <title>TIM - Welcome</title>
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
     <!-- Custom styles for this template -->
     <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
@@ -32,18 +31,40 @@
           $(this).tab('show')
         })
     </script>
+    {% if in_lecture %}
+        <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
+        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/jquery.waypoints.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/shortcuts/inview.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='ng-file-upload/angular-file-upload-all.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
+        {% include 'common_head.html' %}
+        {% include 'lecture_head.html' %}
+    {% endif %}
 </head>
 
 <body>
 
-<div class="container">
+<div class="container" {% if in_lecture %} ng-app="timApp" ng-controller="LectureController" {% endif %}>
     <div class="header clearfix">
-        <img alt="TIM - The Interactive Material." class="pull-left"
-             src="{{url_for('static', filename='images/tim-logo_42height.png')}}"/>
-        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-             src="{{url_for('static', filename='images/jyulogo.png')}}"/>
+        <a href="/">
+            <img alt="TIM - The Interactive Material." class="pull-left"
+                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
+        </a>
+        <a href="https://www.jyu.fi">
+            <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                 src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+        </a>
+        {% include 'loginlogout.html' %}
     </div>
-
+    {% if in_lecture %}
+        {% include 'lecture.html' %}
+    {% endif %}
     <div class="row largetext">
         <div class="col-md-2"></div>
         <div class="col-md-10">
@@ -67,10 +88,10 @@
 {% if session.user_id %}
             <p>You're logged in as {{session.real_name}} ({{session.user_name}}).<p>
             <ul>
-                <li><a href="/settings/">Customize TIM</li>
+                <li><a href="/settings/">Customize TIM</a></li>
                 <li><a href="/view/">Document index</a></li>
             </ul>
-            
+
             <form method="POST" action="/logout">
                 <div class="loginbutton">
                     <button type="submit">Log out</button>
@@ -85,7 +106,7 @@
             </div>
             <input type="hidden" name="token" value="{{ session.token }}">
             <div class="textfield indented">
-                <label for="username">User name</p> 
+                <label for="username">User name</label>
                 <p id="username">{{ session.user_name }}</p>
             </div>
             <div class="textfield indented">
@@ -93,15 +114,15 @@
                 <input id="realname" name="realname" type="text" value="{{ session.real_name }}">
             </div>
             <div class="textfield indented">
-                <label for="email">Email</p> 
+                <label for="email">Email</label>
                 <p id="realname">{{ session.email }}</p>
             </div>
             <div class="textfield indented">
-                <label for="password">New password</label> 
+                <label for="password">New password</label>
                 <input id="password" name="password" type="password">
             </div>
             <div class="textfield indented">
-                <label for="passconfirm">Repeat new password</label> 
+                <label for="passconfirm">Repeat new password</label>
                 <input id="passconfirm" name="passconfirm" type="password">
             </div>
             <div class="loginbutton">
@@ -205,7 +226,7 @@
         <div class="col-md-3">
             <h5>TIM</h5>
             <ul>
-                <li><a href="/view/tim/TIM-esittely">Esittely</a></li> 
+                <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
                 <li><a href="/view/tim/TIM-ohjeet">Ohjeet <sup>(*)</sup></a></li>
             </ul>
         </div>
@@ -227,7 +248,7 @@
     <footer class="footer">
         <p>&copy; Jyväskylän yliopisto</p>
         <ul>
-            <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</li>
+            <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</a></li>
         </ul>
     </footer>
 </div> <!-- /container -->
