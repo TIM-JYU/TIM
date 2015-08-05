@@ -33,24 +33,6 @@
     </style>
     {% if in_lecture %}
         {% include 'common_head.html' %}
-
-        <!-- Script to load question from another file -->
-        <script>
-            window.setsetting = function (setting, value) {
-                $.ajax({
-                    type: 'POST',
-                    url: '/sessionsetting/' + setting + '/' + value,
-                    success: function (data) {
-                        console.log(data);
-                        settings[setting] = value;
-                    },
-                    error: function () {
-                        console.log("Could not set setting.");
-                    }
-                });
-            };
-        </script>
-
         {% include 'lecture_head.html' %}
 
         <script>
