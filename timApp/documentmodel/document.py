@@ -315,7 +315,7 @@ class Document:
         :param par_id_first: The id of the paragraph that denotes the start of the section.
         :param par_id_last: The id of the paragraph that denotes the end of the section.
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_ids().get_blocks()
+        new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
         new_par_id_set = set([par['id'] for par in new_pars])
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
@@ -337,7 +337,7 @@ class Document:
 
         :param text: The new text for the document.
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_ids().get_blocks()
+        new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
         old_pars = [par for par in self]
 
         self._perform_update(new_pars, old_pars)

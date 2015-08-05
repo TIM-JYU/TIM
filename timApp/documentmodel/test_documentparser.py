@@ -91,12 +91,11 @@ test
                               {'id': 'ys55kUwXv6jY', 't': 'LTB4NDU5NDJkZWQ='},
                               {'id': 'ziJ7zlQXydZE', 't': 'LTB4YTU1MWNkMQ=='}],
                              [{'id': block['id'], 't': block['t']} for block in dp.get_blocks()])
-        dp.validate_ids()
+        dp.validate_structure()
         self.assertEqual([], DocumentParser('').get_blocks())
         self.assertListEqual([{'md': '```', 'type': 'code'}],
                              DocumentParser('```').get_blocks())
-        with self.assertRaises(ValidationException):
-            DocumentParser('#- {id=SoMUq2gZwvpI}\n\n#- {id=SoMUq2gZwvpI}').validate_ids()
+
         result = DocumentParser(doc_text).get_blocks(break_on_empty_line=True)
         self.assertListEqual([{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
                               {'md': 'text1', 'type': 'autonormal'},
@@ -116,7 +115,6 @@ test
                               {'md': '```\ncode\n```', 'type': 'code'},
                               {'md': 'test', 'type': 'autonormal'},
                               {'md': '# Test', 'type': 'header', 'attrs': {'a': 'b'}}], result)
-
         result = DocumentParser(doc_text).get_blocks(break_on_code_block=False,
                                                      break_on_header=False,
                                                      break_on_normal=False)
@@ -132,6 +130,55 @@ test
                               {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom'},
                               {'md': '```\ncode\n```\n\ntest', 'type': 'code'},
                               {'md': '# Test', 'attrs': {'a': 'b'}, 'type': 'header'}], result)
+
+    def test_validation(self):
+        failures = [
+            """
+#- {id=SoMUq2gZwvpI}
+
+#- {id=SoMUq2gZwvpI}
+        """,
+            """
+#- {area=test}
+""",
+            """
+#- {area_end=test}
+""",
+            """
+#- {area=test}
+#- {area_end=test}
+#- {area=test}
+#- {area_end=test}
+""",
+            """
+#- {area=test .some}
+#- {area=test2 .some}
+#- {area_end=test}
+#- {area_end=test2}
+""", """
+#- {area=test area_end=test}
+"""]
+
+        oks = [
+            """
+#- {area=test}
+#- {area_end=test}
+""",
+            """
+#- {area=test .some}
+#- {area=test2 .some}
+#- {area=test4 .some}
+#- {area_end=test4}
+#- {area_end=test2}
+#- {area=test3 .some}
+#- {area_end=test3}
+#- {area_end=test}
+"""]
+        for f in failures:
+            with self.assertRaises(ValidationException):
+                DocumentParser(f).validate_structure()
+        for o in oks:
+            DocumentParser(o).validate_structure()
 
 
 if __name__ == '__main__':
