@@ -175,7 +175,7 @@ debug_time = time.time()
 def show_time(s):
     global debug_time
     nyt = time.time()
-    print(s, nyt - debug_time)
+    # print(s, nyt - debug_time)
     debug_time = nyt
 
 
