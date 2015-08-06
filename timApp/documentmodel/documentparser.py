@@ -78,9 +78,12 @@ class DocumentParser:
                 r['id'] = id_func()
         return self
 
-    def validate_ids(self, id_validator_func=is_valid_id):
+    def validate_structure(self, id_validator_func=is_valid_id):
         self._parse_document(*self._last_setting)
         found_ids = set()
+        found_areas = set()
+        classed_areas = []
+        found_area_ends = set()
         for r in self._blocks:
             curr_id = r.get('id')
             if curr_id is not None:
@@ -89,6 +92,32 @@ class DocumentParser:
                 found_ids.add(curr_id)
                 if not id_validator_func(curr_id):
                     raise ValidationException('Invalid paragraph id: ' + curr_id)
+            attrs = r.get('attrs', {})
+            area = attrs.get('area')
+            if area:
+                if area in found_areas:
+                    raise ValidationException('Cannot have multiple areas with same name: ' + area)
+                has_classes = len(attrs.get('classes', [])) > 0
+                if has_classes:
+                    classed_areas.append(area)
+                found_areas.add(area)
+            area_end = attrs.get('area_end')
+            if area_end:
+                if area_end == area:
+                    raise ValidationException('Cannot have a zero-length area')
+                if area_end in classed_areas:
+                    if area_end != classed_areas[-1]:
+                        raise ValidationException('Classed areas cannot overlap ("{}" and "{}")'
+                                                  .format(classed_areas[-1], area))
+                    classed_areas.pop()
+                if area_end not in found_areas:
+                    raise ValidationException('No start found for area "{}"'.format(area_end))
+                if area_end in found_area_ends:
+                    raise ValidationException('Area already ended: ' + area_end)
+                found_area_ends.add(area_end)
+        unended_areas = found_areas - found_area_ends
+        if unended_areas:
+            raise ValidationException('Some areas were not ended: ' + str(unended_areas))
         return self
 
     def _parse_document(self, break_on_empty_line=False,
