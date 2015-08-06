@@ -96,7 +96,6 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @memberof module:createLectureCtrl
          */
         $scope.enableDate2 = function () {
-            $window.console.log($scope.startDate);
             $scope.dateCheck = true;
             $scope.dueCheck = false;
             $scope.endDate = $scope.startDate;
