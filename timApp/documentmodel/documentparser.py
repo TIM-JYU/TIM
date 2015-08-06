@@ -81,6 +81,7 @@ class DocumentParser:
     def validate_structure(self, id_validator_func=is_valid_id):
         self._parse_document(*self._last_setting)
         found_ids = set()
+        found_tasks = set()
         found_areas = set()
         classed_areas = []
         found_area_ends = set()
@@ -93,6 +94,11 @@ class DocumentParser:
                 if not id_validator_func(curr_id):
                     raise ValidationException('Invalid paragraph id: ' + curr_id)
             attrs = r.get('attrs', {})
+            task_id = attrs.get('taskId')
+            if task_id:
+                if task_id in found_tasks:
+                    raise ValidationException('Duplicate task id: ' + task_id)
+                found_tasks.add(task_id)
             area = attrs.get('area')
             if area:
                 if area in found_areas:
