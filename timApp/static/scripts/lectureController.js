@@ -505,10 +505,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.addPeopleToList = function (people, peopleList) {
-            var oldUser = false;
             for (var i = 0; i < people.length; i++) {
+                var oldUser = false;
                 for (var index = 0; index < peopleList.length; index++) {
-                    if (peopleList[index].name === people[i].name) {
+                    if (peopleList[index].id === people[i].user_id) {
                         oldUser = true;
                         peopleList[index].active = people[i].active;
                         break;
@@ -517,6 +517,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
                 if (!oldUser) {
                     var student = {
+                        id: people[i].user_id,
                         name: people[i].name,
                         active: people[i].active
                     };

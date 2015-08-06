@@ -665,11 +665,12 @@ def get_lecture_users(timdb, lecture_id):
             lecturers.append(lecturer)
 
         else:
-            if (user.get("user_id"), lecture_id) in __user_activity:
-                student = {"name": timdb.users.getUser(user.get('user_id')).get("name"),
-                           "active": __user_activity[user.get("user_id"), lecture_id]}
+            user_id = user.get("user_id")
+            if (user_id, lecture_id) in __user_activity:
+                student = {"name": timdb.users.getUser(user_id).get("name"),
+                           "active": __user_activity[user_id, lecture_id], "user_id": user_id}
             else:
-                student = {"name": timdb.users.getUser(user.get('user_id')).get("name"), "active": ""}
+                student = {"name": timdb.users.getUser(user_id).get("name"), "active": "", "user_id": user_id}
             students.append(student)
 
     return lecturers, students
