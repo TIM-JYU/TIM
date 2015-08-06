@@ -15,6 +15,7 @@
 
     <!-- Custom styles for this template -->
     <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -42,7 +43,6 @@
         <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='ng-file-upload/angular-file-upload-all.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
-        <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
         {% include 'common_head.html' %}
         {% include 'lecture_head.html' %}
     {% endif %}
