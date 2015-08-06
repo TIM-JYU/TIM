@@ -47,9 +47,14 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     scope.$on("editQuestion", function (event, data) {
             var id = data.question_id;
+            var asked_id = data.asked_id;
             var json = data.json;
 
-            if (id) scope.question.question_id = id;
+            if (id) {
+                scope.question.question_id = id;
+                scope.asked_id = false;
+            }
+            if (asked_id) scope.asked_id = asked_id;
             if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
             if (json["QUESTION"]) scope.question.question = scope.putBackQuotations(json["QUESTION"]);
             if (json["TYPE"]) scope.question.type = json["TYPE"];
@@ -470,12 +475,51 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
     };
 
+
+    scope.createPoints = function () {
+        var points = '';
+        var separator = '';
+        var separator2 = '';
+        if (scope.question.type === 'matrix' || scope.question.type === 'true-false') {
+            if (scope.question.matrixType !== 'textArea') {
+                for (var i = 0; i < scope.rows.length; i++) {
+                    points += separator;
+                    separator2 = '';
+                    for (var j = 0; j < scope.rows[i].columns.length; j++) {
+                        var currentColumn = scope.rows[i].columns[j];
+                        if (currentColumn.points !== '' && currentColumn.points != '0') {
+                            points += separator2;
+                            var id = parseInt(currentColumn.id) + 1;
+                            points += id.toString() + ':' + parseFloat(currentColumn.points) || 0;
+                            separator2 = ';';
+                        }
+                    }
+                    separator = '|';
+                }
+            }
+        } else {
+            for (var i = 0; i < scope.rows.length; i++) {
+                points += separator;
+                var currentColumn = scope.rows[i].columns[0];
+                if (currentColumn.points !== '' && currentColumn.points != '0') {
+                    points += separator2;
+                    var id = parseInt(scope.rows[i].id) + 1;
+                    points += id.toString() + ':' + parseFloat(currentColumn.points) || 0;
+                    separator2 = ';';
+                }
+            }
+        }
+        return points;
+    };
+
     /**
      * Validates and saves the question into the database.
      * @memberof module:questionController
      */
     scope.createQuestion = function (question, type, ask) {
-
+        if (scope.asked_id) {
+            return scope.updatePoints();
+        }
         scope.removeErrors();
         if (scope.question.question === undefined || scope.question.question.trim().length === 0 || scope.question.title === undefined || scope.question.title.trim().length === 0) {
             scope.errorize("questionName", "Both title and question are required for a question.");
@@ -595,38 +639,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             'DATA': {'HEADERS': headersJson, 'ROWS': rowsJson}
         };
 
-        var points = '';
-        var separator = '';
-        var separator2 = '';
-        if (scope.question.type === 'matrix' || scope.question.type === 'true-false') {
-            if (scope.question.matrixType !== 'textArea') {
-                for (var i = 0; i < scope.rows.length; i++) {
-                    points += separator;
-                    separator2 = '';
-                    for (var j = 0; j < scope.rows[i].columns.length; j++) {
-                        var currentColumn = scope.rows[i].columns[j];
-                        if (currentColumn.points !== '' && currentColumn.points != '0') {
-                            points += separator2;
-                            var id = parseInt(currentColumn.id) + 1;
-                            points += id.toString() + ':' + parseFloat(currentColumn.points) || 0;
-                            separator2 = ';';
-                        }
-                    }
-                    separator = '|';
-                }
-            }
-        } else {
-            for (var i = 0; i < scope.rows.length; i++) {
-                points += separator;
-                var currentColumn = scope.rows[i].columns[0];
-                if (currentColumn.points !== '' && currentColumn.points != '0') {
-                    points += separator2;
-                    var id = parseInt(scope.rows[i].id) + 1;
-                    points += id.toString() + ':' + parseFloat(currentColumn.points) || 0;
-                    separator2 = ';';
-                }
-            }
-        }
+        var points = scope.createPoints();
 
         var testJson = JSON.stringify(scope.question);
         testJson += JSON.stringify(scope.columnHeaders);
@@ -668,6 +681,25 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 }
             }).error(function () {
                 $window.console.log("There was some error creating question to database.");
+            });
+        scope.close();
+    };
+
+    scope.updatePoints = function () {
+        var points = scope.createPoints();
+        var rn = "?_=" + Date.now();
+        http({
+            method: 'POST',
+            url: '/updatePoints/' + rn,
+            params: {
+                'asked_id': scope.asked_id,
+                'points': points
+            }
+        })
+            .success(function () {
+                $window.console.log("Points successfully updated.");
+            }).error(function () {
+                $window.console.log("There was some error when updating points.");
             });
         scope.close();
     };

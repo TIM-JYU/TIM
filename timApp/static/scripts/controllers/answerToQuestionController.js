@@ -92,6 +92,26 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.close($scope.askAsNewEmit);
     };
 
+    $scope.edit = function () {
+        $http({
+            url: '/getAskedQuestionById',
+            method: 'GET',
+            params: {'asked_id': $scope.askedId, 'buster': new Date().getTime()}
+        })
+            .success(function (data) {
+                var json = JSON.parse(data.json);
+                $rootScope.$broadcast('changeQuestionTitle', {'title': json.TITLE});
+                $rootScope.$broadcast("editQuestion", {
+                    "asked_id": $scope.askedId,
+                    "json": json,
+                    "points": data.points
+                });
+            })
+            .error(function () {
+                console.log("There was some error creating question to database.");
+            });
+    };
+
     $scope.reAskEmit = function () {
         $scope.$emit('askQuestion', {
             "lecture_id": $scope.lectureId,

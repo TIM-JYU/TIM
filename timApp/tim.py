@@ -1204,6 +1204,29 @@ def ask_question():
     return jsonResponse(asked_id)
 
 
+# Route to get add question to database
+@app.route('/updatePoints/', methods=['POST'])
+def update_question_points():
+    # TODO: Only lecturers should be able to create questions.
+    # verifyOwnership(doc_id)
+    if 'asked_id' not in request.args or 'points' not in request.args:
+        abort("400")
+    asked_id = int(request.args.get('asked_id'))
+    points = request.args.get('points')
+    timdb = getTimDb()
+    asked_question = timdb.questions.get_asked_question(asked_id)[0]
+    lecture_id = int(asked_question['lecture_id'])
+    if not check_if_is_lecturer(lecture_id):
+        abort("400")
+    timdb.questions.update_asked_question_points(asked_id, points)
+    points_table = create_points_table(points)
+    question_answers = timdb.lecture_answers.get_answers_to_question(asked_id)
+    for answer in question_answers:
+        user_points = calculate_points(answer['answer'], points_table)
+        timdb.lecture_answers.update_answer_points(answer['answer_id'], user_points)
+    return jsonResponse("")
+
+
 def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_time):
     if question_timelimit == 0:
         return
@@ -1240,6 +1263,26 @@ def get_question_by_id():
     timdb = getTimDb()
     question = timdb.questions.get_question(question_id)
     return jsonResponse(question[0])
+
+
+@app.route("/getAskedQuestionById", methods=['GET'])
+def get_asked_question_by_id():
+    if not request.args.get("asked_id"):
+        abort("400")
+    # doc_id = int(request.args.get('doc_id'))
+    asked_id = int(request.args.get('asked_id'))
+    timdb = getTimDb()
+    question = timdb.questions.get_asked_question(asked_id)[0]
+    lecture_id = question['lecture_id']
+    if not check_if_is_lecturer(lecture_id):
+        abort("400")
+    return jsonResponse(question)
+
+
+def check_if_is_lecturer(lecture_id):
+    timdb = getTimDb()
+    current_user = getCurrentUserId()
+    return timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user
 
 
 @app.route("/stopQuestion", methods=['POST'])
@@ -1341,24 +1384,6 @@ def get_lecture_answers():
     return jsonResponse({"answers": lecture_answers, "askedId": asked_id, "latestAnswer": latest_answer})
 
 
-def create_points_table(points):
-    points_table = []
-    if points and points != '':
-        points_split = points.split('|')
-        for row in points_split:
-            row_points = row.split(';')
-            row_points_dict = {}
-            for col in row_points:
-                if col != '':
-                    col_points = col.split(':', 2)
-                    if len(col_points) == 1:
-                        row_points_dict[col_points[0]] = 1
-                    else:
-                        row_points_dict[col_points[0]] = float(col_points[1])
-            points_table.append(row_points_dict)
-    return points_table
-
-
 @app.route("/answerToQuestion", methods=['PUT'])
 def answer_to_question():
     if not request.args.get("asked_id") or not request.args.get('answers') or not request.args.get('lecture_id'):
@@ -1383,20 +1408,9 @@ def answer_to_question():
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer[0]["answer"]):
         time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
-        single_answers = []
-        all_answers = answer.split('|')
-        for answer in all_answers:
-            single_answers.append(answer.split(','))
-
         question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
         points_table = create_points_table(question_points)
-
-        points = 0.0
-        for (oneAnswer, point_row) in zip(single_answers, points_table):
-            for oneLine in oneAnswer:
-                if oneLine in point_row:
-                    points += point_row[oneLine]
-
+        points = calculate_points(answer, points_table)
         current_user = getCurrentUserId()
         if lecture_answer and current_user != 0:
             timdb.lecture_answers.update_answer(lecture_answer[0]["answer_id"], current_user, asked_id,
@@ -1406,6 +1420,37 @@ def answer_to_question():
         __pull_answer[asked_id, lecture_id].set()
 
     return jsonResponse("")
+
+def create_points_table(points):
+    points_table = []
+    if points and points != '':
+        points_split = points.split('|')
+        for row in points_split:
+            row_points = row.split(';')
+            row_points_dict = {}
+            for col in row_points:
+                if col != '':
+                    col_points = col.split(':', 2)
+                    if len(col_points) == 1:
+                        row_points_dict[col_points[0]] = 1
+                    else:
+                        row_points_dict[col_points[0]] = float(col_points[1])
+            points_table.append(row_points_dict)
+    return points_table
+
+
+def calculate_points(answer, points_table):
+    single_answers = []
+    all_answers = answer.split('|')
+    for answer in all_answers:
+        single_answers.append(answer.split(','))
+
+    points = 0.0
+    for (oneAnswer, point_row) in zip(single_answers, points_table):
+        for oneLine in oneAnswer:
+            if oneLine in point_row:
+                points += point_row[oneLine]
+    return points
 
 
 @app.route("/notes/<int:doc_id>")

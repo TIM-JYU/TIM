@@ -57,17 +57,44 @@ class LectureAnswers(TimDbBase):
         if commit:
             self.db.commit()
 
-    def get_answers_to_question(self, question_id: "int", timestamp: "string") -> 'list(dict)':
+    @contract
+    def update_answer_points(self, answer_id: 'int', points: "float", commit: 'bool'=True):
         """
-        Gets answers from specific question
-        :param question_id: question id
-        :param timestamp: gets answer that came after this time.
+        Update answers points
+        :param answer_id: answer id
+        :param points: new points
+        :param commit: commit the database
         :return:
         """
         cursor = self.db.cursor()
 
         cursor.execute("""
-            SELECT answer
+            UPDATE LectureAnswer
+            SET points = ?
+            WHERE answer_id = ?
+        """, [points, answer_id])
+
+        if commit:
+            self.db.commit()
+
+    def get_answers_to_question(self, question_id: "int", timestamp: "str|None"=None) -> 'list(dict)':
+        """
+        Gets answers from specific question
+        :param question_id: question id
+        :param timestamp: gets answer that came after this time (optional)
+        :return:
+        """
+        cursor = self.db.cursor()
+
+        if timestamp is None:
+            cursor.execute("""
+            SELECT answer_id, answer
+            FROM LectureAnswer
+            WHERE question_id = ?
+        """, [question_id])
+        else:
+            cursor.execute("""
+            SELECT answer_id, answer
             FROM LectureAnswer
             WHERE question_id = ? AND answered_on > ?
         """, [question_id, timestamp])

@@ -1,5 +1,5 @@
 <div class="ng-scope" style="text-align:left" ng-controller="QuestionController">
-    <div class="popUpWindow" id="questionWindow">
+    <div class="popUpWindow" id="questionWindow" ng-if="!asked_id">
         <form class="createQuestion" id="question-form">
             <div id="questionName">
                 <label>
@@ -78,5 +78,29 @@
             <button ng-click="close()">Cancel</button>
             <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
         </div>
+    </div>
+    <div class="popUpWindow" id="questionWindow" ng-if="asked_id">
+        <form class="createQuestion" id="question-form">
+            <h3>Question title: {{ question.title }}</h3>
+
+            <h3>Question title: {{ question.question }}</h3>
+
+            <p>Question type: {{ question.type }}</p>
+
+            <p ng-if="question.type == 'matrix'">Answer type: {{ question.matrixType }} </p>
+
+            <div ng-if="question.type" style="overflow-x: auto">
+                <ng-include src="'/static/templates/matrix.html'"></ng-include>
+            </div>
+            <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
+
+            <div class="buttons" id="question_buttons">
+                <button ng-if="!asked_id" ng-if="inLecture"
+                        ng-click="createQuestion(question.question, question.type, true)">Save and ask
+                </button>
+                <button ng-click="createQuestion(question.question, question.type)">Save</button>
+                <button ng-click="close()">Cancel</button>
+                <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
+            </div>
     </div>
 </div>

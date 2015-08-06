@@ -94,6 +94,25 @@ class Questions(TimDbBase):
         return question_id
 
     @contract
+    def update_asked_question_points(self, asked_id: 'int', points: 'str', commit: 'bool'=True) -> 'int':
+
+        """
+        Creates a new asked questions
+        :param commit: Commit or not to commit
+        :return: The id of the newly created asked question
+        """
+
+        cursor = self.db.cursor()
+        cursor.execute("""
+                       UPDATE AskedQuestion
+                       SET points = ?
+                       WHERE asked_id = ?
+                       """, [points, asked_id])
+        if commit:
+            self.db.commit()
+        return asked_id
+
+    @contract
     def get_asked_question(self, asked_id: 'int') -> 'list(dict)':
         """
         Gets the asked question by id
@@ -103,8 +122,9 @@ class Questions(TimDbBase):
         cursor.execute(
             """
             SELECT *
-            FROM AskedQuestion
-            WHERE asked_id = ?
+            FROM AskedQuestion a
+            INNER JOIN AskedJson j
+            WHERE a.asked_id = ? AND a.asked_json_id == j.asked_json_id
             """, [asked_id])
 
         return self.resultAsDictionary(cursor)
