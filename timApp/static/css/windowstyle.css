@@ -224,6 +224,7 @@ input[type="number"] {
 }
 
 .buttons button {
+    margin-top: 5px;
     background: #3CC;
     border: 0;
     border-radius: 3px;
