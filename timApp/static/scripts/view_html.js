@@ -393,7 +393,7 @@ timApp.controller("ViewCtrl", [
         // Event handler for "Add question below"
         // Opens pop-up window to create question.
         sc.addQuestion = function (e, $par) {
-            sc.toggleQuestion();
+            $rootScope.$broadcast('toggleQuestion');
             sc.par = $par;
         };
 

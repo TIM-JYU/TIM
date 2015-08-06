@@ -281,6 +281,11 @@ input[type="number"] {
     background: white;
 }
 
+
+.createQuestion th {
+    max-width: 15em;
+}
+
 .createQuestion table {
     margin-top: 2em;
     margin-left: 2em;
@@ -303,6 +308,7 @@ input[type="number"] {
 }
 
 #row-heading textarea {
+    box-sizing: border-box;
     resize: horizontal;
     width: auto;
     margin: auto;
@@ -341,8 +347,7 @@ th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop
 
 .answer-columns,
 #matrix-textarea {
-    width: 90px;
-    height: 30px;
+    margin: auto;
 }
 
 .negative button {

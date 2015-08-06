@@ -16,6 +16,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
 
+    scope.asked_id = false;
+
     scope.putBackQuotations = function (x) {
         return x.replace(/&quot;/g, '"');
     };
@@ -50,11 +52,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             var asked_id = data.asked_id;
             var json = data.json;
 
+            scope.asked_id = false;
             if (id) {
                 scope.question.question_id = id;
-                scope.asked_id = false;
+            } else if (asked_id) {
+                scope.asked_id = data.asked_id;
             }
-            if (asked_id) scope.asked_id = asked_id;
+
             if (json["TITLE"]) scope.question.title = scope.putBackQuotations(json["TITLE"]);
             if (json["QUESTION"]) scope.question.question = scope.putBackQuotations(json["QUESTION"]);
             if (json["TYPE"]) scope.question.type = json["TYPE"];
