@@ -9,13 +9,14 @@
                 <th ng-show="question.type == 'true-false'" class="true-false-title">False</th>
 
                 <th ng-repeat="item in columnHeaders" ng-if="question.type == 'matrix'" id="row-heading">
-                    <div style="position: relative">
+                    {{ asked_id !== false ? columnHeaders[$index].text : "" }}
+                    <div style="position: relative" ng-if="asked_id === false">
                     <div class="cart">
                         <textarea class="rowHeading" form="question-form" rows="1" cols="10"
                                   ng-model="columnHeaders[$index].text"></textarea>
                         <br/>
                     </div>
-                    <div class="buttonsTop" ng-if="!asked_id">
+                    <div class="buttonsTop">
                         <button ng-click="addCol($index)">+</button>
                         <button class="negative" ng-click="delCol($index)" style="margin-left: 28px;">-</button>
                     </div>
@@ -30,9 +31,10 @@
             <tbody>
             <tr ng-repeat="row in rows">
                 <th id="row-heading">
-                    <div style="position: relative">
+                    {{ asked_id !== false ? row.text : "" }}
+                    <div style="position: relative" ng-if="!asked_id">
                     <textarea class="rowHeading" ng-model="row.text" form="question-form" rows="1"
-                                  cols="20"></textarea>
+                                  cols="20" ng-disabled="asked_id"></textarea>
                     <div class="matrixButtons" ng-if="!asked_id">
                         <button ng-click="addRow($index)" style="clear:both; display: block;">+</button>
                         <button ng-click="delRow($index)" class="negative" style="display: block; margin-top: 20px;">-</button>
