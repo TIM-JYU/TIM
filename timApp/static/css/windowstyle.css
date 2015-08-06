@@ -424,3 +424,9 @@ and (-webkit-device-pixel-ratio: 3) {
         box-shadow: 4px 4px 80px #000;
     }
 }
+
+@media only screen and (max-device-width: 500px) {
+    .buttons button {
+        font-size: 15px;
+    }
+}
