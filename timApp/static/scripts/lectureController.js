@@ -170,6 +170,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $scope.questionTitle = data.title;
         });
 
+        $scope.$on('toggleQuestion', function (event, data) {
+            $scope.questionShown = !$scope.questionShown;
+        });
+
         /*
          Event listener for getLecture. Emits the boolean value if the user is in lecture
          */

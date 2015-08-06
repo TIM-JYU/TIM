@@ -64,8 +64,8 @@
                 <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
                 <strong>Questions asked:</strong>
                 <ul>
-                    <li ng-repeat="question in questions" ng-bind-html="question.json.TITLE">
-                        {{ "{{ question.json.TITLE }}" }}
+                    <li ng-repeat="question in questions">
+                        <a ng-click="editPoints(question.asked_id)">{{ "{{ question.json.TITLE }}" }}</a>
                     </li>
                 </ul>
             </div>

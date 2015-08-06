@@ -159,7 +159,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 scope.question.endTimeSelected = false;
             }
 
-            scope.toggleQuestion();
+            scope.$emit('toggleQuestion');
 
         }
     );
@@ -370,7 +370,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.close = function () {
         scope.removeErrors();
         scope.clearQuestion();
-        if (scope.questionShown) scope.toggleQuestion();
+        if (scope.questionShown) scope.$emit('toggleQuestion');
     };
 
     /**

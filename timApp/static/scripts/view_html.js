@@ -397,11 +397,6 @@ timApp.controller("ViewCtrl", [
             sc.par = $par;
         };
 
-        // Shows question window
-        sc.toggleQuestion = function () {
-            sc.questionShown = !sc.questionShown;
-        };
-
         $.fn.slideFadeToggle = function (easing, callback) {
             return this.animate({opacity: 'toggle', height: 'toggle'}, 'fast', easing, callback);
         };

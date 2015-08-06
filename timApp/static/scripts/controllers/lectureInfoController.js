@@ -63,6 +63,27 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
             });
     };
 
+    $scope.editPoints = function (asked_id) {
+        $http({
+            url: '/getAskedQuestionById',
+            method: 'GET',
+            params: {'asked_id': asked_id, 'buster': new Date().getTime()}
+        })
+            .success(function (data) {
+                var json = JSON.parse(data.json);
+                $scope.$broadcast('changeQuestionTitle', {'title': json.TITLE});
+                $scope.$broadcast("editQuestion", {
+                    "asked_id": asked_id,
+                    "json": json,
+                    "points": data.points
+                });
+            })
+            .error(function () {
+                console.log("There was some error creating question to database.");
+            });
+    };
+
+
     /*
      Gets the lecture info when loading page.
      */
