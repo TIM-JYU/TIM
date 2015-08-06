@@ -238,14 +238,13 @@ def pluginify(pars, user, answer_db, doc_id, user_id, custom_state=None, sanitiz
                 plugin_htmls = json.loads(response)
             except ValueError:
                 for idx in plugin_block_map.keys():
-                    pars[idx].set_html(get_error_html(plugin_name,
-                                                        'Failed to parse plugin response from reqs route.'))
+                    pars[idx].set_html(get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.'))
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
                 pars[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
-                                                                                     plugin_url,
-                                                                                     html))
+                                                                                   plugin_url,
+                                                                                   html))
         else:
             for idx, val in plugin_block_map.items():
                 try:
@@ -254,8 +253,8 @@ def pluginify(pars, user, answer_db, doc_id, user_id, custom_state=None, sanitiz
                     pars[idx].set_html(get_error_html(plugin_name, str(e)))
                     continue
                 pars[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
-                                                                                     plugin_url,
-                                                                                     html))
+                                                                                   plugin_url,
+                                                                                   html))
 
     return pars, js_paths, css_paths, modules
 
