@@ -1115,7 +1115,9 @@ def delete_note():
 
 @app.route("/getServerTime", methods=['GET'])
 def get_server_time():
-    return jsonResponse(int(time.time() * 1000))
+    t2 = int(time.time() * 1000)
+    t1 = int(request.args.get('t1'))
+    return jsonResponse({'t1': t1, 't2': t2, 't3': int(time.time() * 1000)})
 
 
 @app.route("/questions/<int:doc_id>")

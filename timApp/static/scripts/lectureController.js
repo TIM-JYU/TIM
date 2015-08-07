@@ -102,13 +102,17 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * Checks time offset between client server. Used to set question end time right.
          */
         $scope.getClockOffset = function () {
-            var t1 = new Date().valueOf();
             http({
                 url: '/getServerTime',
-                method: 'GET'
-            }).success(function (t2) {
-                var t3 = new Date().valueOf();
-                $scope.clockOffset = ((t2 - t1) + (t2 - t3)) / 2;
+                method: 'GET',
+                params: {'t1': new Date().valueOf()}
+            }).success(function (data) {
+                var t4 = new Date().valueOf();
+                var t3 = parseInt(data.t3);
+                var t2 = parseInt(data.t2);
+                var t1 = parseInt(data.t1);
+                $scope.clockOffset = ((t2 - t1) + (t3 - t4)) / 2;
+                console.log('Clock offset: ', $scope.clockOffset);
             });
         };
 
