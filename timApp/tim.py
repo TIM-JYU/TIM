@@ -547,6 +547,7 @@ def check_lecture():
     else:
         return jsonResponse("")
 
+
 # Route to start lecture that's start time is in future
 @app.route("/startFutureLecture", methods=['POST'])
 def start_future_lecture():
@@ -1303,6 +1304,7 @@ def stop_question():
         for question in __question_to_be_asked:
             if question[0] == lecture_id and question[1] == asked_id:
                 __question_to_be_asked.remove(question)
+                __extend_question[lecture_id, asked_id].set()
     return jsonResponse("")
 
 

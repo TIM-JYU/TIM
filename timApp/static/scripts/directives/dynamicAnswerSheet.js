@@ -152,6 +152,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         $scope.endTime = answer - $scope.$parent.clockOffset;
                         $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
                         $scope.internalControl.getExtendTime();
+                    } else {
+                        if (!$scope.$parent.isLecturer) {
+                            $interval.cancel(promise);
+                            clearInterval(promise);
+                            $element.empty();
+                            $scope.$emit('closeQuestion');
+                        }
                     }
                 }).error(function () {
                     console.log("Couldn't get extend time");
