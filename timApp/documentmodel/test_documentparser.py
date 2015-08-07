@@ -93,6 +93,8 @@ test
                              [{'id': block['id'], 't': block['t']} for block in dp.get_blocks()])
         dp.validate_structure()
         self.assertEqual([], DocumentParser('').get_blocks())
+        self.assertEqual('', DocumentWriter([]).get_text())
+        self.assertEqual('#- {a="b"}\n', DocumentWriter([{'md': '', 'attrs': {'a': 'b'}}]).get_text())
         self.assertListEqual([{'md': '```', 'type': 'code'}],
                              DocumentParser('```').get_blocks())
 
