@@ -653,11 +653,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             setsetting('timelimit', timeLimit.toString());
         }, 1000);
 
-        var rn = "?_=" + Date.now();
-
         http({
             method: 'POST',
-            url: '/addQuestion/' + rn,
+            url: '/addQuestion/',
             params: {
                 'question_id': scope.question.question_id,
                 'question_title': scope.question.title,
@@ -665,7 +663,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 'par_id': par_id,
                 'doc_id': doc_id,
                 'points': points,
-                'questionJson': JSON.stringify(questionJson)
+                'questionJson': JSON.stringify(questionJson),
+                'buster': new Date().valueOf()
             }
         })
             .success(function (data) {
@@ -691,13 +690,13 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
     scope.updatePoints = function () {
         var points = scope.createPoints();
-        var rn = "?_=" + Date.now();
         http({
             method: 'POST',
-            url: '/updatePoints/' + rn,
+            url: '/updatePoints/',
             params: {
                 'asked_id': scope.asked_id,
-                'points': points
+                'points': points,
+                'buster': new Date().valueOf()
             }
         })
             .success(function () {

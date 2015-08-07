@@ -643,6 +643,20 @@ def show_lecture_info_given_name():
     return jsonResponse(response)
 
 
+# Route to check if certain lecture needs password
+@app.route('/lectureNeedsPassword/', methods=['GET'])
+def lecture_needs_password():
+    timdb = getTimDb()
+    if 'lecture_id' in request.args:
+        lecture = timdb.lectures.get_lecture(int(request.args.get('lecture_id')))
+    else:
+        lecture = timdb.lectures.get_lecture_by_name(request.args.get('lecture_code'), int(request.args.get('doc_id')))
+    if len(lecture) <= 0:
+        abort(400)
+    lecture = lecture[0]
+    return jsonResponse(lecture.get("password") != '')
+
+
 # Gets users from specific lecture
 # returns 2 lists of dictionaries.
 # TODO: Think if it would be better to return only one

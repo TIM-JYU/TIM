@@ -93,10 +93,73 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 });
         };
 
-        /*
-         Checks if the user is in lecture when loading page.
+        /**
+         * Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
+         * @memberof module:lectureController
+         * @param name Name of the lecture to be joined.
          */
-        $scope.checkIfInLecture();
+        $scope.joinLecture = function (name, code_required) {
+            if (code_required) $scope.passwordQuess = $window.prompt("Please enter a password:", "");
+            if ($scope.chosenLecture === "" && name === "") {
+                $window.alert("Choose lecture to join");
+                return;
+            }
+
+            var lectureName = "";
+            if (angular.isDefined(name)) {
+                lectureName = name;
+                // $('#currentList').slideToggle();
+            } else {
+                lectureName = $scope.chosenLecture.lecture_code;
+            }
+
+            http({
+                url: '/joinLecture',
+                method: 'POST',
+                params: {
+                    'doc_id': $scope.docId,
+                    'lecture_code': lectureName,
+                    'password_quess': $scope.passwordQuess,
+                    'buster': new Date().getTime()
+                }
+            })
+                .success(function (answer) {
+                    $scope.passwordQuess = "";
+                    var input = $("#passwordInput");
+                    if (!answer.correctPassword) {
+                        $window.alert("Wrong access code!");
+                    } else {
+                        input.removeClass('errorBorder');
+                        input.attr("placeholder", "Access code");
+                        if ($scope.isLecturer) {
+                            $scope.showLectureView(answer);
+                            $scope.useWall = true;
+                            $scope.useQuestions = true;
+                        } else {
+                            $scope.showLectureOptions = true;
+                            $scope.lectureAnswer = answer;
+                        }
+                    }
+                });
+        };
+
+        var lectureCode = GetURLParameter('lecture');
+        if (lectureCode) {
+            http({
+                url: '/lectureNeedsPassword',
+                method: 'GET',
+                params: {
+                    'doc_id': $scope.docId,
+                    'lecture_code': lectureCode,
+                    'buster': new Date().valueOf()
+                }
+            }).success(function (data) {
+                $scope.joinLecture(lectureCode, data);
+            });
+
+        } else {
+            $scope.checkIfInLecture();
+        }
 
         /**
          * Checks time offset between client server. Used to set question end time right.
@@ -134,7 +197,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             http({
                 url: '/askQuestion',
                 method: 'POST',
-                params: args
+                params: args,
+                buster: new Date().getTime()
             })
                 .success(function (id) {
                     $scope.showStudentAnswers = true;
@@ -325,55 +389,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 $scope.showLectureOptions = true;
             }
             $scope.joinLecture();
-        };
-
-        /**
-         * Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
-         * @memberof module:lectureController
-         * @param name Name of the lecture to be joined.
-         */
-        $scope.joinLecture = function (name, code_required) {
-            if (code_required) $scope.passwordQuess = $window.prompt("Please enter a password:", "");
-            if ($scope.chosenLecture === "" && name === "") {
-                $window.alert("Choose lecture to join");
-                return;
-            }
-
-            var lectureName = "";
-            if (angular.isDefined(name)) {
-                lectureName = name;
-                $('#currentList').slideToggle();
-            } else {
-                lectureName = $scope.chosenLecture.lecture_code;
-            }
-
-            http({
-                url: '/joinLecture',
-                method: 'POST',
-                params: {
-                    'doc_id': $scope.docId,
-                    'lecture_code': lectureName,
-                    'password_quess': $scope.passwordQuess
-                }
-            })
-                .success(function (answer) {
-                    $scope.passwordQuess = "";
-                    var input = $("#passwordInput");
-                    if (!answer.correctPassword) {
-                        $window.alert("Wrong access code!");
-                    } else {
-                        input.removeClass('errorBorder');
-                        input.attr("placeholder", "Access code");
-                        if ($scope.isLecturer) {
-                            $scope.showLectureView(answer);
-                            $scope.useWall = true;
-                            $scope.useQuestions = true;
-                        } else {
-                            $scope.showLectureOptions = true;
-                            $scope.lectureAnswer = answer;
-                        }
-                    }
-                });
         };
 
         /**
@@ -730,7 +745,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             http({
                 url: '/deleteLecture',
                 method: 'POST',
-                params: {'doc_id': $scope.docId, lecture_id: $scope.lectureId}
+                params: {doc_id: $scope.docId, lecture_id: $scope.lectureId, buster: new Date().valueOf()}
             })
                 .success(function (answer) {
                     $scope.showBasicView(answer);
@@ -761,7 +776,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 http({
                     url: '/leaveLecture',
                     method: "POST",
-                    params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId}
+                    params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId, 'buster': new Date().valueOf()}
                 })
                     .success(function (answer) {
                         $scope.showBasicView(answer);
@@ -832,7 +847,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             http({
                 url: '/getAllMessages',
                 type: 'GET',
-                params: {lecture_id: $scope.lectureId, 'buster': new Date().getTime()}
+                params: {lecture_id: $scope.lectureId, buster: new Date().getTime()}
             })
                 .success(function (answer) {
                     angular.forEach(answer.data, function (msg) {
