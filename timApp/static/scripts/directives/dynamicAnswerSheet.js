@@ -121,8 +121,19 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $compile($scope);
 
                 if (!$scope.preview) {
+                    var $table = $element.find('#answer-sheet-table');
+                    window.setTimeout(function() {
+                        var $table = $element.find('#answer-sheet-table');
+                        console.log($table);
+                        var $input = null;
+                        if ($scope.json.ANSWERFIELDTYPE !== "text")
+                            $input = $table.find('input:first');
+                        else
+                            $input = $table.find('textarea:first');
+                        $input[0].focus();
+                    }, 0);
+                    $table.on('keyup.send', $scope.answerWithEnter);
                     var now = new Date().valueOf();
-                    var fakeTime = $scope.endTime - now;
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
                     var timeBetween = 100;
@@ -196,6 +207,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 var max = $scope.progressElem.attr("max");
                 $scope.progressElem.attr("value", max);
                 $scope.progressText.text("Time's up");
+            };
+
+            $scope.answerWithEnter = function (e) {
+                if (e.keyCode === 13) {
+                    $('#answer-sheet-table').off('keyup.send');
+                    $scope.$parent.answer();
+                }
             };
 
             /**
