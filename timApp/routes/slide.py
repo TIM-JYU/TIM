@@ -87,7 +87,6 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
                                                                 current_user['name'],
                                                                 timdb.answers,
-                                                                doc_id,
                                                                 current_user['id'],
                                                                 sanitize=False)
 
