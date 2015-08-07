@@ -157,6 +157,11 @@ test
 #- {area_end=test2}
 """, """
 #- {area=test area_end=test}
+""", """
+#- {#test}
+#- {#test}
+""", """
+#- {id=someinvalid}
 """]
 
         oks = [

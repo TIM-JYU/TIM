@@ -132,12 +132,12 @@ def try_load_json(json_str):
         return json_str
 
 
-def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True):
+def pluginify(pars, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph. The input HTML is assumed to be sanitized.
 
     :param sanitize: Whether the blocks should be sanitized before processing.
-    :param blocks: A list of DocParagraphs to be processed.
+    :param pars: A list of DocParagraphs to be processed.
     :param user: The current user's username.
     :param answer_db: A reference to the answer database.
     :param doc_id: The document id.
@@ -146,15 +146,15 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                          If this parameter is specified, the expression len(blocks) MUST be 1.
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
 
-    :type blocks: list[DocParagraph]
+    :type pars: list[DocParagraph]
     """
 
     if custom_state is not None:
-        if len(blocks) != 1:
+        if len(pars) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
     plugins = {}
     state_map = {}
-    for idx, block in enumerate(blocks):
+    for idx, block in enumerate(pars):
         if sanitize:
             block.set_html(sanitize_html(block.get_html()))
         if 'taskId' in block.get_attrs() and 'plugin' in block.get_attrs():
@@ -162,9 +162,9 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
             plugin_name = block.get_attrs()['plugin']
             if 'error' in vals:
                 block.set_html('<div class="pluginError">'
-                              'Error(s) occurred while rendering plugin.'
-                              '</div>'
-                              + get_error_html(plugin_name, vals['error']))
+                               'Error(s) occurred while rendering plugin.'
+                               '</div>'
+                               + get_error_html(plugin_name, vals['error']))
 
                 continue
 
@@ -196,13 +196,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
-                blocks[idx].set_html(get_error_html(plugin_name, str(e)))
+                pars[idx].set_html(get_error_html(plugin_name, str(e)))
             continue
         try:
             reqs = json.loads(resp)
         except ValueError:
             for idx in plugin_block_map.keys():
-                blocks[idx].set_html(get_error_html(plugin_name, 'Failed to parse JSON from plugin reqs route.'))
+                pars[idx].set_html(get_error_html(plugin_name, 'Failed to parse JSON from plugin reqs route.'))
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -232,17 +232,17 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
             except PluginException as e:
                 for idx in plugin_block_map.keys():
-                    blocks[idx].set_html(get_error_html(plugin_name, str(e)))
+                    pars[idx].set_html(get_error_html(plugin_name, str(e)))
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError:
                 for idx in plugin_block_map.keys():
-                    blocks[idx].set_html(get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.'))
+                    pars[idx].set_html(get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.'))
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                blocks[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
+                pars[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                    plugin_url,
                                                                                    html))
         else:
@@ -250,13 +250,13 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
                 except PluginException as e:
-                    blocks[idx].set_html(get_error_html(plugin_name, str(e)))
+                    pars[idx].set_html(get_error_html(plugin_name, str(e)))
                     continue
-                blocks[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
-                                                                                    plugin_url,
-                                                                                    html))
+                pars[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
+                                                                                   plugin_url,
+                                                                                   html))
 
-    return blocks, js_paths, css_paths, modules
+    return pars, js_paths, css_paths, modules
 
 
 def get_all_reqs():
@@ -264,7 +264,7 @@ def get_all_reqs():
     for plugin in PLUGINS.keys():
         try:
             resp = plugin_reqs(plugin)
-        except PluginException as e:
+        except PluginException:
             continue
         try:
             reqs = json.loads(resp)
