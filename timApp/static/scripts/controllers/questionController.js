@@ -129,7 +129,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                         text: jsonColumns[j].text,
                         points: columnPoints,
                         type: jsonColumns[j].type,
-                        answerFiledType: jsonColumns[j].answerFieldType
+                        answerFieldType: jsonColumns[j].answerFieldType
                     };
                 }
                 rows[i].columns = columns;
@@ -214,9 +214,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
 
 
-        if (type === 'radio-vertical' || 'true-false') scope.question.answerFieldType = 'radio';
-        else if (type === 'checkbox-vertical') scope.question.answerFieldType = 'checkbox';
-        else if (type === 'matrix') {
+        if (type === 'radio-vertical' || type === 'true-false') {
+            scope.question.answerFieldType = 'radio';
+        } else if (type === 'checkbox-vertical') {
+            scope.question.answerFieldType = 'checkbox';
+        } else if (type === 'matrix') {
             scope.question.answerFieldType = 'matrix';
         }
 
