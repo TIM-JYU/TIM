@@ -38,7 +38,7 @@ class DocumentWriter:
                 if not attrs_str:
                     text += p['md']
                 else:
-                    if blocks[0]['type'] == 'normal' or blocks[0]['type'] == 'autonormal':
+                    if len(blocks) == 0 or blocks[0]['type'] == 'normal' or blocks[0]['type'] == 'autonormal':
                         text += '#-' + ' {' + attrs_str + '}\n' + p['md']
                     else:
                         parts = blocks[0]['md'].split('\n', 1)

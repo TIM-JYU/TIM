@@ -120,7 +120,7 @@ class AttributeParser:
             return None, None
         value = ''
         quote_enabled = False
-        if self.current_char() == '"':
+        if self.has_chars() and self.current_char() == '"':
             quote_enabled = True
             self.get_char()
         while self.has_chars():

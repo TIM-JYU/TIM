@@ -4,6 +4,7 @@ from contracts import contract, new_contract
 from documentmodel.documentwriter import DocumentWriter
 from markdownconverter import md_to_html
 from .randutils import *
+from timdb.timdbbase import TimDbException
 
 
 class DocParagraphBase:
@@ -25,7 +26,7 @@ class DocParagraph(DocParagraphBase):
             attrs: 'dict|None'=None,
             src_dict: 'dict|None'=None,
             files_root: 'str|None'=None):
-
+        self.original = None
         if not attrs:
             attrs = {}
         self.files_root = self.get_default_files_root() if files_root is None else files_root
@@ -205,3 +206,45 @@ class DocParagraph(DocParagraphBase):
         self.__read()
         self.__write()
 
+    def is_reference(self):
+        return self.is_par_reference() or self.is_area_reference()
+
+    def is_par_reference(self):
+        attrs = self.get_attrs()
+        return 'rd' in attrs and 'rp' in attrs
+
+    def is_area_reference(self):
+        attrs = self.get_attrs()
+        return 'rd' in attrs and 'ra' in attrs
+
+    def get_referenced_pars(self):
+        attrs = self.get_attrs()
+        from documentmodel.document import Document  # Document import needs to be here to avoid circular import
+        try:
+            ref_doc = Document(int(attrs['rd']))
+        except ValueError as e:
+            raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
+        if not ref_doc.exists():
+            raise TimDbException('The referenced document does not exist.')
+        if self.is_par_reference():
+            if not ref_doc.has_paragraph(attrs['rp']):
+                raise TimDbException('The referenced paragraph does not exist.')
+            ref_par = ref_doc.get_paragraph(attrs['rp'])
+            ref_par.set_original(self)
+            return [ref_par]
+        elif self.is_area_reference():
+            ref_pars = ref_doc.get_named_section(attrs['ra'])
+            for p in ref_pars:
+                p.set_original(self)
+            return ref_pars
+        else:
+            assert False
+
+    def set_original(self, orig):
+        self.original = orig
+
+    def get_original(self):
+        return self.original
+
+    def is_plugin(self):
+        return 'taskId' in self.get_attrs()

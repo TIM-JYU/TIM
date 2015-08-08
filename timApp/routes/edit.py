@@ -6,6 +6,7 @@ from .common import *
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException
+from htmlSanitize import sanitize_html
 import pluginControl
 from timdb.docidentifier import DocIdentifier
 from timdb.timdbbase import TimDbException
@@ -81,7 +82,10 @@ def modify_paragraph():
     area_start = request.get_json().get('area_start')
     area_end = request.get_json().get('area_end')
     editing_area = area_start and area_end
-    editor_pars = get_pars_from_editor_text(doc_id, md, break_on_elements=editing_area)
+    try:
+        editor_pars = get_pars_from_editor_text(doc_id, md, break_on_elements=editing_area)
+    except ValidationException as e:
+        return abort(400, str(e))
 
     if editing_area:
         try:
@@ -122,7 +126,11 @@ def preview(doc_id):
     timdb = getTimDb()
     text, = verify_json_params('text')
     editing_area = request.get_json().get('area_start') is not None and request.get_json().get('area_end') is not None
-    blocks = get_pars_from_editor_text(doc_id, text, break_on_elements=editing_area)
+    try:
+        blocks = get_pars_from_editor_text(doc_id, text, break_on_elements=editing_area)
+    except ValidationException as e:
+        blocks = [DocParagraph(doc_id=doc_id)]
+        blocks[0].set_html('<div class="pluginError">{}</div>'.format(sanitize_html(str(e))))
     pars, js_paths, css_paths, modules, _ = post_process_pars(blocks, doc_id)
     return jsonResponse({'texts': pars,
                          'js': js_paths,
@@ -132,9 +140,9 @@ def preview(doc_id):
 
 def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
     blocks = [DocParagraph(doc_id=doc_id, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(text).get_blocks(break_on_code_block=break_on_elements,
-                                                         break_on_header=break_on_elements,
-                                                         break_on_normal=break_on_elements)]
+              for par in DocumentParser(text).validate_structure().get_blocks(break_on_code_block=break_on_elements,
+                                                                              break_on_header=break_on_elements,
+                                                                              break_on_normal=break_on_elements)]
     return blocks
 
 
@@ -163,7 +171,10 @@ def add_paragraph():
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
-    editor_pars = get_pars_from_editor_text(doc_id, md)
+    try:
+        editor_pars = get_pars_from_editor_text(doc_id, md)
+    except ValidationException as e:
+        return abort(400, str(e))
 
     # verify_document_version(doc_id, version)
     doc = get_newest_document(doc_id)
@@ -207,7 +218,6 @@ def post_process_pars(pars, doc_id):
     pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                  getCurrentUserName(),
                                                                  timdb.answers,
-                                                                 doc_id,
                                                                  getCurrentUserId())
     readings = timdb.readings.getReadings(getCurrentUserGroup(), Document(doc_id))
     pars_dict = dict((par.get_id(), par) for par in pars)

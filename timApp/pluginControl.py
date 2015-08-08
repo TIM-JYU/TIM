@@ -14,6 +14,7 @@ from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from documentmodel.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
+from timdb.timdbbase import TimDbException
 
 
 def correct_yaml(text):
@@ -132,15 +133,33 @@ def try_load_json(json_str):
         return json_str
 
 
-def pluginify(pars, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True):
+def dereference_pars(pars):
+    """Resolves references in the given paragraphs.
+
+    :type pars: list[DocParagraph]
+    :param pars: The DocParagraphs to be processed.
+    """
+    new_pars = []
+    for par in pars:
+        if par.is_reference():
+            try:
+                new_pars += par.get_referenced_pars()
+            except TimDbException as e:
+                par.set_html('<div class="pluginError">' + sanitize_html(str(e)) + '</div>')
+                new_pars.append(par)
+        else:
+            new_pars.append(par)
+    return new_pars
+
+
+def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
-        plugin route for each plugin paragraph. The input HTML is assumed to be sanitized.
+        plugin route for each plugin paragraph.
 
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param pars: A list of DocParagraphs to be processed.
     :param user: The current user's username.
     :param answer_db: A reference to the answer database.
-    :param doc_id: The document id.
     :param user_id: The user id.
     :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
                          If this parameter is specified, the expression len(blocks) MUST be 1.
@@ -148,6 +167,8 @@ def pluginify(pars, user, answer_db, doc_id, user_id, custom_state=None, sanitiz
 
     :type pars: list[DocParagraph]
     """
+
+    pars = dereference_pars(pars)
 
     if custom_state is not None:
         if len(pars) != 1:
@@ -171,7 +192,7 @@ def pluginify(pars, user, answer_db, doc_id, user_id, custom_state=None, sanitiz
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
             vals['markup']["user_id"] = user
-            task_id = "{}.{}".format(doc_id, block.get_attrs()['taskId'])
+            task_id = "{}.{}".format(block.get_doc_id(), block.get_attrs()['taskId'])
 
             if custom_state is not None:
                 state = try_load_json(custom_state)

@@ -41,7 +41,7 @@ def save_answer(plugintype, task_id):
     :return: JSON
     """
     timdb = getTimDb()
-
+    # TODO: Check if the task is from a referenced document
     doc_id, task_id_name = parse_task_id(task_id)
     verifyViewAccess(doc_id)
     if 'input' not in request.get_json():
@@ -164,7 +164,6 @@ def get_state():
     texts, js_paths, css_paths, modules = pluginControl.pluginify([block],
                                                                   user['name'],
                                                                   timdb.answers,
-                                                                  doc_id,
                                                                   user_id,
                                                                   custom_state=state)
     return jsonResponse(texts[0])

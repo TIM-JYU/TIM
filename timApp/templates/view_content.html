@@ -4,31 +4,27 @@
         {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
     {% endif %}
     {% for t in text %}
-        {% if 'taskId' in t.get_attrs() %}
-            <div class="par {{ t.get_class_str() }}"
-                 id="{{ t.get_id() }}"
-                 t="{{ t.get_hash() }}"
-                 attrs="{{ t.get_attrs_str() }}">
-                <answerbrowser
-                        task-id="{{ docID }}.{{ t.get_attrs()['taskId'] }}">
-                </answerbrowser>
-                <div class="parContent">
-                    {{ t.get_html()|safe }}
-                </div>
-                {{ editline|safe }}
-            </div>
-        {% else %}
-            <div class="par {{ t.get_class_str() }}"
-                 id="{{ t.get_id() }}"
-                 t="{{ t.get_hash() }}"
-                 attrs="{{ t.get_attrs_str() }}"
-                 ng-non-bindable>
-                <div class="parContent">
-                    {{ t.get_html()|safe }}
-                </div>
-                {{ editline|safe }}
-            </div>
-        {% endif %}
+        <div class="par {{ t.get_class_str() }}"
+                {% if t.get_original() %}
+             id="{{ t.get_original().get_id() }}"
+             t="{{ t.get_original().get_hash() }}"
+                {% else %}
+             id="{{ t.get_id() }}"
+             t="{{ t.get_hash() }}"
+                {% endif %}
+             attrs="{{ t.get_attrs_str() }}"
+                {% if t.is_plugin() %}>
+                    <answerbrowser
+                            task-id="{{ t.get_doc_id() }}.{{ t.get_attrs()['taskId'] }}">
+                    </answerbrowser>
+                {% else %}
+                    ng-non-bindable>
+                {% endif %}
+        <div class="parContent">
+            {{ t.get_html()|safe }}
+        </div>
+        {{ editline|safe }}
+        </div>
     {% endfor %}
     {% if rights.editable %}
         <div class="addBottomContainer">

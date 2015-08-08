@@ -151,7 +151,6 @@ def view_content(doc_name, template_name, view_range=None):
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
                                                                 current_user['name'],
                                                                 timdb.answers,
-                                                                doc_id,
                                                                 current_user['id'],
                                                                 sanitize=False)
 
@@ -225,7 +224,6 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
                                                                 current_user['name'],
                                                                 timdb.answers,
-                                                                doc_id,
                                                                 current_user['id'],
                                                                 sanitize=False)
     show_time('plugin loppu')

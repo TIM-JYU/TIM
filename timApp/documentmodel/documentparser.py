@@ -114,7 +114,7 @@ class DocumentParser:
                 if area_end in classed_areas:
                     if area_end != classed_areas[-1]:
                         raise ValidationException('Classed areas cannot overlap ("{}" and "{}")'
-                                                  .format(classed_areas[-1], area))
+                                                  .format(classed_areas[-1], area_end))
                     classed_areas.pop()
                 if area_end not in found_areas:
                     raise ValidationException('No start found for area "{}"'.format(area_end))

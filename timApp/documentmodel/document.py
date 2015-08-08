@@ -424,6 +424,23 @@ class Document:
         for par in old_pars:
             self.delete_paragraph(par)
 
+    def get_named_section(self, section_name):
+        start_found = False
+        end_found = False
+        pars = []
+        for par in self:
+            if par.get_attrs().get('area') == section_name:
+                start_found = True
+            if start_found:
+                pars.append(par)
+            if par.get_attrs().get('area_end') == section_name:
+                end_found = True
+                break
+        if not start_found or not end_found:
+            raise TimDbException('Area not found: ' + section_name)
+        return pars
+
+
 new_contract('Document', Document)
 
 
