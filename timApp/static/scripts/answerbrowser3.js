@@ -2,6 +2,17 @@ timLogTime("answerbrowser3 load","answ");
 
 var angular, Waypoint;
 var timApp = angular.module('timApp');
+var LAZYWORD = "lazylazylazy";
+var LAZYSTART="<!--lazy ";
+var LAZYEND =" lazy-->";
+
+
+function makeNotLazy(html) {
+    var s = html.replace(LAZYSTART,"");
+    var i = s.lastIndexOf(LAZYEND);
+    if ( i >= 0 ) s = s.substring(0,i);
+    return s.replace(LAZYEND,"");
+}
 
 timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
@@ -24,9 +35,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             link: function ($scope, $element, $attrs) {
                 timLogTime("answerbrowser link function","answ",1);
                 // $element.parents('.par').find('.parContent').html($compile(data.html)($scope));
-                var plugin = $element.parents('.par').find('.parContent')[0];
-                var origHtml = plugin.innerHTML;
-                plugin.innerHTML = "Kukkuu";
+                var plugin = $element.parents('.par').find('.parContent');
                 
                 $element.parent().on('mouseenter touchstart', function () {
                     if ( $scope.compiled ) return;
@@ -39,6 +48,18 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     //$element.html(newElement($scope));
                     var parent = $element.parents(".par")[0];
                     parent.replaceChild(newElement($scope.$parent)[0],$element[0]);
+                    
+                    // Next the inside of the plugin to non lazy
+                    var origHtml = plugin[0].innerHTML;
+                    if ( origHtml.indexOf(LAZYSTART) >= 0 ) {
+                        // plugin.html("Kukkuu");
+                    } else plugin = null;    
+                    if ( plugin ) {
+                        var newPluginHtml = makeNotLazy(origHtml);
+                        var newPluginElement = $compile(newPluginHtml);
+                        plugin.html(newPluginElement($scope.$parent));
+                        origHtml = null; // säästetään vähän tilaa
+                    }
                     //parent.insertBefore(newElement($scope),parent.firstChild);
                     //parent.firstChild = newElement($scope);
                     /*
@@ -100,7 +121,8 @@ timApp.directive("answerbrowserreal", ['$upload', '$http', '$sce', '$compile', '
                             state: $scope.selectedAnswer.content
                         }
                     }).success(function (data, status, headers, config) {
-                        $element.parents('.par').find('.parContent').html($compile(data.html)($scope));
+                        var newhtml = makeNotLazy(data.html);
+                        $element.parents('.par').find('.parContent').html($compile(newhtml)($scope));
                     }).error(function (data, status, headers, config) {
                         $window.alert('Error getting answers: ' + data.error);
                     }).finally(function () {

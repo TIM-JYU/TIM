@@ -1,9 +1,11 @@
+
 var katex, $, angular, modules, version, refererPath, docId, docName, rights, startIndex, users, teacherMode, crumbs;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
     'angularFileUpload',
     'ui.ace'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
+    timLogTime("timApp config","view");
     var interceptor = [
         '$q',
         '$rootScope',
@@ -50,6 +52,8 @@ timApp.controller("ViewCtrl", [
     '$document',
     function (sc, http, q, $upload, $injector, $compile, $window, $document) {
         "use strict";
+        timLogTime("VieCtrl start","view");
+
         http.defaults.headers.common.Version = version.hash;
         http.defaults.headers.common.RefererPath = refererPath;
         sc.docId = docId;
@@ -102,9 +106,11 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.processAllMath = function ($elem) {
+            timLogTime("processAllMath start","view");
             $elem.find('.math').each(function () {
                 sc.processMath(this);
             });
+            timLogTime("processAllMath end","view");
         };
 
         sc.processMath = function (elem) {
@@ -770,7 +776,7 @@ timApp.controller("ViewCtrl", [
             }).error(function (data, status, headers, config) {
                 $window.alert("Could not fetch notes.");
             });
-        };
+       };
 
         sc.getReadPars = function () {
             if (!sc.rights.can_mark_as_read) {
@@ -862,6 +868,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getIndex = function () {
+            timLogTime("getindex","view");
             http.get('/index/' + sc.docId).success(function (data, status, headers, config) {
                 var parentEntry = null;
                 sc.indexTable = [];
@@ -909,6 +916,8 @@ timApp.controller("ViewCtrl", [
                     }
                     sc.indexTable.push(parentEntry);
                 }
+                timLogTime("getindex done","view");
+
             }).error(function (data, status, headers, config) {
                 $window.alert("Could not fetch index entries.");
             });
@@ -954,11 +963,13 @@ timApp.controller("ViewCtrl", [
         sc.editorFunctions = [sc.showNoteWindow, sc.showEditWindow, sc.showAddParagraphAbove,
             sc.showAddParagraphBelow, sc.doNothing];
 
+        timLogTime("getList start","view");
         sc.setHeaderLinks();
         sc.indexTable = [];
         sc.getIndex();
         sc.getNotes();
         sc.getReadPars();
+        timLogTime("getList end","view");
 
 
         // Tässä jos lisää bindiin 'mousedown' scrollaus menua avattaessa ei toimi Androidilla
@@ -985,4 +996,6 @@ timApp.controller("ViewCtrl", [
         sc.processAllMath($('body'));
 
         sc.defaultAction = sc.showOptionsWindow;
+        timLogTime("VieCtrl end","view");
+
     }]);

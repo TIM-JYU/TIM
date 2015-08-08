@@ -1848,3 +1848,25 @@ p.plgfooter {
 #teksti:focus {
     outline: none;
 }
+
+.lazyHidden {
+    visibility: hidden;
+}    
+
+.lazyVisible {
+    margin-top: 0pt;
+    padding-top: 0pt;
+}
+
+.csLazyPre {
+    margin-left: 0.7em;
+    border-left: none;
+    margin-top: 0pt;
+    padding-top: 0pt;
+}
+
+.csLazyPre pre {
+    margin-left: 0pt;
+	border-left: thin solid #0066FF;
+    padding-left: 0pt;
+}

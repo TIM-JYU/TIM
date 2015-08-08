@@ -16,6 +16,7 @@ from subprocess import PIPE, Popen, check_output
 from fileParams3 import *
 # from requests import Request, Session
 import datetime
+import cgi
 
 # cs3.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
@@ -77,6 +78,9 @@ import datetime
 
 PORT = 5000
 
+LAZYWORD ="lazylazylazy"
+LAZYSTART="<!--lazy "
+LAZYEND =" lazy-->"
 
 def generate_filename():
     return str(uuid.uuid4())
@@ -276,15 +280,25 @@ def removedir(dirname):
         return
 
 
-def get_html(ttype, query):
+def get_html(ttype, query, isLazy):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
     if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    doLazy = isLazy
+    lazy = get_param(query, "lazy", "")
+    if str(lazy).lower() == "true":  doLazy = True
+    if str(lazy).lower() == "false": doLazy = False
+    print(lazy,doLazy)
     
     js = query_params_to_map_check_parts(query)
     print(js)
     if "byFile" in js and not ("byCode" in js):
         js["byCode"] = get_url_lines_as_string(js["byFile"])
+    bycode = ""
+    if "byCode" in js: bycode = js["byCode"]  
+    if get_param(query, "noeditor", False): bycode = ""
+
+    
     jso = json.dumps(js)
     # print(jso)
     runner = 'cs-runner'
@@ -299,11 +313,27 @@ def get_html(ttype, query):
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
+    lazyVisible = ""
+    lazyClass = ""
+    lazyStart = ""
+    lazyEnd = ""
+    
     if "csconsole" in ttype:  # erillinen konsoli
         r = "cs-console"
+        
+    if doLazy:
+        # r = LAZYWORD + r;   
+        lazyVisible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>'+cgi.escape(bycode)+'</pre></div>') + '</div>'
+        # lazyClass = ' class="lazyHidden"'
+        lazyStart = LAZYSTART
+        lazyEnd = LAZYEND
+
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
-        s = '<' + r + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>'
+        s = lazyStart + '<' + r + lazyClass + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>' + lazyEnd
+        # s += '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csEditorAreaDiv"><div  class="csrunEditorDiv"><textarea class="csRunArea csInputArea">'+bycode+"</textarea>") + '</div></div></div>'
+        s += lazyVisible
+        # s += '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csEditorAreaDiv csrunEditorDiv csRunCode"><textarea class="csRunArea csInputArea">'+bycode+"</textarea>") + '</div></div>'
     return s
 
 
@@ -402,6 +432,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         # print("do_POST =================================================")
+        self.isLazy = False
+
         if self.path.find('/multihtml') < 0:
             self.do_all(post_params(self))
             return
@@ -416,6 +448,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print("UserId:", self.user_id)
         log(self)
         # print(querys)
+        self.isLazy = len(querys) > 1
 
         for query in querys:
             # print(query.jso)
@@ -429,7 +462,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             ttype = get_param(query, "type", "cs").lower()
             if is_tauno: ttype = 'tauno'
             if is_parsons: ttype = 'parsons'
-            s = get_html(ttype, query)
+            s = get_html(ttype, query, self.isLazy)
             # print(s)
             htmls.append(s)
 

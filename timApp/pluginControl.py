@@ -15,6 +15,9 @@ from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from htmlSanitize import sanitize_html
 
+LAZYSTART= "<!--lazy "
+LAZYEND = " lazy-->"
+NOLAZY = "<!--nolazy-->"
 
 def correct_yaml(text):
     """
@@ -192,7 +195,7 @@ def try_load_json(json_str):
         return json_str
 
 
-def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True):
+def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanitize=True, do_lazy=False):
     """ "Pluginifies" or sanitizes the specified HTML blocks by inspecting each block
     for plugin markers, calling the corresponding plugin route if such is found. The input
     HTML is assumed to be sanitized.
@@ -207,7 +210,6 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                          If this parameter is specified, the expression len(blocks) MUST be 1.
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
     """
-
     if custom_state is not None:
         if len(blocks) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
@@ -312,6 +314,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+                html = make_lazy(html, markup, do_lazy)
                 final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                          plugin_url,
                                                                                          html)
@@ -322,11 +325,27 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 except PluginException as e:
                     final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
                     continue
+                html = make_lazy(html, val, do_lazy)
                 final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                                          plugin_url,
                                                                                          html)
 
     return final_html_blocks, js_paths, css_paths, modules
+
+
+def get_markup_value(markup, key, default):
+    if key not in markup["markup"]: return default
+    return markup["markup"][key]
+
+
+def make_lazy(html, markup, do_lazy):
+    if not do_lazy: return html
+    if html.find(NOLAZY) >= 0: return html  # not allowed to make lazy
+    if not get_markup_value(markup,"lazy", True): return html # user do not want lazy
+    if html.find(LAZYSTART) >= 0: return html # allredy lazy
+    header = get_markup_value(markup, "header", "Check your understanding")
+    stem = get_markup_value(markup, "stem", "Open plugin")
+    return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + "<div><p>" + stem + "</p></div>"
 
 
 def get_all_reqs():

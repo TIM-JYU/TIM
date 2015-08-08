@@ -219,7 +219,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 	csApp.taunoPHIndex = 3;
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
-	return  '<div class="csRunDiv no-popup-menu">' + 
+	return  '<div class="csRunDiv no-popup-menu" ng-cloak>' + 
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
@@ -284,7 +284,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
-				  '<pre  class="console" ng-show="result">{{result}}</pre>'+
+				  '<pre  class="console ng-hide" ng-show="result" ng-cloak>{{result}}</pre>'+
 				  '<div  class="htmlresult" ng-if="htmlresult" ><span ng-bind-html="svgImageSnippet()"></span></div>'+
 				  //'<div  class="userlist" tim-draggable-fixed style="top: 39px; right: 408px;"><span>Raahattava</span>'+
 				  '<span  class="csrunPreview"></span>'+

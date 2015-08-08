@@ -111,7 +111,8 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                                                                 timdb.answers,
                                                                 doc_id,
                                                                 current_user['id'],
-                                                                sanitize=False)
+                                                                sanitize=False,
+                                                                do_lazy=True)
 
     reqs = pluginControl.get_all_reqs()
 
