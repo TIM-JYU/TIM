@@ -14,7 +14,6 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             var clickFn = null;
             if (attr.click) {
                 var clickFn = $parse(attr.click);
-                console.log(clickFn);
             }
 
             /*
