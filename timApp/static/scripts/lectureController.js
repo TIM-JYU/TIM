@@ -417,7 +417,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $scope.showWall = !$scope.showWall;
             if (!$scope.showWall) {
                 $scope.wallHeight = wall.height();
-                wall.height(13);
+                wall.height(15);
                 base.css('display', 'none');
                 wall.css('min-height', '0');
             } else {
