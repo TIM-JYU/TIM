@@ -1,13 +1,8 @@
 <div ng-controller="LectureController" ng-cloak>
     {% include 'lectureinfo_menu.html' %}
-    <div class="wall-behind" id="wall" ng-show="useWall" ng-cloak tim-draggable-fixed caption="Lecture Wall"
+    <div class="wall-behind" id="wall" ng-show="useWall" ng-cloak tim-draggable-fixed click="hideWall()" caption="{% raw %}{{ wallName }}{% endraw %}"
          resize="true">
         <div class="wall-base" id="wallBase">
-            {# <div class="wall-topbar" ng-mousedown="checkDown($event)" ng-mouseup="checkUp($event)"
-                         ng-click="hideWall()">
-                        <span ng-bind="wallName">Wall</span>
-                        <span ng-show="!showWall && newMessagesAmount > 0" ng-bind="newMessagesAmountText"></span>
-                    </div> #}
             <div class="wall-message-area">
                 <textarea id="wallArea" readonly cols="100">{{ "{{msg}}" }}</textarea>
             </div>

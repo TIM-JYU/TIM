@@ -1,7 +1,7 @@
 var angular;
 var timApp = angular.module('timApp');
 
-timApp.directive('timDraggableFixed', ['$document', '$window', function ($document, $window) {
+timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
 
     var resizableConfig = {};
 
@@ -11,26 +11,31 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
 
         link: function (scope, element, attr) {
 
+            var clickFn = null;
+            if (attr.click) {
+                var clickFn = $parse(attr.click);
+                console.log(clickFn);
+            }
+
             /*
-            element.css('top', element.position().top);
-            element.css('left', element.position().left); */
+             element.css('top', element.position().top);
+             element.css('left', element.position().left); */
 
             if (attr.resize) {
                 $window.setTimeout(function () {
-                element.resizable();
-                element.on('resizestop', function () {
-                    if (attr.callback) attr.callback();
-                });
-            }, 200);
+                    element.resizable();
+                    element.on('resizestop', function () {
+                        if (attr.callback) attr.callback();
+                    });
+                }, 200);
             }
-
 
 
             var handle = $("<div>", {class: "draghandle"});
             if (attr.caption) handle.append('<p>' + attr.caption + '</p>');
             element.prepend(handle);
 
-            attr.$observe('caption', function() {
+            attr.$observe('caption', function () {
                 var handle = $(element).find('.draghandle');
                 handle.empty();
                 handle.append('<p>' + attr.caption + '</p>');
@@ -98,6 +103,15 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
             function release(e) {
                 $document.off('mouseup touchend', release);
                 $document.off('mousemove touchmove', move);
+                pos = getPageXY(e);
+
+
+                if (e.which === 1) {
+                    delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
+                    if (Math.abs(delta.Y) < 3 && Math.abs(delta.X) < 3) {
+                        clickFn(scope);
+                    }
+                }
             }
 
             function move(e) {
@@ -106,8 +120,8 @@ timApp.directive('timDraggableFixed', ['$document', '$window', function ($docume
                 //console.log(prevTop);
 
                 /*
-                element.css('top', prevTop + delta.Y);
-                element.css('left', prevLeft + delta.X);*/
+                 element.css('top', prevTop + delta.Y);
+                 element.css('left', prevLeft + delta.X);*/
 
                 if (setTop)
                     element.css('top', prevTop + delta.Y);

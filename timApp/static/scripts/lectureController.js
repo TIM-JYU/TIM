@@ -85,10 +85,41 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 params: {'doc_id': $scope.docId, 'buster': new Date().getTime()}
             })
                 .success(function (answer) {
-                    if (answer.isInLecture) {
-                        $scope.showLectureView(answer);
+                    var lectureCode = GetURLParameter('lecture');
+
+                    if (lectureCode) {
+                        var changeLecture = true;
+
+                        if (answer.isInLecture) {
+                            if (answer.lectureCode == lectureCode) {
+                                changeLecture = false;
+                            } else {
+                                changeLecture = $window.confirm("You are already in lecture " + answer.lectureCode +
+                                    '. Do you want to switch to lecture ' + lectureCode + '?');
+                            }
+                        }
+                        if (changeLecture) {
+                            if (answer.isInLecture) $scope.leaveLecture(answer.lectureId);
+                            http({
+                                url: '/lectureNeedsPassword',
+                                method: 'GET',
+                                params: {
+                                    'doc_id': $scope.docId,
+                                    'lecture_code': lectureCode,
+                                    'buster': new Date().valueOf()
+                                }
+                            }).success(function (data) {
+                                $scope.joinLecture(lectureCode, data);
+                            });
+                        } else {
+                            $scope.showLectureView(answer);
+                        }
                     } else {
-                        $scope.showBasicView(answer);
+                        if (answer.isInLecture) {
+                            $scope.showLectureView(answer);
+                        } else {
+                            $scope.showBasicView(answer);
+                        }
                     }
                 });
         };
@@ -143,23 +174,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 });
         };
 
-        var lectureCode = GetURLParameter('lecture');
-        if (lectureCode) {
-            http({
-                url: '/lectureNeedsPassword',
-                method: 'GET',
-                params: {
-                    'doc_id': $scope.docId,
-                    'lecture_code': lectureCode,
-                    'buster': new Date().valueOf()
-                }
-            }).success(function (data) {
-                $scope.joinLecture(lectureCode, data);
-            });
-
-        } else {
-            $scope.checkIfInLecture();
-        }
+        $scope.checkIfInLecture(true);
 
         /**
          * Checks time offset between client server. Used to set question end time right.
@@ -392,42 +407,26 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /**
-         * Checks where the mouse is when clicking the wall. Sets style to absolute for the draggable directive.
-         * @param e Event of the mouse click.
-         * @memberof module:lectureController
-         */
-        $scope.checkDown = function (e) {
-            $scope.mouseDownX = e.clientX;
-            $scope.mouseDownY = e.clientY;
-            wall.position("absolute");
-            wall.css("bottom", "auto");
-            $scope.wallMoved = true;
-
-        };
-
-        /**
-         * Checks where th mouse is when releasing the wall. If the mouse hasn't moved enough, closes the wall.
-         * @param e Event of the mouse release.
-         * @memberof module:lectureController
-         */
-        $scope.checkUp = function (e) {
-            var mouseUpX = e.clientX;
-            var mouseUpY = e.clientY;
-            wall.position("fixed");
-
-            if (Math.abs(Math.sqrt(Math.pow(($scope.mouseDownX - mouseUpX), 2) + Math.pow(($scope.mouseDownY - mouseUpY), 2))) < 10) {
-                $scope.wallMoved = false;
-            }
-        };
-
-        /**
          * Hides the wall if the wall hasn't moved.
          * @memberof module:lectureController
          */
         $scope.hideWall = function () {
-            if (!$scope.wallMoved) {
-                $scope.hide();
+            var base = wall.find('#wallBase');
+            $scope.newMessagesAmount = 0;
+            $scope.newMessagesAmountText = '';
+            $scope.showWall = !$scope.showWall;
+            if (!$scope.showWall) {
+                $scope.wallHeight = wall.height();
+                wall.height(13);
+                base.css('display', 'none');
+                wall.css('min-height', '0');
+            } else {
+                base.css('display', '');
+                wall.css('min-height', '');
+                wall.height($scope.wallHeight);
             }
+            $scope.wallName = 'Wall - ' + $scope.lectureName;
+            $scope.$apply();
         };
 
         /**
@@ -764,7 +763,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * Sends http request to leave the lecture.
          * @memberof module:lectureController
          */
-        $scope.leaveLecture = function () {
+        $scope.leaveLecture = function (lecture_id) {
             //TODO: better confirm dialog
             var confirmAnswer = false;
             if ($scope.isLecturer) {
@@ -776,28 +775,15 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 http({
                     url: '/leaveLecture',
                     method: "POST",
-                    params: {'lecture_id': $scope.lectureId, 'doc_id': $scope.docId, 'buster': new Date().valueOf()}
+                    params: {
+                        'lecture_id': lecture_id || $scope.lectureId,
+                        'doc_id': $scope.docId,
+                        'buster': new Date().valueOf()
+                    }
                 })
                     .success(function (answer) {
                         $scope.showBasicView(answer);
                     });
-            }
-        };
-
-        /**
-         * Hides the wall. After this you can only see the topbar of the wall.
-         * @memberof module:lectureController
-         */
-        $scope.hide = function () {
-            $scope.showWall = !$scope.showWall;
-
-            if (!$scope.showWall) {
-                $scope.wallHeight = wall.height();
-                wall.height(28);
-                $scope.newMessagesAmount = 0;
-                $scope.newMessagesAmountText = "(" + $scope.newMessagesAmount + ")";
-            } else {
-                wall.height($scope.wallHeight);
             }
         };
 
@@ -979,7 +965,9 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             }, 1000);
 
                             if (answer.status === 'results') {
+                                var newMessages = 0;
                                 angular.forEach(answer.data, function (msg) {
+                                    newMessages++;
                                     $scope.wallMessages.push(msg);
                                     if ($scope.messageName && $scope.messageTime) {
                                         $scope.msg += msg.sender;
@@ -1004,6 +992,12 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
                                     }
                                 });
+                                $scope.newMessagesAmount += newMessages;
+                                if (!$scope.showWall)
+                                    $scope.newMessagesAmountText = ' (' + $scope.newMessagesAmount.toString() + ')';
+                                else
+                                    $scope.newMessagesAmountText = '';
+                                $scope.wallName = 'Wall ' + $scope.lectureName + $scope.newMessagesAmountText;
                                 $scope.lastID = answer.lastid;
                                 var wallArea = $('#wallArea');
                                 wallArea.scrollTop(wallArea[0].scrollHeight);
