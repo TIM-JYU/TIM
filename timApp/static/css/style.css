@@ -48,29 +48,10 @@ table.timppa {
     background-color: white;
 }
 
-.noBullets {
-    list-style-type: none;
-}
-
-.wall-base {
-    width: 100%;
-}
-
-.wall-content {
-    height: 100%;
-    width: 100%;
-    /*position: absolute;*/
-}
-
 .wall-message-area {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    width: 100%;
     position: absolute;
     bottom: 45px;
     top: 15px;
-    /*padding-bottom: 2.5em;*/
 }
 
 .wall-behind textarea {
@@ -105,10 +86,8 @@ table.timppa {
     max-height: 45px;
 }
 .wall-buttons {
-    /*position: absolute;*/
     width: 80%;
     float:left
-
 }
 
 .wall-info-buttons {
