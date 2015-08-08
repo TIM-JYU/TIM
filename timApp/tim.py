@@ -527,12 +527,14 @@ def check_lecture():
             if "use_wall" in session:
                 use_wall = session['use_wall']
             else:
-                use_wall = False
+                use_wall = True
+                session['use_wall'] = True
 
             if "use_questions" in session:
                 use_question = session['use_questions']
             else:
-                use_question = False
+                use_question = True
+                session['use_questions'] = True
 
             return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
                                  "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
