@@ -43,6 +43,8 @@
                             <h4>Current Lectures</h4>
                             <li ng-repeat="lecture in currentLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
+                                <button ng-if="$parent.lectureId != lecture.lecture_id" style="margin-left: 5px;" value="Join"
+                                   ng-click="$emit('joinLecture', lecture)">Join</button>
                             </li>
                             <p ng-show="currentLecturesList.length == 0">No current lectures</p>
                             <h4>Coming Lectures</h4>
