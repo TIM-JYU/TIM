@@ -14,7 +14,7 @@ function makeNotLazy(html) {
     return s.replace(LAZYEND,"");
 }
 
-timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window',
+timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
         "use strict";
         timLogTime("answerbrowser directive function","answ");
@@ -28,7 +28,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             },
             
             controller: function ($scope) {
-                timLogTime("answerbrowser ctrl function","answ",1);
+                timLogTime("answerbrowserlazy ctrl function","answ",1);
                 $scope.compiled = false;
             },
             
@@ -41,7 +41,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
                     var newScope = $scope;
-                    var newHtml = '<answerbrowserreal task-id="' + $scope.taskId + '"></answerbrowserreal>';
+                    var newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
                     var newElement = $compile(newHtml);
                     // $element.parentElement.insertBefore(newElement,$element.parentElement.firstChild);
                     // $element.parents('.par').find('.parContent').html(newElement($scope));
@@ -80,11 +80,13 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
     }]);
 
 
+var GLOBALBrowseUser = null;    
+    
 
-timApp.directive("answerbrowserreal", ['$upload', '$http', '$sce', '$compile', '$window',
+timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
         "use strict";
-        timLogTime("answerbrowserreal directive function","answ");
+        timLogTime("answerbrowser directive function","answ");
         return {
             templateUrl: "/static/templates/answerBrowser.html",
             restrict: 'E',
@@ -95,7 +97,7 @@ timApp.directive("answerbrowserreal", ['$upload', '$http', '$sce', '$compile', '
             },
             link: function ($scope, $element, $attrs) {
                 //$scope.$parent = $scope.$parent; // muutos koska scope on syntynyt tuon toisen lapseksi
-                timLogTime("answerbrowserreal link","answ");
+                timLogTime("answerbrowser link","answ");
                 
                 $scope.$watch("taskId", function (newValue, oldValue) {
                     if (newValue === oldValue) {
@@ -214,6 +216,7 @@ timApp.directive("answerbrowserreal", ['$upload', '$http', '$sce', '$compile', '
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
+                    GLOBALBrowseUser = args.user;
                     $scope.changed = true;
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
@@ -228,7 +231,21 @@ timApp.directive("answerbrowserreal", ['$upload', '$http', '$sce', '$compile', '
                     }
                 };
 
-                if ($scope.$parent.users.length > 0) {
+                
+                $scope.checkUsers = function () {
+                    $scope.loadIfChanged();
+                    if ($scope.$parent.teacherMode && $scope.users === null) {
+                        $scope.users = [];
+                        if ($scope.$parent.users.length > 0) {
+                            $scope.getAvailableUsers();
+                        }
+                    }
+                }
+                
+                if ( GLOBALBrowseUser ) {
+                    $scope.user = GLOBALBrowseUser;
+                }    
+                else if ($scope.$parent.users.length > 0) {
                     $scope.user = $scope.$parent.users[0];
                 } else {
                     $scope.user = null;
@@ -239,15 +256,11 @@ timApp.directive("answerbrowserreal", ['$upload', '$http', '$sce', '$compile', '
                 $scope.shouldUpdateHtml = false;
                 $scope.saveTeacher = false;
                 $scope.users = null;
-                //$element.parent().on('mouseenter touchstart', function () {
-                    $scope.loadIfChanged();
-                    if ($scope.$parent.teacherMode && $scope.users === null) {
-                        $scope.users = [];
-                        if ($scope.$parent.users.length > 0) {
-                            $scope.getAvailableUsers();
-                        }
-                    }
-                // });
+                
+                $scope.checkUsers();
+                $element.parent().on('mouseenter touchstart', function () {
+                    $scope.checkUsers();
+                });
             }
         };
     }]);

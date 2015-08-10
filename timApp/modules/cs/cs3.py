@@ -78,9 +78,9 @@ import cgi
 
 PORT = 5000
 
-LAZYWORD ="lazylazylazy"
 LAZYSTART="<!--lazy "
 LAZYEND =" lazy-->"
+NOLAZY = "<!--nolazy-->"
 
 def generate_filename():
     return str(uuid.uuid4())
@@ -280,15 +280,16 @@ def removedir(dirname):
         return
 
 
-def get_html(ttype, query, isLazy):
+def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
-    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
-    doLazy = isLazy
+    if user_id == "Anonymous": return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    doLazy = get_param(query, "doLazy", False)
+
     lazy = get_param(query, "lazy", "")
     if str(lazy).lower() == "true":  doLazy = True
     if str(lazy).lower() == "false": doLazy = False
-    print(lazy,doLazy)
+    # print(lazy,doLazy)
     
     js = query_params_to_map_check_parts(query)
     print(js)
@@ -432,7 +433,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         # print("do_POST =================================================")
-        self.isLazy = False
 
         if self.path.find('/multihtml') < 0:
             self.do_all(post_params(self))
@@ -448,7 +448,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print("UserId:", self.user_id)
         log(self)
         # print(querys)
-        self.isLazy = len(querys) > 1
 
         for query in querys:
             # print(query.jso)
@@ -462,7 +461,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             ttype = get_param(query, "type", "cs").lower()
             if is_tauno: ttype = 'tauno'
             if is_parsons: ttype = 'parsons'
-            s = get_html(ttype, query, self.isLazy)
+            s = get_html(ttype, query)
             # print(s)
             htmls.append(s)
 

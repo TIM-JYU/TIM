@@ -243,7 +243,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
             else:
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
                 state = None
-            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
+            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
 
             final_html_blocks.append({'html': '',  # This will be filled later
                                       'task_id': task_id})
@@ -339,9 +339,10 @@ def get_markup_value(markup, key, default):
 
 
 def make_lazy(html, markup, do_lazy):
-    if not do_lazy: return html
+    markupLazy = get_markup_value(markup,"lazy", "")
+    if markupLazy == False : return html # user do not want lazy
+    if not do_lazy and markupLazy != True: return html
     if html.find(NOLAZY) >= 0: return html  # not allowed to make lazy
-    if not get_markup_value(markup,"lazy", True): return html # user do not want lazy
     if html.find(LAZYSTART) >= 0: return html # allredy lazy
     header = get_markup_value(markup, "header", "Check your understanding")
     stem = get_markup_value(markup, "stem", "Open plugin")

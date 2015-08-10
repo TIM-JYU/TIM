@@ -84,7 +84,7 @@
         if ( !div ) return "";
         for (i = 0; i < div.childElementCount; i++) {
             var node = div.childNodes[i];
-            var line = node.innerText;
+            var line = node.textContent;
             if ( line === "\\n" ) { line = "\n"; sep = ""; nosep = true; }
             result += sep + line;
             sep = separator;

@@ -188,9 +188,10 @@ def video_html(query):
     return replace_params(query, html)
 
     
-def make_lazy(s, query, htmlfunc, isLazy):    
+def make_lazy(s, query, htmlfunc):
     lazy = get_param(query, "lazy", "")
-    doLazy = isLazy
+    # print("doLazy=",isLazy)
+    doLazy = get_param(query, "doLazy", False)
     if str(lazy).lower() == "true":  doLazy = True
     if str(lazy).lower() == "false": doLazy = False
     if not doLazy: return s
@@ -211,15 +212,15 @@ def get_video_html(self, query):
     video_app = True
     if video_type == "small":
         s = string_to_string_replace_attribute('<small-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        s = make_lazy(s, query, small_video_html, self.isLazy)
+        s = make_lazy(s, query, small_video_html)
         return s
     if video_type == "list":
         s = string_to_string_replace_attribute('<list-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        s = make_lazy(s, query, list_video_html, self.isLazy)
+        s = make_lazy(s, query, list_video_html) 
         return s
     if video_app:
         s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
-        s = make_lazy(s, query, video_html, self.isLazy)
+        s = make_lazy(s, query, video_html)
         return s
 
     url = get_clean_param(query, "file", "")
@@ -249,7 +250,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.do_all(get_params(self))
 
     def do_POST(self):
-        self.isLazy = False
         if self.path.find('/multihtml') < 0:
             self.do_all(post_params(self))
             return
@@ -259,7 +259,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print(querys)
 
         do_headers(self, "application/json")
-        self.isLazy = len(querys) > 1
+
         htmls = []
         for query in querys:
             usercode = get_json_param(query.jso, "state", "usercode", None)
