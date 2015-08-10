@@ -149,7 +149,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             var lectureName = "";
             if (angular.isDefined(name)) {
                 lectureName = name;
-                // $('#currentList').slideToggle();
+                $('#currentList').slideUp();
             } else {
                 lectureName = $scope.chosenLecture.lecture_code;
             }
