@@ -24,7 +24,7 @@ var timApp = angular.module('timApp', [
                             }
                         }
                         var $par = ab.parents('.par');
-                        angular.extend(config.data, {original: {docId: ab.scope().docId, par: $par.attr('id')}});
+                        angular.extend(config.data, {ref_from: {docId: ab.scope().docId, par: $par.attr('id')}});
                     }
                     return config;
                 },

@@ -45,9 +45,9 @@ def save_answer(plugintype, task_id):
     # If the user doesn't have access to the document, we need to check if the plugin was referenced
     # from another document
     if not verifyViewAccess(doc_id, require=False):
-        orig_doc = request.get_json().get('original', {}).get('docId', doc_id)
+        orig_doc = request.get_json().get('ref_from', {}).get('docId', doc_id)
         verifyViewAccess(orig_doc)
-        par_id = request.get_json().get('original', {}).get('par', doc_id)
+        par_id = request.get_json().get('ref_from', {}).get('par', doc_id)
         par = Document(orig_doc).get_paragraph(par_id)
         if not par.is_reference():
             abort(403)
