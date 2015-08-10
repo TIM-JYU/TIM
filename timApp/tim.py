@@ -353,10 +353,13 @@ def get_updates():
     timdb = getTimDb()
     step = 0
 
+    doc_id = request.args.get("doc_id")
+    if doc_id:
+        doc_id = int(doc_id)
     if not check_if_lecture_is_running(lecture_id):
         timdb.lectures.delete_users_from_lecture(lecture_id)
         clean_dictionaries_by_lecture(lecture_id)
-        return get_running_lectures()
+        return get_running_lectures(doc_id)
 
     list_of_new_messages = []
     last_message_id = -1
@@ -701,14 +704,17 @@ def check_if_lecture_is_running(lecture_id):
 
 
 # Gets all lectures that are currently running. Also gives the ones that are in the future
-def get_running_lectures(doc_id):
+def get_running_lectures(doc_id=None):
     timdb = getTimDb()
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     lecture_code = "Not running"
-    list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
+    list_of_lectures = []
+    is_lecturer = False
+    if doc_id:
+        list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
+        is_lecturer = hasOwnership(doc_id)
     current_lecture_codes = []
     future_lectures = []
-    is_lecturer = hasOwnership(doc_id)
     for lecture in list_of_lectures:
         if lecture.get("start_time") <= time_now < lecture.get("end_time"):
             current_lecture_codes.append({"lecture_code": lecture.get("lecture_code"),
