@@ -87,8 +87,6 @@ __question_to_be_asked = []
 __pull_answer = {}
 # Dictionary to activities of different users
 __user_activity = {}
-# Dictionary for extending question time
-__extend_question = {}
 
 
 def error_generic(error, code):
@@ -402,10 +400,11 @@ def get_updates():
                     question = timdb.questions.get_asked_question(pair[1])[0]
                     question_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]["json"]
                     pair[2].append(current_user)
+                    pair[3].append(current_user)
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                         "lectureId": lecture_id, "question": True, "askedId": pair[1], "asked": pair[3],
+                         "lectureId": lecture_id, "question": True, "askedId": pair[1], "asked": pair[4],
                          "questionJson": question_json,
                          "isLecture": True, "lecturers": lecturers, "students": students,
                          "lectureEnding": lecture_ending})
@@ -1160,10 +1159,9 @@ def extend_question():
     extend = int(request.args.get('extend'))
     for q in __question_to_be_asked:
         if q[0] == lecture_id and q[1] == asked_id:
-            question = (q[0], q[1], q[2], q[3], q[4] + extend * 1000)
+            question = (q[0], q[1], q[2], [], q[4], q[5] + extend * 1000)
             __question_to_be_asked.append(question)
             __question_to_be_asked.remove(q)
-            __extend_question[question[0], question[1]].set()
     return jsonResponse('Extended')
 
 
@@ -1219,7 +1217,7 @@ def ask_question():
     thread_to_stop_question.start()
 
     verifyOwnership(int(doc_id))
-    __question_to_be_asked.append((lecture_id, asked_id, [], ask_time, end_time))
+    __question_to_be_asked.append((lecture_id, asked_id, [], [], ask_time, end_time))
 
     return jsonResponse(asked_id)
 
@@ -1261,7 +1259,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
         stopped = True
         for question in __question_to_be_asked:
             if question[0] == lecture_id and question[1] == asked_id:
-                end_time = extra_time * 1000 + question[4]
+                end_time = extra_time * 1000 + question[5]
                 stopped = False
                 break
         if stopped:
@@ -1320,7 +1318,6 @@ def stop_question():
         for question in __question_to_be_asked:
             if question[0] == lecture_id and question[1] == asked_id:
                 __question_to_be_asked.remove(question)
-                __extend_question[lecture_id, asked_id].set()
     return jsonResponse("")
 
 
@@ -1349,24 +1346,25 @@ def get_extend_question():
     asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
 
-    __extend_question[lecture_id, asked_id] = threading.Event()
+    current_user = getCurrentUserId()
+    step = 0
+    while step <= 10:
+        should_stop = True
+        for question in __question_to_be_asked:
+            if question[0] == lecture_id and question[1] == asked_id:
+                should_stop = False
+                if current_user not in question[3]:
+                    question[3].append(current_user)
+                    return jsonResponse(question[5])
+        if should_stop:
+            return jsonResponse(None)
+        step += 1
+        time.sleep(1)
 
-    for extend in __extend_question:
-        lecture, question = extend
-        if lecture == lecture_id and question != asked_id:
-            __extend_question[extend].set()
-
-    """
-    if not request.args.get("time"):
-        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
-    else:
-        time_now = request.args.get('time')
-    """
-    __extend_question[lecture_id, asked_id].wait(5)
     endtime = None
     for q in __question_to_be_asked:
         if q[0] == lecture_id and q[1] == asked_id:
-            endtime = q[4]
+            endtime = q[5]
             break
     return jsonResponse(endtime)
 
