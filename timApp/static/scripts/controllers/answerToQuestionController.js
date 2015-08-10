@@ -26,7 +26,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.askedId = args.askedId;
         $scope.questionId = args.questionId;
         $scope.isLecturer = args.isLecturer;
-        $scope.questionJson = args.questionJson;
+        $scope.json = args.questionJson;
         $scope.questionTitle = args.questionJson.TITLE;
         $scope.askedTime = args.askedTime;
         $scope.clockOffset = args.clockOffset;
@@ -118,7 +118,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             "asked_id": $scope.askedId,
             "question_id": $scope.questionId,
             "doc_id": $scope.docId,
-            "json": $scope.questionJson
+            "json": $scope.json
         });
     };
 
@@ -127,7 +127,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             "lecture_id": $scope.lectureId,
             "question_id": $scope.questionId,
             "doc_id": $scope.docId,
-            "json": $scope.questionJson
+            "json": $scope.json
         });
     };
 }]);
