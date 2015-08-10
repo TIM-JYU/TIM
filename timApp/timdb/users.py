@@ -535,8 +535,6 @@ class Users(TimDbBase):
     def checkUserGroupAccess(self, block_id: 'int', usergroup_id: 'int|None', edit_access: 'bool') -> 'bool':
         if usergroup_id is None:
             return False
-        if self.userIsOwner(usergroup_id, block_id):
-            return True
 
         if edit_access:
             result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess
