@@ -856,6 +856,10 @@ def join_lecture():
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture[0].get("password") != password_quess:
         return jsonResponse({"correctPassword": False})
+
+    in_lecture, current_lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
+    if in_lecture:
+        leave_lecture_function(current_lecture_id)
     timdb.lectures.join_lecture(lecture_id, current_user, True)
 
     time_now = str(datetime.datetime.now().strftime("%H:%M:%S"))
