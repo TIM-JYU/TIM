@@ -906,7 +906,7 @@ def leave_lecture_function(lecture_id):
             lecture_list.remove(lecture_id)
         session['in_lecture'] = lecture_list
     timdb.lectures.leave_lecture(lecture_id, current_user, True)
-    if __user_activity[current_user, lecture_id]:
+    if (current_user, lecture_id) in __user_activity:
         del __user_activity[current_user, lecture_id]
 
 
