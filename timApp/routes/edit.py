@@ -51,10 +51,11 @@ def update_document(doc_id, version):
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
     doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
     try:
+        # To verify view rights for possible referenced paragraphs, we call this first:
+        get_pars_from_editor_text(doc_id, content, break_on_elements=True)
         d = timdb.documents.update_document(doc, content)
-    except TimDbException as e:
-        abort(400, str(e))
-        return
+    except (TimDbException, ValidationException) as e:
+        return abort(400, str(e))
     chg = d.get_changelog()
     for ver in chg:
         ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
@@ -143,6 +144,15 @@ def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
               for par in DocumentParser(text).validate_structure().get_blocks(break_on_code_block=break_on_elements,
                                                                               break_on_header=break_on_elements,
                                                                               break_on_normal=break_on_elements)]
+    for p in blocks:
+        if p.is_reference():
+            try:
+                refdoc = int(p.get_attrs().get('rd'))
+            except ValueError:
+                return blocks
+            if getTimDb().documents.exists(refdoc)\
+                    and not getTimDb().users.userHasViewAccess(getCurrentUserId(), refdoc):
+                raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
 
 

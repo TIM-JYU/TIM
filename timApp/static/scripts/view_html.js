@@ -1,4 +1,4 @@
-var katex, $, angular, modules;
+var katex, $, angular, modules, MathJax;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
