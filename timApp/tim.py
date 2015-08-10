@@ -81,6 +81,7 @@ DATA_PATH = "./static/data/"
 
 
 # List to question that are being asked
+# Content: lecture_id, asked_id, users_asked, users_extended, ask_time, end_time
 __question_to_be_asked = []
 
 # Dictionary for pull request to answers
@@ -1303,6 +1304,7 @@ def check_if_is_lecturer(lecture_id):
     return timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user
 
 
+# Route to stop question from running
 @app.route("/stopQuestion", methods=['POST'])
 def stop_question():
     if not request.args.get("asked_id") or not request.args.get("lecture_id"):
@@ -1337,7 +1339,7 @@ def delete_question():
     return jsonResponse("")
 
 
-# Tämän muuttaminen long polliksi vaatii threadien poistamisen
+# Route to poll question end time change or question stop info
 @app.route("/getExtendQuestion", methods=['GET'])
 def get_extend_question():
     if not request.args.get('asked_id') or not request.args.get('lecture_id'):
@@ -1439,6 +1441,7 @@ def answer_to_question():
         __pull_answer[asked_id, lecture_id].set()
 
     return jsonResponse("")
+
 
 def create_points_table(points):
     points_table = []
