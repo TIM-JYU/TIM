@@ -44,10 +44,13 @@ def hasEditAccess(block_id):
     timdb = getTimDb()
     return timdb.users.userHasEditAccess(getCurrentUserId(), block_id)
 
-def verifyViewAccess(block_id):
+def verifyViewAccess(block_id, require=True):
     timdb = getTimDb()
     if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
+        if not require:
+            return False
         abort(403, "Sorry, you don't have permission to view this resource.")
+    return True
 
 def hasViewAccess(block_id):
     timdb = getTimDb()
