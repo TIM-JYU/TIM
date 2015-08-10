@@ -81,8 +81,11 @@ class TimDbBase(object):
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT exists(SELECT id FROM Block WHERE id = ? AND type_id = ? LIMIT 1)',
-                       [block_id, block_type])
+        try:
+            cursor.execute('SELECT exists(SELECT id FROM Block WHERE id = ? AND type_id = ? LIMIT 1)',
+                           [block_id, block_type])
+        except OverflowError:
+            return False
         result = cursor.fetchone()
         return result[0] == 1
 
