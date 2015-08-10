@@ -33,7 +33,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             $scope.internalControl = $scope.control || {};
 
             $scope.internalControl.createAnswer = function () {
-                $scope.json = $scope.$parent.questionJson;
+                $scope.json = $scope.$parent.json;
                 $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
                 $scope.endTime = $scope.$parent.askedTime + $scope.json.TIMELIMIT * 1000 - $scope.$parent.clockOffset;
 

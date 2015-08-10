@@ -28,7 +28,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         $scope.$on("setPreviewJson", function (event, args) {
             $scope.questionId = args.questionId;
             $scope.isLecturer = args.isLecturer;
-            $scope.questionJson = args.questionJson;
+            $scope.json = args.questionJson;
             $scope.questionTitle = args.questionJson.TITLE;
             $scope.points = args.points;
             $scope.dynamicAnswerSheetControl.createAnswer();
@@ -56,7 +56,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 "lecture_id": $scope.lectureId,
                 "question_id": $scope.questionId,
                 "doc_id": $scope.docId,
-                "json": $scope.questionJson
+                "json": $scope.json
             });
             $scope.close();
         };
