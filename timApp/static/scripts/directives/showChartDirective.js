@@ -94,7 +94,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     pointHighlightStroke: "rgba(220,220,220,1)",
                     data: []
                 },
-                 {
+                {
                     label: "Answers",
                     fillColor: "rgba(165,220,0,0.2)",
                     strokeColor: "rgba(165,220,0,1)",
@@ -104,7 +104,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     pointHighlightStroke: "rgba(165,220,0,1)",
                     data: []
                 },
-                 {
+                {
                     label: "Answers",
                     fillColor: "rgba(220,165,0,0.2)",
                     strokeColor: "rgba(220,165,0,1)",
@@ -114,7 +114,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     pointHighlightStroke: "rgba(220,165,0,1)",
                     data: []
                 },
-                 {
+                {
                     label: "Answers",
                     fillColor: "rgba(0,165,220,0.2)",
                     strokeColor: "rgba(220,165,0,1)",
@@ -124,7 +124,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     pointHighlightStroke: "rgba(220,165,0,1)",
                     data: []
                 },
-                 {
+                {
                     label: "Answers",
                     fillColor: "rgba(220,0,165,0.2)",
                     strokeColor: "rgba(220,0,165,1)",
@@ -134,7 +134,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     pointHighlightStroke: "rgba(220,0,165,1)",
                     data: []
                 },
-                 {
+                {
                     label: "Answers",
                     fillColor: "rgba(30,0,75,0.2)",
                     strokeColor: "rgba(30,0,75,1)",
@@ -144,7 +144,7 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     pointHighlightStroke: "rgba(30,0,75,1)",
                     data: []
                 },
-                 {
+                {
                     label: "Answers",
                     fillColor: "rgba(75,75,180,0.2)",
                     strokeColor: "rgba(75,75,180,1)",
@@ -188,9 +188,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     });
                 }
 
-                labels.push("No answer");
-                emptyData.push(0);
-
+                if (!(question.TYPE === "matrix" || question.TYPE === "true-false")) {
+                    labels.push("No answer");
+                    emptyData.push(0);
+                }
 
                 var usedDataSets = [];
 
@@ -205,6 +206,9 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                         usedDataSets.push(basicSets[i]);
                         usedDataSets[i].data = emptyData;
                     }
+                    usedDataSets.push(basicSets[usedDataSets.length]);
+                    usedDataSets[usedDataSets.length - 1].data = emptyData;
+                    usedDataSets[usedDataSets.length - 1].label = "No answer";
 
                     for (i = 0; i < question.DATA.HEADERS.length; i++) {
                         usedDataSets[i].label = question.DATA.HEADERS[i].text;
@@ -255,22 +259,28 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                                 continue;
                             }
                             if (datasets.length === 1) {
+                                var answered = false;
                                 for (var b = 0; b < datasets[0].bars.length; b++) {
                                     if ((b + 1) === parseInt(singleAnswer)) {
                                         datasets[0].bars[b].value += 1;
+                                        answered = true;
                                     }
                                 }
+                                if (!answered) {
+                                    datasets[0].bars[datasets[0].bars.length - 1].value += 1;
+                                }
                             } else {
+                                var answered = false;
                                 for (var d = 0; d < datasets.length; d++) {
                                     if ((d + 1) === parseInt(singleAnswer)) {
                                         datasets[d].bars[a].value += 1;
+                                        answered = true;
+                                        break;
                                     }
                                 }
-                            }
-
-                            if (singleAnswer === "undefined") {
-                                var helperBars = $scope.answerChart.datasets[0].bars;
-                                helperBars[helperBars.length - 1].value += 1;
+                                if (!answered) {
+                                    datasets[datasets.length - 1].bars[a].value += 1;
+                                }
                             }
                         }
                     }
