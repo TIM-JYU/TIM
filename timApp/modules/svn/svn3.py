@@ -28,9 +28,14 @@ import http.server
 import subprocess
 # import nltk 
 import re
+import math
 from fileParams3 import *
 
 PORT = 5000
+
+LAZYSTART="<!--lazy "
+LAZYEND =" lazy-->"
+NOLAZY = "<!--nolazy-->"
 
 
 def run_while_true(server_class=http.server.HTTPServer,
@@ -45,6 +50,41 @@ def run_while_true(server_class=http.server.HTTPServer,
     while keep_running():
         httpd.handle_request()
 
+regx_hm = re.compile(r"[,\/;:\.hm]")        
+        
+def muunna(value):
+  if not value: return 0;
+  if isinstance( value, int ): return value
+  s = "0 0 0 " + str(value).replace("s","") # loppu s unohdetaan muodosta 1h3m2s
+  print("s",s)
+
+  # .replace(/[,\/;:\.hm]/g," ");
+  s = regx_hm.sub(" ", s)
+  print("s",s)
+  s = s.strip()
+  print("s",s)
+  sc = s.split(" ")
+  n = len(sc)
+  print("s",s," - ",sc,n)
+  h = int(sc[n-3])
+  m = int(sc[n-2])
+  s = int(sc[n-1])
+  return  h*3600.0 + m*60.0 + s*1.0
+        
+        
+def time_2_string(t):
+    if not t:  return ""
+    h = math.floor(t / 3600)
+    t = (t - h*3600)
+    m = math.floor(t/60)
+    s = int((t - m*60))
+    if not h: h = ""
+    else: h =str(h)+"h";
+    if not h and not m: m = ""
+    else: m = str(m) + "m"
+    s = str(s) + "s"
+    return h + m + s
+        
 
 def get_image_html(query):
     """
@@ -61,7 +101,105 @@ def get_image_html(query):
     return result
 
 
-def get_video_html(query):
+def replace_param(query, s, param_id, default):
+    param = get_param(query, param_id, default)
+    if not param: param = ""
+    param = str(param)
+    return s.replace("{{" + param_id + "}}", param)
+  
+  
+    
+def replace_params(query, html):
+    s = replace_param(query, html, "videoicon","/csimages/video_small.png")
+    s = replace_param(query, s, "docicon","/csimages/book.png")
+    s = replace_param(query, s, "doctext","")
+    s = replace_param(query, s, "stem","")
+    s = replace_param(query, s, "header","")
+    s = replace_param(query, s, "footer","")
+    s = replace_param(query, s, "videoname","")
+    start = muunna(get_param(query, "start", ""))
+    end = muunna(get_param(query, "end", ""))
+    startt = time_2_string(start)
+    if startt: startt = ", " + startt
+    s = s.replace("{{startt}}",startt)
+    duration = time_2_string(end - start);
+    if duration != "": duration = "(" + duration + ") "
+    s = s.replace("{{duration}}",duration)
+    return s
+    
+    
+def small_video_html(query):
+    html1 = '<div class="smallVideoRunDiv">' \
+            '<h4>{{header}}</h4>' \
+			'<p>' \
+            '{{stem}} ' \
+            '<a class="videoname">' 
+    html2 = '<span><img src="{{videoicon}}" alt="Click here to show" /> </span>' 
+    html3 = '{{videoname}} {{duration}} </a>' 
+    html4 = '<a href="" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' \
+            '{{doctext}}</a>' 
+    html5 = '</p>' \
+			'<div ><p></p></div>'  \
+			'<p class="plgfooter">{{footer}}</p>' \
+			'</div>'
+    html = html1
+    if get_param(query, "videoicon", ""): html = html + html2   
+    html = html + html3
+    if get_param(query, "doctext", ""): html = html + html4   
+    html = html + html5
+    return replace_params(query, html)
+    
+     
+def list_video_html(query):
+    html1 = '<div class="listVideoRunDiv">' \
+            '<p>{{header}}</p>'             \
+			'<ul><li>{{stem}} '             \
+            '<a >'                          \
+            '<span><img src="{{videoicon}}" alt="Click here to show" /> </span>' \
+            '{{videoname}}{{startt}} {{duration}} </a>' 
+    html2 = '<a href="{{doclink}}" target="timdoc"><span><img src="{{docicon}}"  alt="Go to doc" /> </span>' \
+            '{{doctext}}</a>' 
+    html3 = '</li></ul>' \
+			'<div ><p></p></div>'  \
+			'<p class="plgfooter">{{footer}}</p>' \
+			'</div>'
+			# '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
+    html = html1
+    if get_param(query, "doctext", ""): html = html + html2   
+    html = html + html3
+    return replace_params(query, html)
+    
+    
+def video_html(query):
+    html1 = '<div class="videoRunDiv">' \
+            '<h4>{{header}}</h4>'             \
+			'<p class="stem" >{{stem}}</p>' \
+			'<div ><p></p></div>' \
+            '<div class="no-popup-menu">' \
+			'<img src="/csimages/video.png"  width="200" alt="Click here to show the video" />' \
+            '</div>' 
+    html2 = '<a href="{{doclink}}" target="timdoc"><span ng-if="docoicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' \
+            '{{doctext}}</a>'
+    html3 = '<p class="plgfooter">{{footer}}</p>' \
+	        '</div>'    
+    html = html1
+    if get_param(query, "doctext", ""): html = html + html2   
+    html = html + html3
+    return replace_params(query, html)
+
+    
+def make_lazy(s, query, htmlfunc, isLazy):    
+    lazy = get_param(query, "lazy", "")
+    doLazy = isLazy
+    if str(lazy).lower() == "true":  doLazy = True
+    if str(lazy).lower() == "false": doLazy = False
+    if not doLazy: return s
+    lazy_html = htmlfunc(query)
+    lazy_s = LAZYSTART + s + LAZYEND + lazy_html
+    return lazy_s
+    
+    
+def get_video_html(self, query):
     """
     Muodostaa videon näyttämiseksi tarvittavan HTML-koodin
     :param query: pyynnön paramterit
@@ -73,12 +211,15 @@ def get_video_html(query):
     video_app = True
     if video_type == "small":
         s = string_to_string_replace_attribute('<small-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = make_lazy(s, query, small_video_html, self.isLazy)
         return s
     if video_type == "list":
         s = string_to_string_replace_attribute('<list-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = make_lazy(s, query, list_video_html, self.isLazy)
         return s
     if video_app:
         s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = make_lazy(s, query, video_html, self.isLazy)
         return s
 
     url = get_clean_param(query, "file", "")
@@ -108,13 +249,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.do_all(get_params(self))
 
     def do_POST(self):
+        self.isLazy = False
         if self.path.find('/multihtml') < 0:
             self.do_all(post_params(self))
             return
 
         print("do_POST MULTIHML ==========================================")
         querys = multi_post_params(self)
+        # print(querys)
+
         do_headers(self, "application/json")
+        self.isLazy = len(querys) > 1
         htmls = []
         for query in querys:
             usercode = get_json_param(query.jso, "state", "usercode", None)
@@ -208,7 +353,7 @@ def get_html(self, query, show_html):
     if is_video:
         if is_template:
             return file_to_string('templates/video/' + tempfile) 
-        s = get_video_html(query)
+        s = get_video_html(self, query)
         return s
 
     # Was none of special, so print the file(s) in query
@@ -227,7 +372,7 @@ def get_html(self, query, show_html):
     if show_html: s += '<pre class="showCode' + cla + '"' + w + '>'
     s += get_file_to_output(query, show_html)
     if show_html: s += '</pre><p class="smalllink"><a href="' + ffn + '" target="_blank">'+fn+'</a>'
-    s = get_surrounding_headers(query, s)
+    s = NOLAZY + get_surrounding_headers(query, s) # TODO: korjaa tähän mahdollisuus lazyyyn, oletus on ei.
     return s
 
 

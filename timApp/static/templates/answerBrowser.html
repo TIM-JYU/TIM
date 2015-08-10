@@ -1,4 +1,4 @@
-<div class="answerBrowser">
+<div class="answerBrowser" ng-cloak>
     <select ng-show="$parent.teacherMode && users.length > 0" ng-model="user"
             ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
             ng-change="getAvailableAnswers()"></select>

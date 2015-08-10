@@ -47,7 +47,7 @@ videoApp.muunna = function(value) {
 
 
 videoApp.directiveTemplateVideo = function(t) {
-   if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv">' +
+   if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<p>' +
                   '{{stem}} ' + 
@@ -61,7 +61,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
-   if ( t == "listvideo" ) return '<div class="listVideoRunDiv">' +
+   if ( t == "listvideo" ) return '<div class="listVideoRunDiv" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<ul><li>{{stem}} '+
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">'+
@@ -74,7 +74,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
-   return '<div class="videoRunDiv">' +
+   return '<div class="videoRunDiv" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 				  '<div ><p></p></div>' + 
@@ -133,7 +133,7 @@ videoApp.directiveFunction = function(t) {
             if ( scope.limits == "(-)" ) scope.limits = "";
             scope.span = "";
             scope.startt = videoApp.time2String(scope.start);
-            if ( scope.startt ) scope.startt = ", " + videoApp.time2String(scope.start);
+            if ( scope.startt ) scope.startt = ", " + scope.startt;
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
 			scope.videoHtml = element[0].childNodes[2]
