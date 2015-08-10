@@ -116,7 +116,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                             }
                         }
                     } else {
-                        console.log(i);
                         if (scope.pointsTable.length > 0) {
                             if ((i + 1).toString() in scope.pointsTable[0]) {
                                 columnPoints = scope.pointsTable[0][(i + 1).toString()];

@@ -124,7 +124,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     var $table = $element.find('#answer-sheet-table');
                     window.setTimeout(function() {
                         var $table = $element.find('#answer-sheet-table');
-                        console.log($table);
                         var $input = null;
                         if ($scope.json.ANSWERFIELDTYPE !== "text")
                             $input = $table.find('input:first');
