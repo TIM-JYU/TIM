@@ -13,14 +13,18 @@ var timApp = angular.module('timApp', [
             var re = /\/[^/]+\/([^/]+)\/answer\/$/;
             var service = {
                 'request': function (config) {
-                    if ($window.teacherMode && re.test(config.url)) {
+                    if (re.test(config.url)) {
                         var match = re.exec(config.url);
                         var taskId = match[1];
                         var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
-                        var browserScope = ab.isolateScope();
-                        if (ab.scope().teacherMode) {
-                            angular.extend(config.data, {abData: browserScope.getTeacherData()});
+                        if ($window.teacherMode) {
+                            var browserScope = ab.isolateScope();
+                            if (ab.scope().teacherMode) {
+                                angular.extend(config.data, {abData: browserScope.getTeacherData()});
+                            }
                         }
+                        var $par = ab.parents('.par');
+                        angular.extend(config.data, {original: {docId: ab.scope().docId, par: $par.attr('id')}});
                     }
                     return config;
                 },
