@@ -330,7 +330,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         /*
          Event window for closeAnswerShow. Closes pop-up to show answers and stops gettin more of them.
          */
-        //TODO: Also send event to server to remove getting answers for this question.
         $scope.$on("closeAnswerShow", function () {
             $scope.showStudentAnswers = false;
             //$scope.gettingAnswers = false;
