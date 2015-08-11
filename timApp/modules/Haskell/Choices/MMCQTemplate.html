@@ -1,0 +1,29 @@
+<div class="mcq">
+    <span style="font-weight:bold">Check your understanding</span><br>
+    <span ng-bind-html="content.question.stem"></span>
+    <table>
+        <tr>
+            <th style="text-wrap:suppress"></th>
+            <th>True</th>
+            <th>False</th>
+            <th ng-if="checked"></th>
+            <th ng-if="checked"></th></tr>
+     <tr ng-repeat="choice in content.question.choices">
+      <td ><span style="" class="MCQItem" ng-bind-html="choice.text"></span></td>
+      <td >
+        <input  type="checkbox" ng-model="$parent.answer[$index]" ng-true-value="true" ng-false-value"false"/>
+      </td> 
+      <td >
+        <input  type="checkbox" ng-model="$parent.answer[$index]" ng-false-value="true" ng-true-value="false" />
+        <!-- <input  type="checkbox" ng-model="$parent.answer[$index]" ng-value="false"  />  -->
+      </td>
+      <td  ng-if="checked">
+        <span ng-if="''+answer[$index] == ''+choice.correct" class="correct">Correct!</span> 
+        <span ng-if="''+answer[$index] !==''+choice.correct" class="wrong">Wrong!</span>
+      </td>
+      <td  ng-if="choice.reason"> 
+        <span ng-if="choice.reason" class="MCQExpl" ng-bind-html="choice.reason"></span></td>
+     </tr>
+    </table>
+     <button  ng-click="submit()">Submit</button>
+</div>
