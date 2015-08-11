@@ -70,6 +70,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.wallMessages = [];
         $scope.questionTitle = "";
         $scope.clockOffset = 0;
+        $scope.settings = $window.settings;
 
         var wall = $('#wall');
         var htmlMessageList = $('#wallMessageList');
@@ -209,7 +210,16 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 var t2 = parseInt(data.t2);
                 var t1 = parseInt(data.t1);
                 $scope.clockOffset = ((t2 - t1) + (t3 - t4)) / 2;
+                window.setTimeout(function () {
+                    setsetting('clock_offset', $scope.clockOffset.toString());
+                }, 1000);
                 console.log('Clock offset: ', $scope.clockOffset);
+            }).error(function () {
+                if ($scope.settings['clock_offset']) {
+                    $scope.clockOffset = $scope.settings['clock_offset'];
+                } else {
+                    $scope.clockOffset = 0;
+                }
             });
         };
 
