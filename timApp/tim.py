@@ -489,17 +489,19 @@ def get_all_questions():
 @app.route('/addQuestion/', methods=['POST'])
 def add_question():
     # TODO: Only lecturers should be able to create questions.
-    # verifyOwnership(doc_id)
     question_id = None
     if request.args.get('question_id'):
         question_id = int(request.args.get('question_id'))
     question_title = request.args.get('question_title')
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
+    timdb = getTimDb()
+    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
+        abort(403)
     par_id = request.args.get('par_id')
     points = request.args.get('points')
     question_json = request.args.get('questionJson')
-    timdb = getTimDb()
+
     questions = None
     if not question_id:
         questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, question_json, points)
@@ -1237,8 +1239,6 @@ def ask_question():
 # Route to get add question to database
 @app.route('/updatePoints/', methods=['POST'])
 def update_question_points():
-    # TODO: Only lecturers should be able to create questions.
-    # verifyOwnership(doc_id)
     if 'asked_id' not in request.args or 'points' not in request.args:
         abort("400")
     asked_id = int(request.args.get('asked_id'))
@@ -1262,8 +1262,6 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
         return
 
     # Adding extra time to limit so when people gets question a bit later than others they still get to answer
-    # TODO: If current implementation changes the way that the question last 10 seconds and after that you can't
-    # TODO: answer. Remove this part
     extra_time = 3
     end_time += extra_time * 1000
     while int(time.time() * 1000) < end_time:
