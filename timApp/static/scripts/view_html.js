@@ -109,6 +109,27 @@ timApp.controller("ViewCtrl", [
             }
         };
 
+        sc.showDialog = function (message) {
+            $('<div id="dialog"><p>' + message + '</div>').dialog({
+                dialogClass: "no-close", modal: true,
+                close: function (event, ui) {
+                    $(this).dialog("close");
+                    $(this).remove();
+                },
+                buttons: [
+                    {
+                        text: "OK",
+                        click: function () {
+                            $(this).dialog("close");
+                        }
+                    }
+                ]
+            });
+        };
+
+        sc.$on('showDialog', function(event, message) {
+            sc.showDialog(message);
+        });
 
         sc.changeUser = function (user) {
             sc.$broadcast('userChanged', {user: user});
@@ -757,7 +778,8 @@ timApp.controller("ViewCtrl", [
                     sc.processAllMath($par);
                 });
             }).error(function (data, status, headers, config) {
-                $window.alert("Could not fetch notes.");
+                // $window.alert("Could not fetch notes.");
+                sc.showDialog("Could not fetch notes.");
             });
         };
 
@@ -801,7 +823,8 @@ timApp.controller("ViewCtrl", [
                     $(this).append($div);
                 });
             }).error(function () {
-                $window.alert("Could not fetch reading info.");
+                // $window.alert("Could not fetch reading info.");
+                sc.showDialog("Could not fetch reading info.");
             });
         };
 

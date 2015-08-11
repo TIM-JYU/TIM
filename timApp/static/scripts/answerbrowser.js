@@ -40,7 +40,8 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }).success(function (data, status, headers, config) {
                         $element.parents('.par').find('.parContent').html($compile(data.html)($scope));
                     }).error(function (data, status, headers, config) {
-                        $window.alert('Error getting answers: ' + data.error);
+                        //$window.alert('Error getting answers: ' + data.error);
+                        $scope.$emit('showDialog', 'Error getting answers: ' + data.error);
                     }).finally(function () {
                         $scope.loading--;
                     });
@@ -90,7 +91,8 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         .success(function (data, status, headers, config) {
                             $scope.users = data;
                         }).error(function (data, status, headers, config) {
-                            $window.alert('Error getting users: ' + data.error);
+                            // $window.alert('Error getting users: ' + data.error);
+                            $scope.$emit('showDialog', 'Error getting users: ' + data.error);
                         }).finally(function () {
                             $scope.loading--;
                         });
@@ -116,7 +118,8 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                                 }
                             }
                         }).error(function (data, status, headers, config) {
-                            $window.alert('Error getting answers: ' + data.error);
+                            // $window.alert('Error getting answers: ' + data.error);
+                            $scope.$emit('showDialog', 'Error getting answers: ' + data.error);
                         }).finally(function () {
                             $scope.loading--;
                         });

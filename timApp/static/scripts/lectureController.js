@@ -109,7 +109,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             if (!changeLecture)
                                 showRightView(answer);
                         }).error(function () {
-                            $window.alert("Lecture " + lectureCode + " not found.");
+                            // $window.alert("Lecture " + lectureCode + " not found.");
+                            $scope.showDialog("Lecture " + lectureCode + " not found.");
                             showRightView(answer);
                         });
                     } else {
@@ -168,7 +169,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     $scope.passwordQuess = "";
                     var input = $("#passwordInput");
                     if (!answer.correctPassword) {
-                        $window.alert("Wrong access code!");
+                        // $window.alert("Wrong access code!");
+                        $scope.showDialog("Wrong access code!");
                         return false;
                     } else {
                         $scope.studentTable = [];
@@ -340,7 +342,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             })
                 .success(function (answer) {
                     if (angular.isDefined(answer.questionLate)) {
-                        $window.alert(answer.questionLate);
+                        // $window.alert(answer.questionLate);
+                        $scope.showDialog(answer.questionLate);
                     }
                 })
                 .error(function () {
@@ -459,6 +462,24 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $('#futureList').hide();
             $scope.showLectureForm = true;
             $rootScope.$broadcast("initLectureFormVals");
+        };
+
+        $scope.showDialog = function (message) {
+            $('<div id="dialog"><p>' + message + '</div>').dialog({
+                dialogClass: "no-close", modal: true,
+                close: function (event, ui) {
+                    $(this).dialog("close");
+                    $(this).remove();
+                },
+                buttons: [
+                    {
+                        text: "OK",
+                        click: function () {
+                            $(this).dialog("close");
+                        }
+                    }
+                ]
+            });
         };
 
         /**
@@ -816,7 +837,9 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.sendMessageEvent = function (message) {
             if (message.trim() === "") {
-                $window.alert("Can't send empty messages");
+                // $window.alert("Can't send empty messages");
+
+                $scope.showDialog("Can't send empty messages");
                 return false;
             }
 
