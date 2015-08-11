@@ -162,7 +162,7 @@ input[type="number"] {
     height: 30px;
 }
 
-.createQuestion input[type="checkbox"] {
+.createQuestion input[type="checkbox"], .createQuestion input[type="radio"] {
     margin: 0;
     vertical-align: middle;
 }
