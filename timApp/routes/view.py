@@ -221,11 +221,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         users = []
     current_user = timdb.users.getUser(user)
     show_time('plugin alku')
-    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
-                                                                current_user['name'],
-                                                                timdb.answers,
-                                                                current_user['id'],
-                                                                sanitize=False)
+    texts, jsPaths, cssPaths, modules, readings = post_process_pars(xs, doc_id, current_user['id'], sanitize=False)
     show_time('plugin loppu')
 
     reqs = pluginControl.get_all_reqs()
@@ -265,6 +261,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                              docID=doc_id,
                              docName=doc_name,
                              text=texts,
+                             readings=readings,
                              plugin_users=users,
                              current_user=current_user,
                              version=Document(doc_id).get_version(),
@@ -280,11 +277,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                              in_lecture=is_in_lecture,
                              is_owner=hasOwnership(doc_id),
                              group=usergroup,
-                             rights={'editable': hasEditAccess(doc_id),
-                                     'can_mark_as_read': hasReadMarkingRight(doc_id),
-                                     'can_comment': hasCommentRight(doc_id),
-                                     'browse_own_answers': loggedIn()
-                                     },
+                             rights=get_rights(doc_id),
                              reqs=reqs,
                              settings=settings)
     show_time('render loppu')

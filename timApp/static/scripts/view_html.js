@@ -450,58 +450,20 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.addSavedParToDom = function (data, extraData) {
-            var $par = sc.getElementByParId(extraData.par),
-                len = data.texts.length;
-
+            var $par = sc.getElementByParId(extraData.par);
             // check if we were editing an area
             if (extraData.area_start !== null && extraData.area_end !== null) {
                 $par = sc.getElementByParId(extraData.area_start);
 
-                // remove all but the first element of the area because it'll be removed later
-                // and is required to insert the new ones in the document
+                // remove all but the first element of the area because it'll be used
+                // when replacing
                 var $endpar = sc.getElementByParId(extraData.area_end);
                 $par.nextUntil($endpar).add($endpar).remove();
             }
+            var newPars = $($compile(data.texts)(sc));
+            $par.replaceWith(newPars);
+            sc.processAllMath(newPars);
             http.defaults.headers.common.Version = data.version;
-            for (var i = len - 1; i >= 0; i--) {
-                var html = data.texts[i].html;
-                if ('taskId' in data.texts[i].attrs) {
-                    html = $compile(html)(sc);
-                }
-                var $mathdiv = $.parseHTML(html);
-                if ($mathdiv) {
-                    sc.processMath($mathdiv[0]);
-                }
-                var classes = [];
-                if ('classes' in data.texts[i].attrs) {
-                    classes = data.texts[i].attrs.classes;
-                }
-                var $newpar = $("<div>", {
-                    class: ["par"].concat(classes).join(" "),
-                    id: data.texts[i].id,
-                    t: data.texts[i].t,
-                    attrs: JSON.stringify(data.texts[i].attrs)
-                })
-                    .append($("<div>", {class: "parContent"}).append($mathdiv || html));
-                var readClass = "unread";
-                if (data.texts[i].id in data.read_statuses) {
-                    readClass = data.read_statuses[data.texts[i].id];
-                }
-                if ('taskId' in data.texts[i].attrs) {
-                    var ab = $('<answerbrowser>').attr('task-id', sc.docId + '.' + data.texts[i].attrs.taskId);
-                    $compile(ab[0])(sc);
-                    ab.prependTo($newpar);
-                }
-                /*
-                 var editDiv = "";
-                 if (sc.rights.editable)
-                 editDiv = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
-                 */
-                $par.after($newpar.append($("<div>",
-                        {class: "readline " + readClass, title: "Click to mark this paragraph as read"}),
-                    $("<div>", {class: "editline", title: "Click to edit this paragraph"})));
-            }
-            $par.remove();
             sc.editing = false;
             sc.cancelArea();
         };
@@ -783,51 +745,6 @@ timApp.controller("ViewCtrl", [
             });
         };
 
-        sc.getReadPars = function () {
-            if (!sc.rights.can_mark_as_read) {
-                return;
-            }
-            var rn = "?_=" + Date.now();
-            http.get('/read/' + sc.docId + rn).success(function (data) {
-                var readCount = data.length;
-                $('.readline').remove();
-                var pars = {};
-                for (var i = 0; i < readCount; i++) {
-                    var readPar = data[i];
-                    var pi = data[i].par_id;
-                    if (!(pi in pars)) {
-                        pars[pi] = {par_hash: data[i].par_hash};
-                    }
-                }
-                sc.forEachParagraph(function (index, elem) {
-                    var $par = $(elem);
-                    var hash = $par.attr('t');
-                    var par_id = $par.attr('id');
-                    var classes = ["readline"];
-                    var curr_hash = null;
-                    if (par_id in pars) {
-                        var status = 'read';
-                        if (hash !== pars[par_id].par_hash) {
-                            status = 'modified';
-                        }
-                        classes.push(status);
-                        curr_hash = pars[par_id].par_hash;
-                    } else {
-                        classes.push("unread");
-                    }
-                    var $div = $("<div>", {
-                        class: classes.join(" "),
-                        title: "Click to mark this paragraph as read",
-                        t: curr_hash
-                    });
-                    $(this).append($div);
-                });
-            }).error(function () {
-                // $window.alert("Could not fetch reading info.");
-                sc.showDialog("Could not fetch reading info.");
-            });
-        };
-
         sc.getEditPars = function () {
             sc.forEachParagraph(function (index, elem) {
                 var $div = $("<div>", {class: "editline", title: "Click to edit this paragraph"});
@@ -988,7 +905,6 @@ timApp.controller("ViewCtrl", [
                     $('.paragraphs').append($compile(data)(sc));
                     sc.getIndex();
                     sc.getNotes();
-                    sc.getReadPars();
                     sc.processAllMath($('body'));
                     /*
                      if (sc.rights.editable) {
@@ -1025,7 +941,6 @@ timApp.controller("ViewCtrl", [
         sc.indexTable = [];
         sc.getIndex();
         sc.getNotes();
-        sc.getReadPars();
 
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android

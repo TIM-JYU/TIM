@@ -1,13 +1,13 @@
 """Routes for editing a document."""
 from bs4 import UnicodeDammit
-from flask import Blueprint
+from flask import Blueprint, render_template
 
 from .common import *
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException
 from htmlSanitize import sanitize_html
-import pluginControl
+from routes.common import post_process_pars
 from timdb.docidentifier import DocIdentifier
 from timdb.timdbbase import TimDbException
 
@@ -108,13 +108,7 @@ def modify_paragraph():
             [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
             pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
-    pars, js_paths, css_paths, modules, read_statuses = post_process_pars(pars, doc_id)
-    return jsonResponse({'texts': pars,
-                         'js': js_paths,
-                         'css': css_paths,
-                         'angularModule': modules,
-                         'version': doc.get_version(),
-                         'read_statuses': read_statuses})
+    return par_response(pars, doc_id)
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
@@ -124,7 +118,6 @@ def preview(doc_id):
     :param doc_id: The id of the document in which the preview will be renderer. Unused so far.
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
-    timdb = getTimDb()
     text, = verify_json_params('text')
     editing_area = request.get_json().get('area_start') is not None and request.get_json().get('area_end') is not None
     try:
@@ -132,11 +125,19 @@ def preview(doc_id):
     except ValidationException as e:
         blocks = [DocParagraph(doc_id=doc_id)]
         blocks[0].set_html('<div class="pluginError">{}</div>'.format(sanitize_html(str(e))))
-    pars, js_paths, css_paths, modules, _ = post_process_pars(blocks, doc_id)
-    return jsonResponse({'texts': pars,
+    return par_response(blocks, doc_id)
+
+
+def par_response(blocks, doc_id):
+    pars, js_paths, css_paths, modules, read_statuses = post_process_pars(blocks, doc_id, getCurrentUserId())
+    return jsonResponse({'texts': render_template('paragraphs.html',
+                                                  text=pars,
+                                                  readings=read_statuses,
+                                                  rights=get_rights(doc_id)),
                          'js': js_paths,
                          'css': css_paths,
-                         'angularModule': modules})
+                         'angularModule': modules,
+                         'version': Document(doc_id).get_version()})
 
 
 def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
@@ -193,13 +194,7 @@ def add_paragraph():
         [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
         pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
-    pars, js_paths, css_paths, modules, read_statuses = post_process_pars(pars, doc_id)
-    return jsonResponse({'texts': pars,
-                         'js': js_paths,
-                         'css': css_paths,
-                         'angularModule': modules,
-                         'version': doc.get_version(),
-                         'read_statuses': read_statuses})
+    return par_response(pars, doc_id)
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
@@ -221,18 +216,3 @@ def delete_paragraph(doc_id):
         par_id, = verify_json_params('par')
         new_doc = timdb.documents.delete_paragraph(get_newest_document(doc_id), par_id)
     return jsonResponse({'version': new_doc.get_version()})
-
-
-def post_process_pars(pars, doc_id):
-    timdb = getTimDb()
-    pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
-                                                                 getCurrentUserName(),
-                                                                 timdb.answers,
-                                                                 getCurrentUserId())
-    readings = timdb.readings.getReadings(getCurrentUserGroup(), Document(doc_id))
-    pars_dict = dict((par.get_id(), par) for par in pars)
-    read_statuses = {}
-    for r in readings:
-        if r['par_id'] in pars_dict:
-            read_statuses[r['par_id']] = 'read' if r['par_hash'] == pars_dict[r['par_id']].get_hash() else 'modified'
-    return pars, js_paths, css_paths, modules, read_statuses
