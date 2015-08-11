@@ -288,8 +288,7 @@ input[type="number"] {
 }
 
 .createQuestion table {
-    margin-top: 2em;
-    margin-left: 2em;
+    margin: 2em;
     background: #F0F0F0;
     width: auto;
 }
