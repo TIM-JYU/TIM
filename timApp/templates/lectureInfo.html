@@ -72,7 +72,7 @@
         </label>
 
         <div>
-            <h3>Find answers <span ng-show="!isLecturer" ng-bind="selectedUser"></span></h3>
+            <h3>Find answers <span ng-show="!isLecturer" ng-bind="selectedUser.user_name"></span></h3>
             <label ng-show="isLecturer">UserName
                 <select ng-model="selectedUser" ng-options="user.user_name for user in answerers track by user.user_id">
                 </select>
