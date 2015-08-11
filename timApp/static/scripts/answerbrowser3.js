@@ -5,13 +5,18 @@ var timApp = angular.module('timApp');
 var LAZYWORD = "lazylazylazy";
 var LAZYSTART="<!--lazy ";
 var LAZYEND =" lazy-->";
+var RLAZYSTART = new RegExp(LAZYSTART, 'g');
+var RLAZYEND = new RegExp(LAZYEND, 'g');
 
 
 function makeNotLazy(html) {
-    var s = html.replace(LAZYSTART,"");
+    var s = html.replace(RLAZYSTART,"");
     var i = s.lastIndexOf(LAZYEND);
     if ( i >= 0 ) s = s.substring(0,i);
-    return s.replace(LAZYEND,"");
+    s = s.replace(RLAZYEND,""); 
+    s = s.replace(/-LAZY->/g,"-->");
+    s = s.replace(/<!-LAZY-/g,"<!--");
+    return s;
 }
 
 timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '$window',

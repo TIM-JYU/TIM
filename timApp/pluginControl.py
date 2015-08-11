@@ -351,6 +351,7 @@ def make_lazy(html, markup, do_lazy):
     if html.find(LAZYSTART) >= 0: return html # allredy lazy
     header = get_markup_value(markup, "header", "Check your understanding")
     stem = get_markup_value(markup, "stem", "Open plugin")
+    html = html.replace("<!--","<!-LAZY-").replace("-->","-LAZY->")
     return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + "<div><p>" + stem + "</p></div>"
 
 
