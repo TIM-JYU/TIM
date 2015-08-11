@@ -67,14 +67,18 @@
                     </div>
                 </div>
             </div>
-
+            <label>Show preview <input type="checkbox" ng-change="setShowPreview(question.showPreview)"
+                                       ng-model="question.showPreview"/></label>
         </form>
+        <div class="questionPreview" ng-show="question.showPreview">
+            <dynamic-answer-sheet preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+        </div>
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 
         <div class="buttons" id="question_buttons">
-            <button ng-if="inLecture" ng-click="createQuestion(question.question, question.type, true)">Save and ask
+            <button ng-if="inLecture" ng-click="createQuestion(true)">Save and ask
             </button>
-            <button ng-click="createQuestion(question.question, question.type)">Save</button>
+            <button ng-click="createQuestion()">Save</button>
             <button ng-click="close()">Cancel</button>
             <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
         </div>
@@ -96,9 +100,9 @@
 
             <div class="buttons" id="question_buttons">
                 <button ng-if="!asked_id" ng-if="inLecture"
-                        ng-click="createQuestion(question.question, question.type, true)">Save and ask
+                        ng-click="createQuestion(true)">Save and ask
                 </button>
-                <button ng-click="createQuestion(question.question, question.type)">Save</button>
+                <button ng-click="createQuestion()">Save</button>
                 <button ng-click="close()">Cancel</button>
                 <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
             </div>

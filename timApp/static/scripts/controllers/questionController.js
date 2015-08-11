@@ -15,7 +15,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     $(function () {
         $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     });
-
+    scope.dynamicAnswerSheetControl = {};
     scope.asked_id = false;
 
     scope.putBackQuotations = function (x) {
@@ -163,7 +163,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
 
             scope.$emit('toggleQuestion');
-
         }
     );
 
@@ -173,7 +172,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         matrixType: "",
         answerFieldType: "",
         timeLimit: {hours: 0, minutes: 0, seconds: 30},
-        endTimeSelected: true
+        endTimeSelected: true,
+        showPreview: false
     };
 
 
@@ -261,6 +261,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 answerFiledType: scope.question.answerFieldType
             });
         }
+        if (scope.question.showPreview) scope.createJson();
     };
 
     /**
@@ -306,6 +307,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         for (var i = 0; i < scope.rows.length; i++) {
             scope.rows[i].id = i;
         }
+
+        if (scope.question.showPreview) scope.createJson();
     };
 
     /**
@@ -325,6 +328,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         } else {
             scope.errorize("", "You cannot have an empty table.");
         }
+
+        if (scope.question.showPreview) scope.createJson();
     };
 
     /**
@@ -347,6 +352,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         else {
             scope.columnHeaders.splice(indexToBeDeleted, 1);
         }
+
+        if (scope.question.showPreview) scope.createJson();
     };
 
     /**
@@ -359,7 +366,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             question: "",
             matrixType: "",
             answerFieldType: "",
-            endTimeSelected: true
+            endTimeSelected: true,
+            showPreview: false
         };
         scope.setTime();
 
@@ -375,6 +383,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.close = function () {
         scope.removeErrors();
         scope.clearQuestion();
+        scope.setShowPreview(false);
+        scope.dynamicAnswerSheetControl.closePreview();
         if (scope.questionShown) scope.$emit('toggleQuestion');
     };
 
@@ -517,11 +527,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         return points;
     };
 
-    /**
-     * Validates and saves the question into the database.
-     * @memberof module:questionController
-     */
-    scope.createQuestion = function (question, type, ask) {
+    scope.createJson = function () {
         if (scope.asked_id) {
             return scope.updatePoints();
         }
@@ -578,7 +584,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         if (scope.error_message !== "") {
             return;
         }
-
+        scope.removeErrors();
         if (scope.question.type === 'matrix') {
 
             if (scope.question.matrixType === "radiobutton-horizontal" || scope.question.matrixType === "radiobutton-vertical") {
@@ -592,9 +598,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 scope.question.answerFieldType = "checkbox";
             }
         }
-        var doc_id = scope.docId;
-        var $par = scope.par;
-        var par_id = scope.getParId($par);
 
         //TODO use  JSON.stringify
 
@@ -608,7 +611,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 var header = {
                     'type': scope.columnHeaders[i].type,
                     'id': scope.columnHeaders[i].id,
-                    'text': scope.replaceLinebreaksWithHTML(scope.columnHeaders[i].text)
+                    'text': scope.replaceLinebreaksWithHTML(scope.columnHeaders[i].text) || ''
                 };
                 headersJson.push(header);
             }
@@ -616,6 +619,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
         var rowsJson = [];
         for (var i = 0; i < scope.rows.length; i++) {
+            var text = scope.replaceLinebreaksWithHTML(scope.rows[i].text);
             var row = {
                 'id': scope.rows[i].id,
                 'type': scope.rows[i].type,
@@ -644,14 +648,31 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             'DATA': {'HEADERS': headersJson, 'ROWS': rowsJson}
         };
 
+        scope.json = questionJson;
+        scope.dynamicAnswerSheetControl.createAnswer();
+        return questionJson;
+    };
+
+    /**
+     * Validates and saves the question into the database.
+     * @memberof module:questionController
+     */
+    scope.createQuestion = function (ask) {
+        var questionJson = scope.createJson();
+        if (!questionJson) return;
+
         var points = scope.createPoints();
+
+        var doc_id = scope.docId;
+        var $par = scope.par;
+        var par_id = scope.getParId($par);
 
         var testJson = JSON.stringify(scope.question);
         testJson += JSON.stringify(scope.columnHeaders);
-
-        $window.settings['timelimit'] = timeLimit.toString();
+        $window.settings['timelimit'] = questionJson.TIMELIMIT.toString();
+        ;
         setTimeout(function () {
-            setsetting('timelimit', timeLimit.toString());
+            setsetting('timelimit', questionJson.TIMELIMIT.toString());
         }, 1000);
 
         http({
@@ -729,6 +750,17 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     scope.getQuestions();
 
                 });
+        }
+    };
+
+    scope.setShowPreview = function (show) {
+        if (show) {
+            scope.createJson();
+            $(".createQuestion").on('change.createjson', ':input', function () {
+                scope.createJson();
+            });
+        } else {
+            $(".createQuestion").off('change.createjson');
         }
     };
 }])
