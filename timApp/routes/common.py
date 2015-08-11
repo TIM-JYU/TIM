@@ -1,6 +1,7 @@
 """Common functions for use with routes."""
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
+import pluginControl
 
 from timdb.timdb2 import TimDb
 from flask import current_app, session, abort, g, Response, request
@@ -69,6 +70,15 @@ def hasReadMarkingRight(doc_id):
 def verifyReadMarkingRight(doc_id):
     if not hasReadMarkingRight(doc_id):
         abort(403)
+
+
+def get_rights(doc_id):
+    return {'editable': hasEditAccess(doc_id),
+            'can_mark_as_read': hasReadMarkingRight(doc_id),
+            'can_comment': hasCommentRight(doc_id),
+            'browse_own_answers': loggedIn()
+            }
+
 
 def verifyLoggedIn():
     if not loggedIn():
@@ -165,3 +175,21 @@ def unpack_args(*args, types):
 
 def hide_names_in_teacher(doc_id):
     return False
+
+
+def post_process_pars(pars, doc_id, user_id, sanitize=True):
+    timdb = getTimDb()
+    current_user = timdb.users.getUser(user_id)
+    group = timdb.users.getPersonalUserGroup(user_id)
+    pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
+                                                                 current_user['name'],
+                                                                 timdb.answers,
+                                                                 user_id,
+                                                                 sanitize=sanitize)
+    readings = timdb.readings.getReadings(group, Document(doc_id))
+    pars_dict = dict((par.get_id(), par) for par in pars)
+    read_statuses = {}
+    for r in readings:
+        if r['par_id'] in pars_dict:
+            read_statuses[r['par_id']] = 'read' if r['par_hash'] == pars_dict[r['par_id']].get_hash() else 'modified'
+    return pars, js_paths, css_paths, modules, read_statuses

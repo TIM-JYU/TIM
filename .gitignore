@@ -13,6 +13,7 @@ bower_components/
 /timApp/modules/cs/nohup.out
 /timApp/modules/cs/images/html
 /timApp/modules/cs/images/
+/timApp/modules/cs/java/cs/ComTest.jar
 /docs/YPJ-palkat_1.8.2014_ja_1.8.2015.xlsx
 /converters/demopisteet/*.csv
 tim_secret.py
