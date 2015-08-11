@@ -1277,6 +1277,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
         if stopped:
             return
 
+    del __pull_answer[asked_id, lecture_id]
     for question in __question_to_be_asked:
         if question[0] == lecture_id and question[1] == asked_id:
             __question_to_be_asked.remove(question)
