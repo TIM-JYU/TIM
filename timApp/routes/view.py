@@ -4,6 +4,9 @@ from flask import Blueprint, render_template, url_for
 from .common import *
 from .cache import cache
 import pluginControl
+from options import *
+
+
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -112,7 +115,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                                                                 doc_id,
                                                                 current_user['id'],
                                                                 sanitize=False,
-                                                                do_lazy=True)
+                                                                do_lazy=get_option(request, "lazy", True))
 
     reqs = pluginControl.get_all_reqs()
 

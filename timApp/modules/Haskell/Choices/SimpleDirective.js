@@ -20,7 +20,7 @@ function standardDirective(template,build,extract) {
             if (localState!==null) {message.state = localState};
             if (localMarkup!==null) {message.markup = localMarkup};
             $http({method:'PUT'
-//                  ,url:"http://"+$scope.plugin+"/"+$scope.ident+"/answer/"
+//                  ,url:"http://"+$scope.plugin+"/"+$scope.ident+"/answer/" 
                   ,url:$scope.plugin+"/"+$scope.ident+"/answer/"
                   ,data:message})
              .success(function(data){

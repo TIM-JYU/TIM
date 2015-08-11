@@ -866,5 +866,24 @@ def join_dict(a: dict,b: dict):
     result = a.copy()
     result.update(b)
     return result
+
     
+LAZYSTART="<!--lazy "
+LAZYEND =" lazy-->"
+NOLAZY = "<!--nolazy-->"
+NEVERLAZY = "NEVERLAZY"
+ 
+ 
+def is_lazy(query):
+    caller_lazy = get_param(query, "doLazy", NEVERLAZY)
+    # print("caller_lazy=",caller_lazy)
+    if caller_lazy == NEVERLAZY: return False
+    do_lazy = caller_lazy
+    if str(do_lazy).lower() == "true":  do_lazy = True
+    if str(do_lazy).lower() == "false": do_lazy = False
+    lazy = get_param(query, "lazy", "")
+    if str(lazy).lower() == "true":  do_lazy = True
+    if str(lazy).lower() == "false": do_lazy = False
+    # print("do_lazy=",do_lazy)
+    return do_lazy  
     

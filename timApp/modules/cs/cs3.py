@@ -78,10 +78,6 @@ import cgi
 
 PORT = 5000
 
-LAZYSTART="<!--lazy "
-LAZYEND =" lazy-->"
-NOLAZY = "<!--nolazy-->"
-
 def generate_filename():
     return str(uuid.uuid4())
 
@@ -284,15 +280,11 @@ def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
     if user_id == "Anonymous": return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
-    doLazy = get_param(query, "doLazy", False)
-
-    lazy = get_param(query, "lazy", "")
-    if str(lazy).lower() == "true":  doLazy = True
-    if str(lazy).lower() == "false": doLazy = False
-    # print(lazy,doLazy)
+    do_lazy = is_lazy(query)
+    # print("do_lazy",do_lazy,type(do_lazy))
     
     js = query_params_to_map_check_parts(query)
-    print(js)
+    # print(js)
     if "byFile" in js and not ("byCode" in js):
         js["byCode"] = get_url_lines_as_string(js["byFile"])
     bycode = ""
@@ -314,27 +306,25 @@ def get_html(ttype, query):
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
-    lazyVisible = ""
-    lazyClass = ""
-    lazyStart = ""
-    lazyEnd = ""
+    lazy_visible = ""
+    lazy_class = ""
+    lazy_start = ""
+    lazy_end = ""
     
     if "csconsole" in ttype:  # erillinen konsoli
         r = "cs-console"
         
-    if doLazy:
+    if do_lazy:
         # r = LAZYWORD + r;   
-        lazyVisible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>'+cgi.escape(bycode)+'</pre></div>') + '</div>'
+        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>'+cgi.escape(bycode)+'</pre></div>') + '</div>'
         # lazyClass = ' class="lazyHidden"'
-        lazyStart = LAZYSTART
-        lazyEnd = LAZYEND
+        lazy_start = LAZYSTART
+        lazy_end = LAZYEND
 
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
-        s = lazyStart + '<' + r + lazyClass + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>' + lazyEnd
-        # s += '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csEditorAreaDiv"><div  class="csrunEditorDiv"><textarea class="csRunArea csInputArea">'+bycode+"</textarea>") + '</div></div></div>'
-        s += lazyVisible
-        # s += '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csEditorAreaDiv csrunEditorDiv csRunCode"><textarea class="csRunArea csInputArea">'+bycode+"</textarea>") + '</div></div>'
+        s = lazy_start + '<' + r + lazy_class + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>' + lazy_end
+        s += lazy_visible
     return s
 
 

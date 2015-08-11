@@ -15,9 +15,12 @@ from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from htmlSanitize import sanitize_html
 
+
 LAZYSTART= "<!--lazy "
 LAZYEND = " lazy-->"
 NOLAZY = "<!--nolazy-->"
+NEVERLAZY = "NEVERLAZY"
+
 
 def correct_yaml(text):
     """
@@ -213,6 +216,7 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     if custom_state is not None:
         if len(blocks) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
+            
     final_html_blocks = []
     plugins = {}
     state_map = {}
@@ -339,9 +343,10 @@ def get_markup_value(markup, key, default):
 
 
 def make_lazy(html, markup, do_lazy):
-    markupLazy = get_markup_value(markup,"lazy", "")
-    if markupLazy == False : return html # user do not want lazy
-    if not do_lazy and markupLazy != True: return html
+    if do_lazy == NEVERLAZY: return html 
+    markup_lazy = get_markup_value(markup,"lazy", "")
+    if markup_lazy == False: return html # user do not want lazy
+    if not do_lazy and markup_lazy != True: return html
     if html.find(NOLAZY) >= 0: return html  # not allowed to make lazy
     if html.find(LAZYSTART) >= 0: return html # allredy lazy
     header = get_markup_value(markup, "header", "Check your understanding")

@@ -33,10 +33,6 @@ from fileParams3 import *
 
 PORT = 5000
 
-LAZYSTART="<!--lazy "
-LAZYEND =" lazy-->"
-NOLAZY = "<!--nolazy-->"
-
 
 def run_while_true(server_class=http.server.HTTPServer,
                    handler_class=http.server.BaseHTTPRequestHandler):
@@ -56,16 +52,16 @@ def muunna(value):
   if not value: return 0;
   if isinstance( value, int ): return value
   s = "0 0 0 " + str(value).replace("s","") # loppu s unohdetaan muodosta 1h3m2s
-  print("s",s)
+  # print("s",s)
 
   # .replace(/[,\/;:\.hm]/g," ");
   s = regx_hm.sub(" ", s)
-  print("s",s)
+  # print("s",s)
   s = s.strip()
-  print("s",s)
+  # print("s",s)
   sc = s.split(" ")
   n = len(sc)
-  print("s",s," - ",sc,n)
+  # print("s",s," - ",sc,n)
   h = int(sc[n-3])
   m = int(sc[n-2])
   s = int(sc[n-1])
@@ -147,6 +143,7 @@ def small_video_html(query):
     html = html + html3
     if get_param(query, "doctext", ""): html = html + html4   
     html = html + html5
+    html = html.replace("<h4>{{header}}</h4>","")
     return replace_params(query, html)
     
      
@@ -167,6 +164,7 @@ def list_video_html(query):
     html = html1
     if get_param(query, "doctext", ""): html = html + html2   
     html = html + html3
+    html = html.replace("<p>{{header}}</p>","")
     return replace_params(query, html)
     
     
@@ -185,16 +183,14 @@ def video_html(query):
     html = html1
     if get_param(query, "doctext", ""): html = html + html2   
     html = html + html3
+    html = html.replace("<h4>{{header}}</h4>","")
+    html = html.replace('<p class="stem" >{{stem}}</p>',"")
+    print(html)
     return replace_params(query, html)
 
     
 def make_lazy(s, query, htmlfunc):
-    lazy = get_param(query, "lazy", "")
-    # print("doLazy=",isLazy)
-    doLazy = get_param(query, "doLazy", False)
-    if str(lazy).lower() == "true":  doLazy = True
-    if str(lazy).lower() == "false": doLazy = False
-    if not doLazy: return s
+    if not is_lazy(query): return s
     lazy_html = htmlfunc(query)
     lazy_s = LAZYSTART + s + LAZYEND + lazy_html
     return lazy_s

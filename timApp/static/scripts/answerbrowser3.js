@@ -17,7 +17,7 @@ function makeNotLazy(html) {
 timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '$window',
     function ($upload, $http, $sce, $compile, $window) {
         "use strict";
-        timLogTime("answerbrowser directive function","answ");
+        timLogTime("answerbrowserlazy directive function","answ");
         return {
             //templateUrl: "/static/templates/answerBrowser2.html",
        		// template: timApp.directiveTemplateAnswerBrowser(),
@@ -33,11 +33,11 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
             },
             
             link: function ($scope, $element, $attrs) {
-                timLogTime("answerbrowser link function","answ",1);
+                timLogTime("answerbrowserlazy link function","answ",1);
                 // $element.parents('.par').find('.parContent').html($compile(data.html)($scope));
-                var plugin = $element.parents('.par').find('.parContent');
                 
                 $element.parent().on('mouseenter touchstart', function () {
+                    var plugin = $element.parents('.par').find('.parContent');
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
                     var newScope = $scope;
