@@ -1229,6 +1229,7 @@ def ask_question():
 
     verifyOwnership(int(doc_id))
     __question_to_be_asked.append((lecture_id, asked_id, [], [], ask_time, end_time))
+    __pull_answer[asked_id, lecture_id] = []
 
     return jsonResponse(asked_id)
 
@@ -1391,26 +1392,23 @@ def get_lecture_answers():
     asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
 
-    __pull_answer[asked_id, lecture_id] = threading.Event()
-
-    for pull in __pull_answer:
-        question, lecture = pull
-        if lecture == lecture_id and question != asked_id:
-            __pull_answer[pull].set()
-
-    if not request.args.get("time"):
-        time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
-    else:
-        time_now = request.args.get('time')
-
-    __pull_answer[asked_id, lecture_id].wait()
+    step = 0
+    while step <= 10:
+        if (asked_id, lecture_id) not in __pull_answer:
+            return jsonResponse({"noAnswer": True})
+        if len(__pull_answer[asked_id, lecture_id]) > 0:
+            break
+        step += 1
+        time.sleep(1)
 
     timdb = getTimDb()
-    lecture_answers = timdb.lecture_answers.get_answers_to_question(asked_id, time_now)
-    if len(lecture_answers) <= 0:
-        return jsonResponse({"noAnswer": True})
+    lecture_answers = []
 
-    latest_answer = lecture_answers[-1].get("answered_on")
+    for user_id in __pull_answer[asked_id, lecture_id]:
+        lecture_answers.append(timdb.lecture_answers.get_user_answer_to_question(asked_id, user_id)[0])
+        __pull_answer[asked_id, lecture_id].remove(user_id)
+
+    latest_answer = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
 
     return jsonResponse({"answers": lecture_answers, "askedId": asked_id, "latestAnswer": latest_answer})
 
@@ -1426,13 +1424,15 @@ def answer_to_question():
     answer = request.args.get("answers")
     whole_answer = answer
     lecture_id = int(request.args.get("lecture_id"))
+    current_user = getCurrentUserId()
 
-    lecture_answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, getCurrentUserId())
+    lecture_answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
 
     question_ended = True
     for question in __question_to_be_asked:
         if question[0] == lecture_id and question[1] == asked_id:
             question_ended = False
+            break
 
     if question_ended:
         return jsonResponse({"questionLate": "The question has already finished. Your answer was not saved."})
@@ -1442,13 +1442,13 @@ def answer_to_question():
         question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
         points_table = create_points_table(question_points)
         points = calculate_points(answer, points_table)
-        current_user = getCurrentUserId()
         if lecture_answer and current_user != 0:
             timdb.lecture_answers.update_answer(lecture_answer[0]["answer_id"], current_user, asked_id,
                                                 lecture_id, whole_answer, time_now, points)
         else:
-            timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, whole_answer, time_now, points)
-        __pull_answer[asked_id, lecture_id].set()
+            timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, whole_answer, time_now,
+                                             points)
+    __pull_answer[asked_id, lecture_id].append(current_user)
 
     return jsonResponse("")
 
