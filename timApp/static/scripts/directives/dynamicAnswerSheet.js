@@ -33,6 +33,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             $scope.internalControl = $scope.control || {};
 
             $scope.internalControl.createAnswer = function () {
+                $element.empty();
                 $scope.json = $scope.$parent.json;
                 $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
                 $scope.endTime = $scope.$parent.askedTime + $scope.json.TIMELIMIT * 1000 - $scope.$parent.clockOffset;
@@ -68,9 +69,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 angular.forEach($scope.json.DATA.ROWS, function (row) {
                     var tr = $('<tr>');
                     if ($scope.json.TYPE === "matrix" || $scope.json.TYPE === "true-false") {
-                        if (row.text.length >= 1) {
-                            tr.append($('<td>', {text: row.text}));
-                        }
+                        tr.append($('<td>', {text: row.text}));
                     }
                     var header = 0;
                     //TODO: Needs correct JSON to be made better way
