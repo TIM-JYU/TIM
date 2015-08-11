@@ -92,6 +92,9 @@ RUN apt-get update -qq && apt-get install -qqy \
 
 RUN apt-get install -y postgresql-client    
     
+run apt-get update
+RUN apt-get install -y r-base    
+    
 # Install Docker from Docker Inc. repositories.
 #RUN curl -sSL https://get.docker.com/ubuntu/ | sh
 
