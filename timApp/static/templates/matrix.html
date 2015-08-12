@@ -17,8 +17,8 @@
                         <br/>
                     </div>
                     <div class="buttonsTop">
-                        <button ng-click="addCol($index)">+</button>
-                        <button class="negative" ng-click="delCol($index)" style="margin-left: 28px;">-</button>
+                        <button tabindex="-1" ng-click="addCol($index)">+</button>
+                        <button tabindex="-1" class="negative" ng-click="delCol($index)" style="margin-left: 28px;">-</button>
                     </div>
                     </div>
                 </th>
@@ -35,8 +35,8 @@
                     <div style="position: relative" ng-if="asked_id === false">
                     <textarea class="rowHeading" ng-model="row.text" form="question-form" rows="1"></textarea>
                     <div class="matrixButtons">
-                        <button ng-click="addRow($index)" style="clear:both; display: block;">+</button>
-                        <button ng-click="delRow($index)" class="negative" style="display: block; margin-top: 20px;">-</button>
+                        <button tabindex="-1" ng-click="addRow($index)" style="clear:both; display: block;">+</button>
+                        <button tabindex="-1" ng-click="delRow($index)" class="negative" style="display: block; margin-top: 20px;">-</button>
                     </div>
                     </div>
                 </th>

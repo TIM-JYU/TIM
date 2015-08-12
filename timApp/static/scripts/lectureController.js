@@ -72,6 +72,31 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.clockOffset = 0;
         $scope.settings = $window.settings;
 
+        $scope.lectureOptions = {
+            messageName: true,
+            messageTime: true,
+            polling: true,
+            showWall: false,
+            canStart: true,
+            canStop: false,
+            showLectureCreation: false,
+            useDate: false,
+            useDuration: false,
+            dateChosen: false,
+            durationChosen: false,
+            showAnswerWindow: false,
+            showStudentAnswers: false,
+            gettingAnswers: false,
+            answeredToLectureEnding: false,
+            showLectureEnding: false,
+            lectureEnded: false,
+            showLectureForm: false,
+            showLectureOptions: false,
+            useQuestions: true,
+            useWall: true,
+            useAnswers: true
+        };
+
         var wall = $('#wall');
         var htmlMessageList = $('#wallMessageList');
 

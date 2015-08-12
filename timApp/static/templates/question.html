@@ -67,11 +67,11 @@
                     </div>
                 </div>
             </div>
+        </form>
+        <div class="questionPreview">
             <label>Show preview <input type="checkbox" ng-change="setShowPreview(question.showPreview)"
                                        ng-model="question.showPreview"/></label>
-        </form>
-        <div class="questionPreview" ng-show="question.showPreview">
-            <dynamic-answer-sheet preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+            <dynamic-answer-sheet ng-show="question.showPreview" preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
         </div>
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 

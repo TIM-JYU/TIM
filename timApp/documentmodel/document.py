@@ -6,6 +6,8 @@ import shutil
 from datetime import datetime
 from time import time
 from tempfile import mkstemp
+from lxml import etree
+from io import StringIO, BytesIO
 
 from contracts import contract, new_contract
 from documentmodel.docparagraph import DocParagraph
@@ -382,9 +384,15 @@ class Document:
         return new_ids[0], new_ids[-1]
 
     @contract
-    def get_index(self) -> 'list(str)':
+    def get_index(self) -> 'list(tuple)':
         # todo: optimization?
-        return [par.get_markdown() for par in self if par.get_markdown().startswith('#')]
+        html_table = [par.get_html() for par in self if par.get_markdown().startswith('#')]
+        index = []
+        for html in html_table:
+            index_entry = etree.fromstring(html)
+            level = int(index_entry.tag[1:])
+            index.append((index_entry.get('id'), index_entry.text, level))
+        return index
 
     @contract
     def get_changelog(self, max_entries : 'int' = 100) -> 'list(dict)':

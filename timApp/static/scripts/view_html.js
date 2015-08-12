@@ -70,6 +70,7 @@ timApp.controller("ViewCtrl", [
         sc.teacherMode = $window.teacherMode;
         sc.sidebarState = 'autohidden';
         sc.lectureMode = $window.lectureMode;
+        sc.index = $window.index;
         if (sc.users.length > 0) {
             sc.selectedUser = sc.users[0];
         } else {
@@ -103,7 +104,7 @@ timApp.controller("ViewCtrl", [
             try {
                 katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
             }
-            catch(ParseError) {
+            catch (ParseError) {
                 $this.text(math);
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, $this[0]]);
             }
@@ -127,7 +128,7 @@ timApp.controller("ViewCtrl", [
             });
         };
 
-        sc.$on('showDialog', function(event, message) {
+        sc.$on('showDialog', function (event, message) {
             sc.showDialog(message);
         });
 
@@ -536,8 +537,7 @@ timApp.controller("ViewCtrl", [
             if (sc.selection.start !== null) {
                 sc.selection.end = sc.getParId($par);
             }
-            else
-            {
+            else {
                 var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
                 var toggle1 = $par.find(".actionButtons").length === 0;
                 var toggle2 = $par.hasClass("lightselect");
@@ -804,24 +804,22 @@ timApp.controller("ViewCtrl", [
         sc.getIndex = function () {
             sc.indexTable = [];
             var parentEntry = null;
-            $(".par h1, .par h2, .par h3").each(function () {
-                var id = '#' + $(this).attr('id');
-                var header = $(this).prop('tagName');
-                var lvl = parseInt(header.substring(1));
-
-                var astyle = "a" + lvl;
+            for (var i = 0; i < sc.index.length; i++) {
+                var index_item = sc.index[i];
+                var level = index_item[2];
+                var astyle = "a" + level;
                 var txt = $(this).text();
                 txt = txt.trim().replace(/\\#/g, "#");
                 var entry = {
-                    text: sc.totext(txt),
-                    target: id,
+                    text: index_item[1],
+                    target: '#' + index_item[0],
                     style: astyle,
-                    level: lvl,
+                    level: level,
                     items: [],
                     state: ""
                 };
 
-                if (lvl === 1) {
+                if (level === 1) {
                     if (parentEntry !== null) {
                         if ("items" in parentEntry && parentEntry.items.length > 0) {
                             parentEntry.state = 'col';
@@ -837,8 +835,7 @@ timApp.controller("ViewCtrl", [
                     }
                     parentEntry.items.push(entry);
                 }
-            });
-
+            }
             if (parentEntry !== null) {
                 if (parentEntry.items.length > 0) {
                     parentEntry.state = 'col';
@@ -880,9 +877,7 @@ timApp.controller("ViewCtrl", [
         };
 
 
-
-
-        sc.onClick('.showContent', function($this, e) {
+        sc.onClick('.showContent', function ($this, e) {
             sc.contentShown = !sc.contentShown;
             var $pars = $('#pars');
             if (sc.contentLoaded) {
@@ -1009,7 +1004,8 @@ timApp.controller("ViewCtrl", [
             ];
         };
 
-        sc.nothing = function(){};
+        sc.nothing = function () {
+        };
 
         sc.editorFunctions = sc.getEditorFunctions();
 
