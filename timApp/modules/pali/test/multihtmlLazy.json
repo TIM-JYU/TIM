@@ -1,0 +1,62 @@
+[
+  {
+   "doLazy": true,
+   "state": {
+    "userword": "abba"
+   },
+   "markup": {
+     "-nohex": true,
+     "header": "Kirjoita palindromi",
+     "stem": "Kirjoita palindromi jossa 5 kirjainta",
+     "user_id": "vesal",
+     "-points_array": [[0,0.2],[0.7,1.0]],
+     "initword": "kissa",
+     "-needed_len": 5,
+     "testitem" : {
+       "in1" : {  "-notthis": 6, "butthis" : 7},
+       "in2" : {  "alsothis": true, "-butnotthis" : 9}
+     }
+   },
+   "taskID": "2.ekapali"
+  },
+  {
+   "lazy": true,
+   "markup": {
+     "-points_array": [[3],[2,3]]
+   },
+   "taskID": "2.wrongpoints"
+  },
+ {"state":
+  {"userword": "abba",
+    "tries": 3
+  },
+  "markup":
+    {"stem": "Kirjoita palindromi jossa 5 kirjainta",
+      "user_id": "vesal",
+      "cols": 20,
+      "initword": "muikku",
+      "header": "Kirjoita palindromi",
+      "needed_len": 5,
+      "max_tries": 3,
+      "inputstem": "Palindromisi:",
+      "-points_array": [[0, 0.1], [0.6, 1]]},
+  "taskID": "7.ekapali2",
+  "doLazy": true
+ },
+ {
+   "state": null,
+   "markup":
+   {"needed_len": 4,
+     "header": "Kirjoita palindromi",
+     "inputstem": "Palindromisi:",
+     "user_id": "vesal",
+     "autoupdate": 2000,
+     "initword": null,
+     "-points_array": [[0, 0.1], [0.6, 1]],
+     "stem": "Kirjoita palindromi jossa 4 kirjainta",
+     "cols": 20,
+     "footer": "Saitko tehty\u00e4?"},
+   "doLazy": true,
+   "taskID": "7.tokapali2"
+  }
+]
