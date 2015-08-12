@@ -255,7 +255,8 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
-    index = Document(doc_id).get_index()
+    # index = Document(doc_id).get_index()
+    index = []
 
     show_time('render alku')
     # TODO: Check if doc variable is needed
