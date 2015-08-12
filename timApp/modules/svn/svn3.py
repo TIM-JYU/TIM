@@ -94,7 +94,7 @@ def get_image_html(query):
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
     result = get_surrounding_headers(query, '<img ' + w + h + 'src="' + url + '">')
-    return result
+    return NOLAZY+result
 
 
 def replace_param(query, s, param_id, default):

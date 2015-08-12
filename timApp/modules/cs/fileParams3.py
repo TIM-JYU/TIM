@@ -702,7 +702,7 @@ def clean(s):
 def get_heading(query, key, def_elem):
     if not query: return ""
     h = get_param(query, key, None)
-    print("h=",h)
+    # print("h=",h)
     if not h: return ""
     h = str(h)
     st = h.split("!!")  # h4 class="h3" width="23"!!Tehtava 1
