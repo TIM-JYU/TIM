@@ -314,6 +314,52 @@ ul ul ul, ol ol ol {
     position: relative;
 }
 
+.parref {
+    border: 1px solid #cad;
+    border-radius: 3px;
+    padding-bottom: 20pt;
+}
+
+.parref-begin {
+    border-top: 1px solid #cad;
+    border-left: 1px solid #cad;
+    border-right: 1px solid #cad;
+    border-radius: 3px;
+    //padding-bottom: 20pt;
+}
+
+.parref-mid {
+    border-left: 1px solid #cad;
+    border-right: 1px solid #cad;
+    border-radius: 3px;
+}
+
+.parref-end {
+    border-left: 1px solid #cad;
+    border-right: 1px solid #cad;
+    border-bottom: 1px solid #cad;
+    border-radius: 3px;
+    padding-bottom: 20pt;
+}
+
+.parlink:before {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 36px;
+    color: #cad;
+    content: "\"";
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+a.parlink {
+    color: #97a;
+}
+
+a.parlink:hover {
+    color: #dde;
+    text-decoration: none;
+}
+
 #previewDiv {
     clear: both;
     overflow: hidden;
@@ -1522,6 +1568,7 @@ p.plgfooter {
 #teksti:focus {
     outline: none;
 }
+
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 1200px) {

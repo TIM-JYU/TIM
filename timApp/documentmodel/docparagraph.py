@@ -125,6 +125,33 @@ class DocParagraph(DocParagraphBase):
         return self.__data['html']
 
     @contract
+    def get_ref_html(self, classname="parref", write_link=False) -> 'str':
+        linkhtml = ''
+        if write_link:
+            from documentmodel.document import Document
+            doc = Document(self.get_doc_id())
+            linkhtml = '<a class="parlink" href="/view/{0}">{1}</a>'.format(self.get_doc_id(), doc.get_name())
+        return """
+            <div class="{0}">
+                {1}
+                {2}
+            </div>
+        """.format(classname, linkhtml, self.get_html())
+
+    @contract
+    def __get_html(self) -> 'str':
+        if self.get_original() is None:
+            return self.__get_html()
+
+        # Referenced paragraph
+        return """
+            <div class="parref">
+                <a class="parlink" href="{1}">Dokumentti {1}</a>
+                {0}
+            </div>
+        """.format(self.__get_html(), self.get_doc_id())
+
+    @contract
     def set_html(self, new_html: 'str'):
         self.__data['html'] = new_html
 
@@ -231,11 +258,16 @@ class DocParagraph(DocParagraphBase):
                 raise TimDbException('The referenced paragraph does not exist.')
             ref_par = ref_doc.get_paragraph(attrs['rp'])
             ref_par.set_original(self)
+            ref_par.set_html(ref_par.get_ref_html(write_link=True))
             return [ref_par]
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
+            n = len(ref_pars)
             for p in ref_pars:
+                p.set_html(p.get_ref_html(classname="parref-mid"))
                 p.set_original(self)
+            ref_pars[0].set_html(ref_pars[0].get_ref_html(classname="parref-begin", write_link=True))
+            ref_pars[n-1].set_html(ref_pars[n-1].get_ref_html(classname="parref-end"))
             return ref_pars
         else:
             assert False
