@@ -281,6 +281,7 @@ def get_html(ttype, query):
     # print("UserId:", user_id)
     if user_id == "Anonymous": return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
     do_lazy = is_lazy(query)
+    # do_lazy = False
     # print("do_lazy",do_lazy,type(do_lazy))
     
     js = query_params_to_map_check_parts(query)

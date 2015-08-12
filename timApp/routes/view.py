@@ -5,6 +5,7 @@ from .common import *
 from .cache import cache
 import pluginControl
 from options import *
+import traceback
 
 
 
@@ -19,8 +20,12 @@ def view_document(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
         return view(doc_name, 'view_html.html', view_range=view_range)
-    except (ValueError, TypeError):
-        abort(400, "Invalid start or end index specified.")
+    except ValueError as v:
+        tb = traceback.format_exc()
+        abort(400, "Invalid start or end index specified." + "ValueError" + str(v) + tb)
+    except TypeError as t:
+        tb = traceback.format_exc()
+        abort(400, "Invalid start or end index specified." + " TypeError " +str(t) + tb)
 
 
 @view_page.route("/teacher/<path:doc_name>")

@@ -100,7 +100,7 @@ paliApp.initScope = function (scope, element, attrs) {
     // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
     element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
     var n = element[0].childNodes.length;
-    if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="footer"');
+    if (n > 1) element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
     scope.paliScope.checkPalindrome();
     scope.attrs = {}; // not needed any more
 
