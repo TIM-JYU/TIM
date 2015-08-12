@@ -25,7 +25,7 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from routes.cache import cache
 from routes.answer import answers
-from routes.edit import edit_page
+from routes.edit import edit_page, par_response
 from routes.manage import manage_page
 from routes.view import view_page
 from routes.slide import slide_page
@@ -1093,17 +1093,18 @@ def post_note():
             tags.append(tag)
     doc_id = jsondata['docId']
     doc_ver = request.headers.get('Version')
-    paragraph_id = jsondata['par']
+    par_id = jsondata['par']
     verifyCommentRight(doc_id)
     # verify_document_version(doc_id, doc_ver)
     doc = get_document(doc_id, doc_ver)
-    par = get_paragraph(doc, paragraph_id)
+    par = get_paragraph(doc, par_id)
     if par is None:
         abort(400, 'Non-existent paragraph')
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
     timdb.notes.addNote(group_id, doc, par, note_text, access, tags)
-    return okJsonResponse()
+    return par_response([Document(doc_id).get_paragraph(par_id)],
+                        doc_id)
 
 
 @app.route("/editNote", methods=['POST'])
@@ -1112,8 +1113,10 @@ def edit_note():
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
     doc_id = int(jsondata['docId'])
+    verifyViewAccess(doc_id, getCurrentUserGroup())
     note_text = jsondata['text']
     access = jsondata['access']
+    par_id = jsondata['par']
     note_id = int(jsondata['id'])
     sent_tags = jsondata.get('tags', {})
     tags = []
@@ -1125,21 +1128,24 @@ def edit_note():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
     timdb.notes.modifyNote(note_id, note_text, access, tags)
-    return okJsonResponse()
+    return par_response([Document(doc_id).get_paragraph(par_id)],
+                        doc_id)
 
 
 @app.route("/deleteNote", methods=['POST'])
 def delete_note():
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
-    doc_id = int(jsondata['docId'])  # TODO: maybe not needed
+    doc_id = int(jsondata['docId'])
     note_id = int(jsondata['id'])
+    paragraph_id = jsondata['par']
     timdb = getTimDb()
     if not (timdb.notes.hasEditAccess(group_id, note_id)
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
     timdb.notes.deleteNote(note_id)
-    return okJsonResponse()
+    return par_response([Document(doc_id).get_paragraph(paragraph_id)],
+                        doc_id)
 
 
 @app.route("/getServerTime", methods=['GET'])
@@ -1484,22 +1490,18 @@ def calculate_points(answer, points_table):
     return points
 
 
-@app.route("/notes/<int:doc_id>")
-def get_notes(doc_id):
-    verifyViewAccess(doc_id)
+@app.route("/note/<int:note_id>")
+def get_note(note_id):
     timdb = getTimDb()
-    group_id = getCurrentUserGroup()
-    doc = Document(doc_id)
-    notes = [note for note in timdb.notes.getNotes(group_id, doc)]
-    for note in notes:
-        note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
-        note.pop('UserGroup_id')
-        note['private'] = note['access'] == 'justme'
-        tags = note['tags']
-        note['tags'] = {}
-        for tag in KNOWN_TAGS:
-            note['tags'][tag] = tag in tags
-    return jsonResponse(notes)
+    if not timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id):
+        abort(403)
+    note = timdb.notes.get_note(note_id)
+    note.pop('UserGroup_id')
+    tags = note['tags']
+    note['tags'] = {}
+    for tag in KNOWN_TAGS:
+        note['tags'][tag] = tag in tags
+    return jsonResponse({'text': note['content'], 'extraData': note})
 
 
 @app.route("/read/<int:doc_id>", methods=['GET'])

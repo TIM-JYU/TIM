@@ -283,7 +283,7 @@ timApp.controller("ViewCtrl", [
                 return;
             }
             var url,
-                data;
+                data, initUrl;
             if (options.isNew) {
                 caption = 'Add comment';
                 url = '/postNote';
@@ -294,13 +294,11 @@ timApp.controller("ViewCtrl", [
                         unclear: false
                     }
                 };
+                initUrl = null;
             } else {
                 url = '/editNote';
-                data = options.noteData;
-                if (!data.editable) {
-                    $window.alert('You cannot edit this note.');
-                    return;
-                }
+                data = {};
+                initUrl = '/note/' + options.noteData.id;
             }
             var par_id = sc.getParId($par),
                 attrs = {
@@ -334,7 +332,7 @@ timApp.controller("ViewCtrl", [
                     "after-delete": 'handleNoteDelete(saveData, extraData)',
                     "preview-url": '/preview/' + sc.docId,
                     "delete-url": '/deleteNote',
-                    "editor-text": data.content
+                    "initial-text-url": initUrl
                 };
             sc.toggleEditor($par, options, attrs, caption);
         };
@@ -452,7 +450,10 @@ timApp.controller("ViewCtrl", [
         sc.addSavedParToDom = function (data, extraData) {
             var $par = sc.getElementByParId(extraData.par);
             // check if we were editing an area
-            if (extraData.area_start !== null && extraData.area_end !== null) {
+            if (angular.isDefined(extraData.area_start) &&
+                angular.isDefined(extraData.area_start) &&
+                extraData.area_start !== null &&
+                extraData.area_end !== null) {
                 $par = sc.getElementByParId(extraData.area_start);
 
                 // remove all but the first element of the area because it'll be used
@@ -508,14 +509,12 @@ timApp.controller("ViewCtrl", [
             sc.editing = false;
         };
 
-        sc.handleNoteDelete = function () {
-            sc.getNotes();
-            sc.editing = false;
+        sc.handleNoteDelete = function (saveData, extraData) {
+            sc.addSavedParToDom(saveData, extraData);
         };
 
-        sc.handleNoteSave = function () {
-            sc.getNotes();
-            sc.editing = false;
+        sc.handleNoteSave = function (saveData, extraData) {
+            sc.addSavedParToDom(saveData, extraData);
         };
 
         sc.onClick('.paragraphs .parContent', function ($this, e) {
@@ -550,8 +549,12 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        sc.onClick(".noteContent", function ($this, e) {
-            sc.toggleNoteEditor($this.parent().parent().parent(), {isNew: false, noteData: $this.parent().data()});
+        sc.onClick(".note", function ($this, e) {
+            if (!$this.hasClass('editable')) {
+                sc.showDialog('You cannot edit this note.');
+                return true;
+            }
+            sc.toggleNoteEditor($this.parents('.par'), {isNew: false, noteData: {id: $this.attr('note-id')}});
             return true;
         });
 
@@ -561,8 +564,6 @@ timApp.controller("ViewCtrl", [
             sc.showQuestion(questionId);
             sc.par = ($(question).parent().parent());
         });
-
-        // Note-related functions
 
         sc.showOptionsWindow = function (e, $par, coords) {
             var $popup = $('<popup-menu>');
@@ -629,46 +630,6 @@ timApp.controller("ViewCtrl", [
             }
         };
 
-        sc.getNoteHtml = function (notes) {
-            var $noteDiv = $("<div>", {class: 'notes'});
-            for (var i = 0; i < notes.length; i++) {
-                var classes = ["note"];
-                for (var j = 0; j < sc.noteClassAttributes.length; j++) {
-                    if (notes[i][sc.noteClassAttributes[j]] || notes[i].tags[sc.noteClassAttributes[j]]) {
-                        classes.push(sc.noteClassAttributes[j]);
-                    }
-                }
-                $noteDiv.append($("<div>", {class: classes.join(" ")})
-                    .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].html})));
-            }
-            return $noteDiv;
-        };
-
-        sc.getSpeakerNoteHtml = function (notes) {
-            $(notes).parent().append($(notes).clone());
-            $(notes).removeClass('speaker').addClass('notes');
-            var $noteDiv = $("<div>", {class: 'notes'});
-            for (var i = 0; i < notes.length; i++) {
-                var classes = ["note"];
-                for (var j = 0; j < sc.noteClassAttributes.length; j++) {
-                    if (notes[i][sc.noteClassAttributes[j]] || notes[i].tags[sc.noteClassAttributes[j]]) {
-                        classes.push(sc.noteClassAttributes[j]);
-                    }
-                }
-                $noteDiv.append($("<div>", {class: classes.join(" ")})
-                    .data(notes[i])
-                    .append($("<div>", {class: 'noteContent', html: notes[i].content})));
-            }
-
-            return $noteDiv;
-            /*
-             var $noteDiv = $("<div>", {class: 'notes'});
-             $(notes).removeClass('speaker').addClass('notes');
-             return notes;
-             */
-        };
-
         sc.getQuestionHtml = function (questions) {
             var questionImage = '../../../static/images/show-question-icon.png';
             var $questionsDiv = $("<div>", {class: 'questions'});
@@ -685,7 +646,6 @@ timApp.controller("ViewCtrl", [
             }
             return $questionsDiv;
         };
-
 
         sc.getQuestions = function () {
             var rn = "?_=" + Date.now();
@@ -710,38 +670,6 @@ timApp.controller("ViewCtrl", [
                         $par.append($questionsDiv);
                     });
                 });
-        };
-
-
-        sc.getNotes = function () {
-            var rn = "?_=" + Date.now();
-
-            http.get('/notes/' + sc.docId + rn).success(function (data) {
-                $('.notes').remove();
-                var pars = {};
-
-                var noteCount = data.length;
-                for (var i = 0; i < noteCount; i++) {
-                    var pi = data[i].par_id;
-                    if (!(pi in pars)) {
-                        pars[pi] = {notes: []};
-
-                    }
-                    if (!('notes' in pars[pi])) {
-                        pars[pi].notes = [];
-                    }
-                    pars[pi].notes.push(data[i]);
-                }
-                Object.keys(pars).forEach(function (par_id, index) {
-                    var $par = sc.getElementByParId(par_id);
-                    var $notediv = sc.getNoteHtml(pars[par_id].notes);
-                    $par.append($notediv);
-                    sc.processAllMath($par);
-                });
-            }).error(function (data, status, headers, config) {
-                // $window.alert("Could not fetch notes.");
-                sc.showDialog("Could not fetch notes.");
-            });
         };
 
         sc.getEditPars = function () {
@@ -903,7 +831,6 @@ timApp.controller("ViewCtrl", [
                     $loading.remove();
                     $('.paragraphs').append($compile(data)(sc));
                     sc.getIndex();
-                    sc.getNotes();
                     sc.processAllMath($('body'));
                     /*
                      if (sc.rights.editable) {
@@ -939,7 +866,6 @@ timApp.controller("ViewCtrl", [
         sc.setHeaderLinks();
         sc.indexTable = [];
         sc.getIndex();
-        sc.getNotes();
 
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android

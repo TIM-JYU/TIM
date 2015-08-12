@@ -192,4 +192,14 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True):
     for r in readings:
         if r['par_id'] in pars_dict:
             read_statuses[r['par_id']] = 'read' if r['par_hash'] == pars_dict[r['par_id']].get_hash() else 'modified'
-    return pars, js_paths, css_paths, modules, read_statuses
+    notes = timdb.notes.getNotes(group, Document(doc_id))
+    note_dict = {}
+    for n in notes:
+        if n['par_id'] not in note_dict:
+            note_dict[n['par_id']] = []
+        n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
+        n.pop('UserGroup_id')
+        n['private'] = n['access'] == 'justme'
+        note_dict[n['par_id']].append(n)
+
+    return pars, js_paths, css_paths, modules, read_statuses, note_dict
