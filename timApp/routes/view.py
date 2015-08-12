@@ -255,9 +255,6 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
-    # index = Document(doc_id).get_index()
-    index = []
-
     show_time('render alku')
     # TODO: Check if doc variable is needed
     result = render_template(template_name,
@@ -282,7 +279,6 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                              group=usergroup,
                              rights=get_rights(doc_id),
                              reqs=reqs,
-                             settings=settings,
-                             index=index)
+                             settings=settings)
     show_time('render loppu')
     return result

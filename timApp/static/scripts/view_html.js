@@ -70,7 +70,6 @@ timApp.controller("ViewCtrl", [
         sc.teacherMode = $window.teacherMode;
         sc.sidebarState = 'autohidden';
         sc.lectureMode = $window.lectureMode;
-        sc.index = $window.index;
         if (sc.users.length > 0) {
             sc.selectedUser = sc.users[0];
         } else {
@@ -802,46 +801,51 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getIndex = function () {
-            sc.indexTable = [];
-            var parentEntry = null;
-            for (var i = 0; i < sc.index.length; i++) {
-                var index_item = sc.index[i];
-                var level = index_item[2];
-                var astyle = "a" + level;
-                var txt = $(this).text();
-                txt = txt.trim().replace(/\\#/g, "#");
-                var entry = {
-                    text: index_item[1],
-                    target: '#' + index_item[0],
-                    style: astyle,
-                    level: level,
-                    items: [],
-                    state: ""
-                };
+            http.get('/index/' + sc.docId)
+                .success(function (data) {
+                    sc.indexTable = [];
+                    var parentEntry = null;
+                    for (var i = 0; i < data.length; i++) {
+                        var index_item = data[i];
+                        var level = index_item[2];
+                        var astyle = "a" + level;
+                        var txt = $(this).text();
+                        txt = txt.trim().replace(/\\#/g, "#");
+                        var entry = {
+                            text: index_item[1],
+                            target: '#' + index_item[0],
+                            style: astyle,
+                            level: level,
+                            items: [],
+                            state: ""
+                        };
 
-                if (level === 1) {
+                        if (level === 1) {
+                            if (parentEntry !== null) {
+                                if ("items" in parentEntry && parentEntry.items.length > 0) {
+                                    parentEntry.state = 'col';
+                                }
+                                sc.indexTable.push(parentEntry);
+                            }
+                            parentEntry = entry;
+                        }
+                        else if (parentEntry !== null) {
+                            if (!("items" in parentEntry)) {
+                                // For IE
+                                parentEntry.items = [];
+                            }
+                            parentEntry.items.push(entry);
+                        }
+                    }
                     if (parentEntry !== null) {
-                        if ("items" in parentEntry && parentEntry.items.length > 0) {
+                        if (parentEntry.items.length > 0) {
                             parentEntry.state = 'col';
                         }
                         sc.indexTable.push(parentEntry);
                     }
-                    parentEntry = entry;
-                }
-                else if (parentEntry !== null) {
-                    if (!("items" in parentEntry)) {
-                        // For IE
-                        parentEntry.items = [];
-                    }
-                    parentEntry.items.push(entry);
-                }
-            }
-            if (parentEntry !== null) {
-                if (parentEntry.items.length > 0) {
-                    parentEntry.state = 'col';
-                }
-                sc.indexTable.push(parentEntry);
-            }
+                }).error(function () {
+                    console.log("Could not get index");
+                });
         };
 
         sc.invertState = function (state) {
