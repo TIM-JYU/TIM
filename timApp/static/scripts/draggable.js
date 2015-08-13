@@ -157,7 +157,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 $document.off('mousemove pointermove touchmove', moveResize);
                 pos = getPageXY(e);
 
-                if (clickFn && e.which === 1) {
+                if (!(upResize || rightResize || downResize || leftResize) && clickFn && e.which === 1) {
                     delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
                     if (Math.abs(delta.Y) < 3 && Math.abs(delta.X) < 3) {
                         clickFn(scope);
