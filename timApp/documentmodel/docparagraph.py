@@ -1,3 +1,4 @@
+import functools
 import os
 
 from contracts import contract, new_contract
@@ -13,7 +14,6 @@ class DocParagraphBase:
 
 # This is so the DocParagraph contract can be used in the class itself
 new_contract('DocParagraph', DocParagraphBase)
-
 
 class DocParagraph(DocParagraphBase):
     @contract
@@ -84,6 +84,7 @@ class DocParagraph(DocParagraphBase):
         return cls.get(doc_id, par_id, t, files_root=froot)
 
     @classmethod
+    @functools.lru_cache(maxsize=65536)
     @contract
     def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
