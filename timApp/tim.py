@@ -565,10 +565,12 @@ def check_lecture():
                 use_question = True
                 session['use_questions'] = True
 
+            doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
+
             return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
                                  "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
                                  "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
-                                 "useWall": use_wall, "useQuestions": use_question})
+                                 "useWall": use_wall, "useQuestions": use_question, "doc_name": doc_name})
         else:
             leave_lecture_function(lecture_id)
             timdb.lectures.delete_users_from_lecture(lecture_id)
@@ -889,6 +891,8 @@ def join_lecture():
     if lecture[0].get("password") != password_quess:
         return jsonResponse({"correctPassword": False})
 
+    doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
+
     in_lecture, current_lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
     if in_lecture:
         leave_lecture_function(current_lecture_id)
@@ -909,7 +913,7 @@ def join_lecture():
     return jsonResponse(
         {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
          "lectureCode": lecture_code, "startTime": lecture[0].get("start_time"),
-         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
+         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students, "doc_name": doc_name})
 
 
 # Route to leave lecture
