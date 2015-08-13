@@ -17,16 +17,34 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             }
 
             function resizeElement(e, up, right, down, left) {
-                upSet = up;
-                rightSet = right;
-                downSet = down;
-                leftSet = left;
+                upResize = up;
+                rightResize = right;
+                downResize = down;
+                leftResize = left;
                 $document.off('mouseup pointerup touchend', release);
                 $document.off('mousemove pointermove touchmove', moveResize);
                 lastPos = getPageXY(e);
 
+                var leftSet = element.css('left') != 'auto';
+                var rightSet = element.css('right') != 'auto';
+                setLeft = (!leftSet & !rightSet) | leftSet;
+                setRight = rightSet;
+
+                // Rules for what we should set in CSS
+                // to keep the element dimensions (Y).
+                // Prefer top over bottom.
+
+                var topSet = element.css('top') != 'auto';
+                var botSet = element.css('bottom') != 'auto';
+                setTop = (!topSet & !botSet) | topSet;
+                setBottom = botSet;
                 prevHeight = element.height();
                 prevWidth = element.width();
+
+                prevTop = getPixels(element.css('top'));
+                prevLeft = getPixels(element.css('left'));
+                prevBottom = getPixels(element.css('bottom'));
+                prevRight = getPixels(element.css('right'));
 
                 //prevTop = element.position().top;
                 //prevLeft = element.position().left;
@@ -41,13 +59,19 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             if (attr.resize) {
                 var handleRight = $("<div>", {class: 'resizehandle-r resizehandle'});
-                handleRight.on('mousedown pointerdown touchstart', function (e) {resizeElement(e, false, true, false, false)});
+                handleRight.on('mousedown pointerdown touchstart', function (e) {
+                    resizeElement(e, false, true, false, false)
+                });
                 element.append(handleRight);
                 var handleDown = $("<div>", {class: 'resizehandle-d resizehandle'});
-                handleDown.on('mousedown pointerdown touchstart', function (e) {resizeElement(e, false, false, true, false)});
+                handleDown.on('mousedown pointerdown touchstart', function (e) {
+                    resizeElement(e, false, false, true, false)
+                });
                 element.append(handleDown);
                 var handleRightDown = $("<div>", {class: 'resizehandle-rd resizehandle'});
-                handleRightDown.on('mousedown pointerdown touchstart', function (e) {resizeElement(e, false, true, true, false)});
+                handleRightDown.on('mousedown pointerdown touchstart', function (e) {
+                    resizeElement(e, false, true, true, false)
+                });
                 element.append(handleRightDown);
             }
 
@@ -90,6 +114,10 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             }
 
             handle.on('mousedown pointerdown touchstart', function (e) {
+                upResize = false;
+                rightResize = false;
+                downResize = false;
+                leftResize = false;
                 $document.off('mouseup pointerup touchend', release);
                 $document.off('mousemove pointermove touchmove', move);
                 lastPos = getPageXY(e);
@@ -158,14 +186,26 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 pos = getPageXY(e);
                 delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
 
-                if (upSet)
-                    element.css('height', prevHeight - delta.Y)
-                if (leftSet)
+                if (upResize) {
+                    element.css('height', prevHeight - delta.Y);
+                    if (setTop)
+                        element.css('top', prevTop + delta.Y);
+                }
+                if (leftResize) {
                     element.css('width', prevWidth - delta.X);
-                if (downSet)
+                    if (setLeft)
+                        element.css('left', prevLeft + delta.X);
+                }
+                if (downResize) {
                     element.css('height', prevHeight + delta.Y);
-                if (rightSet)
+                    if (setBottom)
+                        element.css('bottom', prevBottom - delta.Y);
+                }
+                if (rightResize) {
                     element.css('width', prevWidth + delta.X);
+                    if (setRight && delta.X >= 0)
+                        element.css('right', prevRight - delta.X);
+                }
 
                 e.preventDefault();
                 e.stopPropagation();

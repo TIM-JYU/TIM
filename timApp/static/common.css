@@ -124,11 +124,12 @@ a {
     font-size: 13px;
     line-height: 15px;
     cursor: default;
+    touch-action: none;
 }
 
 .resizehandle-r {
     cursor: e-resize;
-    width: 7px;
+    width: 15px;
     right: -5px;
     top: 0;
     height: 100%;
@@ -136,8 +137,8 @@ a {
 
 .resizehandle-rd  {
     cursor: se-resize;
-    width: 12px;
-    height: 12px;
+    width: 20px;
+    height: 20px;
     right: 1px;
     bottom: 1px;
     z-index: 95;
@@ -145,7 +146,7 @@ a {
 
 .resizehandle-d {
     cursor: s-resize;
-    height: 7px;
+    height: 15px;
     width: 100%;
     bottom: -5px;
     left: 0;
