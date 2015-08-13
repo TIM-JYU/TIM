@@ -63,18 +63,20 @@ class Document:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.exists(os.path.join(froot, 'docs', str(doc_id)))
 
-    def create(self, ignore_exists=False):
+    @contract
+    def create(self, ignore_exists : 'bool' = False):
         path = os.path.join(self.files_root, 'docs', str(self.doc_id))
         if not os.path.exists(path):
             os.makedirs(path)
         elif not ignore_exists:
             raise DocExistsError(self.doc_id)
 
-    def exists(self):
+    @contract
+    def exists(self) -> 'bool':
         return Document.doc_exists(self.doc_id, self.files_root)
 
     @contract
-    def export_markdown(self, export_hashes=False) -> 'str':
+    def export_markdown(self, export_hashes : 'bool' = False) -> 'str':
         return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
 
     @contract
@@ -188,6 +190,18 @@ class Document:
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
         return ver
+
+    @contract
+    def get_name(self) -> 'str':
+        """
+        Gets the document name from its main heading.
+        :return: Document name or "Document n" if not found.
+        """
+        for par in self:
+            md = par.get_markdown().lstrip()
+            if md.startswith('#'):
+                return md.lstrip('# ')
+        return "Document {}".format(self.doc_id)
 
     @contract
     def has_paragraph(self, par_id: 'str') -> 'bool':

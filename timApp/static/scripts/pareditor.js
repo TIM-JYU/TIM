@@ -93,6 +93,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }, $scope.extraData)
                     }).success(function (data, status, headers, config) {
                         $scope.setEditorText(data.text);
+                        angular.extend($scope.extraData, data.extraData);
                         $scope.aceChanged();
                     }).error(function (data, status, headers, config) {
                         $window.alert('Failed to get text: ' + data.error);
