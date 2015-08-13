@@ -12,9 +12,10 @@
 
 timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
     "use strict";
-    $(function () {
-        $('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
-    });
+    $window.setTimeout(function() {
+        angular.element('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
+    }, 0);
+
     scope.dynamicAnswerSheetControl = {};
     scope.asked_id = false;
 
@@ -79,6 +80,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
             scope.columnHeaders = columnHeaders;
             scope.pointsTable = [];
+
             if (data.points && data.points !== '') {
                 var points = data.points.split('|');
                 for (var i = 0; i < points.length; i++) {
@@ -101,6 +103,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     type: jsonRows[i].type,
                     value: jsonRows[i].value
                 };
+
+                var idString = rows[i].id.toString();
+                if (data.expl && idString in data.expl) {
+                    rows[i].expl = data.expl[idString];
+                }
 
                 var jsonColumns = jsonRows[i]["COLUMNS"];
                 var columns = [];
@@ -527,6 +534,17 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         return points;
     };
 
+    scope.createExplanation = function () {
+        var expl = {};
+        for (var i = 0; i < scope.rows.length; i++) {
+            var row = scope.rows[i];
+            if (row.expl && row.expl.trim()) {
+                expl[row.id] = row.expl.trim();
+            }
+        }
+        return expl;
+    };
+
     scope.createJson = function () {
         if (scope.asked_id) {
             return scope.updatePoints();
@@ -599,9 +617,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             }
         }
 
-        //TODO use  JSON.stringify
-
-
         scope.question.question = scope.replaceLinebreaksWithHTML(scope.question.question);
         scope.question.title = scope.replaceLinebreaksWithHTML(scope.question.title);
 
@@ -663,6 +678,8 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
 
         var points = scope.createPoints();
 
+        var expl = scope.createExplanation();
+
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_id = scope.getParId($par);
@@ -685,6 +702,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                 'par_id': par_id,
                 'doc_id': doc_id,
                 'points': points,
+                'expl': JSON.stringify(expl),
                 'questionJson': JSON.stringify(questionJson),
                 'buster': new Date().valueOf()
             }

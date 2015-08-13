@@ -88,6 +88,8 @@ __question_to_be_asked = []
 __pull_answer = {}
 # Dictionary to activities of different users
 __user_activity = {}
+# Dictionary for showing answers after question has ended
+__question_to_show = []
 
 
 def error_generic(error, code):
@@ -401,17 +403,35 @@ def get_updates():
         if use_quesitions:
             for pair in __question_to_be_asked:
                 if pair[0] == lecture_id and current_user not in pair[2]:
-                    question = timdb.questions.get_asked_question(pair[1])[0]
-                    question_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]["json"]
+                    question_json = timdb.questions.get_asked_question(pair[1])[0]["json"]
                     pair[2].append(current_user)
                     pair[3].append(current_user)
+                    answer = timdb.lecture_answers.get_user_answer_to_question(pair[1], current_user)
+                    if answer:
+                        answer = answer[0]['answer']
+                    else:
+                        answer = ''
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                          "lectureId": lecture_id, "question": True, "askedId": pair[1], "asked": pair[4],
-                         "questionJson": question_json,
+                         "questionJson": question_json, "answer": answer,
                          "isLecture": True, "lecturers": lecturers, "students": students,
                          "lectureEnding": lecture_ending})
+            for pair in __question_to_show:
+                if pair[0] == lecture_id and current_user not in pair[2]:
+                    question = timdb.questions.get_asked_question(pair[1])[0]
+                    pair[2].append(current_user)
+                    answer = timdb.lecture_answers.get_user_answer_to_question(pair[1], current_user)
+                    if not answer:
+                        break
+                    answer = answer[0]['answer']
+                    lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
+                    return jsonResponse(
+                        {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
+                         "lectureId": lecture_id, "result": True, "questionJson": question["json"], "answer": answer,
+                         "expl": question["expl"], "isLecture": True, "lecturers": lecturers,
+                         "students": students, "lectureEnding": lecture_ending})
 
         if len(list_of_new_messages) > 0:
             if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
@@ -500,14 +520,18 @@ def add_question():
         abort(403)
     par_id = request.args.get('par_id')
     points = request.args.get('points')
+    if points is None:
+        points = ''
+    expl = request.args.get('expl')
+    if expl is None:
+        expl = '{}'
     question_json = request.args.get('questionJson')
 
-    questions = None
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, question_json, points)
+        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, question_json, points, expl)
     else:
         questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, question_json,
-                                                    points)
+                                                    points, expl)
     return jsonResponse(timdb.questions.get_question(questions)[0])
 
 
@@ -1209,7 +1233,7 @@ def ask_question():
             asked_json_id = timdb.questions.add_asked_json(question_json_str, question_hash)
         asked_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
         asked_id = timdb.questions.add_asked_questions(lecture_id, doc_id, None, asked_time, question.get("points"),
-                                                       asked_json_id)
+                                                       asked_json_id, question.get("expl"))
     else:
         question = timdb.questions.get_asked_question(asked_id)[0]
         asked_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]
@@ -1234,6 +1258,19 @@ def ask_question():
     __pull_answer[asked_id, lecture_id] = []
 
     return jsonResponse(asked_id)
+
+
+@app.route('/showAnswerPoints', methods=['POST'])
+def show_points():
+    if 'asked_id' not in request.args or 'lecture_id' not in request.args:
+        abort("400")
+    asked_id = int(request.args.get('asked_id'))
+    lecture_id = int(request.args.get('lecture_id'))
+    for show in __question_to_show:
+        if show[0] == lecture_id:
+            __question_to_show.remove(show)
+    __question_to_show.append((lecture_id, asked_id, []))
+    return jsonResponse("")
 
 
 # Route to get add question to database
@@ -1273,6 +1310,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
                 stopped = False
                 break
         if stopped:
+            del __pull_answer[asked_id, lecture_id]
             return
 
     del __pull_answer[asked_id, lecture_id]

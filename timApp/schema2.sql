@@ -287,7 +287,8 @@ CREATE TABLE Question (
   question_title TEXT    NOT NULL,
   answer         TEXT,
   questionJson   TEXT,
-  points         TEXT
+  points         TEXT,
+  expl           TEXT
 );
 
 CREATE TABLE AskedQuestion (
@@ -297,7 +298,8 @@ CREATE TABLE AskedQuestion (
   par_id         INTEGER,
   asked_time     TEXT    NOT NULL,
   points         TEXT    NOT NULL,
-  asked_json_id  INTEGER NOT NULL
+  asked_json_id  INTEGER NOT NULL,
+  expl           TEXT
 );
 
 CREATE TABLE AskedJson (
@@ -305,7 +307,6 @@ CREATE TABLE AskedJson (
   json           TEXT    NOT NULL,
   hash           TEXT    NOT NULL
 );
-
 CREATE TABLE Lecture (
   lecture_id   INTEGER,
   lecture_code TEXT,

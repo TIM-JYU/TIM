@@ -252,6 +252,7 @@ timApp.controller("ViewCtrl", [
                         questionJson: sc.json,
                         questionId: sc.qId,
                         points: data.points,
+                        expl: JSON.parse(data.expl),
                         isLecturer: sc.isLecturer
                     });
                 })

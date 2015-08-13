@@ -31,6 +31,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.json = args.questionJson;
             $scope.questionTitle = args.questionJson.TITLE;
             $scope.points = args.points;
+            $scope.expl = args.expl;
             $scope.dynamicAnswerSheetControl.createAnswer();
         });
 
@@ -43,7 +44,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $rootScope.$broadcast("editQuestion", {
                 "question_id": $scope.questionId,
                 "json": $scope.json,
-                "points": $scope.points
+                "points": $scope.points,
+                "expl": $scope.expl
             });
         };
 

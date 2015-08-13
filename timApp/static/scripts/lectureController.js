@@ -1015,14 +1015,23 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.addPeopleToList(answer.students, $scope.studentTable);
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
-                        if (answer.question && !$scope.isLecturer) {
+                        if ((answer.question || answer.result) && !$scope.isLecturer) {
                             $scope.showAnswerWindow = true;
+                            var json = JSON.parse(answer.questionJson);
+                            var expl = {};
+                            if (answer.expl) {
+                                expl = JSON.parse(answer.expl)
+                            }
+                            $scope.questionTitle = json.TITLE;
                             $rootScope.$broadcast("setQuestionJson", {
-                                questionJson: JSON.parse(answer.questionJson),
+                                result: answer.result,
+                                answer: answer.answer,
+                                questionJson: json,
                                 askedId: answer.askedId,
                                 isLecturer: $scope.isLecturer,
                                 askedTime: answer.asked,
-                                clockOffset: $scope.clockOffset
+                                clockOffset: $scope.clockOffset,
+                                expl: expl
                             });
                         }
 
