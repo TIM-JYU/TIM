@@ -97,8 +97,12 @@ class DocumentParser:
             task_id = attrs.get('taskId')
             if task_id:
                 if task_id in found_tasks:
-                    raise ValidationException('Duplicate task id: ' + task_id)
-                found_tasks.add(task_id)
+                    # Duplicate task id's are not fatal, but still something we could warn the user about.
+                    # For now, just ignore them.
+                    #print('Duplicate task id: ' + task_id)
+                    #raise ValidationException('Duplicate task id: ' + task_id)
+                    pass
+                #found_tasks.add(task_id)
             area = attrs.get('area')
             if area:
                 if area in found_areas:
