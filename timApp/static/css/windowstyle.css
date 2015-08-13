@@ -15,6 +15,10 @@
     box-sizing: border-box;
 }
 
+.startingTime, .endingTime, #infoFields div {
+    margin-bottom: 10px;
+}
+
 /* Chrome etc. */
 input:enabled::-webkit-input-placeholder {
     color: #3CC;
