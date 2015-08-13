@@ -105,7 +105,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 pos = getPageXY(e);
 
 
-                if (e.which === 1) {
+                if (clickFn && e.which === 1) {
                     delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
                     if (Math.abs(delta.Y) < 3 && Math.abs(delta.X) < 3) {
                         clickFn(scope);
