@@ -22,7 +22,13 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             if (attr.resize) {
                 $window.setTimeout(function () {
-                    element.resizable();
+                    //console.log('left: ', element.css('left'));
+                    //console.log('right: ', element.css('right'));
+                    if (element.css('right') != 'auto' && element.css('left') == 'auto') {
+                        element.resizable({ handles: 's, w, sw' });
+                    } else {
+                        element.resizable();
+                    }
                     element.on('resizestop', function () {
                         if (attr.callback) attr.callback();
                     });
@@ -68,6 +74,8 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             }
 
             handle.on('mousedown pointerdown touchstart', function (e) {
+                $document.off('mouseup pointerup touchend', release);
+                $document.off('mousemove pointermove touchmove', move);
                 lastPos = getPageXY(e);
                 // Rules for what we should set in CSS
                 // to keep the element dimensions (X).
@@ -103,7 +111,6 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 $document.off('mouseup pointerup touchend', release);
                 $document.off('mousemove pointermove touchmove', move);
                 pos = getPageXY(e);
-
 
                 if (clickFn && e.which === 1) {
                     delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};

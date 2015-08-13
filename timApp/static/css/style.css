@@ -42,8 +42,8 @@ table.timppa {
     width: 20em;
     z-index: 6;
     position: fixed;
+    left: calc(100% - 20.5em);
     top: 5%;
-    right: 5%;
     min-width: 20em;
     background-color: white;
 }
