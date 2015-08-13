@@ -125,3 +125,37 @@ a {
     line-height: 15px;
     cursor: default;
 }
+
+.resizehandle-r {
+    cursor: e-resize;
+    width: 7px;
+    right: -5px;
+    top: 0;
+    height: 100%;
+}
+
+.resizehandle-rd  {
+    cursor: se-resize;
+    width: 12px;
+    height: 12px;
+    right: 1px;
+    bottom: 1px;
+    z-index: 95;
+}
+
+.resizehandle-d {
+    cursor: s-resize;
+    height: 7px;
+    width: 100%;
+    bottom: -5px;
+    left: 0;
+}
+
+.resizehandle {
+    z-index: 90;
+    position: absolute;
+    font-size: 0.1px;
+    display: block;
+    -ms-touch-action: none;
+    touch-action: none;
+}

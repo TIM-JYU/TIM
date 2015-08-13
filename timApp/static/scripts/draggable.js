@@ -16,23 +16,39 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 var clickFn = $parse(attr.click);
             }
 
+            function resizeElement(e, up, right, down, left) {
+                upSet = up;
+                rightSet = right;
+                downSet = down;
+                leftSet = left;
+                $document.off('mouseup pointerup touchend', release);
+                $document.off('mousemove pointermove touchmove', moveResize);
+                lastPos = getPageXY(e);
+
+                prevHeight = element.height();
+                prevWidth = element.width();
+
+                //prevTop = element.position().top;
+                //prevLeft = element.position().left;
+
+                $document.on('mouseup pointerup touchend', release);
+                $document.on('mousemove pointermove touchmove', moveResize);
+            }
+
             /*
              element.css('top', element.position().top);
              element.css('left', element.position().left); */
 
             if (attr.resize) {
-                $window.setTimeout(function () {
-                    //console.log('left: ', element.css('left'));
-                    //console.log('right: ', element.css('right'));
-                    if (element.css('right') != 'auto' && element.css('left') == 'auto') {
-                        element.resizable({ handles: 's, w, sw' });
-                    } else {
-                        element.resizable();
-                    }
-                    element.on('resizestop', function () {
-                        if (attr.callback) attr.callback();
-                    });
-                }, 200);
+                var handleRight = $("<div>", {class: 'resizehandle-r resizehandle'});
+                handleRight.on('mousedown pointerdown touchstart', function (e) {resizeElement(e, false, true, false, false)});
+                element.append(handleRight);
+                var handleDown = $("<div>", {class: 'resizehandle-d resizehandle'});
+                handleDown.on('mousedown pointerdown touchstart', function (e) {resizeElement(e, false, false, true, false)});
+                element.append(handleDown);
+                var handleRightDown = $("<div>", {class: 'resizehandle-rd resizehandle'});
+                handleRightDown.on('mousedown pointerdown touchstart', function (e) {resizeElement(e, false, true, true, false)});
+                element.append(handleRightDown);
             }
 
 
@@ -110,6 +126,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             function release(e) {
                 $document.off('mouseup pointerup touchend', release);
                 $document.off('mousemove pointermove touchmove', move);
+                $document.off('mousemove pointermove touchmove', moveResize);
                 pos = getPageXY(e);
 
                 if (clickFn && e.which === 1) {
@@ -123,11 +140,6 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
             function move(e) {
                 pos = getPageXY(e);
                 delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
-                //console.log(prevTop);
-
-                /*
-                 element.css('top', prevTop + delta.Y);
-                 element.css('left', prevLeft + delta.X);*/
 
                 if (setTop)
                     element.css('top', prevTop + delta.Y);
@@ -137,6 +149,23 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     element.css('bottom', prevBottom - delta.Y);
                 if (setRight)
                     element.css('right', prevRight - delta.X);
+
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function moveResize(e) {
+                pos = getPageXY(e);
+                delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
+
+                if (upSet)
+                    element.css('height', prevHeight - delta.Y)
+                if (leftSet)
+                    element.css('width', prevWidth - delta.X);
+                if (downSet)
+                    element.css('height', prevHeight + delta.Y);
+                if (rightSet)
+                    element.css('width', prevWidth + delta.X);
 
                 e.preventDefault();
                 e.stopPropagation();
