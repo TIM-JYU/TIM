@@ -57,7 +57,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
              element.css('top', element.position().top);
              element.css('left', element.position().left); */
 
-            if (attr.resize) {
+            function createResizeHandles () {
                 var handleRight = $("<div>", {class: 'resizehandle-r resizehandle'});
                 handleRight.on('mousedown pointerdown touchstart', function (e) {
                     resizeElement(e, false, true, false, false)
@@ -75,10 +75,21 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 element.append(handleRightDown);
             }
 
+            function removeResizeHandles () {
+                element.find('.resizehandle').remove();
+            }
+
 
             var handle = $("<div>", {class: "draghandle"});
-            if (attr.caption) handle.append('<p>' + attr.caption + '</p>');
             element.prepend(handle);
+
+            attr.$observe('resize', function () {
+                if (attr.resize === "true") {
+                    createResizeHandles();
+                } else {
+                    removeResizeHandles();
+                }
+            });
 
             attr.$observe('caption', function () {
                 var handle = $(element).find('.draghandle');
