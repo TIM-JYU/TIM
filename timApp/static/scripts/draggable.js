@@ -96,7 +96,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 //prevLeft = element.position().left;
 
                 $document.on('mouseup pointerup touchend', release);
-                $document.on('mousemove touchmove', move);
+                $document.on('mousemove pointermove touchmove', move);
             });
 
             function release(e) {
