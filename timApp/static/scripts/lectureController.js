@@ -17,10 +17,12 @@ var timApp = angular.module('timApp');
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
 //TODO: Button, to get questions and wall.
-timApp.controller("LectureController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout',
+timApp.controller("LectureController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout', "$location",
 
-    function ($scope, controller, http, $window, $rootScope, $timeout) {
+    function ($scope, controller, http, $window, $rootScope, $timeout, $location) {
         "use strict";
+        $scope.docNamePath = "";
+        $scope.location = $location.host();
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
@@ -565,6 +567,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.showLectureView = function (lecture) {
+            $scope.docNamePath = encodeURI(lecture.doc_name);
             $scope.isLecturer = lecture.isLecturer;
 
             $scope.lectureName = lecture.lectureCode;
@@ -627,7 +630,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.showBasicView = function (answer) {
-
+            if ($scope.$parent) {
+                console.log($scope.$parent.docName);
+                $scope.docNamePath = encodeURI($scope.$parent.docName);
+            }
             $scope.isLecturer = answer.isLecturer;
             if ($scope.isLecturer) {
                 $rootScope.$broadcast("getQuestions");
@@ -764,10 +770,12 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.editLecture = function (lecture_code) {
             $('#currentList').hide();
             $('#futureList').hide();
+            var params = {'lecture_code': lecture_code, 'doc_id': $scope.docId};
+            if ($scope.lectureId >= 0) params = {'lecture_id': $scope.lectureId};
             http({
                 url: '/showLectureInfoGivenName',
                 method: 'GET',
-                params: {'lecture_code': lecture_code, 'doc_id': $scope.docId}
+                params: params
             })
                 .success(function (lecture) {
                     $rootScope.$broadcast("editLecture", {
@@ -1015,14 +1023,23 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.addPeopleToList(answer.students, $scope.studentTable);
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
-                        if (answer.question && !$scope.isLecturer) {
+                        if ((answer.question || answer.result) && !$scope.isLecturer) {
                             $scope.showAnswerWindow = true;
+                            var json = JSON.parse(answer.questionJson);
+                            var expl = {};
+                            if (answer.expl) {
+                                expl = JSON.parse(answer.expl)
+                            }
+                            $scope.questionTitle = json.TITLE;
                             $rootScope.$broadcast("setQuestionJson", {
-                                questionJson: JSON.parse(answer.questionJson),
+                                result: answer.result,
+                                answer: answer.answer,
+                                questionJson: json,
                                 askedId: answer.askedId,
                                 isLecturer: $scope.isLecturer,
                                 askedTime: answer.asked,
-                                clockOffset: $scope.clockOffset
+                                clockOffset: $scope.clockOffset,
+                                expl: expl
                             });
                         }
 

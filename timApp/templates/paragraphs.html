@@ -3,7 +3,7 @@
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 {% for t in text %}
-    <div class="par {{ t.get_class_str() }}"
+    <div class="{{ ['par', t.get_class_str()]|join(' ') }}"
             {% if t.get_original() %}
          id="{{ t.get_original().get_id() }}"
          t="{{ t.get_original().get_hash() }}"
@@ -23,6 +23,15 @@
         {{ t.get_html()|safe }}
     </div>
     {{ editline|safe }}
-    <div class="readline {{ readings[t.get_id()] }}" title="Click to mark this paragraph as read"></div>
+    <div class="{{ ['readline', readings[t.get_id()]]|join(' ') }}" title="Click to mark this paragraph as read"></div>
+    {% if notes[t.get_id()] %}
+        <div class="notes">
+            {% for note in notes[t.get_id()] %}
+                <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ') }}" note-id="{{ note.id }}">
+                    {{ note.html|safe }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     </div>
 {% endfor %}

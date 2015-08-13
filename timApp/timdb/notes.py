@@ -130,6 +130,19 @@ class Notes(TimDbBase):
                             'FROM UserNotes '
                             'WHERE UserGroup_id = ? AND doc_id = ?', [usergroup_id, doc.doc_id]))
 
+        return self.process_notes(result)
+
+    @contract
+    def get_note(self, note_id: 'int') -> 'dict':
+        result = self.resultAsDictionary(
+            self.db.execute('SELECT id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
+                            'FROM UserNotes '
+                            'WHERE id = ?', [note_id]))
+
+        return self.process_notes(result)[0]
+
+    @contract
+    def process_notes(self, result: 'list(dict)') -> 'list(dict)':
         for note in result:
             note["tags"] = self.__strtotags(note["tags"])
             if note['html'] is None:

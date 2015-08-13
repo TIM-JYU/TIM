@@ -28,19 +28,37 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             var promise;
             var timeLeft;
             var barFilled;
-            var disabled = '';
-            if ($scope.preview) disabled = ' disabled ';
             $scope.internalControl = $scope.control || {};
 
             $scope.internalControl.createAnswer = function () {
+                $scope.result = $scope.$parent.result;
+                $scope.previousAnswer = $scope.$parent.previousAnswer;
+                var disabled = '';
+                if ($scope.preview || $scope.result) disabled = ' disabled ';
                 $element.empty();
                 $scope.json = $scope.$parent.json;
+
+                $scope.answerTable = [];
+                if ($scope.previousAnswer) {
+                    var single_answers = [];
+                    var all_answers = $scope.previousAnswer.split('|');
+
+                    for (var i = 0; i < all_answers.length; i++) {
+                        single_answers.push(all_answers[i].split(','))
+                    }
+                    $scope.answerTable = single_answers;
+                }
+
+                $scope.expl = $scope.$parent.expl;
                 $scope.askedTime = $scope.$parent.askedTime - $scope.$parent.clockOffset;
                 $scope.endTime = $scope.$parent.askedTime + $scope.json.TIMELIMIT * 1000 - $scope.$parent.clockOffset;
 
                 var htmlSheet = $('<div>', {class: 'answerSheet'});
-                if ($scope.json.TIMELIMIT !== "" && !$scope.preview) {
-                    htmlSheet.append($('<progress>', {max: ($scope.endTime - $scope.askedTime), id: 'progressBar'}));
+                if ($scope.json.TIMELIMIT !== "" && !$scope.preview && !$scope.result) {
+                    htmlSheet.append($('<progress>', {
+                        max: ($scope.endTime - $scope.askedTime),
+                        id: 'progressBar'
+                    }));
                     htmlSheet.append($('<span>', {
                         class: 'progresslabel',
                         id: 'progressLabel',
@@ -63,6 +81,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     angular.forEach($scope.json.DATA.HEADERS, function (header) {
                         tr.append($('<th>', {class: 'answer-button', text: header.text}));
                     });
+                    tr.append($('<th>', {class: 'answer-button'}));
                     table.append(tr);
                 }
 
@@ -90,10 +109,18 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 header++;
                             } else {
                                 group = "group" + row.text.replace(/[^a-zA-Z0-9]/g, "");
+                                var checked = false;
+                                if ($scope.answerTable && $scope.answerTable.length > row.id) {
+                                    var value = (row.COLUMNS[i].id + 1).toString();
+                                    console.log("answertable row: " + $scope.answerTable[row.id]);
+                                    console.log("value: " + value);
+                                    checked = ($scope.answerTable[row.id].indexOf(value) >= 0);
+                                }
                                 var input = $('<input>', {
                                     type: $scope.json.ANSWERFIELDTYPE,
                                     name: group,
-                                    value: parseInt(row.COLUMNS[i].id) + 1
+                                    value: parseInt(row.COLUMNS[i].id) + 1,
+                                    checked: checked
                                 });
                                 if (disabled !== '') input.attr('disabled', true);
                                 tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(input)));
@@ -101,16 +128,25 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             }
                         } else {
                             group = "group" + row.type.replace(/[^a-zA-Z0-9]/g, "");
+                            var checked = false;
+                            if ($scope.answerTable && $scope.answerTable.length > 0) {
+                                var value = (row.id + 1).toString();
+                                checked = ($scope.answerTable[0].indexOf(value) >= 0);
+                            }
                             var input = $('<input>', {
                                 type: $scope.json.ANSWERFIELDTYPE,
                                 name: group,
-                                value: parseInt(row.id) + 1
+                                value: parseInt(row.id) + 1,
+                                checked: checked
                             });
                             if (disabled !== '') input.attr('disabled', true);
                             var label = $('<label>');
                             label.append(input).append(row.text);
                             tr.append($('<td>', {class: 'answer-button2'}).append(label));
                         }
+                    }
+                    if ($scope.result && row.id.toString() in $scope.expl) {
+                        tr.append($('<td>', {class: 'answer-button', text: $scope.expl[row.id.toString()]}));
                     }
                     table.append(tr);
                 });
@@ -119,9 +155,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $element.append(htmlSheet);
                 $compile($scope);
 
-                if (!$scope.preview) {
+                if (!$scope.preview && !$scope.result) {
                     var $table = $element.find('#answer-sheet-table');
-                    window.setTimeout(function() {
+                    window.setTimeout(function () {
                         var $table = $element.find('#answer-sheet-table');
                         var $input = null;
                         if ($scope.json.ANSWERFIELDTYPE !== "text")
@@ -250,14 +286,15 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         }
                     }
                     else {
+                        answers.push([]);
                         groupName = "group" + $scope.json.DATA.ROWS[0].type.replace(/[^a-zA-Z0-9]/g, '');
                         var checkedInputs = $('input[name=' + groupName + ']:checked');
                         for (var j = 0; j < checkedInputs.length; j++) {
-                            answers.push(checkedInputs[j].value);
+                            answers[0].push(checkedInputs[j].value);
                         }
 
                         if (checkedInputs.length <= 0) {
-                            answers.push("undefined");
+                            answers[0].push("undefined");
                         }
                     }
                 }
@@ -286,7 +323,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 clearInterval(promise);
                 $element.empty();
                 $scope.$emit('closeQuestion');
-                $rootScope.$broadcast('closeAnswerSheetForGood');
+                if ($scope.$parent.isLecturer) $rootScope.$broadcast('closeAnswerSheetForGood');
             };
 
             $scope.internalControl.closePreview = function () {

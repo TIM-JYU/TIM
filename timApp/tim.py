@@ -25,7 +25,7 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from routes.cache import cache
 from routes.answer import answers
-from routes.edit import edit_page
+from routes.edit import edit_page, par_response
 from routes.manage import manage_page
 from routes.view import view_page
 from routes.slide import slide_page
@@ -38,6 +38,8 @@ from routes.common import *
 from documentmodel.randutils import hashfunc
 
 app = Flask(__name__)
+app.jinja_env.trim_blocks = True
+app.jinja_env.lstrip_blocks = True
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 default_secret = app.config['SECRET_KEY']
@@ -88,6 +90,8 @@ __question_to_be_asked = []
 __pull_answer = {}
 # Dictionary to activities of different users
 __user_activity = {}
+# Dictionary for showing answers after question has ended
+__question_to_show = []
 
 
 def error_generic(error, code):
@@ -401,17 +405,35 @@ def get_updates():
         if use_quesitions:
             for pair in __question_to_be_asked:
                 if pair[0] == lecture_id and current_user not in pair[2]:
-                    question = timdb.questions.get_asked_question(pair[1])[0]
-                    question_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]["json"]
+                    question_json = timdb.questions.get_asked_question(pair[1])[0]["json"]
                     pair[2].append(current_user)
                     pair[3].append(current_user)
+                    answer = timdb.lecture_answers.get_user_answer_to_question(pair[1], current_user)
+                    if answer:
+                        answer = answer[0]['answer']
+                    else:
+                        answer = ''
                     lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                     return jsonResponse(
                         {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                          "lectureId": lecture_id, "question": True, "askedId": pair[1], "asked": pair[4],
-                         "questionJson": question_json,
+                         "questionJson": question_json, "answer": answer,
                          "isLecture": True, "lecturers": lecturers, "students": students,
                          "lectureEnding": lecture_ending})
+            for pair in __question_to_show:
+                if pair[0] == lecture_id and current_user not in pair[2]:
+                    question = timdb.questions.get_asked_question(pair[1])[0]
+                    pair[2].append(current_user)
+                    answer = timdb.lecture_answers.get_user_answer_to_question(pair[1], current_user)
+                    if not answer:
+                        break
+                    answer = answer[0]['answer']
+                    lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
+                    return jsonResponse(
+                        {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
+                         "lectureId": lecture_id, "result": True, "questionJson": question["json"], "answer": answer,
+                         "expl": question["expl"], "isLecture": True, "lecturers": lecturers,
+                         "students": students, "lectureEnding": lecture_ending})
 
         if len(list_of_new_messages) > 0:
             if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
@@ -500,14 +522,18 @@ def add_question():
         abort(403)
     par_id = request.args.get('par_id')
     points = request.args.get('points')
+    if points is None:
+        points = ''
+    expl = request.args.get('expl')
+    if expl is None:
+        expl = '{}'
     question_json = request.args.get('questionJson')
 
-    questions = None
     if not question_id:
-        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, question_json, points)
+        questions = timdb.questions.add_questions(doc_id, par_id, question_title, answer, question_json, points, expl)
     else:
         questions = timdb.questions.update_question(question_id, doc_id, par_id, question_title, answer, question_json,
-                                                    points)
+                                                    points, expl)
     return jsonResponse(timdb.questions.get_question(questions)[0])
 
 
@@ -541,10 +567,12 @@ def check_lecture():
                 use_question = True
                 session['use_questions'] = True
 
+            doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
+
             return jsonResponse({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
                                  "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
                                  "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
-                                 "useWall": use_wall, "useQuestions": use_question})
+                                 "useWall": use_wall, "useQuestions": use_question, "doc_name": doc_name})
         else:
             leave_lecture_function(lecture_id)
             timdb.lectures.delete_users_from_lecture(lecture_id)
@@ -865,6 +893,8 @@ def join_lecture():
     if lecture[0].get("password") != password_quess:
         return jsonResponse({"correctPassword": False})
 
+    doc_name = timdb.documents.get_document(lecture[0].get("doc_id"))["name"]
+
     in_lecture, current_lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
     if in_lecture:
         leave_lecture_function(current_lecture_id)
@@ -885,7 +915,7 @@ def join_lecture():
     return jsonResponse(
         {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
          "lectureCode": lecture_code, "startTime": lecture[0].get("start_time"),
-         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students})
+         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students, "doc_name": doc_name})
 
 
 # Route to leave lecture
@@ -1093,17 +1123,18 @@ def post_note():
             tags.append(tag)
     doc_id = jsondata['docId']
     doc_ver = request.headers.get('Version')
-    paragraph_id = jsondata['par']
+    par_id = jsondata['par']
     verifyCommentRight(doc_id)
     # verify_document_version(doc_id, doc_ver)
     doc = get_document(doc_id, doc_ver)
-    par = get_paragraph(doc, paragraph_id)
+    par = get_paragraph(doc, par_id)
     if par is None:
         abort(400, 'Non-existent paragraph')
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
     timdb.notes.addNote(group_id, doc, par, note_text, access, tags)
-    return okJsonResponse()
+    return par_response([Document(doc_id).get_paragraph(par_id)],
+                        doc_id)
 
 
 @app.route("/editNote", methods=['POST'])
@@ -1112,8 +1143,10 @@ def edit_note():
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
     doc_id = int(jsondata['docId'])
+    verifyViewAccess(doc_id, getCurrentUserGroup())
     note_text = jsondata['text']
     access = jsondata['access']
+    par_id = jsondata['par']
     note_id = int(jsondata['id'])
     sent_tags = jsondata.get('tags', {})
     tags = []
@@ -1125,21 +1158,24 @@ def edit_note():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
     timdb.notes.modifyNote(note_id, note_text, access, tags)
-    return okJsonResponse()
+    return par_response([Document(doc_id).get_paragraph(par_id)],
+                        doc_id)
 
 
 @app.route("/deleteNote", methods=['POST'])
 def delete_note():
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
-    doc_id = int(jsondata['docId'])  # TODO: maybe not needed
+    doc_id = int(jsondata['docId'])
     note_id = int(jsondata['id'])
+    paragraph_id = jsondata['par']
     timdb = getTimDb()
     if not (timdb.notes.hasEditAccess(group_id, note_id)
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
     timdb.notes.deleteNote(note_id)
-    return okJsonResponse()
+    return par_response([Document(doc_id).get_paragraph(paragraph_id)],
+                        doc_id)
 
 
 @app.route("/getServerTime", methods=['GET'])
@@ -1209,7 +1245,7 @@ def ask_question():
             asked_json_id = timdb.questions.add_asked_json(question_json_str, question_hash)
         asked_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
         asked_id = timdb.questions.add_asked_questions(lecture_id, doc_id, None, asked_time, question.get("points"),
-                                                       asked_json_id)
+                                                       asked_json_id, question.get("expl"))
     else:
         question = timdb.questions.get_asked_question(asked_id)[0]
         asked_json = timdb.questions.get_asked_json_by_id(question["asked_json_id"])[0]
@@ -1234,6 +1270,19 @@ def ask_question():
     __pull_answer[asked_id, lecture_id] = []
 
     return jsonResponse(asked_id)
+
+
+@app.route('/showAnswerPoints', methods=['POST'])
+def show_points():
+    if 'asked_id' not in request.args or 'lecture_id' not in request.args:
+        abort("400")
+    asked_id = int(request.args.get('asked_id'))
+    lecture_id = int(request.args.get('lecture_id'))
+    for show in __question_to_show:
+        if show[0] == lecture_id:
+            __question_to_show.remove(show)
+    __question_to_show.append((lecture_id, asked_id, []))
+    return jsonResponse("")
 
 
 # Route to get add question to database
@@ -1273,6 +1322,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
                 stopped = False
                 break
         if stopped:
+            del __pull_answer[asked_id, lecture_id]
             return
 
     del __pull_answer[asked_id, lecture_id]
@@ -1484,22 +1534,18 @@ def calculate_points(answer, points_table):
     return points
 
 
-@app.route("/notes/<int:doc_id>")
-def get_notes(doc_id):
-    verifyViewAccess(doc_id)
+@app.route("/note/<int:note_id>")
+def get_note(note_id):
     timdb = getTimDb()
-    group_id = getCurrentUserGroup()
-    doc = Document(doc_id)
-    notes = [note for note in timdb.notes.getNotes(group_id, doc)]
-    for note in notes:
-        note['editable'] = note['UserGroup_id'] == group_id or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
-        note.pop('UserGroup_id')
-        note['private'] = note['access'] == 'justme'
-        tags = note['tags']
-        note['tags'] = {}
-        for tag in KNOWN_TAGS:
-            note['tags'][tag] = tag in tags
-    return jsonResponse(notes)
+    if not timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id):
+        abort(403)
+    note = timdb.notes.get_note(note_id)
+    note.pop('UserGroup_id')
+    tags = note['tags']
+    note['tags'] = {}
+    for tag in KNOWN_TAGS:
+        note['tags'][tag] = tag in tags
+    return jsonResponse({'text': note['content'], 'extraData': note})
 
 
 @app.route("/read/<int:doc_id>", methods=['GET'])

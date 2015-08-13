@@ -30,6 +30,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.dueCheck = false;
         $scope.error_message = "";
         $scope.lectureCode = "";
+        $scope.lectureEncoded = "";
         $scope.password = "";
         $scope.startDate = "";
         $scope.startHour = "";
@@ -49,8 +50,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.initLectureForm();
         });
 
-        $scope.$on('editLecture', function (event,data) {
+        $scope.$on('editLecture', function (event, data) {
             $scope.lectureCode = data.lecture_name;
+            $scope.lectureCodeEncoded = encodeURIComponent($scope.lectureCode);
             $scope.lectureId = data.lecture_id;
             var splittedStart = data.start_date.split(" ");
             var splittedStartTime = splittedStart[1].split(":");
@@ -65,7 +67,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.endMin = splittedEndTime[1];
             $scope.endHour = splittedEndTime[0];
             $scope.endDate = splittedEndDate[2] + "." + splittedEndDate[1] + "." + splittedEndDate[0];
-            if(data.password !== undefined){
+            if (data.password !== undefined) {
                 $scope.password = data.password;
             }
             $scope.editMode = data.editMode;
@@ -86,7 +88,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.enableDue2();
         };
 
-        $scope.populateLectureForm = function(name) {
+        $scope.populateLectureForm = function (name) {
             $scope.lectureCode = name;
         };
 
@@ -134,7 +136,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          */
         $scope.defInputStyle = function (element) {
             if (element !== null || !element.isDefined) {
-                angular.element("#"+element).css("border", "");
+                angular.element("#" + element).css("border", "");
             }
         };
 
@@ -200,7 +202,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 $scope.leftPadder(input.getDate(), 2);
             if (include_time) {
                 output += " " + $scope.leftPadder(input.getHours(), 2) + ":" +
-                $scope.leftPadder(input.getMinutes(), 2);
+                    $scope.leftPadder(input.getMinutes(), 2);
             }
             return output;
         };
@@ -228,8 +230,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 mm = parseInt(parms[1], 10);
                 yyyy = parseInt(parms[0], 10);
             }
-            var hours = parseInt(time_hours,10);
-            var mins = parseInt(time_mins,10);
+            var hours = parseInt(time_hours, 10);
+            var mins = parseInt(time_mins, 10);
             return new Date(yyyy, mm - 1, dd, hours, mins, 0);
         };
 
@@ -238,13 +240,13 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @memberof module:createLectureCtrl
          */
         $scope.submitLecture = function () {
-            if($scope.lectureId === undefined || $scope.lectureId === null) {
+            if ($scope.lectureId === undefined || $scope.lectureId === null) {
                 $scope.editMode = false;
             }
             $scope.removeErrors();
             $scope.isDateValid($scope.startDate, "startDate");
-            if($scope.error_message<=0) {
-                $scope.start_date = $scope.translateToDateObject($scope.startDate, $scope.startHour, $scope.startMin,".");
+            if ($scope.error_message <= 0) {
+                $scope.start_date = $scope.translateToDateObject($scope.startDate, $scope.startHour, $scope.startMin, ".");
                 if ($scope.endDate !== undefined, $scope.useDate) {
                     $scope.isDateValid($scope.endDate, "endDate");
                     $scope.end_date = $scope.translateToDateObject($scope.endDate, $scope.endHour, $scope.endMin, ".");
@@ -328,7 +330,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             }
             /* If no errors save the lecture to the database */
             if ($scope.error_message <= 0) {
-                if($scope.earlyJoining){
+                if ($scope.earlyJoining) {
                     $scope.start_date = new Date($scope.start_date - 900000); // adds 15 minutes
                 }
                 $scope.startDateForDB = $scope.dateObjectToString($scope.start_date, true);
@@ -345,7 +347,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                     }
                 })
                     .success(function (answer) {
-                        if($scope.editMode) {
+                        if ($scope.editMode) {
                             $window.console.log("Lecture " + answer.lectureId + " updated.");
                         }
                         else {
@@ -457,5 +459,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.$emit("closeLectureForm");
             $scope.clearForm();
         };
+
+        $scope.$watch('lectureCode', function () {
+            $scope.lectureCodeEncoded = encodeURIComponent($scope.lectureCode);
+        });
     }
 ]);

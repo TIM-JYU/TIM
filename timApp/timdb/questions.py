@@ -71,7 +71,7 @@ class Questions(TimDbBase):
 
     @contract
     def add_asked_questions(self, lecture_id: 'int', doc_id: 'int', par_id: 'str|None', asked_time: 'str',
-                            points: 'str', asked_json_id: 'int', commit: 'bool'=True) -> 'int':
+                            points: 'str', asked_json_id: 'int', expl: 'str', commit: 'bool'=True) -> 'int':
 
         """
         Creates a new asked questions
@@ -85,9 +85,9 @@ class Questions(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       INSERT INTO AskedQuestion (lecture_id, doc_id, par_id, asked_time, points, asked_json_id)
-                       VALUES(?,?,?,?,?,?)
-                       """, [lecture_id, doc_id, par_id, asked_time, points, asked_json_id])
+                       INSERT INTO AskedQuestion (lecture_id, doc_id, par_id, asked_time, points, asked_json_id, expl)
+                       VALUES(?,?,?,?,?,?,?)
+                       """, [lecture_id, doc_id, par_id, asked_time, points, asked_json_id, expl])
         if commit:
             self.db.commit()
         question_id = cursor.lastrowid
@@ -181,7 +181,7 @@ class Questions(TimDbBase):
 
     @contract
     def add_questions(self, doc_id: 'int', par_id: 'str', question_title: 'str', answer: 'str', questionJson: 'str',
-                      points: 'str', commit: 'bool'=True) -> 'int':
+                      points: 'str', expl: 'str', commit: 'bool'=True) -> 'int':
         """
         Creates a new questions
         :param question_title: Question to be saved
@@ -192,9 +192,9 @@ class Questions(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute("""
-                       INSERT INTO Question (doc_id, par_id, question_title, answer, questionJson, points)
-                       VALUES(?,?,?,?,?,?)
-                       """, [doc_id, par_id, question_title, answer, questionJson, points])
+                       INSERT INTO Question (doc_id, par_id, question_title, answer, questionJson, points, expl)
+                       VALUES(?,?,?,?,?,?,?)
+                       """, [doc_id, par_id, question_title, answer, questionJson, points, expl])
         if commit:
             self.db.commit()
         question_id = cursor.lastrowid
@@ -203,7 +203,7 @@ class Questions(TimDbBase):
 
     @contract
     def update_question(self, question_id: 'int', doc_id: 'int', par_id: 'str', question_title: 'str', answer: 'str',
-                        questionJson: 'str', points: 'str') -> 'int':
+                        questionJson: 'str', points: 'str', expl: 'str',) -> 'int':
         """
         Updates the question with particular id
         """
@@ -211,9 +211,9 @@ class Questions(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("""
                        UPDATE Question
-                       SET doc_id = ?, par_id = ?, question_title = ?, answer = ?, questionJson = ?, points = ?
+                       SET doc_id = ?, par_id = ?, question_title = ?, answer = ?, questionJson = ?, points = ?, expl = ?
                        WHERE question_id = ?
-                       """, [doc_id, par_id, question_title, answer, questionJson, points, question_id])
+                       """, [doc_id, par_id, question_title, answer, questionJson, points, expl, question_id])
 
         self.db.commit()
         return question_id

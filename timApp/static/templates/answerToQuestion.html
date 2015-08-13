@@ -6,9 +6,10 @@
         <button ng-show="isLecturer && questionEnded" ng-click="edit()">Edit points</button>
         <button ng-show="isLecturer && questionEnded" ng-click="askAsNew()">Ask as new</button>
         <button ng-show="isLecturer && questionEnded" ng-click="reAsk()">Reask</button>
-        <button ng-show="!questionEnded && !answered" ng-click="answer()">Answer</button>
+        <button ng-show="!questionEnded && !answered && !result" ng-click="answer()">Answer</button>
         <button ng-show="isLecturer" ng-click="showAnswers()">Show answers</button>
-        <button ng-show="isLecturer && questionEnded" ng-click="close()">Close</button>
+        <button ng-show="isLecturer && questionEnded" ng-click="showPoints()">Show points</button>
+        <button ng-show="(isLecturer && questionEnded) || result" ng-click="close()">Close</button>
         <button ng-show="isLecturer && !questionEnded" ng-click="stopQuestion()">End question</button>
     </div>
 </div>

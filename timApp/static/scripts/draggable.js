@@ -67,7 +67,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 return Number(s2) || 0;
             }
 
-            handle.on('mousedown touchstart', function (e) {
+            handle.on('mousedown pointerdown touchstart', function (e) {
                 lastPos = getPageXY(e);
                 // Rules for what we should set in CSS
                 // to keep the element dimensions (X).
@@ -95,17 +95,17 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 //prevTop = element.position().top;
                 //prevLeft = element.position().left;
 
-                $document.on('mouseup touchend', release);
-                $document.on('mousemove touchmove', move);
+                $document.on('mouseup pointerup touchend', release);
+                $document.on('mousemove pointermove touchmove', move);
             });
 
             function release(e) {
-                $document.off('mouseup touchend', release);
-                $document.off('mousemove touchmove', move);
+                $document.off('mouseup pointerup touchend', release);
+                $document.off('mousemove pointermove touchmove', move);
                 pos = getPageXY(e);
 
 
-                if (e.which === 1) {
+                if (clickFn && e.which === 1) {
                     delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
                     if (Math.abs(delta.Y) < 3 && Math.abs(delta.X) < 3) {
                         clickFn(scope);

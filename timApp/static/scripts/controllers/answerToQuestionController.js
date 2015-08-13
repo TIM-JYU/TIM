@@ -23,6 +23,8 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
     $scope.questionTitle = "";
 
     $scope.$on("setQuestionJson", function (event, args) {
+        $scope.result = args.result;
+        $scope.previousAnswer = args.answer;
         $scope.askedId = args.askedId;
         $scope.questionId = args.questionId;
         $scope.isLecturer = args.isLecturer;
@@ -30,6 +32,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         $scope.questionTitle = args.questionJson.TITLE;
         $scope.askedTime = args.askedTime;
         $scope.clockOffset = args.clockOffset;
+        $scope.expl = args.expl;
         $scope.questionEnded = false;
         $scope.answered = false;
         $scope.dynamicAnswerSheetControl.createAnswer();
@@ -52,7 +55,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
      * @memberof module:answerToQuestionController
      */
     $scope.close = function (callback) {
-        $scope.stopQuestion(callback);
+        if ($scope.isLecturer) $scope.stopQuestion(callback);
         $scope.dynamicAnswerSheetControl.closeQuestion();
     };
 
@@ -108,7 +111,25 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
                 });
             })
             .error(function () {
-                console.log("There was some error creating question to database.");
+                console.log("There was some error getting question.");
+            });
+    };
+
+    $scope.showPoints = function () {
+        $http({
+            url: '/showAnswerPoints',
+            method: 'POST',
+            params: {
+                'asked_id': $scope.askedId,
+                'lecture_id': $scope.lectureId,
+                'buster': new Date().getTime()
+            }
+        })
+            .success(function () {
+                //TODO: Show explanations to lecturer
+            })
+            .error(function () {
+                console.log("Could not show points to students.");
             });
     };
 

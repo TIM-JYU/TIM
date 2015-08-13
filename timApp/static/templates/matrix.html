@@ -86,6 +86,9 @@
                         </div>
                     </div>
                 </td>
+                <td>
+                    <textarea placeholder="Optional: Explain why answer is right/wrong" class="rowHeading" ng-model="row.expl" form="question-form" rows="1"></textarea>
+                </td>
                 <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionJson at view_html.js and then displaying them at directives/dynamicanswersheet.js -->
             </tr>
             <tr ng-if="asked_id === false">
