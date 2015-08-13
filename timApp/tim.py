@@ -38,6 +38,8 @@ from routes.common import *
 from documentmodel.randutils import hashfunc
 
 app = Flask(__name__)
+app.jinja_env.trim_blocks = True
+app.jinja_env.lstrip_blocks = True
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 default_secret = app.config['SECRET_KEY']
