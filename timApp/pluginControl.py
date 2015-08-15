@@ -9,6 +9,7 @@ import yaml
 from yaml import CLoader
 import yaml.parser
 import yaml.scanner
+import time
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PluginException, PLUGINS
 from containerLink import plugin_reqs
@@ -213,6 +214,9 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                          If this parameter is specified, the expression len(blocks) MUST be 1.
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
     """
+    t1 = time.clock()
+    t12 = t1
+
     if custom_state is not None:
         if len(blocks) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
@@ -254,6 +258,10 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
         else:
             final_html_blocks.append({'html': block})
 
+    # t22 = time.clock()
+    # print("%-15s %-10s %6d - %7.4f" % ("blocks done", " ", len(final_html_blocks), (t22-t12)))
+    # t12 = t22
+
     if custom_state is None and user_id != 0:
         answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
         for answer in answers:
@@ -265,7 +273,16 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
     css_paths = []
     modules = []
 
+    # t22 = time.clock()
+    # print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
+    # t12 = t22
+
     for plugin_name, plugin_block_map in plugins.items():
+
+        # t22 = time.clock()
+        # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "begin", len(plugin_block_map), (t22-t12)))
+        # t12 = t22
+
         try:
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
@@ -304,7 +321,15 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
 
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
+                # t22 = time.clock()
+                # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "beg multi:", 0, (t22-t12)))
+                # t12 = t22
+
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+
+                # t22 = time.clock()
+                # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "multihtml:", len(response), (t22-t12)))
+                # t12 = t22
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     final_html_blocks[idx]['html'] = get_error_html(plugin_name, str(e))
@@ -333,6 +358,8 @@ def pluginify(blocks, user, answer_db, doc_id, user_id, custom_state=None, sanit
                 final_html_blocks[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                                          plugin_url,
                                                                                          html)
+    t2 = time.clock()
+    print("%-15s %-10s %6d - %7.4f" % ("all block done:", "total", len(final_html_blocks), (t2-t1)))
 
     return final_html_blocks, js_paths, css_paths, modules
 

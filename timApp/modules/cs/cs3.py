@@ -430,6 +430,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
         print("do_POST MULTIHML ==========================================")
+        t1 = time.clock()
         querys = multi_post_params(self)
         do_headers(self, "application/json")
         is_tauno = self.path.find('/tauno') >= 0
@@ -460,6 +461,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         sresult = json.dumps(htmls)
         self.wout(sresult)
         log(self)
+        t2 = time.clock()
+        ts = "multihtml: %7.4f" % (t2-t1)
+        print(ts)
 
     def do_PUT(self):
         # print("do_PUT =================================================")

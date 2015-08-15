@@ -238,6 +238,13 @@ def get_url_lines_as_string(url):
     # print(cache)
     return result
 
+    
+def do_escape(s):
+    line = html.escape(s)
+    # line = line.replace("{","&#123;") # because otherwise problems with angular {{, no need if used inside ng-non-bindable
+    # line = line.replace("}","&#125;") # because otherwise problems with angular }}
+    return line
+
 
 class FileParams:
     def __init__(self, query, nr, url, **defs):
@@ -482,13 +489,22 @@ def join_file_parts(p0,parts):
 
     return s
 
+number_of_multi_html_reqs = 0
+
 
 def multi_post_params(self):
     content_length = int(self.headers['Content-Length'])
     f = self.rfile.read(content_length)
+
     # print(f)
     # print(type(f))
     u = f.decode("UTF8")
+
+    # uncomment to get request to file /tmps/mhx.json
+    # global number_of_multi_html_reqs
+    # number_of_multi_html_reqs += 1
+    # with codecs.open("/tmps/mh%d.json" % number_of_multi_html_reqs, "w", "utf-8") as fj: fj.write(u)
+
     jsos = json.loads(u)
     results = []
     for jso in jsos:
@@ -539,7 +555,7 @@ def post_params(self):
     '''
 
     f = self.rfile.read(content_length)
-    print(f)
+    # print(f)
     # print(type(f))
     u = f.decode("UTF8")
     # print(u)
@@ -695,16 +711,28 @@ def allow(s):
 
 def clean(s):
     s = str(s)
-    s = s.replace('"', '')  # kannattaako, tällä poistetaam katkaisun mahdollisuus?
-    return bleach.clean(s)
+    s = s.replace('"', '')  # kannattaako, tällä poistetaan katkaisun mahdollisuus?
+    return s
+    # return bleach.clean(s)
+
+
+attrs = {
+        '*': ['id', 'class'],
+        'a': ['href']
+}
+tags = ['a', 'p', 'em', 'strong', 'tt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'b', 'code']
 
 
 def get_heading(query, key, def_elem):
     if not query: return ""
+    # return "kana"
     h = get_param(query, key, None)
     # print("h=",h)
     if not h: return ""
     h = str(h)
+    return "<" + def_elem + ">" + h + "</" + def_elem + ">\n"
+
+    # Loppu on liian hidasta koodia, kannattaa muuten vaihtaa järjestys jos tuota vielä käyttää, samoin js-koodissa
     st = h.split("!!")  # h4 class="h3" width="23"!!Tehtava 1
     elem = def_elem
     val = st[0]
@@ -721,13 +749,15 @@ def get_heading(query, key, def_elem):
         attributes = ea[1] + " "
     val = allow(val)
     result_html = "<" + elem + attributes + ">" + val + "</" + elem + ">\n"
-    attrs = {
-        '*': ['id', 'class'],
-        'a': ['href']
-    }
-    tags = ['a', 'p', 'em', 'strong', 'tt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'b', 'code']
-    result_html = bleach.clean(result_html, tags, attrs)
+    # result_html = bleach.clean(result_html, tags, attrs)
     return result_html
+
+
+def get_surrounding_headers2(query):
+    result = get_heading(query, "header", "h4")
+    stem = allow(get_param(query, "stem", None))
+    if stem: result += '<p class="stem" >' + stem + '</p>'
+    return result, get_heading(query, "footer", 'p class="plgfooter"')
 
 
 def get_surrounding_headers(query, inside):
@@ -741,6 +771,7 @@ def get_surrounding_headers(query, inside):
 
 def get_clean_param(query, key, default):
     s = get_param(query, key, default)
+    # return str(s)
     return clean(s)
 
 
@@ -888,4 +919,62 @@ def is_lazy(query):
     if str(lazy).lower() == "false": do_lazy = False
     # print("do_lazy=",do_lazy)
     return do_lazy  
+    
+    
+def is_user_lazy(query):
+    caller_lazy = get_param(query, "doLazy", NEVERLAZY)
+    # print("caller_lazy=",caller_lazy)
+    if caller_lazy == NEVERLAZY: return False
+    do_lazy = False
+    if str(caller_lazy).lower() == "false": return False
+    lazy = get_param(query, "lazy", "")
+    if str(lazy).lower() == "true":  do_lazy = True
+    # print("do_lazy=",do_lazy)
+    return do_lazy
+
+
+def add_lazy(plugin_html: str) -> str:
+    return LAZYSTART + plugin_html + LAZYEND
+
+
+def make_lazy(plugin_html: str, query, htmlfunc) -> str:
+    """
+    Makes plugin string to lazy
+    :param plugin_html: ready html for the plugin
+    :param query: query params where lazy options can be read 
+    :param htmlfunc: function to generate the lazy version of plugin html
+    :return true if lazy plugin is needed
+    """
+    if not is_lazy(query): return plugin_html
+    lazy_html = htmlfunc(query)
+    lazy_plugin_html = LAZYSTART + plugin_html + LAZYEND + lazy_html
+    return lazy_plugin_html
+    
+    
+def replace_template_params(query, template: str, cond_itemname: str, itemnames=None) -> str:
+    """
+    Replaces all occurances of itemnames and cond_item_name in template by their value in query
+    if  cond_itemname exists in query. 
+    :param query: query params where items can be read 
+    :param template: string that may include items like {{userword}} that are replaced
+    :param cond_itemname: name for the item that decides if the template is non empty.  None means no condition
+    :param itemnames: list of other item names that are replaced by their value in Query
+    :return true if lazy plugin is needed
+    """
+    items = [] 
+    if cond_itemname:
+        item = get_param(query,cond_itemname, "")
+        if not item: return ""
+        items = [cond_itemname]
+     
+    if itemnames: items += itemnames
+    result = template
+       
+    for name in items:
+        n,d,dummy = (name+"::").split(":",2)
+        item = str(get_param(query, n, d))
+        result = result.replace("{{"+n+"}}", item)
+        
+    return result    
+        
     
