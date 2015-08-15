@@ -1385,6 +1385,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                $scope.out = $scope.element0.getElementsByClassName('console')[0]; 
                $scope.out.write = $scope.write;
                $scope.out.writeln = $scope.writeln;
+               $scope.out.canvas = $scope.canvas;
             }   
             paint(ctx,$scope.out,$scope.userargs,$scope.userinput,cons);
             ctx.restore();
