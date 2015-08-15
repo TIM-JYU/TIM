@@ -43,7 +43,7 @@ def get_lazy_pali_html(query: QueryParams) -> str:
     s += replace_template_params(query, '<div><label>{{inputstem}} <span><input type ="text" class="paliInput"  value="{{state.userword}}" size="{{cols}}"></span></label>',
          "", ["inputstem", "state.userword:"+initword, "cols"])
     s += '</div>'
-    s += replace_template_params(query, '&nbsp&nbsp<span class="tries"> Tries: {{tries}}/{{max_tries}}</span>',"max_tries",["tries:0"])
+    s += replace_template_params(query, '&nbsp;&nbsp;<span class="tries"> Tries: {{tries}}/{{max_tries}}</span>',"max_tries",["tries:0"])
     s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>',"footer")
     s += '</div>'
     return s              
