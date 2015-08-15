@@ -361,10 +361,20 @@ a.parlink:hover {
 }
 
 #previewDiv {
+    max-width: 52em;
     clear: both;
     overflow: hidden;
     border-radius: 5px;
     background: inherit;
+}
+
+#previewDiv .editline, #previewDiv .readline {
+    display: none;
+}
+
+#previewDiv .par {
+    margin-left: 0;
+    margin-right: 0;
 }
 
 #slideFrame {
