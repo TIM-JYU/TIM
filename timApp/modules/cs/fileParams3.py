@@ -995,7 +995,7 @@ def replace_template_param(query, template: str, cond_itemname: str, default="")
     if item == "": return ""
     if not item: return ""
 
-    result = template.replace("{{"+cond_itemname+"}}", item)
+    result = template.replace("{{"+cond_itemname+"}}", str(item))
 
     return result
 

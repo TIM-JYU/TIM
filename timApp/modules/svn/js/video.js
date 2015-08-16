@@ -53,7 +53,7 @@ videoApp.directiveTemplateVideo = function(t) {
                   '{{stem}} ' + 
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">' +
                   '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
-                  '{{videoname}} {{duration}} {{span}}</a>' +
+                  '{{videoname}} {{duration}} {{span}}</a> ' +
                   '<a href="{{doclink}}" ng-if="doctext" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
                   '</p>'+
@@ -66,7 +66,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '<ul><li>{{stem}} '+
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">'+
                   '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
-                  '{{videoname}}{{startt}} {{duration}} {{span}}</a>'+
+                  '{{videoname}}{{startt}} {{duration}} {{span}}</a> '+
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
                   '</li></ul>' +

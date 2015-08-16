@@ -137,22 +137,27 @@ def replace_time_params(query, html):
     s = s.replace("{{duration}}",duration)
     return s
     
-    
+
+def small__and_list_html(query, duration_template):
+    s = replace_template_param(query, '{{stem}}', "stem")
+    di = replace_template_param(query, ' {{videoname}}', "videoname")
+    if di:
+        dur = replace_time_params(query, duration_template)
+        icon = replace_template_param(query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span> ', "videoicon", "/csimages/video_small.png")
+        s += ' <a class="videoname">' + icon + di + dur + '</a>'
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    if di:
+        icon =  replace_template_param(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon","/csimages/book.png")
+        s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    return s
+
+
 def small_video_html(query):
     # Kokeiltu myös listoilla, ei mitattavasti parempi
     s = '<div class="smallVideoRunDiv">'
     s += replace_template_param(query, "<h4>{{header}}</h4>","header")
-    s += '<p>'
-    s += replace_template_param(query, '{{stem}}', "stem")
-    di = replace_template_params(query, ' {{videoname}} ', "videoname")
-    if di:
-        dur = replace_time_params(query, "{{duration}}")
-        icon = replace_template_param(query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span>', "videoicon", "/csimages/video_small.png")
-        s += ' <a class="videoname">' + icon + di + dur + '</a>'
-    icon =  replace_template_param(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon","/csimages/book.png")
-    s += replace_template_params(query, ' <a href="" target="timdoc">' + icon + '{{doctext}}</a>', "doctext")
-    s += '</p>'
-    s += replace_template_params(query, '<div><p></p></div><p class="plgfooter">{{footer}}</p>', "footer")
+    s += '<p>' + small__and_list_html(query, "{{duration}}") + '</p>'
+    s += replace_template_param(query, '<div><p></p></div><p class="plgfooter">{{footer}}</p>', "footer")
     s += '</div>'
 
     return s
@@ -160,32 +165,25 @@ def small_video_html(query):
      
 def list_video_html(query):
     s =  '<div class="listVideoRunDiv">'
-    s += replace_template_params(query, '<p>{{header}}</p>', "header")
-    s += '<ul><li>'
-    s += replace_template_params(query, '{{stem}} ', "stem")
-    di = replace_template_params(query, '<a ><span><img src="{{videoicon}}" alt="Click here to show" /> </span>' \
-            '{{videoname}}{{startt}} {{duration}} </a>', "videoname", ["videoicon:/csimages/video_small.png"])
-    if di: di = replace_time_params(query, di)
-    s += di
-    di = replace_template_params(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', None, ["docicon:/csimages/book.png"])
-    s += replace_template_params(query, ' <a href="" target="timdoc">' + di + '{{doctext}}</a>', "doctext")
-    s += '</li></ul>' \
-         '<div ><p></p></div>'
-    s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
+    s += replace_template_param(query, '<p>{{header}}</p>', "header")
+    s += '<ul><li>' + small__and_list_html(query, "{{startt}} {{duration}}") + '</li></ul>'
+    s += replace_template_param(query, '<div ><p></p></div><p class="plgfooter">{{footer}}</p>', "footer")
     s += '</div>'
     return s
 
 
 def video_html(query):
     s =  '<div class="videoRunDiv">'
-    s += replace_template_params(query, '<h4>{{header}}</h4>', "header")
-    s += replace_template_params(query, '<p class="stem" >{{stem}}</p>', "stem")
+    s += replace_template_param(query, '<h4>{{header}}</h4>', "header")
+    s += replace_template_param(query, '<p class="stem" >{{stem}}</p>', "stem")
     s += '<div ><p></p></div>' \
             '<div class="no-popup-menu">' \
             '<img src="/csimages/video.png"  width="200" alt="Click here to show the video" />' \
             '</div>'
-    s += replace_template_params(query, '<a href="{{doclink}}" target="timdoc"><span><img src="{{docicon}}"  alt="Go to doc" /> </span>' \
-            '{{doctext}}</a>', "doctext", ["docicon:/csimages/book.png"])
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    if di:
+        icon =  replace_template_param(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon","/csimages/book.png")
+        s += ' <a href="" target="timdoc">' + icon + di + '</a>'
     s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
     s += '</div>'
     return s
