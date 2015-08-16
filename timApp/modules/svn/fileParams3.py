@@ -977,4 +977,25 @@ def replace_template_params(query, template: str, cond_itemname: str, itemnames=
         
     return result    
         
-    
+
+def replace_template_param(query, template: str, cond_itemname: str, default="") -> str:
+    """
+    Replaces all occurances of itemnames and cond_item_name in template by their value in query
+    if  cond_itemname exists in query.
+    :param query: query params where items can be read
+    :param template: string that may include items like {{userword}} that are replaced
+    :param cond_itemname: name for the item that decides if the template is non empty.  None means no condition
+    :param default: value to be used if item is default or no item at all, if defult=="", return "" if used
+    :return replaced template or ""
+    """
+    items = []
+    if not cond_itemname: return ""
+    item = get_param(query, cond_itemname, "default")
+    if item == "default": item = default
+    if item == "": return ""
+    if not item: return ""
+
+    result = template.replace("{{"+cond_itemname+"}}", item)
+
+    return result
+

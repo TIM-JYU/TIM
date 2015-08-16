@@ -141,19 +141,18 @@ def replace_time_params(query, html):
 def small_video_html(query):
     # Kokeiltu myös listoilla, ei mitattavasti parempi
     s = '<div class="smallVideoRunDiv">'
-    s += replace_template_params(query, "<h4>{{header}}</h4>","header")
+    s += replace_template_param(query, "<h4>{{header}}</h4>","header")
     s += '<p>'
-    s += replace_template_params(query, '{{stem}}', "stem")
-    s += '<a class="videoname">' 
-    di = replace_template_params(query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span> {{videoname}} {{duration}} </a>',
-                                  "videoname", ["videoicon:/csimages/video_small.png"])
-    if di: di = replace_time_params(query, di)
-    s += di
-    di =  replace_template_params(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', None, ["docicon:/csimages/book.png"])
-    s += replace_template_params(query, ' <a href="" target="timdoc">' + di + '{{doctext}}</a>', "doctext") 
-    s += '</p>' 
-    s += '<div ><p></p></div>'  
-    s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
+    s += replace_template_param(query, '{{stem}}', "stem")
+    di = replace_template_params(query, ' {{videoname}} ', "videoname")
+    if di:
+        dur = replace_time_params(query, "{{duration}}")
+        icon = replace_template_param(query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span>', "videoicon", "/csimages/video_small.png")
+        s += ' <a class="videoname">' + icon + di + dur + '</a>'
+    icon =  replace_template_param(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon","/csimages/book.png")
+    s += replace_template_params(query, ' <a href="" target="timdoc">' + icon + '{{doctext}}</a>', "doctext")
+    s += '</p>'
+    s += replace_template_params(query, '<div><p></p></div><p class="plgfooter">{{footer}}</p>', "footer")
     s += '</div>'
 
     return s
