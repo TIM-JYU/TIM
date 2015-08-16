@@ -279,7 +279,10 @@ def removedir(dirname):
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
-    if user_id == "Anonymous": return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    if user_id == "Anonymous": 
+        allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
+        if allow_anonymous != "true":
+            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
     do_lazy = is_lazy(query)
     # do_lazy = False
     # print("do_lazy",do_lazy,type(do_lazy))
