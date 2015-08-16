@@ -843,7 +843,7 @@ def get_templates(dirname: str) -> object:
     """
     result = []
     for filename in os.listdir(dirname):
-        f = open(dirname+"/"+filename).readlines()
+        f = open(dirname+"/"+filename, encoding="utf-8-sig").readlines()
         template = {"file": filename, "text": f[0].strip(),"expl": f[1].strip() }
         result.append(template)
 
@@ -863,10 +863,11 @@ def get_all_templates(dirname: str) -> object:
     templates = []
     texts = []
     try:
-        texts = open(dirname+"/tabs.txt").read().splitlines();
+        texts = open(dirname+"/tabs.txt", encoding="utf-8-sig").read().splitlines();
         for i in range(0, len(texts)):
             templates.append(get_templates(dirname+"/"+str(i)))
     except Exception as e:
+        print(e)
         return {}
     return {'templates': templates, 'text': texts}
 
@@ -883,7 +884,7 @@ def get_template(dirname: str, idx:str, filename: str) -> str:
         fname = re.sub(r"[^ A-ZÅÄÖa-zåäö_0-9]","",filename)
         if not fname: fname = "0"
         tidx = re.sub(r"[^0-9]","",idx)
-        f = open(dirname+"/"+tidx+"/"+fname).readlines()
+        f = open(dirname+"/"+tidx+"/"+fname, encoding="utf-8-sig").readlines()
     except Exception as e:
         return str(e)
     return "".join(f[2:])
