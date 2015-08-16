@@ -1,0 +1,20 @@
+{  
+   "state":"None",
+   "doLazy": true,
+   "markup":{  
+      "type": "list",
+      "width":"400",
+      "end":"35",
+      "header":"Tehtava 2",
+      "height":"300",
+      "user_id":"vesal",
+      "start":"30",
+      "videoname": "KUKKUU",
+      "videoicon": false,
+      "stem": "Kato ihmeessä",
+      "doctext": "Kirjassa lisää",
+      "docicon": "",
+      "file":"http://users.jyu.fi/~vesal/tmp/OikeaReuna_m.mp4",
+      "footer":"Video 2"
+   }
+}

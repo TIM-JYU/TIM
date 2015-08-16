@@ -1,0 +1,14 @@
+List video
+Video as a list item
+``` {#PLUGINNAMEHERE plugin="showVideo"}
+type: list
+stem: "Mistä aliohjelmille parametrejä"
+videoname: Luento 3
+doctext: 6. Aliohjelmat
+doclink: "http://tim.it.jyu.fi/view/1#aliohjelmat"
+start: 39:00
+end: 1:19:15
+width: 400
+height: 300
+file: "http://kurssit.it.jyu.fi/ITKP102/2015s/luento/luento03a.mp4"
+```
