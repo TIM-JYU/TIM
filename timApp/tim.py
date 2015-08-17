@@ -880,6 +880,9 @@ def join_lecture():
     lecture_id = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     current_user = getCurrentUserId()
 
+    if not check_if_lecture_is_running(lecture_id):
+        return jsonResponse({'lecture_ended': True})
+
     if current_user == 0:
         user_name = 'Anonymous'
         user_real_name = 'Guest'

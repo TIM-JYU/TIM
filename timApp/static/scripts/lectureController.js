@@ -197,7 +197,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 .success(function (answer) {
                     $scope.passwordQuess = "";
                     var input = $("#passwordInput");
-                    if (!answer.correctPassword) {
+                    if (answer.lecture_ended) {
+                        $scope.showDialog("Lecture '" + name + "' has ended");
+                        return false;
+                    } else if (!answer.correctPassword) {
                         // $window.alert("Wrong access code!");
                         $scope.showDialog("Wrong access code!");
                         return false;
@@ -633,7 +636,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.showBasicView = function (answer) {
             if ($scope.$parent) {
-                console.log($scope.$parent.docName);
                 $scope.docNamePath = encodeURI($scope.$parent.docName);
             }
             $scope.isLecturer = answer.isLecturer;
