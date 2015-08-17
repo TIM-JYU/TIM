@@ -2,18 +2,12 @@
     <form class="createLecture" id="lectureForm" name="form">
         <div id="infoFields">
             <div>
-                <label>Lecture name:
-                    <input id="lCode" type="text" name="code" size="45" ng-model="lectureCode"/></label>
+                <label for="lCode">Lecture name:</label>
+                <input id="lCode" type="text" name="code" ng-model="lectureCode"/>
             </div>
             <div>
-                <label>Lecture link:
-                    <input onclick="document.getElementById('lLink').setSelectionRange(0, 9999)" style="float:left"
-                           readonly id="lLink" type="text" size="45" name="link"
-                           ng-value='location + "/lecture/" + docNamePath + "?lecture=" + lectureCodeEncoded'/></label>
-            </div>
-            <div>
-                <label>Lecture access code:<br>(Optional)
-                    <input type="text" name="password" ng-model="password" size="45"/></label>
+                <label for="lPassword">Lecture access code:<br>(Optional)</label>
+                <input id="lPassword" type="text" name="password" ng-model="password"/>
             </div>
         </div>
         <div class="startingTime">
@@ -61,6 +55,12 @@
                                ng-model="durationMin" ng-disabled="!useDuration"/></label>
                 </div>
             </div>
+        </div>
+        <div>
+            <label for="lLink" class="linkLabel">Direct link to join lecture:</label>
+            <input onclick="document.getElementById('lLink').setSelectionRange(0, 9999)"
+                   style="background-color: #DCDCDC" readonly id="lLink" type="text" name="link"
+                   ng-value='"http://" + location + "/lecture/" + docNamePath + "?lecture=" + lectureCodeEncoded'/>
         </div>
         <p id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 
