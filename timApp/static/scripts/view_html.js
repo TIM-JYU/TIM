@@ -922,6 +922,9 @@ timApp.controller("ViewCtrl", [
             sc.selection.end = null;
         };
 
+        sc.nothing = function () {
+        };
+
         sc.getEditorFunctions = function () {
             return [
                 {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
@@ -931,12 +934,12 @@ timApp.controller("ViewCtrl", [
                 {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
                 {func: sc.startArea, desc: 'Start selecting area', show: sc.rights.editable && sc.selection.start === null},
                 {func: sc.beginAreaEditing, desc: 'Edit area', show: sc.selection.start !== null && sc.rights.editable},
-                {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null}
+                {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
+                {func: sc.nothing, desc: 'Close menu', show: true}
             ];
         };
 
-        sc.nothing = function () {
-        };
+
 
         sc.editorFunctions = sc.getEditorFunctions();
 
