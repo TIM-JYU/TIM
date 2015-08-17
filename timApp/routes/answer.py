@@ -131,8 +131,12 @@ def should_hide_name(doc_id, user_id):
     return not getTimDb().users.userIsOwner(user_id, doc_id) and user_id != getCurrentUserId()
 
 
-@answers.route("/answers/<task_id>/<int:user_id>")
+@answers.route("/answers/<task_id>/<user_id>")
 def get_answers(task_id, user_id):
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        abort(404, 'Not a valid user id')
     verifyLoggedIn()
     timdb = getTimDb()
     doc_id, task_id_name = parse_task_id(task_id)
