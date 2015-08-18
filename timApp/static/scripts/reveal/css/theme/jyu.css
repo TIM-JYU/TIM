@@ -11,6 +11,7 @@
  * GLOBAL STYLES
  *********************************************/
 body {
+    margin: auto !important;
     background-color: #fff;
     background-repeat: no-repeat;
     background-attachment: fixed;
