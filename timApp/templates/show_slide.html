@@ -11,8 +11,11 @@
         white-space: pre;
     }</style>
     <link rel="stylesheet" href="{{ url_for('static', filename='scripts/reveal/css/theme/jyu.css') }}" id="theme">
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
 
     <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
+    <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.js') }}"></script>
     <script src="{{ url_for('bower.static', filename='waypoints/lib/jquery.waypoints.js') }}"></script>
     <script src="{{ url_for('bower.static', filename='waypoints/lib/shortcuts/inview.js') }}"></script>
     <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
@@ -32,9 +35,9 @@
         ]);
 
     </script>
-    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/view_html.js') }}"></script>
+
+    {% include 'view_head.html' %}
+    {% include 'common_head.html' %}
 
     {% for cssFile in cssFiles %}
         <link rel="stylesheet" href="{{ cssFile }}">
