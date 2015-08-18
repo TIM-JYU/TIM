@@ -9,6 +9,8 @@ new_contract('range', 'tuple(int, int)')
 from flask import Blueprint, render_template, url_for
 from .common import *
 import pluginControl
+from options import *
+import traceback
 import time
 import tim
 
@@ -54,12 +56,15 @@ def view_document_content(doc_name):
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")
 def view_document(doc_name):
-    view_range = None
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    except (ValueError, TypeError):
-        abort(400, "Invalid start or end index specified.")
-    return view(doc_name, 'view_html.html', view_range=view_range)
+        return view(doc_name, 'view_html.html', view_range=view_range)
+    except ValueError as v:
+        tb = traceback.format_exc()
+        abort(400, "Invalid start or end index specified." + "ValueError" + str(v) + tb)
+    except TypeError as t:
+        tb = traceback.format_exc()
+        abort(400, "Invalid start or end index specified." + " TypeError " +str(t) + tb)
 
 
 @view_page.route("/teacher/<path:doc_name>")
@@ -152,7 +157,8 @@ def view_content(doc_name, template_name, view_range=None):
                                                                 current_user['name'],
                                                                 timdb.answers,
                                                                 current_user['id'],
-                                                                sanitize=False)
+                                                                sanitize=False,
+                                                                do_lazy=get_option(request, "lazy", True))
 
     return render_template(template_name,
                            docID=doc_id,
@@ -221,7 +227,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         users = []
     current_user = timdb.users.getUser(user)
     show_time('plugin alku')
-    texts, jsPaths, cssPaths, modules, readings, notes = post_process_pars(xs, doc_id, current_user['id'], sanitize=False)
+    texts, jsPaths, cssPaths, modules, readings, notes = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
     show_time('plugin loppu')
 
     reqs = pluginControl.get_all_reqs()

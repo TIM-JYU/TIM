@@ -342,7 +342,7 @@ class Users(TimDbBase):
         groups = cursor.fetchall()
 
         if groups is None or len(groups) == 0:
-            print("DEBUG: No such named group: " + group_name)
+            print("DEBUG: No such named group: " + name)
             return None
         elif len(groups) > 1:
             print("DEBUG: Too many named groups: {} ({})".format(group_name, groups))

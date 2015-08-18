@@ -81,6 +81,7 @@
         {% else %}
             {% include 'side_menu.html' %}
         {% endif %}
+
         {% if teacher_mode %}
             <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users">
                 {% if plugin_users %}

@@ -10,6 +10,11 @@ export DISPLAY=:1
 # Copy Jypeli dll's to temp directory
 # cp /cs/jypeli/* /tmp/
 
+# Get Jypeli
+mkdir /tmp/jypeli
+cd /tmp/jypeli
+curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | tar -xz
+
 # Get ComTest
 cd /tmp
 rm ComTest.jar*

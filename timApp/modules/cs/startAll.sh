@@ -10,18 +10,25 @@ export DISPLAY=:1
 # Copy Jypeli dll's to temp directory
 # cp /cs/jypeli/* /tmp/cs
 
+# Gets are moved to startPlugins.sh
+
+# Get Jypeli
+#mkdir /cs/jypeli
+#cd /cs/jypeli
+#curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | tar -xz
+
 # Get ComTest 
 #cd /tmp
-#rm ComTest.jar*
+#rm -f ComTest.jar*
 #wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar
 #cd /cs/java
-#rm comtest*.jar*
+#rm -f comtest*.jar*
 #wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar
 #wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar
 #
-#rm Graphics.jar*
+#rm -f Graphics.jar*
 #wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar
-#rm Ali*.jar
+#rm -f Ali*.jar
 #wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar
 
 cd /cs

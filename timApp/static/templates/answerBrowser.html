@@ -1,4 +1,4 @@
-<div class="answerBrowser">
+<div class="answerBrowser" ng-cloak>
     <select ng-show="$parent.teacherMode && users.length > 0" ng-model="user"
             ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
             ng-change="getAvailableAnswers()"></select>
@@ -24,5 +24,5 @@
     </div>
     <span ng-show="$parent.teacherMode && changed && !firstLoad">(hover/click to update)</span>
     <span ng-show="!changed && answers.length == 0 && $parent.teacherMode">(no answers)</span>
-    <img style="display: inline" src="/static/images/loading.gif" ng-show="loading">
+    <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="loading"> -->
 </div>

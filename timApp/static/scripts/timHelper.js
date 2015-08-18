@@ -18,9 +18,9 @@ timHelper.initAttributes = function(clone, $scope) {
 };
 
 
-timHelper.getHeading = function(a,key,$scope,defElem) {
+timHelper.getHeading = function($scope,attrs,key,defElem) {
 "use strict";
-	var h = timHelper.set($scope,a,key,"");
+	var h = timHelper.set($scope,attrs,key,"");
 	if ( !h ) return "";
 	var st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
 	var elem = defElem;
@@ -31,7 +31,7 @@ timHelper.getHeading = function(a,key,$scope,defElem) {
 	var ea = [elem];
 	if ( i >= 0 ) ea = [elem.substring(0,i),elem.substring(i)];
 	if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
-	try {
+	try { 
 	  val = decodeURIComponent(encodeURI(val));
 	} catch(err) {}
     var html = "<" + elem + attributes + ">" + val + "</" + elem + ">";

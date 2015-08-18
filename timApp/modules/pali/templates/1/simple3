@@ -1,0 +1,12 @@
+3 kirjainta
+Palindromi 3:lla kirjaimella
+``` {#ekapali plugin="pali"}
+header: Kirjoita palindromi
+stem: Kirjoita palindromi jossa 3 kirjainta
+-points_array: [[0, 0.1], [0.4, 1]]
+inputstem: "Palindromisi:"
+needed_len: 3
+max_tries: 2
+initword:
+cols: 20
+```

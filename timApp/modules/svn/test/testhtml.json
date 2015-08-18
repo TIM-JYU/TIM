@@ -1,0 +1,20 @@
+{
+  "doLazy": true,
+  "state": "None",
+  "markup": {
+    "type": "list",
+    "header": "Videot",
+    "doctext": "6. Aliohjelmat",
+    "videoname": "Video 1",
+    "stem": "Aliohjelmat",
+    "doclink": "http://tim.it.jyu.fi/view/1#aliohjelmat",
+    "user_id": "vesal",
+    "start": "1:23:55",
+    "xend": 3456,
+    "end": "21:14:59",
+    "file": "http://users.jyu.fi/~vesal/tmp/OikeaReuna_m.mp4",
+    "footer": "Video 3",
+    "width": "400",
+    "height": "300"
+  }
+}

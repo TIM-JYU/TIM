@@ -8,6 +8,7 @@ import yaml
 from yaml import CLoader
 import yaml.parser
 import yaml.scanner
+import time
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PluginException, PLUGINS
 from containerLink import plugin_reqs
@@ -15,6 +16,12 @@ from containerLink import get_plugin_tim_url
 from documentmodel.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
 from timdb.timdbbase import TimDbException
+
+
+LAZYSTART= "<!--lazy "
+LAZYEND = " lazy-->"
+NOLAZY = "<!--nolazy-->"
+NEVERLAZY = "NEVERLAZY"
 
 
 def correct_yaml(text):
@@ -31,15 +38,18 @@ def correct_yaml(text):
     lines = text.splitlines()
     s = ""
     p = re.compile("^[^ :]*:[^ ]")  # kissa:istuu
-    pm = re.compile("^[^ :]*:[ ]+\|[^ a-zA-Z]+$")  # program: ||| or  program: |!!!
+    pm = re.compile("^[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
     multiline = False
     end_str = ''
     for line in lines:
+        line = line.rstrip()
         if p.match(line) and not multiline:
             line = line.replace(':', ': ', 1)
         if pm.match(line):
             multiline = True
+            n = 0
             line, end_str = line.split("|", 1)
+            end_str = end_str.rstrip()
             s = s + line + "|\n"
             continue
         if multiline:
@@ -57,6 +67,8 @@ def parse_yaml(text):
     :type text: str
     :return:
     """
+    values = {}
+
     if len(text) == 0:
         return False
     try:
@@ -152,7 +164,7 @@ def dereference_pars(pars):
     return new_pars
 
 
-def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
+def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, do_lazy=False):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
@@ -167,6 +179,8 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
 
     :type pars: list[DocParagraph]
     """
+    t1 = time.clock()
+    t12 = t1
 
     pars = dereference_pars(pars)
 
@@ -199,7 +213,11 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
             else:
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
                 state = None
-            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
+            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
+
+    # t22 = time.clock()
+    # print("%-15s %-10s %6d - %7.4f" % ("blocks done", " ", len(pars), (t22-t12)))
+    # t12 = t22
 
     if custom_state is None and user_id != 0:
         answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
@@ -212,7 +230,16 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
     css_paths = []
     modules = []
 
+    # t22 = time.clock()
+    # print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
+    # t12 = t22
+
     for plugin_name, plugin_block_map in plugins.items():
+
+        # t22 = time.clock()
+        # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "begin", len(plugin_block_map), (t22-t12)))
+        # t12 = t22
+
         try:
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
@@ -250,7 +277,15 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
 
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
+                # t22 = time.clock()
+                # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "beg multi:", 0, (t22-t12)))
+                # t12 = t22
+
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+
+                # t22 = time.clock()
+                # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "multihtml:", len(response), (t22-t12)))
+                # t12 = t22
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     pars[idx].set_html(get_error_html(plugin_name, str(e)))
@@ -263,6 +298,7 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+                html = make_lazy(html, markup, do_lazy)
                 pars[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                                    plugin_url,
                                                                                    html))
@@ -273,12 +309,32 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True):
                 except PluginException as e:
                     pars[idx].set_html(get_error_html(plugin_name, str(e)))
                     continue
+                html = make_lazy(html, val, do_lazy)
                 pars[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                                    plugin_url,
                                                                                    html))
+    t2 = time.clock()
+    print("%-15s %-10s %6d - %7.4f" % ("all block done:", "total", len(pars), (t2-t1)))
 
     return pars, js_paths, css_paths, modules
 
+def get_markup_value(markup, key, default):
+    if key not in markup["markup"]: return default
+    return markup["markup"][key]
+
+
+def make_lazy(html, markup, do_lazy):
+    if do_lazy == NEVERLAZY: return html 
+    markup_lazy = get_markup_value(markup,"lazy", "")
+    if markup_lazy == False: return html # user do not want lazy
+    if not do_lazy and markup_lazy != True: return html
+    if html.find(NOLAZY) >= 0: return html  # not allowed to make lazy
+    if html.find(LAZYSTART) >= 0: return html # allredy lazy
+    header = str(get_markup_value(markup, "header", "Check your understanding"))
+    stem = str(get_markup_value(markup, "stem", "Open plugin"))
+    html = html.replace("<!--","<!-LAZY-").replace("-->","-LAZY->")
+    # print(header, stem)
+    return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + "<div><p>" + stem + "</p></div>"
 
 def get_all_reqs():
     allreqs = {}
@@ -294,6 +350,30 @@ def get_all_reqs():
             continue
     return allreqs
 
+def make_browse_buttons(user_id, task_id, answer_db):
+    states = answer_db.getAnswers(user_id, task_id)
+    if len(states) > 1:
+        formatted = ""
+        content_obj = json.loads(states[len(states)-1]["content"])
+        if isinstance(content_obj, dict):
+            for key, val in content_obj.items():
+                formatted += key + "\n---------------\n" + str(val) + "\n\n"
+        elif isinstance(content_obj, list):
+            for v in content_obj:
+                formatted += "List element:" + "\n---------------\n" + str(v) + "\n\n"
+        else:
+            formatted = str(content_obj)
+        first = "<br/>First answer:<br/><pre>{}</pre>".format(html.escape(formatted))
+    else:
+        first = ""
+    return """
+       <div class="answerbuttons">
+           <input type="button" value="<-">
+           {} / {}
+           <input type="button" value="->">
+           {}
+       </div>
+    """.format(len(states), len(states), first)
 
 def plugin_deps(p):
     """

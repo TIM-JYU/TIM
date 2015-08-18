@@ -5,6 +5,7 @@ var timApp = angular.module('timApp', [
     'angularFileUpload',
     'ui.ace',
     'ngStorage'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
+    timLogTime("timApp config","view");
     var interceptor = [
         '$q',
         '$rootScope',
@@ -58,6 +59,7 @@ timApp.controller("ViewCtrl", [
     '$filter',
     function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter) {
         "use strict";
+        timLogTime("VieCtrl start","view");
         http.defaults.headers.common.Version = $window.version.hash;
         http.defaults.headers.common.RefererPath = $window.refererPath;
         sc.docId = $window.docId;
@@ -85,9 +87,11 @@ timApp.controller("ViewCtrl", [
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
         sc.processAllMath = function ($elem) {
+            timLogTime("processAllMath start","view");
             $elem.find('.math').each(function () {
                 sc.processMath(this);
             });
+            timLogTime("processAllMath end","view");
         };
 
         sc.processMath = function (elem) {
@@ -730,6 +734,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.getIndex = function () {
+            timLogTime("getindex","view");
             http.get('/index/' + sc.docId)
                 .success(function (data) {
                     sc.indexTable = [];
@@ -772,6 +777,7 @@ timApp.controller("ViewCtrl", [
                         }
                         sc.indexTable.push(parentEntry);
                     }
+                    timLogTime("getindex done","view");
                 }).error(function () {
                     console.log("Could not get index");
                 });
@@ -864,9 +870,11 @@ timApp.controller("ViewCtrl", [
         }
 
         // Load index, notes and read markings
+        timLogTime("getList start","view");
         sc.setHeaderLinks();
         sc.indexTable = [];
         sc.getIndex();
+        timLogTime("getList end","view");
 
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
@@ -886,6 +894,7 @@ timApp.controller("ViewCtrl", [
         sc.processAllMath($('body'));
 
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
+        timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
         sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();

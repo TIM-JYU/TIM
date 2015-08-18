@@ -1,0 +1,16 @@
+Suunnattu graafi
+Kuvio jossa on suunnattu nuoli alkiosta toiseen
+``` {#PLUGINNAMEHERE plugin="graphviz"}
+gvType: dot
+size: Normal
+width: 100
+height: 100
+gvData: |
+    digraph test {
+      a->b;
+      a->c;
+      a->d;
+      b->d;
+      c->e;
+      }
+```

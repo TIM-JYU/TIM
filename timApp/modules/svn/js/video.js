@@ -47,26 +47,26 @@ videoApp.muunna = function(value) {
 
 
 videoApp.directiveTemplateVideo = function(t) {
-   if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv">' +
+   if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<p>' +
                   '{{stem}} ' + 
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">' +
                   '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
-                  '{{videoname}} {{duration}} {{span}}</a>' +
-                  '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
+                  '{{videoname}} {{duration}} {{span}}</a> ' +
+                  '<a href="{{doclink}}" ng-if="doctext" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
                   '</p>'+
 				  '<div ><p></p></div>' + 
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
-   if ( t == "listvideo" ) return '<div class="listVideoRunDiv">' +
+   if ( t == "listvideo" ) return '<div class="listVideoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<ul><li>{{stem}} '+
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">'+
                   '<span ng-if="videoicon"><img ng-src="{{videoicon}}" alt="Click here to show" /> </span>' +
-                  '{{videoname}}{{startt}} {{duration}} {{span}}</a>'+
+                  '{{videoname}}{{startt}} {{duration}} {{span}}</a> '+
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
                   '</li></ul>' +
@@ -74,12 +74,14 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
-   return '<div class="videoRunDiv">' +
+   return '<div class="videoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
 				  '<div ><p></p></div>' + 
 				  //'<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
+                  '<div class="no-popup-menu">' +
 				  '<img src="/csimages/video.png" ng-if="!videoOn" ng-click="showVideo()" width="200" alt="Click here to show the video" />' +
+                  '</div>' + 
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docoicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
 				  '<p ng-if="videoOn" class="pluginShow" ><a ng-click="hideVideo()">{{hidetext}}</a></p>'+
@@ -131,7 +133,7 @@ videoApp.directiveFunction = function(t) {
             if ( scope.limits == "(-)" ) scope.limits = "";
             scope.span = "";
             scope.startt = videoApp.time2String(scope.start);
-            if ( scope.startt ) scope.startt = ", " + videoApp.time2String(scope.start);
+            if ( scope.startt ) scope.startt = ", " + scope.startt;
 			if ( attrs.stem ) scope.stem = attrs.stem;
 			if ( attrs.iframe ) scope.iframe = true;
 			scope.videoHtml = element[0].childNodes[2]
@@ -199,13 +201,14 @@ videoApp.Controller = function($scope,$http,$transclude) {
 			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + $scope.file + t +  '" ' + w + h + 'autoplay="true"  frameborder="0" allowfullscreen></iframe>';
 			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
-		else   
+		else  { 
             t = ""
             if ( $scope.start ) {
                 t = "#t="+$scope.start; // iPad ei tottele 'loadedmetadata'
                 if ( $scope.end ) t += "," + $scope.end;
             }    
 			$scope.videoHtml.innerHTML = '<video class="showVideo" id="'+vid+'" src="'+ $scope.file + t + '" type="video/mp4" controls autoplay="true" ' + w + h +'/>';
+        }    
         // IE ei tietenkään taas tottele t-attribuuttia...            
 		$scope.videoOn = true;	
 		$scope.myvid = document.getElementById(vid);

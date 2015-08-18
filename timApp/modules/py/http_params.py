@@ -6,7 +6,21 @@ import http.server
 import json
 import codecs
 import bleach
+import os
+import re
 from urllib.parse import urlparse, parse_qs
+
+def check_value(value: object, default: object) -> object:
+    """
+    Check if value is something real, if not return default
+    :param value: value to check
+    :param default: value to return if value is not good
+    :return: value or default
+    """
+    if value == 'undefined': return default
+    if value is None: return default
+    return value
+
 
 class QueryParams:
     """
@@ -56,6 +70,33 @@ class QueryParams:
         if key2 in self.__jso["markup"]: return key2
         return key
 
+
+    def get_param_from_json(self, key: str, default: object) ->  object: # return shoud be Any ???
+        """
+        Get param value from query's json part.  key may include . so that "state.userword" gives a
+        value from inside "state" with key "userword".  If no match, then return default
+        input is prefered over markup
+        :param self: query params where to find the key
+        :param key: key to find, may contain . and if . is first, from higest level
+        :param default: value to return if key not found
+        :return: param from key or default
+        """
+        # print(self.dump(),"KEY:",key)
+        keys = key.split(".")
+        if keys[0] == "": keys = keys[1:]
+        level = self.__jso
+        if not level: return default
+        for k in keys[:-1]:
+            if k not in level: return default
+            level = level[k]
+            if not level: return default
+        lk = keys[-1]
+        if lk not in level: lk = "-"+lk
+        if lk not in level: return default
+
+        return level[lk]
+
+
     def get_param(self, key: str, default: object) ->  object: # return shoud be Any ???
         """
         Get param value from query params that match to key.  If no match, then return default
@@ -65,6 +106,8 @@ class QueryParams:
         :param default: value to return if key not found
         :return: param from key or default
         """
+        if key.find(".") >= 0: return self.get_param_from_json(key, default)
+
         key = self.__check_key(key)
         dvalue = default
         if dvalue == 'undefined':
@@ -74,14 +117,17 @@ class QueryParams:
             if self.__jso is None: return dvalue
             if "input" in self.__jso and "markup" in self.__jso["input"] and key in self.__jso["input"]["markup"]:
                 value = self.__jso["input"]["markup"][key]
-                if value != 'undefined': return value
+                return check_value(value,dvalue)
 
             if "markup" not in self.__jso: return dvalue
-            if key in self.__jso["markup"]: return self.__jso["markup"][key]
+            if key in self.__jso["markup"]:
+                value = self.__jso["markup"][key]
+                return check_value(value,dvalue)
+
+            if key in self.__jso: return self.__jso[key]
             return dvalue
         value = self.__get_query[key][0]
-        if value == 'undefined': return dvalue
-        return value
+        return check_value(value,dvalue)
 
     def copy_post_params(self, q: dict):
         """
@@ -305,7 +351,7 @@ def check_array(a: object, ny: int, nx: int) -> bool:
     :param a: object to check
     :param ny: number of needed rows
     :param nx: number of needed lines
-    :return: true is prober array
+    :return: true is proper array
     """
     if not isinstance(a,list): return False
     if len(a) != ny: return False
@@ -313,4 +359,139 @@ def check_array(a: object, ny: int, nx: int) -> bool:
         if not isinstance(row,list): return False
         if len(row) != nx: return False
 
-    return True;
+    return True
+
+
+def get_templates(dirname: str) -> object:
+    """
+    Find all templates from dirname.  Each template file should include
+    template text - first line
+    template explanation - second line
+    template content - rest of lines
+    :param dirname: the directory name where to find template files
+    :return: list of template items, one item is file: text: explanation
+    """
+    result = []
+    for filename in os.listdir(dirname):
+        f = open(dirname+"/"+filename).readlines()
+        template = {"file": filename, "text": f[0].strip(),"expl": f[1].strip() }
+        result.append(template)
+
+    return result
+
+
+def get_all_templates(dirname: str) -> object:
+    """
+    Find list of all templates from dirname.  Dir should include
+    file tabs.txt where there is one line for every tab needed for TIM editor.
+    Then there should be directories 0, 1, ... for each corresponding
+    tab-line.  So if tehre is two lines in tabs.txt tehre is directories 0 and 1
+    for first and second tab.
+    :param dirname: the directory name where to find template list file and sub directories for templates
+    :return: dict with list of lif to template items (templates) and texts (text)
+    """
+    templates = []
+    texts = []
+    try:
+        texts = open(dirname+"/tabs.txt").read().splitlines();
+        for i in range(0, len(texts)):
+            templates.append(get_templates(dirname+"/"+str(i)))
+    except Exception as e:
+        return {}
+    return {'templates': templates, 'text': texts}
+
+
+def get_template(dirname: str, idx: str, filename: str) -> str:
+    """
+    Returns the template file from line 2 to end of file
+    :param dirname: from directory (be sure this is valid)
+    :param idx: index for the template  (only numbers allowed)
+    :param filename: from file (validity of this is checked)
+    :return: lines starting from line 2.
+    """
+    try:
+        fname = re.sub(r"[^ A-ZÅÄÖa-zåäö_0-9]","",filename)
+        tidx = re.sub(r"[^0-9]","",idx)
+        f = open(dirname+"/"+tidx+"/"+fname).readlines()
+    except Exception as e:
+        return str(e)
+    return "".join(f[2:])
+
+
+def join_dict(a: dict,b: dict):
+    """
+    Joins two dict and returns a new one
+    :param a: first dict to join
+    :param b: next dict to join
+    :return: "a+b"
+    """
+    result = a.copy()
+    result.update(b)
+    return result
+
+    
+LAZYSTART="<!--lazy "
+LAZYEND =" lazy-->"
+NOLAZY = "<!--nolazy-->"
+NEVERLAZY = "NEVERLAZY"
+ 
+ 
+def is_lazy(query: QueryParams) -> bool:
+    """
+    Tells if plugins need to be done in lazy-mode
+    :param query: query params where lazy options can be read 
+    :return true if lazy plugin is needed
+    """
+    caller_lazy = query.get_param("doLazy", NEVERLAZY)
+    # print("caller_lazy=",caller_lazy)
+    if caller_lazy == NEVERLAZY: return False
+    do_lazy = caller_lazy
+    if str(do_lazy).lower() == "true":  do_lazy = True
+    if str(do_lazy).lower() == "false": do_lazy = False
+    lazy = query.get_param("lazy", "")
+    if str(lazy).lower() == "true":  do_lazy = True
+    if str(lazy).lower() == "false": do_lazy = False
+    # print("do_lazy=",do_lazy)
+    return do_lazy  
+        
+    
+def make_lazy(plugin_html: str, query: QueryParams, htmlfunc) -> str:
+    """
+    Makes plugin string to lazy
+    :param plugin_html: ready html for the plugin
+    :param query: query params where lazy options can be read 
+    :param htmlfunc: function to generate the lazy version of plugin html
+    :return true if lazy plugin is needed
+    """
+    if not is_lazy(query): return plugin_html
+    lazy_html = htmlfunc(query)
+    lazy_plugin_html = LAZYSTART + plugin_html + LAZYEND + lazy_html
+    return lazy_plugin_html
+    
+    
+def replace_template_params(query: QueryParams, template: str, cond_itemname: str, itemnames=None) -> str:
+    """
+    Replaces all occurances of itemnames and cond_item_name in template by their value in query
+    if  cond_itemname exists in query. 
+    :param query: query params where items can be read 
+    :param template: string that may include items like {{userword}} that are replaced
+    :param cond_itemname: name for the item that decides if the template is non empty.  None means no condition
+    :param itemnames: list of other item names that are replaced by their value in Query
+    :return true if lazy plugin is needed
+    """
+    items = [] 
+    if cond_itemname:
+        item = query.get_param(cond_itemname, "")
+        if not item: return ""
+        items = [cond_itemname]
+     
+    if itemnames: items += itemnames
+    result = template
+       
+    for name in items:
+        n,d,dummy = (name+"::").split(":",2)
+        item = str(query.get_param(n, d))
+        result = result.replace("{{"+n+"}}", item)
+        
+    return result    
+    

@@ -1,7 +1,7 @@
 Small video
 Video with small icon
 ``` {#PLUGINNAMEHERE plugin="showVideo"}
-type: list
+type: small
 stem: "Aliohjelmien kutsuminen"
 videoname: Luento 5
 doctext: 6.1 Aliohjelman kutsuminen

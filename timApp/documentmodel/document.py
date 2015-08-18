@@ -28,7 +28,6 @@ class Document:
     def get_default_files_root(cls):
         return 'tim_files'
 
-
     def __len__(self):
         count = 0
         for _ in self:
@@ -175,7 +174,8 @@ class Document:
         os.unlink(tmpname)
 
     @contract
-    def __increment_version(self, op: 'str', par_id: 'str', increment_major: 'bool', op_params: 'dict|None' = None) -> 'tuple(int, int)':
+    def __increment_version(self, op: 'str', par_id: 'str', increment_major: 'bool',
+                            op_params: 'dict|None' = None) -> 'tuple(int, int)':
         ver_exists = True
         while ver_exists:
             old_ver = self.get_version()
@@ -210,13 +210,12 @@ class Document:
         :param par_id: The paragraph id.
         :return: Boolean.
         """
-        par_line = par_id + '\n'
         with open(self.get_version_path(self.get_version()), 'r') as f:
             while True:
                 line = f.readline()
                 if line == '':
                     return False
-                if line == par_line:
+                if line.startswith(par_id):
                     return True
 
     @contract
@@ -243,7 +242,7 @@ class Document:
             shutil.copyfile(old_path, new_path)
 
         with open(new_path, 'a') as f:
-            f.write(p.get_id())
+            f.write(p.get_id() + '/' + p.get_hash())
             f.write('\n')
         return p
 
@@ -258,14 +257,13 @@ class Document:
 
         old_ver = self.get_version()
         new_ver = self.__increment_version('Deleted', par_id, increment_major=True)
-        id_line = par_id + '\n'
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
                     line = f_src.readline()
                     if not line:
                         return
-                    if line == id_line:
+                    if line.startswith(par_id):
                         p = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
                         p.remove_link(self.doc_id)
                     else:
@@ -290,18 +288,17 @@ class Document:
         p = DocParagraph(text, files_root=self.files_root, attrs=attrs, par_id=par_id, doc_id=self.doc_id)
         p.add_link(self.doc_id)
         old_ver = self.get_version()
-        new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True, op_params={'before_id': insert_before_id})
-        id_line = insert_before_id + '\n'
+        new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True,
+                                           op_params={'before_id': insert_before_id})
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
                     line = f_src.readline()
                     if not line:
                         return p
-                    if line == id_line:
-                        f.write(p.get_id())
+                    if line.startswith(insert_before_id):
+                        f.write(p.get_id() + '/' + p.get_hash())
                         f.write('\n')
-                        inserted = True
                     f.write(line)
 
     @contract
@@ -320,7 +317,23 @@ class Document:
         p = DocParagraph(new_text, doc_id=self.doc_id, par_id=par_id, attrs=new_attrs, files_root=self.files_root)
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
-        self.__increment_version('Modified', par_id, increment_major=False, op_params={'old_hash': old_hash, 'new_hash': new_hash})
+
+        old_ver = self.get_version()
+        new_ver = self.__increment_version('Modified', par_id, increment_major=False,
+                                           op_params={'old_hash': old_hash, 'new_hash': new_hash})
+        old_line = '{}/{}\n'.format(par_id, old_hash)
+        old_line_legacy = '{}\n'.format(par_id)
+        new_line = '{}/{}\n'.format(par_id, new_hash)
+        with open(self.get_version_path(old_ver), 'r') as f_src:
+            with open(self.get_version_path(new_ver), 'w') as f:
+                while True:
+                    line = f_src.readline()
+                    if not line:
+                        return p
+                    if line == old_line or line == old_line_legacy:
+                        f.write(new_line)
+                    else:
+                        f.write(line)
         return p
 
     @contract
@@ -482,7 +495,13 @@ class DocParagraphIter:
                 self.__close()
                 raise StopIteration
             if line != '\n':
-                return DocParagraph.get_latest(self.doc.doc_id, line.replace('\n', ''), self.doc.files_root)
+                if len(line) > 14:
+                    # Line contains both par_id and t
+                    par_id, t = line.replace('\n', '').split('/')
+                    return DocParagraph.get(self.doc.doc_id, par_id, t, self.doc.files_root)
+                else:
+                    # Line contains just par_id, use the latest t
+                    return DocParagraph.get_latest(self.doc.doc_id, line.replace('\n', ''), self.doc.files_root)
 
     def __close(self):
         if self.f:

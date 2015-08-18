@@ -29,12 +29,33 @@ def check_letters(word: str, needed_len: int) -> bool:
     s = word.upper()
     return len(re.sub("[^[A-ZÅÄÖ]","",s)) == needed_len
 
-
+    
+def get_lazy_pali_html(query: QueryParams) -> str:
+    """
+    Returns a lazy version of plugins html
+    :param query: query params where lazy options can be read 
+    :return: lazy version of pali-plugins html
+    """
+    initword = str(query.get_param("initword",""))
+    s = '<div class="csRunDiv no-popup-menu">'
+    s += replace_template_params(query, "<h4>{{header}}</h4>","header")
+    s += replace_template_params(query, '<p class="stem" >{{stem}}</p>',"stem")
+    s += replace_template_params(query, '<div><label>{{inputstem}} <span><input type ="text" class="paliInput"  value="{{state.userword}}" size="{{cols}}"></span></label>',
+         "", ["inputstem", "state.userword:"+initword, "cols"])
+    s += '</div>'
+    s += replace_template_params(query, '&nbsp;&nbsp;<span class="tries"> Tries: {{tries}}/{{max_tries}}</span>',"max_tries",["tries:0"])
+    s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>',"footer")
+    s += '</div>'
+    return s              
+    
+    
 class PaliServer(tim_server.TimServer):
     """
     Class for palindrome server that can handle the TIM routes
     """
 
+    
+    
     def get_html(self, query: QueryParams) -> str:
         """
         Return the html for this query. Params are dumbed as hexstring to avoid problems
@@ -44,16 +65,17 @@ class PaliServer(tim_server.TimServer):
         """
         # print(query.dump()) # uncomment to see query
         user_id = query.get_param("user_id", "--")
+
         # do the next if Anonymoys is not allowed to use plugins
         if user_id == "Anonymous":
             # SANITOIDAAN markupista tuleva syöte
-            return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' \
+            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' \
                    + query.get_sanitized_param("initword", "") + '</pre>'
 
         # check if points array is 2x2 matrix
         points_array = query.get_param("points_array", None)
         if points_array and not check_array(points_array,2,2):
-            return '<p class="pluginError">points_array must be an 2x2 array, f.ex [[0, 0.1], [0.6, 1]]</p>'
+            return NOLAZY + '<p class="pluginError">points_array must be an 2x2 array, f.ex [[0, 0.1], [0.6, 1]]</p>'
 
         jso = query.to_json(accept_nonhyphen)
         runner = 'pali-runner'
@@ -66,6 +88,7 @@ class PaliServer(tim_server.TimServer):
             hx = 'xxxHEXJSONxxx'+binascii.hexlify(attrs.encode("UTF8")).decode()
             attrs = hx
         s = '<' + runner + '>' + attrs + '</' + runner + '>'
+        s = make_lazy(s, query, get_lazy_pali_html)
         return s
 
     def get_reqs_result(self) -> dict:

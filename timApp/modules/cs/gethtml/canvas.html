@@ -66,6 +66,7 @@
             out.write = write;
             out.writeln = writeln;
             out.flush = flush;
+            out.canvas = canvas;
             if ( !resized ) {
               ctx.canvas.width  = window.innerWidth; // jos toisella puolen piirtoa niin kuva häviää
               ctx.canvas.height = window.innerHeight-20;
@@ -97,6 +98,7 @@
       
     function writeln(s) {
        write(s+"\n");
+       flush();
     }    
       
     function flush() {
@@ -133,6 +135,6 @@
   <body onresize="resize_canvas()">
     <div id="error" class="error" ></div>
     <pre id="myConsole" class="jsconsole" ></pre>
-    <canvas id="myCanvas" class="mycanvas" width="800" height="1"></canvas>
+    <canvas id="myCanvas" class="mycanvas" width="800" height="1" style="touch-action: none;"  ></canvas>
   </body>
 </html>     
