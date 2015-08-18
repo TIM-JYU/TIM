@@ -368,7 +368,7 @@ a.parlink:hover {
     background: inherit;
 }
 
-#previewDiv .editline, #previewDiv .readline {
+#previewDiv .editline, #previewDiv .readline, .csrunPreview  .editline, .csrunPreview  .readline { 
     display: none;
 }
 
