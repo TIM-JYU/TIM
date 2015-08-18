@@ -154,6 +154,7 @@ body {
 }
 
 input[type="submit"], button, input[type="button"] {
+    margin-right: 1px;
     background: #3CC;
     border: 0;
     border-radius: 3px;
@@ -1579,6 +1580,27 @@ p.plgfooter {
     outline: none;
 }
 
+.lazyHidden {
+    visibility: hidden;
+}    
+
+.lazyVisible {
+    margin-top: 0pt;
+    padding-top: 0pt;
+}
+
+.csLazyPre {
+    margin-left: 0.7em;
+    border-left: none;
+    margin-top: 0pt;
+    padding-top: 0pt;
+}
+
+.csLazyPre pre {
+    margin-left: 0pt;
+	border-left: thin solid #0066FF;
+    padding-left: 0pt;
+}
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 1200px) {

@@ -1,0 +1,149 @@
+/** Stylesheet for the parsons */
+
+.sortable-code {
+    position: static;
+    padding-left: 0px;
+    min-width: 90%;
+    margin-bottom: 0.5em;
+}
+
+.sortable-output {
+    background-color: #FFA;
+    padding-bottom: 5px;
+}
+
+#sortableTrash { width: 38%; }
+#sortable { width: 56%; }
+.sortable-code ul {
+    font-size: 120%;
+    font-family: monospace;
+    list-style: none;
+    background-color: #efefff;
+    padding-bottom: 10px;
+    padding-left: 0;
+    margin-left: 0;
+    border: 1px solid #efefff;;
+}
+.sortable-code ul:empty {
+  padding-bottom: 30px;
+}
+.sortable-code li, .sortable-code li:before, .sortable-code li:after {
+  box-sizing: content-box;
+}
+ul.output {
+    background-color: #FFA;
+}
+.sortable-code li  {
+    -moz-border-radius:10px;
+    -webkit-border-radius:10px;
+    border-radius: 10px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:10px;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: move;
+}
+
+.sortable-code div {
+    -moz-border-radius:10px;
+    -webkit-border-radius:10px;
+    border-radius: 10px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:10px;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: move;
+    white-space: pre !important;
+}
+
+.sortable-words li {
+  display: inline-block;
+}
+
+.sortable-words span {
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius: 5px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:7px;
+    margin-top: 5px;
+    overflow: hidden;
+    cursor: move;
+    float: left;
+    white-space: pre !important;
+}
+
+.sortable-words div {
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius: 5px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:7px;
+    margin-top: 5px;
+    overflow: hidden;
+    cursor: move;
+    float: none;
+    white-space: pre !important;
+}
+
+
+
+.sortable-code li:hover {
+    overflow: visible;
+}
+
+ul.incorrect {
+    border: 1px solid red;
+    background-color: #ffefef;
+}
+
+ul.correct {
+    background-color: #efffef;
+    background-color: #DFF2BF;
+}
+
+li.incorrectIndent {
+    border: 1px solid red;
+    border-left: 10px solid red;
+}
+
+li.correctIndent {
+    border: 1px solid green;
+    border-left: 10px solid green;
+}
+
+li.incorrectPosition, .testcase.fail, .testcase.error {
+    background-color: #FFBABA;
+    border:1px solid red;
+}
+
+li.correctPosition, .testcase.pass {
+    background-color: #DFF2BF;
+    border:1px solid green;
+}
+
+.
+/** For styling the toggleable elements */
+.jsparson-toggle {
+    padding: 0 15px;
+    display: inline-block;
+    border: 1px dashed black;
+    z-index: 500;
+    cursor: pointer;
+    min-width: 10px;
+    min-height: 15px;
+}
+.jsparson-toggle:empty {
+    border-color: red;
+}
+.jsparson-toggle:empty:before {
+    content: "??";
+    display: block;
+    color: red;
+}

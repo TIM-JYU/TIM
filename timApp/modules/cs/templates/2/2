@@ -1,0 +1,13 @@
+Upotettu sisältö
+Toisen sivun sisällön upottaminen, eli iframe
+``` {#PLUGINNAMEHERE plugin="showVideo"}
+iframe: true
+open: true
+videoicon: false
+hidetext: Piilota tiedot
+type: small
+videoname: "Selitys upotetulle sivulle"
+width: 700
+height: 600
+file: "https://www.mit.jyu.fi/demowww/ITKP102/materiaalia/junanradat.xhtml"
+```

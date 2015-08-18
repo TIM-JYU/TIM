@@ -25,26 +25,88 @@
 #    ?file=http://example.org/Hello.java&start=main&end=.&endn=1  -> print only the first line where is main and next line
 #   
 import http.server
+import socketserver
+
 import subprocess
-# import nltk 
+# import nltk
 import re
+import math
 from fileParams3 import *
+import time
 
 PORT = 5000
 
 
-def run_while_true(server_class=http.server.HTTPServer,
-                   handler_class=http.server.BaseHTTPRequestHandler):
-    """
-    This assumes that keep_running() is a function of no arguments which
-    is tested initially and after each request.  If its return value
-    is true, the server continues.
-    """
-    server_address = ('', PORT)
-    httpd = server_class(server_address, handler_class)
-    while keep_running():
-        httpd.handle_request()
 
+regx_hm = re.compile(r"[ ,/;:\.hm]")
+        
+def timestr_2_sec2(value):
+    # compare to timestr_2_sec, this is slower
+    if not value: return 0;
+    if isinstance( value, int ): return value
+    s = "0 0 0 " + str(value).replace("s","") # loppu s unohdetaan muodosta 1h3m2s
+    s = regx_hm.sub(" ", s)
+    s = s.strip()
+    sc = s.split(" ")
+    n = len(sc)
+    h = int(sc[n-3])
+    m = int(sc[n-2])
+    s = int(sc[n-1])
+    return  h*3600.0 + m*60.0 + s*1.0
+        
+
+def take_last_number(s,i):
+    n = 0
+    k = 1
+    while i >= 0: # pass non numbers
+        c = s[i]
+        if '0' <= c <= '9': break
+        i -= 1
+    while i >= 0:
+        n += int(c)*k
+        k *= 10
+        i -= 1
+        if i < 0: break
+        c = s[i]
+        if  c < '0' or '9' < c: break
+
+    return n,i
+
+
+def timestr_2_sec(value):
+  # Tämän ratkaisun vaikutus: 100 000 small videota alku ja loppuajalla
+  #  start: 53
+  #  end: 59          1.2 s
+  #  end: "59"        1.27
+  #  end: "23:45:59"  1.5 s
+  #  timestr_2_sec2   1.8 s
+  if not value: return 0;
+  if isinstance( value, int ): return value
+  st = str(value)
+  if st.isdigit(): return int(st)
+  i = len(st)-1
+  s,i = take_last_number(st,i)
+  m,i = take_last_number(st,i)
+  h,i = take_last_number(st,i)
+  return  h*3600.0 + m*60.0 + s*1.0
+
+
+
+
+def sec_2_timestr(t):
+    # tt = time.gmtime(t) jne on todella hidas
+    if not t:  return ""
+    h = math.floor(t / 3600)
+    t = (t - h*3600)
+    m = math.floor(t/60)
+    s = int((t - m*60))
+    if not h: h = ""
+    else: h =str(h)+"h";
+    if not h and not m: m = ""
+    else: m = str(m) + "m"
+    s = str(s) + "s"
+    return h + m + s
+        
 
 def get_image_html(query):
     """
@@ -57,11 +119,77 @@ def get_image_html(query):
     h = get_clean_param(query, "height", "")
     if w: w = 'width="' + w + '" '
     if h: h = 'height="' + h + '" '
-    result = get_surrounding_headers(query, '<img ' + w + h + 'src="' + url + '">')
-    return result
+    header,footer = get_surrounding_headers2(query)
+    result = header + '<img ' + w + h + 'src="' + url + '">' + footer
+    if is_user_lazy(query):
+        return add_lazy(result) + header + footer
+    return NOLAZY+result
 
 
-def get_video_html(query):
+def replace_time_params(query, html):
+    start = timestr_2_sec(get_param(query, "start", ""))
+    end = timestr_2_sec(get_param(query, "end", ""))
+    startt = sec_2_timestr(start)
+    if startt: startt = ", " + startt
+    s = html.replace("{{startt}}",startt)
+    duration = sec_2_timestr(end - start)
+    if duration != "": duration = "(" + duration + ") "
+    s = s.replace("{{duration}}",duration)
+    return s
+    
+
+def small__and_list_html(query, duration_template):
+    s = replace_template_param(query, '{{stem}}', "stem")
+    di = replace_template_param(query, ' {{videoname}}', "videoname")
+    if di:
+        dur = replace_time_params(query, duration_template)
+        icon = replace_template_param(query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span> ', "videoicon", "/csimages/video_small.png")
+        s += ' <a class="videoname">' + icon + di + dur + '</a>'
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    if di:
+        icon =  replace_template_param(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon","/csimages/book.png")
+        s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    return s
+
+
+def small_video_html(query):
+    # Kokeiltu myös listoilla, ei mitattavasti parempi
+    s = '<div class="smallVideoRunDiv">'
+    s += replace_template_param(query, "<h4>{{header}}</h4>","header")
+    s += '<p>' + small__and_list_html(query, "{{duration}}") + '</p>'
+    s += replace_template_param(query, '<div><p></p></div><p class="plgfooter">{{footer}}</p>', "footer")
+    s += '</div>'
+
+    return s
+
+     
+def list_video_html(query):
+    s =  '<div class="listVideoRunDiv">'
+    s += replace_template_param(query, '<p>{{header}}</p>', "header")
+    s += '<ul><li>' + small__and_list_html(query, "{{startt}} {{duration}}") + '</li></ul>'
+    s += replace_template_param(query, '<div ><p></p></div><p class="plgfooter">{{footer}}</p>', "footer")
+    s += '</div>'
+    return s
+
+
+def video_html(query):
+    s =  '<div class="videoRunDiv">'
+    s += replace_template_param(query, '<h4>{{header}}</h4>', "header")
+    s += replace_template_param(query, '<p class="stem" >{{stem}}</p>', "stem")
+    s += '<div ><p></p></div>' \
+            '<div class="no-popup-menu">' \
+            '<img src="/csimages/video.png"  width="200" alt="Click here to show the video" />' \
+            '</div>'
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    if di:
+        icon =  replace_template_param(query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon","/csimages/book.png")
+        s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
+    s += '</div>'
+    return s
+
+
+def get_video_html(self, query):
     """
     Muodostaa videon näyttämiseksi tarvittavan HTML-koodin
     :param query: pyynnön paramterit
@@ -73,12 +201,15 @@ def get_video_html(query):
     video_app = True
     if video_type == "small":
         s = string_to_string_replace_attribute('<small-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = make_lazy(s, query, small_video_html)
         return s
     if video_type == "list":
         s = string_to_string_replace_attribute('<list-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = make_lazy(s, query, list_video_html) 
         return s
     if video_app:
         s = string_to_string_replace_attribute('<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = make_lazy(s, query, video_html)
         return s
 
     url = get_clean_param(query, "file", "")
@@ -95,7 +226,7 @@ def get_video_html(query):
     return result
 
 
-class TIMServer(http.server.BaseHTTPRequestHandler):
+class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200, "ok")
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -108,13 +239,39 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.do_all(get_params(self))
 
     def do_POST(self):
+        if self.path.find('/test') >= 0:
+            do_headers(self, "application/json")
+            
+            dummy,n = (self.path+"&n=1").split("n=",1)
+            n,dummy = (n+"&").split("&",1)
+            try:
+                n = int(n)
+            except:
+                n = 1
+            t1 = time.clock()
+            query = post_params(self)
+            # self.do_all(query)
+
+            for i in range(0,n):
+                s = get_html(self, query, True)
+
+            t2 = time.clock()
+            ts = "%7.4f" % (t2-t1)
+            self.wout(s + "\n" + ts)
+            print(ts)
+            return
+
         if self.path.find('/multihtml') < 0:
             self.do_all(post_params(self))
             return
 
         print("do_POST MULTIHML ==========================================")
+        t1 = time.clock()
         querys = multi_post_params(self)
+        # print(querys)
+
         do_headers(self, "application/json")
+
         htmls = []
         for query in querys:
             usercode = get_json_param(query.jso, "state", "usercode", None)
@@ -126,6 +283,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         sresult = json.dumps(htmls)
         self.wout(sresult)
+        t2 = time.clock()
+        ts = "multihtml: %d - %7.4f" % (len(querys), (t2-t1))
+        print(ts)
 
     def do_PUT(self):
         self.do_all(post_params(self))
@@ -208,7 +368,7 @@ def get_html(self, query, show_html):
     if is_video:
         if is_template:
             return file_to_string('templates/video/' + tempfile) 
-        s = get_video_html(query)
+        s = get_video_html(self, query)
         return s
 
     # Was none of special, so print the file(s) in query
@@ -224,15 +384,51 @@ def get_html(self, query, show_html):
     i = ffn.rfind("/")
     if i >= 0: fn = ffn[i+1:]
 
-    if show_html: s += '<pre class="showCode' + cla + '"' + w + '>'
+    if show_html: s += '<pre ng-non-bindable class="showCode' + cla + '"' + w + '>'
     s += get_file_to_output(query, show_html)
     if show_html: s += '</pre><p class="smalllink"><a href="' + ffn + '" target="_blank">'+fn+'</a>'
-    s = get_surrounding_headers(query, s)
+    s = NOLAZY + get_surrounding_headers(query, s) # TODO: korjaa tähän mahdollisuus lazyyyn, oletus on ei.
     return s
 
-
+'''
 def keep_running():
     return True
 
+def run_while_true(server_class=http.server.HTTPServer,
+                   handler_class=http.server.BaseHTTPRequestHandler):
+    """
+    This assumes that keep_running() is a function of no arguments which
+    is tested initially and after each request.  If its return value
+    is true, the server continues.
+    """
+    server_address = ('', PORT)
+    httpd = server_class(server_address, handler_class)
+    while keep_running():
+        httpd.handle_request()
 
-run_while_true(handler_class=TIMServer)
+if __name__ == '__main__':
+    run_while_true(handler_class=TIMShowFileServer)
+    print("svn-plugin waiting for requests...")
+'''
+
+
+# Kun debuggaa Windowsissa, pitää vaihtaa ThreadingMixIn
+# Jos ajaa Linuxissa ThreadingMixIn, niin chdir vaihtaa kaikkien hakemistoa?
+# Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
+
+# if __debug__:
+if True:
+    class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+        """Handle requests in a separate thread."""
+
+    print("Debug mode/ThreadingMixIn")
+# else:
+#    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
+#        """Handle requests in a separate thread."""
+#    print("Normal mode/ForkingMixIn")
+
+
+if __name__ == '__main__':
+    server = ThreadedHTTPServer(('', PORT), TIMShowFileServer)
+    print('Starting ShowFileServer, use <Ctrl-C> to stop')
+    server.serve_forever()

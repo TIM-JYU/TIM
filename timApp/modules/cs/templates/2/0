@@ -1,0 +1,20 @@
+Itse piirrettävä graafi
+Tehtävä jossa itse piirretään suuntattu graafi
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: run
+cmd: dot -Tsvg 
+autorun: true
+autoupdate: 1000
+isHtml: true
+button: Piirrä
+byCode: |!!
+50->{30 80}
+30->{20 40}
+80->{60 100}
+!!
+replace: REPLACE  
+-program: |
+ digraph puu {
+  // REPLACE
+ }
+```

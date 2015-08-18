@@ -1,0 +1,1 @@
+curl -L -X POST -H "Content-Type: application/json" --data @ohj1Img1.json localhost:5000/image/test?n=%1

@@ -2,7 +2,7 @@
 import threading
 import time
 
-import http.server
+import http.server 
 import subprocess
 # import nltk
 import os
@@ -16,13 +16,13 @@ from subprocess import PIPE, Popen, check_output
 from fileParams3 import *
 # from requests import Request, Session
 import datetime
+import cgi
 
 # cs3.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
 # Ensin käynistettävä 
-# ./csdaemon.sh    - demoni joka valvoo /tmp/uhome/run hakemistoon tulevia ajokomentoja
-# ./dr             - käynnistää dockerin cs3.py varten
-# ./r              - ajetaan dockerin sisällä cs3.py
+# ./startPlugins.sh             - käynnistää dockerin cs3.py varten
+# ./startAll.sh                 - ajetaan dockerin sisällä cs3.py (ajetaan edellisestä)
 # Muut tarvittavat skriptit:
 # rcmd.sh          - käynistetään ajettavan ohjelman kontin sisälle ajamaan
 # cs3.py tuottama skripti
@@ -30,6 +30,7 @@ import datetime
 # Hakemistot:
 #  tim-koneessa
 #     /opt/cs               - varsinainen csPluginin hakemisto, skirptit yms
+#     /opt/cs/templates     - pluginin templatet editoria varten 
 #     /opt/cs/java          - javan tarvitsemat tavarat
 #     /opt/cs/images/cs     - kuvat jotka syntyvät csPlugin ajamista ohjelmista
 #     /opt/cs/jypeli        - jypelin tarvitsemat tiedostot  
@@ -39,7 +40,7 @@ import datetime
 #     /tmp/uhone/run        - tänne kirjoitetaan käynnistyskomento demonia varten
 #     /tmp/uhome/cs:        - c#-jypeli tiedostot
 #
-# tim-koneesta käynnistetään cs3 docker-kontti nimelle csPlugin (./dr), jossa
+# tim-koneesta käynnistetään cs3 docker-kontti nimelle csPlugin (./startPlugins.sh), jossa
 # mountataan em. hakemistoja seuraavasti:
 #
 #   /opt/cs  ->          /cs/          read only
@@ -58,9 +59,6 @@ import datetime
 # täydellinen ajokomento run/URNDFILE.sh
 # Tämä jälkeen tehdään /tmp/run -hakemistoon tiedosto
 # RNDNAME johon on kirjoitettu "USERPATH run/URNDFILE.sh" 
-# Tätä hakemistoa (tim-puolella /tmp/uhome/run) seuraa demoni, 
-# joka uuden tiedoston ilmestyessä
-# käynnistää uuden docker-kontin ohjelman ajamiseksi.
 # Tähän ajokonttiin mountataan tim-koneesta
 #
 #   /opt/cs  ->            /cs/          read only
@@ -79,7 +77,6 @@ import datetime
 #
 
 PORT = 5000
-
 
 def generate_filename():
     return str(uuid.uuid4())
@@ -282,12 +279,23 @@ def removedir(dirname):
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
-    if user_id == "Anonymous": return '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    if user_id == "Anonymous": 
+        allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
+        if allow_anonymous != "true":
+            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are logged in</p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+    do_lazy = is_lazy(query)
+    # do_lazy = False
+    # print("do_lazy",do_lazy,type(do_lazy))
     
     js = query_params_to_map_check_parts(query)
-    print(js)
+    # print(js)
     if "byFile" in js and not ("byCode" in js):
         js["byCode"] = get_url_lines_as_string(js["byFile"])
+    bycode = ""
+    if "byCode" in js: bycode = js["byCode"]  
+    if get_param(query, "noeditor", False): bycode = ""
+
+    
     jso = json.dumps(js)
     # print(jso)
     runner = 'cs-runner'
@@ -296,16 +304,31 @@ def get_html(ttype, query):
     if "input" in ttype or "args" in ttype: is_input = '-input'
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
+    if "parsons" in ttype: runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
     if "sage" in ttype: runner = 'cs-sage-runner'
     r = runner + is_input
     s = '<' + r + '>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
+    lazy_visible = ""
+    lazy_class = ""
+    lazy_start = ""
+    lazy_end = ""
+    
     if "csconsole" in ttype:  # erillinen konsoli
         r = "cs-console"
+        
+    if do_lazy:
+        # r = LAZYWORD + r;   
+        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>'+cgi.escape(bycode)+'</pre></div>') + '</div>'
+        # lazyClass = ' class="lazyHidden"'
+        lazy_start = LAZYSTART
+        lazy_end = LAZYEND
+
     if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         hx = binascii.hexlify(jso.encode("UTF8"))
-        s = '<' + r + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>'
+        s = lazy_start + '<' + r + lazy_class + '>xxxHEXJSONxxx' + hx.decode() + '</' + r + '>' + lazy_end
+        s += lazy_visible
     return s
 
 
@@ -404,14 +427,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         # print("do_POST =================================================")
+
         if self.path.find('/multihtml') < 0:
             self.do_all(post_params(self))
             return
 
         print("do_POST MULTIHML ==========================================")
+        t1 = time.clock()
         querys = multi_post_params(self)
         do_headers(self, "application/json")
         is_tauno = self.path.find('/tauno') >= 0
+        is_parsons = self.path.find('/parsons') >= 0
         htmls = []
         self.user_id = get_param(querys[0], "user_id", "--")
         print("UserId:", self.user_id)
@@ -429,6 +455,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if userargs: query.query["userargs"] = [userargs]
             ttype = get_param(query, "type", "cs").lower()
             if is_tauno: ttype = 'tauno'
+            if is_parsons: ttype = 'parsons'
             s = get_html(ttype, query)
             # print(s)
             htmls.append(s)
@@ -437,6 +464,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         sresult = json.dumps(htmls)
         self.wout(sresult)
         log(self)
+        t2 = time.clock()
+        ts = "multihtml: %7.4f" % (t2-t1)
+        print(ts)
 
     def do_PUT(self):
         # print("do_PUT =================================================")
@@ -490,6 +520,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_iframe = (self.path.find('/iframe') >= 0) or is_iframe_param
         is_answer = self.path.find('/answer') >= 0
         is_tauno = self.path.find('/tauno') >= 0
+        is_parsons = self.path.find('/parsons') >= 0
         is_ptauno = self.path.find('/ptauno') >= 0
         is_rikki = self.path.find('rikki') >= 0
         print_file = get_param(query, "print", "")
@@ -541,10 +572,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
             templs = { }
-            if not (is_tauno or is_rikki): templs = get_all_templates('templates')
-            result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js"],
+            if not (is_tauno or is_rikki or is_parsons): templs = get_all_templates('templates')
+            result_json = {"js": ["/cs/js/dir.js",
+                           "/static/scripts/jquery.ui.touch-punch.min.js",
+                           "/cs/cs-parsons/csparsons.js",
+                           "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
+            if is_parsons:
+                result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js",
+                               "/static/scripts/jquery.ui.touch-punch.min.js",
+                               "/cs/cs-parsons/csparsons.js",
+                               "/cs/js-parsons/lib/underscore-min.js",
+                               "/cs/js-parsons/lib/lis.js",
+                               "/cs/js-parsons/parsons.js",
+                               "/cs/js-parsons/lib/skulpt.js",
+                               "/cs/js-parsons/lib/skulpt-stdlib.js",
+                               "/cs/js-parsons/lib/prettify.js"
+                               ],
+                               "angularModule": ["csApp", "csConsoleApp"],
+                               "css": ["/cs/css/cs.css","/cs/js-parsons/parsons.css","/cs/js-parsons/lib/prettify.css"], "multihtml": True}
             result_json.update(templs)                            
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
@@ -572,7 +619,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # pprint(query.__dict__, indent=2)
 
             if is_css:
-                return self.wout(file_to_string('cs.css'))
+                # return self.wout(file_to_string('cs.css'))
+                return self.wout(file_to_string(self.path))
 
 
             if is_js:
@@ -704,9 +752,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if "jypeli" in ttype:
                 # Jypeli game
+                mainfile = "/cs/jypeli/Ohjelma.cs"
                 csfname = "/tmp/%s/%s.cs" % (basename, filename)
                 exename = "/tmp/%s/%s.exe" % (basename, filename)
-                bmpname = "/tmp/%s/%s.bmp" % (basename, filename)
+                bmpname = "/tmp/%s/output.bmp" % (basename)
                 pure_bmpname = "./%s.bmp" % filename
                 pngname = "/csimages/%s.png" % rndname
                 pure_exename = u"{0:s}.exe".format(filename)
@@ -823,8 +872,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 log(self)
 
                 if ttype == "jypeli":
-                    cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/Jypeli.MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs /cs/jypeli/Screencap.cs %s" % (
-                        exename, csfname)
+                    if s.find(" Main(") >= 0: mainfile = ""
+                    #cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
+                    cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing %s %s" % (
+                        exename, mainfile, csfname)
                 elif ttype == "comtest":
                     cmdline = "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
                         csfname, testdll, csfname, testcs)
@@ -934,9 +985,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             pwd = ""
             
             if ttype == "jypeli":
-                # code, out, err = run(["mono", exename, pure_bmpname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
-                # code, out, err = run2(["mono", pure_exename, pure_bmpname], cwd="/tmp/cs", timeout=10, env=env, stdin=stdin,
-                code, out, err, pwd = run2(["mono", pure_exename, pure_bmpname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                       uargs=userargs, ulimit = "ulimit -f 80000")
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()

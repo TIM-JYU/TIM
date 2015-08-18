@@ -1,0 +1,341 @@
+.console {
+  font-family:Courier;
+  color: #ccc; 
+  background: #000000;
+  border: 3px double #ccc;
+  padding: 10px;
+  width: 40em;
+}
+
+.csRunArea {
+	width: 50em;
+} 
+
+/* @import url('http://fonts.googleapis.com/css?family=Droid+Sans+Mono'); */
+
+.web-console {
+    border: 1px solid black;
+    background:black;
+    border-radius: 5px 5px 5px 5px;
+    padding: 5px;
+    margin-left: 2em;
+}
+.web-console .console-curIndex {
+    font-family: 'Droid Sans Mono', 'Courier', monospace !important;
+    font-size:90%;
+    width:20%;
+    color:#e0e4cc;
+    margin-right:3px;
+}
+.web-console .console-input {
+    width:75%; 
+    margin-left:auto; 
+    margin-right:auto;
+    display: inline;
+    border: none;
+
+    /* border-bottom: 1px dashed black; */
+    border-radius: 3px 3px 3px;
+    background-color:#CCC;
+    font-family: 'Droid Sans Mono', 'Courier', monospace !important;
+    font-size:90%;
+    outline-color:#0A0;
+    /* color:#0F0;             */
+    /* background-color:black; */
+}
+
+.web-console .console-output{
+ background-color: black;
+ color: #E0E4CC;
+ height:100%;
+ display: block;
+ min-height:14em;
+ max-height:14em;
+ overflow:auto;
+ transition: 0.5s;
+}
+
+.enlarged .console-output {
+ background-color: black;
+ color: #E0E4CC;
+ height:100%;
+ display: block;
+ min-height:25em;
+ max-height:25em;
+ overflow:auto;
+
+}
+
+
+.web-console {
+  /*max-width:80ex; */
+  position:relative;
+}
+
+.console-expander-sym{
+position:absolute;
+right:3px ; bottom:3px;
+color: #AAA;
+}
+
+.normal .console-expander-sym:before{
+content:"▼";
+}
+
+.enlarged .console-expander-sym:before{
+content:"▲";
+}
+
+.console-output-elem{
+margin-bottom:3px;
+font-family: 'Droid Sans Mono', 'Courier', monospace !important;
+/*font-size:normal; */
+}
+
+.console-userInput {
+color:#a7dbd8;
+}
+.console-response {
+word-break: break-all;
+color:#69d2e7;
+}
+
+.console-in {
+color:#e0e4cc;
+/* width:9ex; */
+display: inline-block;
+}
+
+.error {
+color: #FA6900;
+}
+
+.warning {
+color: #f38630;
+}
+
+.console-out {
+color:#e0e4cc;
+width:9ex;
+display: inline-block;
+}
+
+.console-examples-box li {
+    cursor:pointer;
+}
+
+.examples-title {
+    cursor:pointer;
+    display:block;
+    text-align:center;
+}
+
+.console-examples-box {
+transition: 0.5s;
+color: #E0E4CC;
+background:rgba(255,255,255,0.3);
+overflow:hidden;
+position: absolute;
+top:0px;
+right:0px;
+height:1.5em;
+font-family: 'Droid Sans Mono', 'Courier', monospace !important;
+font-size:80%;
+border-radius: 0px 6px 0px 6px;
+width:40%;
+}
+
+.console-examples-box:hover {
+background:rgb(76,76,76);
+opacity:1;
+height:85%;
+}
+
+.console-examples-box a {
+    /* color: #E0E4CC; */
+    color: #a7dbd8;
+    font-size: 0.9em;
+}
+
+.success{display:block;}
+
+.web-console pre {
+  margin-left: 0.0em; 
+  border-left: none;
+}
+
+.htmlresult {
+  text-align: center;
+}
+
+.console-buttons {
+  float: right;
+}
+
+.csEditorAreaDiv {
+  display: -webkit-box;
+  width: 100%;
+}  
+
+.csRunMenu {
+  margin-top: 0px;
+}
+
+.csrunEditorDiv {
+    width: 100%; 
+}
+
+
+/** Stylesheet for the parsons */
+
+.sortable-code {
+    position: static;
+    padding-left: 0px;
+    min-width: 90%;
+    margin-bottom: 0.5em;
+}
+
+.sortable-output {
+    background-color: #FFA;
+    padding-bottom: 5px; 
+}
+
+#sortableTrash { width: 38%; }
+#sortable { width: 56%; }
+.sortable-code ul {
+    font-size: 120%;
+    font-family: monospace;
+    list-style: none;
+    background-color: #efefff;
+    padding-bottom: 10px;
+    padding-left: 0;
+    margin-left: 0;
+    border: 1px solid #efefff;;
+}
+.sortable-code ul:empty {
+  padding-bottom: 30px;
+}
+.sortable-code li, .sortable-code li:before, .sortable-code li:after {
+  box-sizing: content-box;
+}
+ul.output {
+    background-color: #FFA;
+}
+.sortable-code li {
+    -moz-border-radius:10px;
+    -webkit-border-radius:10px;
+    border-radius: 10px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:10px;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: move;
+}
+
+.sortable-code div {
+    -moz-border-radius:10px;
+    -webkit-border-radius:10px;
+    border-radius: 10px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:10px;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: move;
+    white-space: pre !important;
+}
+
+
+
+.sortable-words li {
+  display: inline-block;
+}
+
+.sortable-words span {
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius: 5px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:7px;
+    margin-top: 5px;
+    overflow: hidden;
+    cursor: move;
+    float: left;
+    white-space: pre !important;
+    min-height: 40px;
+    /*min-width: 20px; */
+}
+
+.sortable-words div {
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius: 5px;
+    background-color:#EFEFEF;
+    border:1px solid lightgray;
+    padding:7px;
+    margin-top: 5px;
+    overflow: hidden;
+    cursor: move;
+    float: none;
+    white-space: pre !important;
+}
+
+
+
+.sortable-code li:hover {
+    overflow: visible;
+}
+
+ul.incorrect {
+    border: 1px solid red;
+    background-color: #ffefef;
+}
+
+ul.correct {
+    background-color: #efffef;
+    background-color: #DFF2BF;
+}
+
+li.incorrectIndent {
+    border: 1px solid red;
+    border-left: 10px solid red;
+}
+
+li.correctIndent {
+    border: 1px solid green;
+    border-left: 10px solid green;
+}
+
+li.incorrectPosition, .testcase.fail, .testcase.error {
+    background-color: #FFBABA;
+    border:1px solid red;
+}
+
+li.correctPosition, .testcase.pass {
+    background-color: #DFF2BF;
+    border:1px solid green;
+}
+
+.
+/** For styling the toggleable elements */
+.jsparson-toggle {
+    padding: 0 15px;
+    display: inline-block;
+    border: 1px dashed black;
+    z-index: 500;
+    cursor: pointer;
+    min-width: 10px;
+    min-height: 15px;
+}
+.jsparson-toggle:empty {
+    border-color: red;
+}
+.jsparson-toggle:empty:before {
+    content: "??";
+    display: block;
+    color: red;
+}
