@@ -9,11 +9,13 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <meta name="description" content="TIM - The Interactive Material."/>
         <meta name="keywords" content="tim,interactive,material"/>
+
         <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
-       <link href="{{url_for('static', filename='images/favicon.ico')}}" rel="shortcut icon" type="image/x-icon"/>
+
+        <link href="{{url_for('static', filename='images/favicon.ico')}}" rel="shortcut icon" type="image/x-icon"/>
         <script src="{{ url_for('static', filename='scripts/timTiming.js') }}"></script>
         <script>timLogInit("{{ request.query_string }}");</script>
-
+        
         <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">

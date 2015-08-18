@@ -7,7 +7,7 @@
     {% if teacher_mode %}
         <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>
-{#        <link rel="stylesheet" href="{{ url_for('bower.static', filename='ng-table/dist/ng-table.css') }}">#}
+        {#        <link rel="stylesheet" href="{{ url_for('bower.static', filename='ng-table/dist/ng-table.css') }}">#}
     {% endif %}
 
     {% for script in js %}
@@ -25,20 +25,15 @@
 
     </script>
 
-    <script src="{{ url_for('bower.static', filename='rangyinputs/rangyinputs-jquery.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ext-language_tools.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/view_html.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/pareditor.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/resizable.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/answerbrowser3.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('bower.static', filename='katex-build/katex.min.css') }}">
-    <script src="{{ url_for('bower.static', filename='katex-build/katex.min.js') }}"></script>
+    {% include 'view_head.html' %}
+    {% include 'common_head.html' %}
 
     {% if teacher_mode %}
         <script src="{{ url_for('static', filename='scripts/userlistController.js') }}"></script>
+    {% endif %}
+
+    {% if in_lecture or lecture_mode %}
+        {% include 'lecture_head.html' %}
     {% endif %}
 
     {% for cssFile in cssFiles %}
@@ -58,104 +53,76 @@
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};
         var reqs = {{reqs|tojson}};
+        var settings = {{settings|tojson}};
         var startIndex = {{start_index|tojson}};
         var refererPath = {{request.path|tojson|safe}};
         var teacherMode = {{teacher_mode|tojson}};
         var group = {{group|tojson}};
+        var lectureMode = {{lecture_mode|tojson}};
+        var in_lecture = {{in_lecture|tojson}};
+        var users;
         {% if teacher_mode %}
-            var users = {{plugin_users|tojson}};
+            users = {{plugin_users|tojson}};
         {% else %}
-            var users = [{{current_user|tojson}}];
+            users = [{{current_user|tojson}}];
         {% endif %}
 
         var crumbs = getBreadcrumbs(docName);
         {% include 'breadcrumbs.js' %}
     </script>
+
 {% endblock %}
 {% block content %}
     <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
         {% include 'breadcrumbs.html' %}
 
-
-        <div id="contents" ng-show="indexTable.length > 0" class="ng-cloak">
-            <div class="menu">
-                <img ng-click="toggleSidebar()" class="menu-icon" src="{{ url_for('static', filename='images/contents.png') }}" width="50"
-                     height="50"/>
-            </div>
-            <div ng-class="['sidebar', sidebarState]">
-                {% raw %}
-                <ul>
-                    <li ng-repeat="entry in indexTable"
-                        ng-class="entry.state"
-                        ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)">
-                        <a class="indexentry" ng-class="entry.style" ng-click="" href="{{entry.target}}">{{entry.text}}</a>
-                        <ul ng-show="entry.state == 'exp'">
-                            <li ng-repeat="subentry in entry.items">
-                                <a ng-class="subentry.style" ng-click="" href="{{subentry.target}}">{{subentry.text}}</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-                {% endraw %}
-            </div>
-        </div>
-
-        {% if teacher_mode %}
-            <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed>
-            {% if plugin_users %}
-                Users with answers ({{ plugin_users|length }}):<br>
-                {% raw %}
-                <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected" export-csv="csv">
-                    <tr ng-repeat="user in $data"
-                        ng-click="user.$selected = !user.$selected; changeUser(user)"
-                        ng-class="{'active': user.$selected}">
-                        <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
-                            {{user.real_name}}
-                        </td>
-                        <td data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
-                            {{user.name}}
-                        </td>
-                        <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
-                            {{user.task_count}}
-                        </td>
-                        <td data-title="'Total points'" sortable="'total_points'" filter="{ 'total_points': 'text' }">
-                            {{user.total_points}}
-                        </td>
-                    </tr>
-                </table>
-                <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ docId }}.csv">Export to CSV</a>
-                {% endraw %}
-            {% else %}
-                No answerers.
-            {% endif %}
-            </div>
+        {% if lecture_mode or in_lecture %}
+            {% include 'lecture.html' %}
+        {% else %}
+            {% include 'side_menu.html' %}
         {% endif %}
 
-        <div id="pars">
-            {% for t in text %}
-                {% if 'task_id' in t %}
-                    {% if not t['html'].startswith("<div></div>") %}
-                        <div class="par">
-                    {% else %}
-                        <div class="par" style="display: none;">
-                    {% endif %}
-                            <answerbrowserlazy task-id="{{ t['task_id'] }}"></answerbrowserlazy> 
-                            <div class="parContent">
-                                {{ t['html']|safe }}
-                            </div>
-                        </div>
+        {% if teacher_mode %}
+            <div ng-controller="UserListController" id="users" class="userlist" tim-draggable-fixed caption="Users">
+                {% if plugin_users %}
+                    Users with answers ({{ plugin_users|length }}):<br>
+                    {% raw %}
+                    <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected"
+                           export-csv="csv">
+                        <tr ng-repeat="user in $data"
+                            ng-click="user.$selected = !user.$selected; changeUser(user)"
+                            ng-class="{'active': user.$selected}">
+                            <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
+                                {{user.real_name}}
+                            </td>
+                            <td data-title="'User name'" sortable="'name'" filter="{ 'name': 'text' }">
+                                {{user.name}}
+                            </td>
+                            <td data-title="'Tasks'" sortable="'task_count'" filter="{ 'task_count': 'text' }">
+                                {{user.task_count}}
+                            </td>
+                            <td data-title="'Total points'" sortable="'total_points'"
+                                filter="{ 'total_points': 'text' }">
+                                {{user.total_points}}
+                            </td>
+                        </tr>
+                    </table>
+                    <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ docId }}.csv">Export
+                        to CSV</a>
+                    {% endraw %}
                 {% else %}
-                    {% if not t['html'].startswith("<div></div>") %}
-                        <div class="par" ng-non-bindable>
-                    {% else %}
-                        <div class="par" ng-non-bindable style="display: none;">
-                    {% endif %}
-                            <div class="parContent">
-                                {{ t['html']|safe }}
-                            </div>
-                        </div>
+                    No answerers.
                 {% endif %}
-            {% endfor %}
-        </div>
+            </div>
+        {% endif %}
+        {% if slide_mode %}
+            <div class="paragraphs">
+                <iframe id="slideFrame" src="/show_slide/{{ docName }}" allowfullscreen></iframe>
+            </div>
+        {% else %}
+            {% include 'view_content.html' %}
+        {% endif %}
     </div>
+    <p id="test"></p>
+
 {% endblock %}
