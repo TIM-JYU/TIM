@@ -213,6 +213,11 @@ input[type="number"] {
     text-align: left;
 }
 
+.explanation {
+    border-left: 1px solid #CCC !important;
+    text-align: left !important;
+}
+
 #textarea-answer {
     width: 100%
 }

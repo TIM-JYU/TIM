@@ -146,7 +146,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                         }
                     }
                     if ($scope.result && row.id.toString() in $scope.expl) {
-                        tr.append($('<td>', {class: 'answer-button', text: $scope.expl[row.id.toString()]}));
+                        tr.append($('<td>', {class: 'explanation', text: $scope.expl[row.id.toString()]}));
                     }
                     table.append(tr);
                 });
