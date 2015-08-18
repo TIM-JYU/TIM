@@ -227,7 +227,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         users = []
     current_user = timdb.users.getUser(user)
     show_time('plugin alku')
-    texts, jsPaths, cssPaths, modules, readings, notes = post_process_pars(xs, doc_id, current_user['id'], sanitize=False)
+    texts, jsPaths, cssPaths, modules, readings, notes = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
     show_time('plugin loppu')
 
     reqs = pluginControl.get_all_reqs()

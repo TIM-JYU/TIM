@@ -177,7 +177,7 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=True):
+def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
     group = timdb.users.getPersonalUserGroup(user_id)

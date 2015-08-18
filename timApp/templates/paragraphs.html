@@ -13,9 +13,9 @@
             {% endif %}
          attrs="{{ t.get_attrs_str() }}"
             {% if t.is_plugin() %}>
-                <answerbrowser
+                <answerbrowserlazy
                         task-id="{{ t.get_doc_id() }}.{{ t.get_attrs()['taskId'] }}">
-                </answerbrowser>
+                </answerbrowserlazy> 
             {% else %}
                 ng-non-bindable>
             {% endif %}

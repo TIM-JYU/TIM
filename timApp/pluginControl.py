@@ -38,15 +38,18 @@ def correct_yaml(text):
     lines = text.splitlines()
     s = ""
     p = re.compile("^[^ :]*:[^ ]")  # kissa:istuu
-    pm = re.compile("^[^ :]*:[ ]+\|[^ a-zA-Z]+$")  # program: ||| or  program: |!!!
+    pm = re.compile("^[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
     multiline = False
     end_str = ''
     for line in lines:
+        line = line.rstrip()
         if p.match(line) and not multiline:
             line = line.replace(':', ': ', 1)
         if pm.match(line):
             multiline = True
+            n = 0
             line, end_str = line.split("|", 1)
+            end_str = end_str.rstrip()
             s = s + line + "|\n"
             continue
         if multiline:
@@ -64,6 +67,8 @@ def parse_yaml(text):
     :type text: str
     :return:
     """
+    values = {}
+
     if len(text) == 0:
         return False
     try:
@@ -208,7 +213,7 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
             else:
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
                 state = None
-            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id}
+            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
 
     # t22 = time.clock()
     # print("%-15s %-10s %6d - %7.4f" % ("blocks done", " ", len(pars), (t22-t12)))
