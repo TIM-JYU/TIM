@@ -1028,13 +1028,15 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
                         if ((answer.question || answer.result) && !$scope.isLecturer) {
+                            var showPoints = '';
+                            if (answer.result) showPoints = 'Show points: ';
                             $scope.showAnswerWindow = true;
                             var json = JSON.parse(answer.questionJson);
                             var expl = {};
                             if (answer.expl) {
                                 expl = JSON.parse(answer.expl)
                             }
-                            $scope.questionTitle = json.TITLE;
+                            $scope.questionTitle = showPoints + json.TITLE;
                             $rootScope.$broadcast("setQuestionJson", {
                                 result: answer.result,
                                 answer: answer.answer,
