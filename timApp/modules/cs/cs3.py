@@ -444,7 +444,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         log(self)
         # print(querys)
 
+        global_anonymous = False
         for query in querys:
+            ga = get_param(query, "GlobalAnonymous", None)
+            if ga: global_anonymous = True
+            if global_anonymous: query.query["anonymous"] = [True]
             # print(query.jso)
             # print(str(query))
             usercode = get_json_param(query.jso, "state", "usercode", None)

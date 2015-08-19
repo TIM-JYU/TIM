@@ -1870,3 +1870,25 @@ p.plgfooter {
 	border-left: thin solid #0066FF;
     padding-left: 0pt;
 }
+
+@media print {
+  div.header {
+    display: none;
+  }
+  .showSidebar {
+    display: none;
+  }  
+
+  div#header {
+    display: none;
+  }
+  
+  .breadcrumb-div {
+    display: none;
+  }
+  
+  .addBottomContainer {
+    display: none;
+  }
+}
+ 

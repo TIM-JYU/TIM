@@ -1,7 +1,8 @@
 (function($) { // wrap in anonymous function to not show some helper variables
     var CsParsonsWidget = function(options) {
         var defaults = {
-            separator : "\n"
+            separator : "\n",
+            styleWords: ""
         };
      
         this.options = jQuery.extend({}, defaults, options);
@@ -53,7 +54,7 @@
             } else  {  
                 div = document.createElement(type);
                 if ( this.options.words && this.options.minWidth && w.length < 3 )
-                    div.setAttribute('style',"width: " + this.options.minWidth);
+                    div.setAttribute('style',"width: " + this.options.minWidth );
             }     
             div.setAttribute('class',"sortitem");
             
@@ -65,7 +66,7 @@
             parsonsEditDiv.appendChild(div);
         }    
         parsonsEditDiv.setAttribute('class',classes);
-        parsonsEditDiv.setAttribute('style',"float: left; width: 100%");
+        parsonsEditDiv.setAttribute('style',"float: left; width: 100%" + ";" + this.options.styleWords);
         a = $(parsonsEditDiv);
         a.sortable();
         var parson = this;

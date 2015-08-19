@@ -315,6 +315,15 @@ csApp.set = function(scope,attrs,name,def) {
 };
 
 
+csApp.getParam = function(scope,name,def) {
+"use strict";
+    var result = def;
+    if ( scope.attrs && scope.attrs[name] ) result = scope.attrs[name];
+    if ( scope[name] ) result = scope[name];
+    if ( result == "None" ) scope[name] = "";
+    return result;
+}
+
 csApp.directiveFunction = function(t,isInput) {
 "use strict";
 	return {
@@ -470,6 +479,14 @@ csApp.directiveFunction = function(t,isInput) {
             if ( scope.attrs.autorun ) scope.runCodeLink();
             if ( scope.editorMode != 0 || scope.editorModes !== "01" ) scope.showOtherEditor(scope.editorMode);
             scope.mode = languageTypes.getAceModeType(scope.type,"");
+            
+            var styleArgs = csApp.getParam(scope,"style-args","");
+            if ( styleArgs ) {
+                var argsEdit = element[0].getElementsByClassName("csArgsArea"); // element.find("csArgsArea")[0]
+                if ( argsEdit.length > 0  )  argsEdit[0].setAttribute('style',styleArgs);
+            }
+            
+            
             csLogTime(scope.taskId);
             
             // if ( scope.isSage ) alustaSage(scope);
@@ -1096,17 +1113,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         $http.post($scope.previewUrl, {
             "text": text
         }).success(function (data, status, headers, config) {
-            var len = data.texts.length;
-
-            var $previewDiv = angular.element($scope.preview); 
             var s  = "";
+            var $previewDiv = angular.element($scope.preview); 
             
-            for (var i = 0; i < len; i++) s += data.texts[i].html;
+            if( typeof data.texts === 'string' ) {
+                s = data.texts;
+            } else {    
+                var len = data.texts.length;
+                for (var i = 0; i < len; i++) s += data.texts[i].html;
+            }    
             $previewDiv.html(csApp.compile(s)($scope));
 
             //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
-            // $scope.$parent.processAllMath($previewDiv[0]); 
-            $scope.$parent.processAllMath($previewDiv); 
+            // $scope.$parent.processAllMath($previewDiv[0]);
+            if  ( $scope.$parent.processAllMath )            
+                $scope.$parent.processAllMath($previewDiv); 
             //$scope.outofdate = false;
             //$scope.parCount = len;
         }).error(function (data, status, headers, config) {
@@ -1186,6 +1207,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             'words': $scope.words,
             'minWidth': "40px",
             'shuffle' : $scope.initUserCode,
+            'styleWords' : csApp.getParam($scope,"style-words",""),
             'onChange': function(p) {
                 var s = p.join("\n");
                 $scope.usercode = s; 
