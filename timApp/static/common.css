@@ -132,31 +132,54 @@ a {
     width: 20px;
     right: -10px;
     top: 0;
-    height: 100%;
+    bottom: 15px;
+    border-top-right-radius: 5px;
 }
 
-.resizehandle-rd  {
+.resizehandle-rd {
     cursor: se-resize;
     width: 25px;
     height: 25px;
     right: -10px;
     bottom: -10px;
     z-index: 95;
+    border-bottom-right-radius: 5px;
+    border-top-left-radius: 5px;
 }
 
 .resizehandle-d {
     cursor: s-resize;
     height: 20px;
-    width: 100%;
     bottom: -10px;
     left: 0;
+    right: 15px;
+    border-bottom-left-radius: 5px;
 }
 
 .resizehandle {
+    /*
+    background-color: black;
+    opacity: 0.1;*/
     z-index: 90;
     position: absolute;
     font-size: 0.1px;
     display: block;
     -ms-touch-action: none;
     touch-action: none;
+}
+
+.minimize {
+    right: 34px;
+}
+
+.close {
+    right: 15px;
+}
+
+.titlebutton {
+    top: 0;
+    height: 14px;
+    width: 16px;
+    position: absolute;
+    cursor: pointer;
 }

@@ -13,7 +13,12 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             var clickFn = null;
             if (attr.click) {
-                var clickFn = $parse(attr.click);
+                clickFn = $parse(attr.click);
+            }
+
+            var closeFn = null;
+            if (attr.close) {
+                closeFn = $parse(attr.close);
             }
 
             function resizeElement(e, up, right, down, left) {
@@ -57,7 +62,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
              element.css('top', element.position().top);
              element.css('left', element.position().left); */
 
-            function createResizeHandles () {
+            function createResizeHandles() {
                 var handleRight = $("<div>", {class: 'resizehandle-r resizehandle'});
                 handleRight.on('mousedown pointerdown touchstart', function (e) {
                     resizeElement(e, false, true, false, false)
@@ -75,12 +80,29 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 element.append(handleRightDown);
             }
 
-            function removeResizeHandles () {
+            function removeResizeHandles() {
                 element.find('.resizehandle').remove();
             }
 
 
             var handle = $("<div>", {class: "draghandle"});
+            if (attr.click) {
+                var minimize = $("<img>", {
+                    src: "/static/images/minimize-window-16.png",
+                    class: 'titlebutton minimize'
+                });
+                minimize.on('click', function () {
+                    clickFn(scope)
+                });
+                handle.append(minimize);
+            }
+            if (attr.close) {
+                var close = $("<img>", {src: "/static/images/close-window-16.png", class: 'titlebutton close'});
+                close.on('click', function () {
+                    closeFn(scope)
+                });
+                handle.append(close);
+            }
             element.prepend(handle);
 
             attr.$observe('resize', function () {
@@ -93,9 +115,27 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
 
             attr.$observe('caption', function () {
                 var handle = $(element).find('.draghandle');
-                handle.empty();
+                handle.find('p').remove();
                 handle.append('<p>' + attr.caption + '</p>');
             });
+
+            /* Prevent document scrolling, when element inside draggable is scrolled. Currently doesn't work on touch
+             $(element).find('.scrollable').on('scroll wheel DOMMouseScroll mousewheel', function (e) {
+             var e0 = e.originalEvent,
+             delta = e0.wheelDelta || -e0.detail;
+             console.log(delta);
+             e.preventDefault();
+             if (isNaN(delta)) {
+             return;
+             }
+             if ($(e.target).hasClass('scrollable')) {
+             console.log('target ', e.target);
+             e.target.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+             } else {
+             e.target.closest('.scrollable').scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+             console.log('closest ', e.target.closest('.scrollable'));
+             }
+             });*/
 
             updateHandle(element, handle);
 
@@ -168,12 +208,13 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 $document.off('mousemove pointermove touchmove', moveResize);
                 pos = getPageXY(e);
 
-                if (!(upResize || rightResize || downResize || leftResize) && clickFn && e.which === 1) {
-                    delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
-                    if (Math.abs(delta.Y) < 3 && Math.abs(delta.X) < 3) {
-                        clickFn(scope);
-                    }
-                }
+                /*
+                 if (!(upResize || rightResize || downResize || leftResize) && clickFn && e.which === 1) {
+                 delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
+                 if (Math.abs(delta.Y) < 3 && Math.abs(delta.X) < 3) {
+                 clickFn(scope);
+                 }
+                 }*/
             }
 
             function move(e) {
