@@ -975,6 +975,14 @@ p.stem {
     margin-bottom: 1em;
 }
 
+.reveal .csRunChanged {
+    display: none;
+}
+
+.reveal .csRunMenu {
+    font-size: 0.1em;
+}
+
 .csRunChanged {
     background-color: rgb(41, 255, 0);
     width: 0.5em;
@@ -1755,4 +1763,26 @@ p.plgfooter {
     .sidebar.autohidden {
         display: none;
     }
+}
+
+
+@media print {
+  div.header {
+    display: none;
+  }
+  .showSidebar {
+    display: none;
+  }  
+
+  div#header {
+    display: none;
+  }
+  
+  .breadcrumb-div {
+    display: none;
+  }
+  
+  .addBottomContainer {
+    display: none;
+  }
 }
