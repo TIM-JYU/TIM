@@ -353,7 +353,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         else {
                             $window.console.log("Lecture created: " + answer.lectureId);
                         }
-                        $scope.$parent.useWall = true;
+                        $scope.$parent.lectureSettings.useWall = true;
                         $scope.$parent.useAnswers = true;
                         $scope.clearForm();
                         $scope.$emit("closeLectureForm", true);

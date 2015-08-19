@@ -211,8 +211,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         input.attr("placeholder", "Access code");
                         if ($scope.isLecturer) {
                             $scope.showLectureView(answer);
-                            $scope.useWall = true;
-                            $scope.useQuestions = true;
+                            $scope.lectureSettings.useWall = true;
+                            $scope.lectureSettings.useQuestions = true;
                         } else {
                             $scope.showLectureOptions = true;
                             $scope.lectureAnswer = answer;
@@ -346,7 +346,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.$on('closeLectureForm', function (event, showWall) {
             $scope.showLectureForm = false;
             if (showWall) {
-                $scope.useWall = true;
+                $scope.lectureSettings.useWall = true;
             }
             $scope.checkIfInLecture();
         });
@@ -454,8 +454,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.useOptions = function (useQuestions, useWall) {
             $scope.showLectureView($scope.lectureAnswer);
-            $scope.useWall = useWall;
-            $scope.useQuestions = useQuestions;
+            $scope.lectureSettings.useWall = useWall;
+            $scope.lectureSettings.useQuestions = useQuestions;
             $scope.showLectureOptions = false;
 
         };
@@ -646,7 +646,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 $scope.canStop = false;
             }
             $scope.wallMessages = [];
-            $scope.useWall = false;
+            $scope.lectureSettings.useWall = false;
             $scope.polling = false;
             $scope.inLecture = false;
             $scope.lectureId = -1;
