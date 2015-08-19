@@ -1,6 +1,6 @@
 <div ng-controller="LectureController" ng-cloak>
     {% include 'lectureinfo_menu.html' %}
-    <div class="wall-behind" id="wall" ng-show="useWall" ng-cloak tim-draggable-fixed click="hideWall()" caption="{% raw %}{{ wallName }}{% endraw %}"
+    <div class="wall-behind" id="wall" ng-show="lectureSettings.useWall" ng-cloak tim-draggable-fixed close="changeUsingWall(false)" click="hideWall()" caption="{% raw %}{{ wallName }}{% endraw %}"
          resize="{% raw %}{{ !lectureSettings.wallMinimized }}{% endraw %}">
         <div class="wall-base" id="wallBase">
             <div class="wall-message-area">

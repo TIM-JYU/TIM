@@ -545,7 +545,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.changeUsingWall = function (wallUsage) {
-            $scope.useWall = wallUsage;
+            $scope.lectureSettings.useWall = wallUsage;
+            $scope.$apply();
         };
 
         /**
@@ -587,8 +588,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $scope.polling = true;
             $scope.msg = "";
             $scope.showWall = true;
-            $scope.useWall = lecture.useWall;
-            $scope.useQuestions = lecture.useQuestions;
+            $scope.lectureSettings.useWall = lecture.useWall;
+            $scope.lectureSettings.useQuestions = lecture.useQuestions;
 
             $scope.getAllMessages();
 
@@ -998,8 +999,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         'lecture_id': $scope.lectureId,
                         'doc_id': $scope.docId,
                         'is_lecturer': $scope.isLecturer, // Tarkista mielummin serverin päässä
-                        'get_messages': $scope.useWall,
-                        'get_questions': $scope.useQuestions,
+                        'get_messages': $scope.lectureSettings.useWall,
+                        'get_questions': $scope.lectureSettings.useQuestions,
                         'buster': new Date().getTime()
                     }
                 })
