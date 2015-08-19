@@ -168,6 +168,11 @@ a {
     touch-action: none;
 }
 
+.resizehandle:hover {
+    background-color: black;
+    opacity: 0.1;
+}
+
 .minimize {
     padding-left: 15px;
     right: 55px;
