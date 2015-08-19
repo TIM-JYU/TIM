@@ -116,14 +116,12 @@
                         <h4>Lecture settings</h4>
                         <li>
                             <label> Show wall
-                                <input type="checkbox" ng-model="useWall"
-                                       ng-change="changeUsingWall(useWall)">
+                                <input type="checkbox" ng-model="lectureSettings.useWall">
                             </label>
                         </li>
                         <li ng-show="!isLecturer">
                             <label> Show questions
-                                <input type="checkbox" ng-model="useQuestions"
-                                       ng-change="changeUsingQuestions(useQuestions)">
+                                <input type="checkbox" ng-model="lectureSettings.useQuestions">
                             </label>
                         </li>
                         <li ng-show="isLecturer">
