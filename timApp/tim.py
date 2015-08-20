@@ -644,6 +644,7 @@ def show_lecture_info(lecture_id):
     lecture = lecture[0]
     doc = timdb.documents.get_document(lecture.get('doc_id'))
     in_lecture, lecture_ids = timdb.lectures.check_if_in_any_lecture(getCurrentUserId())
+    settings = get_user_settings()
     return render_template("lectureInfo.html",
                            doc=doc,
                            docId=lecture.get("doc_id"),
@@ -651,7 +652,8 @@ def show_lecture_info(lecture_id):
                            lectureCode=lecture.get("lecture_code"),
                            lectureStartTime=lecture.get("start_time"),
                            lectureEndTime=lecture.get("end_time"),
-                           in_lecture=in_lecture)
+                           in_lecture=in_lecture,
+                           settings=settings)
 
 
 # Route to get show lecture info of some specific lecture
@@ -1591,8 +1593,10 @@ def mark_all_read(doc_id):
 def start_page():
     timdb = getTimDb()
     in_lecture = user_in_lecture()
+    settings = get_user_settings()
     return render_template('start.html',
-                           in_lecture=in_lecture)
+                           in_lecture=in_lecture,
+                           settings=settings)
 
 
 @app.route("/view/")
@@ -1601,11 +1605,13 @@ def index_page():
     current_user = getCurrentUserId()
     in_lecture = user_in_lecture()
     possible_groups = timdb.users.getUserGroupsPrintable(current_user)
+    settings = get_user_settings()
     return render_template('tempindex.html',
                            userName=getCurrentUserName(),
                            userId=current_user,
                            userGroups=possible_groups,
-                           in_lecture=in_lecture)
+                           in_lecture=in_lecture,
+                           settings=settings)
 
 
 def user_in_lecture():
@@ -1615,6 +1621,13 @@ def user_in_lecture():
     if in_lecture:
         in_lecture = check_if_lecture_is_running(lecture_id)
     return in_lecture
+
+
+def get_user_settings():
+    if 'settings' in session:
+        return session['settings']
+    else:
+        return {}
 
 
 @app.before_request

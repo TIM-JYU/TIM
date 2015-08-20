@@ -112,6 +112,7 @@ def try_return_folder(doc_name):
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
+    settings = tim.get_user_settings()
     return render_template('tempindex.html',
                            docID=block_id,
                            userName=getCurrentUserName(),
@@ -120,7 +121,8 @@ def try_return_folder(doc_name):
                            is_owner=hasOwnership(block_id),
                            docName=folder_name,
                            folder=True,
-                           in_lecture=is_in_lecture)
+                           in_lecture=is_in_lecture,
+                           settings=settings)
 
 
 def view_content(doc_name, template_name, view_range=None):
@@ -246,10 +248,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
 
-    if 'settings' in session:
-        settings = session['settings']
-    else:
-        settings = {}
+    settings = tim.get_user_settings()
 
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
