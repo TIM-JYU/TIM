@@ -36,7 +36,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.showPoll = true;
         $scope.polling = true;
         $scope.requestOnTheWay = false;
-        $scope.showWall = false;
         $scope.canStart = true;
         $scope.canStop = false;
         $scope.showLectureCreation = false;
@@ -79,7 +78,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             'messageName': true,
             'messageTime': true,
             'polling': true,
-            'showWall': false,
             'canStart': true,
             'canStop': false,
             'showLectureCreation': false,
@@ -467,8 +465,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             var base = wall.find('#wallBase');
             $scope.newMessagesAmount = 0;
             $scope.newMessagesAmountText = '';
-            $scope.showWall = !$scope.showWall;
-            if (!$scope.showWall) {
+            if ($scope.lectureSettings.wallMinimized) {
                 $scope.wallHeight = wall.height();
                 wall.height(15);
                 base.css('display', 'none');
@@ -1073,7 +1070,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                                     }
                                 });
                                 $scope.newMessagesAmount += newMessages;
-                                if (!$scope.showWall)
+                                if ($scope.lectureSettings.wallMinimized)
                                     $scope.newMessagesAmountText = ' (' + $scope.newMessagesAmount.toString() + ')';
                                 else
                                     $scope.newMessagesAmountText = '';
