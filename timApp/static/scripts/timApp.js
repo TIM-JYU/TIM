@@ -1,6 +1,7 @@
 var modules = [];
 var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload']);
 
+// Filter to make string URL friendly
 timApp.filter('escape', function () {
     "use strict";
     return function (str) {
@@ -8,6 +9,7 @@ timApp.filter('escape', function () {
     };
 });
 
+// Controller used in document index and folders
 var angular, folder, crumbs, groups;
 timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', '$upload', '$window',
 

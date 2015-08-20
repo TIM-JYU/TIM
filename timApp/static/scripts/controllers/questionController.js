@@ -12,6 +12,8 @@
 
 timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
     "use strict";
+
+    // Timeout is used to make sure that #calendarStart element is rendered before creating datepicker
     $window.setTimeout(function() {
         angular.element('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     }, 0);
