@@ -1606,7 +1606,7 @@ def index_page():
     in_lecture = user_in_lecture()
     possible_groups = timdb.users.getUserGroupsPrintable(current_user)
     settings = get_user_settings()
-    return render_template('tempindex.html',
+    return render_template('index.html',
                            userName=getCurrentUserName(),
                            userId=current_user,
                            userGroups=possible_groups,

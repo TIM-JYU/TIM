@@ -113,7 +113,7 @@ def try_return_folder(doc_name):
 
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
     settings = tim.get_user_settings()
-    return render_template('tempindex.html',
+    return render_template('index.html',
                            docID=block_id,
                            userName=getCurrentUserName(),
                            userId=getCurrentUserId(),
