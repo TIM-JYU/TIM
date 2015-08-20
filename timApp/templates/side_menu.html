@@ -34,9 +34,10 @@
                     {% endraw %}
                 </div>
 
+                {# if user is in lecture or lecture_view, show lecture related menus #}
                 {% if lecture_mode or in_lecture %}
-                    <div class="invisible"></div>
-                    <div ng-class="['lectures-sidebar', lecturesSidebarState, 'sidebar']">
+                    <div class="invisible" ng-show="lectureSettings.lectureMode"></div>
+                    <div ng-class="['lectures-sidebar', lecturesSidebarState, 'sidebar']" ng-show="lectureSettings.lectureMode">
                         <h1>Lectures</h1>
                         {% raw %}
                         <ul>
@@ -82,7 +83,7 @@
                         {% endraw %}
                     </div>
 
-                    <div class="invisible" ng-show="isLecturer && inLecture"></div>
+                    <div class="invisible" ng-show="isLecturer && lectureSettings.inLecture"></div>
                     <div ng-class="['people-sidebar', peopleSidebarState, 'sidebar']">
                         <h1>People</h1>
 
@@ -112,7 +113,7 @@
                     <h3>Customize</h3>
                     <a href="/settings">Customize TIM</a>
                     {% raw %}
-                    <ul ng-show="inLecture">
+                    <ul ng-show="lectureSettings.inLecture">
                         <h4>Lecture settings</h4>
                         <li>
                             <label> Show wall
@@ -126,8 +127,7 @@
                         </li>
                         <li ng-show="isLecturer">
                             <label> Show answers
-                                <input type="checkbox" ng-model="useAnswers"
-                                       ng-change="changeUsingAnswers(useAswers)">
+                                <input type="checkbox" ng-model="lectureSettings.useAnswers">
                             </label>
                         </li>
                     </ul>
@@ -142,14 +142,14 @@
                          src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                          height="50" title="Contents"/>
                     {% if lecture_mode or in_lecture %}
-                        <img ng-click="toggleLectures()" ng-class="['menu-icon', lectureIconState]"
+                        <img ng-show="lectureSettings.lectureMode" ng-click="toggleLectures()" ng-class="['menu-icon', lectureIconState]"
                              src="{{ url_for('static', filename='images/lectures-icon.png') }}" width="50"
                              height="50" title="Lectures-menu"/>
                         <img ng-show="isLecturer" ng-click="toggleQuestions()"
                              ng-class="['menu-icon', questionIconState]"
                              src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
                              height="50" title="Questions-menu"/>
-                        <img ng-show="isLecturer && inLecture" ng-click="togglePeople()"
+                        <img ng-show="isLecturer && lectureSettings.inLecture" ng-click="togglePeople()"
                              ng-class="['menu-icon', peopleIconState]"
                              src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
                              height="50" title="People logged-in"/>

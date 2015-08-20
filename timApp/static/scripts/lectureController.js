@@ -66,15 +66,15 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.lectureEnded = false;
         $scope.showLectureForm = false;
         $scope.showLectureOptions = false;
-        $scope.useQuestions = true;
-        $scope.useWall = true;
-        $scope.useAnswers = true;
         $scope.wallMessages = [];
         $scope.questionTitle = "";
         $scope.clockOffset = 0;
         $scope.settings = $window.settings;
 
+        //TODO: Move all lecture settings to lectureSettings object, so they will work as ng-model
         $scope.lectureSettings = {
+            'inLecture': false,
+            'lectureMode': $window.lectureMode || false,
             'wallMinimized': false,
             'messageName': true,
             'messageTime': true,
@@ -138,7 +138,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             if (!changeLecture)
                                 showRightView(answer);
                         }).error(function () {
-                            // $window.alert("Lecture " + lectureCode + " not found.");
                             $scope.showDialog("Lecture " + lectureCode + " not found.");
                             showRightView(answer);
                         });
@@ -158,7 +157,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.joinLecture = function (name, code_required, in_lecture, current_lecture) {
             var changeLecture = true;
             if (current_lecture) {
-                var inLecture = in_lecture || $scope.inLecture;
+                var inLecture = in_lecture || $scope.lectureSettings.inLecture;
                 if (inLecture) {
                     if (current_lecture == name) {
                         changeLecture = false;
@@ -201,7 +200,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.showDialog("Lecture '" + name + "' has ended");
                         return false;
                     } else if (!answer.correctPassword) {
-                        // $window.alert("Wrong access code!");
                         $scope.showDialog("Wrong access code!");
                         return false;
                     } else {
@@ -257,8 +255,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.getClockOffset();
 
         /**
-         * Use question_id in data to ask question as new.
-         * Use asked_id to reask question already asked.
+         * Use data.question_id to ask question as new.
+         * Use data.asked_id to reask question.
          */
         $scope.$on("askQuestion", function (event, data) {
             $scope.json = data.json;
@@ -277,7 +275,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             })
                 .success(function (id) {
                     $scope.showStudentAnswers = true;
-                    if ($scope.useAnswers) {
+                    if ($scope.lectureSettings.useAnswers) {
                         // Because of dynamic creation needs to wait 1ms to ensure that the directive is made(maybe?)
                         $timeout(function () {
                             $rootScope.$broadcast("createChart", $scope.json);
@@ -310,7 +308,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         });
 
         $scope.$on('joinLecture', function (event, lecture) {
-            $scope.joinLecture(lecture.lecture_code, lecture.is_access_code, $scope.inLecture,
+            $scope.joinLecture(lecture.lecture_code, lecture.is_access_code, $scope.lectureSettings.inLecture,
                 $scope.lectureName);
         });
 
@@ -326,7 +324,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Event listener for getLecture. Emits the boolean value if the user is in lecture
          */
         $scope.$on('getInLecture', function () {
-            $scope.$emit('postInLecture', $scope.inLecture);
+            $scope.$emit('postInLecture', $scope.lectureSettings.inLecture);
         });
 
         /*
@@ -352,7 +350,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         });
 
         /*
-         Event listener for closeQuestion. Closes quesition pop-up.
+         Event listener for closeQuestion. Closes question pop-up.
          */
         $scope.$on('closeQuestion', function () {
             $scope.showAnswerWindow = false;
@@ -360,7 +358,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
 
         /*
-         Event listener for answerToQuesion. Closes the answer pop-up and sends answer to server.
+         Event listener for answerToQuestion. Closes the answer pop-up and sends answer to server.
          */
         $scope.$on("answerToQuestion", function (event, answer) {
             if (!$scope.isLecturer) $scope.showAnswerWindow = false;
@@ -383,7 +381,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             })
                 .success(function (answer) {
                     if (angular.isDefined(answer.questionLate)) {
-                        // $window.alert(answer.questionLate);
                         $scope.showDialog(answer.questionLate);
                     }
                 })
@@ -452,23 +449,13 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @param useQuestions Whether or not to display questions?
          * @param useWall Whether or not to display the wall?
          */
+            //TODO: Change showLectureView so that it doesn't set useWall and useQuestions if they are set in
+            // lectureOptions dialog
         $scope.useOptions = function (useQuestions, useWall) {
             $scope.showLectureView($scope.lectureAnswer);
             $scope.lectureSettings.useWall = useWall;
             $scope.lectureSettings.useQuestions = useQuestions;
             $scope.showLectureOptions = false;
-
-        };
-
-        /**
-         * Ask lecture options from students that are coming to lecture.
-         * @memberof module:lectureController
-         */
-        $scope.lectureOptions = function () {
-            if (!$scope.isLecturer) {
-                $scope.showLectureOptions = true;
-            }
-            $scope.joinLecture();
         };
 
         /**
@@ -506,6 +493,11 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $rootScope.$broadcast("initLectureFormVals");
         };
 
+        /**
+         * Show jQuery UI:s modal dialog
+         * Use this instead of window.alert, it will stop executing all javascript
+         * @param message dialog text
+         */
         $scope.showDialog = function (message) {
             $('<div id="dialog"><p>' + message + '</div>').dialog({
                 dialogClass: "no-close", modal: true,
@@ -540,31 +532,13 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /**
-         * Change the usage of wall.
+         * Change the usage of wall. Used as lectureWall close callback function.
          * @param wallUsage Whether wall should be displayed or not.
          * @memberof module:lectureController
          */
         $scope.changeUsingWall = function (wallUsage) {
             $scope.lectureSettings.useWall = wallUsage;
             $scope.$apply();
-        };
-
-        /**
-         * Change the usage of getting lecture questions.
-         * @param questionUsage Whether questions should be displayed or not.
-         * @memberof module:lectureController
-         */
-        $scope.changeUsingQuestions = function (questionUsage) {
-            $scope.useQuestions = questionUsage;
-        };
-
-        /**
-         * Changes the usage of getting answers from students.
-         * @param answerUsage Whether to get answers from students or not.
-         * @memberof module:lectureController
-         */
-        $scope.changeUsingAnswers = function (answerUsage) {
-            $scope.useAnswers = answerUsage;
         };
 
         /**
@@ -583,16 +557,14 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             }
             $scope.lectureStartTime = "Started: " + lecture.startTime;
             $scope.lectureEndTime = "Ends: " + lecture.endTime;
-            $scope.inLecture = true;
+            $scope.lectureSettings.inLecture = true;
             $scope.lectureId = lecture.lectureId;
             $scope.polling = true;
             $scope.msg = "";
-            $scope.showWall = true;
             $scope.lectureSettings.useWall = lecture.useWall;
             $scope.lectureSettings.useQuestions = lecture.useQuestions;
 
             $scope.getAllMessages();
-
 
             if ($scope.isLecturer) {
                 $rootScope.$broadcast("getQuestions");
@@ -645,10 +617,9 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 $scope.canStart = true;
                 $scope.canStop = false;
             }
+            $scope.lectureSettings.inLecture = false;
             $scope.wallMessages = [];
-            $scope.lectureSettings.useWall = false;
             $scope.polling = false;
-            $scope.inLecture = false;
             $scope.lectureId = -1;
             $scope.lectureName = "Not running";
             $scope.showStudentAnswers = false;
@@ -658,8 +629,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             $scope.lectures = [];
             $scope.futureLectures = [];
 
+            if (answer === "") return;
 
-            var addLecture = true;
             for (var i = 0; i < answer.lectures.length; i++) {
                 $scope.lectures.push(answer.lectures[i]);
             }
@@ -684,62 +655,77 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          * @memberof module:lectureController
          */
         $scope.extendLecture = function () {
-            var dateTime = $scope.lectureEndTime.split(" ");
 
-            //TODO: Use javascript date object.
-            var YearMonthDay = dateTime[1].split("-");
-            var endYear = parseInt(YearMonthDay[0]);
-            var endMonth = parseInt(YearMonthDay[1]);
-            var endDay = parseInt(YearMonthDay[2]);
+            var dateTime2 = Date.parse($scope.lectureEndTime);
 
-            var hoursMins = dateTime[2].split(":");
-            var endHour = parseInt(hoursMins[0]);
-            var endMinutes = parseInt(hoursMins[1]);
+            dateTime2 += $scope.extend.extendTime * 60 * 1000;
 
+            var dateTime3 = new Date(dateTime2);
 
-            endMinutes += parseInt($scope.extend.extendTime);
+            var endTimeDate = dateTime3.getFullYear() + '-' + $scope.leftPadder((dateTime3.getMonth() + 1), 2) + '-' +
+                $scope.leftPadder(dateTime3.getDate(), 2) + ' ' +
+                $scope.leftPadder(dateTime3.getHours(), 2) + ':' + $scope.leftPadder(dateTime3.getMinutes(), 2);
 
-            if (endMinutes >= 60) {
-                endHour += 1;
-                endMinutes -= 60;
-                if (endHour >= 24) {
-                    endDay += 1;
-                    endHour -= 24;
-                    switch (endMonth) {
-                        case 1:
-                        case 3:
-                        case 5:
-                        case 7:
-                        case 8:
-                        case 10:
-                        case 12:
-                            if (endDay > 31) {
-                                endDay = 1;
-                                endMonth += 1;
-                            }
-                            break;
-                        case 2:
-                            if (endDay > 28) {
-                                endDay = 1;
-                                endMonth += 1;
-                            }
-                            break;
-                        default:
-                            if (endDay > 30) {
-                                endDay = 1;
-                                endMonth += 1;
-                            }
-                    }
-                    if (endMonth > 12) {
-                        endMonth = 1;
-                        endYear += 1;
-                    }
-                }
-            }
+            console.log(endTimeDate);
+
+            /* Old way of calculating new endtime, without javascript Date object
+
+             var dateTime = $scope.lectureEndTime.split(" ");
+
+             //TODO: Use javascript date object.
+             var YearMonthDay = dateTime[1].split("-");
+             var endYear = parseInt(YearMonthDay[0]);
+             var endMonth = parseInt(YearMonthDay[1]);
+             var endDay = parseInt(YearMonthDay[2]);
+
+             var hoursMins = dateTime[2].split(":");
+             var endHour = parseInt(hoursMins[0]);
+             var endMinutes = parseInt(hoursMins[1]);
 
 
-            var endTimeDate = endYear + "-" + $scope.leftPadder(endMonth, 2) + "-" + $scope.leftPadder(endDay, 2) + " " +
-                $scope.leftPadder(endHour, 2) + ":" + $scope.leftPadder(endMinutes, 2);
+             endMinutes += parseInt($scope.extend.extendTime);
+
+             if (endMinutes >= 60) {
+             endHour += 1;
+             endMinutes -= 60;
+             if (endHour >= 24) {
+             endDay += 1;
+             endHour -= 24;
+             switch (endMonth) {
+             case 1:
+             case 3:
+             case 5:
+             case 7:
+             case 8:
+             case 10:
+             case 12:
+             if (endDay > 31) {
+             endDay = 1;
+             endMonth += 1;
+             }
+             break;
+             case 2:
+             if (endDay > 28) {
+             endDay = 1;
+             endMonth += 1;
+             }
+             break;
+             default:
+             if (endDay > 30) {
+             endDay = 1;
+             endMonth += 1;
+             }
+             }
+             if (endMonth > 12) {
+             endMonth = 1;
+             endYear += 1;
+             }
+             }
+             }
+             var endTimeDate = endYear + "-" + $scope.leftPadder(endMonth, 2) + "-" + $scope.leftPadder(endDay, 2) + " " +
+             $scope.leftPadder(endHour, 2) + ":" + $scope.leftPadder(endMinutes, 2);
+
+             */
             $scope.lectureEndTime = "Ends: " + endTimeDate;
             $scope.showLectureEnding = false;
             $scope.lectureEnded = false;
@@ -769,7 +755,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         /**
-         * NOT IMPLEMENTED YET
+         * Gets lectureInfo and shows editLecture dialog
          * @memberof module:lectureController
          */
         $scope.editLecture = function (lecture_code) {
@@ -885,8 +871,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          */
         $scope.sendMessageEvent = function (message) {
             if (message.trim() === "") {
-                // $window.alert("Can't send empty messages");
-
                 $scope.showDialog("Can't send empty messages");
                 return false;
             }
@@ -1093,7 +1077,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                                     $scope.newMessagesAmountText = ' (' + $scope.newMessagesAmount.toString() + ')';
                                 else
                                     $scope.newMessagesAmountText = '';
-                                $scope.wallName = 'Wall ' + $scope.lectureName + $scope.newMessagesAmountText;
+                                $scope.wallName = 'Wall - ' + $scope.lectureName + $scope.newMessagesAmountText;
                                 $scope.lastID = answer.lastid;
                                 var wallArea = $('#wallArea');
                                 wallArea.scrollTop(wallArea[0].scrollHeight);
