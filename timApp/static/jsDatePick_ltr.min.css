@@ -14,7 +14,7 @@
     right: 10px;
     width: 33px;
     height: 13px;
-    background: url(../images/img/closeButton_normal.gif) left top no-repeat;
+    background: url(images/img/closeButton_normal.gif) left top no-repeat;
 }
 
 .JsDatePickBox .jsDatePickCloseButtonOver {
@@ -25,7 +25,7 @@
     right: 10px;
     width: 33px;
     height: 13px;
-    background: url(../images/img/closeButton_over.gif) left top no-repeat;
+    background: url(images/img/closeButton_over.gif) left top no-repeat;
 }
 
 .JsDatePickBox .jsDatePickCloseButtonDown {
@@ -36,7 +36,7 @@
     right: 10px;
     width: 33px;
     height: 13px;
-    background: url(../images/img/closeButton_down.gif) left top no-repeat;
+    background: url(images/img/closeButton_down.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxLeftWall {
@@ -51,7 +51,7 @@
     padding: 0;
     width: 7px;
     height: 8px;
-    background: url(../images/img/boxTopLeftCorner.png) left top no-repeat;
+    background: url(images/img/boxTopLeftCorner.png) left top no-repeat;
     overflow: hidden;
 }
 
@@ -60,7 +60,7 @@
     padding: 0;
     width: 7px;
     height: 8px;
-    background: url(../images/img/boxBottomLeftCorner.png) left top no-repeat;
+    background: url(images/img/boxBottomLeftCorner.png) left top no-repeat;
     overflow: hidden;
 }
 
@@ -68,7 +68,7 @@
     margin: 0;
     padding: 0;
     width: 7px;
-    background: url(../images/img/boxSideWallPx.gif) #fff left top repeat-y;
+    background: url(images/img/boxSideWallPx.gif) #fff left top repeat-y;
     overflow: hidden;
 }
 
@@ -84,7 +84,7 @@
     padding: 0;
     width: 7px;
     height: 8px;
-    background: url(../images/img/boxTopRightCorner.png) left top no-repeat;
+    background: url(images/img/boxTopRightCorner.png) left top no-repeat;
     overflow: hidden;
 }
 
@@ -93,7 +93,7 @@
     padding: 0;
     width: 7px;
     height: 8px;
-    background: url(../images/img/boxBottomRightCorner.png) left top no-repeat;
+    background: url(images/img/boxBottomRightCorner.png) left top no-repeat;
     overflow: hidden;
 }
 
@@ -101,7 +101,7 @@
     margin: 0;
     padding: 0;
     width: 7px;
-    background: url(../images/img/boxSideWallPx.gif) #fff right top repeat-y;
+    background: url(images/img/boxSideWallPx.gif) #fff right top repeat-y;
     overflow: hidden;
 }
 
@@ -112,7 +112,7 @@
     left: 7px;
     width: 198px;
     height: 4px;
-    background: url(../images/img/boxTopPx.gif) #fff left top repeat-x;
+    background: url(images/img/boxTopPx.gif) #fff left top repeat-x;
 }
 
 .JsDatePickBox .bottomWall {
@@ -122,7 +122,7 @@
     left: 7px;
     width: 198px;
     height: 4px;
-    background: url(../images/img/boxTopPx.gif) #fff left top repeat-x;
+    background: url(images/img/boxTopPx.gif) #fff left top repeat-x;
 }
 
 .JsDatePickBox .hiddenBoxLeftWall {
@@ -219,7 +219,7 @@
     position: absolute;
     top: 0;
     right: 22px;
-    background: url(../images/img/monthForward_normal.gif) left top no-repeat;
+    background: url(images/img/monthForward_normal.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .monthForwardButtonOver {
@@ -230,7 +230,7 @@
     position: absolute;
     top: 0;
     right: 22px;
-    background: url(../images/img/monthForward_over.gif) left top no-repeat;
+    background: url(images/img/monthForward_over.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .monthForwardButtonDown {
@@ -241,7 +241,7 @@
     position: absolute;
     top: 0;
     right: 22px;
-    background: url(../images/img/monthForward_down.gif) left top no-repeat;
+    background: url(images/img/monthForward_down.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .monthBackwardButton {
@@ -252,7 +252,7 @@
     position: absolute;
     top: 0;
     left: 22px;
-    background: url(../images/img/monthBackward_normal.gif) left top no-repeat;
+    background: url(images/img/monthBackward_normal.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .monthBackwardButtonOver {
@@ -263,7 +263,7 @@
     position: absolute;
     top: 0;
     left: 22px;
-    background: url(../images/img/monthBackward_over.gif) left top no-repeat;
+    background: url(images/img/monthBackward_over.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .monthBackwardButtonDown {
@@ -274,7 +274,7 @@
     position: absolute;
     top: 0;
     left: 22px;
-    background: url(../images/img/monthBackward_down.gif) left top no-repeat;
+    background: url(images/img/monthBackward_down.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .yearForwardButton {
@@ -285,7 +285,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    background: url(../images/img/yearForward_normal.gif) left top no-repeat;
+    background: url(images/img/yearForward_normal.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .yearForwardButtonOver {
@@ -296,7 +296,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    background: url(../images/img/yearForward_over.gif) left top no-repeat;
+    background: url(images/img/yearForward_over.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .yearForwardButtonDown {
@@ -307,7 +307,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    background: url(../images/img/yearForward_down.gif) left top no-repeat;
+    background: url(images/img/yearForward_down.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .yearBackwardButton {
@@ -318,7 +318,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    background: url(../images/img/yearBackward_normal.gif) left top no-repeat;
+    background: url(images/img/yearBackward_normal.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .yearBackwardButtonOver {
@@ -329,7 +329,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    background: url(../images/img/yearBackward_over.gif) left top no-repeat;
+    background: url(images/img/yearBackward_over.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .yearBackwardButtonDown {
@@ -340,7 +340,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    background: url(../images/img/yearBackward_down.gif) left top no-repeat;
+    background: url(images/img/yearBackward_down.gif) left top no-repeat;
 }
 
 .JsDatePickBox .boxMainInner .skipDay {
