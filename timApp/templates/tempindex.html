@@ -33,17 +33,16 @@
     </style>
     {% if session.user_id %}
         {% include 'common_head.html' %}
-    {% elif in_lecture %}
-        {% include 'common_head.html' %}
-        {% include 'lecture_head.html' %}
-
-        <script>
+        {% if in_lecture %}
+            {% include 'lecture_head.html' %}
+            <script>
             {% if docID %}
                 var docId = JSON.parse({{docID|tojson|safe}});
                 var docName = {{docName|tojson|safe}};
             {% endif %}
             var in_lecture = {{in_lecture|tojson}};
-        </script>
+            </script>
+        {% endif %}
     {% endif %}
 {% endblock %}
 {% block content %}
