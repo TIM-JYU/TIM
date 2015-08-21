@@ -768,9 +768,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             })
                 .success(function () {
                     $window.console.log("Deleted question done!");
-                    //location.reload();
                     scope.close();
-                    //scope.clearQuestion();
                     scope.getQuestions();
                 })
                 .error(function (error) {

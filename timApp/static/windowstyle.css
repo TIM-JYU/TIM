@@ -175,6 +175,21 @@ input[type="number"] {
     vertical-align: middle;
 }
 
+tr:hover .explField {
+    opacity: 1;
+    border: 1px solid #CCC !important;
+}
+
+.explField.hasText {
+    opacity: 1;
+    border: 1px solid #CCC !important;
+}
+
+.explField {
+    border: none !important;
+    opacity: 0;
+}
+
 .createQuestion textarea {
     width: 95%;
     resize: none;
