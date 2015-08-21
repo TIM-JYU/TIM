@@ -14,7 +14,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     "use strict";
 
     // Timeout is used to make sure that #calendarStart element is rendered before creating datepicker
-    $window.setTimeout(function() {
+    $window.setTimeout(function () {
         angular.element('#calendarStart').datepicker({dateFormat: 'dd.m.yy'});
     }, 0);
 
@@ -200,8 +200,6 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     /**
      * A function for creating a matrix.
      * @memberof module:questionController
-     * @param rowsCount The number of rows to create for the matrix.
-     * @param columnsCount The number of columns to create for new matrix.
      * @param type The answer type of the matrix.
      */
     scope.createMatrix = function (type) {
@@ -500,6 +498,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     };
 
 
+    /**
+     * Creates a string of points. Rows are separated by | and answers in the same row separated by ;
+     * @returns {string}
+     */
     scope.createPoints = function () {
         var points = '';
         var separator = '';
@@ -536,6 +538,10 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         return points;
     };
 
+    /**
+     * Creates a dict with explanations for question rows
+     * @returns {{}}
+     */
     scope.createExplanation = function () {
         var expl = {};
         for (var i = 0; i < scope.rows.length; i++) {
@@ -547,6 +553,11 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         return expl;
     };
 
+    /**
+     * Creates question json
+     * @returns {{QUESTION: string, TITLE: string, TYPE: *, ANSWERFIELDTYPE: string, MATRIXTYPE: string,
+     * TIMELIMIT: string, DATA: {HEADERS: Array, ROWS: Array}}}
+     */
     scope.createJson = function () {
         if (scope.asked_id) {
             return scope.updatePoints();
@@ -677,19 +688,14 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
     scope.createQuestion = function (ask) {
         var questionJson = scope.createJson();
         if (!questionJson) return;
-
         var points = scope.createPoints();
-
         var expl = scope.createExplanation();
-
         var doc_id = scope.docId;
         var $par = scope.par;
         var par_id = scope.getParId($par);
 
-        var testJson = JSON.stringify(scope.question);
-        testJson += JSON.stringify(scope.columnHeaders);
+        // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
         $window.settings['timelimit'] = questionJson.TIMELIMIT.toString();
-        ;
         setTimeout(function () {
             setsetting('timelimit', questionJson.TIMELIMIT.toString());
         }, 1000);
@@ -730,6 +736,9 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         scope.close();
     };
 
+    /**
+     * Calls /updatePoints/ to update questions points according to form
+     */
     scope.updatePoints = function () {
         var points = scope.createPoints();
         http({
@@ -765,14 +774,16 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
                     scope.getQuestions();
                 })
                 .error(function (error) {
-
                     $window.console.log(error);
                     scope.getQuestions();
-
                 });
         }
     };
 
+    /**
+     * Creates question json to be displayed in preview.
+     * @param show if true add event handler to input change, if false remove eventhandlers
+     */
     scope.setShowPreview = function (show) {
         if (show) {
             scope.createJson();
