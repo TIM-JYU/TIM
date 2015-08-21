@@ -778,6 +778,14 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
         }
     };
 
+    scope.explFocus = function ($event) {
+        $($event.target).parent().addClass('explFocus');
+    };
+
+    scope.explBlur = function ($event) {
+        $($event.target).parent().removeClass('explFocus');
+    };
+
     /**
      * Creates question json to be displayed in preview.
      * @param show if true add event handler to input change, if false remove eventhandlers

@@ -88,7 +88,8 @@
                 </td>
                 <td ng-class="['explField', row.expl ? 'hasText' : '']">
                     <textarea placeholder="Optional: Explain why answer is right/wrong" class="rowHeading"
-                              ng-model="row.expl" form="question-form" rows="1"></textarea>
+                              ng-focus="explFocus($event)" ng-blur="explBlur($event)" ng-model="row.expl"
+                              form="question-form" rows="1"></textarea>
                 </td>
                 <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionJson at view_html.js and then displaying them at directives/dynamicanswersheet.js -->
             </tr>

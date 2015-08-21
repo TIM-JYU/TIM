@@ -175,12 +175,7 @@ input[type="number"] {
     vertical-align: middle;
 }
 
-tr:hover .explField {
-    opacity: 1;
-    border: 1px solid #CCC !important;
-}
-
-.explField.hasText {
+.explField.explFocus, .explField.hasText, tr:hover .explField {
     opacity: 1;
     border: 1px solid #CCC !important;
 }
