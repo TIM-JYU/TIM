@@ -14,6 +14,7 @@ csApp.directive('csTaunoRunner', ['$sanitize','$compile', function ($sanitize,$c
 csApp.directive('csTaunoRunnerInput', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('tauno',true); }]);
 csApp.directive('csParsonsRunner', ['$sanitize','$compile', function ($sanitize,$compile1) { "use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('parsons',false); }]);
 csApp.directive('csSageRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('sage',true); }]);
+csApp.directive('csSimcirRunner', ['$sanitize','$compile', function ($sanitize,$compile1) {"use strict"; csApp.sanitize = $sanitize;  csApp.compile = $compile1; return csApp.directiveFunction('simcir',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 
@@ -75,8 +76,8 @@ ConsolePWD.getPWD = function() {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","r"];
-languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","r"];
+languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","r"];
+languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","r"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -219,17 +220,20 @@ csApp.directiveTemplateCS = function(t,isInput) {
 	csApp.taunoPHIndex = 3;
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
+    var taunoText = "Tauno";
+    if ( t === "simcir" ) taunoText = "SimCir";
 	return  '<div class="csRunDiv no-popup-menu" ng-cloak>' + 
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-  				  (t === "tauno" ?
-				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">hide Tauno</a></p>' +
+  				  (t === "tauno" || t === "simcir" ?
+				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">hide ' + taunoText + '</a></p>' +
 				    '<div ><p></p></div>' + // Tauno code place holder nr 3!!
-				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">Click here to show Tauno</a></p>' +
-				    '<p ng-if="taunoOn" class="pluginHide"" ><a ng-click="copyTauno()">copy from Tauno</a> | <a ng-click="hideTauno()">hide Tauno</a></p>' +
-				    '<p ng-if="taunoOn" class="taunoOhje">Kopioi Taunolla tekemäsi koodi "copy from Tauno"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa että ajossa voi olla eri taulukko kuin Taunossa!</a></p>' +
+				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">Click here to show ' + taunoText + '</a></p>' +
+				    (t === "tauno" ? '<p ng-if="taunoOn" class="pluginHide"" ><a ng-click="copyTauno()">copy from Tauno</a> | <a ng-click="hideTauno()">hide Tauno</a></p>' +
+				    '<p ng-if="taunoOn" class="taunoOhje">Kopioi Taunolla tekemäsi koodi "copy from Tauno"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa että ajossa voi olla eri taulukko kuin Taunossa!</a></p>' 
+                    : '<p ng-if="taunoOn && !noeditor" class="pluginHide"" ><a ng-click="copyFromSimcir()">copy from SimCir</a> | <a ng-click="copyToSimcir()">copy to SimCir</a> | <a ng-click="hideTauno()">hide SimCir</a></p>') +
 					"" : "") +   
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
 				  '<div class="csRunCode">'+'<p></p>'+
@@ -334,10 +338,13 @@ csApp.directiveFunction = function(t,isInput) {
 			scope.taunoHtml = element[0].childNodes[csApp.taunoPHIndex]; // Check this carefully, where is Tauno placeholder
             scope.plugin = element.parent().attr("data-plugin");
             scope.taskId  = element.parent().attr("id");
+            scope.isFirst = true;
+            if ( scope.$parent.$$prevSibling ) scope.isFirst = false;
 
 			csApp.set(scope,attrs,"type","cs");
             scope.isText = languageTypes.getRunType(scope.type,false) == "text";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
+            scope.isSimcir = t === "simcir";
             
 			csApp.set(scope,attrs,"file");
 			csApp.set(scope,attrs,"filename");
@@ -354,7 +361,7 @@ csApp.directiveFunction = function(t,isInput) {
 			// csApp.set(scope,attrs,"usercode","");
 			csApp.set(scope,attrs,"codeunder",false);
 			csApp.set(scope,attrs,"codeover",false);
-			csApp.set(scope,attrs,"open",false);
+			csApp.set(scope,attrs,"open",!scope.isFirst);
 			csApp.set(scope,attrs,"rows",1);
 			csApp.set(scope,attrs,"maxrows",100);
 			csApp.set(scope,attrs,"attrs.bycode");
@@ -366,7 +373,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"userargs",scope.isText ? scope.filename : "");
 			csApp.set(scope,attrs,"inputstem","");
 			csApp.set(scope,attrs,"inputrows",1);
-			csApp.set(scope,attrs,"toggleEditor",false);
+			csApp.set(scope,attrs,"toggleEditor",scope.isSimcir ? "True" : false);
             csApp.set(scope,attrs,"indent",-1);
             csApp.set(scope,attrs,"user_id");
             csApp.set(scope,attrs,"isHtml",false);
@@ -374,7 +381,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"canvasWidth",700);
             csApp.set(scope,attrs,"canvasHeight",300);
             csApp.set(scope,attrs,"button","");
-            csApp.set(scope,attrs,"noeditor",false);
+            csApp.set(scope,attrs,"noeditor",scope.isSimcir ? "True" : false);
             csApp.set(scope,attrs,"norun",false);
             csApp.set(scope,attrs,"normal","Normal");
             csApp.set(scope,attrs,"highlight","Highlight");
@@ -427,7 +434,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
             scope.buttonText = "Aja";
-            if ( scope.type.indexOf("text") >= 0 ) { // || scope.isSage ) {
+            if ( scope.type.indexOf("text") >= 0 || scope.isSimcir) { // || scope.isSage ) {
                 scope.isRun = true;
                 scope.buttonText = "Tallenna";
             }            
@@ -451,7 +458,7 @@ csApp.directiveFunction = function(t,isInput) {
         //    scope.header = head;
 		//	scope.getHeader = function() { return head; };
 		//	csApp.updateEditSize(scope);
-            if (scope.open && t == "tauno" ) scope.showTauno();
+            if (scope.open && (t == "tauno" || t === "simcir") ) scope.showTauno();
 
             //attrs.buttons = "$hellobuttons$\nMunOhjelma\n$typebuttons$\n$charbuttons$";
             var b = attrs.buttons || scope.attrs.buttons;
@@ -753,6 +760,11 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         if ( $scope.sageButton ) $scope.sageButton.click();
         if ( $scope.isSage && !$scope.sagecellInfo ) alustaSage($scope,true);
         
+        if ( $scope.simcir ) {
+            $scope.usercode = $scope.getCircuitData();
+        }
+		else if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
+        
         if ( $scope.parson ) {
             var fb = $scope.parson.getFeedback();
             $scope.usercode = $scope.getJsParsonsCode();
@@ -765,7 +777,6 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         }
         
         // if ( runType == "md" ) { $scope.showMD(); return; }
-		if ( $scope.taunoOn && ( !$scope.muokattu || !$scope.usercode ) ) $scope.copyTauno();
 		$scope.checkIndent();
 		if ( !$scope.autoupdate ) {
             $scope.error = "... running ...";
@@ -851,6 +862,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	};
 	
 	$scope.hideTauno = function() {
+        if ( $scope.simcir ) {
+           $scope.simcir.children().remove();
+           $scope.simcir = null;
+        }
 		$scope.taunoOn = false;
 		$scope.taunoHtml.innerHTML = "<p></p>";
 	};
@@ -927,9 +942,80 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		var h = csApp.ifIs($scope.height,"height",500);
         return {vid:vid,w:w,h:h};
     }
+
+    
+    $scope.setCircuitData = function(data) {
+        var data = {};
+        $scope.runError = false;
+        try {
+            if ( $scope.usercode ) data = JSON.parse($scope.usercode);
+        } catch (err ) {
+            $scope.error = err.message;
+            $scope.runError = true;
+        }
+        data.width = csApp.getParam($scope,"width",800);
+        data.height = csApp.getParam($scope,"height",400);
+        $scope.simcir.children().remove();
+        simcir.setupSimcir($scope.simcir, data );
+    }
+    
+    
+    $scope.getCircuitData = function() {
+        var data = simcir.controller($scope.simcir.find('.simcir-workspace'));
+        data = data.data();
+        
+        var buf = '';
+        var print = function(s) {
+            buf += s;
+        };
+        var println = function(s) {
+            print(s);
+            buf += '\r\n';
+        };
+        var printArray = function(array) {
+            $.each(array, function(i, item) {
+              println('    ' + JSON.stringify(item) +
+                  (i + 1 < array.length? ',' : '') );
+            });
+        };
+        println('{');
+        println('  "devices":[');
+        printArray(data.devices);
+        println('  ],');
+        println('  "connectors":[');
+        printArray(data.connectors);
+        println('  ]');
+        print('}');
+        return buf;
+        // return JSON.stringify(result);
+    }
+    
+    
+    $scope.copyToSimcir = function() {
+        $scope.setCircuitData();
+    }
+    
+    
+    $scope.copyFromSimcir = function() {
+        $scope.usercode = $scope.getCircuitData();
+    }
+    
+    
+    $scope.showSimcir = function() {
+        var v = this.getVid();
+        $scope.taunoOn = true;	
+        $scope.taunoHtml.innerHTML = "<div id="+v.vid+"></div>";
+        var jqTauno = $($scope.taunoHtml);
+        $scope.simcir2 = $($scope.taunoHtml.innerHTML);
+        $scope.simcir = $("#"+v.vid);
+        $scope.simcir = jqTauno.find("#"+v.vid);
+        $scope.setCircuitData();
+        return true;
+    }
     
     
 	$scope.showTauno = function () {
+        if ( $scope.isSimcir ) return $scope.showSimcir();
 	    /* 
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
@@ -982,7 +1068,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.showOtherEditor($scope.editorMode);
         }
         if ( $scope.isSage ) alustaSage($scope);
-
+        if ( $scope.simcir ) $scope.setCircuitData();
 	};
 
 	

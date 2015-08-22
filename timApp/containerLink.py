@@ -20,6 +20,7 @@ TIM_URL = ""
 PLUGINS = {
     "csPlugin":      {"host": "http://172.17.42.1:56000/cs/"},
     "taunoPlugin":   {"host": "http://172.17.42.1:56000/cs/tauno/"},
+    "simcirPlugin":  {"host": "http://172.17.42.1:56000/cs/simcir/"},
     "csPluginRikki": {"host": "http://172.17.42.1:56000/cs/rikki/"},  # demonstrates a broken plugin
     "showCode":      {"host": "http://172.17.42.1:55000/svn/"},
     "showImage":     {"host": "http://172.17.42.1:55000/svn/image/"},
