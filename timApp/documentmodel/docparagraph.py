@@ -1,3 +1,4 @@
+from copy import deepcopy
 import functools
 import os
 
@@ -81,7 +82,8 @@ class DocParagraph(DocParagraphBase):
     def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         froot = cls.get_default_files_root() if files_root is None else files_root
         t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
-        return cls.get(doc_id, par_id, t, files_root=froot)
+        # Make a copy of the paragraph to avoid modifying cached instance
+        return deepcopy(cls.get(doc_id, par_id, t, files_root=froot))
 
     @classmethod
     @functools.lru_cache(maxsize=65536)
