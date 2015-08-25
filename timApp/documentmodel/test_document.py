@@ -65,6 +65,7 @@ class DocumentTest(unittest.TestCase):
         par1 = d.add_paragraph('testing')
         self.assertEqual('testing', par1.get_markdown())
         self.assertTrue(d.has_paragraph(par1.get_id()))
+        self.assertFalse(d.has_paragraph(par1.get_id()[:-1]))
         self.assertEqual((1, 0), d.get_version())
         self.assertEqual(1, len(d.get_changelog()))
 

@@ -215,7 +215,7 @@ class Document:
                 line = f.readline()
                 if line == '':
                     return False
-                if line.startswith(par_id):
+                if line.split('/', 1)[0] == par_id:
                     return True
 
     @contract
