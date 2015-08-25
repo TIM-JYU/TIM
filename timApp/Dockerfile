@@ -35,8 +35,8 @@ run pip3 install mmh3
 run apt-get install -y wget
 run apt-get update
 run apt-get install -y cmake
-run wget https://github.com/libgit2/libgit2/archive/v0.22.0.tar.gz && tar xzf v0.22.0.tar.gz
-run cd libgit2-0.22.0/ && cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 . && make install
+run wget https://github.com/libgit2/libgit2/archive/v0.23.1.tar.gz && tar xzf v0.23.1.tar.gz
+run cd libgit2-0.23.1/ && cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 . && make install
 
 run apt-get install -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
