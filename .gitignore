@@ -18,5 +18,8 @@ bower_components/
 /converters/demopisteet/*.csv
 tim_secret.py
 /timApp/modules/pali/log/log.txt
+/timApp/doctest_files/
+/timApp/modules/Haskell/Choices/
+/timApp/modules/Haskell/PluginConstructionKit/
 /timApp/tim_files/
 /tim_logs/
