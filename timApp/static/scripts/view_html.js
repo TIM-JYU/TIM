@@ -474,10 +474,21 @@ timApp.controller("ViewCtrl", [
             sc.cancelArea();
         };
 
-        sc.markParRead = function ($this, par_id) {
+        sc.isReference = function ($par) {
+            return angular.isDefined($par.attr('ref-id'));
+        };
+
+        sc.markParRead = function ($this, $par) {
             var oldClass = $this.attr("class");
             $this.attr("class", "readline read");
-            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now())
+            var par_id = sc.getParId($par);
+            var data = {};
+            if (sc.isReference($par)) {
+                data['ref-id'] = $par.attr('ref-id');
+                data['ref-t'] = $par.attr('ref-t');
+                data['ref-doc-id'] = $par.attr('ref-doc-id');
+            }
+            http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
                 .success(function (data, status, headers, config) {
                     // No need to do anything here
                 }).error(function () {
@@ -488,8 +499,7 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.onClick(".readline", function ($this, e) {
-            var par_id = sc.getParId($this.parents('.par'));
-            return sc.markParRead($this, par_id);
+            return sc.markParRead($this, $this.parents('.par'));
         });
 
         sc.isParWithinArea = function ($par) {
