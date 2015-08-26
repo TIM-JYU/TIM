@@ -97,6 +97,7 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
     if custom_css_files:
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
+    settings = tim.get_user_settings()
     return render_template(template_name,
                            docID=doc_id,
                            docName=doc_name,
@@ -113,6 +114,7 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
                            teacher_mode=teacher,
                            is_owner=hasOwnership(doc_id),
                            group=usergroup,
+                           settings=settings,
                            rights={'editable': hasEditAccess(doc_id),
                                    'can_mark_as_read': hasReadMarkingRight(doc_id),
                                    'can_comment': hasCommentRight(doc_id),
