@@ -70,6 +70,7 @@ def interpret_sql(db, command):
             stdout(','.join([str(col) for col in row]))
             n += 1
         stderr('{} row{} returned.'.format(n, '' if n == 1 else 's'))
+        db.commit()
     except Exception as e:
         stderr('EXCEPTION {}: {}'.format(e.__class__, str(e)))
 
