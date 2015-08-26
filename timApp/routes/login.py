@@ -104,8 +104,7 @@ def loginWithKorppi():
         if user is not None:
             userId = user['id']
             timdb.users.updateUser(userId, userName, realName, email)
-            gid = timdb.users.createUserGroup(userName)
-            timdb.users.addUserToGroup(gid, userId)
+            timdb.users.addUserToKorppiGroup(userId)
         else:
             uid = timdb.users.createUser(userName, realName, email)
             gid = timdb.users.createUserGroup(userName)
