@@ -58,32 +58,30 @@ def view_document_content(doc_name):
 def view_document(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        return view(doc_name, 'view_html.html', view_range=view_range)
     except ValueError as v:
         tb = traceback.format_exc()
-        abort(400, "Invalid start or end index specified." + "ValueError" + str(v) + tb)
+        return abort(400, "Invalid start or end index specified." + "ValueError" + str(v) + tb)
     except TypeError as t:
         tb = traceback.format_exc()
-        abort(400, "Invalid start or end index specified." + " TypeError " +str(t) + tb)
-
+        return abort(400, "Invalid start or end index specified." + " TypeError " +str(t) + tb)
+    return view(doc_name, 'view_html.html', view_range=view_range)
 
 @view_page.route("/teacher/<path:doc_name>")
 def teacher_view(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        usergroup = request.args.get('group')
-        return view(doc_name, 'view_html.html', view_range=view_range, usergroup=usergroup, teacher=True)
     except (ValueError, TypeError):
-        abort(400, "Invalid start or end index specified.")
-
+        return abort(400, "Invalid start or end index specified.")
+    usergroup = request.args.get('group')
+    return view(doc_name, 'view_html.html', view_range=view_range, usergroup=usergroup, teacher=True)
 
 @view_page.route("/lecture/<path:doc_name>")
 def lecture_view(doc_name):
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        return view(doc_name, 'view_html.html', view_range, lecture=True)
     except (ValueError, TypeError):
-        abort(400, "Invalid start or end index specified.")
+        return abort(400, "Invalid start or end index specified.")
+    return view(doc_name, 'view_html.html', view_range, lecture=True)
 
 
 @view_page.route("/slide/<path:doc_name>")
@@ -100,7 +98,6 @@ def slide_document(doc_name):
 def parse_range(start_index: 'int|None', end_index: 'int|None') -> 'range|None':
     if start_index is None and end_index is None:
         return None
-
     return( int(start_index), int(end_index) )
 
 
