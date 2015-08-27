@@ -158,10 +158,11 @@ def view_content(doc_name, template_name, view_range=None):
                                                                 current_user['id'],
                                                                 sanitize=False,
                                                                 do_lazy=get_option(request, "lazy", True))
+    texts = quick_post_process(texts)
 
     return render_template(template_name,
                            docID=doc_id,
-                           text=[t.html_dict() for t in texts],
+                           text=texts,
                            current_user=current_user,
                            js=jsPaths,
                            cssFiles=cssPaths,
@@ -179,7 +180,7 @@ debug_time = time.time()
 def show_time(s):
     global debug_time
     nyt = time.time()
-    # print(s, nyt - debug_time)
+    print(s, nyt - debug_time)
     debug_time = nyt
 
 
@@ -226,7 +227,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         users = []
     current_user = timdb.users.getUser(user)
     show_time('plugin alku')
-    texts, jsPaths, cssPaths, modules, readings, notes = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
+    texts, jsPaths, cssPaths, modules = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
     show_time('plugin loppu')
 
     reqs = pluginControl.get_all_reqs()
@@ -262,9 +263,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     result = render_template(template_name,
                              docID=doc_id,
                              docName=doc_name,
-                             text=[t.html_dict() for t in texts],
-                             readings=readings,
-                             notes=notes,
+                             text=texts,
                              plugin_users=users,
                              current_user=current_user,
                              version=Document(doc_id).get_version(),

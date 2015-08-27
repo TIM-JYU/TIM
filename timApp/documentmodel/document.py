@@ -423,7 +423,7 @@ class Document:
             except etree.XMLSyntaxError:
                 continue
             if index_entry.tag == 'div':
-                print(index_entry)
+                #print(index_entry)
                 for header in index_entry.iter('h1', 'h2', 'h3'):
                     level = int(header.tag[1:])
                     index.append((header.get('id'), header.text, level))

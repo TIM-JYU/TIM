@@ -177,6 +177,12 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
+def quick_post_process(pars):
+    htmlpars = [par.html_dict() for par in pars]
+    for par in htmlpars:
+        par['status'] = ''
+    return htmlpars
+
 def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
@@ -188,28 +194,34 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
                                                                  sanitize=sanitize,
                                                                  do_lazy=do_lazy)
     if request.get_json() is not None and 'ref-id' in request.get_json():
-        pars = [par for par in pars
+        htmlpars = [par.html_dict() for par in pars
                 if str(par.get_doc_id()) == request.get_json().get('ref-doc-id') and
                 par.get_id() == request.get_json().get('ref-id')]
+    else:
+        htmlpars = [par.html_dict() for par in pars]
+
+    pars_dict = dict(((par['id'], par['doc_id']), par) for par in htmlpars)
+
     readings = timdb.readings.getReadings(group, Document(doc_id))
-    pars_dict = dict(((par.get_id(), par.get_doc_id()), par) for par in pars)
-    read_statuses = {}
     for r in readings:
         key = (r['par_id'], r['doc_id'])
         if key in pars_dict:
-            read_statuses[key] = 'read' if r['par_hash'] == pars_dict[key].get_hash() else 'modified'
+            pars_dict[key]['status'] = 'read' if r['par_hash'] == pars_dict[key]['t'] else 'modified'
+
     notes = timdb.notes.getNotes(group, Document(doc_id))
     note_dict = {}
     for n in notes:
         key = (n['par_id'], n['doc_id'])
-        if key not in note_dict:
-            note_dict[key] = []
-        n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
-        n.pop('UserGroup_id')
-        n['private'] = n['access'] == 'justme'
-        note_dict[key].append(n)
+        if key in pars_dict:
+            if 'notes' not in pars_dict[key]:
+                pars_dict[key]['notes'] = []
 
-    return pars, js_paths, css_paths, modules, read_statuses, note_dict
+            n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
+            n.pop('UserGroup_id', None)
+            n['private'] = n['access'] == 'justme'
+            pars_dict[key]['notes'].append(n)
+
+    return htmlpars, js_paths, css_paths, modules
 
 
 def get_referenced_par_from_req(par):
