@@ -95,6 +95,18 @@ class DocParagraph(DocParagraphBase):
         return self.__data
 
     @contract
+    def html_dict(self) -> 'dict':
+        return {
+            'doc_id': self.get_doc_id(),
+            'cls': 'par ' + self.get_class_str(),
+            'id': self.get_id() if not self.get_original() else self.get_original().get_id(),
+            't': self.get_hash() if not self.get_original() else self.get_original().get_hash(),
+            'attrs': self.get_attrs_str(),
+            'is_plugin': self.is_plugin(),
+            'html': self.get_html()
+        }
+
+    @contract
     def get_doc_id(self) -> 'int':
         return self.doc_id
 

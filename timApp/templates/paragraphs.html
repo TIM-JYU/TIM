@@ -3,30 +3,25 @@
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 {% for t in text %}
-    <div class="{{ ['par', t.get_class_str()]|join(' ') }}"
-            {% if t.get_original() %}
-         id="{{ t.get_original().get_id() }}"
-         t="{{ t.get_original().get_hash() }}"
-            {% else %}
-         id="{{ t.get_id() }}"
-         t="{{ t.get_hash() }}"
-            {% endif %}
-         attrs="{{ t.get_attrs_str() }}"
-            {% if t.is_plugin() %}>
+    <div class="{{ t.cls }}"
+         id="{{ t.id }}"
+         t="{{ t.t }}"
+         attrs="{{ t.attrs }}"
+            {% if t.is_plugin %}>
                 <answerbrowser
-                        task-id="{{ t.get_doc_id() }}.{{ t.get_attrs()['taskId'] }}">
+                        task-id="{{ t.doc_id }}.{{ t.attrs['taskId'] }}">
                 </answerbrowser>
             {% else %}
                 ng-non-bindable>
             {% endif %}
     <div class="parContent">
-        {{ t.get_html()|safe }}
+        {{ t.html|safe }}
     </div>
     {{ editline|safe }}
-    <div class="{{ ['readline', readings[t.get_id()]]|join(' ') }}" title="Click to mark this paragraph as read"></div>
-    {% if notes[t.get_id()] %}
+    <div class="{{ ['readline', readings[t.id]]|join(' ') }}" title="Click to mark this paragraph as read"></div>
+    {% if notes[t.id] %}
         <div class="notes">
-            {% for note in notes[t.get_id()] %}
+            {% for note in notes[t.id] %}
                 <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ') }}" note-id="{{ note.id }}">
                     {{ note.html|safe }}
                 </div>

@@ -158,7 +158,7 @@ def view_content(doc_name, template_name, view_range=None):
 
     return render_template(template_name,
                            docID=doc_id,
-                           text=texts,
+                           text=[t.html_dict() for t in texts],
                            current_user=current_user,
                            js=jsPaths,
                            cssFiles=cssPaths,
@@ -259,7 +259,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     result = render_template(template_name,
                              docID=doc_id,
                              docName=doc_name,
-                             text=texts,
+                             text=[t.html_dict() for t in texts],
                              readings=readings,
                              notes=notes,
                              plugin_users=users,
