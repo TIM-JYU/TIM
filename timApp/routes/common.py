@@ -193,10 +193,11 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
                                                                  user_id,
                                                                  sanitize=sanitize,
                                                                  do_lazy=do_lazy)
-    if request.get_json() is not None and 'ref-id' in request.get_json():
+    req_json = request.get_json()
+    if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
         htmlpars = [par.html_dict() for par in pars
-                if str(par.get_doc_id()) == request.get_json().get('ref-doc-id') and
-                par.get_id() == request.get_json().get('ref-id')]
+                if str(par.get_doc_id()) == req_json.get('ref-doc-id') and
+                par.get_id() == req_json.get('ref-id')]
     else:
         htmlpars = [par.html_dict() for par in pars]
 
