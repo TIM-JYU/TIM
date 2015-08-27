@@ -76,7 +76,7 @@
         <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 
         <div class="buttons" id="question_buttons">
-            <button ng-if="inLecture" ng-click="createQuestion(true)">Save and ask
+            <button ng-if="lectureSettings.inLecture" ng-click="createQuestion(true)">Save and ask
             </button>
             <button ng-click="createQuestion()">Save</button>
             <button ng-click="close()">Cancel</button>
@@ -99,7 +99,7 @@
             <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 
             <div class="buttons" id="question_buttons">
-                <button ng-if="!asked_id" ng-if="inLecture"
+                <button ng-if="!asked_id" ng-if="lectureSettings.inLecture"
                         ng-click="createQuestion(true)">Save and ask
                 </button>
                 <button ng-click="createQuestion()">Save</button>

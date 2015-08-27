@@ -5,18 +5,18 @@
         </div>
         <div>
             <label class="lectureOptions">
-                <input type="checkbox" ng-model="useQuestions" checked>
+                <input type="checkbox" ng-model="lectureSettings.useQuestions">
                 Lecture questions
             </label>
             <label class="lectureOptions">
-                <input type="checkbox" ng-model="useWall" checked>
+                <input type="checkbox" ng-model="lectureSettings.useWall">
                 Lecture wall
             </label>
         </div>
     </form>
     <div class="buttons">
         <label class="lectureOptions">
-            <button ng-click="useOptions(useQuestions,useWall)">Submit</button>
+            <button ng-click="useOptions(lectureSettings.useQuestions, lectureSettings.useWall)">OK</button>
         </label>
     </div>
 </div>

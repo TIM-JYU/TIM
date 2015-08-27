@@ -414,12 +414,22 @@ class Document:
     @contract
     def get_index(self) -> 'list(tuple)':
         # todo: optimization?
-        html_table = [par.get_html() for par in self if par.get_markdown().startswith('#')]
+        html_table = [par.get_html() for par in self if (par.get_markdown().startswith('#') or
+                                                         par.get_html().startswith('<div'))]
         index = []
         for html in html_table:
-            index_entry = etree.fromstring(html)
-            level = int(index_entry.tag[1:])
-            index.append((index_entry.get('id'), index_entry.text, level))
+            try:
+                index_entry = etree.fromstring(html)
+            except etree.XMLSyntaxError:
+                continue
+            if index_entry.tag == 'div':
+                print(index_entry)
+                for header in index_entry.iter('h1', 'h2', 'h3'):
+                    level = int(header.tag[1:])
+                    index.append((header.get('id'), header.text, level))
+            elif index_entry.tag.startswith('h'):
+                level = int(index_entry.tag[1:])
+                index.append((index_entry.get('id'), index_entry.text, level))
         return index
 
     @contract

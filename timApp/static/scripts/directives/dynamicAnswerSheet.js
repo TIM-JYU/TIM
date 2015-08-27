@@ -1,6 +1,7 @@
 /**
  * Created by localadmin on 25.5.2015.
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.
+ * If preview parameter is used, inputs are disable and there is no progressbar or answer button
  * @module dynamicAnswerSheet
  * @author Matias Berg
  * @author Bek Eljurkaev
@@ -30,15 +31,20 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             var barFilled;
             $scope.internalControl = $scope.control || {};
 
+            /**
+             * Creates question answer/preview form.
+             */
             $scope.internalControl.createAnswer = function () {
                 $scope.result = $scope.$parent.result;
                 $scope.previousAnswer = $scope.$parent.previousAnswer;
                 var disabled = '';
+                // If showing preview or question result, inputs are disabled
                 if ($scope.preview || $scope.result) disabled = ' disabled ';
                 $element.empty();
                 $scope.json = $scope.$parent.json;
 
                 $scope.answerTable = [];
+                // If user has answer to question, create table of answers and select inputs according to it
                 if ($scope.previousAnswer) {
                     var single_answers = [];
                     var all_answers = $scope.previousAnswer.split('|');
@@ -112,8 +118,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 var checked = false;
                                 if ($scope.answerTable && $scope.answerTable.length > row.id) {
                                     var value = (row.COLUMNS[i].id + 1).toString();
-                                    console.log("answertable row: " + $scope.answerTable[row.id]);
-                                    console.log("value: " + value);
                                     checked = ($scope.answerTable[row.id].indexOf(value) >= 0);
                                 }
                                 var input = $('<input>', {
@@ -145,8 +149,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             tr.append($('<td>', {class: 'answer-button2'}).append(label));
                         }
                     }
+                    // If showing question results, add question rows explanation
                     if ($scope.result && row.id.toString() in $scope.expl) {
-                        tr.append($('<td>', {class: 'answer-button', text: $scope.expl[row.id.toString()]}));
+                        tr.append($('<td>', {class: 'explanation', text: $scope.expl[row.id.toString()]}));
                     }
                     table.append(tr);
                 });
@@ -166,6 +171,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                             $input = $table.find('textarea:first');
                         $input[0].focus();
                     }, 0);
+                    //
                     $table.on('keyup.send', $scope.answerWithEnter);
                     var now = new Date().valueOf();
                     timeLeft = $scope.endTime - now;
@@ -183,6 +189,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             };
 
 
+            /**
+             * Polls for question end time change and if question is stopped manually.
+             */
             $scope.internalControl.getExtendTime = function () {
                 $http({
                     url: '/getExtendQuestion',
@@ -212,7 +221,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
 
             /**
-             * FILL WITH SUITABLE TEXT
+             * Updates progressbar and time left text
              * @memberof module:dynamicAnswerSheet
              */
             $scope.internalControl.updateBar = function () {
@@ -251,7 +260,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             };
 
             /**
-             * FILL WITH SUITABLE TEXT
+             * Function to create question answer and send it to server.
              * @memberof module:dynamicAnswerSheet
              */
             $scope.internalControl.answerToQuestion = function () {
@@ -315,7 +324,8 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             };
 
             /**
-             * FILL WITH SUITABLE TEXT
+             * Closes question window and clears updateBar interval.
+             * If user is lecturer, also closes answer chart window.
              * @memberof module:dynamicAnswerSheet
              */
             $scope.internalControl.closeQuestion = function () {

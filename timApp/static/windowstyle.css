@@ -175,6 +175,16 @@ input[type="number"] {
     vertical-align: middle;
 }
 
+.explField.explFocus, .explField.hasText, tr:hover .explField {
+    opacity: 1;
+    border: 1px solid #CCC !important;
+}
+
+.explField {
+    border: none !important;
+    opacity: 0;
+}
+
 .createQuestion textarea {
     width: 95%;
     resize: none;
@@ -211,6 +221,11 @@ input[type="number"] {
 
 .answer-button2 {
     text-align: left;
+}
+
+.explanation {
+    border-left: 1px solid #CCC !important;
+    text-align: left !important;
 }
 
 #textarea-answer {

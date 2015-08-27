@@ -2,16 +2,14 @@
 {% block title %}TIM{% endblock %}
 {% block head %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='scripts/indexView/indexController.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/indexView/indexApp.js') }}"></script>
+
     <script>
         var groups = {{userGroups|tojson|safe}};
         var folder = "{{docName}}";
         var crumbs = getBreadcrumbs(folder);
-
         {% include 'breadcrumbs.js' %}
     </script>
-
+    <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
     <style type="text/css">
         table {
             margin: 1em;
@@ -32,15 +30,29 @@
             border: 1px solid black;
             padding: 1em;
         }
-
-        .material {
-            padding: 1em;
-        }
     </style>
+    {% if session.user_id %}
+        {% include 'common_head.html' %}
+        {% if in_lecture %}
+            {% include 'lecture_head.html' %}
+            <script>
+            {% if docID %}
+                var docId = JSON.parse({{docID|tojson|safe}});
+                var docName = {{docName|tojson|safe}};
+            {% endif %}
+            var in_lecture = {{in_lecture|tojson}};
+            </script>
+        {% endif %}
+    {% endif %}
 {% endblock %}
 {% block content %}
-    <div ng-app="indexApp" ng-controller="IndexCtrl">
+    <div ng-app="timApp" ng-controller="IndexCtrl">
         {% include 'breadcrumbs.html' %}
+        {% if in_lecture %}
+            {% include 'lecture.html' %}
+        {% elif session.user_id %}
+            {% include 'side_menu.html' %}
+        {% endif %}
 
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{ url_for('static', filename='images/loading.gif') }}" ng-show="!displayIndex">
@@ -123,7 +135,8 @@
                             Document name:
                             <input ng-model="docName" type="text">
                         </label>
-                        <button ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create</button>
+                        <button ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
+                        </button>
                         <button ng-click="showControls = false" type="button">Cancel</button>
                     </div>
                 </div>

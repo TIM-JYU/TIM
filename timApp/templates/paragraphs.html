@@ -3,37 +3,31 @@
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 {% for t in text %}
-    {% set o = t.get_original() %}
-    <div class="{{ ['par', t.get_class_str()]|join(' ')|trim }}"
-            {% if o %}
-         id="{{ o.get_id() }}"
-         t="{{ o.get_hash() }}"
-         attrs="{{ o.get_attrs_str() }}"
-         ref-id="{{ t.get_id() }}"
-         ref-t="{{ t.get_hash() }}"
-         ref-attrs="{{ t.get_attrs_str() }}"
-         ref-doc-id="{{ t.get_doc_id() }}"
-            {% else %}
-         id="{{ t.get_id() }}"
-         t="{{ t.get_hash() }}"
-         attrs="{{ t.get_attrs_str() }}"
-            {% endif %}
-            {% if t.is_plugin() %}>
+    <div class="{{ t.cls }}"
+         id="{{ t.id }}"
+         t="{{ t.t }}"
+         attrs="{{ t.attrs }}"
+         ref-id="{{ t.ref_id }}"
+         ref-t="{{ t.ref_t }}"
+         ref-attrs="{{ t.ref_attrs }}"
+         ref-doc-id="{{ t.ref_doc_id }}"
+
+            {% if t.is_plugin %}>
                 <answerbrowserlazy
-                        task-id="{{ t.get_doc_id() }}.{{ t.get_attrs()['taskId'] }}">
+                        task-id="{{ t.doc_id }}.{{ t.attrs['taskId'] }}">
                 </answerbrowserlazy>
             {% else %}
                 ng-non-bindable>
             {% endif %}
     <div class="parContent">
-        {{ t.get_html()|safe }}
+        {{ t.html|safe }}
     </div>
     {{ editline|safe }}
-    <div class="{{ ['readline', readings[(t.get_id(), t.get_doc_id())]]|join(' ')|trim }}"
+    <div class="{{ ['readline', readings[(t.id, t.doc_id)]]|join(' ')|trim }}"
          title="Click to mark this paragraph as read"></div>
-    {% if notes[(t.get_id(), t.get_doc_id())] %}
+    {% if notes[(t.id, t.doc_id)] %}
         <div class="notes">
-            {% for note in notes[(t.get_id(), t.get_doc_id())] %}
+            {% for note in notes[(t.id, t.doc_id)] %}
                 <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"
                      note-id="{{ note.id }}">
                     {{ note.html|safe }}
