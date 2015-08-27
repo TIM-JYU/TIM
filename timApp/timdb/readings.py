@@ -21,8 +21,11 @@ class Readings(TimDbBase):
         :param doc: The document for which to get the readings.
         :param usergroup_id: The id of the user group whose readings will be fetched.
         """
-        return self.resultAsDictionary(self.db.execute("""SELECT par_id, par_hash, timestamp FROM ReadParagraphs
-                           WHERE doc_id = ? AND UserGroup_id = ?""", [doc.doc_id, usergroup_id]))
+        ids = doc.get_referenced_document_ids()
+        ids.add(doc.doc_id)
+        template = ','.join('?' * len(ids))
+        return self.resultAsDictionary(self.db.execute("""SELECT par_id, doc_id, par_hash, timestamp FROM ReadParagraphs
+                           WHERE doc_id IN (%s) AND UserGroup_id = ?""" % template, list(ids) + [usergroup_id]))
 
     @contract
     def setAsRead(self, usergroup_id: 'int', doc: 'Document', par: 'DocParagraph', commit: 'bool'=True):

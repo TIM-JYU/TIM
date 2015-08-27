@@ -1135,7 +1135,8 @@ def post_note():
         abort(400, 'Non-existent paragraph')
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    timdb.notes.addNote(group_id, doc, par, note_text, access, tags)
+    par = get_referenced_par_from_req(par)
+    timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
     return par_response([Document(doc_id).get_paragraph(par_id)],
                         doc_id)
 
@@ -1571,16 +1572,9 @@ def set_read_paragraph(doc_id, specifier):
     par = doc.get_paragraph(specifier)
     if par is None:
         return abort(400, 'Non-existent paragraph')
-    if par.is_reference():
-        refs = par.get_referenced_pars()
-        for ref in refs:
-            if ref.get_id() == request.get_json().get('ref-id'):
-                timdb.readings.setAsRead(getCurrentUserGroup(), doc, ref)
-                return okJsonResponse()
-        abort(400, 'Invalid reference par id')
-    else:
-        timdb.readings.setAsRead(getCurrentUserGroup(), doc, par)
-        return okJsonResponse()
+    par = get_referenced_par_from_req(par)
+    timdb.readings.setAsRead(getCurrentUserGroup(), Document(par.get_doc_id()), par)
+    return okJsonResponse()
 
 
 @app.route("/read/<int:doc_id>", methods=['PUT'])

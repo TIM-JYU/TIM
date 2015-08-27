@@ -7,6 +7,7 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException
 from htmlSanitize import sanitize_html
+from markdownconverter import md_to_html
 from routes.common import post_process_pars
 from timdb.docidentifier import DocIdentifier
 from timdb.timdbbase import TimDbException
@@ -119,13 +120,16 @@ def preview(doc_id):
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     text, = verify_json_params('text')
-    editing_area = request.get_json().get('area_start') is not None and request.get_json().get('area_end') is not None
-    try:
-        blocks = get_pars_from_editor_text(doc_id, text, break_on_elements=editing_area)
-    except ValidationException as e:
-        blocks = [DocParagraph(doc_id=doc_id)]
-        blocks[0].set_html('<div class="pluginError">{}</div>'.format(sanitize_html(str(e))))
-    return par_response(blocks, doc_id)
+    if not request.get_json().get('isComment'):
+        editing_area = request.get_json().get('area_start') is not None and request.get_json().get('area_end') is not None
+        try:
+            blocks = get_pars_from_editor_text(doc_id, text, break_on_elements=editing_area)
+        except ValidationException as e:
+            blocks = [DocParagraph(doc_id=doc_id)]
+            blocks[0].set_html('<div class="pluginError">{}</div>'.format(sanitize_html(str(e))))
+        return par_response(blocks, doc_id)
+    else:
+        return jsonResponse({'texts': md_to_html(text)})
 
 
 def par_response(blocks, doc_id):

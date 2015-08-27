@@ -125,10 +125,14 @@ class Notes(TimDbBase):
         :param usergroup_id: The usergroup id.
         :param doc: The document for which to get the notes.
         """
+        ids = doc.get_referenced_document_ids()
+        ids.add(doc.doc_id)
+        template = ','.join('?' * len(ids))
         result = self.resultAsDictionary(
-            self.db.execute('SELECT id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
+            self.db.execute('SELECT id, par_id, doc_id, par_hash, content,'
+                            '       created, modified, access, tags, html, UserGroup_id '
                             'FROM UserNotes '
-                            'WHERE UserGroup_id = ? AND doc_id = ?', [usergroup_id, doc.doc_id]))
+                            'WHERE UserGroup_id = ? AND doc_id IN (%s)' % template, [usergroup_id] + list(ids)))
 
         return self.process_notes(result)
 

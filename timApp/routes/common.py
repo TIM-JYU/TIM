@@ -187,20 +187,37 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
                                                                  user_id,
                                                                  sanitize=sanitize,
                                                                  do_lazy=do_lazy)
+    if request.get_json() is not None and 'ref-id' in request.get_json():
+        pars = [par for par in pars
+                if str(par.get_doc_id()) == request.get_json().get('ref-doc-id') and
+                par.get_id() == request.get_json().get('ref-id')]
     readings = timdb.readings.getReadings(group, Document(doc_id))
-    pars_dict = dict((par.get_id(), par) for par in pars)
+    pars_dict = dict(((par.get_id(), par.get_doc_id()), par) for par in pars)
     read_statuses = {}
     for r in readings:
-        if r['par_id'] in pars_dict:
-            read_statuses[r['par_id']] = 'read' if r['par_hash'] == pars_dict[r['par_id']].get_hash() else 'modified'
+        key = (r['par_id'], r['doc_id'])
+        if key in pars_dict:
+            read_statuses[key] = 'read' if r['par_hash'] == pars_dict[key].get_hash() else 'modified'
     notes = timdb.notes.getNotes(group, Document(doc_id))
     note_dict = {}
     for n in notes:
-        if n['par_id'] not in note_dict:
-            note_dict[n['par_id']] = []
+        key = (n['par_id'], n['doc_id'])
+        if key not in note_dict:
+            note_dict[key] = []
         n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
         n.pop('UserGroup_id')
         n['private'] = n['access'] == 'justme'
-        note_dict[n['par_id']].append(n)
+        note_dict[key].append(n)
 
     return pars, js_paths, css_paths, modules, read_statuses, note_dict
+
+
+def get_referenced_par_from_req(par):
+    if par.is_reference():
+        refs = par.get_referenced_pars()
+        for ref in refs:
+            if ref.get_id() == request.get_json().get('ref-id'):
+                return ref
+        abort(400, 'Invalid reference par id')
+    else:
+        return par

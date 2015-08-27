@@ -183,15 +183,15 @@ timApp.controller("ViewCtrl", [
 
             var attrs = {
                 "save-url": url,
-                "extra-data": JSON.stringify({
+                "extra-data": {
                     docId: sc.docId, // current document id
                     par: par_id, // the id of paragraph on which the editor was opened
                     par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
                     area_start: area_start,
                     area_end: area_end,
                     attrs: JSON.parse($par.attr('attrs')) // TODO: Take attrs away; not needed
-                }),
-                "options": JSON.stringify({
+                },
+                "options": {
                     showDelete: options.showDelete,
                     showImageUpload: true,
                     showPlugins: true,
@@ -200,7 +200,7 @@ timApp.controller("ViewCtrl", [
                     tags: [
                         {name: 'markread', desc: 'Mark as read'}
                     ]
-                }),
+                },
                 "after-save": 'addSavedParToDom(saveData, extraData)',
                 "after-cancel": 'handleCancel(extraData)',
                 "after-delete": 'handleDelete(saveData, extraData)',
@@ -214,7 +214,24 @@ timApp.controller("ViewCtrl", [
             sc.toggleEditor($par, options, attrs, caption);
         };
 
+        sc.getRefAttrs = function ($par) {
+            return {
+                'ref-id': $par.attr('ref-id'),
+                'ref-t': $par.attr('ref-t'),
+                'ref-doc-id': $par.attr('ref-doc-id')
+            };
+        };
+
         sc.toggleEditor = function ($par, options, attrs, caption) {
+            if (sc.isReference($par)) {
+                angular.extend(attrs['extra-data'], sc.getRefAttrs($par));
+            }
+            Object.keys(attrs).forEach(function (key, index) {
+                if (typeof attrs[key] === 'object' && attrs[key] !== null) {
+                    //console.log('converting ' + key + " to string");
+                    attrs[key] = JSON.stringify(attrs[key]);
+                }
+            });
             if ($par.children(EDITOR_CLASS_DOT).length) {
                 $par.children().remove(EDITOR_CLASS_DOT);
                 sc.editing = false;
@@ -308,11 +325,12 @@ timApp.controller("ViewCtrl", [
             var par_id = sc.getParId($par),
                 attrs = {
                     "save-url": url,
-                    "extra-data": JSON.stringify(angular.extend({
+                    "extra-data": angular.extend({
                         docId: sc.docId,
-                        par: par_id
-                    }, data)),
-                    "options": JSON.stringify({
+                        par: par_id,
+                        isComment: true
+                    }, data),
+                    "options": {
                         showDelete: !options.isNew,
                         showImageUpload: true,
                         showPlugins: false,
@@ -331,7 +349,7 @@ timApp.controller("ViewCtrl", [
                             }]
                         },
                         destroyAfterSave: true
-                    }),
+                    },
                     "after-save": 'handleNoteSave(saveData, extraData)',
                     "after-cancel": 'handleNoteCancel(extraData)',
                     "after-delete": 'handleNoteDelete(saveData, extraData)',
@@ -484,9 +502,7 @@ timApp.controller("ViewCtrl", [
             var par_id = sc.getParId($par);
             var data = {};
             if (sc.isReference($par)) {
-                data['ref-id'] = $par.attr('ref-id');
-                data['ref-t'] = $par.attr('ref-t');
-                data['ref-doc-id'] = $par.attr('ref-doc-id');
+                data = sc.getRefAttrs($par);
             }
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
                 .success(function (data, status, headers, config) {

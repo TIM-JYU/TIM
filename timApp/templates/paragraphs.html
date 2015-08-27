@@ -29,11 +29,11 @@
         {{ t.get_html()|safe }}
     </div>
     {{ editline|safe }}
-    <div class="{{ ['readline', readings[t.get_id()]]|join(' ')|trim }}"
+    <div class="{{ ['readline', readings[(t.get_id(), t.get_doc_id())]]|join(' ')|trim }}"
          title="Click to mark this paragraph as read"></div>
-    {% if notes[(o or t).get_id()] %}
+    {% if notes[(t.get_id(), t.get_doc_id())] %}
         <div class="notes">
-            {% for note in notes[(o or t).get_id()] %}
+            {% for note in notes[(t.get_id(), t.get_doc_id())] %}
                 <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"
                      note-id="{{ note.id }}">
                     {{ note.html|safe }}
