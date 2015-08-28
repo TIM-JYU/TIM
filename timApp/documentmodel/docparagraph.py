@@ -98,32 +98,22 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def html_dict(self) -> 'dict':
-        d = dict(self.__data)
-        d['doc_id'] = self.doc_id
         if self.original:
-            d['ref_doc_id'] = d['doc_id']
-            d['ref_id'] = d['id']
-            d['ref_t'] = d['t']
-            d['ref_attrs'] = d['attrs']
+            d = dict(self.original.__data)
+            d['doc_id'] = self.original.doc_id
+
+            d['ref_doc_id'] = self.__data['doc_id']
+            d['ref_id'] = self.__data['id']
+            d['ref_t'] = self.__data['t']
+            d['ref_attrs'] = self.__data['attrs']
+        else:
+            d = dict(self.__data)
+            d['doc_id'] = self.doc_id
+
+        d['cls'] = 'par ' + self.get_class_str()
+        d['is_plugin'] = self.is_plugin()
 
         return d
-
-        #original = self.get_original()
-        #return {
-        #    'doc_id': self.get_doc_id() if not original else original.get_doc_id(),
-        #    'id': self.get_id() if not original else original.get_id(),
-        #    't': self.get_hash() if not original else original.get_hash(),
-        #    'attrs': self.get_attrs_str() if not original else original.get_attrs(),
-
-        #    'ref_doc_id': self.get_doc_id() if original else '',
-        #    'ref_id': self.get_id() if original else '',
-        #    'ref_t': self.get_hash() if original else '',
-        #    'ref_attrs': self.get_attrs_str() if original else '',
-
-        #    'cls': 'par ' + self.get_class_str(),
-        #    'is_plugin': self.is_plugin(),
-        #    'html': self.get_html()
-        #}
 
     @contract
     def get_doc_id(self) -> 'int':
@@ -313,4 +303,4 @@ class DocParagraph(DocParagraphBase):
         return self.original
 
     def is_plugin(self):
-        return 'taskId' in self.get_attrs()
+        return 'taskId' in self.__data['attrs']
