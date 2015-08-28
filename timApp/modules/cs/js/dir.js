@@ -953,6 +953,18 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.error = err.message;
             $scope.runError = true;
         }
+        try {
+            var initstr = csApp.getParam($scope,"initSimcir","");
+            if ( initstr ) {
+                var initdata = JSON.parse(initstr);
+                $.extend(data,initdata);
+            }    
+        } catch (err ) {
+            $scope.error = err.message;
+            $scope.runError = true;
+        }
+        
+        
         data.width = csApp.getParam($scope,"width",800);
         data.height = csApp.getParam($scope,"height",400);
         $scope.simcir.children().remove();
@@ -1777,7 +1789,7 @@ function truthTable(sentence,topbottomLines) {
   try {
       if ( !sentence ) return "";
       if ( !sentence.trim() ) return "";
-      var replace = "v |;^ &;~ !;∧ &&;∨ |;∼ !"; 
+      var replace = "v ||;^ &&;~ !;∧ &&;∨ ||;∼ !"; 
       var abcde = "abcdefghijklmnopqrstuxy";
       var header = "";
       var vals = '""';
