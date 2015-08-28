@@ -455,7 +455,7 @@ class Document:
 
     def get_paragraph_by_task(self, task_id_name):
         for p in self:
-            if 'taskId' in p.get_attrs() and p.get_attrs()['taskId'] == task_id_name:
+            if p.get_attr('taskId') == task_id_name:
                 return p
         return None
 
@@ -475,11 +475,11 @@ class Document:
         end_found = False
         pars = []
         for par in self:
-            if par.get_attrs().get('area') == section_name:
+            if par.get_attr('area') == section_name:
                 start_found = True
             if start_found:
                 pars.append(par)
-            if par.get_attrs().get('area_end') == section_name:
+            if par.get_attr('area_end') == section_name:
                 end_found = True
                 break
         if not start_found or not end_found:
@@ -491,7 +491,7 @@ class Document:
         refs = set()
         for par in self:
             if par.is_reference():
-                refs.add(int(par.get_attrs().get('rd')))
+                refs.add(int(par.get_attr('rd')))
 
         return refs
 

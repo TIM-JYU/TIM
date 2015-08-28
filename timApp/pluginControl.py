@@ -125,7 +125,7 @@ def find_task_ids(blocks, doc_id):
     """
     task_ids = []
     for block in blocks:
-        task_id = block.get_attrs().get('taskId')
+        task_id = block.get_attr('taskId')
         if task_id:
             task_ids.append("{}.{}".format(doc_id, task_id))
     return task_ids
@@ -192,9 +192,12 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
     for idx, block in enumerate(pars):
         if sanitize:
             block.set_html(sanitize_html(block.get_html()))
-        if 'taskId' in block.get_attrs() and 'plugin' in block.get_attrs():
+
+        attr_taskId = block.get_attr('taskId')
+        plugin_name = block.get_attr('plugin')
+
+        if attr_taskId and plugin_name:
             vals = parse_plugin_values(block)
-            plugin_name = block.get_attrs()['plugin']
             if 'error' in vals:
                 block.set_html('<div class="pluginError">'
                                'Error(s) occurred while rendering plugin.'
@@ -206,7 +209,7 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
             vals['markup']["user_id"] = user
-            task_id = "{}.{}".format(block.get_doc_id(), block.get_attrs()['taskId'])
+            task_id = "{}.{}".format(block.get_doc_id(), attr_taskId)
 
             if custom_state is not None:
                 state = try_load_json(custom_state)

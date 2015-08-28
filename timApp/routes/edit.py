@@ -151,7 +151,7 @@ def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
     for p in blocks:
         if p.is_reference():
             try:
-                refdoc = int(p.get_attrs().get('rd'))
+                refdoc = int(p.get_attr('rd'))
             except ValueError:
                 return blocks
             if getTimDb().documents.exists(refdoc)\

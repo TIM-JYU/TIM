@@ -52,7 +52,7 @@ def save_answer(plugintype, task_id):
         if not par.is_reference():
             abort(403)
         pars = pluginControl.dereference_pars([par])
-        if not any(p.get_attrs().get('taskId') == task_id_name for p in pars):
+        if not any(p.get_attr('taskId') == task_id_name for p in pars):
             abort(403)
     if 'input' not in request.get_json():
         return jsonResponse({'error': 'The key "input" was not found from the request.'}, 400)

@@ -36,6 +36,7 @@ class DocParagraph(DocParagraphBase):
         if src_dict:
             # Create from JSON
             self.__data = src_dict
+            self.__mkhtmldata()
             return
 
         assert doc_id is not None
@@ -52,6 +53,9 @@ class DocParagraph(DocParagraphBase):
             self.__read()
             for attr in attrs or []:
                 self.__data['attrs'][attr] = attrs[attr]
+
+        self.__mkhtmldata()
+
 
     def __iter__(self):
         return self.__data.__iter__()
@@ -96,8 +100,10 @@ class DocParagraph(DocParagraphBase):
     def dict(self) -> 'dict':
         return self.__data
 
-    @contract
-    def html_dict(self) -> 'dict':
+    def __mkhtmldata(self):
+        self.__is_plugin = self.get_attr('taskId', dereference=True)
+        self.__is_ref = self.is_par_reference() or self.is_area_reference()
+
         if self.original:
             d = dict(self.original.__data)
             d['doc_id'] = self.original.doc_id
@@ -113,7 +119,11 @@ class DocParagraph(DocParagraphBase):
         d['cls'] = 'par ' + self.get_class_str()
         d['is_plugin'] = self.is_plugin()
 
-        return d
+        self.__htmldata = d
+
+    @contract
+    def html_dict(self) -> 'dict':
+        return self.__htmldata
 
     @contract
     def get_doc_id(self) -> 'int':
@@ -176,10 +186,30 @@ class DocParagraph(DocParagraphBase):
     @contract
     def set_html(self, new_html: 'str'):
         self.__data['html'] = new_html
+        self.__htmldata['html'] = new_html
 
     @contract
     def get_links(self) -> 'list(str)':
         return self.__data['links']
+
+    @contract
+    def get_attr(self, attr_name: 'str', default_value=None, dereference=False):
+        if dereference and self.original:
+            return self.original.get_attr(attr_name, default_value, True)
+
+        return self.__data['attrs'].get(attr_name, default_value)
+
+    @contract
+    def set_attr(self, attr_name: 'str', attr_val, dereference=False):
+        if dereference and self.original:
+            self.original.set_attr(attr_name, attr_val, True)
+        else:
+            self.__data['attrs'][attr_name] = attr_val
+
+        if attr_name == 'taskId':
+            self.__is_plugin = bool(attr_val)
+        elif attr_name == 'rd':
+            self.__is_ref = bool(attr_val)
 
     @contract
     def get_attrs(self) -> 'dict':
@@ -187,11 +217,11 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_attrs_str(self) -> 'str':
-        return json.dumps(self.get_attrs())
+        return json.dumps(self.__data['attrs'])
 
     @contract
     def get_class_str(self) -> 'str':
-        return ' '.join(self.get_attrs().get('classes', []))
+        return ' '.join(self.get_attr('classes', []))
 
     @contract
     def get_base_path(self) -> 'str':
@@ -206,6 +236,7 @@ class DocParagraph(DocParagraphBase):
             return
         with open(self.get_path(), 'r') as f:
             self.__data = json.loads(f.read())
+            self.__mkhtmldata()
 
     def __write(self):
         file_name = self.get_path()
@@ -256,17 +287,13 @@ class DocParagraph(DocParagraphBase):
         self.__write()
 
     def is_reference(self):
-        # Optimization
-        return 'rd' in self.__data['attrs']
-        #return self.is_par_reference() or self.is_area_reference()
+        return self.__is_ref
 
     def is_par_reference(self):
-        attrs = self.get_attrs()
-        return 'rd' in attrs and 'rp' in attrs
+        return self.get_attr('rd') is not None and self.get_attr('rp') is not None
 
     def is_area_reference(self):
-        attrs = self.get_attrs()
-        return 'rd' in attrs and 'ra' in attrs
+        return self.get_attr('rd') is not None and self.get_attr('ra') is not None
 
     def get_referenced_pars(self):
         attrs = self.get_attrs()
@@ -303,4 +330,4 @@ class DocParagraph(DocParagraphBase):
         return self.original
 
     def is_plugin(self):
-        return 'taskId' in self.__data['attrs']
+        return self.__is_plugin
