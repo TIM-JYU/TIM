@@ -110,6 +110,7 @@ class DocParagraph(DocParagraphBase):
             d = dict(self.__data)
             d['doc_id'] = self.doc_id
 
+        d['html'] = self.get_html()
         d['cls'] = 'par ' + self.get_class_str()
         d['is_plugin'] = self.is_plugin()
 
