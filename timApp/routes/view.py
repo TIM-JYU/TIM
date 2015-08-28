@@ -186,6 +186,7 @@ def show_time(s):
 
 def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False, slide=False):
     show_time('view alku')
+    t0 = time.time()
 
     timdb = getTimDb()
     doc_id = timdb.documents.get_document_id(doc_name)
@@ -283,4 +284,5 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                              reqs=reqs,
                              settings=settings)
     show_time('render loppu')
+    print('koko view: {}'.format(time.time() - t0))
     return result

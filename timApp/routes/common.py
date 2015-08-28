@@ -9,6 +9,7 @@ import json
 from timdb.docidentifier import DocIdentifier
 from werkzeug.exceptions import default_exceptions, HTTPException
 from flask import make_response, abort as flask_abort, request
+import time
 
 def getCurrentUserId():
     uid = session.get('user_id')
@@ -187,13 +188,17 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
     group = timdb.users.getPersonalUserGroup(user_id)
+    t0 = time.time()
     pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                  current_user['name'],
                                                                  timdb.answers,
                                                                  user_id,
                                                                  sanitize=sanitize,
                                                                  do_lazy=do_lazy)
+    print("pluginify time: {} s".format(time.time() - t0))
     req_json = request.get_json()
+    t0 = time.time()
+
     if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
         htmlpars = [par.html_dict() for par in pars
                 if str(par.get_doc_id()) == req_json.get('ref-doc-id') and
@@ -201,14 +206,20 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
     else:
         htmlpars = [par.html_dict() for par in pars]
 
+    print("dict1 time: {} s".format(time.time() - t0))
+    t0 = time.time()
     pars_dict = dict(((par['id'], par['doc_id']), par) for par in htmlpars)
+    print("dict2 time: {} s".format(time.time() - t0))
 
+    t0 = time.time()
     readings = timdb.readings.getReadings(group, Document(doc_id))
     for r in readings:
         key = (r['par_id'], r['doc_id'])
         if key in pars_dict:
             pars_dict[key]['status'] = 'read' if r['par_hash'] == pars_dict[key]['t'] else 'modified'
+    print("readings time: {} s".format(time.time() - t0))
 
+    t0 = time.time()
     notes = timdb.notes.getNotes(group, Document(doc_id))
     note_dict = {}
     for n in notes:
@@ -221,6 +232,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
             n.pop('UserGroup_id', None)
             n['private'] = n['access'] == 'justme'
             pars_dict[key]['notes'].append(n)
+    print("notes time: {} s".format(time.time() - t0))
 
     return htmlpars, js_paths, css_paths, modules
 

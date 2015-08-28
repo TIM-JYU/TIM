@@ -486,11 +486,13 @@ class Document:
             raise TimDbException('Area not found: ' + section_name)
         return pars
 
-    def get_referenced_document_ids(self):
+    @contract
+    def get_referenced_document_ids(self) -> 'set':
         refs = set()
         for par in self:
             if par.is_reference():
                 refs.add(int(par.get_attrs().get('rd')))
+
         return refs
 
 
