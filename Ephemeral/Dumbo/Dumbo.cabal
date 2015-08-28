@@ -22,6 +22,7 @@ executable Dumbo
   build-depends:       
         base
       , pandoc 
+      , pandoc-types
       , text 
       , bytestring 
       , aeson
@@ -31,6 +32,11 @@ executable Dumbo
       , containers
       , blaze-html
       , hashable 
+      , vector
+      , unordered-containers
+      , lens
+      , lens-aeson
+      , texmath
   -- hs-source-dirs:      
   default-language:    Haskell2010
 
