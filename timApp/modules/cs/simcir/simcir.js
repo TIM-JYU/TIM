@@ -1236,9 +1236,9 @@ var simcir = function($) {
       dragCompleteHandler = function(event) {
         checkTouch(event);
         var $target = $(event.target);
-        var scrollBar = $(".simcir-scrollbar-bar");
+        var body = $(".simcir-body");
         var sx = 0;
-        if ( scrollBar ) sx = $(scrollBar[0]).offset().left;
+        if ( body ) sx = body.offset().left + 100;
         enableEvents($dev, true);
         $.each($selectedDevices, function(i, $dev) {
           //if ($target.closest('.simcir-toolbox').length == 0) {
@@ -1404,6 +1404,7 @@ var simcir = function($) {
     $placeHolder.text('');
     $placeHolder.append($('<div></div>').
         addClass('simcir-body').
+        css('touch-action','none'). // for IE and EDGE
         append($workspace).
         append($dataArea).
         on('click', function(event) {
