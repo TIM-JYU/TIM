@@ -105,22 +105,20 @@ class DocParagraph(DocParagraphBase):
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
         if self.original:
-            d = dict(self.original.__data)
-            d['doc_id'] = self.original.doc_id
+            self.__htmldata = dict(self.original.__data)
+            self.__htmldata['doc_id'] = self.original.doc_id
 
-            d['ref_doc_id'] = self.__data['doc_id']
-            d['ref_id'] = self.__data['id']
-            d['ref_t'] = self.__data['t']
-            d['ref_attrs'] = self.__data['attrs']
+            self.__htmldata['ref_doc_id'] = self.__data['doc_id']
+            self.__htmldata['ref_id'] = self.__data['id']
+            self.__htmldata['ref_t'] = self.__data['t']
+            self.__htmldata['ref_attrs'] = self.__data['attrs']
         else:
-            d = dict(self.__data)
-            d['doc_id'] = self.doc_id
+            self.__htmldata = dict(self.__data)
+            self.__htmldata['doc_id'] = self.doc_id
 
-        d['html'] = self.get_html()
-        d['cls'] = 'par ' + self.get_class_str()
-        d['is_plugin'] = self.is_plugin()
-
-        self.__htmldata = d
+        self.__htmldata['html'] = self.get_html()
+        self.__htmldata['cls'] = 'par ' + self.get_class_str()
+        self.__htmldata['is_plugin'] = self.is_plugin()
 
     @contract
     def html_dict(self) -> 'dict':
