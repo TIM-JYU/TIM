@@ -1234,10 +1234,15 @@ var simcir = function($) {
         updateConnectors();
       };
       dragCompleteHandler = function(event) {
+        checkTouch(event);
         var $target = $(event.target);
+        var scrollBar = $(".simcir-scrollbar-bar");
+        var sx = 0;
+        if ( scrollBar ) sx = $(scrollBar[0]).offset().left;
         enableEvents($dev, true);
         $.each($selectedDevices, function(i, $dev) {
-          if ($target.closest('.simcir-toolbox').length == 0) {
+          //if ($target.closest('.simcir-toolbox').length == 0) {
+          if ( event.pageX > sx ) {
             adjustDevice($dev);
             updateConnectors();
           } else {
