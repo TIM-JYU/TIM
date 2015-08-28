@@ -304,7 +304,9 @@ def get_html(ttype, query):
     if "input" in ttype or "args" in ttype: is_input = '-input'
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
-    if "simcir" in ttype: runner = 'cs-simcir-runner'
+    if "simcir" in ttype: 
+        runner = 'cs-simcir-runner'
+        bycode = ''
     if "parsons" in ttype: runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype: runner = 'cs-jypeli-runner'
     if "sage" in ttype: runner = 'cs-sage-runner'
@@ -321,7 +323,8 @@ def get_html(ttype, query):
         
     if do_lazy:
         # r = LAZYWORD + r;   
-        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>'+cgi.escape(bycode)+'</pre></div>') + '</div>'
+        ebycode = cgi.escape(bycode)
+        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
@@ -570,7 +573,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         
 
         if is_tauno and not is_answer: ttype = 'tauno'  # answer is newer tauno
-        if is_simcir and not is_answer: ttype = 'simcir'  
+        if is_simcir: ttype = 'simcir'  
 
 
         if is_reqs:
