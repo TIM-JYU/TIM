@@ -118,7 +118,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.changeAnswer = function () {
                     $scope.points = $scope.selectedAnswer.points;
                     var $par = $element.parents('.par');
-                    var par_id = $scope.$parent.getParIndex($par);
+                    var par_id = $scope.$parent.getParId($par);
                     $scope.loading++;
                     $http.get('/getState', {
                         params: {

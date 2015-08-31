@@ -6,16 +6,16 @@
     <div class="{{ t.cls }}"
          id="{{ t.id }}"
          t="{{ t.t }}"
-         attrs="{{ t.attrs }}"
+         attrs="{{ t.attrs_str }}"
      {% if t.ref_id %}
          ref-id="{{ t.ref_id }}"
          ref-t="{{ t.ref_t }}"
-         ref-attrs="{{ t.ref_attrs }}"
+         ref-attrs="{{ t.ref_attrs_str }}"
          ref-doc-id="{{ t.ref_doc_id }}"
      {% endif %}
             {% if t.is_plugin %}>
                 <answerbrowserlazy
-                        task-id="{{ t.doc_id }}.{{ t.attrs['taskId'] }}">
+                        task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ (t.ref_attrs or t.attrs)['taskId'] }}">
                 </answerbrowserlazy>
             {% else %}
                 ng-non-bindable>

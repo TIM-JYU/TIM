@@ -101,19 +101,22 @@ class DocParagraph(DocParagraphBase):
         return self.__data
 
     def __mkhtmldata(self):
-        self.__is_plugin = self.get_attr('taskId', dereference=True)
+        self.__is_plugin = self.get_attr('taskId')
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
         if self.original:
             self.__htmldata = dict(self.original.__data)
+            self.__htmldata['attrs_str'] = self.original.get_attrs_str()
             self.__htmldata['doc_id'] = self.original.doc_id
 
             self.__htmldata['ref_doc_id'] = self.doc_id
             self.__htmldata['ref_id'] = self.__data['id']
             self.__htmldata['ref_t'] = self.__data['t']
             self.__htmldata['ref_attrs'] = self.__data['attrs']
+            self.__htmldata['ref_attrs_str'] = self.get_attrs_str()
         else:
             self.__htmldata = dict(self.__data)
+            self.__htmldata['attrs_str'] = self.get_attrs_str()
             self.__htmldata['doc_id'] = self.doc_id
 
         self.__htmldata['html'] = self.get_html()
