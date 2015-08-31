@@ -30,8 +30,8 @@ def check_key(query, key):
        if key in query.jso["input"]["markup"]: return key
        if key2 in query.jso["input"]["markup"]: return key2
     if "markup" not in query.jso: return key
-    if key in query.jso["markup"]: key
-    if key2 in query.jso["markup"]: key2
+    if key in query.jso["markup"]: return key
+    if key2 in query.jso["markup"]: return key2
     return key
 
 

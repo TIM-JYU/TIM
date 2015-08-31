@@ -323,7 +323,7 @@ def get_html(ttype, query):
         
     if do_lazy:
         # r = LAZYWORD + r;   
-        ebycode = cgi.escape(bycode)
+        ebycode = html.escape(bycode)
         lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
@@ -409,6 +409,20 @@ def log(self):
         return
 
     return
+
+
+def give_points(points_rule, points, rule, default = 0):
+    if not points_rule: return max(points, default)
+    if rule not in points_rule: return max(points, default)
+    p = points_rule[rule]
+    return max(points, p)
+
+
+def get_points_rule(points_rule, key, default):
+    if not points_rule: return default
+    if key not in points_rule: return default
+    return points_rule[key]
+
 
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
@@ -884,6 +898,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 
             nocode = get_param(query, "nocode", False)
+
+
+            points_rule = get_param(query, "pointsRule", None)
+            print(points_rule)
+            points = 0
         
                 
             # print(ttype)
@@ -980,6 +999,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if delete_tmp: removedir(prgpath)
                 return write_json_error(self.wfile, error_str, result)
 
+            points = give_points(points_rule, points, "compile")
+
             # ########################## Running programs ###################################################
             # delete_tmp = False
             
@@ -1031,6 +1052,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                     web["image"] = "/csimages/cs/" + pure_pngname
+                    points = give_points(points_rule, points, "run")
                 if delete_tmp:
                     remove(csfname)
                     remove(exename)
@@ -1067,6 +1089,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                     web["image"] = "/csimages/cs/" + rndname + ".png"
+                    points = give_points(points_rule, points, "run")
 
             elif ttype == "r":
                 debug_str("r ajoon")
@@ -1085,7 +1108,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
                 else:
-                    if image_ok: web["image"] = "/csimages/cs/" + pure_pngname
+                    if image_ok:
+                        web["image"] = "/csimages/cs/" + pure_pngname
+                        points = give_points(points_rule, points, "run")
                 if delete_tmp:
                     remove(csfname)
                     remove(exename)
@@ -1104,7 +1129,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                     image_ok, e = copy_file(bmpname, pngname, True, is_optional_image)
                     print(is_optional_image, image_ok)
-                    if image_ok: web["image"] = "/csimages/cs/" + rndname + ".png"
+                    if image_ok:
+                        web["image"] = "/csimages/cs/" + rndname + ".png"
+                        points = give_points(points_rule, points, "run")
 
             elif ttype == "comtest":
                 eri = -1
@@ -1138,6 +1165,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         # print("Line nr: "+str(lnro)) 
                         # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                         web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
+                else: points = give_points(points_rule, points, "test")
             elif ttype == "jcomtest" or ttype == "ccomtest" or ttype == "junit":
                 eri = -1
                 # linenr_end = " "
@@ -1192,6 +1220,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     out = re.sub("^Time: .*\n", "", out, flags=re.M)
                     out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
                     out = re.sub("^ok$", "", out, flags=re.M)
+                    points = give_points(points_rule, points, "test")
 
             else:
                 if ttype == "java":
@@ -1268,7 +1297,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                           uargs=userargs)
                 elif ttype == "text":
                     print("text: ", csfname)
-                    code, out, err, pwd = (0, "".encode("utf-8"), ("tallennettu " + filename).encode("utf-8"), "")
+                    showname = filename
+                    if showname == "prg": showname = ""
+                    code, out, err, pwd = (0, "".encode("utf-8"), ("tallennettu " + showname).encode("utf-8"), "")
                 elif ttype == "fs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
@@ -1288,6 +1319,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     out = "Unknown run type: " + ttype + "\n"
 
+                if not err: points = give_points(points_rule, points, "run")
                 print(code, out, err, pwd, compiler_output)
 
                 if code == -9:
@@ -1316,7 +1348,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             print("run: ",e)
             code, out, err = (-1, "", str(e)) # .encode())
                     
-                    
+        expect_output = get_points_rule(points_rule, "expectOutput", None)
+        if expect_output:
+            exout = re.compile(expect_output.rstrip('\n'), re.M)
+            if exout.match(out): points = give_points(points_rule, points, "output", 1)
+
+        expect_code = get_points_rule(points_rule, "expectCode", None)
+        if expect_code:
+            if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
+            excode = re.compile(expect_code.rstrip('\n'), re.M)
+            if excode.match(usercode): points = give_points(points_rule, points, "code", 1)
+
+        if points_rule:
+            tim_info = {"points": points}
+            result["tim_info"] = tim_info
+
         if delete_tmp: removedir(prgpath)
 
         out = out[0:20000]
