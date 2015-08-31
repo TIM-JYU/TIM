@@ -108,7 +108,7 @@ class DocParagraph(DocParagraphBase):
             self.__htmldata = dict(self.original.__data)
             self.__htmldata['doc_id'] = self.original.doc_id
 
-            self.__htmldata['ref_doc_id'] = self.__data['doc_id']
+            self.__htmldata['ref_doc_id'] = self.doc_id
             self.__htmldata['ref_id'] = self.__data['id']
             self.__htmldata['ref_t'] = self.__data['t']
             self.__htmldata['ref_attrs'] = self.__data['attrs']
@@ -324,6 +324,7 @@ class DocParagraph(DocParagraphBase):
 
     def set_original(self, orig):
         self.original = orig
+        self.__mkhtmldata()
 
     def get_original(self):
         return self.original

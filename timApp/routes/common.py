@@ -1,4 +1,5 @@
 """Common functions for use with routes."""
+from collections import defaultdict
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
 import pluginControl
@@ -208,30 +209,38 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
 
     print("dict1 time: {} s".format(time.time() - t0))
     t0 = time.time()
-    pars_dict = dict(((par['id'], par['doc_id']), par) for par in htmlpars)
+    
+    # There can be several references of the same paragraph in the document, which is why we need a dict of lists
+    pars_dict = defaultdict(list)
+    for htmlpar in htmlpars:
+        key = htmlpar.get('ref_id') or htmlpar['id'], htmlpar.get('ref_doc_id') or htmlpar['doc_id']
+        pars_dict[key].append(htmlpar)
     print("dict2 time: {} s".format(time.time() - t0))
 
     t0 = time.time()
     readings = timdb.readings.getReadings(group, Document(doc_id))
     for r in readings:
         key = (r['par_id'], r['doc_id'])
-        if key in pars_dict:
-            pars_dict[key]['status'] = 'read' if r['par_hash'] == pars_dict[key]['t'] else 'modified'
+        pars = pars_dict.get(key)
+        if pars:
+            for p in pars:
+                p['status'] = 'read' if r['par_hash'] == (p.get('ref_t')
+                                              or p['t']) else 'modified'
     print("readings time: {} s".format(time.time() - t0))
 
     t0 = time.time()
     notes = timdb.notes.getNotes(group, Document(doc_id))
-    note_dict = {}
     for n in notes:
         key = (n['par_id'], n['doc_id'])
-        if key in pars_dict:
-            if 'notes' not in pars_dict[key]:
-                pars_dict[key]['notes'] = []
-
+        pars = pars_dict.get(key)
+        if pars:
             n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
             n.pop('UserGroup_id', None)
             n['private'] = n['access'] == 'justme'
-            pars_dict[key]['notes'].append(n)
+            for p in pars:
+                if 'notes' not in p:
+                    p['notes'] = []
+                p['notes'].append(n)
     print("notes time: {} s".format(time.time() - t0))
 
     return htmlpars, js_paths, css_paths, modules
