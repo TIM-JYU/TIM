@@ -3,7 +3,7 @@
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
 {% endif %}
 {% for t in text %}
-    <div class="{{ t.cls }}"
+    <div class="{{ t.cls|trim }}"
          id="{{ t.id }}"
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
