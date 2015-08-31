@@ -470,8 +470,17 @@ timApp.controller("ViewCtrl", [
             sc.cancelArea();
         };
 
+        sc.getElementByRefId = function (ref) {
+            return $(".par[ref-id='" + ref +  "']");
+        };
+
         sc.addSavedParToDom = function (data, extraData) {
-            var $par = sc.getElementByParId(extraData.par);
+            var $par;
+            if (angular.isDefined(extraData['ref-id'])) {
+                $par = sc.getElementByRefId(extraData['ref-id']);
+            } else {
+                $par = sc.getElementByParId(extraData.par);
+            }
             // check if we were editing an area
             if (angular.isDefined(extraData.area_start) &&
                 angular.isDefined(extraData.area_start) &&
