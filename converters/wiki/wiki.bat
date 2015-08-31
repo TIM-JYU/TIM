@@ -1,0 +1,1 @@
+@sed -r -f wiki.sed %1
