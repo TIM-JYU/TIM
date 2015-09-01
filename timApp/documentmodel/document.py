@@ -273,8 +273,8 @@ class Document:
 
     @contract
     def insert_paragraph(self, text: 'str',
-                         insert_before_id:'str|None',
-                         attrs: 'dict|None'=None,
+                         insert_before_id: 'str|None',
+                         attrs: 'dict|None'=None, options: 'dict|None'=None,
                          par_id: 'str|None'=None) -> 'DocParagraph':
         """
         Inserts a paragraph before a given paragraph id.
@@ -287,7 +287,7 @@ class Document:
         if not insert_before_id:
             return self.add_paragraph(text, attrs, par_id=par_id)
 
-        p = DocParagraph(text, files_root=self.files_root, attrs=attrs, par_id=par_id, doc_id=self.doc_id)
+        p = DocParagraph(text, files_root=self.files_root, attrs=attrs, options=options, par_id=par_id, doc_id=self.doc_id)
         p.add_link(self.doc_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True, op_params={'before_id': insert_before_id})
@@ -305,7 +305,7 @@ class Document:
                     f.write(line)
 
     @contract
-    def modify_paragraph(self, par_id: 'str', new_text: 'str', new_attrs: 'dict|None'=None) -> 'DocParagraph':
+    def modify_paragraph(self, par_id: 'str', new_text: 'str', new_attrs: 'dict|None'=None, new_options: 'dict|None'=None) -> 'DocParagraph':
         """
         Modifies the text of the given paragraph.
         :param par_id: Paragraph id.
@@ -317,10 +317,12 @@ class Document:
         p_src = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
         p_src.remove_link(self.doc_id)
         old_hash = p_src.get_hash()
-        p = DocParagraph(new_text, doc_id=self.doc_id, par_id=par_id, attrs=new_attrs, files_root=self.files_root)
+        p = DocParagraph(new_text, doc_id=self.doc_id, par_id=par_id, attrs=new_attrs, options=new_options,
+                         files_root=self.files_root)
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
-        self.__increment_version('Modified', par_id, increment_major=False, op_params={'old_hash': old_hash, 'new_hash': new_hash})
+        self.__increment_version('Modified', par_id, increment_major=False,
+                                 op_params={'old_hash': old_hash, 'new_hash': new_hash})
         return p
 
     @contract
@@ -400,8 +402,9 @@ class Document:
     @contract
     def get_index(self) -> 'list(tuple)':
         # todo: optimization?
+        par_table = [par for par in self]
         html_table = [par.get_html() for par in self if (par.get_markdown().startswith('#') or
-                                                         par.get_html().startswith('<div'))]
+                                                         (par.is_multi_block() and par.has_headers()))]
         index = []
         for html in html_table:
             try:
@@ -436,7 +439,7 @@ class Document:
                 except ValueError:
                     print("doc id {}: malformed log line: {}".format(self.doc_id, line))
                 lc -= 1
-        
+
         return log
 
     def get_paragraph_by_task(self, task_id_name):

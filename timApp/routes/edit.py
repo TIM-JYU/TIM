@@ -97,15 +97,36 @@ def modify_paragraph():
     else:
         original_par = DocParagraph(doc_id=doc_id, par_id=par_id)
         pars = []
+
+        separate_pars = DocumentParser(md).get_blocks()
+        is_multi_block = len(separate_pars) > 1
+        has_headers = None
+        if is_multi_block:
+            for separate_par in separate_pars:
+                if separate_par['type'] == 'header':
+                    has_headers = True
+                    break
+
         if editor_pars[0].is_different_from(original_par):
+            options = {}
+            if is_multi_block:
+                options['multi_block'] = True
+            if has_headers:
+                options['has_headers'] = has_headers
             [par], _ = timdb.documents.modify_paragraph(doc,
                                                         par_id,
                                                         editor_pars[0].get_markdown(),
-                                                        editor_pars[0].get_attrs())
+                                                        attrs,
+                                                        options)
             pars.append(par)
 
         for p in editor_pars[1:]:
-            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
+            options = {}
+            if is_multi_block:
+                options['multi_block'] = True
+            if has_headers:
+                options['has_headers'] = has_headers
+            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=attrs, options=options)
             pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
     return par_response(pars, doc_id)
@@ -191,8 +212,22 @@ def add_paragraph():
     # verify_document_version(doc_id, version)
     doc = get_newest_document(doc_id)
     pars = []
+    separate_pars = DocumentParser(md).get_blocks()
+    is_multi_block = len(separate_pars) > 1
+    has_headers = None
+    if is_multi_block:
+        for separate_par in separate_pars:
+            if separate_par['type'] == 'header':
+                has_headers = True
+                break
     for p in editor_pars:
-        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
+        options = {}
+        if is_multi_block:
+            options['multi_block'] = True
+        if has_headers:
+            options['has_headers'] = has_headers
+        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
+                                                 options=options)
         pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
     return par_response(pars, doc_id)

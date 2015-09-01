@@ -24,11 +24,14 @@ class DocParagraph(DocParagraphBase):
             par_id: 'str|None'=None,
             t: 'str|None'=None,
             attrs: 'dict|None'=None,
+            options: 'dict|None'=None,
             src_dict: 'dict|None'=None,
             files_root: 'str|None'=None):
         self.original = None
         if not attrs:
             attrs = {}
+        if not options:
+            options = {}
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.doc_id = doc_id
         assert doc_id is not None
@@ -44,7 +47,8 @@ class DocParagraph(DocParagraphBase):
             'html': None,
             't': hashfunc(md) if md is not None else None,
             'links': [],
-            'attrs': attrs}
+            'attrs': attrs,
+            'options': options}
 
         if par_id:
             # Try to read from file if we know the paragraph id
@@ -163,6 +167,29 @@ class DocParagraph(DocParagraphBase):
     @contract
     def get_attrs(self) -> 'dict':
         return self.__data['attrs']
+
+    @contract
+    def get_options(self) -> 'dict':
+        if 'options' in self.__data:
+            return self.__data['options']
+        else:
+            return {}
+
+    @contract
+    def is_multi_block(self) -> 'bool':
+        options = self.get_options()
+        is_multi_block = False
+        if 'multi_block' in options:
+            is_multi_block = options['multi_block']
+        return is_multi_block
+
+    @contract
+    def has_headers(self) -> 'bool':
+        options = self.get_options()
+        has_headers = False
+        if 'has_headers' in options:
+            has_headers = options['has_headers']
+        return has_headers
 
     @contract
     def get_attrs_str(self) -> 'str':
