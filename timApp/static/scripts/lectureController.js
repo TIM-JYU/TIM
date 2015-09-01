@@ -289,7 +289,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         askedId: id,
                         isLecturer: $scope.isLecturer,
                         askedTime: new Date().valueOf() + $scope.clockOffset,
-                        clockOffset: $scope.clockOffset
+                        clockOffset: $scope.clockOffset,
+                        expl: data.expl
                     });
                     $scope.showAnswerWindow = true;
                 })

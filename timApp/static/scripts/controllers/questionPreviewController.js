@@ -58,7 +58,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
                 "lecture_id": $scope.lectureId,
                 "question_id": $scope.questionId,
                 "doc_id": $scope.docId,
-                "json": $scope.json
+                "json": $scope.json,
+                "expl": $scope.expl
             });
             $scope.close();
         };

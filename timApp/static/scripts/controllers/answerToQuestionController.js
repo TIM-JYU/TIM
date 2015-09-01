@@ -71,7 +71,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
         })
             .success(function () {
                 $scope.questionEnded = true;
-                $scope.dynamicAnswerSheetControl.questionEnded();
+                $scope.dynamicAnswerSheetControl.endQuestion();
                 console.log("Question ", $scope.askedId, " stopped");
                 if (callback) callback();
             })
@@ -126,7 +126,8 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             }
         })
             .success(function () {
-                //TODO: Show explanations to lecturer
+                $scope.result = true;
+                $scope.dynamicAnswerSheetControl.createAnswer();
             })
             .error(function () {
                 console.log("Could not show points to students.");
@@ -139,7 +140,8 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             "asked_id": $scope.askedId,
             "question_id": $scope.questionId,
             "doc_id": $scope.docId,
-            "json": $scope.json
+            "json": $scope.json,
+            "expl": $scope.expl
         });
     };
 
@@ -148,7 +150,8 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             "lecture_id": $scope.lectureId,
             "question_id": $scope.questionId,
             "doc_id": $scope.docId,
-            "json": $scope.json
+            "json": $scope.json,
+            "expl": $scope.expl
         });
     };
 }]);
