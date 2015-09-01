@@ -54,7 +54,19 @@ class Documents(TimDbBase):
         content = self.trim_markdown(content)
         par = doc.insert_paragraph(content, prev_par_id, attrs, options)
         self.update_last_modified(doc)
+        self.remove_help_paragraph(doc)
         return [par], doc
+
+    @contract
+    def remove_help_paragraph(self, doc: 'Document'):
+        i = 0
+        for par in doc:
+            if par.get_hash() == 'LTB4NDU1YzYxMTI=':
+                self.delete_paragraph(doc, par.get_id())
+                return
+            if i > 1:
+                return
+            i += 1
 
     @contract
     def create(self, name: 'str', owner_group_id: 'int') -> 'Document':
