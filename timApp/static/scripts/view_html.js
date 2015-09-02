@@ -150,6 +150,10 @@ timApp.controller("ViewCtrl", [
             return $("#" + id);
         };
 
+        sc.getElementByParHash = function(t) {
+            return $("[t='" + t + "']");
+        };
+
         sc.toggleParEditor = function ($par, options) {
             var caption = 'Add paragraph';
             var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
@@ -201,7 +205,7 @@ timApp.controller("ViewCtrl", [
                         {name: 'markread', desc: 'Mark as read'}
                     ]
                 },
-                "after-save": 'addSavedParToDom(saveData, extraData)',
+                "after-save": 'addSavedParAndDeleteHelp(saveData, extraData)',
                 "after-cancel": 'handleCancel(extraData)',
                 "after-delete": 'handleDelete(saveData, extraData)',
                 "preview-url": '/preview/' + sc.docId,
@@ -474,6 +478,11 @@ timApp.controller("ViewCtrl", [
             return $(".par[ref-id='" + ref +  "']");
         };
 
+        sc.addSavedParAndDeleteHelp = function (data, extraData) {
+            sc.addSavedParToDom(data, extraData);
+            sc.deleteHelpParagraph();
+        };
+
         sc.addSavedParToDom = function (data, extraData) {
             var $par;
             if (angular.isDefined(extraData['ref-id'])) {
@@ -500,6 +509,11 @@ timApp.controller("ViewCtrl", [
             sc.editing = false;
             sc.cancelArea();
         };
+
+        sc.deleteHelpParagraph = function() {
+            var $par = sc.getElementByParHash('LTB4NDU1YzYxMTI=');
+            $par.remove();
+        }
 
         sc.isReference = function ($par) {
             return angular.isDefined($par.attr('ref-id'));

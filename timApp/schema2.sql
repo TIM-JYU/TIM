@@ -4,8 +4,6 @@ DROP TABLE IF EXISTS BlockViewAccess;
 
 DROP TABLE IF EXISTS UserGroupMember;
 
-DROP TABLE IF EXISTS ReadRevision;
-
 DROP TABLE IF EXISTS BlockRelation;
 
 DROP TABLE IF EXISTS Block;
@@ -26,8 +24,6 @@ DROP TABLE IF EXISTS UserAnswer;
 
 DROP TABLE IF EXISTS AnswerTag;
 
-DROP TABLE IF EXISTS ParMappings;
-
 DROP TABLE IF EXISTS UserNotes;
 
 DROP TABLE IF EXISTS ReadParagraphs;
@@ -45,6 +41,8 @@ DROP TABLE IF EXISTS LectureUsers;
 DROP TABLE IF EXISTS LectureAnswer;
 
 DROP TABLE IF EXISTS Message;
+
+DROP TABLE IF EXISTS Version;
 
 CREATE TABLE Answer (
   id          INTEGER      NOT NULL,
@@ -176,20 +174,6 @@ CREATE TABLE BlockRelation (
   ON UPDATE CASCADE
 );
 
-
-CREATE TABLE ReadRevision (
-  revision_id INTEGER NOT NULL PRIMARY KEY,
-  Block_id    INTEGER NOT NULL,
-  Hash        VARCHAR(128),
-
-  CONSTRAINT ReadRevision_id
-  FOREIGN KEY (Block_id)
-  REFERENCES Block (id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-);
-
-
 CREATE TABLE UserGroupMember (
   UserGroup_id INTEGER NOT NULL,
   User_id      INTEGER NOT NULL,
@@ -272,7 +256,7 @@ CREATE TABLE UserNotes (
 CREATE TABLE ReadParagraphs (
   UserGroup_id INTEGER   NOT NULL,
   doc_id       INTEGER   NOT NULL,
-  par_id       INTEGER   NOT NULL,
+  par_id       TEXT      NOT NULL,
   par_hash     TEXT      NOT NULL,
   timestamp    TIMESTAMP NOT NULL,
 
@@ -295,7 +279,7 @@ CREATE TABLE AskedQuestion (
   asked_id       INTEGER NOT NULL PRIMARY KEY,
   lecture_id     INTEGER NOT NULL,
   doc_id         INTEGER,
-  par_id         INTEGER,
+  par_id         TEXT,
   asked_time     TEXT    NOT NULL,
   points         TEXT    NOT NULL,
   asked_json_id  INTEGER NOT NULL,
@@ -358,3 +342,10 @@ CREATE TABLE LectureAnswer (
   points      REAL,
   PRIMARY KEY (answer_id)
 );
+
+CREATE TABLE Version (
+  id INTEGER NOT NULL PRIMARY KEY,
+  updated_on TIMESTAMP
+);
+
+INSERT INTO Version(id, updated_on) VALUES (1, CURRENT_TIMESTAMP);

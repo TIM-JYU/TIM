@@ -345,7 +345,7 @@ class Users(TimDbBase):
             print("DEBUG: No such named group: " + name)
             return None
         elif len(groups) > 1:
-            print("DEBUG: Too many named groups: {} ({})".format(group_name, groups))
+            print("DEBUG: Too many named groups: {} ({})".format(name, groups))
             return None
 
         return groups[0][0]

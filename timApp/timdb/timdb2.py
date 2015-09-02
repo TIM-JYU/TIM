@@ -22,7 +22,6 @@ import os
 TABLE_NAMES = ['BlockEditAccess',
                'BlockViewAccess',
                'UserGroupMember',
-               'ReadRevision',
                'BlockRelation',
                'Block',
                'User',
@@ -91,10 +90,36 @@ class TimDb(object):
         self.db.commit()
         self.db.close()
 
-    def initialize_tables(self, schema_file='schema2.sql'):
+    def initialize_tables(self):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
-        with open(schema_file, 'r') as schema_file:
+        self.execute_script('schema2.sql')
+
+    def execute_script(self, sql_file):
+        """Executes an SQL file on the database.
+        :param sql_file: The SQL script to be executed.
+        """
+        with open(sql_file, 'r') as schema_file:
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
 
+    def execute_sql(self, sql):
+        """Executes an SQL command on the database.
+        :param sql_file: The SQL command to be executed.
+        """
+        self.db.cursor().executescript(sql)
+        self.db.commit()
+
+    def get_version(self):
+        try:
+            return self.db.execute("""SELECT MAX(id) FROM Version""").fetchone()[0]
+        except sqlite3.OperationalError:
+            return 0
+
+    def update_version(self):
+        self.db.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
+        self.db.commit()
+
+    def table_exists(self, table_name):
+        return bool(self.db.execute("SELECT EXISTS(SELECT name from sqlite_master WHERE type = 'table' AND name = ?)",
+                               [table_name]).fetchone()[0])
