@@ -12,12 +12,19 @@ CREATE TABLE DocEntry (
   ON UPDATE CASCADE
 );
 
-INSERT INTO DocEntry (id, name, public) SELECT
-                                          id,
-                                          description,
-                                          1
-                                        FROM Block
-                                        WHERE type_id = 0;
+CREATE TABLE Folder (
+  id        INTEGER       NOT NULL,
+  name      VARCHAR(50)   NOT NULL,
+  location  VARCHAR(512)  NOT NULL,
+
+  CONSTRAINT Folder_PK
+  PRIMARY KEY (id),
+  CONSTRAINT Folder_id
+  FOREIGN KEY (id)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
 
 DROP TABLE UserNotes;
 DROP TABLE ReadParagraphs;
@@ -44,10 +51,17 @@ CREATE TABLE UserNotes (
 CREATE TABLE ReadParagraphs (
   UserGroup_id INTEGER   NOT NULL,
   doc_id       INTEGER   NOT NULL,
-  par_id       INTEGER   NOT NULL,
+  par_id       TEXT      NOT NULL,
   par_hash     TEXT      NOT NULL,
   timestamp    TIMESTAMP NOT NULL,
 
   CONSTRAINT ReadParagraphs_PK
   PRIMARY KEY (UserGroup_id, doc_id, par_id)
 );
+
+CREATE TABLE Version (
+  id INTEGER NOT NULL PRIMARY KEY,
+  updated_on TIMESTAMP
+);
+
+INSERT INTO Version(updated_on, id) VALUES (CURRENT_TIMESTAMP, 0);
