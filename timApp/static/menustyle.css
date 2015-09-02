@@ -230,23 +230,23 @@ li.basic, li.basic_active {
 }
 
 li.exp {
-    list-style-image: url("plus.png");
+    list-style-image: url("images/plus.png");
     cursor: pointer;
 }
 
 li.col {
-    list-style-image: url("minus.png");
+    list-style-image: url("images/minus.png");
     cursor: pointer;
 }
 
 li.exp_active {
-    list-style-image: url("plus.png");
+    list-style-image: url("images/plus.png");
     background-color: #eeeeff;
     cursor: pointer;
 }
 
 li.col_active {
-    list-style-image: url("minus.png");
+    list-style-image: url("images/minus.png");
     background-color: #eeeeff;
     cursor: pointer; /* if not included, bullets are not shown right in moz*/
 }
