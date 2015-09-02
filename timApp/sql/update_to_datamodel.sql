@@ -1,3 +1,8 @@
+DROP TABLE UserNotes;
+DROP TABLE ReadParagraphs;
+DROP TABLE ParMappings;
+DROP TABLE ReadRevision;
+
 CREATE TABLE DocEntry (
   id     INTEGER      NOT NULL,
   name   VARCHAR(512) NOT NULL,
@@ -25,11 +30,6 @@ CREATE TABLE Folder (
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
-
-DROP TABLE UserNotes;
-DROP TABLE ReadParagraphs;
-DROP TABLE ParMappings;
-DROP TABLE ReadRevision;
 
 CREATE TABLE UserNotes (
   id           INTEGER      NOT NULL,

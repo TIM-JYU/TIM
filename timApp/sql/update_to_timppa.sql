@@ -27,7 +27,7 @@ CREATE TABLE AskedQuestion (
   asked_id       INTEGER NOT NULL PRIMARY KEY,
   lecture_id     INTEGER NOT NULL,
   doc_id         INTEGER,
-  par_id         INTEGER,
+  par_id         TEXT,
   asked_time     TEXT    NOT NULL,
   points         TEXT    NOT NULL,
   asked_json_id  INTEGER NOT NULL,

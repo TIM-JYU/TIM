@@ -97,10 +97,15 @@ def update_database():
 def update_datamodel():
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
     if not timdb.table_exists('Folder'):
+        print('Executing SQL script update_to_datamodel...', end="", flush=True)
         timdb.execute_script('sql/update_to_datamodel.sql')
+        print(' done.', flush=True)
     if not timdb.table_exists('Question'):
+        print('Executing SQL script update_to_timppa...', end="", flush=True)
         timdb.execute_script('sql/update_to_timppa.sql')
+        print(' done.', flush=True)
     if not timdb.table_exists('Version'):
+        print('Creating Version table...', end="", flush=True)
         timdb.execute_sql("""
 CREATE TABLE Version (
   id INTEGER NOT NULL PRIMARY KEY,
@@ -109,6 +114,7 @@ CREATE TABLE Version (
 
 INSERT INTO Version(updated_on, id) VALUES (CURRENT_TIMESTAMP, 0);
         """)
+        print(' done.', flush=True)
     doc_ids = timdb.db.execute("""SELECT id FROM Block WHERE type_id = ?""", [blocktypes.DOCUMENT]).fetchall()
     for doc_id, in doc_ids:
         print('Migrating document {}...'.format(doc_id), end="", flush=True)
