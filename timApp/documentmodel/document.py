@@ -413,12 +413,14 @@ class Document:
         return new_ids[0], new_ids[-1]
 
     def get_index(self) -> 'list(tuple)':
-        return self.get_index_for_version(self.get_version())
+        return self.get_index_for_version(self.doc_id, self.get_version())
 
+    @classmethod
     @functools.lru_cache(maxsize=1024)
     @contract
-    def get_index_for_version(self, version: 'tuple(int,int)') -> 'list(tuple)':
-        html_table = [par.get_html() for par in DocParagraphIter(self, version)
+    def get_index_for_version(cls, doc_id: 'int', version: 'tuple(int,int)') -> 'list(tuple)':
+        doc = Document(doc_id)
+        html_table = [par.get_html() for par in DocParagraphIter(doc, version)
                       if (par.get_markdown().startswith('#') or (par.is_multi_block() and par.has_headers()))]
         index = []
         current_headers = None
@@ -429,9 +431,9 @@ class Document:
                 continue
             if index_entry.tag == 'div':
                 for header in index_entry.iter('h1', 'h2', 'h3'):
-                    current_headers = self.add_index_entry(index, current_headers, header)
+                    current_headers = doc.add_index_entry(index, current_headers, header)
             elif index_entry.tag.startswith('h'):
-                current_headers = self.add_index_entry(index, current_headers, index_entry)
+                current_headers = doc.add_index_entry(index, current_headers, index_entry)
         if current_headers is not None:
             index.append(current_headers)
         return index
