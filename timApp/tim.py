@@ -984,6 +984,7 @@ def get_documents():
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         final_docs.append(doc)
 
+    final_docs.sort(key=lambda d: d['name'].lower())
     return jsonResponse(final_docs)
 
 
@@ -999,6 +1000,7 @@ def get_folders():
         f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.userHasAdminAccess(uid)
         f['owner'] = timdb.users.getOwnerGroup(f['id'])
 
+    allowed_folders.sort(key=lambda f: f['name'].lower())
     return jsonResponse(allowed_folders)
 
 
