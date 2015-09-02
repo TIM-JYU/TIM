@@ -109,25 +109,26 @@ def modify_paragraph():
                     break
 
         if editor_pars[0].is_different_from(original_par):
-            options = {}
+            properties = {}
             if is_multi_block:
-                options['multi_block'] = True
+                properties['multi_block'] = True
             if has_headers:
-                options['has_headers'] = has_headers
+                properties['has_headers'] = has_headers
             [par], _ = timdb.documents.modify_paragraph(doc,
                                                         par_id,
                                                         editor_pars[0].get_markdown(),
                                                         attrs,
-                                                        options)
+                                                        properties)
             pars.append(par)
 
         for p in editor_pars[1:]:
-            options = {}
+            properties = {}
             if is_multi_block:
-                options['multi_block'] = True
+                properties['multi_block'] = True
             if has_headers:
-                options['has_headers'] = has_headers
-            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=attrs, options=options)
+                properties['has_headers'] = has_headers
+            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=attrs,
+                                                     properties=properties)
             pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
     return par_response(pars, doc_id)
@@ -223,13 +224,13 @@ def add_paragraph():
                 has_headers = True
                 break
     for p in editor_pars:
-        options = {}
+        properties = {}
         if is_multi_block:
-            options['multi_block'] = True
+            properties['multi_block'] = True
         if has_headers:
-            options['has_headers'] = has_headers
+            properties['has_headers'] = has_headers
         [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
-                                                 options=options)
+                                                 properties=properties)
         pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
     return par_response(pars, doc_id)

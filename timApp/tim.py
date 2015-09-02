@@ -1070,7 +1070,11 @@ def plugin_call(plugin, filename):
 def get_index(doc_id):
     verifyViewAccess(doc_id)
     index = Document(doc_id).get_index()
-    return jsonResponse(index)
+    if not index:
+        return jsonResponse({'empty': True})
+    else:
+        return render_template('content.html',
+                               headers=index)
 
 
 @app.route("/<plugin>/template/<template>/<index>")

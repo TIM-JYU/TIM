@@ -8,30 +8,11 @@
         <div class="showSidebar">
 
             <div class="sideMenu">
-                <div class="invisible" ng-show="indexTable.length > 0"></div>
+                <div class="invisible" ng-show="showIndex"></div>
                 <div ng-class="['index-sidebar', indexSidebarState, 'sidebar']">
                     <h1>Index</h1>
-                    {% raw %}
-                    <ul>
-                        <li ng-repeat="entry in indexTable"
-                            ng-class="entry.state">
-                            <img class="collapse"
-                                 ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)"
-                                 ng-show="entry.state == 'exp'" src="/static/images/minus.png"/>
-                            <img class="collapse"
-                                 ng-mouseup="entry.state = invertStateClearSelection($event, entry.state)"
-                                 ng-show="entry.state == 'col'" src="/static/images/plus.png"/>
-                            <a class="indexentry" ng-class="entry.style"
-                               href="{{entry.target}}" target="_self">{{entry.text}}</a>
-                            <ul ng-show="entry.state == 'exp'">
-                                <li ng-repeat="subentry in entry.items">
-                                    <a ng-class="subentry.style"
-                                       href="{{subentry.target}}" target="_self">{{subentry.text}}</a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                    {% endraw %}
+                    <div class="sideBarContainer">
+                    </div>
                 </div>
 
                 {# if user is in lecture or lecture_view, show lecture related menus #}
@@ -39,54 +20,65 @@
                     <div class="invisible" ng-show="lectureSettings.lectureMode"></div>
                     <div ng-class="['lectures-sidebar', lecturesSidebarState, 'sidebar']" ng-show="lectureSettings.lectureMode">
                         <h1>Lectures</h1>
+                        <div class="sideBarContainer">
                         {% raw %}
+                        <h4>Current Lectures</h4>
                         <ul>
-                            <h4>Current Lectures</h4>
                             <li ng-repeat="lecture in currentLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                                 <button ng-if="$parent.lectureId != lecture.lecture_id" style="margin-left: 5px;" value="Join"
                                    ng-click="$emit('joinLecture', lecture)">Join</button>
                             </li>
-                            <p ng-show="currentLecturesList.length == 0">No current lectures</p>
-                            <h4>Coming Lectures</h4>
+                            <li ng-show="currentLecturesList.length == 0"><p>No current lectures</p></li>
+                        </ul>
+                        <h4>Coming Lectures</h4>
+                        <ul>
                             <li ng-repeat="lecture in futureLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="futureLecturesList.length == 0">No coming lectures</p>
-                            <h4>Past Lectures</h4>
+                            <li ng-show="futureLecturesList.length == 0"><p>No coming lectures</p></li>
+                        </ul>
+                        <h4>Past Lectures</h4>
+                        <ul>
                             <li ng-repeat="lecture in pastLecturesList">
                                 <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                             </li>
-                            <p ng-show="pastLecturesList.length == 0">No past lectures</p>
+                            <li ng-show="pastLecturesList.length == 0"><p>No past lectures</p></li>
                         </ul>
                         {% endraw %}
+                        </div>
                     </div>
 
                     <div class="invisible" ng-show="isLecturer"></div>
                     <div ng-class="['questions-sidebar', questionSidebarState, 'sidebar']">
                         <h1>Questions</h1>
+                        <div class="sideBarContainer">
                         {% raw %}
+                        <h4>Lecture questions</h4>
                         <ul>
-                            <h4>Lecture questions</h4>
                             <li ng-repeat="question in lectureQuestions">
                                 <a ng-click="showQuestion(question.questionId)">{{
                                     question.questionTitle
                                     }}</a>
                             </li>
-                            <p ng-show="lectureQuestions.length == 0">No lecture questions</p>
-                            <h4>Material questions</h4>
+                            <li ng-show="lectureQuestions.length == 0"><p>No lecture questions</p></li>
+                        </ul>
+                        <h4>Material questions</h4>
+                        <ul>
                             <li ng-repeat="question in materialQuestions">
                                 <a>{{ question.question }}</a>
                             </li>
-                            <p ng-show="materialQuestions.length == 0">No material questions</p>
+                            <li ng-show="materialQuestions.length == 0"><p>No material questions</p></li>
                         </ul>
                         {% endraw %}
+                        </div>
                     </div>
 
                     <div class="invisible" ng-show="isLecturer && lectureSettings.inLecture"></div>
                     <div ng-class="['people-sidebar', peopleSidebarState, 'sidebar']">
                         <h1>People</h1>
 
+                        <div class="sideBarContainer">
                         <h3>People logged-in: <span
                                 ng-bind="lecturerTable.length + studentTable.length">None</span></h3>
                         {% raw %}
@@ -103,18 +95,19 @@
                             <p ng-show="studentTable.length == 0">No students</p>
                         </ul>
                         {% endraw %}
+                        </div>
                     </div>
                 {% endif %}
 
                 <div class="invisible"></div>
                 <div ng-class="['settings-sidebar', settingsSidebarState, 'sidebar']">
                     <h1>Settings</h1>
-
+                    <div class="sideBarContainer">
                     <h3>Customize</h3>
                     <a href="/settings">Customize TIM</a>
+                    <h4>Lecture settings</h4>
                     {% raw %}
                     <ul ng-show="lectureSettings.inLecture">
-                        <h4>Lecture settings</h4>
                         <li>
                             <label> Show wall
                                 <input type="checkbox" ng-model="lectureSettings.useWall">
@@ -132,13 +125,14 @@
                         </li>
                     </ul>
                     {% endraw %}
+                    </div>
                 </div>
             </div>
 
             <div class="menu">
                 <div id="sideBarIcons">
                     <img ng-click="toggleIndex()" ng-class="['menu-icon', indexIconState]"
-                         ng-show="indexTable.length > 0"
+                         ng-show="showIndex"
                          src="{{ url_for('static', filename='images/contents.png') }}" width="50"
                          height="50" title="Contents"/>
                     {% if lecture_mode or in_lecture %}

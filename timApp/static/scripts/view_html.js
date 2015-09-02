@@ -772,45 +772,12 @@ timApp.controller("ViewCtrl", [
             timLogTime("getindex","view");
             http.get('/index/' + sc.docId)
                 .success(function (data) {
-                    sc.indexTable = [];
-                    var parentEntry = null;
-                    for (var i = 0; i < data.length; i++) {
-                        var index_item = data[i];
-                        var level = index_item[2];
-                        var astyle = "a" + level;
-                        var txt = $(this).text();
-                        txt = txt.trim().replace(/\\#/g, "#");
-                        var entry = {
-                            text: index_item[1],
-                            target: '#' + index_item[0],
-                            style: astyle,
-                            level: level,
-                            items: [],
-                            state: ""
-                        };
-
-                        if (level === 1) {
-                            if (parentEntry !== null) {
-                                if ("items" in parentEntry && parentEntry.items.length > 0) {
-                                    parentEntry.state = 'col';
-                                }
-                                sc.indexTable.push(parentEntry);
-                            }
-                            parentEntry = entry;
-                        }
-                        else if (parentEntry !== null) {
-                            if (!("items" in parentEntry)) {
-                                // For IE
-                                parentEntry.items = [];
-                            }
-                            parentEntry.items.push(entry);
-                        }
-                    }
-                    if (parentEntry !== null) {
-                        if (parentEntry.items.length > 0) {
-                            parentEntry.state = 'col';
-                        }
-                        sc.indexTable.push(parentEntry);
+                    if (data.empty) {
+                        sc.showIndex = false;
+                    } else {
+                        var indexElement = $(".index-sidebar .sideBarContainer");
+                        $(indexElement).append(data);
+                        sc.showIndex = true;
                     }
                     timLogTime("getindex done","view");
                 }).error(function () {
