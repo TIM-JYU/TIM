@@ -103,7 +103,10 @@ def update_datamodel():
     doc_ids = timdb.db.execute("""SELECT id FROM Block WHERE type_id = ?""", [blocktypes.DOCUMENT]).fetchall()
     for doc_id, in doc_ids:
         print('Migrating document {}...'.format(doc_id), end="", flush=True)
-        timdb.documents.get_document_with_autoimport(DocIdentifier(doc_id, ''))
+        try:
+            timdb.documents.get_document_with_autoimport(DocIdentifier(doc_id, ''))
+        except FileNotFoundError:
+            print(' document was not found from file system, skipping.')
         print(' done.', flush=True)
     admin_group_id = timdb.users.getUserGroupByName(ADMIN_GROUPNAME)
     if admin_group_id is None:
