@@ -103,6 +103,13 @@ class TimDb(object):
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
 
+    def execute_sql(self, sql):
+        """Executes an SQL command on the database.
+        :param sql_file: The SQL command to be executed.
+        """
+        self.db.cursor().executescript(sql)
+        self.db.commit()
+
     def get_version(self):
         try:
             return self.db.execute("""SELECT MAX(id) FROM Version""").fetchone()[0]

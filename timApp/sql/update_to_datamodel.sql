@@ -58,10 +58,3 @@ CREATE TABLE ReadParagraphs (
   CONSTRAINT ReadParagraphs_PK
   PRIMARY KEY (UserGroup_id, doc_id, par_id)
 );
-
-CREATE TABLE Version (
-  id INTEGER NOT NULL PRIMARY KEY,
-  updated_on TIMESTAMP
-);
-
-INSERT INTO Version(updated_on, id) VALUES (CURRENT_TIMESTAMP, 0);

@@ -100,6 +100,15 @@ def update_datamodel():
         timdb.execute_script('sql/update_to_datamodel.sql')
     if not timdb.table_exists('Question'):
         timdb.execute_script('sql/update_to_timppa.sql')
+    if not timdb.table_exists('Version'):
+        timdb.execute_sql("""
+CREATE TABLE Version (
+  id INTEGER NOT NULL PRIMARY KEY,
+  updated_on TIMESTAMP
+);
+
+INSERT INTO Version(updated_on, id) VALUES (CURRENT_TIMESTAMP, 0);
+        """)
     doc_ids = timdb.db.execute("""SELECT id FROM Block WHERE type_id = ?""", [blocktypes.DOCUMENT]).fetchall()
     for doc_id, in doc_ids:
         print('Migrating document {}...'.format(doc_id), end="", flush=True)
