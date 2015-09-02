@@ -1,5 +1,6 @@
 from copy import deepcopy
 from difflib import SequenceMatcher
+import functools
 import json
 import os
 import shutil
@@ -411,11 +412,14 @@ class Document:
                                               new_attrs=new_par.get('attrs'))
         return new_ids[0], new_ids[-1]
 
-    @contract
     def get_index(self) -> 'list(tuple)':
-        # todo: optimization?
-        html_table = [par.get_html() for par in self if (par.get_markdown().startswith('#') or
-                                                         (par.is_multi_block() and par.has_headers()))]
+        return self.get_index_for_version(self.get_version())
+
+    @functools.lru_cache(maxsize=1024)
+    @contract
+    def get_index_for_version(self, version: 'tuple(int,int)') -> 'list(tuple)':
+        html_table = [par.get_html() for par in DocParagraphIter(self, version)
+                      if (par.get_markdown().startswith('#') or (par.is_multi_block() and par.has_headers()))]
         index = []
         current_headers = None
         for html in html_table:
@@ -512,11 +516,15 @@ new_contract('Document', Document)
 
 
 class DocParagraphIter:
-    def __init__(self, doc: 'Document'):
+    def __init__(self, doc: 'Document', version:'tuple(int,int)|None'=None):
         self.doc = doc
         self.next_index = 0
-        name = doc.get_version_path(doc.get_version())
+        ver = doc.get_version() if version is None else version
+        name = doc.get_version_path(ver)
         self.f = open(name, 'r') if os.path.isfile(name) else None
+
+    def __iter__(self):
+        return self
 
     def __next__(self) -> 'DocParagraph':
         if not self.f:
