@@ -1,0 +1,21 @@
+<div class="lectureEnding popUpWindow">
+    <h1 ng-show="!lectureEnded">Lecture ends in 5 minutes</h1>
+
+    <h1 ng-show="lectureEnded">Lecture ends</h1>
+    <form class="extendLectureOptions">
+        <label> Extend by
+            <select ng-model="extend.extendTime">
+                <option value="5">5</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
+                <option value="45">45</option>
+                <option value="60">60</option>
+            </select>
+        </label>
+    </form>
+    <div class="buttons">
+        <button autofocus ng-click="extendLecture()">Extend</button>
+        <button ng-show="lectureEnded" ng-click="endLecture()">End</button>
+        <button ng-show="!lectureEnded" ng-click="continueLecture()">Don't extend</button>
+    </div>
+</div>

@@ -555,7 +555,7 @@ def post_params(self):
     '''
 
     f = self.rfile.read(content_length)
-    # print(f)
+    print(f)
     # print(type(f))
     u = f.decode("UTF8")
     # print(u)

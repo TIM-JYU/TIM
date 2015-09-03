@@ -1,0 +1,37 @@
+<script src="{{ url_for('bower.static', filename='ngstorage/ngStorage.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/draggable.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/resizable.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('bower.static', filename='katex-build/katex.min.css') }}">
+<script src="{{ url_for('bower.static', filename='katex-build/katex.min.js') }}"></script>
+<script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="{{ url_for('static', filename='scripts/sidebarMenuCtrl.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='menustyle.css') }}">
+
+<script>
+    var settings = {{settings|tojson}};
+    window.setsetting = function (setting, value) {
+        $.ajax({
+            type: 'POST',
+            url: '/sessionsetting/' + setting + '/' + value,
+            success: function (data) {
+                console.log(data);
+                settings[setting] = value;
+            },
+            error: function () {
+                console.log("Could not set setting.");
+            }
+        });
+    };
+
+    window.GetURLParameter = function(sParam) {
+        var sPageURL = window.location.search.substring(1);
+        var sURLVariables = sPageURL.split('&');
+        for (var i = 0; i < sURLVariables.length; i++) {
+            var sParameterName = sURLVariables[i].split('=');
+            if (sParameterName[0] == sParam) {
+                var param = decodeURIComponent(sParameterName[1]);
+                return param;
+            }
+        }
+    }
+</script>

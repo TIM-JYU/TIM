@@ -1,0 +1,13 @@
+<div class="actionButtons">
+    <span class="actionButtonRow" ng-repeat="f in editorFunctions | filter:{show: true}">
+    <button style="width: 150px;" class="timButton" ng-bind="f.desc" ng-click="callFunc($event, f)">
+    </button>
+    <input ng-model="$parent.$parent.defaultAction"
+           ng-value="f"
+           class="defaultCheckbox"
+           type="radio"
+           ng-change="saveChoice()">
+    </span>
+    <button style="width: 150px;" class="timButton" ng-click="$parent.defaultAction = null">Clear default action
+    </button>
+</div>

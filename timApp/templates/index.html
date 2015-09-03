@@ -1,81 +1,94 @@
 {% extends "base.html" %}
 {% block title %}TIM{% endblock %}
 {% block head %}
-{{ super() }}
-<script src="{{url_for('static', filename='scripts/indexView/indexController.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/indexView/indexApp.js')}}"></script>
-<script>
-    var groups = {{userGroups|tojson|safe}};
-    var folder = "{{docName}}";
-    var crumbs = getBreadcrumbs(folder);
-    
-    {% include 'breadcrumbs.js' %}
-</script>
+    {{ super() }}
 
-<style type="text/css">
-table {
-	margin: 1em;
-	border: none;
-}
+    <script>
+        var groups = {{userGroups|tojson|safe}};
+        var folder = "{{docName}}";
+        var crumbs = getBreadcrumbs(folder);
+        {% include 'breadcrumbs.js' %}
+    </script>
+    <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
+    <style type="text/css">
+        table {
+            margin: 1em;
+            border: none;
+        }
 
-thead {
-	font-weight: bold;
-	border: none;
-}
+        thead {
+            font-weight: bold;
+            border: none;
+        }
 
-table td {
-	padding: 0.2em;
-	border: none;
-}
+        table td {
+            padding: 0.2em;
+            border: none;
+        }
 
-.uploadForm {
-	border: 1px solid black;
-	padding: 1em;
-}
-
-.material { 
-	padding: 1em;
-}
-</style>
+        .uploadForm {
+            border: 1px solid black;
+            padding: 1em;
+        }
+    </style>
+    {% if session.user_id %}
+        {% include 'common_head.html' %}
+        {% if in_lecture %}
+            {% include 'lecture_head.html' %}
+            <script>
+            {% if docID %}
+                var docId = JSON.parse({{docID|tojson|safe}});
+                var docName = {{docName|tojson|safe}};
+            {% endif %}
+            var in_lecture = {{in_lecture|tojson}};
+            </script>
+        {% endif %}
+    {% endif %}
 {% endblock %}
 {% block content %}
-    <div ng-app="indexApp" ng-controller="IndexCtrl">
+    <div ng-app="timApp" ng-controller="IndexCtrl">
         {% include 'breadcrumbs.html' %}
+        {% if in_lecture %}
+            {% include 'lecture.html' %}
+        {% elif session.user_id %}
+            {% include 'side_menu.html' %}
+        {% endif %}
 
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
-            src="{{url_for('static', filename='images/loading.gif')}}" ng-show="!displayIndex">
+            src="{{ url_for('static', filename='images/loading.gif') }}" ng-show="!displayIndex">
+
         <div ng-show="displayIndex == 2">
             <table ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
                 <thead>
-                    <tr>
-                        <td></td>
-                        <td>Document name</td>
-                        <td></td>
-                        <td>Last modified</td>
-                        <td>Owner</td>
-                        <td>Rights</td>
-                    </tr>
+                <tr>
+                    <td></td>
+                    <td>Document name</td>
+                    <td></td>
+                    <td>Last modified</td>
+                    <td>Owner</td>
+                    <td>Rights</td>
+                </tr>
                 </thead>
                 <tr ng-show="parentfolder != null">
                     <td>
                         <a href="/view/{{ '{{ parentfolder | escape }}' }}">
-                	        <img src="{{url_for('static', filename='images/folder.png')}}"/>
-                	    </a>
-                	</td>
+                            <img src="{{ url_for('static', filename='images/folder.png') }}"/>
+                        </a>
+                    </td>
                     <td><a href="/view/{{ '{{ parentfolder | escape }}' }}">..</a></td>
-                	<td></td>
-                	<td></td>
-                	<td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                     <td></td>
                 </tr>
                 <tr ng-repeat="doc in folderList">
                     <td>
-                    	<a href="/view/{{ '{{ doc.fullname | escape }}' }}">
-                            <img src="{{url_for('static', filename='images/folder.png')}}"/>
+                        <a href="/view/{{ '{{ doc.fullname | escape }}' }}">
+                            <img src="{{ url_for('static', filename='images/folder.png') }}"/>
                         </a>
-                	</td>
+                    </td>
                     <td>
-                    	<a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
+                        <a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
                     </td>
                     <td></td>
                     <td>{{ '{{ doc.modified }}' }}</td>
@@ -85,9 +98,9 @@ table td {
                     </td>
                 </tr>
                 <tr ng-repeat="doc in documentList">
-                	<td></td>
+                    <td></td>
                     <td>
-                    	<a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
+                        <a href="/view/{{ '{{ doc.fullname | escape }}' }}">{{ '{{ doc.name }}' }}</a>
                     </td>
                     <td></td>
                     <td>{{ '{{ doc.modified }}' }}</td>
@@ -101,49 +114,53 @@ table td {
             </table>
             <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
             {% if session.user_id %}
-            <a ng-click="setCurrentDocument({})">Upload a new document</a>
-            <div class="uploadForm" ng-show="m.currDoc">
-                <p ng-show="m.currDoc.id">Upload new version for document: {{ '{{ m.currDoc.name
+                <a ng-click="setCurrentDocument({})">Upload a new document</a>
+                <div class="uploadForm" ng-show="m.currDoc">
+                    <p ng-show="m.currDoc.id">Upload new version for document: {{ '{{ m.currDoc.name
                     }}' }}</p>
-                <p ng-show="!m.currDoc.id">Upload a new document</p>
-                <input type="file"
-                    ng-file-select="m.currDoc.id ? updateDocument(m.currDoc, $files) : onFileSelect('/upload/', $files)">
-                <span ng-bind="progress"></span>
-                <input ng-disabled="uploadInProgress" type="button"
-                    value="{{ '{{ progress && !uploadInProgress ? \'Close\' : \'Cancel\' }}' }}"
-                    ng-click="m.currDoc = 0">
-            </div>
-            <div>
-                <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>
-                <div ng-show="showControls">
-                    <label>
-                        Document name:
-                        <input ng-model="docName" type="text">
-                    </label>
-                    <input ng-disabled="!docName" ng-click="createDocument(docName)" type="button"
-                        value="Create">
-                    <input ng-click="showControls = false" type="button" value="Cancel">
+
+                    <p ng-show="!m.currDoc.id">Upload a new document</p>
+                    <input type="file"
+                           ng-file-select="m.currDoc.id ? updateDocument(m.currDoc, $files) : onFileSelect('/upload/', $files)">
+                    <span ng-bind="progress"></span>
+                    <button ng-disabled="uploadInProgress" type="button"
+                            ng-click="m.currDoc = 0">
+                        {{ '{{ progress && !uploadInProgress ? \'Close\' : \'Cancel\' }}' }}</button>
                 </div>
-            </div>
-            <div>
-                <a ng-show="!showCreateFolder" ng-click="showCreateFolder = true">Create a new folder</a>
-                <div ng-show="showCreateFolder">
-                    <label>
-                        Folder name:
-                        <input ng-model="folderName" type="text">
-                    </label>
-                    <label>
-                        Owner:
-                        <select ng-model="folderOwner"
-                                ng-options="group.name for group in userGroups track by group.id"/>
-                    </label>
-                    <input ng-disabled="!folderName || !folderOwner" ng-click="createFolder(folderName, folderOwner.id)" type="button"
-                        value="Create">
-                    <input ng-click="showCreateFolder = false" type="button" value="Cancel">
+                <div>
+                    <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>
+
+                    <div ng-show="showControls">
+                        <label>
+                            Document name:
+                            <input ng-model="docName" type="text">
+                        </label>
+                        <button ng-disabled="!docName" ng-click="createDocument(docName)" type="button">Create
+                        </button>
+                        <button ng-click="showControls = false" type="button">Cancel</button>
+                    </div>
                 </div>
-            </div>
+                <div>
+                    <a ng-show="!showCreateFolder" ng-click="showCreateFolder = true">Create a new folder</a>
+
+                    <div ng-show="showCreateFolder">
+                        <label>
+                            Folder name:
+                            <input ng-model="folderName" type="text">
+                        </label>
+                        <label>
+                            Owner:
+                            <select ng-model="folderOwner"
+                                    ng-options="group.name for group in userGroups track by group.id"></select>
+                        </label>
+                        <button ng-disabled="!folderName || !folderOwner"
+                                ng-click="createFolder(folderName, folderOwner.id)" type="button">Create
+                        </button>
+                        <button ng-click="showCreateFolder = false" type="button">Cancel</button>
+                    </div>
+                </div>
             {% else %}
-            To create or upload new documents, log in.
+                To create or upload new documents, log in.
             {% endif %}
         </div>
     </div>

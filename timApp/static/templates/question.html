@@ -1,0 +1,111 @@
+<div class="ng-scope" style="text-align:left" ng-controller="QuestionController">
+    <div class="popUpWindow" id="questionWindow" ng-if="!asked_id">
+        <form class="createQuestion" id="question-form">
+            <div id="questionName">
+                <label>
+                    Question title:
+                    <input id="qTitle" name="question.title" type="text" ng-model="question.title"/>
+                </label>
+            </div>
+            <div id="question-textarea-div">
+                <div>Question:</div>
+                <textarea id="question-textarea" name="question" rows="3" ng-model="question.question"></textarea>
+            </div>
+            <div id="qType">
+                <label>Question type:
+                    <select name="question.type" ng-model="question.type" ng-dropdown required
+                            ng-change="createMatrix(question.type)">
+                        <option value="" ng-option disabled selected> -- select question type --</option>
+                        <option ng-option value="radio-vertical">Multiple choice (radio button)</option>
+                        <option ng-option value="checkbox-vertical">Multiple choice (checkbox)</option>
+                        <option ng-option value="true-false">True/False</option>
+                        <option ng-option value="matrix">Many rows and columns</option>
+                    </select>
+                </label>
+            </div>
+            <div id="check" ng-if="question.type == 'matrix'">
+                <label>Answer type:</label>
+                <select name="answerType" ng-model="question.matrixType" ng-dropdown
+                        ng-options="item.value as item.label for item in answerFieldTypes ">
+                    <option value="" disabled selected> -- select answer type --</option>
+                </select>
+            </div>
+            <div ng-if="question.type" style="overflow-x: auto">
+                <ng-include src="'/static/templates/matrix.html'"></ng-include>
+            </div>
+
+            <div id="questionTiming">
+                <div><label>Set question timing:</label></div>
+                <div id="questionStart">
+                    <label>Starting time:</label>
+                    <input type="checkbox" ng-model="question.startTimeSelected"/>
+
+                    <div class="questionStartTime">
+                        <label>Date:<input type="text" id="calendarStart"
+                                           ng-disabled="!question.startTimeSelected"></label>
+                        Time:
+                        <input type="text" id="startHour" name="hour" maxlength="2" size="2" placeholder="hh"
+                               is-valid-change="" ng-model="question.startHour"
+                               ng-disabled="!question.startTimeSelected">
+                        :
+                        <input type="text" id="startMin" name="min" maxlength="2" size="2" placeholder="mm"
+                               is-valid-change="" ng-model="question.startMin"
+                               ng-disabled="!question.startTimeSelected">
+                    </div>
+                </div>
+                <div id="questionTimer">
+                    <label>Duration:</label>
+                    <input type="checkbox" ng-model="question.endTimeSelected"/>
+
+                    <div id="durationDiv" class="questionTimer">
+                        <input id="durationHour" type="text" name="hours" maxlength="2" size="2"
+                               ng-model="question.timeLimit.hours" ng-disabled="!question.endTimeSelected"> h
+                        <input id="durationMin" type="text" name="minutes" maxlength="2" size="2"
+                               ng-model="question.timeLimit.minutes" ng-disabled="!question.endTimeSelected"> m
+                        <input id="durationSec" type="text" name="seconds" maxlength="2" size="2"
+                               ng-model="question.timeLimit.seconds" ng-disabled="!question.endTimeSelected"> s
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="questionPreview">
+            <label>Show preview <input type="checkbox" ng-change="setShowPreview(question.showPreview)"
+                                       ng-model="question.showPreview"/></label>
+            <dynamic-answer-sheet ng-show="question.showPreview" preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+        </div>
+        <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
+
+        <div class="buttons" id="question_buttons">
+            <button ng-if="lectureSettings.inLecture" ng-click="createQuestion(true)">Save and ask
+            </button>
+            <button ng-click="createQuestion()">Save</button>
+            <button ng-click="close()">Cancel</button>
+            <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
+        </div>
+    </div>
+    <div class="popUpWindow" id="questionWindow" ng-if="asked_id">
+        <form class="createQuestion" id="question-form">
+            <h3>Question title: {{ question.title }}</h3>
+
+            <h3>Question title: {{ question.question }}</h3>
+
+            <p>Question type: {{ question.type }}</p>
+
+            <p ng-if="question.type == 'matrix'">Answer type: {{ question.matrixType }} </p>
+
+            <div ng-if="question.type" style="overflow-x: auto">
+                <ng-include src="'/static/templates/matrix.html'"></ng-include>
+            </div>
+            <p class="error_message" id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
+
+            <div class="buttons" id="question_buttons">
+                <button ng-if="!asked_id" ng-if="lectureSettings.inLecture"
+                        ng-click="createQuestion(true)">Save and ask
+                </button>
+                <button ng-click="createQuestion()">Save</button>
+                <button ng-click="close()">Cancel</button>
+                <span ng-if="(question.question_id)"> <button ng-click="deleteQuestion()">Delete</button> </span>
+            </div>
+        </form>
+    </div>
+</div>

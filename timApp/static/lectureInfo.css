@@ -1,0 +1,9 @@
+/* luentoseinän asetukset */
+#lectureInfoWall {
+    width: 400px;
+    height: 300px;
+}
+
+.bold {
+    font-weight: bold;
+}

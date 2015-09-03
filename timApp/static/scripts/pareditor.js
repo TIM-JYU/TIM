@@ -21,7 +21,28 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 initialTextUrl: '@'
             },
             controller: function ($scope) {
-                $scope.editortab = $window.editortab;
+                $scope.deleteAttribute = function(key) {
+                    delete $scope.extraData.attrs[key];
+                };
+
+                $scope.deleteClass = function(classIndex) {
+                    $scope.extraData.attrs.classes.splice(classIndex, 1);
+                };
+
+                $scope.addClass = function() {
+                    $scope.extraData.attrs.classes.push('');
+                };
+
+                $scope.addAttribute = function() {
+                    if ($scope.newAttr === 'classes') {
+                        $scope.extraData.attrs[$scope.newAttr] = [];
+                    } else {
+                        $scope.extraData.attrs[$scope.newAttr] = '';
+                    }
+                    $scope.newAttr = '';
+                };
+
+                $scope.settings = $window.settings;
                 var $plugintab;
                 $scope.pluginButtonList = {};
 
@@ -67,9 +88,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 $scope.setInitialText = function () {
                     $scope.setEditorText('Loading text...');
                     $http.get($scope.initialTextUrl, {
-                        params: {"_": Date.now()}
+                        params: angular.extend({
+                            "_": Date.now()
+                        }, $scope.extraData)
                     }).success(function (data, status, headers, config) {
                         $scope.setEditorText(data.text);
+                        angular.extend($scope.extraData, data.extraData);
                         $scope.aceChanged();
                     }).error(function (data, status, headers, config) {
                         $window.alert('Failed to get text: ' + data.error);
@@ -279,23 +303,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                     $scope.timer = $window.setTimeout(function () {
                         var text = $scope.getEditorText();
-                        $http.post($scope.previewUrl, {
-                            "text": text
-                        }).success(function (data, status, headers, config) {
-                            var len = data.texts.length;
-
+                        $http.post($scope.previewUrl, angular.extend({
+                            text: text
+                        }, $scope.extraData)).success(function (data, status, headers, config) {
                             var $previewDiv = angular.element(".previewcontent");
-                            $previewDiv.html("");
-
-                            for (var i = 0; i < len; i++) {
-                                var html = data.texts[i].html;
-                                if ('task_id' in data.texts[i]) {
-                                    html = $compile(html)($scope);
-                                }
-                                $previewDiv.append(angular.element("<div>", {class: "par"})
-                                    .append(angular.element("<div>", {class: "parContent"})
-                                        .html(html)));
-                            }
+                            $previewDiv.html($compile(data.texts)($scope));
+                            var len = $previewDiv.children().length;
                             $scope.$parent.processAllMath($previewDiv);
                             $scope.outofdate = false;
                             $scope.parCount = len;
@@ -1106,16 +1119,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.tabClicked = function ($event, area) {
                     var active = $($event.target).parent();
-                    $.ajax({
-                        type: 'POST',
-                        url: '/editortab/' + area,
-                        success: function (data) {
-                            editortab = area;
-                        },
-                        error: function () {
-                            console.log("Virhe");
-                        }
-                    });
+                    setsetting('editortab', area);
                     $scope.setActiveTab(active, area);
                     $scope.wrapFn();
                 };
@@ -1139,13 +1143,13 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     $(naviArea).attr('class', 'extraButtonArea');
                 };
 
-                if ($scope.editortab) {
+                if ($scope.settings['editortab']) {
                     //Timeout is used to ensure that ng-ifs are executed before this
                     window.setTimeout(function () {
-                        var tab = $scope.editortab.substring(0, $scope.editortab.lastIndexOf('Buttons'));
+                        var tab = $scope.settings['editortab'].substring(0, $scope.settings['editortab'].lastIndexOf('Buttons'));
                         var tabelement = $('#' + tab);
                         if (tabelement.length) {
-                            $scope.setActiveTab(tabelement, $scope.editortab);
+                            $scope.setActiveTab(tabelement, $scope.settings['editortab']);
                         }
                     }, 0);
                 }

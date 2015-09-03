@@ -58,6 +58,37 @@ class Users(TimDbBase):
         user_id = cursor.lastrowid
         return user_id
 
+
+    def createAnonymousUser(self, name: 'str', real_name: 'str', commit: 'bool'=True) -> 'int':
+        """Creates a new user anonymous user.
+        :param id: id of anonymous user
+        :param name: The name of the user to be created.
+        :param real_name: The real name of the user.
+        :returns: The id of the newly created user.
+        """
+
+        next_id = self.getNextAnonymousUserId()
+
+        cursor = self.db.cursor()
+        cursor.execute('INSERT INTO User (id, name, real_name) VALUES (?, ?, ?)', [next_id, name, real_name])
+        if commit:
+            self.db.commit()
+        user_id = cursor.lastrowid
+        self.addUserToGroup(2, user_id)
+        return user_id
+
+
+    @contract
+    def getNextAnonymousUserId(self) -> 'int':
+        """
+        :returns: Tnext unused negative id.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('SELECT MIN(id) AS next_id FROM User')
+        user_id = min(self.resultAsDictionary(cursor)[0]['next_id'], 0)
+        return user_id - 1
+
+
     def updateUser(self, user_id: 'int', name: 'str', real_name: 'str', email: 'str', password: 'str' = '', commit : 'bool' = True):
         """Updates user information.
 
@@ -271,15 +302,27 @@ class Users(TimDbBase):
 
 
     @contract
-    def groupExists(self, user_id : 'int') -> 'bool':
+    def groupExists(self, group_id : 'int') -> 'bool':
         """Checks if the group with the specified id. exists
 
+        :param group_id: The id of the group.
         :returns: Boolean.
         """
 
         cursor = self.db.cursor()
-        cursor.execute('select id from UserGroup where id = ?', [user_id])
+        cursor.execute('select id from UserGroup where id = ?', [group_id])
         return cursor.fetchone() is not None
+
+    @contract
+    def get_user_group_name(self, group_id: 'int') -> 'str|None':
+        """Gets the user group name.
+        :param group_id: The id of the group.
+        :returns: The name of the group.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('select name from UserGroup where id = ?', [group_id])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
 
     @contract
     def getUserGroupsByName(self, name: 'str'):
@@ -299,10 +342,10 @@ class Users(TimDbBase):
         groups = cursor.fetchall()
 
         if groups is None or len(groups) == 0:
-            print("DEBUG: No such named group: " + group_name)
+            print("DEBUG: No such named group: " + name)
             return None
         elif len(groups) > 1:
-            print("DEBUG: Too many named groups: {} ({})".format(group_name, groups))
+            print("DEBUG: Too many named groups: {} ({})".format(name, groups))
             return None
 
         return groups[0][0]
@@ -492,8 +535,6 @@ class Users(TimDbBase):
     def checkUserGroupAccess(self, block_id: 'int', usergroup_id: 'int|None', edit_access: 'bool') -> 'bool':
         if usergroup_id is None:
             return False
-        if self.userIsOwner(usergroup_id, block_id):
-            return True
 
         if edit_access:
             result = self.db.execute("""SELECT UserGroup_id FROM BlockEditAccess

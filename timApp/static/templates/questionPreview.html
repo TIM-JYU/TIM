@@ -1,0 +1,17 @@
+<div ng-controller="QuestionPreviewController" class="popUpWindow">
+    <div class="questionPreview">
+        <div id="questionTypeAndTimeLimit">
+            <span>Time limit:</span>
+            <span ng-if="json.TIMELIMIT > 0"
+                  ng-bind="json.TIMELIMIT">{{ json.TIMELIMIT }} seconds</span>
+            <span ng-if="json.TIMELIMIT <= 0">No time limit.</span>
+        </div>
+        <dynamic-answer-sheet preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+    </div>
+    <div class="buttons">
+        <button ng-show='inLecture' ng-click='ask()' class='timButton questionButton'>Ask</button>
+        <button ng-click='editQuestion()' class='timButton questionButton'>Edit</button>
+        <!--        <button ng-click='deleteQuestion()' class="timButton questionButton">Delete</button> -->
+        <button ng-click='close()' class='timButton questionButton'>Close</button>
+    </div>
+</div>

@@ -7,15 +7,15 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="TIM - The Interactive Material."/>
     <meta name="keywords" content="tim,interactive,material"/>
-    <link href="{{url_for('static', filename='images/favicon.ico')}}" rel="shortcut icon" type="image/x-icon"/>
+    <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
 
     <title>TIM - Welcome</title>
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
     <!-- Custom styles for this template -->
     <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -28,22 +28,47 @@
 
     <script>
         $('#loginTab a').click(function (e) {
-          e.preventDefault()
-          $(this).tab('show')
+            e.preventDefault()
+            $(this).tab('show')
         })
     </script>
+    {% if session.user_id %}
+        <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
+        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/jquery.waypoints.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='waypoints/lib/shortcuts/inview.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-file-upload/angular-file-upload-all.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
+        {% include 'common_head.html' %}
+        {% if in_lecture %}
+            {% include 'lecture_head.html' %}
+        {% endif %}
+    {% endif %}
 </head>
 
 <body>
 
-<div class="container">
+<div class="container" ng-app="timApp">
     <div class="header clearfix">
-        <img alt="TIM - The Interactive Material." class="pull-left"
-             src="{{url_for('static', filename='images/tim-logo_42height.png')}}"/>
-        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-             src="{{url_for('static', filename='images/jyulogo.png')}}"/>
+        <a href="/">
+            <img alt="TIM - The Interactive Material." class="pull-left"
+                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
+        </a>
+        <a href="https://www.jyu.fi">
+            <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                 src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+        </a>
+        {% include 'loginlogout.html' %}
     </div>
-
+    {% if in_lecture %}
+        {% include 'lecture.html' %}
+    {% elif session.user_id %}
+        {% include 'side_menu.html' %}
+    {% endif %}
     <div class="row largetext">
         <div class="col-md-2"></div>
         <div class="col-md-10">
@@ -54,7 +79,7 @@
     <div class="row">
         <div class="col-md-8 largeimage">
             <a href="/view/tim/TIM-esittely">
-                <img src="{{url_for('static', filename='images/responsive.jpg')}}"/>
+                <img src="{{ url_for('static', filename='images/responsive.jpg') }}"/>
             </a>
             <!--<div class="jumbotron">
                 <h1>The Interactive Material.</h1>
@@ -64,139 +89,143 @@
         </div>
 
         <div class="col-md-4">
-{% if session.user_id %}
-            <p>You're logged in as {{session.real_name}} ({{session.user_name}}).<p>
-            <ul>
-                <li><a href="/settings/">Customize TIM</li>
-                <li><a href="/view/">Document index</a></li>
-            </ul>
-            
-            <form method="POST" action="/logout">
-                <div class="loginbutton">
-                    <input type="submit" value="Log out">
-                </div>
-            </form>
-{% elif session.altlogin == "signup2" %}
-        <form method="POST" action="/altsignup2">
-            <div class="loginwelcome">
-                <p>
-                    Welcome to TIM! We need just a few more details to get you started.
-                </p>
-            </div>
-            <input type="hidden" name="token" value="{{ session.token }}">
-            <div class="textfield indented">
-                <label for="username">User name</p> 
-                <p id="username">{{ session.user_name }}</p>
-            </div>
-            <div class="textfield indented">
-                <label for="realname">Real name</label>
-                <input id="realname" name="realname" type="text" value="{{ session.real_name }}">
-            </div>
-            <div class="textfield indented">
-                <label for="email">Email</p> 
-                <p id="realname">{{ session.email }}</p>
-            </div>
-            <div class="textfield indented">
-                <label for="password">New password</label> 
-                <input id="password" name="password" type="password">
-            </div>
-            <div class="textfield indented">
-                <label for="passconfirm">Repeat new password</label> 
-                <input id="passconfirm" name="passconfirm" type="password">
-            </div>
-            <div class="loginbutton">
-                <input type="submit" value="Create account">
-            </div>
-        </form>
-{% else %}
-            <ul>
-                <li><a href="/view/">Document index</a></li>
-            </ul>
-            <!-- Nav tabs -->
-            <ul id="loginTab" class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active"><a href="#login" aria-controls="login" role="tab" data-toggle="tab">Log in</a></li>
-                <li role="presentation"><a href="#signup" aria-controls="signup" role="tab" data-toggle="tab">Sign up</a></li>
-            </ul>
+            {% if session.user_id %}
+                <p>You're logged in as {{ session.real_name }} ({{ session.user_name }}).<p>
+                <ul>
+                    <li><a href="/view/">Browse material</a></li>
+                </ul>
 
-            <!-- Tab panes -->
-            <div class="tab-content">
-                <div role="tabpanel" class="tab-pane tab-padding active" id="login">
-                    <small>
-                        Login with:
-                    </small>
-
-                    <div class="openidbutton">
-                        <div class="openidcontent">
-                           <a href="/korppiLogin?came_from=/view/"
-                              data-confirm="null" id="">
-                               <img src="{{ url_for('static', filename='images/korppi.png') }}"/>
-                            </a>
-                        </div>
+                <form method="POST" action="/logout">
+                    <div class="loginbutton">
+                        <button type="submit">Log out</button>
                     </div>
-
-                    <div class='grid-row'>
-                        <div class="grid-col-12 grid-col--align-center grid-col--center grid-col--no-padding js-oauth-title">
-                            <small>
-                                or email:
-                            </small>
-                        </div>
+                </form>
+            {% elif session.altlogin == "signup2" %}
+                <form method="POST" action="/altsignup2">
+                    <div class="loginwelcome">
+                        <p>
+                            Welcome to TIM! We need just a few more details to get you started.
+                        </p>
                     </div>
+                    <input type="hidden" name="token" value="{{ session.token }}">
 
-                    <form accept-charset="UTF-8" action="/altlogin" class="new_user"
+                    <div class="textfield indented">
+                        <label for="username">User name</label>
+
+                        <p id="username">{{ session.user_name }}</p>
+                    </div>
+                    <div class="textfield indented">
+                        <label for="realname">Real name</label>
+                        <input id="realname" name="realname" type="text" value="{{ session.real_name }}">
+                    </div>
+                    <div class="textfield indented">
+                        <label for="email">Email</label>
+
+                        <p id="realname">{{ session.email }}</p>
+                    </div>
+                    <div class="textfield indented">
+                        <label for="password">New password</label>
+                        <input id="password" name="password" type="password">
+                    </div>
+                    <div class="textfield indented">
+                        <label for="passconfirm">Repeat new password</label>
+                        <input id="passconfirm" name="passconfirm" type="password">
+                    </div>
+                    <div class="loginbutton">
+                        <button type="submit">Create account</button>
+                    </div>
+                </form>
+            {% else %}
+                <ul>
+                    <li><a href="/view/">Browse material</a></li>
+                </ul>
+                <!-- Nav tabs -->
+                <ul id="loginTab" class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#login" aria-controls="login" role="tab"
+                                                              data-toggle="tab">Log in</a></li>
+                    <li role="presentation"><a href="#signup" aria-controls="signup" role="tab" data-toggle="tab">Sign
+                        up</a></li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane tab-padding active" id="login">
+                        <small>
+                            Login with:
+                        </small>
+
+                        <div class="openidbutton">
+                            <div class="openidcontent">
+                                <a href="/korppiLogin?came_from=/view/"
+                                   data-confirm="null" id="">
+                                    <img src="{{ url_for('static', filename='images/korppi.png') }}"/>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class='grid-row'>
+                            <div class="grid-col-12 grid-col--align-center grid-col--center grid-col--no-padding js-oauth-title">
+                                <small>
+                                    or email:
+                                </small>
+                            </div>
+                        </div>
+
+                        <form accept-charset="UTF-8" action="/altlogin" class="new_user"
                               id="new-session" method="post">
-                        <div class="textfield indented">
-                            <input id="user_login" name="email"
-                                   placeholder="Email or username" required="required"
-                                   tabindex="1" type="text" value="{{session.email}}"/>
-                            <input id="user_password" name="password" class="textfield"
-                                   placeholder="Password" required="required" size="30"
-                                   tabindex="2" type="password"/>
-                        </div>
+                            <div class="textfield indented">
+                                <input id="user_login" name="email"
+                                       placeholder="Email or username" required="required"
+                                       tabindex="1" type="text" value="{{ session.email }}"/>
+                                <input id="user_password" name="password" class="textfield"
+                                       placeholder="Password" required="required" size="30"
+                                       tabindex="2" type="password"/>
+                            </div>
 
-                        <div>
-                            {% with messages = get_flashed_messages() %}
-                                {% if messages %}
-                                    <ul class="flashes">
-                                        {% for message in messages %}
-                                            <li>{{ message }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
+                            <div>
+                                {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        <ul class="flashes">
+                                            {% for message in messages %}
+                                                <li>{{ message }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
 
-                        <div class="loginbutton">
-                            <input type="submit" value="Login"/>
-                        </div>
-                    </form>
+                            <div class="loginbutton">
+                                <button type="submit">Login</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div role="tabpanel" class="tab-pane tab-padding" id="signup">
+                        <form accept-charset="UTF-8" action="/altsignup" autocomplete="off"
+                              class="new_user" id="new-user" method="post">
+                            <div class="textfield">
+                                <input id="user_email" name="email" placeholder="Email"
+                                       required="required" size="30" tabindex="1" type="text"/>
+                            </div>
+
+                            <div>
+                                {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        <ul class="flashes">
+                                            {% for message in messages %}
+                                                <li>{{ message }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="loginbutton">
+                                <button type="submit">Get started</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div role="tabpanel" class="tab-pane tab-padding" id="signup">
-                    <form accept-charset="UTF-8" action="/altsignup" autocomplete="off"
-                      class="new_user" id="new-user" method="post">
-                        <div class="textfield">
-                            <input id="user_email" name="email" placeholder="Email"
-                                   required="required" size="30" tabindex="1" type="text"/>
-                        </div>
-
-                        <div>
-                            {% with messages = get_flashed_messages() %}
-                                {% if messages %}
-                                    <ul class="flashes">
-                                        {% for message in messages %}
-                                            <li>{{ message }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
-
-                        <div class="loginbutton">
-                            <input type="submit" value="Get started"/>
-                        </div>
-                    </form>
-                </div>
-            </div>
-	{% endif %}
+            {% endif %}
         </div>
     </div>
 
@@ -205,7 +234,7 @@
         <div class="col-md-3">
             <h5>TIM</h5>
             <ul>
-                <li><a href="/view/tim/TIM-esittely">Esittely</a></li> 
+                <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
                 <li><a href="/view/tim/TIM-ohjeet">Ohjeet <sup>(*)</sup></a></li>
             </ul>
         </div>
@@ -221,16 +250,17 @@
     <div class="row marketing">
         <div class="col-md-6 text-muted">
             <sup>(*)</sup> vaatii kirjautumisen
-	    </div>
+        </div>
     </div>
 
     <footer class="footer">
         <p>&copy; Jyväskylän yliopisto</p>
         <ul>
-            <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</li>
+            <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</a></li>
         </ul>
     </footer>
-</div> <!-- /container -->
+</div>
+<!-- /container -->
 
 
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->

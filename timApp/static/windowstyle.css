@@ -1,0 +1,431 @@
+.createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion, .joinLectureOptions,
+.questionAskedWindow, .statisticsWindow, .questionPreview, .extendLectureOptions {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #F0F0F0;
+    padding: 10px;
+    font: 12px Georgia;
+    color: #505050;
+    text-shadow: 1px 1px 1px #FFF;
+    border: 1px solid #E4E4E4;
+    text-align: left;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.startingTime, .endingTime, #infoFields div {
+    margin-bottom: 10px;
+}
+
+/* Chrome etc. */
+input:enabled::-webkit-input-placeholder {
+    color: #3CC;
+}
+
+input:enabled:-moz-placeholder {
+    /* FF 4-18 */
+    color: #3CC;
+}
+
+input:enabled::-moz-placeholder {
+    /* FF 19+ */
+    color: #3CC;
+}
+
+input:enabled:-ms-input-placeholder {
+    /* IE 10+ */
+    color: #3CC;
+}
+
+input:disabled::-webkit-input-placeholder {
+    /* WebKit browsers */
+    display: none;
+}
+
+input:disabled:-moz-placeholder {
+    /* Mozilla Firefox 4 to 18 */
+    display: none;
+}
+
+input:disabled::-moz-placeholder {
+    /* Mozilla Firefox 19+ */
+    display: none;
+}
+
+input:disabled:-ms-input-placeholder {
+    /* Internet Explorer 10+ */
+    display: none;
+}
+
+fieldset, form {
+    margin-left: auto;
+    margin-right: auto;
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
+
+#studentsJoinEarly {
+    margin-bottom: 10px;
+}
+
+#infoFields input, #lLink {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 30px;
+    width: 100%;
+}
+
+#startDate, #endDate, #calendarStart {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 30px;
+    width: 80px;
+}
+
+#startHour, #startMin, #endHour, #endMin, #durationHour, #durationMin, #durationSec {
+    width: 25px;
+}
+
+input[type="number"] {
+    width: 30px;
+}
+
+.questionTable .negative {
+    background: #c12e2a;
+}
+
+.questionTable textarea {
+    width: 100% !important;
+    box-sizing: border-box;
+    resize: horizontal;
+    margin: 0;
+}
+
+#infoFields label, .linkLabel {
+    display: inline-block;
+    width: 150px;
+}
+
+.choose label {
+    display: block;
+}
+
+.icon {
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+}
+
+.questionInfo {
+    border: 1px solid #E4E4E4;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.startingTime #startInfo, #endInfo {
+    margin-left: 20px;
+}
+
+.popUpWindow h1 {
+    font-family: verdana;
+    font-size: 18px;
+    padding: 0;
+    color: #3cc;
+    text-align: left;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-top: none;
+    border-bottom: none;
+    line-height: 1;
+}
+
+.createLecture input[type="text"], .createLecture input[type="date"],
+.createLecture select, .createQuestion input, .createQuestion textarea {
+    border: 1px solid #3cc;
+    color: #505050;
+    outline: 0 none;
+    font-size: 12px;
+    line-height: 15px;
+    box-shadow: inset 0 1px 4px #ECECEC;
+    -moz-box-shadow: inset 0 1px 4px #ECECEC;
+    -webkit-box-shadow: inset 0 1px 4px #ECECEC;
+}
+
+.createQuestion select {
+    border: 1px solid #3cc;
+    color: #505050;
+    margin: 2px 6px 10px 2px;
+    outline: 0 none;
+    padding: 3px 3px 3px 5px;
+    font-size: 12px;
+    line-height: 15px;
+    box-shadow: inset 0 1px 4px #ECECEC;
+    -moz-box-shadow: inset 0 1px 4px #ECECEC;
+    -webkit-box-shadow: inset 0 1px 4px #ECECEC;
+    height: 30px;
+}
+
+.createQuestion input[type="checkbox"], .createQuestion input[type="radio"] {
+    margin: 0;
+    vertical-align: middle;
+}
+
+.explField.explFocus, .explField.hasText, tr:hover .explField {
+    opacity: 1;
+    border: 1px solid #CCC !important;
+}
+
+.explField {
+    border: none !important;
+    opacity: 0;
+}
+
+.createQuestion textarea {
+    width: 95%;
+    resize: none;
+}
+
+.rowHeading {
+    height: 50px !important;
+}
+
+.true-false-title {
+    text-align: center;
+    width: 50px;
+}
+
+.answer-columns {
+    text-align: center;
+}
+
+#addRow {
+    width: 100%;
+    height: 50px;
+}
+
+#answer-sheet-table {
+    background: white;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.answer-button {
+    text-align: center;
+}
+
+.answer-button2 {
+    text-align: left;
+}
+
+.explanation {
+    border-left: 1px solid #CCC !important;
+    text-align: left !important;
+}
+
+#textarea-answer {
+    width: 100%
+}
+
+.buttons {
+    border: none;
+    margin: 5px;
+    color: #FFF;
+    border-radius: 3px;
+    text-shadow: 1px 1px 1px #9E3F3F;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 11px;
+    line-height: normal;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    float: right;
+}
+
+.createLecture button, .buttons button {
+    margin-top: 5px;
+    background: #3CC;
+    border: 0;
+    border-radius: 3px;
+    color: #FFF;
+    display: inline-block;
+    font-size: 11px;
+    cursor: pointer;
+    line-height: normal;
+    padding: 5px 10px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.createLecture button:disabled, .createLecture input[type="button"]:disabled {
+    cursor: default;
+    background-color: #DCDCDC;
+}
+
+.createLecture input[type="text"]:disabled, .createQuestion input[type="text"]:disabled {
+    background-color: #DCDCDC;
+    border: 1px solid #DCDCDC;
+}
+
+.error_message {
+    color: red;
+    margin-left: 0;
+}
+
+.createLecture p {
+    color: red;
+    margin-left: 0;
+}
+
+.lectureArea {
+    vertical-align: middle;
+}
+
+#endDateDiv, #durationDiv {
+    margin-left: 24px;
+}
+
+.questionAskedWindow {
+    max-width: 800px;
+}
+
+.answerStatistics select, .questioninfoWindow label, .questionAskedWindow label {
+    display: block;
+}
+
+.sectionDetails {
+    border: 1px solid #E4E4E4;
+}
+
+.createQuestion td {
+    border: 1px solid #cccccc;
+    background: white;
+}
+
+
+.createQuestion th {
+    max-width: 15em;
+}
+
+.createQuestion table {
+    margin: 2em;
+    background: #F0F0F0;
+    width: auto;
+}
+
+.createQuestion th {
+    border: 1px solid #cccccc;
+    width: auto;
+}
+
+.createQuestion .emptyBlock {
+    border: none;
+    background: #F0F0F0
+}
+
+#row-heading {
+    text-align: center;
+}
+
+.matrixButtons, .buttonsTop {
+    position: absolute;
+    opacity: 0;
+    -webkit-transition: opacity 0.2s ease-in-out;
+    -moz-transition: opacity 0.2s ease-in-out;
+    -ms-transition: opacity 0.2s ease-in-out;
+    -o-transition: opacity 0.2s ease-in-out;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.matrixButtons {
+    padding: 0;
+    top: -21px;
+    left: -26px;
+}
+
+.buttonsTop {
+    top: -25px;
+    left: -21px;
+}
+
+th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop:hover {
+    opacity: 1;
+}
+
+.negative button {
+    background: #c12e2a;
+}
+
+#questionStartTime, #questionTimer, #questionStart {
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+#questionStart label, #questionTimer label {
+    display: inline;
+}
+
+.questionTimer, .questionStartTime {
+    display: inline;
+}
+
+#questionName label {
+    display: block;
+}
+
+#questionName {
+    margin-bottom: 10px;
+}
+
+#questionTiming {
+    margin-top: 10px;
+    display: block;
+}
+
+#questionTypeAndTimeLimit {
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+/*Kännykät*/
+
+/* ----------- Galaxy S3 & iPhone 6 & iPhone 5 & 5S & iPhone 4 & 4S----------- */
+/* Portrait and Landscape */
+@media screen
+and (min-device-width: 320px)
+and (max-device-width: 667px)
+and (-webkit-device-pixel-ratio: 2) {
+
+    .pop-up-dialog {
+        width: 100%);
+        overflow: auto;
+        z-index: 6;
+        background-color: #fff;
+        box-shadow: 4px 4px 80px #000;
+    }
+
+}
+
+/* ----------- Galaxy S4 & S5 & iPhone 6+ ----------- */
+/* Portrait and Landscape */
+@media screen
+and (min-device-width: 320px)
+and (max-device-width: 736px)
+and (-webkit-device-pixel-ratio: 3) {
+    .pop-up-dialog {
+        width: 100%);
+        overflow: auto;
+        z-index: 6;
+        background-color: #fff;
+        box-shadow: 4px 4px 80px #000;
+    }
+}
+
+@media only screen and (max-device-width: 500px) {
+    .buttons button {
+        font-size: 15px;
+    }
+}

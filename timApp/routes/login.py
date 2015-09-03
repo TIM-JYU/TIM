@@ -55,7 +55,7 @@ def logout():
     session.pop('appcookie', None)
     session.pop('altlogin', None)
     session['user_name'] = 'Anonymous'
-    return redirect(url_for('startPage'))
+    return redirect(url_for('start_page'))
 
 @login_page.route("/login")
 def login():
@@ -104,8 +104,7 @@ def loginWithKorppi():
         if user is not None:
             userId = user['id']
             timdb.users.updateUser(userId, userName, realName, email)
-            gid = timdb.users.createUserGroup(userName)
-            timdb.users.addUserToGroup(gid, userId)
+            timdb.users.addUserToKorppiGroup(userId)
         else:
             uid = timdb.users.createUser(userName, realName, email)
             gid = timdb.users.createUserGroup(userName)
@@ -265,7 +264,7 @@ def altLogin():
 @login_page.route("/testuser/<path:anything>")
 def testuser(anything=None):
     flash("Testuser route has been removed; please sign up using email.")
-    return redirect(url_for('indexPage'))
+    return redirect(url_for('index_page'))
 
 
 def saveCameFrom():
@@ -306,4 +305,4 @@ def quickLogin(username):
     session['real_name'] = user['real_name']
     session['email'] = user['email']
     flash("Logged in as: {}".format(username))
-    return redirect(url_for('indexPage'))
+    return redirect(url_for('index_page'))

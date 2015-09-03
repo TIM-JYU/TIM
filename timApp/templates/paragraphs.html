@@ -1,0 +1,40 @@
+{% set editline = '' %}
+{% if rights.editable or rights.can_comment %}
+    {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
+{% endif %}
+{% for t in text %}
+    <div class="{{ t.cls|trim }}"
+         id="{{ t.id }}"
+         t="{{ t.t }}"
+         attrs="{{ t.attrs_str }}"
+     {% if t.ref_id %}
+         ref-id="{{ t.ref_id }}"
+         ref-t="{{ t.ref_t }}"
+         ref-attrs="{{ t.ref_attrs_str }}"
+         ref-doc-id="{{ t.ref_doc_id }}"
+     {% endif %}
+            {% if t.is_plugin %}>
+                <answerbrowserlazy
+                        task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ (t.ref_attrs or t.attrs)['taskId'] }}">
+                </answerbrowserlazy>
+            {% else %}
+                ng-non-bindable>
+            {% endif %}
+    <div class="parContent">
+        {{ t.html|safe }}
+    </div>
+    {{ editline|safe }}
+    <div class="{{ ['readline', t.status]|join(' ')|trim }}"
+         title="Click to mark this paragraph as read"></div>
+    {% if t.notes %}
+        <div class="notes">
+            {% for note in t.notes %}
+                <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"
+                     note-id="{{ note.id }}">
+                    {{ note.html|safe }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    </div>
+{% endfor %}

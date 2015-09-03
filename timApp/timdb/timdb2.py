@@ -11,22 +11,39 @@ from timdb.files import Files
 from timdb.documents import Documents
 from timdb.answers import Answers
 from timdb.readings import Readings
+from timdb.questions import Questions
+from timdb.messages import Messages
+from timdb.lectures import Lectures
 from timdb.folders import Folders
+from timdb.lectureanswers import LectureAnswers
 import os
 
 
 TABLE_NAMES = ['BlockEditAccess',
                'BlockViewAccess',
                'UserGroupMember',
-               'ReadRevision',
                'BlockRelation',
                'Block',
                'User',
-               'UserGroup']
+               'UserGroup',
+               'Question',
+               'Messages',
+               'Lectures',
+               'LectureAnswers']
 
 
 class TimDb(object):
-    """Handles saving and retrieving information from TIM database."""
+    """Handles saving and retrieving information from TIM database.
+
+    :type readings: Readings
+    :type notes: Notes
+    :type users: Users
+    :type images: Images
+    :type documents: Documents
+    :type answers: Answers
+    :type folders: Folders
+    :type db: sqlite3.Connection
+    """
 
     @contract
     def __init__(self, db_path: 'str', files_root_path: 'str', current_user_name='Anonymous'):
@@ -53,7 +70,11 @@ class TimDb(object):
         self.files = Files(self.db, files_root_path, 'files', current_user_name)
         self.documents = Documents(self.db, files_root_path, 'documents', current_user_name)
         self.answers = Answers(self.db, files_root_path, 'answers', current_user_name)
+        self.questions = Questions(self.db, files_root_path, 'questions', current_user_name)
+        self.messages = Messages(self.db, files_root_path, 'messages', current_user_name)
+        self.lectures = Lectures(self.db, files_root_path, 'lectures', current_user_name)
         self.folders = Folders(self.db, files_root_path, 'folders', current_user_name)
+        self.lecture_answers = LectureAnswers(self.db, files_root_path, 'lecture_answers', current_user_name)
 
     def clear(self):
         """Clears the contents of all database tables."""
@@ -69,10 +90,36 @@ class TimDb(object):
         self.db.commit()
         self.db.close()
 
-    def initializeTables(self, schema_file='schema2.sql'):
+    def initialize_tables(self):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
-        with open(schema_file, 'r') as schema_file:
+        self.execute_script('schema2.sql')
+
+    def execute_script(self, sql_file):
+        """Executes an SQL file on the database.
+        :param sql_file: The SQL script to be executed.
+        """
+        with open(sql_file, 'r') as schema_file:
             self.db.cursor().executescript(schema_file.read())
         self.db.commit()
 
+    def execute_sql(self, sql):
+        """Executes an SQL command on the database.
+        :param sql_file: The SQL command to be executed.
+        """
+        self.db.cursor().executescript(sql)
+        self.db.commit()
+
+    def get_version(self):
+        try:
+            return self.db.execute("""SELECT MAX(id) FROM Version""").fetchone()[0]
+        except sqlite3.OperationalError:
+            return 0
+
+    def update_version(self):
+        self.db.execute("""INSERT INTO Version(updated_on) VALUES (CURRENT_TIMESTAMP)""")
+        self.db.commit()
+
+    def table_exists(self, table_name):
+        return bool(self.db.execute("SELECT EXISTS(SELECT name from sqlite_master WHERE type = 'table' AND name = ?)",
+                               [table_name]).fetchone()[0])

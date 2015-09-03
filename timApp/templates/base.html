@@ -9,12 +9,15 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <meta name="description" content="TIM - The Interactive Material."/>
         <meta name="keywords" content="tim,interactive,material"/>
+
+        <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
+
         <link href="{{url_for('static', filename='images/favicon.ico')}}" rel="shortcut icon" type="image/x-icon"/>
         <script src="{{ url_for('static', filename='scripts/timTiming.js') }}"></script>
         <script>timLogInit("{{ request.query_string }}");</script>
-
         
         <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
 
 
@@ -24,7 +27,7 @@
         <script src="{{ url_for('bower.static', filename='waypoints/lib/shortcuts/inview.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='ng-file-upload/angular-file-upload-all.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-file-upload/angular-file-upload-all.js') }}"></script>
 
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -41,12 +44,11 @@
     <div class="header clearfix">
         <a href="/">
             <img alt="TIM - The Interactive Material." class="pull-left"
-                 src="{{url_for('static', filename='images/tim-logo_42height.png')}}"/>
+                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
         </a>
-        <a href="https://www.jyu.fi">
-            <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-                 src="{{url_for('static', filename='images/jyulogo.png')}}"/>
-        </a>
+        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+        {% include 'loginlogout.html' %}
     </div>
 
     {% with messages = get_flashed_messages() %}
@@ -61,31 +63,64 @@
 
     <div id="header">
         {% block header %}
+            {% set separator = '' %}
             {% if self.title() != "TIM" %}
                 <!-- <div class="doctitle">{{ self.title() }}</div> -->
             {% endif %}
-            {% include 'loginlogout.html' %}
-            {% if is_owner %}
-                <a href="/manage/{{docID}}">Manage</a>
-            {%endif%}
 
-            {% if self.title() != "TIM" and is_owner %}
-                |
-                {% if teacher_mode %}
-                   <a href="/view/{{docID}}">Student view</a>
-                {% else %}
-                   <a href="/teacher/{{docID}}">Teacher view</a>
-                {% endif %}
-            {% elif objName == "folder" %}
-                |
-                <a href="/view/{{docID}}">View</a>
-            {% elif doc %}
-                |
-                <a href="/view/{{doc.name}}">Student view</a>
-                |
-                <a href="/teacher/{{doc.name}}">Teacher view</a>
+            {% if is_owner %}
+                <a href="/manage/{{ docID }}">Manage</a>
+                {% set separator = '|' %}
             {% endif %}
 
+            {% if self.title() != "TIM" and is_owner %}
+                {% if lecture_mode or teacher_mode or slide_mode %}
+                    {{ separator|safe }}
+                    <a href="/view/{{ docName }}">Student view</a>
+                    {% set separator = '|' %}
+                {% endif %}
+                {% if not teacher_mode %}
+                    {{ separator|safe }}
+                    <a href="/teacher/{{ docName }}">Teacher view</a>
+                    {% set separator = '|' %}
+                {% endif %}
+                {% if not lecture_mode %}
+                    {{ separator|safe }}
+                    <a href="/lecture/{{ docName }}">Lecture view</a>
+                    {% set separator = '|' %}
+                {% endif %}
+                {% if not slide_mode %}
+                    {{ separator|safe }}
+                    <a href="/slide/{{ docName }}">Slide view</a>
+                    {% set separator = '|' %}
+                {% endif %}
+            {% elif folder or objName == 'folder' %}
+                {{ separator|safe }}
+                <a href="/view/{{ docName }}">View</a>
+            {% elif doc %}
+                <a href="/view/{{ doc.name }}">Student view</a>
+                |
+                <a href="/teacher/{{ doc.name }}">Teacher view</a>
+                |
+                <a href="/lecture/{{ doc.name }}">Lecture view</a>
+                |
+                <a href="/slide/{{ doc.name }}">Slide view</a>
+            {% elif docName %}
+                {% if lecture_mode or slide_mode %}
+                    <a href="/view/{{ docName }}">Student view</a>
+                    {% set separator = '|' %}
+                {% endif %}
+                {% if not lecture_mode %}
+                    {{ separator|safe }}
+                    <a href="/lecture/{{ docName }}">Lecture view</a>
+                    {% set separator = '|' %}
+                {% endif %}
+                {% if not slide_mode %}
+                    {{ separator|safe }}
+                    <a href="/slide/{{ docName }}">Slide view</a>
+                    {% set separator = '|' %}
+                {% endif %}
+            {% endif %}
         {% endblock %}
     </div>
 

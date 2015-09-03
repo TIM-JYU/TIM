@@ -1,0 +1,22 @@
+<div class="popUpWindow">
+    <form class="joinLectureOptions">
+        <div>
+            <label for="features">Which features you want to use with this browser?</label>
+        </div>
+        <div>
+            <label class="lectureOptions">
+                <input type="checkbox" ng-model="lectureSettings.useQuestions">
+                Lecture questions
+            </label>
+            <label class="lectureOptions">
+                <input type="checkbox" ng-model="lectureSettings.useWall">
+                Lecture wall
+            </label>
+        </div>
+    </form>
+    <div class="buttons">
+        <label class="lectureOptions">
+            <button ng-click="useOptions(lectureSettings.useQuestions, lectureSettings.useWall)">OK</button>
+        </label>
+    </div>
+</div>

@@ -1,5 +1,6 @@
 import os
 import shutil
+import dumboclient
 import initdb2
 import tim
 import ephemeralclient
@@ -8,6 +9,7 @@ from filemodehelper import change_permission_and_retry
 
 scripts_path = os.path.join('static', 'scripts')
 bower_path = os.path.join(scripts_path, 'bower_components')
+bower_src = '/bower_components'
 
 
 def copy_bower_libs():
@@ -16,7 +18,7 @@ def copy_bower_libs():
         shutil.rmtree(bower_path, onerror=change_permission_and_retry)
     print('Copying bower libs to static/scripts...', end="")
     sys.stdout.flush()
-    shutil.copytree('/bower_components', bower_path)
+    shutil.copytree(bower_src, bower_path)
     print(' Done.')
 
 if __name__ == '__main__':
@@ -24,20 +26,31 @@ if __name__ == '__main__':
         raise Exception('static/scripts directory does not seem to exist, '
                         'make sure the working directory is correct')
     if not os.path.exists(bower_path):
-        copy_bower_libs()
-    else:
-        expected_files = set(os.listdir('/bower_components'))
+        if os.path.exists(bower_src):
+            copy_bower_libs()
+        else:
+            print('You may want to run inside docker first or copy bower libs to static/scripts if there are errors.')
+    elif os.path.exists(bower_src):
+        expected_files = set(os.listdir(bower_src))
         actual_files = set(os.listdir(bower_path))
         if actual_files != expected_files:
             print('actual bower files differ from expected ones, copying bower libs again')
             copy_bower_libs()
+    else:
+        print('Not running inside docker, skipping bower check.')
     ephemeral_started = False
+    dumbo_started = False
     try:
         if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
             p = ephemeralclient.launch_ephemeral(ignore_signals='pudb' in sys.modules)
+            d = dumboclient.launch_dumbo()
             ephemeral_started = True
-        initdb2.initialize_database(launch_ephemeral=False)
-        tim.startApp()
+            dumbo_started = True
+        initdb2.initialize_database()
+        initdb2.update_database()
+        tim.start_app()
     finally:
         if ephemeral_started:
             p.kill()
+        if dumbo_started:
+            d.kill()

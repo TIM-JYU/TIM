@@ -1,0 +1,18 @@
+<div id="base">
+    <ul class="subexp">
+        {% for h in headers %}
+            <li class="{% if h[1] %}exp{% else %}basic{% endif %}">
+                <a class="a{{ h[0].level }}" href="#{{ h[0].id|safe }}" target="_self">{{ h[0].text|safe }}</a>
+                {% if h[1] %}
+                    <ul class="sub">
+                        {% for h2 in h[1] %}
+                            <li class="basic">
+                                <a class="a{{ h2.level }}" href="#{{ h2.id }}" target="_self">{{ h2.text|safe }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</div>

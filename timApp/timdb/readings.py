@@ -1,58 +1,54 @@
 from contracts import contract
+from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import Document
 from timdb.timdbbase import TimDbBase
-
+from sqlite3 import Connection
 
 class Readings(TimDbBase):
     @contract
-    def __init__(self, db_path : 'Connection', files_root_path : 'str', type_name : 'str', current_user_name : 'str'):
+    def __init__(self, db_path: 'Connection', files_root_path: 'str', type_name: 'str', current_user_name: 'str'):
         """Initializes TimDB with the specified database and root path.
 
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-        #self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
-    def getReadings(self, UserGroup_id : 'int', doc_id : 'int', doc_ver : 'str') -> 'list(dict)':
+    def getReadings(self, usergroup_id: 'int', doc: 'Document') -> 'list(dict)':
         """Gets the reading info for a document for a user.
 
-        :param UserGroup_id: The id of the user group whose readings will be fetched.
-        :param block_id: The id of the block whose readings will be fetched.
+        :param doc: The document for which to get the readings.
+        :param usergroup_id: The id of the user group whose readings will be fetched.
         """
-        return self.getMappedValues(UserGroup_id,
-                                    doc_id,
-                                    doc_ver,
-                                    'ReadParagraphs',
-                                    status_unmodified='read',
-                                    order_by_sql='order by timestamp desc')
-
+        ids = doc.get_referenced_document_ids()
+        ids.add(doc.doc_id)
+        template = ','.join('?' * len(ids))
+        return self.resultAsDictionary(self.db.execute("""SELECT par_id, doc_id, par_hash, timestamp FROM ReadParagraphs
+                           WHERE doc_id IN (%s) AND UserGroup_id = ?""" % template, list(ids) + [usergroup_id]))
 
     @contract
-    def setAsRead(self, UserGroup_id: 'int', doc_id : 'int', doc_ver : 'str', par_index: 'int', commit : 'bool' = True):
-        self.addEmptyParMapping(doc_id, doc_ver, par_index, commit=False)
+    def setAsRead(self, usergroup_id: 'int', doc: 'Document', par: 'DocParagraph', commit: 'bool'=True):
         cursor = self.db.cursor()
-
         # Remove previous markings for this paragraph to reduce clutter
         cursor.execute(
-            'delete from ReadParagraphs where UserGroup_id = ? and doc_id = ? and par_index = ? and doc_ver = ?',
-            [UserGroup_id, doc_id, par_index, doc_ver])
+            'DELETE FROM ReadParagraphs WHERE UserGroup_id = ? AND doc_id = ? AND par_id = ?',
+            [usergroup_id, doc.doc_id, par.get_id()])
 
         # Set current version as read
         cursor.execute(
-            'insert into ReadParagraphs (UserGroup_id, doc_id, doc_ver, par_index, timestamp) values (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-            [UserGroup_id, doc_id, doc_ver, par_index])
+            'INSERT INTO ReadParagraphs (UserGroup_id, doc_id, par_id, timestamp, par_hash)'
+            'VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)',
+            [usergroup_id, doc.doc_id, par.get_id(), par.get_hash()])
 
         if commit:
             self.db.commit()
 
     @contract
     def setAllAsRead(self, usergroup_id: 'int',
-                     doc_id : 'int',
-                     doc_ver : 'str',
-                     num_blocks: 'int',
-                     commit : 'bool' = True):
-        for i in range(0, num_blocks):
-            self.setAsRead(usergroup_id, doc_id, doc_ver, i, commit=False)
+                     doc: 'Document',
+                     commit: 'bool'=True):
+        for i in doc:
+            self.setAsRead(usergroup_id, doc.doc_id, i, commit=False)
         if commit:
             self.db.commit()
