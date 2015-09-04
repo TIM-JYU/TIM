@@ -57,7 +57,8 @@ timApp.controller("ViewCtrl", [
     '$rootScope',
     '$localStorage',
     '$filter',
-    function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter) {
+    '$timeout',
+    function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout) {
         "use strict";
         timLogTime("VieCtrl start","view");
         http.defaults.headers.common.Version = $window.version.hash;
@@ -85,6 +86,12 @@ timApp.controller("ViewCtrl", [
         sc.firstTimeQuestions = true;
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
+
+        sc.processAllMathDelayed = function ($elem) {
+            $timeout(function () {
+                sc.processAllMath($elem);
+            }, 500);
+        };
 
         sc.processAllMath = function ($elem) {
             timLogTime("processAllMath start","view");
@@ -504,7 +511,7 @@ timApp.controller("ViewCtrl", [
             }
             var newPars = $($compile(data.texts)(sc));
             $par.replaceWith(newPars);
-            sc.processAllMath(newPars);
+            sc.processAllMathDelayed(newPars);
             http.defaults.headers.common.Version = data.version;
             sc.editing = false;
             sc.cancelArea();

@@ -309,7 +309,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             var $previewDiv = angular.element(".previewcontent");
                             $previewDiv.html($compile(data.texts)($scope));
                             var len = $previewDiv.children().length;
-                            $scope.$parent.processAllMath($previewDiv);
+                            $scope.$parent.processAllMathDelayed($previewDiv);
                             $scope.outofdate = false;
                             $scope.parCount = len;
                         }).error(function (data, status, headers, config) {

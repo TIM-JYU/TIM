@@ -24,9 +24,6 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
         "use strict";
         timLogTime("answerbrowserlazy directive function","answ");
         return {
-            //templateUrl: "/static/templates/answerBrowser2.html",
-       		// template: timApp.directiveTemplateAnswerBrowser(),
-
             restrict: 'E',
             scope: {
                 taskId: '@'
@@ -39,8 +36,7 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
             
             link: function ($scope, $element, $attrs) {
                 timLogTime("answerbrowserlazy link function","answ",1);
-                // $element.parents('.par').find('.parContent').html($compile(data.html)($scope));
-                
+
                 $element.parent().on('mouseenter touchstart', function () {
                     var plugin = $element.parents('.par').find('.parContent');
                     if ( $scope.compiled ) return;
@@ -48,39 +44,23 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
                     var newScope = $scope;
                     var newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
                     var newElement = $compile(newHtml);
-                    // $element.parentElement.insertBefore(newElement,$element.parentElement.firstChild);
-                    // $element.parents('.par').find('.parContent').html(newElement($scope));
-                    //$element.html(newElement($scope));
                     var parent = $element.parents(".par")[0];
                     parent.replaceChild(newElement($scope.$parent)[0],$element[0]);
                     
                     // Next the inside of the plugin to non lazy
                     var origHtml = plugin[0].innerHTML;
                     if ( origHtml.indexOf(LAZYSTART) >= 0 ) {
-                        // plugin.html("Kukkuu");
-                    } else plugin = null;    
+
+                    } else plugin = null;
                     if ( plugin ) {
                         var newPluginHtml = makeNotLazy(origHtml);
                         var newPluginElement = $compile(newPluginHtml);
-                        plugin.html(newPluginElement($scope.$parent));
-                        origHtml = null; // säästetään vähän tilaa
+                        plugin.html(newPluginElement($scope));
+                        $scope.$parent.processAllMathDelayed(plugin);
+                        origHtml = null; // save some space
                     }
-                    //parent.insertBefore(newElement($scope),parent.firstChild);
-                    //parent.firstChild = newElement($scope);
-                    /*
-                    $scope.answerBrowserScope.loadIfChanged();
-                    if ($scope.$parent.teacherMode && $scope.users === null) {
-                        $scope.users = [];
-                        if ($scope.$parent.users.length > 0) {
-                            $scope.answerBrowserScope.getAvailableUsers();
-                        }
-                    }
-                    */
                 });
             }
-            
-            //function ($scope, $element, $attrs) {
-            //}
         };
     }]);
 
@@ -101,6 +81,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             controller: function ($scope) {
             },
             link: function ($scope, $element, $attrs) {
+                $scope.element = $element.parents('.par');
                 //$scope.$parent = $scope.$parent; // muutos koska scope on syntynyt tuon toisen lapseksi
                 timLogTime("answerbrowser link","answ");
                 
@@ -117,7 +98,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
                     $scope.points = $scope.selectedAnswer.points;
-                    var $par = $element.parents('.par');
+                    var $par = $scope.element;
                     var par_id = $scope.$parent.getParId($par);
                     $scope.loading++;
                     $http.get('/getState', {
@@ -129,7 +110,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         }
                     }).success(function (data, status, headers, config) {
                         var newhtml = makeNotLazy(data.html);
-                        $element.parents('.par').find('.parContent').html($compile(newhtml)($scope));
+                        var plugin = $par.find('.parContent');
+                        plugin.html($compile(newhtml)($scope));
+                        $scope.$parent.processAllMathDelayed(plugin);
                     }).error(function (data, status, headers, config) {
                         $window.alert('Error getting answers: ' + data.error);
                     }).finally(function () {
@@ -216,6 +199,8 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.$on('answerSaved', function (event, args) {
                     if (args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
+                        // HACK: for some reason the math mode is lost because of the above call, so we restore it here
+                        $scope.$parent.processAllMathDelayed($scope.element.find('.parContent'));
                     }
                 });
 
@@ -245,7 +230,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             $scope.getAvailableUsers();
                         }
                     }
-                }
+                };
                 
                 if ( GLOBALBrowseUser ) {
                     $scope.user = GLOBALBrowseUser;
