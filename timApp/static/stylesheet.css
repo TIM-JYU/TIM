@@ -361,6 +361,55 @@ a.parlink:hover {
     text-decoration: none;
 }
 
+.partranslate {
+    /*border: 1px solid #dac;
+    border-radius: 3px;*/
+    padding-bottom: 20pt;
+}
+
+.partranslatefrom {
+    border: 1px solid #dac;
+    border-radius: 3px;
+    padding-bottom: 20pt;
+}
+
+.trlink:before {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 24px;
+    color: #cad;
+    content: ">";
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+a.trlink {
+    color: #97a;
+}
+
+a.trfromlink:hover {
+    color: #dde;
+    text-decoration: none;
+}
+
+.trfromlink:before {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 24px;
+    color: #cad;
+    content: "<";
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+a.trfromlink {
+    color: #97a;
+}
+
+a.trfromlink:hover {
+    color: #dde;
+    text-decoration: none;
+}
+
+
 #previewDiv {
     max-width: 52em;
     clear: both;

@@ -155,7 +155,7 @@ def preview(doc_id):
 
 
 def par_response(blocks, doc_id):
-    pars, js_paths, css_paths, modules = post_process_pars(blocks, doc_id, getCurrentUserId())
+    pars, js_paths, css_paths, modules = post_process_pars(blocks, doc_id, getCurrentUserId(), edit_window=True)
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
                                                   rights=get_rights(doc_id)),

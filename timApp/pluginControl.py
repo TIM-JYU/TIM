@@ -145,7 +145,7 @@ def try_load_json(json_str):
         return json_str
 
 
-def dereference_pars(pars):
+def dereference_pars(pars, edit_window=False):
     """Resolves references in the given paragraphs.
 
     :type pars: list[DocParagraph]
@@ -155,7 +155,7 @@ def dereference_pars(pars):
     for par in pars:
         if par.is_reference():
             try:
-                new_pars += par.get_referenced_pars()
+                new_pars += par.get_referenced_pars(edit_window=edit_window)
             except TimDbException as e:
                 par.set_html('<div class="pluginError">' + sanitize_html(str(e)) + '</div>')
                 new_pars.append(par)
@@ -164,7 +164,7 @@ def dereference_pars(pars):
     return new_pars
 
 
-def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, do_lazy=False):
+def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, do_lazy=False, edit_window=False):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
@@ -182,7 +182,7 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
     t1 = time.clock()
     t12 = t1
 
-    pars = dereference_pars(pars)
+    pars = dereference_pars(pars, edit_window)
 
     if custom_state is not None:
         if len(pars) != 1:
