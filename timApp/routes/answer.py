@@ -3,7 +3,6 @@
 from flask import Blueprint
 
 from .common import *
-from documentmodel.docparagraph import DocParagraph
 import pluginControl
 import containerLink
 
@@ -27,6 +26,20 @@ def parse_task_id(task_id):
     doc_id = int(pieces[0])
     task_id_name = pieces[1]
     return doc_id, task_id_name
+
+
+def is_answer_valid(plugin_type, plugin_yaml, old_answers, tim_info):
+    """Determines whether the currently posted answer should be considered valid.
+
+    :param plugin_type: The type of the plugin to which the answer was posted.
+    :param plugin_yaml: The YAML markup as a dict that was used in the plugin.
+    :param old_answers: The old answers for this task for the current user.
+    :param tim_info: The tim_info structure returned by the plugin or None.
+    :return: True if the answer should be considered valid, False otherwise.
+    """
+    if plugin_type == 'mmcq' and len(old_answers) > 0:
+        return False
+    return True
 
 
 @answers.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
@@ -101,7 +114,8 @@ def save_answer(plugintype, task_id):
         except (TypeError, KeyError):
             pass
         if not is_teacher:
-            timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags)
+            is_valid = is_answer_valid(plugintype, plugin_data['markup'], old_answers, tim_info)
+            timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
         else:
             if answer_browser_data.get('saveTeacher', False):
                 answer_id = answer_browser_data.get('answer_id', None)
@@ -118,7 +132,7 @@ def save_answer(plugintype, task_id):
                 points = answer_browser_data.get('points', points)
                 if points == "":
                     points = None
-                timdb.answers.saveAnswer(users, task_id, json.dumps(save_object), points, tags)
+                timdb.answers.saveAnswer(users, task_id, json.dumps(save_object), points, tags, valid=True)
 
     return jsonResponse({'web': jsonresp['web']})
 

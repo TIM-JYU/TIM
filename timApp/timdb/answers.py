@@ -5,10 +5,18 @@ from contracts import contract
 
 class Answers(TimDbBase):
     @contract
-    def saveAnswer(self, user_ids: 'list(int)', task_id: 'str', content: 'str', points: 'str|int|float|None', tags: 'list(str)'):
+    def saveAnswer(self,
+                   user_ids: 'list(int)',
+                   task_id: 'str',
+                   content: 'str',
+                   points: 'str|int|float|None',
+                   tags: 'list(str)',
+                   valid: 'bool'=True):
         """
         Saves an answer to the database.
         
+        :param tags: Tags for the answer.
+        :param valid: Whether the answer is considered valid (e.g. sent before deadline, etc.)
         :param user_ids: The id of the usergroup to which the answer belongs.
         :param task_id: The id of the task.
         :param content: The content of the answer.
@@ -24,8 +32,9 @@ class Answers(TimDbBase):
             self.db.commit()
             return
 
-        cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on) VALUES (?,?,?,CURRENT_TIMESTAMP)',
-                       [task_id, content, points])
+        cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on, valid)'
+                       'VALUES (?,?,?,CURRENT_TIMESTAMP,?)',
+                       [task_id, content, points, valid])
         answer_id = cursor.lastrowid
         assert answer_id is not None
 
@@ -46,7 +55,8 @@ class Answers(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        cursor.execute("""SELECT Answer.id, task_id, content, points, datetime(answered_on, 'localtime') as answered_on
+        cursor.execute("""SELECT Answer.id, task_id, content, points,
+                                 datetime(answered_on, 'localtime') as answered_on, valid
                           FROM Answer
                           JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
                           WHERE task_id = ?
@@ -117,9 +127,10 @@ class Answers(TimDbBase):
                 FROM User
                 JOIN UserAnswer ON User.id = UserAnswer.user_id
                 JOIN Answer ON Answer.id = UserAnswer.answer_id
-                JOIN (SELECT Answer.id, MIN(answered_on)
+                JOIN (SELECT Answer.id, MAX(answered_on)
                       FROM Answer
                       JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
+                      WHERE Answer.valid = 1
                       GROUP BY UserAnswer.user_id, Answer.task_id
                       )tmp ON tmp.id = Answer.id
                 WHERE task_id IN (%s)
