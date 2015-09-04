@@ -903,8 +903,9 @@ timApp.controller("ViewCtrl", [
         if (sc.rights.editable) {
             sc.onClick(".addBottom", function ($this, e) {
                 $(".actionButtons").remove();
-                var $par = $('.par').last();
-                return sc.showAddParagraphBelow(e, $par);
+                //var $par = $('.par').last();
+                //return sc.showAddParagraphBelow(e, $par);
+                return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
         }
         sc.processAllMath($('body'));
