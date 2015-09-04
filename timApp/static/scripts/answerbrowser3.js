@@ -139,8 +139,10 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.setNewest = function () {
-                    $scope.selectedAnswer = $scope.filteredAnswers[0];
-                    $scope.changeAnswer();
+                    if ($scope.filteredAnswers.length > 0) {
+                        $scope.selectedAnswer = $scope.filteredAnswers[0];
+                        $scope.changeAnswer();
+                    }
                 };
 
                 $scope.getTeacherData = function () {
@@ -248,6 +250,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.users = null;
                 $scope.answers = [];
                 $scope.onlyValid = true;
+                $scope.selectedAnswer = null;
 
                 $scope.$watchGroup(['onlyValid', 'answers'], function (newValues, oldValues, scope) {
                     $scope.filteredAnswers = $filter('filter')($scope.answers, function (value, index, array) {
