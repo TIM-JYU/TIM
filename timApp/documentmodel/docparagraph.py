@@ -19,48 +19,68 @@ new_contract('DocParagraph', DocParagraphBase)
 
 class DocParagraph(DocParagraphBase):
     @contract
-    def __init__(
-            self,
-            md: 'str' = '',
-            html: 'str|None' = None,
-            doc_id: 'int|None'=None,
-            par_id: 'str|None'=None,
-            t: 'str|None'=None,
-            attrs: 'dict|None'=None,
-            properties: 'dict|None'=None,
-            src_dict: 'dict|None'=None,
-            files_root: 'str|None'=None):
-        self.original = None
-        if not attrs:
-            attrs = {}
-        if not properties:
-            properties = {}
-        self.files_root = self.get_default_files_root() if files_root is None else files_root
+    def __init__(self, doc_id: 'int|None'=None, files_root: 'str|None'=None):
         self.doc_id = doc_id
-        assert doc_id is not None
-        if src_dict:
-            # Create from JSON
-            self.__data = src_dict
-            self.__mkhtmldata()
-            return
+        self.original = None
+        self.files_root = self.get_default_files_root() if files_root is None else files_root
 
-        assert doc_id is not None
-        self.__data = {
-            'id': par_id if par_id is not None else random_id(),
+    @classmethod
+    @contract
+    def create(cls,
+               doc_id: 'int',
+               par_id: 'str|None' = None,
+               md: 'str' = '',
+               html: 'str|None' = None,
+               attrs: 'dict|None' = None,
+               props: 'dict|None' = None,
+               files_root: 'str|None' = None) -> 'DocParagraph':
+
+        par = DocParagraph(doc_id, files_root)
+        par.__data = {
+            'id': random_id() if par_id is None else par_id,
             'md': md,
+            't': hashfunc(md),
             'html': html,
-            't': hashfunc(md) if md is not None else None,
             'links': [],
-            'attrs': attrs,
-            'props': properties}
+            'attrs': {} if attrs is None else attrs,
+            'props': {} if props is None else props
+        }
+        par._mkhtmldata()
+        return par
 
-        if par_id:
-            # Try to read from file if we know the paragraph id
-            self.__read()
-            for attr in attrs or []:
-                self.__data['attrs'][attr] = attrs[attr]
+    @classmethod
+    @contract
+    def from_dict(cls, doc_id: 'int', d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
+        par = DocParagraph(doc_id, files_root)
+        par.__data = dict(d)
+        par._mkhtmldata()
+        return par
 
-        self.__mkhtmldata()
+    @classmethod
+    @contract
+    def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        froot = cls.get_default_files_root() if files_root is None else files_root
+        try:
+            t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
+            # Make a copy of the paragraph to avoid modifying cached instance
+            return deepcopy(cls.get(doc_id, par_id, t, files_root=froot))
+        except FileNotFoundError as e:
+            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+
+    @classmethod
+    @contract
+    def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        try:
+            return cls.__get(doc_id, par_id, t, files_root)
+        except FileNotFoundError as e:
+            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+
+    @classmethod
+    @functools.lru_cache(maxsize=65536)
+    @contract
+    def __get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
+            return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
 
 
     def __iter__(self):
@@ -69,11 +89,6 @@ class DocParagraph(DocParagraphBase):
     @classmethod
     def get_default_files_root(cls):
         return 'tim_files'
-
-    @classmethod
-    @contract
-    def from_dict(cls, doc_id: 'int', d: 'dict', files_root: 'str|None' = None):
-        return DocParagraph(doc_id=doc_id, src_dict=d, files_root=files_root)
 
     @classmethod
     @contract
@@ -87,26 +102,11 @@ class DocParagraph(DocParagraphBase):
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.join(froot, 'pars', str(doc_id), par_id)
 
-    @classmethod
-    @contract
-    def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
-        # Make a copy of the paragraph to avoid modifying cached instance
-        return deepcopy(cls.get(doc_id, par_id, t, files_root=froot))
-
-    @classmethod
-    @functools.lru_cache(maxsize=65536)
-    @contract
-    def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
-        with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
-            return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
-
     @contract
     def dict(self) -> 'dict':
         return self.__data
 
-    def __mkhtmldata(self):
+    def _mkhtmldata(self):
         self.__is_plugin = self.get_attr('taskId')
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
@@ -282,10 +282,11 @@ class DocParagraph(DocParagraphBase):
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
-            return
+            return False
         with open(self.get_path(), 'r') as f:
             self.__data = json.loads(f.read())
-            self.__mkhtmldata()
+            self._mkhtmldata()
+            return True
 
     def __write(self):
         file_name = self.get_path()
@@ -400,7 +401,7 @@ class DocParagraph(DocParagraphBase):
 
     def set_original(self, orig):
         self.original = orig
-        self.__mkhtmldata()
+        self._mkhtmldata()
 
     def get_original(self):
         return self.original

@@ -190,6 +190,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
     current_user = timdb.users.getUser(user_id)
     group = timdb.users.getPersonalUserGroup(user_id)
     t0 = time.time()
+
     pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                  current_user['name'],
                                                                  timdb.answers,

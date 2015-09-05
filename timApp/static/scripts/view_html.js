@@ -199,8 +199,7 @@ timApp.controller("ViewCtrl", [
                     par: par_id, // the id of paragraph on which the editor was opened
                     par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
                     area_start: area_start,
-                    area_end: area_end,
-                    attrs: JSON.parse($par.attr('attrs')) // TODO: Take attrs away; not needed
+                    area_end: area_end
                 },
                 "options": {
                     showDelete: options.showDelete,

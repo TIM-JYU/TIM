@@ -71,7 +71,7 @@ def modify_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     timdb = getTimDb()
-    doc_id, md, par_id, par_next_id, attrs = verify_json_params('docId', 'text', 'par', 'par_next', 'attrs')
+    doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
     verifyEditAccess(doc_id)
 
     current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, par_id))
@@ -96,7 +96,7 @@ def modify_paragraph():
         except ValidationException as e:
             return abort(400, str(e))
     else:
-        original_par = DocParagraph(doc_id=doc_id, par_id=par_id)
+        original_par = DocParagraph.get_latest(doc_id=doc_id, par_id=par_id)
         pars = []
 
         separate_pars = DocumentParser(md).get_blocks()
@@ -114,11 +114,11 @@ def modify_paragraph():
                 properties['multi_block'] = True
             if has_headers:
                 properties['has_headers'] = has_headers
-            [par], _ = timdb.documents.modify_paragraph(doc,
-                                                        par_id,
-                                                        editor_pars[0].get_markdown(),
-                                                        attrs,
-                                                        properties)
+            [par], _ = timdb.documents.modify_paragraph(doc=doc,
+                                                        par_id=par_id,
+                                                        new_content=editor_pars[0].get_markdown(),
+                                                        new_attrs=editor_pars[0].get_attrs(),
+                                                        new_properties=properties)
             pars.append(par)
 
         for p in editor_pars[1:]:
@@ -127,7 +127,7 @@ def modify_paragraph():
                 properties['multi_block'] = True
             if has_headers:
                 properties['has_headers'] = has_headers
-            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=attrs,
+            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
                                                      properties=properties)
             pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
@@ -147,8 +147,8 @@ def preview(doc_id):
         try:
             blocks = get_pars_from_editor_text(doc_id, text, break_on_elements=editing_area)
         except ValidationException as e:
-            blocks = [DocParagraph(doc_id=doc_id)]
-            blocks[0].set_html('<div class="pluginError">{}</div>'.format(sanitize_html(str(e))))
+            err_html = '<div class="pluginError">{}</div>'.format(sanitize_html(str(e)))
+            blocks = [DocParagraph.create(doc_id=doc_id, md=err_html, html=err_html)]
         return par_response(blocks, doc_id)
     else:
         return jsonResponse({'texts': md_to_html(text)})
@@ -166,7 +166,7 @@ def par_response(blocks, doc_id):
 
 
 def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
-    blocks = [DocParagraph(doc_id=doc_id, md=par['md'], attrs=par.get('attrs'))
+    blocks = [DocParagraph.create(doc_id=doc_id, md=par['md'], attrs=par.get('attrs'))
               for par in DocumentParser(text).validate_structure().get_blocks(break_on_code_block=break_on_elements,
                                                                               break_on_header=break_on_elements,
                                                                               break_on_normal=break_on_elements)]
