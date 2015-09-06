@@ -68,8 +68,8 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
 var GLOBALBrowseUser = null;    
     
 
-timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window',
-    function ($upload, $http, $sce, $compile, $window) {
+timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window', '$filter',
+    function ($upload, $http, $sce, $compile, $window, $filter) {
         "use strict";
         timLogTime("answerbrowser directive function","answ");
         return {
@@ -121,26 +121,28 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.next = function () {
-                    var newIndex = $scope.answers.indexOf($scope.selectedAnswer) - 1;
+                    var newIndex = $scope.filteredAnswers.indexOf($scope.selectedAnswer) - 1;
                     if (newIndex < 0) {
-                        newIndex = $scope.answers.length - 1;
+                        newIndex = $scope.filteredAnswers.length - 1;
                     }
-                    $scope.selectedAnswer = $scope.answers[newIndex];
+                    $scope.selectedAnswer = $scope.filteredAnswers[newIndex];
                     $scope.changeAnswer();
                 };
 
                 $scope.previous = function () {
-                    var newIndex = $scope.answers.indexOf($scope.selectedAnswer) + 1;
-                    if (newIndex >= $scope.answers.length) {
+                    var newIndex = $scope.filteredAnswers.indexOf($scope.selectedAnswer) + 1;
+                    if (newIndex >= $scope.filteredAnswers.length) {
                         newIndex = 0;
                     }
-                    $scope.selectedAnswer = $scope.answers[newIndex];
+                    $scope.selectedAnswer = $scope.filteredAnswers[newIndex];
                     $scope.changeAnswer();
                 };
 
                 $scope.setNewest = function () {
-                    $scope.selectedAnswer = $scope.answers[0];
-                    $scope.changeAnswer();
+                    if ($scope.filteredAnswers.length > 0) {
+                        $scope.selectedAnswer = $scope.filteredAnswers[0];
+                        $scope.changeAnswer();
+                    }
                 };
 
                 $scope.getTeacherData = function () {
@@ -231,7 +233,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         }
                     }
                 };
-                
+
                 if ( GLOBALBrowseUser ) {
                     $scope.user = GLOBALBrowseUser;
                 }    
@@ -246,7 +248,22 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.shouldUpdateHtml = false;
                 $scope.saveTeacher = false;
                 $scope.users = null;
-                
+                $scope.answers = [];
+                $scope.onlyValid = true;
+                $scope.selectedAnswer = null;
+
+                $scope.$watchGroup(['onlyValid', 'answers'], function (newValues, oldValues, scope) {
+                    $scope.filteredAnswers = $filter('filter')($scope.answers, function (value, index, array) {
+                        if (value.valid) {
+                            return true;
+                        }
+                        return !$scope.onlyValid;
+                    });
+                    if ($scope.filteredAnswers.indexOf($scope.selectedAnswer) < 0) {
+                        $scope.setNewest();
+                    }
+                });
+
                 $scope.checkUsers();
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.checkUsers();

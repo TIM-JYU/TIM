@@ -236,11 +236,14 @@ def print_lines(file, lines, n1, n2):
         file.write((ln + line + "\n"))
 
 
-def write_json_error(file, err, result):
+def write_json_error(file, err, result, points_rule):
+    return_points(points_rule, result)
+
     result["web"] = {"error": err}
     result_str = json.dumps(result)
     file.write(result_str.encode())
     print("ERROR:======== ", err.encode("UTF8"))
+    print(result_str)
 
 
 def remove_before(what, s):
@@ -411,18 +414,37 @@ def log(self):
     return
 
 
-def give_points(points_rule, points, rule, default = 0):
-    if not points_rule: return max(points, default)
-    if rule not in points_rule: return max(points, default)
-    p = points_rule[rule]
-    return max(points, p)
+def give_points(points_rule, rule, default=0):
+    if not points_rule: return
+    p = points_rule.get(rule, default)
+    if not points_rule.get("cumulative", False):
+        points_rule["result"] = max(points_rule.get("result", 0), p)
+        return
+    ptstype = "run"
+    if "test" in rule: ptstype = "test"
+    pts = points_rule.get("points", None)
+    if pts:
+        ptype = pts.get(ptstype, 0)
+        pts[ptstype] = ptype + p
+    else:
+        pts = {}
+        points_rule["points"] = pts
+        pts[ptstype] = p
+    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0)
 
 
 def get_points_rule(points_rule, key, default):
     if not points_rule: return default
-    if key not in points_rule: return default
-    return points_rule[key]
+    return points_rule.get(key, default)
 
+
+def return_points(points_rule, result):
+    if not points_rule: return
+    if "save" not in result: return
+    if "result" in points_rule:
+        tim_info = {"points": points_rule["result"]}
+        result["tim_info"] = tim_info
+    if "points" in points_rule: result["save"]["points"] = points_rule["points"]
 
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
@@ -602,11 +624,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             result_json = {"js": ["/cs/js/dir.js",
                            "/static/scripts/jquery.ui.touch-punch.min.js",
                            "/cs/cs-parsons/csparsons.js",
-                           "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js"],
+                            #"https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
+                           "/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             if is_parsons:
-                result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","/cs/js/embedded_sagecell.js",
+                result_json = {"js": ["/cs/js/dir.js",
+                               # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
+                               "/cs/js/embedded_sagecell.js",
                                "/static/scripts/jquery.ui.touch-punch.min.js",
                                "/cs/cs-parsons/csparsons.js",
                                "/cs/js-parsons/lib/underscore-min.js",
@@ -688,7 +713,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             delete_tmp = True
             opt = get_param(query, "opt", "") 
             if get_param(query, "path", "") == "user" and self.user_id:
-                basename = "user/" + hash_user_dir(self.user_id)
+                task_id = get_param(query, "taskID", "")
+                doc_id, dummy = (task_id + "NONE.none").split(".",1)
+                print(task_id, doc_id)
+                basename = "user/" + hash_user_dir(self.user_id) + "/" + doc_id
                 delete_tmp = False
                 mkdirs("/tmp/user")
             else:
@@ -845,6 +873,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "input", "usercode", None)
             if usercode: save["usercode"] = usercode
             userinput = get_json_param(query.jso, "input", "userinput", None)
+
             if userinput: 
                 save["userinput"] = userinput
                 if userinput[-1:] != "\n": userinput += "\n" 
@@ -899,11 +928,25 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 
             nocode = get_param(query, "nocode", False)
 
-
+            is_test = ""
+            if "test" in ttype: is_test = "test"
             points_rule = get_param(query, "pointsRule", None)
+            if points_rule:
+                points_rule["points"] = get_json_param(query.jso, "state", "points", None)
+                points_rule["result"] = 0
+                if points_rule["points"]:
+                    if is_test:
+                        points_rule["points"]["test"] = 0
+                    else:
+                        points_rule["points"]["run"] = 0
+
+                expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
+                if expect_code:
+                    if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
+                    excode = re.compile(expect_code.rstrip('\n'), re.M)
+                    if excode.match(usercode): give_points(points_rule, "code", 1)
             print(points_rule)
-            points = 0
-        
+
                 
             # print(ttype)
             # ########################## Compiling programs ###################################################
@@ -997,9 +1040,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 output.close()
 
                 if delete_tmp: removedir(prgpath)
-                return write_json_error(self.wfile, error_str, result)
+                give_points(points_rule, is_test + "notcompile")
+                return write_json_error(self.wfile, error_str, result, points_rule)
 
-            points = give_points(points_rule, points, "compile")
+            give_points(points_rule, is_test + "compile")
 
             # ########################## Running programs ###################################################
             # delete_tmp = False
@@ -1052,7 +1096,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                     web["image"] = "/csimages/cs/" + pure_pngname
-                    points = give_points(points_rule, points, "run")
+                    give_points(points_rule, "run")
                 if delete_tmp:
                     remove(csfname)
                     remove(exename)
@@ -1089,7 +1133,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
                     web["image"] = "/csimages/cs/" + rndname + ".png"
-                    points = give_points(points_rule, points, "run")
+                    give_points(points_rule, "run")
 
             elif ttype == "r":
                 debug_str("r ajoon")
@@ -1110,7 +1154,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     if image_ok:
                         web["image"] = "/csimages/cs/" + pure_pngname
-                        points = give_points(points_rule, points, "run")
+                        give_points(points_rule, "run")
                 if delete_tmp:
                     remove(csfname)
                     remove(exename)
@@ -1131,7 +1175,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print(is_optional_image, image_ok)
                     if image_ok:
                         web["image"] = "/csimages/cs/" + rndname + ".png"
-                        points = give_points(points_rule, points, "run")
+                        give_points(points_rule, "run")
 
             elif ttype == "comtest":
                 eri = -1
@@ -1151,6 +1195,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 out = out.strip(' \t\n\r')
                 if eri < 0: eri = out.find("Test Failure")
                 if eri < 0: eri = out.find("Test Error")
+                give_points(points_rule, "testrun")
                 web["testGreen"] = True
                 if eri >= 0:
                     web["testGreen"] = False
@@ -1165,7 +1210,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         # print("Line nr: "+str(lnro)) 
                         # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                         web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
-                else: points = give_points(points_rule, points, "test")
+                else: give_points(points_rule, "test")
             elif ttype == "jcomtest" or ttype == "ccomtest" or ttype == "junit":
                 eri = -1
                 # linenr_end = " "
@@ -1199,6 +1244,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if eri < 0: eri = out.find("Test error")  # ccomtest
                 if eri < 0: eri = out.find("ERROR:")  # ccomtest compile error
                 web["testGreen"] = True
+                give_points(points_rule, "testrun")
                 if eri >= 0:
                     web["testGreen"] = False
                     web["testRed"] = True
@@ -1220,7 +1266,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     out = re.sub("^Time: .*\n", "", out, flags=re.M)
                     out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
                     out = re.sub("^ok$", "", out, flags=re.M)
-                    points = give_points(points_rule, points, "test")
+                    give_points(points_rule, "test")
 
             else:
                 if ttype == "java":
@@ -1319,7 +1365,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     out = "Unknown run type: " + ttype + "\n"
 
-                if not err: points = give_points(points_rule, points, "run")
+                if not err: give_points(points_rule, "run")
                 print(code, out, err, pwd, compiler_output)
 
                 if code == -9:
@@ -1345,23 +1391,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         out = out.decode('iso-8859-1')
 
         except Exception as e:
-            print("run: ",e)
+            print("run: ", e)
             code, out, err = (-1, "", str(e)) # .encode())
                     
-        expect_output = get_points_rule(points_rule, "expectOutput", None)
+        expect_output = get_points_rule(points_rule, is_test + "expectOutput", None)
         if expect_output:
             exout = re.compile(expect_output.rstrip('\n'), re.M)
-            if exout.match(out): points = give_points(points_rule, points, "output", 1)
+            if exout.match(out): give_points(points_rule, "output", 1)
 
-        expect_code = get_points_rule(points_rule, "expectCode", None)
-        if expect_code:
-            if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
-            excode = re.compile(expect_code.rstrip('\n'), re.M)
-            if excode.match(usercode): points = give_points(points_rule, points, "code", 1)
-
-        if points_rule:
-            tim_info = {"points": points}
-            result["tim_info"] = tim_info
+        return_points(points_rule, result)
 
         if delete_tmp: removedir(prgpath)
 

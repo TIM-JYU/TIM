@@ -77,7 +77,8 @@ def update_database():
     timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
     ver = timdb.get_version()
     ver_old = ver
-    update_dict = {0: update_datamodel}
+    update_dict = {0: update_datamodel,
+                   1: update_answers}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -130,6 +131,30 @@ INSERT INTO Version(updated_on, id) VALUES (CURRENT_TIMESTAMP, 0);
         timdb.db.commit()
         print(' done.', flush=True)
     mkfolders.update_tables(timdb.db)
+    return True
+
+
+def update_answers():
+    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+    timdb.execute_sql("""ALTER TABLE Answer ADD COLUMN valid BOOLEAN""")
+    timdb.execute_sql("""UPDATE Answer SET valid = 1 WHERE id IN
+(SELECT Answer.id
+FROM Answer
+JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
+WHERE Answer.content LIKE '[%'
+GROUP BY UserAnswer.user_id, Answer.task_id
+HAVING answered_on = MIN(answered_on)
+ORDER BY Answer.content)""")
+    timdb.execute_sql("""UPDATE Answer SET valid = 0 WHERE id IN
+(SELECT Answer.id
+FROM Answer
+WHERE Answer.content LIKE '[%' AND valid IS NULL)
+""")
+    timdb.execute_sql("""UPDATE Answer SET valid = 1 WHERE id IN
+(SELECT Answer.id
+FROM Answer
+WHERE valid IS NULL)
+""")
     return True
 
 

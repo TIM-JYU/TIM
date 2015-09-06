@@ -5,14 +5,16 @@
     <span ng-show="answers.length > 0 && !changed">
     <button ng-click="previous()">&larr;</button>
     <select ng-model="selectedAnswer"
-            ng-options="((answers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in answers track by answer.id"
+            ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers track by answer.id"
             ng-change="changeAnswer()"></select>
     <button ng-click="next()">&rarr;</button>
-    {{ answers.length - answers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ answers.length }}</a>
+    {{ filteredAnswers.length - filteredAnswers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ filteredAnswers.length }}</a>
+    <label><input type="checkbox" ng-model="onlyValid">Show valid only</label>
     <br>
-    <label ng-show="!changed && $parent.teacherMode">Points:<input ng-model="points" type="text"></label>
-    <span ng-show="!changed && !$parent.teacherMode && points !== null">Points: {{ points }}</span>
-    <label ng-show="!changed && $parent.teacherMode">
+    <label ng-show="$parent.teacherMode">Points:<input ng-model="points" type="text"></label>
+    <span ng-show="!$parent.teacherMode && points !== null">Points: {{ points }}</span>
+    <span ng-show="!selectedAnswer.valid">(invalid)</span>
+    <label ng-show="$parent.teacherMode">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
     </label>
     </span>

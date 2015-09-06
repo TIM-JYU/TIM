@@ -50,6 +50,7 @@ CREATE TABLE Answer (
   content     VARCHAR(255) NOT NULL,
   points      VARCHAR(255), -- TODO: should this be of type REAL?
   answered_on TIMESTAMP    NOT NULL,
+  valid       BOOLEAN,
 
   CONSTRAINT Answer_PK
   PRIMARY KEY (id)

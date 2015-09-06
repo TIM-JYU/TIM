@@ -199,8 +199,7 @@ timApp.controller("ViewCtrl", [
                     par: par_id, // the id of paragraph on which the editor was opened
                     par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
                     area_start: area_start,
-                    area_end: area_end,
-                    attrs: JSON.parse($par.attr('attrs')) // TODO: Take attrs away; not needed
+                    area_end: area_end
                 },
                 "options": {
                     showDelete: options.showDelete,
@@ -879,18 +878,16 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        if (sc.lectureMode) {
-            sc.$on("getQuestions", function () {
-                if (sc.firstTimeQuestions) {
-                    sc.getQuestions();
-                    sc.firstTimeQuestions = false;
-                }
-            });
+        sc.$on("getQuestions", function () {
+            if (sc.firstTimeQuestions) {
+                sc.getQuestions();
+                sc.firstTimeQuestions = false;
+            }
+        });
 
-            sc.$on("closeQuestionPreview", function () {
-                sc.showQuestionPreview = false;
-            });
-        }
+        sc.$on("closeQuestionPreview", function () {
+            sc.showQuestionPreview = false;
+        });
 
         // Load index, notes and read markings
         timLogTime("getList start","view");
