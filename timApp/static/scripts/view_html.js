@@ -692,7 +692,7 @@ timApp.controller("ViewCtrl", [
 
         sc.getQuestionHtml = function (questions) {
             var questionImage = '/static/images/show-question-icon.png';
-            var $questionsDiv = $("<div>", {class: 'questions'}); 
+            var $questionsDiv = $("<div>", {class: 'questions'});
 
             // TODO: Think better way to get the ID of question.
             for (var i = 0; i < questions.length; i++) {
@@ -878,18 +878,16 @@ timApp.controller("ViewCtrl", [
             return true;
         });
 
-        if (sc.lectureMode) {
-            sc.$on("getQuestions", function () {
-                if (sc.firstTimeQuestions) {
-                    sc.getQuestions();
-                    sc.firstTimeQuestions = false;
-                }
-            });
+        sc.$on("getQuestions", function () {
+            if (sc.firstTimeQuestions) {
+                sc.getQuestions();
+                sc.firstTimeQuestions = false;
+            }
+        });
 
-            sc.$on("closeQuestionPreview", function () {
-                sc.showQuestionPreview = false;
-            });
-        }
+        sc.$on("closeQuestionPreview", function () {
+            sc.showQuestionPreview = false;
+        });
 
         // Load index, notes and read markings
         timLogTime("getList start","view");
