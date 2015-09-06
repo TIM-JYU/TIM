@@ -6,9 +6,13 @@ import string
 
 alphanum = string.digits + string.ascii_lowercase + string.ascii_uppercase
 n_alphanum = len(alphanum)
+empty_hash = mmh3.hash('{}')
 
-def hashfunc(text):
-    return base64.b64encode(hex(mmh3.hash(text.replace(' ', ''))).encode()).decode()
+def hashfunc(text, attrs):
+    text_hash = mmh3.hash(text.replace(' ', ''))
+    attr_hash = empty_hash if not attrs else mmh3.hash(str(attrs))
+    full_hash = text_hash ^ attr_hash
+    return base64.b64encode(hex(full_hash).encode()).decode()
 
 def __id_checksum(idstr):
     # Luhn checksum modified to alphanumeric digits
@@ -48,6 +52,6 @@ def random_paragraph():
 
 def random_jsonpar(par_id):
     content = random_paragraph()
-    chash = hashfunc(content)
+    chash = hashfunc(content, [])
     return [{'id': par_id, 't': chash, 'md': content, 'html': content}]
 
