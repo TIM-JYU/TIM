@@ -146,7 +146,7 @@ if (isFolder) {
                 <th>Actions</th>
             </tr>
             <tr ng-repeat="alias in aliases">
-                <td class="checkbox-td" ng-click="alias.publicChanged = !alias.publicChanged"><input type="checkbox" ng-checked="alias.public" ng-model="alias.public"/></td>
+                <td class="checkbox-td" ng-click="aliasPublicClicked(alias)"><input type="checkbox" ng-checked="alias.public"/></td>
                 <td><input type="text" ng-model="alias.location"/><a href="{{ '/view/{{alias.location}}' }}">View</a></td>
                 <td><input type="text" ng-model="alias.name" placeholder="{{objNameC}} name"/><a href="{{ '/view/{{alias.fullname}}' }}">View</a></td>
                 <td>

@@ -130,6 +130,11 @@ PermApp.controller("PermCtrl", [
             return (folder + '/' + name).replace(/(^\/+)|(\/+$)/, '')
         };
 
+        sc.aliasPublicClicked = function(alias) {
+            alias.public = !alias.public;
+            alias.publicChanged = !alias.publicChanged;
+        };
+
         sc.aliasChanged = function(alias) {
             return alias.publicChanged || alias.fullname != sc.combine(alias.location, alias.name);
         };
