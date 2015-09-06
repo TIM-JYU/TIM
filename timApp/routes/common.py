@@ -185,17 +185,19 @@ def quick_post_process(pars):
         par['status'] = ''
     return htmlpars
 
-def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False):
+def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_window=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
     group = timdb.users.getPersonalUserGroup(user_id)
     t0 = time.time()
+
     pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                  current_user['name'],
                                                                  timdb.answers,
                                                                  user_id,
                                                                  sanitize=sanitize,
-                                                                 do_lazy=do_lazy)
+                                                                 do_lazy=do_lazy,
+                                                                 edit_window=edit_window)
     print("pluginify time: {} s".format(time.time() - t0))
     req_json = request.get_json()
     t0 = time.time()

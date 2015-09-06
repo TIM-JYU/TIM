@@ -16,49 +16,71 @@ class DocParagraphBase:
 # This is so the DocParagraph contract can be used in the class itself
 new_contract('DocParagraph', DocParagraphBase)
 
+
 class DocParagraph(DocParagraphBase):
     @contract
-    def __init__(
-            self,
-            md: 'str' = '',
-            doc_id: 'int|None'=None,
-            par_id: 'str|None'=None,
-            t: 'str|None'=None,
-            attrs: 'dict|None'=None,
-            properties: 'dict|None'=None,
-            src_dict: 'dict|None'=None,
-            files_root: 'str|None'=None):
-        self.original = None
-        if not attrs:
-            attrs = {}
-        if not properties:
-            properties = {}
-        self.files_root = self.get_default_files_root() if files_root is None else files_root
+    def __init__(self, doc_id: 'int|None'=None, files_root: 'str|None'=None):
         self.doc_id = doc_id
-        assert doc_id is not None
-        if src_dict:
-            # Create from JSON
-            self.__data = src_dict
-            self.__mkhtmldata()
-            return
+        self.original = None
+        self.files_root = self.get_default_files_root() if files_root is None else files_root
 
-        assert doc_id is not None
-        self.__data = {
-            'id': par_id if par_id is not None else random_id(),
+    @classmethod
+    @contract
+    def create(cls,
+               doc_id: 'int',
+               par_id: 'str|None' = None,
+               md: 'str' = '',
+               html: 'str|None' = None,
+               attrs: 'dict|None' = None,
+               props: 'dict|None' = None,
+               files_root: 'str|None' = None) -> 'DocParagraph':
+
+        par = DocParagraph(doc_id, files_root)
+        par.__data = {
+            'id': random_id() if par_id is None else par_id,
             'md': md,
-            'html': None,
-            't': hashfunc(md) if md is not None else None,
+            't': hashfunc(md),
+            'html': html,
             'links': [],
-            'attrs': attrs,
-            'props': properties}
+            'attrs': {} if attrs is None else attrs,
+            'props': {} if props is None else props
+        }
+        par._mkhtmldata()
+        return par
 
-        if par_id:
-            # Try to read from file if we know the paragraph id
-            self.__read()
-            for attr in attrs or []:
-                self.__data['attrs'][attr] = attrs[attr]
+    @classmethod
+    @contract
+    def from_dict(cls, doc_id: 'int', d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
+        par = DocParagraph(doc_id, files_root)
+        par.__data = dict(d)
+        par._mkhtmldata()
+        return par
 
-        self.__mkhtmldata()
+    @classmethod
+    @contract
+    def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        froot = cls.get_default_files_root() if files_root is None else files_root
+        try:
+            t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
+            # Make a copy of the paragraph to avoid modifying cached instance
+            return deepcopy(cls.get(doc_id, par_id, t, files_root=froot))
+        except FileNotFoundError as e:
+            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+
+    @classmethod
+    @contract
+    def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        try:
+            return cls.__get(doc_id, par_id, t, files_root)
+        except FileNotFoundError as e:
+            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+
+    @classmethod
+    @functools.lru_cache(maxsize=65536)
+    @contract
+    def __get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
+            return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
 
 
     def __iter__(self):
@@ -67,11 +89,6 @@ class DocParagraph(DocParagraphBase):
     @classmethod
     def get_default_files_root(cls):
         return 'tim_files'
-
-    @classmethod
-    @contract
-    def from_dict(cls, doc_id: 'int', d: 'dict', files_root: 'str|None' = None):
-        return DocParagraph(doc_id=doc_id, src_dict=d, files_root=files_root)
 
     @classmethod
     @contract
@@ -85,26 +102,11 @@ class DocParagraph(DocParagraphBase):
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.join(froot, 'pars', str(doc_id), par_id)
 
-    @classmethod
-    @contract
-    def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
-        # Make a copy of the paragraph to avoid modifying cached instance
-        return deepcopy(cls.get(doc_id, par_id, t, files_root=froot))
-
-    @classmethod
-    @functools.lru_cache(maxsize=65536)
-    @contract
-    def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
-        with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
-            return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
-
     @contract
     def dict(self) -> 'dict':
         return self.__data
 
-    def __mkhtmldata(self):
+    def _mkhtmldata(self):
         self.__is_plugin = self.get_attr('taskId')
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
@@ -163,12 +165,15 @@ class DocParagraph(DocParagraphBase):
         return self.__data['html']
 
     @contract
-    def get_ref_html(self, classname="parref", write_link=False) -> 'str':
+    def get_ref_html(self, classname="parref", write_link=False, link_class="parlink", linked_paragraph=None) -> 'str':
+        if linked_paragraph is None:
+            linked_paragraph = self
         linkhtml = ''
         if write_link:
             from documentmodel.document import Document
-            doc = Document(self.get_doc_id())
-            linkhtml = '<a class="parlink" href="/view/{0}">{1}</a>'.format(self.get_doc_id(), doc.get_name())
+            doc = Document(linked_paragraph.get_doc_id())
+            linkhtml = '<a class="{2}" href="/view/{0}">{1}</a>'.format(linked_paragraph.get_doc_id(),
+                                                                        doc.get_name(), link_class)
         return """
             <div class="{0}">
                 {1}
@@ -193,6 +198,21 @@ class DocParagraph(DocParagraphBase):
     def set_html(self, new_html: 'str'):
         self.__data['html'] = new_html
         self.__htmldata['html'] = new_html
+
+    @contract
+    def set_trans_html(self, referencing_par: 'DocParagraph', show_original: 'bool',
+                       from_class: 'str' = 'partranslatefrom', to_class: 'str' = 'partranslate',
+                       show_link: 'bool' = False):
+        if show_original:
+            html = '{}\n{}'.format(referencing_par.get_ref_html(classname=to_class, write_link=show_link,
+                                                                link_class="trlink", linked_paragraph=self),
+                                   self.get_ref_html(classname=from_class, link_class="trfromlink",
+                                                     write_link=show_link))
+        else:
+            html = referencing_par.get_ref_html(classname=to_class, write_link=show_link, link_class="trlink",
+                                                linked_paragraph=self)
+
+        self.set_html(html)
 
     @contract
     def get_links(self) -> 'list(str)':
@@ -262,10 +282,11 @@ class DocParagraph(DocParagraphBase):
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
-            return
+            return False
         with open(self.get_path(), 'r') as f:
             self.__data = json.loads(f.read())
-            self.__mkhtmldata()
+            self._mkhtmldata()
+            return True
 
     def __write(self):
         file_name = self.get_path()
@@ -324,7 +345,21 @@ class DocParagraph(DocParagraphBase):
     def is_area_reference(self):
         return self.get_attr('rd') is not None and self.get_attr('ra') is not None
 
-    def get_referenced_pars(self):
+    def __repr__(self):
+        return self.__data.__repr__()
+
+    def get_referenced_pars(self, edit_window=False):
+        def reference_par(ref_par, attrs, classname='parref', trclassname='partranslate', write_link=False):
+            par = deepcopy(ref_par)
+            par.set_attr('classes', (self.get_attr('classes') or []) + (ref_par.get_attr('classes') or []))
+            if 'r' in attrs and attrs['r'] == 'tr':
+                par.set_trans_html(self, edit_window, classname, trclassname, write_link)
+            else:
+                par.set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
+            par.set_original(self)
+            print(par)
+            return par
+
         attrs = self.get_attrs()
         from documentmodel.document import Document  # Document import needs to be here to avoid circular import
         try:
@@ -336,25 +371,37 @@ class DocParagraph(DocParagraphBase):
         if self.is_par_reference():
             if not ref_doc.has_paragraph(attrs['rp']):
                 raise TimDbException('The referenced paragraph does not exist.')
+
             ref_par = ref_doc.get_paragraph(attrs['rp'])
-            ref_par.set_original(self)
-            ref_par.set_html(ref_par.get_ref_html(write_link=True))
-            return [ref_par]
+            return [reference_par(ref_par, attrs, write_link=True)]
+
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
+            pars = []
             n = len(ref_pars)
-            for p in ref_pars:
-                p.set_html(p.get_ref_html(classname="parref-mid"))
-                p.set_original(self)
-            ref_pars[0].set_html(ref_pars[0].get_ref_html(classname="parref-begin", write_link=True))
-            ref_pars[n-1].set_html(ref_pars[n-1].get_ref_html(classname="parref-end"))
-            return ref_pars
+
+            if n == 1:
+                return [reference_par(ref_pars[0], attrs, write_link=True)]
+
+            i = 0
+            for ref_par in ref_pars:
+                if i == 0:
+                    par = reference_par(ref_pars[i], attrs, classname="parref-begin", write_link=True)
+                elif i == n - 1:
+                    par = reference_par(ref_pars[i], attrs, classname="parref-end")
+                else:
+                    par = reference_par(ref_pars[i], attrs, classname="parref-mid")
+
+                pars.append(par)
+                i += 1
+
+            return pars
         else:
             assert False
 
     def set_original(self, orig):
         self.original = orig
-        self.__mkhtmldata()
+        self._mkhtmldata()
 
     def get_original(self):
         return self.original
