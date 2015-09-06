@@ -316,9 +316,9 @@ ul ul ul, ol ol ol {
 }
 
 .parref {
-    border: 1px solid #cad;
+    /* border: 1px solid #cad;
     border-radius: 3px;
-    padding-bottom: 20pt;
+    padding-bottom: 20pt;*/
 }
 
 .parref-begin {
@@ -354,6 +354,7 @@ ul ul ul, ol ol ol {
 
 a.parlink {
     color: #97a;
+    display: none;
 }
 
 a.parlink:hover {
