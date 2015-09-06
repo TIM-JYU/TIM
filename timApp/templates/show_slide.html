@@ -54,13 +54,15 @@
         {{ custom_css }}
     </style>
     <script>
-        var docId = JSON.parse({{docID|tojson|safe}});
+        var docId = {{docID|tojson|safe}};
         var docName = {{docName|tojson|safe}};
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};
         var startIndex = {{start_index|tojson}};
         var teacherMode = {{teacher_mode|tojson}};
         var group = {{group|tojson}};
+        var is_owner = {{is_owner|tojson}};
+        console.log(is_owner);
         var users;
         {% if teacher_mode %}
             users = {{plugin_users|tojson}};
@@ -162,7 +164,7 @@
         clearTimeout(pollTimeout);
         $.ajax({
             cache: false,
-            url: '/getslidestatus/{{ docID }}',
+            url: '/getslidestatus/' + docId,
             dataType: 'json',
             error: function (xhr, status, err) {
                 console.log('error');
@@ -187,7 +189,7 @@
         });
     }
 
-    if (GetURLParameter('controls') === undefined) pollTimeout = setTimeout(refresh, 250);
+    if (GetURLParameter('controls') === undefined && is_owner) pollTimeout = setTimeout(refresh, 250);
 
 
     function updateSlideStatus(h, v, f) {
@@ -197,7 +199,7 @@
         $.ajax({
                 type: 'POST',
                 dataType: 'json',
-                url: '/setslidestatus/{{ docID }}',
+                url: '/setslidestatus/' + docId,
                 data: JSON.stringify({indexh:h, indexv:v, indexf:f}),
                 contentType: "application/json",
                 success: function(data) {

@@ -20,19 +20,26 @@ slide_page = Blueprint('slide_page',
                       url_prefix='')
 
 
-@slide_page.route("/getslidestatus/<path:doc_name>")
-def getslidestatus(doc_name):
+@slide_page.route("/getslidestatus/<path:doc_id>")
+def getslidestatus(doc_id):
     try:
-        status = slidestatuses[doc_name]
-    except KeyError:
+        doc_id = int(doc_id)
+        verifyOwnership(doc_id)
+        status = slidestatuses[doc_id]
+    except (KeyError, ValueError):
         abort(400, "Could not get slide status.")
     return jsonify(status)
 
 
-@slide_page.route("/setslidestatus/<path:doc_name>", methods=['POST'])
-def setslidestatus(doc_name):
+@slide_page.route("/setslidestatus/<path:doc_id>", methods=['POST'])
+def setslidestatus(doc_id):
+    try:
+        doc_id = int(doc_id)
+    except (KeyError, ValueError):
+        abort(400, "Cannot set slide status.")
+    verifyOwnership(doc_id)
     data = request.json
-    slidestatuses[doc_name] = data
+    slidestatuses[doc_id] = data
     return jsonify(data)
 
 
@@ -98,6 +105,7 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
     settings = tim.get_user_settings()
+    is_owner = hasOwnership(doc_id)
     return render_template(template_name,
                            docID=doc_id,
                            docName=doc_name,
