@@ -1,4 +1,4 @@
-.content {
+fmediant {
     text-align: justify;
 }
 
@@ -1224,12 +1224,12 @@ img.console {
 @media only screen and (max-width: 1600px) {
 
     .notes:hover, .speaker:hover {
-        margin-left: -60%;
-        width: 200em;
+        /* margin-left: -60%; */
+        /* width: 200em; */
         background-color: white;
         display: block;
         z-index: 9;
-        padding-left: 2em;
+        /* padding-left: 2em; */
     }
 
 }
@@ -1785,6 +1785,10 @@ p.plgfooter {
 
     .sidebar.autohidden {
         display: none;
+    }
+    
+    .csRunMenu {
+        margin-left: 25px;
     }
 }
 
