@@ -39,7 +39,7 @@ class DocParagraph(DocParagraphBase):
         par.__data = {
             'id': random_id() if par_id is None else par_id,
             'md': md,
-            't': hashfunc(md),
+            't': hashfunc(md, attrs),
             'html': html,
             'links': [],
             'attrs': {} if attrs is None else attrs,
@@ -81,7 +81,6 @@ class DocParagraph(DocParagraphBase):
     def __get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
             return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
-
 
     def __iter__(self):
         return self.__data.__iter__()
