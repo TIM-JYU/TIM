@@ -24,7 +24,6 @@ slide_page = Blueprint('slide_page',
 def getslidestatus(doc_id):
     try:
         doc_id = int(doc_id)
-        verifyOwnership(doc_id)
         status = slidestatuses[doc_id]
     except (KeyError, ValueError):
         abort(400, "Could not get slide status.")
