@@ -349,4 +349,4 @@ CREATE TABLE Version (
   updated_on TIMESTAMP
 );
 
-INSERT INTO Version(id, updated_on) VALUES (1, CURRENT_TIMESTAMP);
+INSERT INTO Version(id, updated_on) VALUES (2, CURRENT_TIMESTAMP);
