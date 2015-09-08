@@ -160,6 +160,8 @@ class DocumentParser:
                             and self._blocks[-1]['type'] != 'atom':
                         self._blocks[-1]['md'] += '\n\n' + result['md']
                     else:
+                        if not result.get('attrs'):
+                            result['attrs'] = {}
                         self._blocks.append(result)
                     break
 
