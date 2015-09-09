@@ -20,6 +20,8 @@ from timdb.timdbbase import TimDbException
 
 
 class Document:
+    default_files_root = 'tim_files'
+
     @contract()
     def __init__(self, doc_id: 'int|None'=None, files_root = None, modifier_group_id: 'int|None' = 0):
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)
@@ -28,7 +30,7 @@ class Document:
 
     @classmethod
     def get_default_files_root(cls):
-        return 'tim_files'
+        return cls.default_files_root
 
     def __len__(self):
         count = 0

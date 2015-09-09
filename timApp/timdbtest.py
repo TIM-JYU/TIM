@@ -1,34 +1,34 @@
 import os
 import shutil
 import unittest
+from documentmodel.document import Document
 
-import ephemeralclient
+import dumboclient
 from filemodehelper import change_permission_and_retry
-from timdb.gitclient import GitClient
 from timdb.timdb2 import TimDb
 
 
 class TimDbTest(unittest.TestCase):
 
+    dumbo = dumboclient.launch_dumbo()
+    db = None
+    test_files_path = 'doctest_files'
+
     @classmethod
     def setUpClass(cls):
-        global e
-        global db
-        TEST_FILES_PATH = 'test_files'
-        if os.path.exists(TEST_FILES_PATH):
-            shutil.rmtree(TEST_FILES_PATH, onerror=change_permission_and_retry)
-        TEST_DB_NAME = ':memory:'
 
-        GitClient.initRepo(TEST_FILES_PATH)
-        db = TimDb(TEST_DB_NAME, TEST_FILES_PATH)
-        e = ephemeralclient.launch_ephemeral()
-        db.initializeTables("schema2.sql")
-        db.users.createAnonymousAndLoggedInUserGroups()
+        TEST_DB_NAME = ':memory:'
+        if os.path.exists(cls.test_files_path):
+            # Safety mechanism
+            assert cls.test_files_path == 'doctest_files'
+            shutil.rmtree(cls.test_files_path, onerror=change_permission_and_retry)
+        db = TimDb(TEST_DB_NAME, cls.test_files_path)
+        db.initialize_tables()
+        Document.default_files_root = cls.test_files_path
 
     @classmethod
     def tearDownClass(cls):
-        e.kill()
+        cls.dumbo.kill()
 
     def setUp(self):
-        global db
-        self.db = db
+        self.db = TimDbTest.db

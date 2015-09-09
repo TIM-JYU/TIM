@@ -18,16 +18,15 @@ def create_admin(timdb, name, real_name, email):
     return (user_id, user_group)
 
 
-def initialize_database():
+def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files'):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
-    FILES_ROOT_PATH = 'tim_files'
-    if os.path.exists(FILES_ROOT_PATH):
-        print('tim_files already exists, no need to initialize')
+    if os.path.exists(files_root_path):
+        print('{} already exists, no need to initialize'.format(files_root_path))
         return
-    print('initializing tim_files')
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path=FILES_ROOT_PATH)
+    print('initializing the database in {}...'.format(files_root_path))
+    timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     timdb.initialize_tables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
     anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
@@ -59,7 +58,7 @@ def initialize_database():
     #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.
     #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.
     #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.""", 'everyone', [])
-
+    print(' done.')
 
 def update_database():
     """Updates the database structure if needed.

@@ -1,32 +1,33 @@
-# Run from parent directory with command:
-# python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py
+"""Unit tests for Document class.
+
+Run from parent directory with command:
+python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py
+"""
 
 import os
 import random
 import unittest
 import shutil
+
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
-
-import dumboclient
-import documentmodel.randutils
-
 from filemodehelper import change_permission_and_retry
 from documentmodel.document import Document
 from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
+from timdbtest import TimDbTest
 
-class DocumentTest(unittest.TestCase):
-    files_root = 'doctest_files'
-    dumbo = dumboclient.launch_dumbo()
 
+class DocumentTest(TimDbTest):
     def cleanup(self):
-        if os.path.exists(self.files_root):
-            shutil.rmtree(self.files_root, onerror=change_permission_and_retry)
+        if os.path.exists(TimDbTest.test_files_path):
+            # Safety mechanism
+            assert TimDbTest.test_files_path == 'doctest_files'
+            shutil.rmtree(TimDbTest.test_files_path, onerror=change_permission_and_retry)
 
     def init_testdoc(self):
         self.cleanup()
-        d = Document(doc_id=1, files_root=self.files_root)
+        d = Document(doc_id=1)
         d.create()
         return d
     
@@ -35,28 +36,26 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual((num_docs, 0), d.get_version())
         return pars
 
-
     def test_document_create(self):
         self.cleanup()
-        d = Document(doc_id=1, files_root=self.files_root)
-        self.assertFalse(Document.doc_exists(1, files_root=self.files_root))
+        d = Document(doc_id=1)
+        self.assertFalse(Document.doc_exists(1))
         d.create()
-        self.assertTrue(Document.doc_exists(1, files_root=self.files_root))
-        self.assertEqual(2, Document.get_next_free_id(self.files_root))
+        self.assertTrue(Document.doc_exists(1))
+        self.assertEqual(2, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog())
 
-        d = Document(doc_id=2, files_root=self.files_root)
-        self.assertFalse(Document.doc_exists(2, files_root=self.files_root))
+        d = Document(doc_id=2)
+        self.assertFalse(Document.doc_exists(2))
         d.create()
-        self.assertTrue(Document.doc_exists(2, files_root=self.files_root))
-        self.assertEqual(3, Document.get_next_free_id(self.files_root))
+        self.assertTrue(Document.doc_exists(2))
+        self.assertEqual(3, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog())
 
         with self.assertRaises(DocExistsError):
             d.create()
-
 
     def test_addparagraph(self):
         d = self.init_testdoc()
@@ -131,7 +130,6 @@ class DocumentTest(unittest.TestCase):
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
         self.assertEqual(13, len(d.get_changelog()))
-        
 
     def test_insertparagraph(self):
         d = self.init_testdoc()
@@ -157,8 +155,7 @@ class DocumentTest(unittest.TestCase):
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
         self.assertEqual(13, len(d.get_changelog()))
-        
-   
+
     def test_get_html(self):
         d = self.init_testdoc()
         
@@ -167,7 +164,6 @@ class DocumentTest(unittest.TestCase):
 
         par1 = d.add_paragraph('# Heading')
         self.assertEqual('<h1 id="heading">Heading</h1>', par1.get_html())
-
 
     def test_modify(self):
         d = self.init_testdoc()
@@ -202,47 +198,46 @@ class DocumentTest(unittest.TestCase):
             self.assertEqual((10, i + 3), d.get_version())
             self.assertEqual(13 + i, len(d.get_changelog()))
 
-
     def test_document_remove(self):
         self.cleanup()
 
-        self.assertFalse(Document.doc_exists(doc_id=1, files_root=self.files_root))
-        self.assertFalse(Document.doc_exists(doc_id=2, files_root=self.files_root))
-        self.assertFalse(Document.doc_exists(doc_id=3, files_root=self.files_root))
-        self.assertFalse(Document.doc_exists(doc_id=4, files_root=self.files_root))
-        self.assertFalse(Document.doc_exists(doc_id=5, files_root=self.files_root))
+        self.assertFalse(Document.doc_exists(doc_id=1))
+        self.assertFalse(Document.doc_exists(doc_id=2))
+        self.assertFalse(Document.doc_exists(doc_id=3))
+        self.assertFalse(Document.doc_exists(doc_id=4))
+        self.assertFalse(Document.doc_exists(doc_id=5))
 
-        for i in range(1,6):
+        for i in range(1, 6):
             if i != 3:
-                d = Document(doc_id=i, files_root=self.files_root)
+                d = Document(doc_id=i)
                 d.create()
 
-        self.assertEqual(6, Document.get_next_free_id(files_root=self.files_root))
+        self.assertEqual(6, Document.get_next_free_id())
 
         with self.assertRaises(DocExistsError):
-            Document.remove(doc_id=3, files_root=self.files_root)
+            Document.remove(doc_id=3)
 
-        Document.remove(doc_id=2, files_root=self.files_root)
-        self.assertFalse(Document.doc_exists(doc_id=2, files_root=self.files_root))
-        self.assertEqual(6, Document.get_next_free_id(files_root=self.files_root))
+        Document.remove(doc_id=2)
+        self.assertFalse(Document.doc_exists(doc_id=2))
+        self.assertEqual(6, Document.get_next_free_id())
 
-        Document.remove(doc_id=5, files_root=self.files_root)
-        self.assertFalse(Document.doc_exists(doc_id=5, files_root=self.files_root))
-        self.assertEqual(5, Document.get_next_free_id(files_root=self.files_root))
+        Document.remove(doc_id=5)
+        self.assertFalse(Document.doc_exists(doc_id=5))
+        self.assertEqual(5, Document.get_next_free_id())
 
-        Document.remove(doc_id=1, files_root=self.files_root)
-        self.assertFalse(Document.doc_exists(doc_id=1, files_root=self.files_root))
-        self.assertEqual(5, Document.get_next_free_id(files_root=self.files_root))
+        Document.remove(doc_id=1)
+        self.assertFalse(Document.doc_exists(doc_id=1))
+        self.assertEqual(5, Document.get_next_free_id())
 
-        Document.remove(doc_id=4, files_root=self.files_root)
-        self.assertFalse(Document.doc_exists(doc_id=4, files_root=self.files_root))
-        self.assertEqual(1, Document.get_next_free_id(files_root=self.files_root))
+        Document.remove(doc_id=4)
+        self.assertFalse(Document.doc_exists(doc_id=4))
+        self.assertEqual(1, Document.get_next_free_id())
 
     def test_update(self):
         self.maxDiff = None
         random.seed(0)
         for i in range(1, 5):
-            d = Document(files_root=self.files_root)
+            d = Document()
             d.create()
             for _ in range(0, i):
                 d.add_paragraph(random_paragraph())
@@ -262,7 +257,7 @@ class DocumentTest(unittest.TestCase):
         self.maxDiff = None
         random.seed(0)
         for i in range(6, 10):
-            d = Document(files_root=self.files_root)
+            d = Document()
             d.create()
             for _ in range(0, i):
                 d.add_paragraph(random_paragraph())
@@ -278,10 +273,6 @@ class DocumentTest(unittest.TestCase):
             self.assertListEqual([par['id'] for par in new_pars],
                                  new_ids[start_repl_index:start_repl_index + repl_length])
             self.assertEqual(length_diff, len(new_ids) - len(ids))
-
-    @classmethod
-    def tearDownClass(cls):
-        DocumentTest.dumbo.kill()
 
 
 if __name__ == '__main__':
