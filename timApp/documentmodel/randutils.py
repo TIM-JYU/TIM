@@ -8,7 +8,7 @@ alphanum = string.digits + string.ascii_lowercase + string.ascii_uppercase
 n_alphanum = len(alphanum)
 empty_hash = mmh3.hash('{}')
 
-def hashfunc(text, attrs):
+def hashfunc(text, attrs=None):
     text_hash = mmh3.hash(text.replace(' ', ''))
     attr_hash = empty_hash if not attrs else mmh3.hash(str(attrs))
     full_hash = text_hash ^ attr_hash
