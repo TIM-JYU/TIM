@@ -1,0 +1,58 @@
+                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, SUM(points) as total_points
+                FROM User
+                JOIN UserAnswer ON User.id = UserAnswer.user_id
+                JOIN Answer ON Answer.id = UserAnswer.answer_id
+                JOIN (SELECT Answer.id, MAX(answered_on)
+                      FROM Answer
+                      JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
+                      WHERE Answer.valid = 1
+                      GROUP BY UserAnswer.user_id, Answer.task_id
+                      )tmp ON tmp.id = Answer.id
+                WHERE task_id IN (%s)
+                %s
+                GROUP BY User.id
+                ORDER BY real_name ASC
+                
+                
+SELECT u.name, a.task_id, a.content, MAX(a.answered_on), a.points 
+          from answer as a, userAnswer as ua, user as u 
+          where a.task_id like "113471.%" and ua.answer_id = a.id and u.id = ua.user_id 
+          group by a.task_id, u.id 
+          order by u.id,a.task_id;
+          
+SELECT u.name, COUNT(DISTINCT a.task_id) AS task_count, SUM(a.points) as total_points
+          from answer as a, userAnswer as ua, user as u 
+          WHERE task_id IN ("113471.kaannataulukko","113471.lumiukko","113471.tehtava2","113471.tehtava3")
+          and ua.answer_id = a.id and u.id = ua.user_id 
+          group by a.task_id, u.id 
+          order by u.id,a.task_id;
+          
+Select id as "User.id", name, real_name, count(name) as task_count,  SUM(t.points) as total_points from
+          (SELECT u.id, u.real_name, u.name, a.points as points , MAX(a.answered_on)
+          from answer as a, userAnswer as ua, user as u 
+          WHERE a.task_id IN ("113471.kaannataulukko","113471.lumiukko","113471.tehtava2","113471.tehtava3")
+          and ua.answer_id = a.id and u.id = ua.user_id 
+          group by a.task_id, u.id 
+          order by u.id,a.task_id) t
+group by t.name 
+ORDER BY real_name ASC
+                    
+          
+          
+          
+ SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, SUM(points) as total_points
+                FROM User
+                JOIN UserAnswer ON User.id = UserAnswer.user_id
+                JOIN Answer ON Answer.id = UserAnswer.answer_id
+                JOIN (SELECT Answer.id, MAX(answered_on)
+                      FROM Answer
+                      JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
+                      WHERE Answer.valid = 1
+                      GROUP BY UserAnswer.user_id, Answer.task_id
+                      )tmp ON tmp.id = Answer.id
+                WHERE task_id IN ("113471.kaannataulukko","113471.lumiukko","113471.tehtava2","113471.tehtava3")
+                GROUP BY User.id
+                ORDER BY real_name ASC
+
+
+                
