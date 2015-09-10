@@ -520,6 +520,10 @@ class Document:
 
         return refs
 
+    @contract
+    def get_paragraphs(self) -> 'list(DocParagraph)':
+        return [par for par in self]
+
 
 new_contract('Document', Document)
 

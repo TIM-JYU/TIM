@@ -10,55 +10,44 @@ from timdb.timdbbase import blocktypes
 from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME
 
 
-def create_admin(timdb, name, real_name, email):
-    user_id = timdb.users.createUser(name, real_name, email)
+def create_user(timdb, name, real_name, email, password='', is_admin=False):
+    user_id = timdb.users.createUser(name, real_name, email, password=password)
     user_group = timdb.users.createUserGroup(name)
     timdb.users.addUserToGroup(user_group, user_id)
-    timdb.users.addUserToAdmins(user_id)
-    return (user_id, user_group)
+    if is_admin:
+        timdb.users.addUserToAdmins(user_id)
+    return user_id, user_group
 
 
-def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files'):
+def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files', create_docs=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
-    if os.path.exists(files_root_path):
+    if os.path.exists(db_path):
         print('{} already exists, no need to initialize'.format(files_root_path))
         return
-    print('initializing the database in {}...'.format(files_root_path))
+    print('initializing the database in {}...'.format(files_root_path), end='')
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     timdb.initialize_tables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
     anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
-    (vesa_id, vesa_group) = create_admin(timdb, 'vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi')
-    doc_id = timdb.documents.create('Testaus 1', anon_group)
-    timdb.documents.create('Testaus 2', anon_group)
-    timdb.documents.import_document_from_file('example_docs/programming_examples.md',
-                                                     'Programming examples',
-                                                     anon_group)
-    timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
-                                                     'Multiple choice plugin example',
-                                                     anon_group)
+    create_user(timdb, 'vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
+    create_user(timdb, 'tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
+    create_user(timdb, 'testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
+    create_user(timdb, 'testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
 
-    create_admin(timdb, 'tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi')
-
-    anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
-    # Grant access to anonymous users
-    #timdb.users.grantViewAccess(anon_group, doc_id.id)
-    #timdb.users.grantViewAccess(anon_group, doc_id2.id)
-    
-    #timdb.users.grantEditAccess(anon_group, doc_id2.id)
-    
-    #timdb.notes.addNote(anon_group, doc_id.id, doc_id.hash, 0, 'Tämä on testimuistiinpano.', 'everyone', [])
-    #timdb.notes.addNote(anon_group, doc_id.id, doc_id.hash, 0, 'Tämä on toinen testimuistiinpano samassa kappaleessa.', 'everyone', [])
-    #timdb.notes.addNote(anon_group, doc_id.id, doc_id.hash, 0,
-    #                 """Vielä kolmas muistiinpano, jossa on pitkä teksti.
-    #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.
-    #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.
-    #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.
-    #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.
-    #                    Vielä kolmas muistiinpano, jossa on pitkä teksti.""", 'everyone', [])
+    if create_docs:
+        timdb.documents.create('Testaus 1', anon_group)
+        timdb.documents.create('Testaus 2', anon_group)
+        timdb.documents.import_document_from_file('example_docs/programming_examples.md',
+                                                         'Programming examples',
+                                                         anon_group)
+        timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
+                                                         'Multiple choice plugin example',
+                                                         anon_group)
+    timdb.close()
     print(' done.')
+
 
 def update_database():
     """Updates the database structure if needed.

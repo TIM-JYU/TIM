@@ -129,10 +129,10 @@ class Notes(TimDbBase):
         ids.add(doc.doc_id)
         template = ','.join('?' * len(ids))
         result = self.resultAsDictionary(
-            self.db.execute('SELECT id, par_id, doc_id, par_hash, content,'
-                            '       created, modified, access, tags, html, UserGroup_id '
-                            'FROM UserNotes '
-                            'WHERE UserGroup_id = ? AND doc_id IN (%s)' % template, [usergroup_id] + list(ids)))
+            self.db.execute("""SELECT id, par_id, doc_id, par_hash, content,
+                                      created, modified, access, tags, html, UserGroup_id
+                               FROM UserNotes
+                               WHERE (UserGroup_id = ? OR access = 'everyone') AND doc_id IN (%s)""" % template, [usergroup_id] + list(ids)))
 
         return self.process_notes(result)
 

@@ -1035,7 +1035,8 @@ def create_document():
     jsondata = request.get_json()
     doc_name = jsondata['doc_name']
     timdb = getTimDb()
-    return create_item(doc_name, 'document', timdb.documents.create, getCurrentUserGroup())
+    return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
+                       getCurrentUserGroup())
 
 
 @app.route("/createFolder", methods=["POST"])
@@ -1130,7 +1131,7 @@ def post_note():
     sent_tags = jsondata.get('tags', {})
     tags = []
     for tag in KNOWN_TAGS:
-        if sent_tags[tag]:
+        if sent_tags.get(tag):
             tags.append(tag)
     doc_id = jsondata['docId']
     doc_ver = request.headers.get('Version')
