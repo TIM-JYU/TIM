@@ -181,7 +181,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         return;
                     }
                     $scope.loading++;
-                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id + '?'+Math.random())  
+                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id + '?rnd='+Math.random())  
                         .success(function (data, status, headers, config) {
                             $scope.answers = data;
                             if ($scope.answers.length > 0) {
