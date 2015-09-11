@@ -42,6 +42,8 @@ run apt-get install -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
 run pip3 install pygit2
 
+run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b4 eventlet tornado
+
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six
 
@@ -88,15 +90,10 @@ run bower --allow-root install ngstorage#~0.3
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
 
-run npm uninstall bower
-run apt-get remove -y npm
-
 run apt-get install -y openssh-server
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-
-run apt-get autoremove -y
 
 # Configure timezone and locale
 run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata

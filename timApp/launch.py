@@ -5,6 +5,7 @@ import initdb2
 import tim
 import ephemeralclient
 import sys
+import subprocess
 from filemodehelper import change_permission_and_retry
 
 scripts_path = os.path.join('static', 'scripts')
@@ -48,7 +49,15 @@ if __name__ == '__main__':
             dumbo_started = True
         initdb2.initialize_database()
         initdb2.update_database()
-        tim.start_app()
+        if len(sys.argv) <= 1:
+            print('Starting without gunicorn.')
+            tim.start_app()
+        elif sys.argv[1] == '--with-gunicorn':
+            print('Starting with gunicorn.')
+            p = subprocess.Popen(["gunicorn", "--config", "gunicornconf.py", "tim:app"])
+            p.wait()
+        else:
+            raise Exception('Unknown command line argument: ' + sys.argv[1])
     finally:
         if ephemeral_started:
             p.kill()
