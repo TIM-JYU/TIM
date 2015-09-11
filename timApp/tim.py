@@ -65,6 +65,8 @@ app.register_blueprint(Blueprint('bower',
                                  static_folder='static/scripts/bower_components',
                                  static_url_path='/static/scripts/bower_components'))
 
+app.wsgi_app = ReverseProxied(app.wsgi_app)
+
 print('Debug mode: {}'.format(app.config['DEBUG']))
 
 KNOWN_TAGS = ['difficult', 'unclear']
@@ -1645,6 +1647,4 @@ def make_session_permanent():
 
 
 def start_app():
-    # TODO: Think if it is truly necessary to have threaded=True here
-    app.wsgi_app = ReverseProxied(app.wsgi_app)
     app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
