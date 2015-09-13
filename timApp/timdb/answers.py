@@ -123,7 +123,7 @@ class Answers(TimDbBase):
             user_ids = []
         cursor.execute(
             """
-                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, SUM(points) as total_points
+                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, ROUND(SUM(points),2) as total_points
                 FROM User
                 JOIN UserAnswer ON User.id = UserAnswer.user_id
                 JOIN Answer ON Answer.id = UserAnswer.answer_id
