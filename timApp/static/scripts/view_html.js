@@ -533,6 +533,8 @@ timApp.controller("ViewCtrl", [
             if (sc.isReference($par)) {
                 data = sc.getRefAttrs($par);
             }
+            if ( !sc.selectedUser ) return true;
+            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;  
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
                 .success(function (data, status, headers, config) {
                     // No need to do anything here

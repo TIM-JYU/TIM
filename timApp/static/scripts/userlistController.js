@@ -22,8 +22,10 @@ timApp.controller('UserListController', ['$scope', '$filter', 'ngTableParams',
                 var filteredData = params.filter() ?
                     $filter('filter')($scope.users, params.filter()) :
                     $scope.users;
+                var orderBy = params.orderBy();
+                if ( !orderBy || orderBy.length < 1 ) orderBy = ["+real_name"];    
                 var orderedData = params.sorting() ?
-                    $filter('orderBy')(filteredData, params.orderBy()) :
+                    $filter('orderBy')(filteredData, orderBy ) :
                     $scope.users;
 
                 params.total(orderedData.length);
