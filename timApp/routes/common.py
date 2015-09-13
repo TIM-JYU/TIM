@@ -221,6 +221,9 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
 
     t0 = time.time()
     readings = timdb.readings.getReadings(group, Document(doc_id))
+    print("getReadings time: {} s".format(time.time() - t0))
+    t0 = time.time()
+
     for r in readings:
         key = (r['par_id'], r['doc_id'])
         pars = pars_dict.get(key)
@@ -232,6 +235,8 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
 
     t0 = time.time()
     notes = timdb.notes.getNotes(group, Document(doc_id))
+    print("notes time: {} s".format(time.time() - t0))
+    t0 = time.time()
     for n in notes:
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)

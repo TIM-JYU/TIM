@@ -218,9 +218,9 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
                 state = None
             plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
 
-    # t22 = time.clock()
-    # print("%-15s %-10s %6d - %7.4f" % ("blocks done", " ", len(pars), (t22-t12)))
-    # t12 = t22
+    t22 = time.clock()
+    print("%-15s %-10s %6d - %7.4f" % ("blocks done", " ", len(pars), (t22-t12)))
+    t12 = t22
 
     if custom_state is None and user_id != 0:
         answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
@@ -233,15 +233,15 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
     css_paths = []
     modules = []
 
-    # t22 = time.clock()
-    # print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
-    # t12 = t22
+    t22 = time.clock()
+    print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
+    t12 = t22
 
     for plugin_name, plugin_block_map in plugins.items():
 
-        # t22 = time.clock()
-        # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "begin", len(plugin_block_map), (t22-t12)))
-        # t12 = t22
+        t22 = time.clock()
+        print("%-15s %-10s %6d - %7.4f" % (plugin_name, "begin", len(plugin_block_map), (t22-t12)))
+        t12 = t22
 
         try:
             resp = plugin_reqs(plugin_name)
@@ -280,15 +280,15 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
 
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
-                # t22 = time.clock()
-                # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "beg multi:", 0, (t22-t12)))
-                # t12 = t22
+                t22 = time.clock()
+                print("%-15s %-10s %6d - %7.4f" % (plugin_name, "beg multi:", 0, (t22-t12)))
+                t12 = t22
 
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
 
-                # t22 = time.clock()
-                # print("%-15s %-10s %6d - %7.4f" % (plugin_name, "multihtml:", len(response), (t22-t12)))
-                # t12 = t22
+                t22 = time.clock()
+                print("%-15s %-10s %6d - %7.4f" % (plugin_name, "multihtml:", len(response), (t22-t12)))
+                t12 = t22
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     pars[idx].set_html(get_error_html(plugin_name, str(e)))
