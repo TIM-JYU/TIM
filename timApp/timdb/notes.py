@@ -119,7 +119,7 @@ class Notes(TimDbBase):
         self.db.commit()
 
     @contract
-    def getNotes(self, usergroup_id: 'int', doc: 'Document') -> 'list(dict)':
+    def getNotes(self, usergroup_id: 'int', doc: 'Document', include_public=True) -> 'list(dict)':
         """Gets all notes for a document a particular user has access to.
 
         :param usergroup_id: The usergroup id.
@@ -128,18 +128,23 @@ class Notes(TimDbBase):
         ids = doc.get_referenced_document_ids()
         ids.add(doc.doc_id)
         template = ','.join('?' * len(ids))
+        include_public_sql = ''
+        if include_public:
+            include_public_sql = "OR access = 'everyone'"
         result = self.resultAsDictionary(
             self.db.execute("""SELECT id, par_id, doc_id, par_hash, content,
                                       created, modified, access, tags, html, UserGroup_id
                                FROM UserNotes
-                               WHERE (UserGroup_id = ? OR access = 'everyone') AND doc_id IN (%s)""" % template, [usergroup_id] + list(ids)))
+                               WHERE (UserGroup_id = ? %s) AND doc_id IN (%s)""" % (include_public_sql, template),
+                            [usergroup_id] + list(ids)))
+
 
         return self.process_notes(result)
 
     @contract
     def get_note(self, note_id: 'int') -> 'dict':
         result = self.resultAsDictionary(
-            self.db.execute('SELECT id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
+            self.db.execute('SELECT id, doc_id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
                             'FROM UserNotes '
                             'WHERE id = ?', [note_id]))
 

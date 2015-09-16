@@ -1550,9 +1550,10 @@ def calculate_points(answer, points_table):
 @app.route("/note/<int:note_id>")
 def get_note(note_id):
     timdb = getTimDb()
-    if not timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id):
-        abort(403)
     note = timdb.notes.get_note(note_id)
+    if not (timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id)
+            or timdb.users.userIsOwner(getCurrentUserId(), note['doc_id'])):
+        abort(403)
     note.pop('UserGroup_id')
     tags = note['tags']
     note['tags'] = {}

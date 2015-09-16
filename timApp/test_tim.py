@@ -2,6 +2,7 @@
 
 import json
 import unittest
+from flask import session
 
 from flask.testing import FlaskClient
 from documentmodel.document import Document
@@ -21,8 +22,11 @@ class TimTest(TimDbTest):
         tim.app.config['TESTING'] = True
         cls.app = tim.app.test_client()
 
-    def assertInResponse(self, expected, resp, expect_status=200):
+    def assertResponseStatus(self, resp, expect_status=200):
         self.assertEqual(expect_status, resp.status_code)
+
+    def assertInResponse(self, expected, resp, expect_status=200):
+        self.assertResponseStatus(resp, expect_status)
         self.assertIn(expected, resp.get_data(as_text=True))
 
     def assertResponse(self, expected, resp, expect_status=200):
@@ -46,27 +50,29 @@ class TimTest(TimDbTest):
                         method=method)
 
     def test_commenting(self):
+        timdb = self.get_db()
         with TimTest.app as a:
             login_resp = a.post('/altlogin',
                                 data={'email': 'test1@example.com', 'password': 'test1pass'},
                                 follow_redirects=True)
             self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
             doc_name = 'users/testuser1/testing'
-            self.assertDictResponse({'id': 3, 'name': doc_name},
+            doc_id = 3
+            self.assertDictResponse({'id': doc_id, 'name': doc_name},
                                     self.json_post(a, '/createDocument', {
                                         'doc_name': doc_name
                                     }))
             self.assertResponse('Success',
                                 self.json_put(a, '/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
-            pars = Document(3).get_paragraphs()
+            pars = Document(doc_id).get_paragraphs()
             self.assertEqual(1, len(pars))
             first_id = pars[0].get_id()
-            public_comment_text = 'This is a comment.'
-            self.assertInResponse(public_comment_text,
+            comment_of_test1 = 'This is a comment.'
+            self.assertInResponse(comment_of_test1,
                                   self.json_post(a,
-                                                 '/postNote', {'text': public_comment_text,
+                                                 '/postNote', {'text': comment_of_test1,
                                                                'access': 'everyone',
-                                                               'docId': 3,
+                                                               'docId': doc_id,
                                                                'par': first_id}))
 
         with TimTest.app as a:
@@ -74,7 +80,34 @@ class TimTest(TimDbTest):
                                 data={'email': 'test2@example.com', 'password': 'test2pass'},
                                 follow_redirects=True)
             self.assertInResponse('Logged in as: Test user 2 (testuser2)', login_resp)
-            self.assertInResponse(public_comment_text, a.get('/view/' + doc_name))
+            self.assertInResponse(comment_of_test1, a.get('/view/' + doc_name))
+            comment_of_test2 = 'g8t54h954hy95hg54h'
+            self.assertInResponse(comment_of_test2,
+                                  self.json_post(a,
+                                                 '/postNote', {'text': comment_of_test2,
+                                                               'access': 'everyone',
+                                                               'docId': doc_id,
+                                                               'par': first_id}))
+
+            ug = timdb.users.getPersonalUserGroup(session['user_id'])
+            notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
+            self.assertEqual(1, len(notes))
+            test2_note_id = notes[0]['id']
+
+        with TimTest.app as a:
+            login_resp = a.post('/altlogin',
+                                data={'email': 'test1@example.com', 'password': 'test1pass'},
+                                follow_redirects=True)
+            self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
+            self.assertInResponse(comment_of_test2,
+                                  a.get('/note/{}'.format(test2_note_id)))
+            self.assertResponseStatus(self.json_post(a,
+                                                     '/deleteNote', {'id': test2_note_id,
+                                                                     'docId': doc_id,
+                                                                     'par': first_id}))
+            ug = timdb.users.getPersonalUserGroup(session['user_id'])
+            notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
+            self.assertEqual(1, len(notes))
 
 
 if __name__ == '__main__':

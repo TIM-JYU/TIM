@@ -10,10 +10,13 @@ from timdb.timdb2 import TimDb
 
 
 class TimDbTest(unittest.TestCase):
-
     dumbo = dumboclient.launch_dumbo()
     test_files_path = 'doctest_files'
     db_path = 'doctest_files/tim.db'
+
+    @classmethod
+    def get_db(cls):
+        return TimDb(db_path=cls.db_path, files_root_path=cls.test_files_path)
 
     @classmethod
     def setUpClass(cls):
