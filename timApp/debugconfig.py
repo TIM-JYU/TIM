@@ -1,2 +1,2 @@
-DEBUG = False
-PROFILE = True
+DEBUG = True
+PROFILE = False

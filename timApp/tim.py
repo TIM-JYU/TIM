@@ -15,6 +15,7 @@ from flask import Flask, Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import send_from_directory
+from werkzeug.contrib.profiler import ProfilerMiddleware
 from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
@@ -66,6 +67,7 @@ app.register_blueprint(Blueprint('bower',
                                  static_url_path='/static/scripts/bower_components'))
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
+print('Profiling: {}'.format(app.config['PROFILE']))
 
 KNOWN_TAGS = ['difficult', 'unclear']
 
@@ -1646,6 +1648,11 @@ def make_session_permanent():
 
 
 def start_app():
-    # TODO: Think if it is truly necessary to have threaded=True here
     app.wsgi_app = ReverseProxied(app.wsgi_app)
-    app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
+    if app.config['PROFILE']:
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
+    app.run(host='0.0.0.0',
+            port=5000,
+            use_evalex=False,
+            use_reloader=False,
+            threaded=not (app.config['DEBUG'] and app.config['PROFILE']))
