@@ -234,7 +234,7 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
     modules = []
 
     t22 = time.clock()
-    print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
+    # print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
     t12 = t22
 
     for plugin_name, plugin_block_map in plugins.items():
