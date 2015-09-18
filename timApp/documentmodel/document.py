@@ -118,7 +118,6 @@ class Document:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         res = 1 + cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=0)
-        print("get_next_free_id() = {}".format(res))
         return res
 
     @contract

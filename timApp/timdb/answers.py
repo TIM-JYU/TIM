@@ -153,7 +153,6 @@ class Answers(TimDbBase):
                           %s
                           order by answered_on desc""" % (
             " ".join(["and id in (select answer_id from UserAnswer where user_id = %d)" % user_id for user_id in user_ids]))
-        print(sql)
         cursor.execute(sql, [task_id])
         return self.resultAsDictionary(cursor)
 

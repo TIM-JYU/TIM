@@ -179,8 +179,6 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
 
     :type pars: list[DocParagraph]
     """
-    t1 = time.clock()
-    t12 = t1
 
     pars = dereference_pars(pars, edit_window)
 
@@ -218,10 +216,6 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
                 state = None
             plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
 
-    t22 = time.clock()
-    print("%-15s %-10s %6d - %7.4f" % ("blocks done", " ", len(pars), (t22-t12)))
-    t12 = t22
-
     if custom_state is None and user_id != 0:
         answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
         for answer in answers:
@@ -233,16 +227,7 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
     css_paths = []
     modules = []
 
-    t22 = time.clock()
-    # print("%-15s %-10s %6d - %7.4f" % ("answ done", " ", len(answers), (t22-t12)))
-    t12 = t22
-
     for plugin_name, plugin_block_map in plugins.items():
-
-        t22 = time.clock()
-        print("%-15s %-10s %6d - %7.4f" % (plugin_name, "begin", len(plugin_block_map), (t22-t12)))
-        t12 = t22
-
         try:
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
@@ -280,15 +265,7 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
 
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
-                t22 = time.clock()
-                print("%-15s %-10s %6d - %7.4f" % (plugin_name, "beg multi:", 0, (t22-t12)))
-                t12 = t22
-
                 response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
-
-                t22 = time.clock()
-                print("%-15s %-10s %6d - %7.4f" % (plugin_name, "multihtml:", len(response), (t22-t12)))
-                t12 = t22
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     pars[idx].set_html(get_error_html(plugin_name, str(e)))
@@ -316,8 +293,6 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
                 pars[idx].set_html("<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                                    plugin_url,
                                                                                    html))
-    t2 = time.clock()
-    print("%-15s %-10s %6d - %7.4f" % ("all block done:", "total", len(pars), (t2-t1)))
 
     return pars, js_paths, css_paths, modules
 
@@ -339,6 +314,7 @@ def make_lazy(html, markup, do_lazy):
     # print(header, stem)
     return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + "<div><p>" + stem + "</p></div>"
 
+
 def get_all_reqs():
     allreqs = {}
     for plugin in PLUGINS.keys():
@@ -353,30 +329,6 @@ def get_all_reqs():
             continue
     return allreqs
 
-def make_browse_buttons(user_id, task_id, answer_db):
-    states = answer_db.getAnswers(user_id, task_id)
-    if len(states) > 1:
-        formatted = ""
-        content_obj = json.loads(states[len(states)-1]["content"])
-        if isinstance(content_obj, dict):
-            for key, val in content_obj.items():
-                formatted += key + "\n---------------\n" + str(val) + "\n\n"
-        elif isinstance(content_obj, list):
-            for v in content_obj:
-                formatted += "List element:" + "\n---------------\n" + str(v) + "\n\n"
-        else:
-            formatted = str(content_obj)
-        first = "<br/>First answer:<br/><pre>{}</pre>".format(html.escape(formatted))
-    else:
-        first = ""
-    return """
-       <div class="answerbuttons">
-           <input type="button" value="<-">
-           {} / {}
-           <input type="button" value="->">
-           {}
-       </div>
-    """.format(len(states), len(states), first)
 
 def plugin_deps(p):
     """

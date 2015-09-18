@@ -185,11 +185,11 @@ def quick_post_process(pars):
         par['status'] = ''
     return htmlpars
 
+
 def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_window=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
     group = timdb.users.getPersonalUserGroup(user_id)
-    t0 = time.time()
 
     pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                  current_user['name'],
@@ -198,9 +198,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
                                                                  sanitize=sanitize,
                                                                  do_lazy=do_lazy,
                                                                  edit_window=edit_window)
-    print("pluginify time: {} s".format(time.time() - t0))
     req_json = request.get_json()
-    t0 = time.time()
 
     if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
         htmlpars = [par.html_dict() for par in pars
@@ -209,20 +207,13 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
     else:
         htmlpars = [par.html_dict() for par in pars]
 
-    print("dict1 time: {} s".format(time.time() - t0))
-    t0 = time.time()
-    
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
     for htmlpar in htmlpars:
         key = htmlpar.get('ref_id') or htmlpar['id'], htmlpar.get('ref_doc_id') or htmlpar['doc_id']
         pars_dict[key].append(htmlpar)
-    print("dict2 time: {} s".format(time.time() - t0))
 
-    t0 = time.time()
     readings = timdb.readings.getReadings(group, Document(doc_id))
-    print("getReadings time: {} s".format(time.time() - t0))
-    t0 = time.time()
 
     for r in readings:
         key = (r['par_id'], r['doc_id'])
@@ -231,12 +222,8 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
             for p in pars:
                 p['status'] = 'read' if r['par_hash'] == (p.get('ref_t')
                                               or p['t']) else 'modified'
-    print("readings time: {} s".format(time.time() - t0))
 
-    t0 = time.time()
     notes = timdb.notes.getNotes(group, Document(doc_id))
-    print("notes time: {} s".format(time.time() - t0))
-    t0 = time.time()
     for n in notes:
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
@@ -248,8 +235,6 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
                 if 'notes' not in p:
                     p['notes'] = []
                 p['notes'].append(n)
-    print("notes time: {} s".format(time.time() - t0))
-
     return htmlpars, js_paths, css_paths, modules
 
 

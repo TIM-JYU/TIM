@@ -356,7 +356,6 @@ class DocParagraph(DocParagraphBase):
             else:
                 par.set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
             par.set_original(self)
-            print(par)
             return par
 
         attrs = self.get_attrs()
