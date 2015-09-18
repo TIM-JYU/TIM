@@ -10,4 +10,4 @@ mkdir -p dist/build/Ephemeral/log
 # Copy the built executable from the container to host
 hash=$(docker run -d -t -i ephemeral)
 docker cp $hash:/Ephemeral/dist/build/Ephemeral/Ephemeral dist/build/Ephemeral/
-
+docker rm -f $hash
