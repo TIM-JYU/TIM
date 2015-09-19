@@ -794,6 +794,7 @@ timApp.controller("ViewCtrl", [
             timLogTime("getindex","view");
             http.get('/index/' + sc.docId)
                 .success(function (data) {
+                    timLogTime("getindex succ","view");
                     if (data.empty) {
                         sc.showIndex = false;
                     } else {
