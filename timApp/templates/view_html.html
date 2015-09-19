@@ -112,7 +112,7 @@
                         to CSV</a>
                     &nbsp;&nbsp;
                     <input type="text" size="5" name="korppiExportId" ng-model="expkorppi.korppiExportId">
-                    <a ng-mousedown="expkorppi.generate()" ng-href="{{ expkorppi.link() }}" download="{{ docName }}.txt">Korppi</a>
+                    <a ng-mousedown="expkorppi.generate()" ng-href="{{ expkorppi.link() }}" download="{{ expkorppi.korppiExportId }}.txt">Korppi</a>
                     {% endraw %}
                 {% else %}
                     No answerers.

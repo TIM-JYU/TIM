@@ -16,6 +16,7 @@ angular.module('ngTableExportKorppi', [])
                 },
                 generate: function() {
                     data = '';
+                    if ( !csv.korppiExportId ) { alert("Give name for Korppi-field"); return; }
                     var rows = element.find('tr');
                     angular.forEach(rows, function(row, i) {
                         var tr = angular.element(row),
