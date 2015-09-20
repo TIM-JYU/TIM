@@ -234,6 +234,27 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 };
 
+
+                $scope.getAllAnswers = function() {
+                    $scope.loading++;
+                    $http.get('/allAnswers/' + $scope.taskId + '?rnd='+Math.random(), {params: {group: $scope.$parent.group}})
+                        .success(function (data, status, headers, config) {
+                            $scope.allAnswers = data;
+                            var nw = $window
+                            //var nd = nw.document;
+                            //nd.write(data[0]);
+                        }).error(function (data, status, headers, config) {
+                            $window.alert('Error getting answers: ' + data.error);
+                        }).finally(function () {
+                            $scope.loading--;
+                        });
+                };
+
+
+                $scope.getLink = function() {
+                     return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
+                }
+
                 if ( GLOBALBrowseUser ) {
                     $scope.user = GLOBALBrowseUser;
                 }    

@@ -36,7 +36,8 @@ angular.module('ngTableExportKorppi', [])
                     });
                 },
                 link: function() {
-                    return 'data:text/csv;charset=UTF-8,' + encodeURIComponent(data);
+                    // return 'data:text/csv;charset=UTF-8,' + encodeURIComponent(data);
+                    return 'data:text/plain;charset=UTF-8,' + encodeURIComponent(data);
                 }
             };
             $parse(attrs.exportKorppi).assign(scope.$parent, csv);
