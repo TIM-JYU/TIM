@@ -160,7 +160,7 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_html(self) -> 'str':
-        if self.__data['html']:
+        if self.__data.get('html'):
             return self.__data['html']
         self.set_html(md_to_html(self.get_markdown()))
         return self.__data['html']

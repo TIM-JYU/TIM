@@ -42,19 +42,24 @@ def update_document(doc_id, version):
             content = raw.decode('utf-8')
         except UnicodeDecodeError:
             content = UnicodeDammit(raw).unicode_markup
+        original = None
+        # TODO: Include original when posting as a file
     else:
         request_json = request.get_json()
         if 'fulltext' not in request_json:
             return jsonResponse({'message': 'Malformed request - fulltext missing.'}, 400)
         content = request_json['fulltext']
+        original = request_json['original']
 
+    if original is None:
+        abort(400, 'Missing parameter: original')
     if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
     doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
         get_pars_from_editor_text(doc_id, content, break_on_elements=True)
-        d = timdb.documents.update_document(doc, content)
+        d = timdb.documents.update_document(doc, content, original)
     except (TimDbException, ValidationException) as e:
         return abort(400, str(e))
     chg = d.get_changelog()
