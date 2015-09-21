@@ -6,6 +6,7 @@ from flask import session
 
 from flask.testing import FlaskClient
 from documentmodel.document import Document
+from markdownconverter import md_to_html
 
 import tim
 from timdbtest import TimDbTest
@@ -68,12 +69,34 @@ class TimTest(TimDbTest):
             self.assertEqual(1, len(pars))
             first_id = pars[0].get_id()
             comment_of_test1 = 'This is a comment.'
-            self.assertInResponse(comment_of_test1,
+            html_comment_of_test1 = md_to_html(comment_of_test1)
+            self.assertInResponse(html_comment_of_test1,
                                   self.json_post(a,
                                                  '/postNote', {'text': comment_of_test1,
                                                                'access': 'everyone',
                                                                'docId': doc_id,
                                                                'par': first_id}))
+            self.assertInResponse(html_comment_of_test1, a.get('/view/' + doc_name))
+            par_text = 'testing editing now...\nnew line\n'
+            par_html = md_to_html(par_text)
+            self.assertEqual('<p>testing editing now... new line</p>', par_html)
+            self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
+                "text": par_text,
+                "docId": doc_id,
+                "par": first_id,
+                "par_next": None,
+                "area_start": None,
+                "area_end": None
+            }))
+            self.assertDictResponse({'text': par_text}, a.get('/getBlock/{}/{}'.format(doc_id, first_id)))
+            self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
+                "text": par_text,
+                "docId": doc_id,
+                "par": first_id,
+                "par_next": None,
+                "area_start": None,
+                "area_end": None
+            }))
 
         with TimTest.app as a:
             login_resp = a.post('/altlogin',
