@@ -120,7 +120,9 @@ def modify_paragraph():
                                                         new_attrs=editor_pars[0].get_attrs(),
                                                         new_properties=properties)
             pars.append(par)
-
+        else:
+            # If the first paragraph was not modified at all, append the original one
+            pars.append(original_par)
         for p in editor_pars[1:]:
             properties = {}
             if is_multi_block:
@@ -130,10 +132,6 @@ def modify_paragraph():
             [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
                                                      properties=properties)
             pars.append(par)
-
-        # If the user was editing only one paragraph and it was not modified at all, append the original one
-        if len(pars) == 0:
-            pars.append(original_par)
     mark_pars_as_read_if_chosen(pars, doc)
     return par_response(pars, doc_id)
 

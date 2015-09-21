@@ -97,6 +97,14 @@ class TimTest(TimDbTest):
                 "area_start": None,
                 "area_end": None
             }))
+            self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
+                "text": par_text + '#-\nnew par',
+                "docId": doc_id,
+                "par": first_id,
+                "par_next": None,
+                "area_start": None,
+                "area_end": None
+            }))
 
         with TimTest.app as a:
             login_resp = a.post('/altlogin',
