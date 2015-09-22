@@ -239,7 +239,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.loading++;
                     $http.get('/allAnswers/' + $scope.taskId + '?rnd='+Math.random(), {params: {group: $scope.$parent.group}})
                         .success(function (data, status, headers, config) {
-                            $scope.allAnswers = data;
+                            $scope.allAnswers = data.join("\n\n----------------------------------------------------------------------------------\n");
                             var nw = $window
                             //var nd = nw.document;
                             //nd.write(data[0]);

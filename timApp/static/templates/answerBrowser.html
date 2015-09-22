@@ -10,7 +10,7 @@
     <button ng-click="next()">&rarr;</button>
     {{ filteredAnswers.length - filteredAnswers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ filteredAnswers.length }}</a>
     <label><input type="checkbox" ng-model="onlyValid">Show valid only</label> |
-    <a ng-show="$parent.teacherMode" href="{{getLink()}}" ng-mousedown="getAllAnswers()" >All answers</a> 
+    <a ng-show="$parent.teacherMode" href="{{getLink()}}" ng-mousedown="getAllAnswers()" >All answers</a>
     <br>
     <label ng-show="$parent.teacherMode">Points:<input ng-model="points" type="text"></label>
     <span ng-show="!$parent.teacherMode && points !== null">Points: {{ points }}</span>
