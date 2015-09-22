@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import contracts
 import logging
 import os
 import imghdr
@@ -68,6 +69,11 @@ app.register_blueprint(Blueprint('bower',
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
+if app.config['CONTRACTS_ENABLED']:
+    print('Contracts are ENABLED')
+else:
+    contracts.disable_all()
+    print('Contracts are DISABLED')
 
 KNOWN_TAGS = ['difficult', 'unclear']
 
