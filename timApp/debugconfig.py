@@ -1,2 +1,3 @@
+CONTRACTS_ENABLED = False
 DEBUG = True
 PROFILE = False

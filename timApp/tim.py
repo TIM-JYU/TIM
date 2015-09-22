@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import contracts
 import logging
 import os
 import imghdr
@@ -68,6 +69,11 @@ app.register_blueprint(Blueprint('bower',
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 print('Profiling: {}'.format(app.config['PROFILE']))
+if app.config['CONTRACTS_ENABLED']:
+    print('Contracts are ENABLED')
+else:
+    contracts.disable_all()
+    print('Contracts are DISABLED')
 
 KNOWN_TAGS = ['difficult', 'unclear']
 

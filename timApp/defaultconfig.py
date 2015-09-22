@@ -4,6 +4,7 @@ from datetime import timedelta
 COMPRESS_DEBUG     = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
 COMPRESS_MIN_SIZE  = 50
+CONTRACTS_ENABLED  = True
 DATABASE           = './tim_files/tim.db'
 DEBUG              = False
 FILES_PATH         = 'tim_files'
