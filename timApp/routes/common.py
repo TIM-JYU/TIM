@@ -204,6 +204,10 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
         key = htmlpar.get('ref_id') or htmlpar['id'], htmlpar.get('ref_doc_id') or htmlpar['doc_id']
         pars_dict[key].append(htmlpar)
 
+    for p in html_pars:
+        p['status'] = ''
+        p['notes'] = []
+
     readings = timdb.readings.getReadings(group, Document(doc_id))
 
     for r in readings:
@@ -213,7 +217,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
             for p in pars:
                 p['status'] = 'read' if r['par_hash'] == (p.get('ref_t')
                                               or p['t']) else 'modified'
-
+    
     notes = timdb.notes.getNotes(group, Document(doc_id))
     for n in notes:
         key = (n['par_id'], n['doc_id'])

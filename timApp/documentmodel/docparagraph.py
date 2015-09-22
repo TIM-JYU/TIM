@@ -309,7 +309,10 @@ class DocParagraph(DocParagraphBase):
             base_path = self.get_base_path()
             if os.listdir(base_path) == ['current']:
                 os.unlink(os.path.join(base_path, 'current'))
-                os.rmdir(base_path)
+                if os.path.islink(base_path):
+                    os.unlink(base_path)
+                else:
+                    os.rmdir(base_path)
 
         if not should_exist:
             return
@@ -327,7 +330,7 @@ class DocParagraph(DocParagraphBase):
         linkpath = self._get_path(self.get_doc_id(), self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
-        if os.path.isfile(linkpath):
+        if os.path.islink(linkpath) or os.path.isfile(linkpath):
             os.unlink(linkpath)
         os.symlink(self.get_hash(), linkpath)
 
@@ -340,7 +343,13 @@ class DocParagraph(DocParagraphBase):
     @contract
     def remove_link(self, doc_id: 'int'):
         self.__read()
-        self.__data['links'].remove(str(doc_id))
+        if str(doc_id) in self.__data['links']:
+            self.__data['links'].remove(str(doc_id))
+        elif doc_id in self.__data['links']:
+            self.__data['links'].remove(doc_id)
+        else:
+            print("Couldn't remove link... links contains:")
+            print(self.__data['links'])
         self.__write()
 
     def update_links(self):
