@@ -6,6 +6,7 @@ from flask import session
 
 from flask.testing import FlaskClient
 from documentmodel.document import Document
+from markdownconverter import md_to_html
 
 import tim
 from timdbtest import TimDbTest
@@ -29,6 +30,10 @@ class TimTest(TimDbTest):
         self.assertResponseStatus(resp, expect_status)
         self.assertIn(expected, resp.get_data(as_text=True))
 
+    def assertManyInResponse(self, expecteds, resp, expect_status=200):
+        for e in expecteds:
+            self.assertInResponse(e, resp, expect_status)
+
     def assertResponse(self, expected, resp, expect_status=200):
         self.assertEqual(expect_status, resp.status_code)
         self.assertEqual(expected, resp.get_data(as_text=True))
@@ -49,7 +54,7 @@ class TimTest(TimDbTest):
                         content_type='application/json',
                         method=method)
 
-    def test_commenting(self):
+    def test_activities(self):
         timdb = self.get_db()
         with TimTest.app as a:
             login_resp = a.post('/altlogin',
@@ -68,12 +73,48 @@ class TimTest(TimDbTest):
             self.assertEqual(1, len(pars))
             first_id = pars[0].get_id()
             comment_of_test1 = 'This is a comment.'
-            self.assertInResponse(comment_of_test1,
+            html_comment_of_test1 = md_to_html(comment_of_test1)
+            self.assertInResponse(html_comment_of_test1,
                                   self.json_post(a,
                                                  '/postNote', {'text': comment_of_test1,
                                                                'access': 'everyone',
                                                                'docId': doc_id,
                                                                'par': first_id}))
+            self.assertInResponse(html_comment_of_test1, a.get('/view/' + doc_name))
+            par_text = 'testing editing now...\nnew line\n'
+            par_html = md_to_html(par_text)
+            self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
+                "text": par_text,
+                "docId": doc_id,
+                "par": first_id,
+                "par_next": None
+            }))
+            self.assertDictResponse({'text': par_text}, a.get('/getBlock/{}/{}'.format(doc_id, first_id)))
+            self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
+                "text": par_text,
+                "docId": doc_id,
+                "par": first_id,
+                "par_next": None
+            }))
+            par2_text = 'new par'
+            par2_html = md_to_html(par2_text)
+            self.assertManyInResponse([par_html, par2_html], self.json_post(a, '/postParagraph/', {
+                "text": par_text + '#-\n' + par2_text,
+                "docId": doc_id,
+                "par": first_id,
+                "par_next": None
+            }))
+            pars = Document(doc_id).get_paragraphs()
+            self.assertEqual(2, len(pars))
+            second_par_id = pars[1].get_id()
+            par2_new_text = '    ' + par2_text
+            par2_new_html = md_to_html(par2_new_text)
+            self.assertInResponse(par2_new_html, self.json_post(a, '/postParagraph/', {
+                "text": par2_new_text,
+                "docId": doc_id,
+                "par": second_par_id,
+                "par_next": None
+            }))
 
         with TimTest.app as a:
             login_resp = a.post('/altlogin',

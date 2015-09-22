@@ -9,7 +9,7 @@ n_alphanum = len(alphanum)
 empty_hash = mmh3.hash('{}')
 
 def hashfunc(text, attrs=None):
-    text_hash = mmh3.hash(text.replace(' ', ''))
+    text_hash = mmh3.hash(text)
     attr_hash = empty_hash if not attrs else mmh3.hash(str(attrs))
     full_hash = text_hash ^ attr_hash
     return base64.b64encode(hex(full_hash).encode()).decode()

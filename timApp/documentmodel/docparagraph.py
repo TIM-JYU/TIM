@@ -18,6 +18,8 @@ new_contract('DocParagraph', DocParagraphBase)
 
 
 class DocParagraph(DocParagraphBase):
+    default_files_root = 'tim_files'
+
     @contract
     def __init__(self, doc_id: 'int|None'=None, files_root: 'str|None'=None):
         self.doc_id = doc_id
@@ -87,7 +89,7 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     def get_default_files_root(cls):
-        return 'tim_files'
+        return cls.default_files_root
 
     @classmethod
     @contract
@@ -158,7 +160,7 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_html(self) -> 'str':
-        if self.__data['html']:
+        if self.__data.get('html'):
             return self.__data['html']
         self.set_html(md_to_html(self.get_markdown()))
         return self.__data['html']

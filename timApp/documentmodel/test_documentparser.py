@@ -79,18 +79,30 @@ test
         self.assertListEqual(expected, DocumentParser(exported).get_blocks())
         random.seed(0)
         dp.add_missing_attributes()
-        self.assertListEqual([{'id': 'SoMUq2gZwvpI', 't': 'LTB4NGQwMTZhODI='},
-                              {'id': 'WORjZumBVWdm', 't': 'MHg3ZjUxNmRhYw=='},
-                              {'id': 'w8i8M6DPgWyR', 't': 'MHgyZTE2OTQzOA=='},
-                              {'id': 'JPCV9j6K4VSg', 't': 'LTB4NTJhNDY1MTQ='},
-                              {'id': 'Hluz6mrkDEWe', 't': 'MHg3NWU5NTMyMA=='},
-                              {'id': 'dZzusTxg3PW5', 't': 'MHgxZWRmN2M2Yg=='},
-                              {'id': 'zW05KRpJQOG9', 't': 'MHg0MzA5ZDAz'},
-                              {'id': 'E0DvQTlfKkJd', 't': 'MHg0NDIxMTk0OQ=='},
-                              {'id': 'T4cWAefPZ9Po', 't': 'MHg3ZDY2ZjA3MQ=='},
-                              {'id': 'ys55kUwXv6jY', 't': 'MHgzMDYzZmNkYg=='},
-                              {'id': 'ziJ7zlQXydZE', 't': 'LTB4NDkwNjQ2Mg=='}],
-                             [{'id': block['id'], 't': block['t']} for block in dp.get_blocks()])
+        self.assertListEqual([{'id': 'SoMUq2gZwvpI'},
+                              {'id': 'WORjZumBVWdm'},
+                              {'id': 'w8i8M6DPgWyR'},
+                              {'id': 'JPCV9j6K4VSg'},
+                              {'id': 'Hluz6mrkDEWe'},
+                              {'id': 'dZzusTxg3PW5'},
+                              {'id': 'zW05KRpJQOG9'},
+                              {'id': 'E0DvQTlfKkJd'},
+                              {'id': 'T4cWAefPZ9Po'},
+                              {'id': 'ys55kUwXv6jY'},
+                              {'id': 'ziJ7zlQXydZE'}],
+                             [{'id': block['id']} for block in dp.get_blocks()])
+        self.assertListEqual([{'t': 'LTB4NGQwMTZhODI='},
+                              {'t': 'MHg3ZjUxNmRhYw=='},
+                              {'t': 'MHgyZTE2OTQzOA=='},
+                              {'t': 'LTB4MjQzZTM5MmU='},
+                              {'t': 'LTB4MWIyNGU1NzI='},
+                              {'t': 'LTB4MzI5Y2Y0ZWM='},
+                              {'t': 'MHgzNGFiZTAwYw=='},
+                              {'t': 'LTB4NTZiNGY3ZGU='},
+                              {'t': 'MHg3ZDY2ZjA3MQ=='},
+                              {'t': 'MHgzMDYzZmNkYg=='},
+                              {'t': 'MHg3NjQzNzAyYg=='}],
+                             [{'t': block['t']} for block in dp.get_blocks()])
         dp.validate_structure()
         self.assertEqual([], DocumentParser('').get_blocks())
         self.assertEqual('', DocumentWriter([]).get_text())

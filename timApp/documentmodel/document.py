@@ -392,13 +392,14 @@ class Document:
                                     if end_index + 1 < len(all_par_ids) else None)
 
     @contract
-    def update(self, text: 'str'):
+    def update(self, text: 'str', original: 'str'):
         """Replaces the document's contents with the specified text.
 
         :param text: The new text for the document.
         """
         new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
-        old_pars = [par for par in self]
+        old_pars = [DocParagraph.from_dict(doc_id=self.doc_id, d=d)
+                    for d in DocumentParser(original).add_missing_attributes().validate_structure().get_blocks()]
 
         self._perform_update(new_pars, old_pars)
 
@@ -417,29 +418,39 @@ class Document:
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == 'replace':
                 for par in new_pars[j1:j2]:
-                    before_i = i2
-                    while before_i < len(old_ids) and not self.has_paragraph(old_ids[before_i]):
-                        before_i += 1
+                    before_i = self.find_insert_index(i2, old_ids)
                     self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
                                           insert_before_id=old_ids[before_i] if before_i < len(old_ids) else last_par_id)
             elif tag == 'insert':
                 for par in new_pars[j1:j2]:
-                    before_i = i2
-                    while before_i < len(old_ids) and not self.has_paragraph(old_ids[before_i]):
-                        before_i += 1
+                    before_i = self.find_insert_index(i2, old_ids)
                     self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
-                                          insert_before_id=old_ids[before_i] if i2 < len(old_ids) else last_par_id)
+                                          insert_before_id=old_ids[before_i] if before_i < len(old_ids) else last_par_id)
             elif tag == 'equal':
-                for new_par, old_par in zip(new_pars[j1:j2], old_pars[i1:i2]):
+                for idx, (new_par, old_par) in enumerate(zip(new_pars[j1:j2], old_pars[i1:i2])):
                     if new_par['t'] != old_par.get_hash() or new_par.get('attrs', {}) != old_par.get_attrs():
-                        self.modify_paragraph(old_par.get_id(),
-                                              new_par['md'],
-                                              new_attrs=new_par.get('attrs'))
+                        if self.has_paragraph(old_par.get_id()):
+                            self.modify_paragraph(old_par.get_id(),
+                                                  new_par['md'],
+                                                  new_attrs=new_par.get('attrs'))
+                        else:
+                            before_i = self.find_insert_index(j1 + idx, new_ids)
+                            self.insert_paragraph(new_par['md'],
+                                                  attrs=new_par.get('attrs'),
+                                                  par_id=new_par['id'],
+                                                  insert_before_id=old_ids[before_i] if before_i < len(
+                                                      old_ids) else last_par_id)
         return new_ids[0], new_ids[-1]
+
+    def find_insert_index(self, i2, old_ids):
+        before_i = i2
+        while before_i < len(old_ids) and not self.has_paragraph(old_ids[before_i]):
+            before_i += 1
+        return before_i
 
     def get_index(self) -> 'list(tuple)':
         return get_index_for_version(self.doc_id, self.get_version())
