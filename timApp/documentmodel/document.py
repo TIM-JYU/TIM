@@ -1,4 +1,3 @@
-from copy import deepcopy
 from difflib import SequenceMatcher
 import functools
 import json
@@ -562,7 +561,7 @@ class DocParagraphIter:
                     # Line contains both par_id and t
                     par_id, t = line.replace('\n', '').split('/')
                     # Make a copy of the paragraph to avoid modifying cached instance
-                    return deepcopy(DocParagraph.get(self.doc.doc_id, par_id, t, self.doc.files_root))
+                    return DocParagraph.get(self.doc.doc_id, par_id, t, self.doc.files_root)
                 else:
                     # Line contains just par_id, use the latest t
                     return DocParagraph.get_latest(self.doc.doc_id, line.replace('\n', ''), self.doc.files_root)

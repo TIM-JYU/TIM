@@ -158,8 +158,6 @@ def view_content(doc_name, template_name, view_range=None):
                                                                 current_user['id'],
                                                                 sanitize=False,
                                                                 do_lazy=get_option(request, "lazy", True))
-    texts = quick_post_process(texts)
-
     return render_template(template_name,
                            docID=doc_id,
                            text=texts,

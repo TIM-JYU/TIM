@@ -179,37 +179,28 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def quick_post_process(pars):
-    htmlpars = [par.html_dict() for par in pars]
-    for par in htmlpars:
-        par['status'] = ''
-    return htmlpars
-
-
 def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_window=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
     group = timdb.users.getPersonalUserGroup(user_id)
 
-    pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
-                                                                 current_user['name'],
-                                                                 timdb.answers,
-                                                                 user_id,
-                                                                 sanitize=sanitize,
-                                                                 do_lazy=do_lazy,
-                                                                 edit_window=edit_window)
+    html_pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
+                                                                      current_user['name'],
+                                                                      timdb.answers,
+                                                                      user_id,
+                                                                      sanitize=sanitize,
+                                                                      do_lazy=do_lazy,
+                                                                      edit_window=edit_window)
     req_json = request.get_json()
 
     if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
-        htmlpars = [par.html_dict() for par in pars
-                if str(par.get_doc_id()) == req_json.get('ref-doc-id') and
-                par.get_id() == req_json.get('ref-id')]
-    else:
-        htmlpars = [par.html_dict() for par in pars]
+        ref_doc_id = req_json.get('ref-doc-id')
+        ref_id = req_json.get('ref-id')
+        html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
 
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
-    for htmlpar in htmlpars:
+    for htmlpar in html_pars:
         key = htmlpar.get('ref_id') or htmlpar['id'], htmlpar.get('ref_doc_id') or htmlpar['doc_id']
         pars_dict[key].append(htmlpar)
 
@@ -235,7 +226,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
                 if 'notes' not in p:
                     p['notes'] = []
                 p['notes'].append(n)
-    return htmlpars, js_paths, css_paths, modules
+    return html_pars, js_paths, css_paths, modules
 
 
 def get_referenced_par_from_req(par):
