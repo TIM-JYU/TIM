@@ -83,7 +83,8 @@ class Documents(TimDbBase):
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
-        document.add_paragraph('Click right side to edit. You can get help with editing from editors Help tab.')
+        document.add_paragraph("Click left side to edit. You can get help with editing from editor's Help tab."
+                               "\n\nEdit or delete this paragraph.")
 
         self.add_name(document_id, name)
         return document
