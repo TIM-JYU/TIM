@@ -42,7 +42,7 @@ run apt-get install -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
 run pip3 install pygit2
 
-run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b4 eventlet tornado
+run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b5 eventlet tornado aiohttp
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six
