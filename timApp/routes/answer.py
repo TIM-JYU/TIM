@@ -170,6 +170,20 @@ def get_answers(task_id, user_id):
     return jsonResponse(user_answers)
 
 
+@answers.route("/allAnswers/<task_id>")
+def get__all_answers(task_id):
+    verifyLoggedIn()
+    timdb = getTimDb()
+    doc_id, task_id_name = parse_task_id(task_id)
+    usergroup = request.args.get('group')
+    if not usergroup: usergroup = 0
+    if not timdb.documents.exists(doc_id):
+        abort(404, 'No such document')
+    verifyOwnership(doc_id)
+    all_answers = timdb.answers.get_all_answers(task_id, usergroup, hide_names_in_teacher(doc_id))
+    return jsonResponse(all_answers)
+
+
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()

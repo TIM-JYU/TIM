@@ -88,18 +88,18 @@
     <div class="slides">
         <section>
             {% if text %}
-                {{ text[0].get_html()|safe }}
+                {{ text[0].html|safe }}
                 {% set ignore=False %}
                 {% for t in text[1:] %}
-                    {% if t.get_html()|safe == "<div></div>" %}
+                    {% if t.html|safe == "<div></div>" %}
                         </section>
                         <section>
                             {% else %}
-                            {% if (t.get_html()|safe).startswith("<h1") or (t.get_html()|safe).startswith("<h2") or (t.get_html()|safe).startswith("<h3") %}
+                            {% if (t.html|safe).startswith("<h1") or (t.html|safe).startswith("<h2") or (t.html|safe).startswith("<h3") %}
                                 </section>
                                 <section>
                             {% endif %}
-                        {{ t.get_html()|safe }}
+                        {{ t.html|safe }}
                     {% endif %}
                 {% endfor %}
             {% endif %}

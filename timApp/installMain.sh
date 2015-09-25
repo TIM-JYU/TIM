@@ -77,9 +77,10 @@ sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/v
 #run apt-get remove -y npm
 
 apt-get install -y openssh-server
-mkdir /var/run/sshd
-echo 'root:test' | chpasswd
-sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+# tämä ei ehkä ole turvallista pääkoneessa?
+# mkdir /var/run/sshd
+# echo 'root:test' | chpasswd
+# sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # run apt-get autoremove -y
 

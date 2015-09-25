@@ -132,6 +132,21 @@ def get_json_param(jso, key1, key2, default):
         return default
 
 
+def get_json_param3(jso, key1, key2, key3, default):
+    try:
+        if jso is None: return default
+        if key1 not in jso: return default
+        if not key2: return jso[key1]
+        if not jso[key1]: return default
+        if key2 not in jso[key1]: return default
+        if key3 not in jso[key1][key2]: return default
+        return jso[key1][key2][key3]
+    except:
+        # print("JSO XXXXXXXXXXXXX", jso)
+        print("KEY1=", key1, "KEY2=", key2, "KEY3=", key3)
+        return default
+
+
 def get_scan_value(s):
     direction = 1
     if s:

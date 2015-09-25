@@ -16,6 +16,7 @@ from flask import Flask, Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import send_from_directory
+from werkzeug.contrib.profiler import ProfilerMiddleware
 from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
@@ -69,6 +70,7 @@ app.register_blueprint(Blueprint('bower',
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
+print('Profiling: {}'.format(app.config['PROFILE']))
 if app.config['CONTRACTS_ENABLED']:
     print('Contracts are ENABLED')
 else:
@@ -1558,9 +1560,10 @@ def calculate_points(answer, points_table):
 @app.route("/note/<int:note_id>")
 def get_note(note_id):
     timdb = getTimDb()
-    if not timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id):
-        abort(403)
     note = timdb.notes.get_note(note_id)
+    if not (timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id)
+            or timdb.users.userIsOwner(getCurrentUserId(), note['doc_id'])):
+        abort(403)
     note.pop('UserGroup_id')
     tags = note['tags']
     note['tags'] = {}
@@ -1653,4 +1656,10 @@ def make_session_permanent():
 
 
 def start_app():
-    app.run(host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
+    if app.config['PROFILE']:
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
+    app.run(host='0.0.0.0',
+            port=5000,
+            use_evalex=False,
+            use_reloader=False,
+            threaded=not (app.config['DEBUG'] and app.config['PROFILE']))

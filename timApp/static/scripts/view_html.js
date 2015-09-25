@@ -87,6 +87,54 @@ timApp.controller("ViewCtrl", [
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
+        sc.reload = function() {
+            sc.markPageNotDirty();
+            $window.location.reload();
+        };
+
+        sc.closeRefreshDlg = function() {
+            $("#dialog-refresh").hide();
+        };
+
+        sc.markPageDirty = function() {
+            var e = angular.element('#page_is_dirty');
+            e.val('1');
+        };
+
+        sc.markPageNotDirty = function() {
+            var e = angular.element('#page_is_dirty');
+            e.val('0');
+        };
+
+        sc.isPageDirty = function() {
+            var e = angular.element('#page_is_dirty');
+            return e.val() === '1';
+        };
+
+        if (sc.isPageDirty()) {
+            var dlg = $("#dialog-refresh");
+            dlg.attr("tim-draggable-fixed", '');
+            dlg.css("display", "block");
+            $compile(dlg[0])(sc);
+
+            // alternative way using jQuery UI; position is not fixed
+            //$("#dialog-refresh").dialog({
+            //    resizable: false,
+            //    height: 200,
+            //    modal: true,
+            //    buttons: {
+            //        "Refresh": function () {
+            //            $(this).dialog("close");
+            //            sc.markPageNotDirty();
+            //            $window.location.reload();
+            //        },
+            //        "No": function () {
+            //            $(this).dialog("close");
+            //        }
+            //    }
+            //});
+        }
+
         sc.processAllMathDelayed = function ($elem) {
             $timeout(function () {
                 sc.processAllMath($elem);
@@ -514,12 +562,13 @@ timApp.controller("ViewCtrl", [
             http.defaults.headers.common.Version = data.version;
             sc.editing = false;
             sc.cancelArea();
+            sc.markPageDirty();
         };
 
         sc.deleteHelpParagraph = function() {
             var $par = sc.getElementByParHash('LTB4NDU1YzYxMTI=');
             $par.remove();
-        }
+        };
 
         sc.isReference = function ($par) {
             return angular.isDefined($par.attr('ref-id'));
@@ -533,9 +582,11 @@ timApp.controller("ViewCtrl", [
             if (sc.isReference($par)) {
                 data = sc.getRefAttrs($par);
             }
+            if ( !sc.selectedUser ) return true;
+            if ( sc.selectedUser.name.indexOf("Anonymous") == 0 ) return true;  
             http.put('/read/' + sc.docId + '/' + par_id + '?_=' + Date.now(), data)
                 .success(function (data, status, headers, config) {
-                    // No need to do anything here
+                    sc.markPageDirty();
                 }).error(function () {
                     $window.alert('Could not save the read marking.');
                     $this.attr("class", oldClass);
@@ -792,6 +843,7 @@ timApp.controller("ViewCtrl", [
             timLogTime("getindex","view");
             http.get('/index/' + sc.docId)
                 .success(function (data) {
+                    timLogTime("getindex succ","view");
                     if (data.empty) {
                         sc.showIndex = false;
                     } else {

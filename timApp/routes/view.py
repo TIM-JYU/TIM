@@ -158,8 +158,6 @@ def view_content(doc_name, template_name, view_range=None):
                                                                 current_user['id'],
                                                                 sanitize=False,
                                                                 do_lazy=get_option(request, "lazy", True))
-    texts = quick_post_process(texts)
-
     return render_template(template_name,
                            docID=doc_id,
                            text=texts,
@@ -185,8 +183,6 @@ def show_time(s):
 
 
 def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False, slide=False):
-    show_time('view alku')
-    t0 = time.time()
 
     timdb = getTimDb()
     doc_id = timdb.documents.get_document_id(doc_name)
@@ -211,9 +207,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
             abort(403)
 
     start_index = max(view_range[0], 0) if view_range else 0
-    show_time('document alku')
     xs = get_document(doc_id, view_range)
-    show_time('document loppu')
     user = getCurrentUserId()
 
     if teacher:
@@ -227,9 +221,7 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     else:
         users = []
     current_user = timdb.users.getUser(user)
-    show_time('plugin alku')
     texts, jsPaths, cssPaths, modules = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
-    show_time('plugin loppu')
 
     reqs = pluginControl.get_all_reqs()
 
@@ -259,7 +251,6 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
-    show_time('render alku')
     # TODO: Check if doc variable is needed
     result = render_template(template_name,
                              docID=doc_id,
@@ -283,6 +274,4 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
                              rights=get_rights(doc_id),
                              reqs=reqs,
                              settings=settings)
-    show_time('render loppu')
-    print('koko view: {}'.format(time.time() - t0))
     return result

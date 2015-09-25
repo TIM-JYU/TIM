@@ -3,6 +3,8 @@ from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from timdb.timdbbase import TimDbBase
 from sqlite3 import Connection
+import time
+
 
 class Readings(TimDbBase):
     @contract

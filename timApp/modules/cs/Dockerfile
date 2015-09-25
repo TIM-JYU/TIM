@@ -108,6 +108,7 @@ RUN apt-get install -y r-base
 #CMD ["sudo","wrapdocker"]
 # RUN sudo /usr/local/bin/wrapdocker
 
+run apt-get install doxygen
 
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.

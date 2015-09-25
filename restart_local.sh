@@ -60,11 +60,25 @@ if param plugins ; then
  /opt/tim/timApp/modules/Haskell/startPlugins.sh
 fi
 
+TIM_SETTINGS=''
+END_SHELL='; /bin/bash'
+DAEMON_FLAG='-d'
+if param debug ; then
+  TIM_SETTINGS='TIM_SETTINGS=/service/timApp/debugconfig.py'
+  END_SHELL=''
+  DAEMON_FLAG=''
+fi
+if param profile ; then
+  TIM_SETTINGS='TIM_SETTINGS=/service/timApp/profileconfig.py'
+  END_SHELL=''
+  DAEMON_FLAG=''
+fi
+
 if param tim ; then
   if param sshd ; then
     docker run --name tim -p 50001:5000 -p 49999:22 -v /opt/tim:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c '/usr/sbin/sshd -D ; /bin/bash'
   else
-    docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh ; python3 launch.py ; /bin/bash'
+    docker run --name tim -p 50001:5000 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py $END_SHELL"
   fi
 fi
 

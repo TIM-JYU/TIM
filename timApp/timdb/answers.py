@@ -1,6 +1,7 @@
 """"""
 from timdb.timdbbase import TimDbBase
 from contracts import contract
+import json
 
 
 class Answers(TimDbBase):
@@ -86,6 +87,38 @@ class Answers(TimDbBase):
 
 
     @contract
+    def get_all_answers(self, task_id: 'str', usergroup: 'int', hide_names: 'bool') -> 'list(str)':
+        """Gets the all answers to task
+
+        :param task_id: The id of the task.
+        :param usergroup: Group of users to search
+        :param hide_names: Hide names
+        """
+        time_limit = "1900-09-12 22:00:00"
+        answs = self.db.execute("""
+select u.name, a.task_id, a.content, MAX(a.answered_on) as t
+from answer as a, userAnswer as ua, user as u
+where a.task_id like ? and ua.answer_id = a.id and u.id = ua.user_id and a.answered_on > ?
+group by a.task_id, u.id
+order by u.id,a.task_id;
+        """, [task_id, time_limit])
+
+        result = []
+        if answs is None: return result
+
+        for row in answs:
+            header = row[0] + ": " + row[1]
+            if hide_names: header = ""
+            # print(separator + header)
+            line = json.loads(row[2])
+            if not isinstance(line, list):
+                answ = line.get("usercode", "-")
+                result.append(header + "\n" + answ)
+
+        return result
+
+
+    @contract
     def get_common_answers(self, user_ids: 'list(int)', task_id: 'str') -> 'list(dict)':
         common_answers_ids = None
         for user_id in user_ids:
@@ -123,7 +156,7 @@ class Answers(TimDbBase):
             user_ids = []
         cursor.execute(
             """
-                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, SUM(points) as total_points
+                SELECT User.id, name, real_name, COUNT(DISTINCT task_id) AS task_count, ROUND(SUM(points),2) as total_points
                 FROM User
                 JOIN UserAnswer ON User.id = UserAnswer.user_id
                 JOIN Answer ON Answer.id = UserAnswer.answer_id
@@ -153,7 +186,6 @@ class Answers(TimDbBase):
                           %s
                           order by answered_on desc""" % (
             " ".join(["and id in (select answer_id from UserAnswer where user_id = %d)" % user_id for user_id in user_ids]))
-        print(sql)
         cursor.execute(sql, [task_id])
         return self.resultAsDictionary(cursor)
 

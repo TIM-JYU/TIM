@@ -274,6 +274,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
+				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">Document</a>&nbsp&nbsp</span>'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
@@ -299,6 +300,11 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  //'<div  class="htmlresult" ng-if="htmlresult" >{{htmlresult}}</span></div>'+
                   
 				  (t === "jypeli" || true ? '<img ng-if="imgURL" class="grconsole" ng-src="{{imgURL}}" alt=""  />' : "") +
+				  // '<a ng-if="docURL" class="docurl" href="{{docURL}}" target="csdocument" >Go to document</a>' +
+				  '<div ng-if="docURL" class="docurl">'+
+				  '<p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="closeDocument()" >X</a></p>' +
+				  '<iframe width="800" height="600"  src="{{docURL}}" target="csdocument" />' +
+				  '</div>' +
 				  //(t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess"  />' : "") +
                   //  '<div class="userlist" tim-draggable-fixed="" style="top: 39px; right: 408px;">' +
                   //  'Raahattava' +
@@ -430,7 +436,8 @@ csApp.directiveFunction = function(t,isInput) {
             
             scope.isRun = languageTypes.getRunType(scope.type,false) !== false && scope.norun == false;
             scope.isTest = languageTypes.getTestType(scope.type,false) !== false;
-            
+            scope.isDocument = (scope.type.indexOf("doc") >= 0);
+
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
             scope.buttonText = "Aja";
@@ -723,6 +730,21 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	};
 	
     
+	$scope.runDocument = function() {
+	    if ( $scope.docURL ) {
+	        $scope.closeDocument();
+	        return;
+	    }
+		var t = languageTypes.getRunType($scope.type,"cs");
+		$scope.doRunCode(t, false, {"document": true});
+	};
+
+
+	$scope.closeDocument = function() {
+		$scope.docURL = "";
+	};
+
+
     $scope.hideShowEditor = function() {
         $scope.noeditor = !$scope.noeditor;
     };
@@ -752,9 +774,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
     
 
     
-	$scope.doRunCode = function(runType, nosave) {
+	$scope.doRunCode = function(runType, nosave, extraMarkUp) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
+        $scope.closeDocument();
         // alert("moi");
         
         if ( $scope.sageButton ) $scope.sageButton.click();
@@ -804,14 +827,19 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		var params = {
-                  //   'input': 1
-				  'input': {'usercode':ucode, 'userinput':uinput, 'isInput' : isInput, 'userargs': uargs,
-                            // 'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id}, 
-				      'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id }
-				  }
-                  };
+            //   'input': 1
+			'input': {
+			    'usercode':ucode,
+			    'userinput':uinput,
+			    'isInput' : isInput,
+			    'userargs': uargs,
+                // 'markup': {'type':t, 'file': $scope.file, 'replace': $scope.replace, 'lang': $scope.lang, 'taskId': $scope.taskId, 'user_id': $scope.user_id},
+				'markup': { 'type': t, 'taskId': $scope.taskId, 'user_id': $scope.user_id }
+			}
+        };
 		//		  alert($scope.usercode);
         if ( nosave ) params.input.nosave = true;
+        if ( extraMarkUp ) jQuery.extend(params.input.markup, extraMarkUp);
         var url = "/cs/answer";
         // url = "http://tim-beta.it.jyu.fi/cs/answer";
         if ( $scope.plugin ) {
@@ -838,6 +866,14 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			if ( data.web.testGreen ) $scope.runTestGreen = true;
 			if ( data.web.testRed ) $scope.runTestRed = true;
 			$scope.comtestError = data.web.comtestError;
+
+			var docURL = data.web.docurl;
+
+			if ( docURL ) {
+				$scope.docURL = docURL;
+				$scope.result = data.web.console;
+			}
+
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
 				$scope.imgURL = imgURL;

@@ -1,4 +1,3 @@
-from copy import deepcopy
 from difflib import SequenceMatcher
 import functools
 import json
@@ -118,7 +117,6 @@ class Document:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         res = 1 + cls.__get_largest_file_number(os.path.join(froot, 'docs'), default=0)
-        print("get_next_free_id() = {}".format(res))
         return res
 
     @contract
@@ -219,7 +217,7 @@ class Document:
                 line = f.readline()
                 if line == '':
                     return False
-                if line.split('/', 1)[0] == par_id:
+                if line.split('/', 1)[0].rstrip('\n') == par_id:
                     return True
 
     @contract
@@ -393,13 +391,14 @@ class Document:
                                     if end_index + 1 < len(all_par_ids) else None)
 
     @contract
-    def update(self, text: 'str'):
+    def update(self, text: 'str', original: 'str'):
         """Replaces the document's contents with the specified text.
 
         :param text: The new text for the document.
         """
         new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
-        old_pars = [par for par in self]
+        old_pars = [DocParagraph.from_dict(doc_id=self.doc_id, d=d)
+                    for d in DocumentParser(original).add_missing_attributes().validate_structure().get_blocks()]
 
         self._perform_update(new_pars, old_pars)
 
@@ -418,29 +417,39 @@ class Document:
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == 'replace':
                 for par in new_pars[j1:j2]:
-                    before_i = i2
-                    while before_i < len(old_ids) and not self.has_paragraph(old_ids[before_i]):
-                        before_i += 1
+                    before_i = self.find_insert_index(i2, old_ids)
                     self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
                                           insert_before_id=old_ids[before_i] if before_i < len(old_ids) else last_par_id)
             elif tag == 'insert':
                 for par in new_pars[j1:j2]:
-                    before_i = i2
-                    while before_i < len(old_ids) and not self.has_paragraph(old_ids[before_i]):
-                        before_i += 1
+                    before_i = self.find_insert_index(i2, old_ids)
                     self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
-                                          insert_before_id=old_ids[before_i] if i2 < len(old_ids) else last_par_id)
+                                          insert_before_id=old_ids[before_i] if before_i < len(old_ids) else last_par_id)
             elif tag == 'equal':
-                for new_par, old_par in zip(new_pars[j1:j2], old_pars[i1:i2]):
+                for idx, (new_par, old_par) in enumerate(zip(new_pars[j1:j2], old_pars[i1:i2])):
                     if new_par['t'] != old_par.get_hash() or new_par.get('attrs', {}) != old_par.get_attrs():
-                        self.modify_paragraph(old_par.get_id(),
-                                              new_par['md'],
-                                              new_attrs=new_par.get('attrs'))
+                        if self.has_paragraph(old_par.get_id()):
+                            self.modify_paragraph(old_par.get_id(),
+                                                  new_par['md'],
+                                                  new_attrs=new_par.get('attrs'))
+                        else:
+                            before_i = self.find_insert_index(j1 + idx, new_ids)
+                            self.insert_paragraph(new_par['md'],
+                                                  attrs=new_par.get('attrs'),
+                                                  par_id=new_par['id'],
+                                                  insert_before_id=old_ids[before_i] if before_i < len(
+                                                      old_ids) else last_par_id)
         return new_ids[0], new_ids[-1]
+
+    def find_insert_index(self, i2, old_ids):
+        before_i = i2
+        while before_i < len(old_ids) and not self.has_paragraph(old_ids[before_i]):
+            before_i += 1
+        return before_i
 
     def get_index(self) -> 'list(tuple)':
         return get_index_for_version(self.doc_id, self.get_version())
@@ -552,7 +561,7 @@ class DocParagraphIter:
                     # Line contains both par_id and t
                     par_id, t = line.replace('\n', '').split('/')
                     # Make a copy of the paragraph to avoid modifying cached instance
-                    return deepcopy(DocParagraph.get(self.doc.doc_id, par_id, t, self.doc.files_root))
+                    return DocParagraph.get(self.doc.doc_id, par_id, t, self.doc.files_root)
                 else:
                     # Line contains just par_id, use the latest t
                     return DocParagraph.get_latest(self.doc.doc_id, line.replace('\n', ''), self.doc.files_root)
