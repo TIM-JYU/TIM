@@ -1,5 +1,6 @@
 import os
 import shutil
+import multiprocessing
 import dumboclient
 import initdb2
 import tim
