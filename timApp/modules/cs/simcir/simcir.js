@@ -1146,6 +1146,9 @@ var simcir = function($) {
         for (i = 0, len = a.length; i < len; i++) {
            var cur = $(a[i]);
            var cir = $(cur[0].childNodes[0]);
+           // if ( cir.context != circle) continue;
+           coff = cir.offset();
+           if (!coff) continue;
            var dx = cir.offset().left+4 - x0; // suppose circle with radious 0f 4
            var dy = cir.offset().top+4 -y0;
            var curdist = dx*dx + dy*dy;
