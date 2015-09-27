@@ -2,19 +2,19 @@ __author__ = 'localadmin'
 
 from contracts import contract
 from timdb.timdbbase import TimDbBase
+import json
 
 
 class Lectures(TimDbBase):
     @contract
     def create_lecture(self, doc_id: "int", lecturer: 'int', start_time: "string", end_time: "string",
-                       lecture_code: "string",
-                       password: "string", commit: "bool") -> "int":
+                       lecture_code: "string", password: "string", options: "string", commit: "bool") -> "int":
         cursor = self.db.cursor()
 
         cursor.execute("""
-                          INSERT INTO Lecture(lecture_code, doc_id,lecturer, start_time, end_time, password)
-                          VALUES (?,?,?,?,?,?)
-                          """, [lecture_code, doc_id, lecturer, start_time, end_time, password])
+                          INSERT INTO Lecture(lecture_code, doc_id,lecturer, start_time, end_time, password, options)
+                          VALUES (?,?,?,?,?,?,?)
+                          """, [lecture_code, doc_id, lecturer, start_time, end_time, password, options])
 
         if commit:
             self.db.commit()
@@ -25,16 +25,16 @@ class Lectures(TimDbBase):
 
     @contract
     def update_lecture(self, lecture_id: "int", doc_id: "int", lecturer: 'int', start_time: "string", end_time: "string",
-                       lecture_code: "string",
-                       password: "string"):
+                       lecture_code: "string", password: "string", options: "string"):
 
         cursor = self.db.cursor()
 
         cursor.execute("""
                         UPDATE Lecture
-                        SET lecture_code = ?, doc_id = ?, lecturer = ?, start_time = ?, end_time = ?, password = ?
+                        SET lecture_code = ?, doc_id = ?, lecturer = ?, start_time = ?, end_time = ?, password = ?,
+                            options = ?
                         WHERE lecture_id = ?
-                        """, [lecture_code, doc_id, lecturer, start_time, end_time, password, lecture_id])
+                        """, [lecture_code, doc_id, lecturer, start_time, end_time, password, options, lecture_id])
 
         self.db.commit()
         return lecture_id
@@ -219,6 +219,40 @@ class Lectures(TimDbBase):
             return False
 
         return True
+
+    @contract
+    def check_if_lecture_is_full(self, lecture_id: "int") -> bool:
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+            SELECT COUNT(*)
+            FROM LectureUsers
+            WHERE lecture_id == ?;
+            """, [lecture_id]
+        )
+
+        students = int(cursor.fetchone()[0])
+
+        cursor.execute(
+            """
+            SELECT options
+            FROM Lecture
+            WHERE Lecture_id == ?
+            """, [lecture_id]
+        )
+
+        options = cursor.fetchone()
+        options = json.loads(options[0])
+
+        max = None
+        if 'max_students' in options:
+            max = int(options['max_students'])
+
+        if max is None:
+            return False
+        else:
+            return max > students
 
     @contract
     def check_if_in_lecture(self, doc_id: "int", user_id: "int") -> "tuple":

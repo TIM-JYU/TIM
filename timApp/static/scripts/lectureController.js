@@ -197,6 +197,9 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     if (answer.lecture_ended) {
                         $scope.showDialog("Lecture '" + name + "' has ended");
                         return false;
+                    } else if (answer.lecture_full) {
+                        $scope.showDialog("Lecture '" + name + "' is full");
+                        return false;
                     } else if (!answer.correctPassword) {
                         $scope.showDialog("Wrong access code!");
                         return false;

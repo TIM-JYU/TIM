@@ -735,6 +735,12 @@ def check_if_lecture_is_running(lecture_id):
     return timdb.lectures.check_if_lecture_is_running(lecture_id, time_now)
 
 
+# Checks if some lecture is full.
+def check_if_lecture_is_full(lecture_id):
+    timdb = getTimDb()
+    return timdb.lectures.check_if_lecture_is_full(lecture_id)
+
+
 # Gets all lectures that are currently running. Also gives the ones that are in the future
 def get_running_lectures(doc_id=None):
     timdb = getTimDb()
@@ -776,16 +782,28 @@ def create_lecture():
     end_time = request.args.get("end_date")
     lecture_code = request.args.get("lecture_code")
     password = request.args.get("password")
+    if 'max_students' in request.args:
+        max_students = request.args.get('max_students')
+    else:
+        max_students = ''
+
+    options = {}
+    if max_students != "":
+        options['max_students'] = max_students
+
     if not password:
         password = ""
     current_user = getCurrentUserId()
     if not timdb.lectures.check_if_correct_name(doc_id, lecture_code, lecture_id):
         abort(400, "Can't create two or more lectures with the same name to the same document.")
+
+    options = json.dumps(options)
     if lecture_id < 0:
         lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password,
-                                                   True)
+                                                   options, True)
     else:
-        timdb.lectures.update_lecture(lecture_id, doc_id, current_user, start_time, end_time, lecture_code, password)
+        timdb.lectures.update_lecture(lecture_id, doc_id, current_user, start_time, end_time, lecture_code, password,
+                                      options)
 
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -884,6 +902,9 @@ def join_lecture():
 
     if not check_if_lecture_is_running(lecture_id):
         return jsonResponse({'lecture_ended': True})
+
+    if not check_if_lecture_is_full(lecture_id):
+        return jsonResponse({'lecture_full': True})
 
     if current_user == 0:
         user_name = 'Anonymous'
