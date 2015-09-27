@@ -8,6 +8,7 @@
     {% if teacher_mode %}
         <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/ng-table-exportKorppi.js') }}"></script>
         {#        <link rel="stylesheet" href="{{ url_for('bower.static', filename='ng-table/dist/ng-table.css') }}">#}
     {% endif %}
 
@@ -20,7 +21,7 @@
                 "{{ dep|safe}}",
             {% endfor %}
             {% if teacher_mode %}
-                "ngTable", "ngTableExport"
+                "ngTable", "ngTableExport", "ngTableExportKorppi"
             {% endif %}
         ]);
 
@@ -88,7 +89,7 @@
                     Users with answers ({{ plugin_users|length }}):<br>
                     {% raw %}
                     <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected"
-                           export-csv="csv">
+                           export-csv="csv" export-korppi="expkorppi">
                         <tr ng-repeat="user in $data"
                             ng-click="user.$selected = !user.$selected; changeUser(user)"
                             ng-class="{'active': user.$selected}">
@@ -109,6 +110,9 @@
                     </table>
                     <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ docId }}.csv">Export
                         to CSV</a>
+                    &nbsp;&nbsp;
+                    <input type="text" size="5" name="korppiExportId" ng-model="expkorppi.korppiExportId">
+                    <a ng-mousedown="expkorppi.generate()" ng-href="{{ expkorppi.link() }}" download="{{ expkorppi.korppiExportId }}.txt">Korppi</a>
                     {% endraw %}
                 {% else %}
                     No answerers.

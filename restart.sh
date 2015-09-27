@@ -58,19 +58,33 @@ if param plugins ; then
  /opt/tim/timApp/modules/Haskell/startPlugins.sh
 fi
 
+TIM_SETTINGS=''
+END_SHELL='; /bin/bash'
+DAEMON_FLAG='-d'
+if param debug ; then
+  TIM_SETTINGS='TIM_SETTINGS=/service/timApp/debugconfig.py'
+  END_SHELL=''
+  DAEMON_FLAG=''
+fi
+if param profile ; then
+  TIM_SETTINGS='TIM_SETTINGS=/service/timApp/profileconfig.py'
+  END_SHELL=''
+  DAEMON_FLAG=''
+fi
+
 if param timdev ; then
 # Start timdev
-docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py $END_SHELL"
 fi
 
 if param timbeta ; then
 # Start timbeta
-docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && export TIM_SETTINGS=/service/timApp/debugconfig.py && source initenv.sh ; python3 launch.py ; /bin/bash'
+docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py $END_SHELL"
 fi
 
 if param tim ; then
 # Start tim
-docker run --name tim -p 50001:5000 -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.py ; python3 launch.py ; /bin/bash'
+docker run --name tim -p 50001:5000 --cpuset=0,0 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py $END_SHELL"
 fi
 
 #trap '' 0

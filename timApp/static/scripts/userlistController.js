@@ -8,7 +8,7 @@ timApp.controller('UserListController', ['$scope', '$filter', 'ngTableParams',
             page: 1,
             count: $scope.users.length,
             filter: {
-                //name: 'M'
+                real_name: ''
             },
             sorting: {
                 //name: 'asc'

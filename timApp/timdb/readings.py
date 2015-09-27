@@ -23,10 +23,7 @@ class Readings(TimDbBase):
         :param doc: The document for which to get the readings.
         :param usergroup_id: The id of the user group whose readings will be fetched.
         """
-        t0 = time.time()
         ids = doc.get_referenced_document_ids()
-        print("ids time: {} s".format(time.time() - t0)); t0 = time.time()
-
         ids.add(doc.doc_id)
         template = ','.join('?' * len(ids))
         return self.resultAsDictionary(self.db.execute("""SELECT par_id, doc_id, par_hash, timestamp FROM ReadParagraphs

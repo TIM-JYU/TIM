@@ -4,12 +4,10 @@
 # Build Ephemeral
 docker build --tag="ephemeral" .
 
+# Create folder for logs
+mkdir -p dist/build/Ephemeral/log
+
 # Copy the built executable from the container to host
 hash=$(docker run -d -t -i ephemeral)
 docker cp $hash:/Ephemeral/dist/build/Ephemeral/Ephemeral dist/build/Ephemeral/
-
-# Create folder for logs
-mkdir dist/build/Ephemeral/log
-
-echo "To launch Ephemeral, run"
-echo "./dist/build/Ephemeral/Ephemeral -p 8001 &"
+docker rm -f $hash

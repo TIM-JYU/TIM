@@ -242,14 +242,14 @@ class DocumentTest(TimDbTest):
             for _ in range(0, i):
                 d.add_paragraph(random_paragraph())
             fulltext = d.export_markdown()
-            d.update(fulltext)
+            d.update(fulltext, fulltext)
             self.assertEqual(fulltext, d.export_markdown())
             dp = DocumentParser(fulltext)
             blocks = dp.get_blocks()
             random.shuffle(blocks)
             blocks[0]['md'] = 'modified'
             new_text = DocumentWriter(blocks).get_text()
-            d.update(new_text)
+            d.update(new_text, fulltext)
             blocks = DocumentParser(new_text).add_missing_attributes().get_blocks()
             self.assertListEqual(blocks, DocumentParser(d.export_markdown(export_hashes=True)).get_blocks())
 

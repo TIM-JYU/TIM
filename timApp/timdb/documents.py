@@ -83,7 +83,8 @@ class Documents(TimDbBase):
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
-        document.add_paragraph('Click right side to edit. You can get help with editing from editors Help tab.')
+        document.add_paragraph("Click left side to edit. You can get help with editing from editor's Help tab."
+                               "\n\nEdit or delete this paragraph.")
 
         self.add_name(document_id, name)
         return document
@@ -364,7 +365,7 @@ class Documents(TimDbBase):
         return [par], doc
 
     @contract
-    def update_document(self, doc: 'Document', new_content: 'str') -> 'Document':
+    def update_document(self, doc: 'Document', new_content: 'str', original_content: 'str'=None) -> 'Document':
         """Updates a document.
         
         :param doc: The id of the document to be updated.
@@ -374,9 +375,8 @@ class Documents(TimDbBase):
 
         assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc)
 
-        new_content = self.trim_markdown(new_content)
         try:
-            doc.update(new_content)
+            doc.update(new_content, original_content)
         except ValidationException as e:
             raise TimDbException(e)
         self.update_last_modified(doc, commit=False)

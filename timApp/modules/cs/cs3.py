@@ -1,14 +1,14 @@
-#-*- coding: utf-8 -*-  
+# -*- coding: utf-8 -*-
 import threading
 import time
 
-import http.server 
+import http.server
 import subprocess
 # import nltk
 import os
 import uuid
 import io
-import shutil 
+import shutil
 import shlex
 import socketserver
 # from signal import alarm, signal, SIGALRM, SIGKILL
@@ -78,17 +78,16 @@ import cgi
 
 PORT = 5000
 
+
 def generate_filename():
     return str(uuid.uuid4())
 
 
-
-    
 def tquote(s):
     if s.startswith("$"): return s
     return shlex.quote(s)
-    
-    
+
+
 def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8"):
     """
     Alkuperäinen ajaminen, jossa ajo suoritetaan tavallisen prosessina
@@ -118,8 +117,8 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
     except IOError as e:
         return -2, '', ('IO Error ' + str(e)).encode()
     return p.returncode, stdout, stderr
-    
-    
+
+
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
          extra="", ulimit=None):
     """
@@ -139,7 +138,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     """
     s_in = ""
     pwd = ""
-    if not ulimit: ulimit = "ulimit -f 100 -t 5 -s 100 " # -v 2000 -s 100 -u 10
+    if not ulimit: ulimit = "ulimit -f 100 -t 5 -s 100 "  # -v 2000 -s 100 -u 10
     if uargs and len(uargs): args.extend(shlex.split(uargs))
     if stdin: s_in = " <" + stdin
     mkdirs(cwd + "/run")
@@ -175,14 +174,14 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
         stdout, stderr = p.communicate(timeout=timeout)
-        print("stdout: ",stdout[:100])
-        print("stderr: ",stderr)
+        print("stdout: ", stdout[:100])
+        print("stderr: ", stderr)
         print("Run2 done!")
-        try: 
-            pwd = codecs.open(cwd+'/pwd.txt', 'r', "utf-8").read() # .encode("utf-8")
-        except:    
+        try:
+            pwd = codecs.open(cwd + '/pwd.txt', 'r', "utf-8").read()  # .encode("utf-8")
+        except:
             pwd = ""
-        
+
         if ( stderr ):
             remove(cwd + "/" + stdoutf)
             remove(cwd + "/" + stderrf)
@@ -190,29 +189,30 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             if "File size limit" in err: err = "File size limit exceeded"
             if "Killed" in err: err = "Timeout. Too long loop?"
             return -3, '', ("Run error: " + err).encode(), pwd
-        try: 
+        try:
             stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read().encode("utf-8")  # luetaan stdin ja err
             stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("utf-8")
         except UnicodeDecodeError:
-            stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read().encode("iso-8859-15")  # luetaan stdin ja err
+            stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read().encode(
+                "iso-8859-15")  # luetaan stdin ja err
             stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read().encode("iso-8859-15")
-        
+
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
-        remove(cwd+'/pwd.txt')
+        remove(cwd + '/pwd.txt')
         # print(stdout)
-        print("stderr",stderr)
+        print("stderr", stderr)
     except subprocess.TimeoutExpired:
         # p.kill()
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
-        remove(cwd+'/pwd.txt')
+        remove(cwd + '/pwd.txt')
         os.system("docker rm -f " + tmpname)
         return -9, '', ''
     except IOError as e:
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
-        remove(cwd+'/pwd.txt')
+        remove(cwd + '/pwd.txt')
         return -2, '', ("IO Error" + str(e)).encode()
     return 0, stdout, stderr, pwd
 
@@ -282,23 +282,23 @@ def removedir(dirname):
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     # print("UserId:", user_id)
-    if user_id == "Anonymous": 
+    if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
         if allow_anonymous != "true":
-            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are <a href="/">logged in</a></p><pre class="csRunDiv">' + get_param(query, "byCode", "") + '</pre>'
+            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are <a href="/">logged in</a></p><pre class="csRunDiv">' + get_param(
+                query, "byCode", "") + '</pre>'
     do_lazy = is_lazy(query)
     # do_lazy = False
     # print("do_lazy",do_lazy,type(do_lazy))
-    
+
     js = query_params_to_map_check_parts(query)
     # print(js)
     if "byFile" in js and not ("byCode" in js):
         js["byCode"] = get_url_lines_as_string(js["byFile"])
     bycode = ""
-    if "byCode" in js: bycode = js["byCode"]  
+    if "byCode" in js: bycode = js["byCode"]
     if get_param(query, "noeditor", False): bycode = ""
 
-    
     jso = json.dumps(js)
     # print(jso)
     runner = 'cs-runner'
@@ -307,7 +307,7 @@ def get_html(ttype, query):
     if "input" in ttype or "args" in ttype: is_input = '-input'
     if "comtest" in ttype or "junit" in ttype: runner = 'cs-comtest-runner'
     if "tauno" in ttype: runner = 'cs-tauno-runner'
-    if "simcir" in ttype: 
+    if "simcir" in ttype:
         runner = 'cs-simcir-runner'
         bycode = ''
     if "parsons" in ttype: runner = 'cs-parsons-runner'
@@ -320,14 +320,15 @@ def get_html(ttype, query):
     lazy_class = ""
     lazy_start = ""
     lazy_end = ""
-    
+
     if "csconsole" in ttype:  # erillinen konsoli
         r = "cs-console"
-        
+
     if do_lazy:
         # r = LAZYWORD + r;   
         ebycode = html.escape(bycode)
-        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,'<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
+        lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,
+                                                                                                    '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
         # lazyClass = ' class="lazyHidden"'
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
@@ -395,11 +396,11 @@ def copy_file(f1, f2, remove_f1=False, is_optional=False):
         return False, e
 
 
-def debug_str(s):        
+def debug_str(s):
     t = datetime.datetime.now()
     print(t.isoformat(' ') + ": " + s)
-    
-        
+
+
 def log(self):
     t = datetime.datetime.now()
     agent = " :AG: " + self.headers["User-Agent"]
@@ -422,6 +423,7 @@ def give_points(points_rule, rule, default=0):
         return
     ptstype = "run"
     if "test" in rule: ptstype = "test"
+    if "doc" in rule: ptstype = "doc"
     pts = points_rule.get("points", None)
     if pts:
         ptype = pts.get(ptstype, 0)
@@ -430,7 +432,7 @@ def give_points(points_rule, rule, default=0):
         pts = {}
         points_rule["points"] = pts
         pts[ptstype] = p
-    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0)
+    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0) + pts.get("doc", 0)
 
 
 def get_points_rule(points_rule, key, default):
@@ -511,7 +513,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.wout(sresult)
         log(self)
         t2 = time.clock()
-        ts = "multihtml: %7.4f" % (t2-t1)
+        ts = "multihtml: %7.4f" % (t2 - t1)
         print(ts)
 
     def do_PUT(self):
@@ -582,22 +584,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_template:
             tempfile = get_param(query, "file", "")
             tidx = get_param(query, "idx", "0")
-            print("tempfile: ",tempfile, tidx)
+            print("tempfile: ", tempfile, tidx)
             # return self.wout(file_to_string('templates/' + tempfile))        
-            return self.wout(get_template('templates', tidx, tempfile))        
-        
+            return self.wout(get_template('templates', tidx, tempfile))
+
         if self.path.find("refresh") >= 0:
             self.wout(get_chache_keys())
             clear_cache()
             return
 
-        if is_gethtml:    
+        if is_gethtml:
             scripts = get_param(query, "scripts", "")
             p = self.path.split("?")
-            print(p,scripts)
-            self.wout(replace_scripts(file_to_string(p[0]),scripts,"%INCLUDESCRIPTS%"))
+            print(p, scripts)
+            self.wout(replace_scripts(file_to_string(p[0]), scripts, "%INCLUDESCRIPTS%"))
             return
-            
+
         if is_ptauno:
             # print("PTAUNO: " + content_type)
             p = self.path.split("?")
@@ -606,11 +608,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Get the template type
         ttype = get_param(query, "type", "cs").lower()
-        
 
         if is_tauno and not is_answer: ttype = 'tauno'  # answer is newer tauno
-        if is_simcir: ttype = 'simcir'  
-
+        if is_simcir: ttype = 'simcir'
 
         if is_reqs:
             # result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
@@ -619,39 +619,41 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
             # result_json = {"js": ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
-            templs = { }
+            templs = {}
             if not (is_tauno or is_rikki or is_parsons or is_simcir): templs = get_all_templates('templates')
             result_json = {"js": ["/cs/js/dir.js",
-                           "/static/scripts/jquery.ui.touch-punch.min.js",
-                           "/cs/cs-parsons/csparsons.js",
-                            #"https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                           "/cs/js/embedded_sagecell.js"],
+                                  "/static/scripts/jquery.ui.touch-punch.min.js",
+                                  "/cs/cs-parsons/csparsons.js",
+                                  #"https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
+                                  "/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css"], "multihtml": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/dir.js",
-                               # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                               "/cs/js/embedded_sagecell.js",
-                               "/static/scripts/jquery.ui.touch-punch.min.js",
-                               "/cs/cs-parsons/csparsons.js",
-                               "/cs/js-parsons/lib/underscore-min.js",
-                               "/cs/js-parsons/lib/lis.js",
-                               "/cs/js-parsons/parsons.js",
-                               "/cs/js-parsons/lib/skulpt.js",
-                               "/cs/js-parsons/lib/skulpt-stdlib.js",
-                               "/cs/js-parsons/lib/prettify.js"
-                               ],
+                                      # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
+                                      "/cs/js/embedded_sagecell.js",
+                                      "/static/scripts/jquery.ui.touch-punch.min.js",
+                                      "/cs/cs-parsons/csparsons.js",
+                                      "/cs/js-parsons/lib/underscore-min.js",
+                                      "/cs/js-parsons/lib/lis.js",
+                                      "/cs/js-parsons/parsons.js",
+                                      "/cs/js-parsons/lib/skulpt.js",
+                                      "/cs/js-parsons/lib/skulpt-stdlib.js",
+                                      "/cs/js-parsons/lib/prettify.js"
+                ],
                                "angularModule": ["csApp", "csConsoleApp"],
-                               "css": ["/cs/css/cs.css","/cs/js-parsons/parsons.css","/cs/js-parsons/lib/prettify.css"], "multihtml": True}
+                               "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
+                                       "/cs/js-parsons/lib/prettify.css"], "multihtml": True}
             if is_simcir:
                 result_json = {"js": ["/cs/js/dir.js",
-                               "/cs/simcir/simcir.js",
-                               "/cs/simcir/simcir-basicset.js",
-                               "/cs/simcir/simcir-library.js",
-                               ],
+                                      "/cs/simcir/simcir.js",
+                                      "/cs/simcir/simcir-basicset.js",
+                                      "/cs/simcir/simcir-library.js",
+                ],
                                "angularModule": ["csApp"],
-                               "css": ["/cs/css/cs.css","/cs/simcir/simcir.css","/cs/simcir/simcir-basicset.css"], "multihtml": True}
-            result_json.update(templs)                            
+                               "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
+                               "multihtml": True}
+            result_json.update(templs)
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)
@@ -663,6 +665,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(file_to_string(p[0]))
             return
 
+        # answer-route
+
         try:
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             usercode = get_json_param(query.jso, "state", "usercode", None)
@@ -670,6 +674,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             userinput = get_json_param(query.jso, "state", "userinput", None)
             if userinput: query.query["userinput"] = [userinput]
             userargs = get_json_param(query.jso, "input", "userargs", None)
+            is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
+
             if userargs: save["userargs"] = userargs
 
             # print("USERCODE: XXXXX = ", usercode)
@@ -680,7 +686,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_css:
                 # return self.wout(file_to_string('cs.css'))
                 return self.wout(file_to_string(self.path))
-
 
             if is_js:
                 if is_rikki:
@@ -700,7 +705,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 self.wout(file_to_string('end.html'))
                 return
 
-                
             if is_iframe and not print_file and not ttype == "js":
                 s = string_to_string_replace_url(
                     '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
@@ -711,10 +715,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # Check if user name or temp name
             rndname = generate_filename()
             delete_tmp = True
-            opt = get_param(query, "opt", "") 
+            opt = get_param(query, "opt", "")
             if get_param(query, "path", "") == "user" and self.user_id:
                 task_id = get_param(query, "taskID", "")
-                doc_id, dummy = (task_id + "NONE.none").split(".",1)
+                doc_id, dummy = (task_id + "NONE.none").split(".", 1)
                 print(task_id, doc_id)
                 basename = "user/" + hash_user_dir(self.user_id) + "/" + doc_id
                 delete_tmp = False
@@ -724,7 +728,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 basename = "tmp/" + rndname
                 mkdirs("/tmp/tmp")
             filename = get_param(query, "filename", "prg")
- 
+
             ifilename = get_param(query, "inputfilename", "/input.txt")
             # csfname = "/tmp/%s.cs" % basename
             # exename = "/tmp/%s.exe" % basename
@@ -735,25 +739,30 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             prgpath = "/tmp/%s" % basename
             filepath = prgpath
 
-            print("ttype: ",ttype)
-            
+            print("ttype: ", ttype)
+            fileext = "cs"
+
             before_code = get_param(query, "beforeCode", "")
-            
+
             # if ttype == "console":
             # Console program
             if ttype == "cc":
                 csfname = "/tmp/%s/%s.c" % (basename, filename)
+                fileext = "c"
 
             if ttype == "c++":
                 csfname = "/tmp/%s/%s.cpp" % (basename, filename)
+                fileext = "cpp"
 
             if ttype == "fs":
                 csfname = "/tmp/%s/%s.fs" % (basename, filename)
+                fileext = "fs"
 
             if ttype == "py":
                 csfname = "/tmp/%s/%s.py" % (basename, filename)
                 exename = csfname
                 pure_exename = "./%s.py" % filename
+                fileext = "py"
 
             if ttype == "alloy":
                 csfname = "/tmp/%s/%s.als" % (basename, filename)
@@ -766,6 +775,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 csfname = "/tmp/%s/%s.sh" % (basename, filename)
                 exename = csfname
                 pure_exename = "/home/agent/%s.sh" % filename
+                fileext = "sh"
 
             if ttype == "run":
                 csfname = "/tmp/%s/%s" % (basename, filename)
@@ -773,43 +783,46 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 pure_exename = "/home/agent/%s" % filename
                 pngname = "/csimages/%s.png" % rndname
                 bmpname = get_param(query, "bmpname", "")
-                
+
             if ttype == "r":
                 debug_str("r alkaa")
                 prgpath = "/tmp/%s/r" % basename
                 filepath = prgpath
                 csfname = "%s/%s.r" % (prgpath, filename)
+                fileext = "r"
                 exename = csfname
                 mkdirs(filepath)
                 image_ext = "png"
                 pure_exename = "./%s.r" % filename
                 bmpname = "%s/Rplot001.%s" % (prgpath, image_ext)
-                pure_pngname = u"{0:s}.{1:s}".format(rndname,image_ext)
-                pngname = "/csimages/%s.%s" % (rndname,image_ext)
-
+                pure_pngname = u"{0:s}.{1:s}".format(rndname, image_ext)
+                pngname = "/csimages/%s.%s" % (rndname, image_ext)
 
             if ttype == "jjs":
                 csfname = "/tmp/%s/%s.js" % (basename, filename)
                 exename = csfname
                 pure_exename = u"./{0:s}.js".format(filename)
-                if before_code == "": # Jos ei ole vamista koodia, niin tehdään konsoli johon voi tulostaa
+                fileext = "js"
+                if before_code == "":  # Jos ei ole vamista koodia, niin tehdään konsoli johon voi tulostaa
                     before_code = ('var console={};'
-                    'console.log = function(s) {'  
-                    '    var res = "", sep = "";'  
-                    '    for (var i=0; i<arguments.length; i++) { res += sep + arguments[i]; sep = " "; } ' 
-                    '    print(res);' 
-                    '};') 
+                                   'console.log = function(s) {'
+                                   '    var res = "", sep = "";'
+                                   '    for (var i=0; i<arguments.length; i++) { res += sep + arguments[i]; sep = " "; } '
+                                   '    print(res);'
+                                   '};')
             print(before_code)
 
             if ttype == "sql" or ttype == "psql":
                 csfname = "/tmp/%s/%s.sql" % (basename, filename)
                 exename = csfname
                 pure_exename = u"{0:s}.sql".format(filename)
+                fileext = "sql"
                 dbname = get_param(query, "dbname", "db")
 
             if ttype == "clisp":
                 csfname = "/tmp/%s/%s.lisp" % (basename, filename)
                 exename = csfname
+                fileext = "lisp"
                 pure_exename = u"./{0:s}.lisp".format(filename)
 
             if "jypeli" in ttype:
@@ -818,6 +831,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 csfname = "/tmp/%s/%s.cs" % (basename, filename)
                 exename = "/tmp/%s/%s.exe" % (basename, filename)
                 bmpname = "/tmp/%s/output.bmp" % (basename)
+                fileext = "cs"
                 pure_bmpname = "./%s.bmp" % filename
                 pngname = "/csimages/%s.png" % rndname
                 pure_exename = u"{0:s}.exe".format(filename)
@@ -825,11 +839,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if "comtest" in ttype:
                 # ComTest test cases
                 testcs = "/tmp/%s/%sTest.cs" % (basename, filename)
+                fileext = "cs"
                 # testdll = "/tmp/%s/%sTest.dll" % (basename, filename)
                 testdll = u"./{0:s}Test.dll".format(filename)
             if "ccomtest" in ttype:
                 # ComTest test cases
                 csfname = "/tmp/%s/%s.cpp" % (basename, filename)
+                fileext = "cpp"
                 # testcs = "/tmp/%s/%s.cpp" % (basename, filename)
                 testcs = u"{0:s}.cpp".format(filename)
             if "text" in ttype:
@@ -863,7 +879,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Open the file and write it
             # print(print_file,"Haetaan")
-            if print_file: 
+            if print_file:
                 return self.wout(s)
 
             mkdirs(prgpath)
@@ -874,17 +890,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if usercode: save["usercode"] = usercode
             userinput = get_json_param(query.jso, "input", "userinput", None)
 
-            if userinput: 
+            if userinput:
                 save["userinput"] = userinput
-                if userinput[-1:] != "\n": userinput += "\n" 
+                if userinput[-1:] != "\n": userinput += "\n"
             nosave = get_json_param(query.jso, "input", "nosave", None)
 
             if not nosave: result["save"] = save
 
             if "java" in ttype or "jcomtest" in ttype or "junit" in ttype or "graphics" in ttype:
                 # java
-                classpath = get_param(query, "-cp", ".") +":$CLASSPATH"
-                print("classpath=" ,classpath)
+                classpath = get_param(query, "-cp", ".") + ":$CLASSPATH"
+                print("classpath=", classpath)
                 package, classname = find_java_package(s)
                 javaclassname = classname
                 if not classname: classname = "Prg"
@@ -893,6 +909,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     mkdirs(filepath)
                     javaclassname = package + "." + classname
                 javaname = filepath + "/" + classname + ".java"
+                fileext = "java"
                 csfname = javaname
                 # bmpname = "capture.png" % basename
                 bmpname = "%s/run/capture.png" % prgpath
@@ -903,13 +920,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if "jcomtest" in ttype:
                 # ComTest test cases
                 testcs = filepath + "/" + classname + "Test.java"
+                fileext = "java"
                 testdll = javaclassname + "Test"
 
             if not s.startswith("File not found"):
                 print(os.path.dirname(csfname))
                 mkdirs(os.path.dirname(csfname))
                 print("Write file: " + csfname)
-                if s == "": s ="\n"
+                if s == "": s = "\n"
                 codecs.open(csfname, "w", "utf-8").write(before_code + s)
                 slines = s
 
@@ -925,7 +943,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 # self.wfile.write("Could not get the source file\n")
                 # print "=== Could not get the source file"
 
-                
             nocode = get_param(query, "nocode", False)
 
             is_test = ""
@@ -937,6 +954,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if points_rule["points"]:
                     if is_test:
                         points_rule["points"]["test"] = 0
+                    elif is_doc:
+                        points_rule["points"]["doc"] = 0
                     else:
                         points_rule["points"]["run"] = 0
 
@@ -947,13 +966,27 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if excode.match(usercode): give_points(points_rule, "code", 1)
             print(points_rule)
 
-                
+
             # print(ttype)
             # ########################## Compiling programs ###################################################
             try:
                 log(self)
+                cmdline = ""
 
-                if ttype == "jypeli":
+                if is_doc:
+                    # doxygen
+                    #  ./doxygen/csdoc.sh /tmp/user/4d859744c28dbca8348fc24833ece03aa3050371f98a882bbd4b54e5da617114/3 /csimages/docs/vesal/abcd /csimages/docs/vesal
+                    # http://tim3/csimages/cs/docs/vesal/abcd/html/index.html
+                    #
+                    userdoc = "/csimages/docs/%s" % self.user_id
+                    docrnd = generate_filename()
+                    doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (prgpath, userdoc, docrnd, userdoc)
+                    dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, filename, fileext)
+                    doc_output = check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+                    web["docurl"] = dochtml
+                    give_points(points_rule, "doc")
+
+                elif ttype == "jypeli":
                     if s.find(" Main(") >= 0: mainfile = ""
                     #cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
                     cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing %s %s" % (
@@ -1047,7 +1080,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # ########################## Running programs ###################################################
             # delete_tmp = False
-            
+
             lang = ""
             plang = get_param(query, "lang", "")
             env = dict(os.environ)
@@ -1067,13 +1100,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             stdin = get_param(query, "stdin", None)
             # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
             # if stdin: stdin = "/tmp/%s/%s" % (basename, stdin)
-            if ttype == "sql" or ttype == "psql" : stdin = pure_exename
+            if ttype == "sql" or ttype == "psql": stdin = pure_exename
 
             pwd = ""
-            
-            if ttype == "jypeli":
+
+            if is_doc:
+                pass  # jos doc ei ajeta
+            elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                      uargs=userargs, ulimit = "ulimit -f 80000")
+                                           uargs=userargs, ulimit="ulimit -f 80000")
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 err = re.sub("^ALSA.*\n", "", err, flags=re.M)
@@ -1137,15 +1172,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             elif ttype == "r":
                 debug_str("r ajoon")
-                code, out, err, pwd = run2(["Rscript", "--save", "--restore", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                      uargs=userargs, ulimit = "ulimit -f 80000")
+                code, out, err, pwd = run2(["Rscript", "--save", "--restore", pure_exename], cwd=prgpath, timeout=10,
+                                           env=env, stdin=stdin,
+                                           uargs=userargs, ulimit="ulimit -f 80000")
                 debug_str("r ajo valmis")
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 print(err)
                 #  wait_file(bmpname)
                 debug_str("r kuvan kopiointi aloitetaan")
-                image_ok, e = copy_file(bmpname, pngname, True, True) # is_optional_image)
+                image_ok, e = copy_file(bmpname, pngname, True, True)  # is_optional_image)
                 remove(bmpname)
                 debug_str("r kuva kopioitu")
                 print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
@@ -1159,7 +1195,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     remove(csfname)
                     remove(exename)
                 debug_str("r tiedostot poistettu")
-                    
+
             elif ttype == "alloy":
                 runcmd = ["java", "-cp", "/cs/java/alloy-dev.jar:/cs/java", "RunAll", pure_exename]
                 code, out, err, pwd = run2(runcmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs)
@@ -1179,7 +1215,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             elif ttype == "comtest":
                 eri = -1
-                code, out, err, pwd = run2(["nunit-console", "-nologo", "-nodots", testdll], cwd=prgpath, timeout=10, env=env)
+                code, out, err, pwd = run2(["nunit-console", "-nologo", "-nodots", testdll], cwd=prgpath, timeout=10,
+                                           env=env)
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
                 # print(code, out, err)
@@ -1201,7 +1238,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     web["testGreen"] = False
                     web["testRed"] = True
                     lni = out.find(", line ")
-                    if lni >= 0: #  and not nocode: 
+                    if lni >= 0:  #  and not nocode:
                         lns = out[lni + 7:]
                         lns = lns[0:lns.find("\n")]
                         lnro = int(lns)
@@ -1210,18 +1247,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         # print("Line nr: "+str(lnro)) 
                         # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
                         web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
-                else: give_points(points_rule, "test")
+                else:
+                    give_points(points_rule, "test")
             elif ttype == "jcomtest" or ttype == "ccomtest" or ttype == "junit":
                 eri = -1
                 # linenr_end = " "
                 if ttype == "jcomtest":
-                    code, out, err, pwd = run2(["java", "org.junit.runner.JUnitCore", testdll], cwd=prgpath, timeout=10, env=env)
+                    code, out, err, pwd = run2(["java", "org.junit.runner.JUnitCore", testdll], cwd=prgpath, timeout=10,
+                                               env=env)
                 if ttype == "junit":
-                    code, out, err, pwd = run2(["java", "org.junit.runner.JUnitCore", javaclassname], cwd=prgpath, timeout=10,
-                                         env=env)
+                    code, out, err, pwd = run2(["java", "org.junit.runner.JUnitCore", javaclassname], cwd=prgpath,
+                                               timeout=10,
+                                               env=env)
                 if ttype == "ccomtest":
                     code, out, err, pwd = run2(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", testcs], cwd=prgpath,
-                                          timeout=10, env=env)
+                                               timeout=10, env=env)
                     # linenr_end = ":"
                 if type('') != type(out): out = out.decode()
                 if type('') != type(err): err = err.decode()
@@ -1272,8 +1312,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if ttype == "java":
                     print("java: ", javaclassname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
-                    code, out, err, pwd = run2(["java", "-cp", classpath , javaclassname], cwd=prgpath, timeout=10, env=env, stdin=stdin, ulimit = "ulimit -f 10000",
-                                          uargs=userargs)
+                    code, out, err, pwd = run2(["java", "-cp", classpath, javaclassname], cwd=prgpath, timeout=10,
+                                               env=env, stdin=stdin, ulimit="ulimit -f 10000",
+                                               uargs=userargs)
                 elif ttype == "shell":
                     print("shell: ", pure_exename)
                     # os.chmod(exename, stat.S_IEXEC)
@@ -1282,8 +1323,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     extra = "cd $PWD\nsource "
                     try:
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
-                        code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs,
-                                              extra=extra)
+                        code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                                                   uargs=userargs,
+                                                   extra=extra)
                     except OSError as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
@@ -1294,7 +1336,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("run: ", cmd, extra, pure_exename, csfname)
                     try:
                         code, out, err, pwd = run2(cmd, cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs,
-                                              extra=extra)
+                                                   extra=extra)
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e).encode())
@@ -1311,36 +1353,40 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "jjs":
                     print("jjs: ", exename)
                     code, out, err, pwd = run2(["jjs", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                                               uargs=userargs)
                 elif ttype == "sql":
                     print("sql: ", exename)
                     code, out, err, pwd = run2(["sqlite3", dbname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                                               uargs=userargs)
                 elif ttype == "psql":
                     print("psql: ", exename)
-                    code, out, err, pwd = run2(["psql", "-h", dbname, "-U", "$psqluser"], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                    code, out, err, pwd = run2(["psql", "-h", dbname, "-U", "$psqluser"], cwd=prgpath, timeout=10,
+                                               env=env, stdin=stdin,
+                                               uargs=userargs)
                     # code, out, err = run2(["sqlite3",dbname], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs, code='iso-8859-1')
                 elif ttype == "cc":
                     print("c: ", exename)
-                    code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs)
+                    code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                                               uargs=userargs)
                 elif ttype == "c++":
                     print("c++: ", exename)
-                    code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin, uargs=userargs)
+                    code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                                               uargs=userargs)
                 elif ttype == "py":
                     print("py: ", exename)
                     code, out, err, pwd = run2(["python3", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                                               uargs=userargs)
                 elif ttype == "clisp":
                     print("clips: ", exename)
-                    code, out, err, pwd = run2(["sbcl", "--script", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                    code, out, err, pwd = run2(["sbcl", "--script", pure_exename], cwd=prgpath, timeout=10, env=env,
+                                               stdin=stdin,
+                                               uargs=userargs)
                     # code, out, err = run(["sbcl", "--noinform --load " + exename + " --eval '(SB-EXT:EXIT)'"], timeout=10, env=env)
                     # code, out, err = run(["clisp",exename], timeout=10, env=env)
                 elif ttype == "py2":
                     print("py2: ", exename)
                     code, out, err, pwd = run2(["python2", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                                               uargs=userargs)
                 elif ttype == "text":
                     print("text: ", csfname)
                     showname = filename
@@ -1349,7 +1395,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "fs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                                               uargs=userargs)
                 elif ttype == "md":
                     code, out, err = (0, "".encode(), "".encode())
                 elif ttype == "js":
@@ -1361,7 +1407,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "cs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
-                                          uargs=userargs)
+                                               uargs=userargs)
                 else:
                     out = "Unknown run type: " + ttype + "\n"
 
@@ -1392,12 +1438,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         except Exception as e:
             print("run: ", e)
-            code, out, err = (-1, "", str(e)) # .encode())
-                    
-        expect_output = get_points_rule(points_rule, is_test + "expectOutput", None)
-        if expect_output:
-            exout = re.compile(expect_output.rstrip('\n'), re.M)
-            if exout.match(out): give_points(points_rule, "output", 1)
+            code, out, err = (-1, "", str(e))  # .encode())
+
+        if is_doc:
+            pass  # jos doc, ei ajeta
+        else:
+            expect_output = get_points_rule(points_rule, is_test + "expectOutput", None)
+            if expect_output:
+                exout = re.compile(expect_output.rstrip('\n'), re.M)
+                if exout.match(out): give_points(points_rule, "output", 1)
 
         return_points(points_rule, result)
 

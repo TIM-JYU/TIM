@@ -1,14 +1,19 @@
 #!/bin/bash
 # Restart csPlugin 
 # run with option i to get interactive mode
+# option p for pure start (no wget for files)
 dockername="csPlugin"
 dockerOptions="--name $dockername -p 56000:5000 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 
 docker stop $dockername
 docker rm $dockername
 
+if [ "$2" != "p" ]
+then
 
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
+
+
 
 sudo chmod 777 /tmp
 sudo mkdir -p /tmp/uhome
@@ -52,6 +57,7 @@ sudo chmod 777 cs
 cd cs
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
 
+fi
 
 cd /opt/cs
 sudo chmod 777 r

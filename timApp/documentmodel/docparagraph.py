@@ -4,6 +4,7 @@ import os
 
 from contracts import contract, new_contract
 from documentmodel.documentwriter import DocumentWriter
+from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html
 from .randutils import *
 from timdb.timdbbase import TimDbException
@@ -18,11 +19,14 @@ new_contract('DocParagraph', DocParagraphBase)
 
 
 class DocParagraph(DocParagraphBase):
+    default_files_root = 'tim_files'
+
     @contract
     def __init__(self, doc_id: 'int|None'=None, files_root: 'str|None'=None):
         self.doc_id = doc_id
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
+        self.html_sanitized = False
 
     @classmethod
     @contract
@@ -62,8 +66,7 @@ class DocParagraph(DocParagraphBase):
         froot = cls.get_default_files_root() if files_root is None else files_root
         try:
             t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
-            # Make a copy of the paragraph to avoid modifying cached instance
-            return deepcopy(cls.get(doc_id, par_id, t, files_root=froot))
+            return cls.get(doc_id, par_id, t, files_root=froot)
         except FileNotFoundError as e:
             return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
 
@@ -87,7 +90,7 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     def get_default_files_root(cls):
-        return 'tim_files'
+        return cls.default_files_root
 
     @classmethod
     @contract
@@ -158,9 +161,9 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_html(self) -> 'str':
-        if self.__data['html']:
+        if self.__data.get('html'):
             return self.__data['html']
-        self.set_html(md_to_html(self.get_markdown()))
+        self.__set_html(md_to_html(self.get_markdown()))
         return self.__data['html']
 
     @contract
@@ -193,13 +196,22 @@ class DocParagraph(DocParagraphBase):
             </div>
         """.format(self.__get_html(), self.get_doc_id())
 
-    @contract
-    def set_html(self, new_html: 'str'):
+    def sanitize_html(self):
+        if self.html_sanitized or not self.__data['html']:
+            return
+        new_html = sanitize_html(self.__data['html'])
         self.__data['html'] = new_html
         self.__htmldata['html'] = new_html
+        self.html_sanitized = True
 
     @contract
-    def set_trans_html(self, referencing_par: 'DocParagraph', show_original: 'bool',
+    def __set_html(self, new_html: 'str'):
+        self.__data['html'] = new_html
+        self.__htmldata['html'] = new_html
+        self.html_sanitized = False
+
+    @contract
+    def __set_trans_html(self, referencing_par: 'DocParagraph', show_original: 'bool',
                        from_class: 'str' = 'partranslatefrom', to_class: 'str' = 'partranslate',
                        show_link: 'bool' = False):
         if show_original:
@@ -211,7 +223,7 @@ class DocParagraph(DocParagraphBase):
             html = referencing_par.get_ref_html(classname=to_class, write_link=show_link, link_class="trlink",
                                                 linked_paragraph=self)
 
-        self.set_html(html)
+        self.__set_html(html)
 
     @contract
     def get_links(self) -> 'list(str)':
@@ -297,7 +309,10 @@ class DocParagraph(DocParagraphBase):
             base_path = self.get_base_path()
             if os.listdir(base_path) == ['current']:
                 os.unlink(os.path.join(base_path, 'current'))
-                os.rmdir(base_path)
+                if os.path.islink(base_path):
+                    os.unlink(base_path)
+                else:
+                    os.rmdir(base_path)
 
         if not should_exist:
             return
@@ -315,7 +330,7 @@ class DocParagraph(DocParagraphBase):
         linkpath = self._get_path(self.get_doc_id(), self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
-        if os.path.isfile(linkpath):
+        if os.path.islink(linkpath) or os.path.isfile(linkpath):
             os.unlink(linkpath)
         os.symlink(self.get_hash(), linkpath)
 
@@ -328,7 +343,13 @@ class DocParagraph(DocParagraphBase):
     @contract
     def remove_link(self, doc_id: 'int'):
         self.__read()
-        self.__data['links'].remove(str(doc_id))
+        if str(doc_id) in self.__data['links']:
+            self.__data['links'].remove(str(doc_id))
+        elif doc_id in self.__data['links']:
+            self.__data['links'].remove(doc_id)
+        else:
+            print("Couldn't remove link... links contains:")
+            print(self.__data['links'])
         self.__write()
 
     def update_links(self):
@@ -352,11 +373,10 @@ class DocParagraph(DocParagraphBase):
             par = deepcopy(ref_par)
             par.set_attr('classes', (self.get_attr('classes') or []) + (ref_par.get_attr('classes') or []))
             if 'r' in attrs and attrs['r'] == 'tr':
-                par.set_trans_html(self, edit_window, classname, trclassname, write_link)
+                par.__set_trans_html(self, edit_window, classname, trclassname, write_link)
             else:
-                par.set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
+                par.__set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
             par.set_original(self)
-            print(par)
             return par
 
         attrs = self.get_attrs()
