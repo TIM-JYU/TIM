@@ -305,7 +305,8 @@ class DocParagraph(DocParagraphBase):
         does_exist = os.path.isfile(file_name)
 
         if does_exist and not should_exist:
-            os.unlink(file_name)
+            # Uncomment to remove old versions
+            #os.unlink(file_name)
             base_path = self.get_base_path()
             if os.listdir(base_path) == ['current']:
                 os.unlink(os.path.join(base_path, 'current'))
