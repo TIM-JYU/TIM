@@ -1,12 +1,13 @@
 *.pyc
 *.bak
 *.log
+*~
 .settings
 .idea
 .cabal-sandbox/
 dist/
 bower_components/
-
+.stack-work/
 /timApp/.hypothesis/
 /timApp/modules/cs/test/a.b
 /timApp/modules/cs/test/a.c
