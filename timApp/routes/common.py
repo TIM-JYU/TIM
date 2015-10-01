@@ -183,14 +183,15 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
     group = timdb.users.getPersonalUserGroup(user_id)
-
+    doc = Document(doc_id)
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
                                                                       current_user['name'],
                                                                       timdb.answers,
                                                                       user_id,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
-                                                                      edit_window=edit_window)
+                                                                      edit_window=edit_window,
+                                                                      settings=doc.get_settings())
     req_json = request.get_json()
 
     if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
@@ -208,7 +209,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
         p['status'] = ''
         p['notes'] = []
 
-    readings = timdb.readings.getReadings(group, Document(doc_id))
+    readings = timdb.readings.getReadings(group, doc)
 
     for r in readings:
         key = (r['par_id'], r['doc_id'])
@@ -218,12 +219,12 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
                 p['status'] = 'read' if r['par_hash'] == (p.get('ref_t')
                                               or p['t']) else 'modified'
     
-    notes = timdb.notes.getNotes(group, Document(doc_id))
+    notes = timdb.notes.getNotes(group, doc)
     for n in notes:
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
         if pars:
-            n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc_id)
+            n['editable'] = n['UserGroup_id'] == group or timdb.users.userIsOwner(getCurrentUserId(), doc.doc_id)
             n.pop('UserGroup_id', None)
             n['private'] = n['access'] == 'justme'
             for p in pars:

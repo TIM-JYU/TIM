@@ -47,7 +47,6 @@ def correct_yaml(text):
             line = line.replace(':', ': ', 1)
         if pm.match(line):
             multiline = True
-            n = 0
             line, end_str = line.split("|", 1)
             end_str = end_str.rstrip()
             s = s + line + "|\n"
@@ -67,7 +66,6 @@ def parse_yaml(text):
     :type text: str
     :return:
     """
-    values = {}
 
     if len(text) == 0:
         return False
@@ -87,7 +85,7 @@ def parse_yaml(text):
         return "Missing identifier"
 
 
-def parse_plugin_values(par):
+def parse_plugin_values(par, global_attrs=None):
     """
 
     :type par: DocParagraph
@@ -102,6 +100,11 @@ def parse_plugin_values(par):
         if type(values) is str:
             return {'error': "YAML is malformed: " + values}
         else:
+            if global_attrs:
+                if type(global_attrs) is str:
+                    return {'error': 'global_plugin_attrs should be a dict, not str'}
+                global_attrs.update(values)
+                values = global_attrs
             return {"markup": values}
     except Exception as e:
         return {'error': "Unknown error: " + str(e)}
@@ -169,7 +172,15 @@ def dereference_pars(pars, edit_window=False):
     return new_pars
 
 
-def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, do_lazy=False, edit_window=False):
+def pluginify(pars,
+              user,
+              answer_db,
+              user_id,
+              custom_state=None,
+              sanitize=True,
+              do_lazy=False,
+              edit_window=False,
+              settings=None):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
@@ -202,13 +213,9 @@ def pluginify(pars, user, answer_db, user_id, custom_state=None, sanitize=True, 
         plugin_name = block.get_attr('plugin')
 
         if attr_taskId and plugin_name:
-            vals = parse_plugin_values(block)
+            vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs())
             if 'error' in vals:
-                html_pars[idx]['html'] = ('<div class="pluginError">'
-                                          'Error(s) occurred while rendering plugin.'
-                                          '</div>'
-                                          + get_error_html(plugin_name, vals['error']))
-
+                html_pars[idx]['html'] = get_error_html(plugin_name, vals['error'])
                 continue
 
             if plugin_name not in plugins:

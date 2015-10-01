@@ -201,13 +201,15 @@ def get_state():
         abort(403, 'Permission denied')
 
     # version = request.headers['Version']
-    block = Document(doc_id).get_paragraph(par_id)
+    doc = Document(doc_id)
+    block = doc.get_paragraph(par_id)
 
     texts, js_paths, css_paths, modules = pluginControl.pluginify([block],
                                                                   user['name'],
                                                                   timdb.answers,
                                                                   user_id,
-                                                                  custom_state=state)
+                                                                  custom_state=state,
+                                                                  settings=doc.get_settings())
     return jsonResponse(texts[0])
 
 

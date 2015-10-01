@@ -12,6 +12,7 @@ from io import StringIO, BytesIO
 
 from contracts import contract, new_contract
 from documentmodel.docparagraph import DocParagraph
+from documentmodel.docsettings import DocSettings
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
@@ -64,6 +65,10 @@ class Document:
         """
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.exists(os.path.join(froot, 'docs', str(doc_id)))
+
+    @contract
+    def get_settings(self) -> 'DocSettings':
+        return DocSettings.from_paragraph(next(self.__iter__()))
 
     @contract
     def create(self, ignore_exists : 'bool' = False):

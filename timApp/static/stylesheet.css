@@ -1820,3 +1820,7 @@ p.plgfooter {
     border: 1px solid;
     background: white
 }
+
+.collapsed .parContent {
+    display: none;
+}

@@ -45,53 +45,30 @@ def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'list(DocPar
 
 @view_page.route("/view_content/<path:doc_name>")
 def view_document_content(doc_name):
-    try:
-        view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        return view_content(doc_name, 'view_content.html', view_range=view_range)
-    except (ValueError, TypeError):
-        abort(400, "Invalid start or end index specified.")
+    return view(doc_name, 'view_content.html')
 
 
 @view_page.route("/view/<path:doc_name>")
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")
 def view_document(doc_name):
-    try:
-        view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    except ValueError as v:
-        tb = traceback.format_exc()
-        return abort(400, "Invalid start or end index specified." + "ValueError" + str(v) + tb)
-    except TypeError as t:
-        tb = traceback.format_exc()
-        return abort(400, "Invalid start or end index specified." + " TypeError " +str(t) + tb)
-    return view(doc_name, 'view_html.html', view_range=view_range)
+    return view(doc_name, 'view_html.html')
+
 
 @view_page.route("/teacher/<path:doc_name>")
 def teacher_view(doc_name):
-    try:
-        view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    except (ValueError, TypeError):
-        return abort(400, "Invalid start or end index specified.")
     usergroup = request.args.get('group')
-    return view(doc_name, 'view_html.html', view_range=view_range, usergroup=usergroup, teacher=True)
+    return view(doc_name, 'view_html.html', usergroup=usergroup, teacher=True)
+
 
 @view_page.route("/lecture/<path:doc_name>")
 def lecture_view(doc_name):
-    try:
-        view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    except (ValueError, TypeError):
-        return abort(400, "Invalid start or end index specified.")
-    return view(doc_name, 'view_html.html', view_range, lecture=True)
+    return view(doc_name, 'view_html.html', lecture=True)
 
 
 @view_page.route("/slide/<path:doc_name>")
 def slide_document(doc_name):
-    view_range = None
-    try:
-        view_range = parse_range(request.args.get('b'), request.args.get('e'))
-    except (ValueError, TypeError):
-        abort(400, "Invalid start or end index specified.")
-    return view(doc_name, 'view_html.html', view_range=view_range, slide=True)
+    return view(doc_name, 'view_html.html', slide=True)
 
 
 @contract
@@ -127,51 +104,6 @@ def try_return_folder(doc_name):
                            settings=settings)
 
 
-def view_content(doc_name, template_name, view_range=None):
-    timdb = getTimDb()
-    doc_id = timdb.documents.get_document_id(doc_name)
-    if doc_id is None or not timdb.documents.exists(doc_id):
-        # Backwards compatibility: try to use as document id
-        try:
-            doc_id = int(doc_name)
-            if not timdb.documents.exists(doc_id):
-                return try_return_folder(doc_name)
-            doc_name = timdb.documents.get_first_document_name(doc_id)
-        except ValueError:
-            return try_return_folder(doc_name)
-
-    if not hasViewAccess(doc_id):
-        if not loggedIn():
-            session['came_from'] = request.url
-            return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
-        else:
-            abort(403)
-
-    start_index = max(view_range[0], 0) if view_range else 0
-    xs = get_document(doc_id, view_range)
-    user = getCurrentUserId()
-
-    current_user = timdb.users.getUser(user)
-    texts, jsPaths, cssPaths, modules = pluginControl.pluginify(xs,
-                                                                current_user['name'],
-                                                                timdb.answers,
-                                                                current_user['id'],
-                                                                sanitize=False,
-                                                                do_lazy=get_option(request, "lazy", True))
-    return render_template(template_name,
-                           docID=doc_id,
-                           text=texts,
-                           current_user=current_user,
-                           js=jsPaths,
-                           cssFiles=cssPaths,
-                           jsMods=modules,
-                           start_index=start_index,
-                           rights={'editable': hasEditAccess(doc_id),
-                                   'can_mark_as_read': hasReadMarkingRight(doc_id),
-                                   'can_comment': hasCommentRight(doc_id),
-                                   'browse_own_answers': loggedIn()
-                                   })
-
 debug_time = time.time()
 
 
@@ -182,7 +114,7 @@ def show_time(s):
     debug_time = nyt
 
 
-def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False, lecture=False, slide=False):
+def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, slide=False):
 
     timdb = getTimDb()
     doc_id = timdb.documents.get_document_id(doc_name)
@@ -206,6 +138,10 @@ def view(doc_name, template_name, view_range=None, usergroup=None, teacher=False
         else:
             abort(403)
 
+    try:
+        view_range = parse_range(request.args.get('b'), request.args.get('e'))
+    except (ValueError, TypeError):
+        view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
     xs = get_document(doc_id, view_range)
     user = getCurrentUserId()
