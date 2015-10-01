@@ -252,7 +252,7 @@ class Lectures(TimDbBase):
         if max is None:
             return False
         else:
-            return max > students
+            return students + 1 >= max
 
     @contract
     def check_if_in_lecture(self, doc_id: "int", user_id: "int") -> "tuple":

@@ -6,6 +6,7 @@ COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', '
 COMPRESS_MIN_SIZE  = 50
 CONTRACTS_ENABLED  = False
 DATABASE           = './tim_files/tim.db'
+TEMP_DATABASE           = './tim_files/temp.db'
 DEBUG              = False
 FILES_PATH         = 'tim_files'
 LOG_DIR            = "../tim_logs/"
