@@ -186,7 +186,7 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
-
+    doc = Document(doc_id)
     # TODO: Check if doc variable is needed
     result = render_template(template_name,
                              docID=doc_id,
@@ -194,12 +194,13 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
                              text=texts,
                              plugin_users=users,
                              current_user=current_user,
-                             version=Document(doc_id).get_version(),
+                             version=doc.get_version(),
                              js=jsPaths,
                              cssFiles=cssPaths,
                              jsMods=modules,
                              custom_css_files=custom_css_files,
                              custom_css=custom_css,
+                             doc_css=doc.get_settings().css(),
                              start_index=start_index,
                              teacher_mode=teacher,
                              lecture_mode=lecture,

@@ -47,7 +47,8 @@
     {% endfor %}
 
     <style type="text/css">
-        {{ custom_css }}
+        {{ doc_css if doc_css }}
+        {{ custom_css if custom_css }}
     </style>
     <script>
         var docId = JSON.parse({{docID|tojson|safe}});

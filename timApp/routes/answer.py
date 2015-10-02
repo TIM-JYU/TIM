@@ -82,10 +82,11 @@ def save_answer(plugintype, task_id):
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if loggedIn() and len(old_answers) > 0 else None
 
-    par = Document(doc_id).get_paragraph_by_task(task_id_name)
+    doc = Document(doc_id)
+    par = doc.get_paragraph_by_task(task_id_name)
     if par is None:
         abort(400, 'Task not found in the document: ' + task_id_name)
-    plugin_data = pluginControl.parse_plugin_values(par)
+    plugin_data = pluginControl.parse_plugin_values(par, global_attrs=doc.get_settings().global_plugin_attrs())
     if 'error' in plugin_data:
         return jsonResponse({'error': plugin_data['error'] + ' Task id: ' + task_id_name}, 400)
 

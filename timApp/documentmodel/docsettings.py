@@ -4,6 +4,7 @@ from pluginControl import parse_plugin_values
 
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
+    css_key = 'css'
 
     @classmethod
     def from_paragraph(cls, par):
@@ -24,5 +25,8 @@ class DocSettings:
 
     def global_plugin_attrs(self):
         return self.__dict.get(self.global_plugin_attrs_key)
+
+    def css(self):
+        return self.__dict.get(self.css_key)
 
 new_contract('DocSettings', DocSettings)
