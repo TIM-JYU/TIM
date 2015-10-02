@@ -1,5 +1,15 @@
-FROM        phadej/stackage:2.9 
+FROM        ubuntu
+RUN         apt-get install -y wget
+RUN         wget -q -O- https://s3.amazonaws.com/download.fpcomplete.com/ubuntu/fpco.key | sudo apt-key add -
+RUN         echo 'deb http://download.fpcomplete.com/ubuntu/trusty stable main'|sudo tee /etc/apt/sources.list.d/fpco.list
+RUN         apt-get update
+RUN         apt-get install -y stack
 ADD         Dumbo.cabal /build/Dumbo.cabal
-RUN         cd /build/ && cabal install --only-dependencies
-ADD         buildScript.sh /build/buildScript.sh
+ADD         stack.yaml /build/stack.yaml
+RUN         ln -s /lib/x86_64-linux-gnu/libtinfo.so.5 /lib/x86_64-linux-gnu/libtinfo.so
+RUN         cd /build && stack setup
+RUN         cd /build && stack build || true
+ADD         LICENSE /build/LICENSE
+ADD         Dumbo.hs /build/Dumbo.hs
+RUN         cd /build && stack build
 ENTRYPOINT  ["bash", "/build/buildScript.sh"]
