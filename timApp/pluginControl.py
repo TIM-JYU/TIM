@@ -103,6 +103,7 @@ def parse_plugin_values(par, global_attrs=None):
             if global_attrs:
                 if type(global_attrs) is str:
                     return {'error': 'global_plugin_attrs should be a dict, not str'}
+                global_attrs = global_attrs.copy()
                 global_attrs.update(values)
                 values = global_attrs
             return {"markup": values}
