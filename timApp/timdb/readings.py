@@ -51,6 +51,6 @@ class Readings(TimDbBase):
                      doc: 'Document',
                      commit: 'bool'=True):
         for i in doc:
-            self.setAsRead(usergroup_id, doc.doc_id, i, commit=False)
+            self.setAsRead(usergroup_id, doc, i, commit=False)
         if commit:
             self.db.commit()

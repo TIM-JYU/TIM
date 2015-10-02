@@ -322,12 +322,11 @@ class DocParagraph(DocParagraphBase):
             base_path = self.get_base_path()
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
-            self.__set_latest()
 
         with open(file_name, 'w') as f:
             f.write(json.dumps(self.__data))
 
-    def __set_latest(self):
+    def set_latest(self):
         linkpath = self._get_path(self.get_doc_id(), self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
@@ -337,7 +336,7 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def add_link(self, doc_id: 'int'):
-        self.__read()
+        #self.__read()
         self.__data['links'].append(str(doc_id))
         self.__write()
 

@@ -427,6 +427,7 @@ def give_points(points_rule, rule, default=0):
     pts = points_rule.get("points", None)
     if pts:
         ptype = pts.get(ptstype, 0)
+        print(ptstype, "===" , pts[ptstype], p)
         pts[ptstype] = ptype + p
     else:
         pts = {}
@@ -956,6 +957,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         points_rule["points"]["test"] = 0
                     elif is_doc:
                         points_rule["points"]["doc"] = 0
+                        print("doc points: ",points_rule["points"]["doc"])
                     else:
                         points_rule["points"]["run"] = 0
 
@@ -1046,6 +1048,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     compiler_output = check_output(["cd " + prgpath + " && " + cmdline], stderr=subprocess.STDOUT,
                                                    shell=True).decode("utf-8")
                     compiler_output = compiler_output.replace(prgpath, "")
+                    give_points(points_rule, is_test + "compile")
+                    
                 # self.wfile.write("*** Success!\n")
                 print("*** Compile Success")
                 if nocode: remove(csfname)
@@ -1076,7 +1080,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 give_points(points_rule, is_test + "notcompile")
                 return write_json_error(self.wfile, error_str, result, points_rule)
 
-            give_points(points_rule, is_test + "compile")
 
             # ########################## Running programs ###################################################
             # delete_tmp = False
