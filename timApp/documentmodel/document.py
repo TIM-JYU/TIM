@@ -255,6 +255,7 @@ class Document:
 
         p.get_html()
         p.add_link(self.doc_id)
+        p.set_latest()
         old_ver = self.get_version()
         new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
         old_path = self.get_version_path(old_ver)
@@ -316,6 +317,7 @@ class Document:
         )
 
         p.add_link(self.doc_id)
+        p.set_latest()
         old_ver = self.get_version()
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True,
                                            op_params={'before_id': insert_before_id})
@@ -353,6 +355,7 @@ class Document:
         )
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
+        p.set_latest()
         old_ver = self.get_version()
         new_ver = self.__increment_version('Modified', par_id, increment_major=False,
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
