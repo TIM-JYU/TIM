@@ -245,7 +245,7 @@ ul ul ul, ol ol ol {
     margin-bottom: 0;
 }
 
-.paragraph, .par {
+.paragraph {
     position: relative;
     margin-left: 1em;
     padding-top: 0.25em;
@@ -255,6 +255,10 @@ ul ul ul, ol ol ol {
     border-bottom: 1px solid transparent;
     border-top: 1px solid transparent;
     border-right: 1px solid transparent;
+}
+
+.par {
+    position: relative;
 }
 
 .par.lightselect {
@@ -634,8 +638,8 @@ table td {
 }
 
 P {
-    margin-top: 0;
-    margin-bottom: 0.0cm;
+    margin-top: 1.2em;
+    margin-bottom: 0.3em;
     margin-left: 2em;
 }
 
@@ -826,13 +830,20 @@ a.anchor:hover {
 
 .huomautus {
     margin-left: 3em;
-    margin-top: 0.4cm;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
     background: #e6e6e6;
     border: 1.00pt solid #000000;
     padding: 0.25cm;
     font-family: Verdana, Arial, sans-serif;
     text-align: left;
 }
+
+.huomautus p {
+    margin-top: 0.1em;
+    margin-left: 0.3em;
+}
+
 
 /* pre-blokit, joissa sub/sup - spanit ymp�rill�, v�hennet��n paddingia */
 /*pre.esimerkki-western-sub {
@@ -1065,7 +1076,12 @@ p.stem {
 
 .listVideoRunDiv {
     /* margin-left: 2em; */
-    margin-top: -1em;
+    margin-top: -0.5em;
+    margin-bottom: -1.2em; 
+}
+
+.smallVideoRunDiv {
+    margin-bottom: -1.0em;
 }
 
 .listVideoRunDiv img {
@@ -1363,11 +1379,6 @@ img.console {
     margin: 0.2em;
 }
 
-.listVideoRunDiv {
-    /* margin-left: 2em; */
-    margin-top: -1.5em;
-    margin-bottom: -1.2em;
-}
 
 .csArgsArea {
     width: 90%;
@@ -1609,6 +1620,10 @@ p.plgfooter {
     margin-left: 0pt;
 	border-left: thin solid #0066FF;
     padding-left: 0pt;
+    margin-top: 0.1em;
+    margin-bottom: 0pt;
+    padding-top: 0pt;
+    padding-bottom: 2pt;
 }
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
@@ -1823,4 +1838,17 @@ p.plgfooter {
 
 .collapsed .parContent {
     display: none;
+    z-index: 10;
+    position: relative;
+    margin-left: 1em;
+    padding-top: 0.25em;
+    padding-bottom: 1em;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    border-bottom: 1px solid transparent;
+    border-top: 1px solid transparent;
+    border-right: 1px solid transparent;
+    /*
+    margin-top: -0.1em;
+    */
 }

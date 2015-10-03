@@ -1,0 +1,1 @@
+sed -f dem.sed o1.csv | sed s/;.*;/;%1;/ >o1.txt

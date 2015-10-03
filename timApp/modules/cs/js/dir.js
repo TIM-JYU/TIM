@@ -236,7 +236,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
                     : '<p ng-if="taunoOn && !noeditor" class="pluginHide"" ><a ng-click="copyFromSimcir()">copy from SimCir</a> | <a ng-click="copyToSimcir()">copy to SimCir</a> | <a ng-click="hideTauno()">hide SimCir</a></p>') +
 					"" : "") +   
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
-				  '<div class="csRunCode">'+'<p></p>'+
+				  '<div class="csRunCode">'+
+                  // '<p></p>'+
 				  '<pre class="csRunPre" ng-if="viewCode &&!codeunder &&!codeover">{{precode}}</pre>'+
                   '<div class="csEditorAreaDiv">'+
                   '<div  class="csrunEditorDiv">'+
