@@ -131,7 +131,7 @@ class DocParagraph(DocParagraphBase):
         self.__htmldata['html'] = self.get_html()
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
         self.__htmldata['is_plugin'] =  self.is_plugin()
-        self.__htmldata['needs_browser'] = self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
+        self.__htmldata['needs_browser'] = True #self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
 
     @contract
     def html_dict(self) -> 'dict':
