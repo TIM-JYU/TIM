@@ -13,6 +13,7 @@ import time
 from containerLink import call_plugin_html, call_plugin_multihtml, PluginException, PLUGINS
 from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
+from containerLink import get_plugin_needs_browser
 from documentmodel.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
 from timdb.timdbbase import TimDbException
@@ -296,8 +297,11 @@ def pluginify(pars,
                     html_pars[idx]['html'] = get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.')
                 continue
 
+            needs_browser = get_plugin_needs_browser(plugin_name)
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                html = make_lazy(html, markup, do_lazy)
+                html, is_lazy = make_lazy(html, markup, do_lazy)
+
+                html_pars[idx]['needs_browser'] = needs_browser or is_lazy
                 html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(markup['taskID'],
                                                                              plugin_url,
                                                                              html)
@@ -308,7 +312,9 @@ def pluginify(pars,
                 except PluginException as e:
                     html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
                     continue
-                html = make_lazy(html, val, do_lazy)
+                html, is_lazy = make_lazy(html, val, do_lazy)
+                needs_browser = get_plugin_needs_browser(plugin_name)
+                html_pars[idx]['needs_browser'] = needs_browser or is_lazy
                 html_pars[idx]['html'] = "<div id='{}' data-plugin='{}'>{}</div>".format(val['taskID'],
                                                                              plugin_url,
                                                                              html)
@@ -321,17 +327,17 @@ def get_markup_value(markup, key, default):
 
 
 def make_lazy(html, markup, do_lazy):
-    if do_lazy == NEVERLAZY: return html 
+    if do_lazy == NEVERLAZY: return html, False
     markup_lazy = get_markup_value(markup,"lazy", "")
-    if markup_lazy == False: return html # user do not want lazy
-    if not do_lazy and markup_lazy != True: return html
-    if html.find(NOLAZY) >= 0: return html  # not allowed to make lazy
-    if html.find(LAZYSTART) >= 0: return html # allredy lazy
+    if markup_lazy == False: return html, False # user do not want lazy
+    if not do_lazy and markup_lazy != True: return html, False
+    if html.find(NOLAZY) >= 0: return html, False  # not allowed to make lazy
+    if html.find(LAZYSTART) >= 0: return html, True # allredy lazy
     header = str(get_markup_value(markup, "header", "Check your understanding"))
     stem = str(get_markup_value(markup, "stem", "Open plugin"))
-    html = html.replace("<!--","<!-LAZY-").replace("-->","-LAZY->")
+    html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
     # print(header, stem)
-    return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + "<div><p>" + stem + "</p></div>"
+    return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + "<div><p>" + stem + "</p></div>", True
 
 
 def get_all_reqs():

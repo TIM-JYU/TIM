@@ -8,7 +8,7 @@ class DocSettings:
 
     @classmethod
     def from_paragraph(cls, par):
-        if 'settings' in par.get_attrs():
+        if par.is_setting():
             yaml_vals = parse_plugin_values(par)
             if 'error' in yaml_vals:
                 return DocSettings()
@@ -28,5 +28,7 @@ class DocSettings:
 
     def css(self):
         return self.__dict.get(self.css_key)
+
+
 
 new_contract('DocSettings', DocSettings)

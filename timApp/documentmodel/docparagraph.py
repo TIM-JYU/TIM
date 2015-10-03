@@ -8,7 +8,7 @@ from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html
 from .randutils import *
 from timdb.timdbbase import TimDbException
-
+import containerLink
 
 class DocParagraphBase:
     pass
@@ -109,8 +109,9 @@ class DocParagraph(DocParagraphBase):
         return self.__data
 
     def _mkhtmldata(self):
-        self.__is_plugin = self.get_attr('taskId')
+        self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
+        self.__is_setting = 'settings' in self.get_attrs()
 
         if self.original:
             self.__htmldata = dict(self.original.__data)
@@ -129,7 +130,8 @@ class DocParagraph(DocParagraphBase):
 
         self.__htmldata['html'] = self.get_html()
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
-        self.__htmldata['is_plugin'] = self.is_plugin()
+        self.__htmldata['is_plugin'] =  self.is_plugin()
+        self.__htmldata['needs_browser'] = self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
 
     @contract
     def html_dict(self) -> 'dict':
@@ -163,7 +165,10 @@ class DocParagraph(DocParagraphBase):
     def get_html(self) -> 'str':
         if self.__data.get('html'):
             return self.__data['html']
-        self.__set_html(md_to_html(self.get_markdown()))
+        if self.__is_setting:
+            self.__set_html('<p class="docsettings">&nbsp;</p>')
+        else:
+            self.__set_html(md_to_html(self.get_markdown()))
         return self.__data['html']
 
     @contract
@@ -427,3 +432,6 @@ class DocParagraph(DocParagraphBase):
 
     def is_plugin(self):
         return self.__is_plugin
+
+    def is_setting(self):
+        return self.__is_setting

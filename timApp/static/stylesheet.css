@@ -1077,7 +1077,7 @@ p.stem {
 .listVideoRunDiv {
     /* margin-left: 2em; */
     margin-top: -0.5em;
-    margin-bottom: -1.2em; 
+    margin-bottom: -0.9em;
 }
 
 .smallVideoRunDiv {
@@ -1851,4 +1851,8 @@ p.plgfooter {
     /*
     margin-top: -0.1em;
     */
+}
+
+p.docsettings {
+    margin-top: -2.4em;
 }

@@ -200,11 +200,11 @@ def get_video_html(self, query):
     # print ("iframe " + iframe + " url: " + url)
     video_app = True
     if video_type == "small":
-        s = string_to_string_replace_attribute('<small-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = string_to_string_replace_attribute('<small-video-runner \n##QUERYPARAMS##\n></small-video-runner>', "##QUERYPARAMS##", query)
         s = make_lazy(s, query, small_video_html)
         return s
     if video_type == "list":
-        s = string_to_string_replace_attribute('<list-video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
+        s = string_to_string_replace_attribute('<list-video-runner \n##QUERYPARAMS##\n></list-video-runner>', "##QUERYPARAMS##", query)
         s = make_lazy(s, query, list_video_html) 
         return s
     if video_app:

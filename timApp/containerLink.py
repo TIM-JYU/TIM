@@ -22,13 +22,13 @@ PLUGINS = {
     "taunoPlugin":   {"host": "http://172.17.42.1:56000/cs/tauno/"},
     "simcirPlugin":  {"host": "http://172.17.42.1:56000/cs/simcir/"},
     "csPluginRikki": {"host": "http://172.17.42.1:56000/cs/rikki/"},  # demonstrates a broken plugin
-    "showCode":      {"host": "http://172.17.42.1:55000/svn/"},
-    "showImage":     {"host": "http://172.17.42.1:55000/svn/image/"},
-    "showVideo":     {"host": "http://172.17.42.1:55000/svn/video/"},
+    "showCode":      {"host": "http://172.17.42.1:55000/svn/", "browser": False},
+    "showImage":     {"host": "http://172.17.42.1:55000/svn/image/", "browser": False},
+    "showVideo":     {"host": "http://172.17.42.1:55000/svn/video/", "browser": False},
     "mcq":           {"host": "http://172.17.42.1:57000/"},
     "mmcq":          {"host": "http://172.17.42.1:58000/"},
     "shortNote":     {"host": "http://172.17.42.1:59000/"},
-    "graphviz":      {"host": "http://172.17.42.1:60000/"},
+    "graphviz":      {"host": "http://172.17.42.1:60000/", "browser": False},
     "pali":          {"host": "http://172.17.42.1:61000/"}
 }
 
@@ -95,3 +95,10 @@ def get_plugin_tim_url(plugin):
     if plugin in PLUGINS:
         return TIM_URL + "/" + plugin
     raise PluginException("Plugin does not exist.")
+
+
+def get_plugin_needs_browser(plugin):
+    # if not plugin: return False
+    plg = get_plugin(plugin)
+    if "browser" not in plg: return True
+    return plg["browser"] != False
