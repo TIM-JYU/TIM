@@ -6,6 +6,7 @@ import sqlite3
 from timdb.runningquestion import RunningQuestions
 from timdb.usersshown import UsersShown
 from timdb.usersextended import UsersExtended
+from timdb.usersanswered import UsersAnswered
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
@@ -27,6 +28,7 @@ class TempDb(object):
         self.runningquestions = RunningQuestions(self.db, files_root_path, 'runningquestions', current_user_name)
         self.usersshown = UsersShown(self.db, files_root_path, 'usersshown', current_user_name)
         self.usersextended = UsersExtended(self.db, files_root_path, 'usersextended', current_user_name)
+        self.usersanswered = UsersAnswered(self.db, files_root_path, 'usersanswered', current_user_name)
         self.useractivity = UserActivity(self.db, files_root_path, 'useractivity', current_user_name)
         self.newanswers = NewAnswers(self.db, files_root_path, 'newanswers', current_user_name)
         self.showpoints = ShowPoints(self.db, files_root_path, 'showpoints', current_user_name)

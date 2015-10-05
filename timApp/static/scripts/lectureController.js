@@ -1014,25 +1014,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
                         if ((answer.question || answer.result) && !$scope.isLecturer) {
-                            var showPoints = '';
-                            if (answer.result) showPoints = 'Show points: ';
-                            $scope.showAnswerWindow = true;
-                            var json = JSON.parse(answer.questionJson);
-                            var expl = {};
-                            if (answer.expl) {
-                                expl = JSON.parse(answer.expl)
-                            }
-                            $scope.questionTitle = showPoints + json.TITLE;
-                            $rootScope.$broadcast("setQuestionJson", {
-                                result: answer.result,
-                                answer: answer.answer,
-                                questionJson: json,
-                                askedId: answer.askedId,
-                                isLecturer: $scope.isLecturer,
-                                askedTime: answer.asked,
-                                clockOffset: $scope.clockOffset,
-                                expl: expl
-                            });
+                            $scope.showQuestion(answer);
                         }
 
                         $scope.requestOnTheWay = false;
@@ -1101,6 +1083,52 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             }
 
             message_longPolling(lastID);
+        };
+
+        $scope.showQuestion = function (answer) {
+            var showPoints = '';
+            if (answer.result) showPoints = 'Show points: ';
+            $scope.showAnswerWindow = true;
+            var json = JSON.parse(answer.questionJson);
+            var expl = {};
+            if (answer.expl) {
+                expl = JSON.parse(answer.expl)
+            }
+            $scope.questionTitle = showPoints + json.TITLE;
+            $rootScope.$broadcast("setQuestionJson", {
+                result: answer.result,
+                answer: answer.answer,
+                questionJson: json,
+                askedId: answer.askedId,
+                isLecturer: $scope.isLecturer,
+                askedTime: answer.asked,
+                clockOffset: $scope.clockOffset,
+                expl: expl
+            });
+        };
+
+        $scope.getQuestionManually = function (event) {
+            http({
+                url: '/getQuestionManually',
+                type: 'GET',
+                params: {
+                    'lecture_id': $scope.lectureId,
+                    'buster': new Date().getTime()
+                }
+            })
+                .success(function (answer) {
+                    if (!answer) {
+                        $scope.showDialog('No running questions.')
+                    }
+                    else if (answer.already_answered) {
+                        $scope.showDialog('You have already answered to the current question.')
+                    } else {
+                        $scope.showQuestion(answer);
+                    }
+                })
+                .error(function () {
+                    $window.console.log("Couldn't get questions.");
+                });
         };
 
         /**

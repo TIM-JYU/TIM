@@ -402,28 +402,13 @@ def get_updates():
 
         # Gets new questions if the questions are in use.
         if use_questions:
-            question = tempdb.runningquestions.get_lectures_running_questions(lecture_id)
-            if len(question) > 0:
-                question = question[0]
-                asked_id = question['asked_id']
-                already_shown = tempdb.usersshown.shown_to_user(asked_id, current_user)
-                if not already_shown:
-                    ask_time = question['ask_time']
-                    question_json = timdb.questions.get_asked_question(asked_id)[0]["json"]
-                    answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
-                    tempdb.usersshown.add_shown_info(lecture_id, asked_id, current_user)
-                    tempdb.usersextended.add_extended_info(lecture_id, asked_id, current_user)
-                    if answer:
-                        answer = answer[0]['answer']
-                    else:
-                        answer = ''
-                    lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
-                    return jsonResponse(
-                            {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                             "lectureId": lecture_id, "question": True, "askedId": asked_id, "asked": ask_time,
-                             "questionJson": question_json, "answer": answer,
-                             "isLecture": True, "lecturers": lecturers, "students": students,
-                             "lectureEnding": lecture_ending})
+            new_question = get_new_question(lecture_id)
+            if new_question is not None:
+                resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
+                        "lectureId": lecture_id, "question": True, "isLecture": True, "lecturers": lecturers,
+                        "students": students, "lectureEnding": lecture_ending}
+                resp.update(new_question)
+                return jsonResponse(resp)
 
             question_to_show_points = tempdb.showpoints.get_currently_shown_points(lecture_id)
             if question_to_show_points:
@@ -438,8 +423,8 @@ def get_updates():
                         lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                         return jsonResponse(
                             {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                             "lectureId": lecture_id, "result": True, "questionJson": question["json"], "answer": answer,
-                             "expl": question["expl"], "isLecture": True, "lecturers": lecturers,
+                             "lectureId": lecture_id, "result": True, "questionJson": question["json"],
+                             "answer": answer, "expl": question["expl"], "isLecture": True, "lecturers": lecturers,
                              "students": students, "lectureEnding": lecture_ending})
 
         if len(list_of_new_messages) > 0:
@@ -461,6 +446,50 @@ def get_updates():
     return jsonResponse(
         {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
          "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
+
+
+# Route to use to get question manually (instead of getting question in /getUpdates)
+@app.route('/getQuestionManually')
+def get_question_manually():
+    if not request.args.get('lecture_id'):
+        abort(400, "Bad request")
+    lecture_id = int(request.args.get('lecture_id'))
+    new_question = get_new_question(lecture_id, True)
+    return jsonResponse(new_question)
+
+
+def get_new_question(lecture_id, force=False):
+    """
+    :param lecture_id: lecture to get running questions from
+    :param force: Return question, even if it already has been shown to user
+    :return: None if no questions are running
+             dict with data of new question if there is a question running and user hasn't answered to that question.
+             {'already_answered': True} if there is a question running and user has answered to that.
+    """
+    timdb = getTimDb()
+    tempdb = getTempDb()
+    current_user = getCurrentUserId()
+    question = tempdb.runningquestions.get_lectures_running_questions(lecture_id)
+    if len(question) > 0:
+        question = question[0]
+        asked_id = question['asked_id']
+        already_shown = tempdb.usersshown.shown_to_user(asked_id, current_user)
+        already_answered = tempdb.usersanswered.user_has_answered(asked_id, current_user)
+        if not already_shown or force:
+            if already_answered and force:
+                return {'already_answered': True}
+            ask_time = question['ask_time']
+            question_json = timdb.questions.get_asked_question(asked_id)[0]["json"]
+            answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
+            tempdb.usersshown.add_shown_info(lecture_id, asked_id, current_user)
+            tempdb.usersextended.add_extended_info(lecture_id, asked_id, current_user)
+            if answer:
+                answer = answer[0]['answer']
+            else:
+                answer = ''
+            return {'askedId': asked_id, 'asked': ask_time, 'questionJson': question_json, "answer": answer}
+    else:
+        return None
 
 
 # Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
@@ -1368,6 +1397,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
         tempdb.runningquestions.delete_running_question(asked_id)
         tempdb.usersshown.delete_all_from_question(asked_id)
         tempdb.usersextended.delete_all_from_question(asked_id)
+        tempdb.usersanswered.delete_all_from_lecture(asked_id)
         tempdb.newanswers.delete_question_answers(asked_id)
 
 
@@ -1420,6 +1450,7 @@ def stop_question():
             abort("400", "You cannot stop questions on someone elses lecture.")
         tempdb.runningquestions.delete_running_question(asked_id)
         tempdb.usersshown.delete_all_from_question(asked_id)
+        tempdb.usersanswered.delete_all_from_question(asked_id)
     return jsonResponse("")
 
 
@@ -1452,17 +1483,14 @@ def get_extend_question():
     current_user = getCurrentUserId()
     step = 0
     while step <= 10:
-        should_stop = True
         question = tempdb.runningquestions.get_running_question_by_id(asked_id)
-        # TEMPDB
-        if question:
-            should_stop = False
+        already_answered = tempdb.usersanswered.user_has_answered(asked_id, current_user)
+        if question and not already_answered:
             already_extended = tempdb.usersextended.extended_to_user(asked_id, current_user)
             if not already_extended:
                 tempdb.usersextended.add_extended_info(lecture_id, asked_id, current_user)
                 return jsonResponse(question['end_time'])
-
-        if should_stop:
+        else:
             return jsonResponse(None)
         step += 1
         time.sleep(1)
@@ -1528,10 +1556,12 @@ def answer_to_question():
 
     lecture_answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
 
-    #TEMPDB
     question = tempdb.runningquestions.get_running_question_by_id(asked_id)
+    already_answered = tempdb.usersanswered.user_has_answered(asked_id, current_user)
     if not question:
         return jsonResponse({"questionLate": "The question has already finished. Your answer was not saved."})
+    if already_answered:
+        return jsonResponse({"alreadyAnswered": "You have already answered to question. Your first answer is saved."})
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer[0]["answer"]):
         time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
@@ -1545,6 +1575,7 @@ def answer_to_question():
             timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, whole_answer, time_now,
                                              points)
     tempdb.newanswers.user_answered(lecture_id, asked_id, current_user)
+    tempdb.usersanswered.add_answered_info(lecture_id, asked_id, current_user)
 
     return jsonResponse("")
 

@@ -14,6 +14,15 @@ CREATE TABLE UsersShown (
   PRIMARY KEY (asked_id, user_id)
 );
 
+CREATE TABLE UserAnswered (
+  lecture_id  INTEGER NOT NULL,
+  asked_id    INTEGER NOT NULL,
+  user_id     INTEGER NOT NULL,
+
+  CONSTRAINT UserShown_PK
+  PRIMARY KEY (asked_id, user_id)
+);
+
 CREATE TABLE UserExtended (
   lecture_id  INTEGER NOT NULL,
   asked_id    INTEGER NOT NULL,
