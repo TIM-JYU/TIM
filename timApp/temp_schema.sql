@@ -1,3 +1,19 @@
+DROP TABLE IF EXISTS RunningQuestion;
+
+DROP TABLE IF EXISTS UsersShown;
+
+DROP TABLE IF EXISTS UserAnswered;
+
+DROP TABLE IF EXISTS UserExtended;
+
+DROP TABLE IF EXISTS ShowPoints;
+
+DROP TABLE IF EXISTS NewAnswer;
+
+DROP TABLE IF EXISTS UserActivity;
+
+DROP TABLE IF EXISTS PointsShown;
+
 CREATE TABLE RunningQuestion (
   asked_id    INTEGER NOT NULL PRIMARY KEY,
   lecture_id  INTEGER NOT NULL,
@@ -19,7 +35,7 @@ CREATE TABLE UserAnswered (
   asked_id    INTEGER NOT NULL,
   user_id     INTEGER NOT NULL,
 
-  CONSTRAINT UserShown_PK
+  CONSTRAINT UserAnswered_PK
   PRIMARY KEY (asked_id, user_id)
 );
 
@@ -42,7 +58,7 @@ CREATE TABLE NewAnswer (
   asked_id    INTEGER NOT NULL,
   user_id     INTEGER NOT NULL,
 
-  CONSTRAINT UsersShown_PK
+  CONSTRAINT NewAnswer_PK
   PRIMARY KEY (asked_id, user_id)
 );
 

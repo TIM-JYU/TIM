@@ -48,6 +48,7 @@ if __name__ == '__main__':
             d = dumboclient.launch_dumbo()
             ephemeral_started = True
             dumbo_started = True
+        initdb2.initialize_temp_database()
         initdb2.initialize_database()
         initdb2.update_database()
         if len(sys.argv) <= 1:
@@ -59,7 +60,6 @@ if __name__ == '__main__':
             p.wait()
         else:
             raise Exception('Unknown command line argument: ' + sys.argv[1])
-        initdb2.initialize_temp_database()
         tim.start_app()
     finally:
         if ephemeral_started:

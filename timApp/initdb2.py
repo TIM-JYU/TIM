@@ -24,9 +24,9 @@ def initialize_temp_database(db_path='tim_files/temp.db', files_root_path='tim_f
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
-    if os.path.exists(db_path):
-        print('Temp database already exists, no need to initialize')
-        return
+    # if os.path.exists(db_path):
+    #     print('Temp database already exists, no need to initialize')
+    #     return
     print('initializing the temp database in {}...'.format(files_root_path), end='')
     tempdb = TempDb(db_path=db_path, files_root_path=files_root_path)
     tempdb.initialize_tables()
