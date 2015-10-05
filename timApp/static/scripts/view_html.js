@@ -84,6 +84,8 @@ timApp.controller("ViewCtrl", [
 
         sc.questionShown = false;
         sc.firstTimeQuestions = true;
+        sc.mathJaxLoaded = false;
+        sc.mathJaxLoadDefer = null;
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
@@ -150,21 +152,25 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.processMath = function (elem) {
-            var $this = $(elem);
-            var math = $this.text();
-            var hasDisplayMode = false;
-            if (math[1] === '[') {
-                hasDisplayMode = true;
-            }
-            else if (math[1] !== '(') {
-                return;
-            }
             try {
-                katex.render(math.slice(2, -2), elem, {displayMode: hasDisplayMode});
+                $window.renderMathInElement(elem);
             }
-            catch (ParseError) {
-                $this.text(math);
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, $this[0]]);
+            catch (e) {
+                if (sc.mathJaxLoaded) {
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, elem]);
+                } else {
+                    if (sc.mathJaxLoadDefer === null) {
+                        sc.mathJaxLoadDefer = $.ajax({
+                            dataType: "script",
+                            cache: true,
+                            url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+                        });
+                    }
+                    sc.mathJaxLoadDefer.done(function () {
+                        sc.mathJaxLoaded = true;
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, elem]);
+                    });
+                }
             }
         };
 

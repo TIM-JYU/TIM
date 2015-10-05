@@ -79,7 +79,7 @@ run bower --allow-root install angular-sanitize#~1.3
 run bower --allow-root install bootstrap#~3.3
 run bower --allow-root install waypoints#~3.1
 run bower --allow-root install jquery-ui#~1.11
-run bower --allow-root install katex-build#~0.2
+run bower --allow-root install katex#~0.5
 run bower --allow-root install ng-table#~0.5
 run bower --allow-root install ng-table-export
 run bower --allow-root install rangyinputs
@@ -87,6 +87,9 @@ run bower --allow-root install ngstorage#~0.3
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
+
+# Force auto-render extension to throw exceptions instead of printing to console
+run sed -i 's/f instanceof katex\.ParseError/false/' /bower_components/KaTeX/dist/contrib/auto-render.min.js
 
 run npm uninstall bower
 run apt-get remove -y npm
