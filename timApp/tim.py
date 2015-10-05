@@ -67,6 +67,8 @@ app.register_blueprint(Blueprint('bower',
                                  static_folder='static/scripts/bower_components',
                                  static_url_path='/static/scripts/bower_components'))
 
+app.wsgi_app = ReverseProxied(app.wsgi_app)
+
 print('Debug mode: {}'.format(app.config['DEBUG']))
 print('Profiling: {}'.format(app.config['PROFILE']))
 if app.config['CONTRACTS_ENABLED']:
@@ -1675,7 +1677,6 @@ def make_session_permanent():
 
 
 def start_app():
-    app.wsgi_app = ReverseProxied(app.wsgi_app)
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
     app.run(host='0.0.0.0',
