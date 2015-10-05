@@ -6,6 +6,7 @@ import mkfolders
 from timdb.docidentifier import DocIdentifier
 
 from timdb.timdb2 import TimDb
+from timdb.tempdb import TempDb
 from timdb.timdbbase import blocktypes
 from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME
 
@@ -17,6 +18,20 @@ def create_user(timdb, name, real_name, email, password='', is_admin=False):
     if is_admin:
         timdb.users.addUserToAdmins(user_id)
     return user_id, user_group
+
+
+def initialize_temp_database(db_path='tim_files/temp.db', files_root_path='tim_files'):
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+    if os.path.exists(db_path):
+        print('Temp database already exists, no need to initialize')
+        return
+    print('initializing the temp database in {}...'.format(files_root_path), end='')
+    tempdb = TempDb(db_path=db_path, files_root_path=files_root_path)
+    tempdb.initialize_tables()
+    tempdb.close()
+    print(' done.')
 
 
 def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files', create_docs=True):
@@ -148,3 +163,4 @@ WHERE valid IS NULL)
 
 if __name__ == "__main__":
     initialize_database()
+    initialize_temp_database()

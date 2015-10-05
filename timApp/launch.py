@@ -59,6 +59,8 @@ if __name__ == '__main__':
             p.wait()
         else:
             raise Exception('Unknown command line argument: ' + sys.argv[1])
+        initdb2.initialize_temp_database()
+        tim.start_app()
     finally:
         if ephemeral_started:
             p.kill()
