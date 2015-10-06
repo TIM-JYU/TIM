@@ -42,6 +42,8 @@ run apt-get install -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
 run pip3 install pygit2
 
+run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b5 eventlet tornado aiohttp
+
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six
 
@@ -98,8 +100,6 @@ run apt-get install -y openssh-server
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-
-run apt-get autoremove -y
 
 # Configure timezone and locale
 run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata

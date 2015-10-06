@@ -34,6 +34,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.password = "";
         $scope.startDate = "";
         $scope.startHour = "";
+        $scope.maxStudents = "";
         $scope.startMin = "";
         $scope.earlyJoining = true;
         var date = new Date();
@@ -149,6 +150,13 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.isHour = function (element, val) {
             if (element === "" || isNaN(element) || element > 23 || element < 0) {
                 $scope.errorize(val, "Hour has to be between 0 and 23.");
+            }
+        };
+
+        $scope.isNumber = function (element, val) {
+            console.log(element);
+            if (!(element === "") && (isNaN(element) || element < 0)) {
+                $scope.errorize(val, "Max number of students must be a positive number or empty.");
             }
         };
 
@@ -268,6 +276,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
              Checks that minutes in starting and ending time are between 0 and 59*/
             $scope.isHour($scope.startHour, "startHour");
             $scope.isMinute($scope.startMin, "startMin");
+            $scope.isNumber($scope.maxStudents, "maxStudents");
 
             if ($scope.start_date !== undefined) {
                 var now_hours = date.getHours();
@@ -343,7 +352,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         'lecture_code': $scope.lectureCode,
                         'password': $scope.password,
                         'start_date': $scope.startDateForDB,
-                        'end_date': $scope.endDateForDB
+                        'end_date': $scope.endDateForDB,
+                        'max_students': $scope.maxStudents || ''
                     }
                 })
                     .success(function (answer) {
@@ -399,7 +409,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 "endDateDiv",
                 "durationDiv",
                 "durationHour",
-                "durationMin"
+                "durationMin",
+                "maxStudents"
             ];
             for (var i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
                 if (elementsToRemoveErrorsFrom[i] !== undefined) {

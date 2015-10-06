@@ -34,10 +34,7 @@
                 src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
     </pop-up-dialog>
 
-    <pop-up-dialog show="showStudentAnswers" caption="'Statistics'">
-        <ng-include
-                src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
-    </pop-up-dialog>
+
 
     <pop-up-dialog show="showAnswerWindow" caption="questionTitle">
         <ng-include
@@ -56,6 +53,10 @@
         <div>
             <ng-include src="'{{ url_for('static', filename='templates/question.html') }}'"></ng-include>
         </div>
+    </pop-up-dialog>
+    <pop-up-dialog show="showStudentAnswers" caption="'Statistics'">
+        <ng-include
+                src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
     </pop-up-dialog>
 
     {% include 'side_menu.html' %}

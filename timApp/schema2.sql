@@ -300,6 +300,7 @@ CREATE TABLE Lecture (
   start_time   TEXT    NOT NULL,
   end_time     TEXT,
   password     TEXT,
+  options      TEXT,
 
   PRIMARY KEY (lecture_id)
 );
