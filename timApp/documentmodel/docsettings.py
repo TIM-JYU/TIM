@@ -1,5 +1,6 @@
 from contracts import new_contract
 from pluginControl import parse_plugin_values
+from documentmodel.docparagraph import DocParagraph
 
 
 class DocSettings:
@@ -8,6 +9,14 @@ class DocSettings:
 
     @classmethod
     def from_paragraph(cls, par):
+        """Constructs DocSettings from the given DocParagraph.
+
+        :param par: The DocParagraph to extract settings from.
+        :type par: DocParagraph
+        :return: The DocSettings object.
+        """
+        if par.is_reference():
+            par = par.get_referenced_pars()[0]
         if par.is_setting():
             yaml_vals = parse_plugin_values(par)
             if 'error' in yaml_vals:
