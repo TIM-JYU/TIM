@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 from collections import OrderedDict
+from copy import deepcopy
 import json
 import re
 
@@ -104,9 +105,11 @@ def parse_plugin_values(par, global_attrs=None):
             if global_attrs:
                 if type(global_attrs) is str:
                     return {'error': 'global_plugin_attrs should be a dict, not str'}
-                global_attrs = global_attrs.copy()
-                global_attrs.update(values)
-                values = global_attrs
+                global_attrs = deepcopy(global_attrs)
+                final_values = global_attrs.get('all', {})
+                final_values.update(global_attrs.get(par.get_attrs()['plugin'], {}))
+                final_values.update(values)
+                values = final_values
             return {"markup": values}
     except Exception as e:
         return {'error': "Unknown error: " + str(e)}
