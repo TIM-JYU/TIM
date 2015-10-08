@@ -71,18 +71,16 @@ class NewAnswers(TimDbBase):
         users = cursor.fetchall()
         user_ids = []
 
-        users_str = []
         for user in users:
-            user_id = user['user_id']
-            user_ids.append(user_id)
-            users_str.append(str(user_id))
+            user_ids.append(user['user_id'])
 
-        users_str = ', '.join(users_str)
+        users_str = ', '.join(str(user_id) for user_id in user_ids)
+
         cursor.execute("""
             DELETE
             FROM NewAnswer
-            WHERE asked_id = ? AND user_id IN (?)
-        """, [asked_id, users_str])
+            WHERE asked_id = ? AND user_id IN (%s)
+        """ % users_str, [asked_id])
 
         if commit:
             self.db.commit()
