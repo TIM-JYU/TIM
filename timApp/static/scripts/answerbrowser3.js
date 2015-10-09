@@ -240,7 +240,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $http.get('/allAnswers/' + $scope.taskId + '?rnd='+Math.random(), {params: {group: $scope.$parent.group}})
                         .success(function (data, status, headers, config) {
                             $scope.allAnswers = data.join("\n\n----------------------------------------------------------------------------------\n");
-                            var nw = $window
+                            var nw = $window;
                             //var nd = nw.document;
                             //nd.write(data[0]);
                         }).error(function (data, status, headers, config) {
@@ -253,7 +253,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.getLink = function() {
                      return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
-                }
+                };
 
                 if ( GLOBALBrowseUser ) {
                     $scope.user = GLOBALBrowseUser;
@@ -272,12 +272,15 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.answers = [];
                 $scope.onlyValid = true;
                 $scope.selectedAnswer = null;
+                $scope.anyInvalid = false;
 
                 $scope.$watchGroup(['onlyValid', 'answers'], function (newValues, oldValues, scope) {
+                    $scope.anyInvalid = false;
                     $scope.filteredAnswers = $filter('filter')($scope.answers, function (value, index, array) {
                         if (value.valid) {
                             return true;
                         }
+                        $scope.anyInvalid = true;
                         return !$scope.onlyValid;
                     });
                     if ($scope.filteredAnswers.indexOf($scope.selectedAnswer) < 0) {
