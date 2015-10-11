@@ -304,7 +304,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  // '<a ng-if="docURL" class="docurl" href="{{docURL}}" target="csdocument" >Go to document</a>' +
 				  '<div ng-if="docURL" class="docurl">'+
 				  '<p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="closeDocument()" >X</a></p>' +
-				  '<iframe width="800" height="600"  src="{{docURL}}" target="csdocument" />' +
+				  '<iframe width="800" height="600"  ng-src="{{docURL}}" target="csdocument" />' +
 				  '</div>' +
 				  //(t == "jypeli" ? '<img  class="grconsole" ng-src="{{imgURL}}" alt=""  ng-if="runSuccess"  />' : "") +
                   //  '<div class="userlist" tim-draggable-fixed="" style="top: 39px; right: 408px;">' +
@@ -872,13 +872,13 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 
 			if ( docURL ) {
 				$scope.docURL = docURL;
-				$scope.result = data.web.console;
+				$scope.result = data.web.console.trim();
 			}
 
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
 				$scope.imgURL = imgURL;
-				$scope.result = data.web.console;
+				$scope.result = data.web.console.trim();
 			} else {
 				if ( $scope.runSuccess )  
                     if ( $scope.isHtml )
@@ -1826,7 +1826,7 @@ function truthTable(sentence,topbottomLines) {
   try {
       if ( !sentence ) return "";
       if ( !sentence.trim() ) return "";
-      var replace = "v ||;^ &&;~ !;∧ &&;∨ ||;∼ !"; 
+      var replace = "v ||;^ &&;~ !;∧ &&;∨ ||;∼ !;xor ^;and &&;not !;or ||;ja &&;ei !;tai ||"; 
       var abcde = "abcdefghijklmnopqrstuxy";
       var header = "";
       var vals = '""';
@@ -1834,6 +1834,13 @@ function truthTable(sentence,topbottomLines) {
       var cnt2 = 1;
       
       var input = sentence.toLowerCase();
+
+      var repls = replace.split(";");
+      for (i in repls) {
+          var r = repls[i].split(" ");
+          input = input.split(r[0]).join(r[1]);
+      }
+
       for (var i=0; i<abcde.length; i++) {
           if ( input.indexOf(abcde[i]) >= 0 ) {
               header += abcde[i] + " ";
@@ -1845,11 +1852,6 @@ function truthTable(sentence,topbottomLines) {
           } 
       }
       
-      var repls = replace.split(";");
-      for (i in repls) {
-          var r = repls[i].split(" ");
-          input = input.split(r[0]).join(r[1]);
-      }
       
       var sents = sentence.split(";");
       var lens = [];
