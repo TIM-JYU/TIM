@@ -59,6 +59,18 @@ code
 test
 
 # Test {a=b}
+
+````
+#- {rd=x rp=y}
+
+``` {rp=x rd=y}
+```
+
+````
+
+````
+test
+````
 """.strip()
         dp = DocumentParser(doc_text)
         result = dp.get_blocks()
@@ -73,7 +85,9 @@ test
                     {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom', 'attrs': {}},
                     {'md': '```\ncode\n```', 'type': 'code', 'attrs': {}},
                     {'md': 'test', 'type': 'autonormal', 'attrs': {}},
-                    {'type': 'header', 'attrs': {'a': 'b'}, 'md': '# Test'}]
+                    {'type': 'header', 'attrs': {'a': 'b'}, 'md': '# Test'},
+                    {'md': '````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````', 'type': 'code', 'attrs': {}},
+                    {'md': '````\ntest\n````', 'type': 'code', 'attrs': {}}]
         self.assertListEqual(expected, result)
         exported = DocumentWriter(result).get_text()
         self.assertListEqual(expected, DocumentParser(exported).get_blocks())
@@ -89,7 +103,9 @@ test
                               {'id': 'E0DvQTlfKkJd'},
                               {'id': 'T4cWAefPZ9Po'},
                               {'id': 'ys55kUwXv6jY'},
-                              {'id': 'ziJ7zlQXydZE'}],
+                              {'id': 'ziJ7zlQXydZE'},
+                              {'id': 'PCzBis5CPokx'},
+                              {'id': 'AfibcQb2DGgM'}],
                              [{'id': block['id']} for block in dp.get_blocks()])
         self.assertListEqual([{'t': 'LTB4NGQwMTZhODI='},
                               {'t': 'MHg3ZjUxNmRhYw=='},
@@ -101,7 +117,9 @@ test
                               {'t': 'LTB4NTZiNGY3ZGU='},
                               {'t': 'MHg3ZDY2ZjA3MQ=='},
                               {'t': 'MHgzMDYzZmNkYg=='},
-                              {'t': 'MHg3NjQzNzAyYg=='}],
+                              {'t': 'MHg3NjQzNzAyYg=='},
+                              {'t': 'LTB4MmJhMWVlZGI='},
+                              {'t': 'MHgyNjJlNzU5OQ=='}],
                              [{'t': block['t']} for block in dp.get_blocks()])
         dp.validate_structure()
         self.assertEqual([], DocumentParser('').get_blocks())
@@ -128,22 +146,47 @@ test
                               {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom', 'attrs': {}},
                               {'md': '```\ncode\n```', 'type': 'code', 'attrs': {}},
                               {'md': 'test', 'type': 'autonormal', 'attrs': {}},
-                              {'md': '# Test', 'type': 'header', 'attrs': {'a': 'b'}}], result)
+                              {'md': '# Test', 'type': 'header', 'attrs': {'a': 'b'}},
+                              {'attrs': {}, 'type': 'code',
+                               'md': '````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````'},
+                              {'attrs': {}, 'md': '````\ntest\n````', 'type': 'code'}], result)
         result = DocumentParser(doc_text).get_blocks(break_on_code_block=False,
                                                      break_on_header=False,
                                                      break_on_normal=False)
-        self.assertListEqual([{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
-                              {'md': 'text1\n\ntext2', 'type': 'autonormal', 'attrs': {}},
-                              {'md': '```\ncode2\n```', 'attrs': {'plugin': 'mmcq'}, 'type': 'code'},
-                              {
-                                  'md': '# Header 1\n\nheaderpar 1\n\nheaderpar 2\n\n```\nnormal code\n```\n\n'
-                                        '# Header 2\n\nheaderpar 3\n\nheaderpar 4',
-                                  'type': 'header', 'attrs': {}},
-                              {'md': 'text 3\n\n\ntext 4', 'attrs':
-                                  {'classes': ['someClass']}, 'type': 'normal'},
-                              {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom', 'attrs': {}},
-                              {'md': '```\ncode\n```\n\ntest', 'type': 'code', 'attrs': {}},
-                              {'md': '# Test', 'attrs': {'a': 'b'}, 'type': 'header'}], result)
+        expected = [{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
+                    {'md': 'text1\n\ntext2', 'type': 'autonormal', 'attrs': {}},
+                    {'md': '```\ncode2\n```', 'attrs': {'plugin': 'mmcq'}, 'type': 'code'},
+                    {
+                        'md': '# Header 1\n\nheaderpar 1\n\nheaderpar 2\n\n```\nnormal code\n```\n\n'
+                              '# Header 2\n\nheaderpar 3\n\nheaderpar 4',
+                        'type': 'header', 'attrs': {}},
+                    {'md': 'text 3\n\n\ntext 4', 'attrs':
+                        {'classes': ['someClass']}, 'type': 'normal'},
+                    {'md': '# Test1\n\n# Test2\n\n# Test3', 'type': 'atom', 'attrs': {}},
+                    {'md': '```\ncode\n```\n\ntest', 'type': 'code', 'attrs': {}},
+                    {'attrs': {'a': 'b'},
+                     'md': '# Test\n'
+                           '\n'
+                           '````\n'
+                           '#- {rd=x rp=y}'
+                           '\n'
+                           '\n'
+                           '``` {rp=x rd=y}'
+                           '\n'
+                           '```\n'
+                           '\n'
+                           '````\n'
+                           '\n'
+                           '````\n'
+                           'test\n'
+                           '````',
+                     'type': 'header'}]
+        self.assertListEqual(expected, result)
+        exported = DocumentWriter(result).get_text()
+
+        # ignore 'type' because some of them are now 'atom'
+        self.assertListEqual([{'md': p['md'], 'attrs': p['attrs']} for p in expected],
+                             [{'md': p['md'], 'attrs': p['attrs']} for p in DocumentParser(exported).get_blocks()])
 
     def test_validation(self):
         failures = [
@@ -172,10 +215,10 @@ test
 """, """
 #- {area=test area_end=test}
 """,
-#"""
+# """
 ##- {#test}
 ##- {#test}
-#""",
+# """,
 """
 #- {id=someinvalid}
 """]
@@ -196,7 +239,7 @@ test
 #- {area_end=test}
 """]
         for f in failures:
-            with self.assertRaises(ValidationException):
+            with self.assertRaises(ValidationException, msg=f):
                 DocumentParser(f).validate_structure()
         for o in oks:
             DocumentParser(o).validate_structure()

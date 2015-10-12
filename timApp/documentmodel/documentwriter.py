@@ -32,7 +32,14 @@ class DocumentWriter:
             if len(blocks) > 1:
                 atomized = p.copy()
                 atomized['atom'] = 'true'
-                text += '``` {' + self.attrs_to_str(atomized) + '}\n' + p['md'] + '\n' + '```'
+                num_ticks = 3
+                for b in blocks:
+                    if b['type'] == 'code':
+                        for i, c in enumerate(b['md']):
+                            if c != '`':
+                                num_ticks = max(num_ticks, i + 1)
+                                break
+                text += '`'*num_ticks + ' {' + self.attrs_to_str(atomized) + '}\n' + p['md'] + '\n' + '`'*num_ticks
             else:
                 attrs_str = self.attrs_to_str(p)
                 if not attrs_str:
