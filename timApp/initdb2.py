@@ -81,7 +81,8 @@ def update_database():
     ver = timdb.get_version()
     ver_old = ver
     update_dict = {0: update_datamodel,
-                   1: update_answers}
+                   1: update_answers,
+                   2: update_rights}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -96,6 +97,65 @@ def update_database():
         print('Database is up to date.')
     else:
         print('Database was updated from version {} to {}.'.format(ver_old, ver))
+
+
+def update_rights():
+    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+    timdb.execute_sql("""
+BEGIN TRANSACTION;
+
+CREATE TABLE BlockAccess (
+  accessible_from TIMESTAMP NOT NULL,
+  accessible_to   TIMESTAMP,
+  Block_id      INTEGER   NOT NULL,
+  UserGroup_id  INTEGER   NOT NULL,
+  type INTEGER NOT NULL,
+
+  CONSTRAINT BlockAccess_PK
+  PRIMARY KEY (Block_id, UserGroup_id, type),
+
+  CONSTRAINT BlockAccess_id
+  FOREIGN KEY (Block_id)
+  REFERENCES Block (id)
+  ON DELETE NO ACTION
+  ON UPDATE CASCADE,
+
+  CONSTRAINT BlockAccess_id
+  FOREIGN KEY (UserGroup_id)
+  REFERENCES UserGroup (id)
+  ON DELETE NO ACTION
+  ON UPDATE CASCADE,
+
+  FOREIGN KEY (type)
+  REFERENCES AccessType(id)
+  ON DELETE NO ACTION
+  ON UPDATE CASCADE
+);
+
+CREATE TABLE AccessType (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+);
+
+INSERT INTO AccessType(id, name) VALUES (1, 'view');
+INSERT INTO AccessType(id, name) VALUES (2, 'edit');
+INSERT INTO AccessType(id, name) VALUES (3, 'teacher');
+INSERT INTO AccessType(id, name) VALUES (4, 'manage');
+
+INSERT INTO BlockAccess(accessible_from, accessible_to, Block_id, UserGroup_id, type)
+SELECT visible_from, visible_to, Block_id, UserGroup_id, 1
+FROM BlockViewAccess;
+
+INSERT INTO BlockAccess(accessible_from, accessible_to, Block_id, UserGroup_id, type)
+SELECT editable_from, editable_to, Block_id, UserGroup_id, 2
+FROM BlockEditAccess;
+
+DROP TABLE BlockViewAccess;
+DROP TABLE BlockEditAccess;
+
+COMMIT TRANSACTION;
+    """)
+    return True
 
 
 def update_datamodel():

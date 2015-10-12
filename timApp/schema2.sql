@@ -194,47 +194,43 @@ CREATE TABLE UserGroupMember (
 );
 
 
-CREATE TABLE BlockViewAccess (
-  visible_from TIMESTAMP NOT NULL,
-  visible_to   TIMESTAMP,
-  Block_id     INTEGER   NOT NULL,
-  UserGroup_id INTEGER   NOT NULL,
-
-  CONSTRAINT BlockViewAccess_PK
-  PRIMARY KEY (Block_id, UserGroup_id),
-  CONSTRAINT BlockViewAccess_id
-  FOREIGN KEY (Block_id)
-  REFERENCES Block (id)
-  ON DELETE NO ACTION
-  ON UPDATE CASCADE,
-  CONSTRAINT BlockViewAccess_id
-  FOREIGN KEY (UserGroup_id)
-  REFERENCES UserGroup (id)
-  ON DELETE NO ACTION
-  ON UPDATE CASCADE
-);
-
-
-CREATE TABLE BlockEditAccess (
-  editable_from TIMESTAMP NOT NULL,
-  editable_to   TIMESTAMP,
+CREATE TABLE BlockAccess (
+  accessible_from TIMESTAMP NOT NULL,
+  accessible_to   TIMESTAMP,
   Block_id      INTEGER   NOT NULL,
   UserGroup_id  INTEGER   NOT NULL,
+  type INTEGER NOT NULL,
 
-  CONSTRAINT BlockEditAccess_PK
-  PRIMARY KEY (Block_id, UserGroup_id),
-  CONSTRAINT BlockEditAccess_id
+  CONSTRAINT BlockAccess_PK
+  PRIMARY KEY (Block_id, UserGroup_id, type),
+
+  CONSTRAINT BlockAccess_id
   FOREIGN KEY (Block_id)
   REFERENCES Block (id)
   ON DELETE NO ACTION
   ON UPDATE CASCADE,
-  CONSTRAINT BlockEditAccess_id
+
+  CONSTRAINT BlockAccess_id
   FOREIGN KEY (UserGroup_id)
   REFERENCES UserGroup (id)
+  ON DELETE NO ACTION
+  ON UPDATE CASCADE,
+
+  FOREIGN KEY (type)
+  REFERENCES AccessType(id)
   ON DELETE NO ACTION
   ON UPDATE CASCADE
 );
 
+CREATE TABLE AccessType (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+);
+
+INSERT INTO AccessType(id, name) VALUES (1, 'view');
+INSERT INTO AccessType(id, name) VALUES (2, 'edit');
+INSERT INTO AccessType(id, name) VALUES (3, 'teacher');
+INSERT INTO AccessType(id, name) VALUES (4, 'manage');
 
 CREATE TABLE UserNotes (
   id           INTEGER      NOT NULL,
@@ -350,4 +346,4 @@ CREATE TABLE Version (
   updated_on TIMESTAMP
 );
 
-INSERT INTO Version(id, updated_on) VALUES (2, CURRENT_TIMESTAMP);
+INSERT INTO Version(id, updated_on) VALUES (3, CURRENT_TIMESTAMP);
