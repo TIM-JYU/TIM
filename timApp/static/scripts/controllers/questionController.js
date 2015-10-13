@@ -209,7 +209,7 @@ timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootSco
             rowsCount = 2;
             columnsCount = 2;
         } else {
-            rowsCount = 2;
+            rowsCount = 4;
             columnsCount = 1;
         }
 
