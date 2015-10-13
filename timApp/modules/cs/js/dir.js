@@ -1193,9 +1193,11 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		var step = 0;
 		var nl = "";
 		var nls = "";
+        var regexp = new RegExp($scope.replace);
 		for (var i in st) if ( st.hasOwnProperty(i) ) {
 			var s = st[i];
-			if ( s.indexOf($scope.replace) >= 0 ) {
+			// if ( s.indexOf($scope.replace) >= 0 ) {
+            if ( regexp.test(s) ) {
 				r += nl + $scope.usercode;
 				if ( step === 0 ) { step++; nls = ""; continue; }
 			} else { 
@@ -1263,6 +1265,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             // $scope.$parent.processAllMath($previewDiv[0]);
             if  ( $scope.$parent.processAllMath )            
                 $scope.$parent.processAllMath($previewDiv); 
+            else if  ( $scope.$parent.$parent.processAllMath )            
+                $scope.$parent.$parent.processAllMath($previewDiv); 
             //$scope.outofdate = false;
             //$scope.parCount = len;
         }).error(function (data, status, headers, config) {
