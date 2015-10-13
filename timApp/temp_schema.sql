@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS RunningQuestion;
 
-DROP TABLE IF EXISTS UsersShown;
+DROP TABLE IF EXISTS UserShown;
 
 DROP TABLE IF EXISTS UserAnswered;
 
@@ -14,6 +14,8 @@ DROP TABLE IF EXISTS UserActivity;
 
 DROP TABLE IF EXISTS PointsShown;
 
+DROP TABLE IF EXISTS PointsClosed;
+
 CREATE TABLE RunningQuestion (
   asked_id    INTEGER NOT NULL PRIMARY KEY,
   lecture_id  INTEGER NOT NULL,
@@ -21,12 +23,12 @@ CREATE TABLE RunningQuestion (
   end_time    INTEGER
 );
 
-CREATE TABLE UsersShown (
+CREATE TABLE UserShown (
   lecture_id  INTEGER NOT NULL,
   asked_id    INTEGER NOT NULL,
   user_id     INTEGER NOT NULL,
 
-  CONSTRAINT UsersShown_PK
+  CONSTRAINT UserShown_PK
   PRIMARY KEY (asked_id, user_id)
 );
 
@@ -77,5 +79,14 @@ CREATE TABLE PointsShown (
   user_id     INTEGER NOT NULL,
 
   CONSTRAINT PointsShown_PK
+  PRIMARY KEY (asked_id, user_id)
+);
+
+CREATE TABLE PointsClosed (
+  lecture_id  INTEGER NOT NULL,
+  asked_id    INTEGER NOT NULL,
+  user_id     INTEGER NOT NULL,
+
+  CONSTRAINT PointsClosed_PK
   PRIMARY KEY (asked_id, user_id)
 );

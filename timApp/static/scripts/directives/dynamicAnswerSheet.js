@@ -180,45 +180,31 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     $scope.progressElem = $("#progressBar");
                     $scope.progressText = $("#progressLabel");
                     $scope.start = function () {
-                        //$scope.getTimeLeft();
                         promise = $interval($scope.internalControl.updateBar, timeBetween);
                     };
                     $scope.start();
-                    $scope.internalControl.getExtendTime();
                 }
             };
 
 
             /**
-             * Polls for question end time change and if question is stopped manually.
+             * Use time parameter to either close question/points window or extend question end time.
+             * If time is null, question/points is closed.
+             * Else time is set as questions new end time.
              */
-            $scope.internalControl.getExtendTime = function () {
-                $http({
-                    url: '/getExtendQuestion',
-                    type: 'GET',
-                    params: {
-                        'asked_id': $scope.$parent.askedId,
-                        'lecture_id': $scope.$parent.lectureId,
-                        'buster': new Date().getTime()
+            $scope.$on('update_end_time', function (event, time) {
+                if (time !== null) {
+                    $scope.endTime = time - $scope.$parent.clockOffset;
+                    $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
+                } else {
+                    if (!$scope.$parent.isLecturer) {
+                        $interval.cancel(promise);
+                        clearInterval(promise);
+                        $element.empty();
+                        $scope.$emit('closeQuestion');
                     }
-                }).success(function (answer) {
-                    if (answer !== null) {
-                        $scope.endTime = answer - $scope.$parent.clockOffset;
-                        $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
-                        $scope.internalControl.getExtendTime();
-                    } else {
-                        if (!$scope.$parent.isLecturer) {
-                            $interval.cancel(promise);
-                            clearInterval(promise);
-                            $element.empty();
-                            $scope.$emit('closeQuestion');
-                        }
-                    }
-                }).error(function () {
-                    console.log("Couldn't get extend time");
-                });
-            };
-
+                }
+            });
 
             /**
              * Updates progressbar and time left text

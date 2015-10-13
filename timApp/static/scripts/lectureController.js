@@ -68,6 +68,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.wallMessages = [];
         $scope.questionTitle = "";
         $scope.clockOffset = 0;
+        $scope.current_question_id = false;
+        $scope.current_points_id = false;
         $scope.settings = $window.settings;
 
         //TODO: Move all lecture settings to lectureSettings object, so they will work as ng-model
@@ -355,6 +357,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Event listener for closeQuestion. Closes question pop-up.
          */
         $scope.$on('closeQuestion', function () {
+            $scope.current_question_id = false;
             $scope.showAnswerWindow = false;
         });
 
@@ -363,6 +366,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
          Event listener for answerToQuestion. Closes the answer pop-up and sends answer to server.
          */
         $scope.$on("answerToQuestion", function (event, answer) {
+            $scope.current_question_id = false;
             if (!$scope.isLecturer) $scope.showAnswerWindow = false;
             var mark = "";
             var answerString = "";
@@ -386,6 +390,22 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.showDialog(answer.questionLate);
                     }
                 })
+                .error(function () {
+                    $window.console.log("Failed to answer to question");
+                });
+        });
+
+        $scope.$on("pointsClosed", function(event, asked_id) {
+            $scope.current_points_id = false;
+            http({
+                url: '/closePoints',
+                method: 'PUT',
+                params: {
+                    'asked_id': asked_id,
+                    'lecture_id': $scope.lectureId,
+                    'buster': new Date().getTime()
+                }
+            })
                 .error(function () {
                     $window.console.log("Failed to answer to question");
                 });
@@ -668,65 +688,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 $scope.leftPadder(dateTime3.getHours(), 2) + ':' + $scope.leftPadder(dateTime3.getMinutes(), 2);
 
             console.log(endTimeDate);
-
-            /* Old way of calculating new endtime, without javascript Date object
-
-             var dateTime = $scope.lectureEndTime.split(" ");
-
-             //TODO: Use javascript date object.
-             var YearMonthDay = dateTime[1].split("-");
-             var endYear = parseInt(YearMonthDay[0]);
-             var endMonth = parseInt(YearMonthDay[1]);
-             var endDay = parseInt(YearMonthDay[2]);
-
-             var hoursMins = dateTime[2].split(":");
-             var endHour = parseInt(hoursMins[0]);
-             var endMinutes = parseInt(hoursMins[1]);
-
-
-             endMinutes += parseInt($scope.extend.extendTime);
-
-             if (endMinutes >= 60) {
-             endHour += 1;
-             endMinutes -= 60;
-             if (endHour >= 24) {
-             endDay += 1;
-             endHour -= 24;
-             switch (endMonth) {
-             case 1:
-             case 3:
-             case 5:
-             case 7:
-             case 8:
-             case 10:
-             case 12:
-             if (endDay > 31) {
-             endDay = 1;
-             endMonth += 1;
-             }
-             break;
-             case 2:
-             if (endDay > 28) {
-             endDay = 1;
-             endMonth += 1;
-             }
-             break;
-             default:
-             if (endDay > 30) {
-             endDay = 1;
-             endMonth += 1;
-             }
-             }
-             if (endMonth > 12) {
-             endMonth = 1;
-             endYear += 1;
-             }
-             }
-             }
-             var endTimeDate = endYear + "-" + $scope.leftPadder(endMonth, 2) + "-" + $scope.leftPadder(endDay, 2) + " " +
-             $scope.leftPadder(endHour, 2) + ":" + $scope.leftPadder(endMinutes, 2);
-
-             */
             $scope.lectureEndTime = "Ends: " + endTimeDate;
             $scope.showLectureEnding = false;
             $scope.lectureEnded = false;
@@ -986,6 +947,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         'is_lecturer': $scope.isLecturer, // Tarkista mielummin serverin päässä
                         'get_messages': $scope.lectureSettings.useWall,
                         'get_questions': $scope.lectureSettings.useQuestions,
+                        'current_question_id': $scope.current_question_id || null,
+                        'current_points_id': $scope.current_points_id || null,
                         'buster': new Date().getTime()
                     }
                 })
@@ -1013,7 +976,14 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.addPeopleToList(answer.students, $scope.studentTable);
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
-                        if ((answer.question || answer.result) && !$scope.isLecturer) {
+                        // If 'new_end_time' is not undefined, extend or end question according to new_end_time
+                        if (typeof answer.new_end_time !== "undefined") {
+                            $rootScope.$broadcast('update_end_time', answer.new_end_time);
+                        // If 'question' or 'result' is in answer, show question/explanation accordingly
+                        } else if (typeof answer.points_closed !== "undefined") {
+                            $scope.current_points_id = false;
+                            $rootScope.$broadcast('update_end_time', null);
+                        } else if ((answer.question || answer.result) && !$scope.isLecturer) {
                             $scope.showQuestion(answer);
                         }
 
@@ -1095,6 +1065,10 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 expl = JSON.parse(answer.expl)
             }
             $scope.questionTitle = showPoints + json.TITLE;
+            if (answer.result) {
+                $scope.current_question_id = false;
+                $scope.current_points_id = answer.askedId;
+            } else $scope.current_question_id = answer.askedId;
             $rootScope.$broadcast("setQuestionJson", {
                 result: answer.result,
                 answer: answer.answer,

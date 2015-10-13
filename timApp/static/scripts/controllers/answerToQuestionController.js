@@ -56,6 +56,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
      */
     $scope.close = function (callback) {
         if ($scope.isLecturer) $scope.stopQuestion(callback);
+        else if ($scope.result) $scope.$emit('pointsClosed', $scope.askedId);
         $scope.dynamicAnswerSheetControl.closeQuestion();
     };
 

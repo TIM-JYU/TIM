@@ -4,13 +4,10 @@ Handles temp database that is needed by lecture and questions.
 
 import sqlite3
 from timdb.runningquestion import RunningQuestions
-from timdb.usersshown import UsersShown
-from timdb.usersextended import UsersExtended
-from timdb.usersanswered import UsersAnswered
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
-from timdb.pointsshown import PointsShown
+from timdb.temp_info_for_user import TempInfoUserQuestion
 from contracts import contract
 import os
 
@@ -26,13 +23,18 @@ class TempDb(object):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.runningquestions = RunningQuestions(self.db, files_root_path, 'runningquestions', current_user_name)
-        self.usersshown = UsersShown(self.db, files_root_path, 'usersshown', current_user_name)
-        self.usersextended = UsersExtended(self.db, files_root_path, 'usersextended', current_user_name)
-        self.usersanswered = UsersAnswered(self.db, files_root_path, 'usersanswered', current_user_name)
+        self.showpoints = ShowPoints(self.db, files_root_path, 'showpoints', current_user_name)
         self.useractivity = UserActivity(self.db, files_root_path, 'useractivity', current_user_name)
         self.newanswers = NewAnswers(self.db, files_root_path, 'newanswers', current_user_name)
-        self.showpoints = ShowPoints(self.db, files_root_path, 'showpoints', current_user_name)
-        self.pointsshown = PointsShown(self.db, files_root_path, 'pointsshown', current_user_name)
+        self.usersshown = TempInfoUserQuestion(self.db, files_root_path, 'usersshown', current_user_name, 'UserShown')
+        self.usersextended = TempInfoUserQuestion(self.db, files_root_path, 'usersextended', current_user_name,
+                                                  'UserExtended')
+        self.usersanswered = TempInfoUserQuestion(self.db, files_root_path, 'usersanswered', current_user_name,
+                                                  'UserAnswered')
+        self.pointsshown = TempInfoUserQuestion(self.db, files_root_path, 'pointsshown', current_user_name,
+                                                'PointsShown')
+        self.pointsclosed = TempInfoUserQuestion(self.db, files_root_path, 'pointsclosed', current_user_name,
+                                                 'PointsClosed')
 
     """
     def clear(self):
