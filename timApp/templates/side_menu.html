@@ -147,6 +147,10 @@
                              ng-class="['menu-icon', peopleIconState]"
                              src="{{ url_for('static', filename='images/people-icon.png') }}" width="50"
                              height="50" title="People logged-in"/>
+                        <img ng-show="lectureSettings.inLecture && !isLecturer" ng-click="getQuestionManually()"
+                             ng-class="['menu-icon']"
+                             src="{{ url_for('static', filename='images/question-icon.png') }}" width="50"
+                             height="50" title="Get question manually"/>
                     {% endif %}
                     <img ng-click="toggleSettings()" ng-class="['menu-icon', settingsIconState]"
                          src="{{ url_for('static', filename='images/settings-icon.png') }}" width="50"

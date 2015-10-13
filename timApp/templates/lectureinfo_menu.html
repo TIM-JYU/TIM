@@ -47,8 +47,6 @@
                      ng-click="endLecture()" title="End this lecture" ng-show="canStop">
                 <img id="edit-icon" src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                      title="Edit this lecture" ng-click="editLecture(lectureName)" ng-show="canStop">
-                <img id="edit-icon" src="{{ url_for('static', filename='images/question_icon_circle.png') }}" class="icon"
-                     title="Get question manually" ng-click="getQuestionManually(lectureId)">
             </div>
         </div>
 
@@ -97,8 +95,6 @@
                     <img ng-click="editLecture(lectureName)" id="edit-icon"
                          src="{{ url_for('static', filename='images/edit-icon3.png') }}" class="icon"
                          title="Edit this lecture" ng-show="canStop">
-                    <img id="edit-icon" src="{{ url_for('static', filename='images/question_icon_circle.png') }}" class="icon"
-                     title="Get question manually" ng-click="getQuestionManually(lectureId)">
                 </div>
             </div>
         </div>
