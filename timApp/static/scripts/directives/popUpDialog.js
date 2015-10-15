@@ -21,11 +21,13 @@ timApp.directive('popUpDialog', function () {
         restrict: 'E',
         scope: {
             show: '=',
-            caption: '='
+            caption: '=',
+            elemId : '='
         },
         template: "<div class='pop-up' ng-show='show' id='popUpBack'>" +
         "<div class='pop-up-overlay'></div> " +
-        "<div class='pop-up-dialog' " + toDragOrNot() + " ng-mousedown='checkDown($event)' ng-mouseup='checkUp($event)' style='top:0; left: 0'>" +
+        "<div id='{{elemId}}' class='pop-up-dialog' " + toDragOrNot() + " ng-mousedown='checkDown($event)' " +
+        "ng-mouseup='checkUp($event)' style='top:0; left: 0'>" +
         "<div class='pop-up-dialog-content' ng-transclude></div>" +
         "</div>" +
         "</div>",

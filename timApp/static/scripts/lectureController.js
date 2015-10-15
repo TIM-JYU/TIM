@@ -74,6 +74,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
         //TODO: Move all lecture settings to lectureSettings object, so they will work as ng-model
         $scope.lectureSettings = {
+            'pollingStopped': false,
             'inLecture': false,
             'lectureMode': $window.lectureMode || false,
             'wallMinimized': false,
@@ -1039,6 +1040,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
                             }
                         } else {
+                            $scope.pollingStopped = true;
+                            //$('#pausedWindow').center();
                             $window.console.log("Got answer but not polling anymore.");
                         }
                     })
@@ -1144,6 +1147,48 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             return paddedNumber;
 
         };
+
+        $scope.gotFocus = function () {
+            //if (typeof $scope.timeout !== 'undefined') $window.clearTimeout($scope.timeout);
+            $scope.polling = true;
+            $scope.pollingStopped = false;
+            $scope.$apply();
+            if (!$scope.requestOnTheWay) $scope.startLongPolling($scope.lastID);
+            console.log('Got focus');
+        };
+
+        jQuery.fn.center = function (parent) {
+            if (parent) {
+                parent = this.parent();
+            } else {
+                parent = window;
+            }
+            this.css({
+                "top": ((($(parent).height() - this.outerHeight()) / 2) + $(parent).scrollTop() + "px"),
+                "left": ((($(parent).width() - this.outerWidth()) / 2) + $(parent).scrollLeft() + "px")
+            });
+            return this;
+        };
+
+        $scope.lostFocus = function () {
+            console.log('Lost focus');
+            $scope.polling = false;
+            /*
+            $scope.timeout = $window.setTimeout(function() {
+                console.log('Stopped polling');
+
+            }, 5000);*/
+        };
+
+        angular.element($window).on('focus', function () {
+            $scope.gotFocus();
+        });
+
+        angular.element($window).on('blur', function () {
+            $scope.lostFocus();
+        });
+
+        $(document).focus();
     }
 ])
 ;
