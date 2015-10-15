@@ -365,6 +365,8 @@ timApp.controller("ViewCtrl", [
 
         sc.toggleNoteEditor = function ($par, options) {
             var caption = 'Edit comment';
+            var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
+            var mobile = touch && (window.screen.width < 1200);
             if (!sc.rights.can_comment) {
                 return;
             }
@@ -398,6 +400,7 @@ timApp.controller("ViewCtrl", [
                         showDelete: !options.isNew,
                         showImageUpload: true,
                         showPlugins: false,
+                        touchDevice: mobile,
                         tags: [
                             {name: 'difficult', desc: 'The text is difficult to understand'},
                             {name: 'unclear', desc: 'The text is unclear'}
