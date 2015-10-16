@@ -56,72 +56,100 @@ class TimTest(TimDbTest):
 
     def test_activities(self):
         timdb = self.get_db()
-        with TimTest.app as a:
-            login_resp = a.post('/altlogin',
-                                data={'email': 'test1@example.com', 'password': 'test1pass'},
-                                follow_redirects=True)
-            self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
-            doc_name = 'users/testuser1/testing'
-            doc_id = 3
-            self.assertDictResponse({'id': doc_id, 'name': doc_name},
-                                    self.json_post(a, '/createDocument', {
-                                        'doc_name': doc_name
-                                    }))
-            self.assertResponse('Success',
-                                self.json_put(a, '/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
-            pars = Document(doc_id).get_paragraphs()
-            self.assertEqual(1, len(pars))
-            first_id = pars[0].get_id()
-            comment_of_test1 = 'This is a comment.'
-            html_comment_of_test1 = md_to_html(comment_of_test1)
-            self.assertInResponse(html_comment_of_test1,
-                                  self.json_post(a,
-                                                 '/postNote', {'text': comment_of_test1,
-                                                               'access': 'everyone',
-                                                               'docId': doc_id,
-                                                               'par': first_id}))
-            self.assertInResponse(html_comment_of_test1, a.get('/view/' + doc_name))
-            par_text = 'testing editing now...\nnew line\n'
-            par_html = md_to_html(par_text)
-            self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
-                "text": par_text,
-                "docId": doc_id,
-                "par": first_id,
-                "par_next": None
-            }))
-            self.assertDictResponse({'text': par_text}, a.get('/getBlock/{}/{}'.format(doc_id, first_id)))
-            self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
-                "text": par_text,
-                "docId": doc_id,
-                "par": first_id,
-                "par_next": None
-            }))
-            par2_text = 'new par'
-            par2_html = md_to_html(par2_text)
-            self.assertManyInResponse([par_html, par2_html], self.json_post(a, '/postParagraph/', {
-                "text": par_text + '#-\n' + par2_text,
-                "docId": doc_id,
-                "par": first_id,
-                "par_next": None
-            }))
-            pars = Document(doc_id).get_paragraphs()
-            self.assertEqual(2, len(pars))
-            second_par_id = pars[1].get_id()
-            par2_new_text = '    ' + par2_text
-            par2_new_html = md_to_html(par2_new_text)
-            self.assertInResponse(par2_new_html, self.json_post(a, '/postParagraph/', {
-                "text": par2_new_text,
-                "docId": doc_id,
-                "par": second_par_id,
-                "par_next": None
-            }))
+        a = TimTest.app
 
-        with TimTest.app as a:
-            login_resp = a.post('/altlogin',
-                                data={'email': 'test2@example.com', 'password': 'test2pass'},
-                                follow_redirects=True)
-            self.assertInResponse('Logged in as: Test user 2 (testuser2)', login_resp)
-            self.assertInResponse(comment_of_test1, a.get('/view/' + doc_name))
+        login_resp = a.post('/altlogin',
+                            data={'email': 'test1@example.com', 'password': 'test1pass'},
+                            follow_redirects=True)
+        self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
+        doc_names = ['users/testuser1/testing',
+                     'users/testuser1/testing2',
+                     'users/testuser1/testing3',
+                     'users/testuser1/testing4',
+                     'users/testuser1/testing5']
+        doc_name = doc_names[0]
+        doc_id = 3
+        doc_ids = set()
+        for idx, n in enumerate(doc_names):
+            self.assertDictResponse({'id': doc_id + idx, 'name': doc_names[idx]},
+                                    self.json_post(a, '/createDocument', {
+                                        'doc_name': n
+                                    }))
+            doc_ids.add(doc_id + idx)
+        self.assertResponse('Success',
+                            self.json_put(a, '/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
+        self.assertResponse('Success',
+                            self.json_put(a, '/addPermission/{}/{}/{}'.format(4, 'Logged-in users', 'view')))
+        self.assertResponse('Success',
+                            self.json_put(a, '/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
+        self.assertResponse('Success',
+                            self.json_put(a, '/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
+        pars = Document(doc_id).get_paragraphs()
+        self.assertEqual(1, len(pars))
+        first_id = pars[0].get_id()
+        comment_of_test1 = 'This is a comment.'
+        html_comment_of_test1 = md_to_html(comment_of_test1)
+        self.assertInResponse(html_comment_of_test1,
+                              self.json_post(a,
+                                             '/postNote', {'text': comment_of_test1,
+                                                           'access': 'everyone',
+                                                           'docId': doc_id,
+                                                           'par': first_id}))
+        self.assertInResponse(html_comment_of_test1, a.get('/view/' + doc_name))
+        par_text = 'testing editing now...\nnew line\n'
+        par_html = md_to_html(par_text)
+        self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
+            "text": par_text,
+            "docId": doc_id,
+            "par": first_id,
+            "par_next": None
+        }))
+        self.assertDictResponse({'text': par_text}, a.get('/getBlock/{}/{}'.format(doc_id, first_id)))
+        self.assertInResponse(par_html, self.json_post(a, '/postParagraph/', {
+            "text": par_text,
+            "docId": doc_id,
+            "par": first_id,
+            "par_next": None
+        }))
+        par2_text = 'new par'
+        par2_html = md_to_html(par2_text)
+        self.assertManyInResponse([par_html, par2_html], self.json_post(a, '/postParagraph/', {
+            "text": par_text + '#-\n' + par2_text,
+            "docId": doc_id,
+            "par": first_id,
+            "par_next": None
+        }))
+        pars = Document(doc_id).get_paragraphs()
+        self.assertEqual(2, len(pars))
+        second_par_id = pars[1].get_id()
+        par2_new_text = '    ' + par2_text
+        par2_new_html = md_to_html(par2_new_text)
+        self.assertInResponse(par2_new_html, self.json_post(a, '/postParagraph/', {
+            "text": par2_new_text,
+            "docId": doc_id,
+            "par": second_par_id,
+            "par_next": None
+        }))
+        self.assertResponseStatus(a.post('/logout', follow_redirects=True))
+        self.assertResponseStatus(a.get('/settings/'), 403)
+        for d in doc_ids - {3}:
+            self.assertResponseStatus(a.get('/view/' + str(d)), 403)
+        self.assertResponseStatus(a.get('/view/' + str(3)))
+
+        a.post('/altlogin',
+               data={'email': 'test2@example.com', 'password': 'test2pass'})
+        view_resp = a.get('/view/' + doc_name)
+        self.assertInResponse('Logged in as: Test user 2 (testuser2)', view_resp)
+        self.assertInResponse(comment_of_test1, view_resp)
+        not_viewable_docs = {7}
+        for view_id in doc_ids - not_viewable_docs:
+            self.assertResponseStatus(a.get('/view/' + str(view_id)))
+
+        for view_id in not_viewable_docs:
+            self.assertResponseStatus(a.get('/view/' + str(view_id)), 403)
+        self.assertResponseStatus(a.get('/view/1'), 404)
+
+        with a as a:
             comment_of_test2 = 'g8t54h954hy95hg54h'
             self.assertInResponse(comment_of_test2,
                                   self.json_post(a,
@@ -135,13 +163,12 @@ class TimTest(TimDbTest):
             self.assertEqual(1, len(notes))
             test2_note_id = notes[0]['id']
 
-        with TimTest.app as a:
-            login_resp = a.post('/altlogin',
-                                data={'email': 'test1@example.com', 'password': 'test1pass'},
-                                follow_redirects=True)
-            self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
-            self.assertInResponse(comment_of_test2,
-                                  a.get('/note/{}'.format(test2_note_id)))
+        a.post('/altlogin',
+               data={'email': 'test1@example.com', 'password': 'test1pass'},
+               follow_redirects=True)
+        self.assertInResponse(comment_of_test2,
+                              a.get('/note/{}'.format(test2_note_id)))
+        with a as a:
             self.assertResponseStatus(self.json_post(a,
                                                      '/deleteNote', {'id': test2_note_id,
                                                                      'docId': doc_id,

@@ -134,7 +134,9 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     if not hasViewAccess(doc_id):
         if not loggedIn():
             session['came_from'] = request.url
-            return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
+            return render_template('loginpage.html',
+                                   target_url=url_for('login_page.loginWithKorppi'),
+                                   came_from=request.url), 403
         else:
             abort(403)
 
