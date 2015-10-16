@@ -82,13 +82,7 @@ def save_answer(plugintype, task_id):
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if loggedIn() and len(old_answers) > 0 else None
 
-    doc = Document(doc_id)
-    par = doc.get_paragraph_by_task(task_id_name)
-    if par is None:
-        abort(400, 'Task not found in the document: ' + task_id_name)
-    plugin_data = pluginControl.parse_plugin_values(par, global_attrs=doc.get_settings().global_plugin_attrs())
-    if 'error' in plugin_data:
-        return jsonResponse({'error': plugin_data['error'] + ' Task id: ' + task_id_name}, 400)
+    plugin_data = get_plugin_data(task_id)
 
     answer_call_data = {'markup': plugin_data['markup'], 'state': state, 'input': answerdata, 'taskID': task_id}
 
@@ -138,12 +132,31 @@ def save_answer(plugintype, task_id):
     return jsonResponse({'web': jsonresp['web']})
 
 
+def get_plugin_data(task_id):
+    doc_id, task_id_name = parse_task_id(task_id)
+    doc = Document(doc_id)
+    par = doc.get_paragraph_by_task(task_id_name)
+    if par is None:
+        abort(400, 'Task not found in the document: ' + task_id_name)
+    plugin_data = pluginControl.parse_plugin_values(par, global_attrs=doc.get_settings().global_plugin_attrs())
+    if 'error' in plugin_data:
+        abort(400, plugin_data['error'] + ' Task id: ' + task_id_name)
+    return plugin_data
+
+
 def get_hidden_name(user_id):
     return 'Undisclosed student %d' % user_id
 
 
 def should_hide_name(doc_id, user_id):
     return not getTimDb().users.userIsOwner(user_id, doc_id) and user_id != getCurrentUserId()
+
+
+@answers.route("/taskinfo/<task_id>")
+def get_task_info(task_id):
+    plugin_data = get_plugin_data(task_id)
+    tim_vars = {'maxPoints': plugin_data.get('markup', {}).get('pointsRule', {}).get('maxPoints')}
+    return jsonResponse(tim_vars)
 
 
 @answers.route("/answers/<task_id>/<user_id>")

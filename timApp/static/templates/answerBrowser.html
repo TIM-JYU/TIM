@@ -14,6 +14,7 @@
     <br> 
     <label ng-show="$parent.teacherMode">Points:<input ng-model="points" type="text"></label>
     <span ng-show="!$parent.teacherMode && points !== null">Points: {{ points }}</span>
+    <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
     <span ng-show="!selectedAnswer.valid">(invalid)</span>
     <label ng-show="$parent.teacherMode">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
