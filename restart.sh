@@ -74,17 +74,17 @@ fi
 
 if param timdev ; then
 # Start timdev
-docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "service postgresql start && cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param timbeta ; then
 # Start timbeta
-docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c " service postgresql start && cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param tim ; then
 # Start tim
-docker run --name tim -p 50001:5000 --cpuset=0,0 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --name tim -p 50001:5000 --cpuset=0,0 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "service postgresql start && cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 #trap '' 0

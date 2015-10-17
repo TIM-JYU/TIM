@@ -17,6 +17,8 @@ run apt-get install -y git-core
 run apt-get install -y zlib1g-dev # lxml dependency
 run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml dependency
 run apt-get install -y libyaml-dev # C-parser for PyYAML
+run apt-get install -y libpq-dev # Needed by PostGreSQL
+run apt-get install -y postgresql
 
 run pip3 install flask
 run pip3 install flask-compress
@@ -30,6 +32,7 @@ run pip3 install pyaml
 run pip3 install ansi2html
 run pip3 install cssutils
 run pip3 install mmh3
+run pip3 install psycopg2
 
 # Install pygit2 and dependencies
 run apt-get install -y wget
@@ -40,6 +43,7 @@ run cd libgit2-0.23.1/ && cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 . && make i
 
 run apt-get install -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib
+run pip3 install cffi
 run pip3 install pygit2
 
 run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b5 eventlet tornado aiohttp
@@ -103,6 +107,17 @@ run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/ss
 
 # Configure timezone and locale
 run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+
+user postgres
+run /etc/init.d/postgresql start &&\
+  psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
+  createdb -O docker docker
+
+user root
+
+run sed 's/.*local.*.*all.*all.*peer/local all all md5/' /etc/postgresql/9.3/main/pg_hba.conf > /etc/postgresql/9.3/main/pg_hba2.conf
+run rm /etc/postgresql/9.3/main/pg_hba.conf
+run mv /etc/postgresql/9.3/main/pg_hba2.conf /etc/postgresql/9.3/main/pg_hba.conf
 
 # Default startup command
 cmd cd /service/timApp && source initenv.sh && python3 launch.py

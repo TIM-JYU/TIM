@@ -1,8 +1,8 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase
+from timdb.tempdbbase import TempDbBase
 
 
-class ShowPoints(TimDbBase):
+class ShowPoints(TempDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
@@ -14,12 +14,10 @@ class ShowPoints(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             INSERT INTO ShowPoints(lecture_id, asked_id)
-            VALUES (?,?)
-        """, [lecture_id, asked_id])
+            VALUES (%s,%s)
+        """, (lecture_id, asked_id))
 
         if commit:
             self.db.commit()
@@ -31,24 +29,20 @@ class ShowPoints(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             DELETE FROM ShowPoints
-            WHERE  lecture_id = ?
+            WHERE  lecture_id = %s
         """, [lecture_id])
 
         if commit:
             self.db.commit()
 
     def get_currently_shown_points(self, lecture_id: "int"):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT *
             FROM ShowPoints
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
         """, [lecture_id])
 
-        questions = cursor.fetchall()
+        questions = self.cursor.fetchall()
         return questions

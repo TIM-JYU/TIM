@@ -76,9 +76,9 @@ fi
 
 if param tim ; then
   if param sshd ; then
-    docker run --name tim -p 50001:5000 -p 49999:22 -v /opt/tim:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c '/usr/sbin/sshd -D ; /bin/bash'
+    docker run --name tim -p 50001:5000 -p 49999:22 -v /opt/tim:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'service postgresql start && /usr/sbin/sshd -D ; /bin/bash'
   else
-    docker run --name tim -p 50001:5000 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py $END_SHELL"
+    docker run --name tim -p 50001:5000 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "service postgresql start && cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py $END_SHELL"
   fi
 fi
 

@@ -1,8 +1,8 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase
+from timdb.tempdbbase import TempDbBase
 
 
-class RunningQuestions(TimDbBase):
+class RunningQuestions(TempDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
@@ -15,12 +15,10 @@ class RunningQuestions(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             INSERT INTO RunningQuestion(lecture_id, asked_id, ask_time, end_time)
-            VALUES (?,?,?,?)
-        """, [lecture_id, asked_id, ask_time, end_time])
+            VALUES (%s,%s,%s,%s)
+        """, (lecture_id, asked_id, ask_time, end_time))
 
         if commit:
             self.db.commit()
@@ -32,11 +30,9 @@ class RunningQuestions(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             DELETE FROM RunningQuestion
-            WHERE  asked_id = ?
+            WHERE  asked_id = %s
         """, [asked_id])
 
         if commit:
@@ -49,68 +45,58 @@ class RunningQuestions(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             DELETE FROM RunningQuestion
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
         """, [lecture_id])
 
         if commit:
             self.db.commit()
 
     def get_lectures_running_questions(self, lecture_id: "int"):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT *
             FROM RunningQuestion
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
         """, [lecture_id])
 
-        questions = cursor.fetchall()
+        questions = self.cursor.fetchall()
         return questions
 
     def get_running_question_by_id(self, asked_id: "int"):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT *
             FROM RunningQuestion
-            WHERE asked_id = ?
+            WHERE asked_id = %s
         """, [asked_id])
 
-        question = cursor.fetchone()
+        question = self.cursor.fetchone()
         return question
 
     def extend_question(self, asked_id: "int", extend: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
-        
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT end_time
             FROM RunningQuestion
-            WHERE asked_id = ?
+            WHERE asked_id = %s
         """, [asked_id])
         
-        end_time = cursor.fetchone()[0]
+        end_time = self.cursor.fetchone()[0]
         end_time += extend
         
-        cursor.execute("""
+        self.cursor.execute("""
             UPDATE RunningQuestion
-            SET end_time = ?
-            WHERE asked_id = ?
-        """, [end_time, asked_id])
+            SET end_time = %s
+            WHERE asked_id = %s
+        """, (end_time, asked_id))
 
         if commit:
             self.db.commit()
 
     def get_end_time(self, asked_id: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT end_time
             FROM RunningQuestion
-            WHERE asked_id = ?
+            WHERE asked_id = %s
         """, [asked_id])
 
-        return cursor.fetchone()
+        return self.cursor.fetchone()
