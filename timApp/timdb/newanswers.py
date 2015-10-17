@@ -1,8 +1,8 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase
+from timdb.tempdbbase import TempDbBase
 
 
-class NewAnswers(TimDbBase):
+class NewAnswers(TempDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
@@ -14,12 +14,10 @@ class NewAnswers(TimDbBase):
         :param user_id: user id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             INSERT INTO NewAnswer(lecture_id, asked_id, user_id)
-            VALUES (?,?,?)
-        """, [lecture_id, asked_id, user_id])
+            VALUES (%s,%s,%s)
+        """, (lecture_id, asked_id, user_id))
 
         if commit:
             self.db.commit()
@@ -31,11 +29,9 @@ class NewAnswers(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             DELETE FROM NewAnswer
-            WHERE asked_id = ?
+            WHERE asked_id = %s
         """, [asked_id])
 
         if commit:
@@ -48,11 +44,9 @@ class NewAnswers(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             DELETE FROM NewAnswer
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
         """, [lecture_id])
 
         if commit:
@@ -60,27 +54,26 @@ class NewAnswers(TimDbBase):
 
     @contract
     def get_new_answers(self, asked_id: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT user_id
             FROM NewAnswer
-            WHERE asked_id = ?
+            WHERE asked_id = %s
         """, [asked_id])
 
-        users = cursor.fetchall()
+        users = self.cursor.fetchall()
         user_ids = []
 
         for user in users:
             user_ids.append(user['user_id'])
-        
-        cursor.execute("""
-            DELETE
-            FROM NewAnswer
-            WHERE asked_id = ? AND user_id IN (%s)
-        """ % ', '.join('?' * len(user_ids)), [asked_id] + user_ids)
 
-        if commit:
-            self.db.commit()
+        if user_ids:
+            self.cursor.execute("""
+                DELETE
+                FROM NewAnswer
+                WHERE asked_id = %s AND user_id IN %s
+            """, (asked_id, tuple(user_ids)))
+
+            if commit:
+                self.db.commit()
 
         return user_ids

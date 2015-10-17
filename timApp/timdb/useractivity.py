@@ -1,8 +1,8 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase
+from timdb.tempdbbase import TempDbBase
 
 
-class UserActivity(TimDbBase):
+class UserActivity(TempDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
@@ -17,9 +17,24 @@ class UserActivity(TimDbBase):
         cursor = self.db.cursor()
 
         cursor.execute("""
-            INSERT OR REPLACE INTO UserActivity(lecture_id, user_id, active)
-            VALUES (?,?,?)
-        """, [lecture_id, user_id, active])
+            SELECT *
+            FROM UserActivity
+            WHERE lecture_id = %s AND user_id = %s
+        """, (lecture_id, user_id))
+
+        exists = cursor.fetchall()
+
+        if exists:
+            cursor.execute("""
+                INSERT INTO UserActivity(lecture_id, user_id, active)
+                VALUES (%s,%s,%s)
+            """, (lecture_id, user_id, active))
+        else:
+            cursor.execute("""
+                UPDATE UserActivity
+                SET active = %s
+                WHERE lecture_id = %s AND user_id = %s
+            """, (active, lecture_id, user_id))
 
         if commit:
             self.db.commit()
@@ -31,11 +46,9 @@ class UserActivity(TimDbBase):
         :param asked_id: asked questions id
         :return:
         """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             DELETE FROM UserActivity
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
         """, [lecture_id])
 
         if commit:
@@ -43,26 +56,22 @@ class UserActivity(TimDbBase):
 
     @contract
     def get_user_activity(self, lecture_id: "int", user_id: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT *
             FROM UserActivity
-            WHERE lecture = ? AND user_id = ?
-        """, [lecture_id, user_id])
+            WHERE lecture = %s AND user_id = %s
+        """, (lecture_id, user_id))
 
-        activity = cursor.fetchone()
+        activity = self.cursor.fetchone()
         return activity
 
     @contract
     def get_all_user_activity(self, lecture_id: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
+        self.cursor.execute("""
             SELECT user_id, active
             FROM UserActivity
-            WHERE lecture_id = ?
+            WHERE lecture_id = %s
         """, [lecture_id])
 
-        activity = cursor.fetchall()
+        activity = self.cursor.fetchall()
         return activity

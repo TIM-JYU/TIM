@@ -2,7 +2,9 @@
 Handles temp database that is needed by lecture and questions.
 """
 
-import sqlite3
+# import sqlite3
+import psycopg2
+import psycopg2.extras
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
@@ -20,21 +22,17 @@ class TempDb(object):
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
-        self.db = sqlite3.connect(db_path)
-        self.db.row_factory = sqlite3.Row
-        self.runningquestions = RunningQuestions(self.db, files_root_path, 'runningquestions', current_user_name)
-        self.showpoints = ShowPoints(self.db, files_root_path, 'showpoints', current_user_name)
-        self.useractivity = UserActivity(self.db, files_root_path, 'useractivity', current_user_name)
-        self.newanswers = NewAnswers(self.db, files_root_path, 'newanswers', current_user_name)
-        self.usersshown = TempInfoUserQuestion(self.db, files_root_path, 'usersshown', current_user_name, 'UserShown')
-        self.usersextended = TempInfoUserQuestion(self.db, files_root_path, 'usersextended', current_user_name,
-                                                  'UserExtended')
-        self.usersanswered = TempInfoUserQuestion(self.db, files_root_path, 'usersanswered', current_user_name,
-                                                  'UserAnswered')
-        self.pointsshown = TempInfoUserQuestion(self.db, files_root_path, 'pointsshown', current_user_name,
-                                                'PointsShown')
-        self.pointsclosed = TempInfoUserQuestion(self.db, files_root_path, 'pointsclosed', current_user_name,
-                                                 'PointsClosed')
+        self.db = psycopg2.connect('dbname=docker user=docker password=docker host=/run/postgresql')
+        self.cursor = self.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        self.runningquestions = RunningQuestions(self.db, self.cursor)
+        self.showpoints = ShowPoints(self.db, self.cursor)
+        self.useractivity = UserActivity(self.db, self.cursor)
+        self.newanswers = NewAnswers(self.db, self.cursor)
+        self.usersshown = TempInfoUserQuestion(self.db, self.cursor, 'UserShown')
+        self.usersextended = TempInfoUserQuestion(self.db, self.cursor, 'UserExtended')
+        self.usersanswered = TempInfoUserQuestion(self.db, self.cursor, 'UserAnswered')
+        self.pointsshown = TempInfoUserQuestion(self.db, self.cursor, 'PointsShown')
+        self.pointsclosed = TempInfoUserQuestion(self.db, self.cursor, 'PointsClosed')
 
     """
     def clear(self):
@@ -55,7 +53,8 @@ class TempDb(object):
     def initialize_tables(self):
         """Initializes the database from the schema2.sql file.
         NOTE: The database is emptied if it exists."""
-        self.execute_script('temp_schema.sql')
+        self.db.cursor().execute(open("temp_schema.sql", "r").read())
+        # self.execute_script('temp_schema.sql')
 
     def execute_script(self, sql_file):
         """Executes an SQL file on the database.
