@@ -17,8 +17,17 @@ run apt-get install -y git-core
 run apt-get install -y zlib1g-dev # lxml dependency
 run apt-get install -y libxml2-dev libxslt-dev python3-dev # lxml dependency
 run apt-get install -y libyaml-dev # C-parser for PyYAML
+
+# Add the PostgreSQL PGP key
+run apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+
+# Add PostgreSQL's repository.
+run echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+run apt-get update
 run apt-get install -y libpq-dev # Needed by PostGreSQL
-run apt-get install -y postgresql
+# Install postgresql 9.3, version 9.4 didn't install correctly
+run apt-get install -y postgresql-9.3
 
 run pip3 install flask
 run pip3 install flask-compress
