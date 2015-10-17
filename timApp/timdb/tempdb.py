@@ -3,6 +3,7 @@ Handles temp database that is needed by lecture and questions.
 """
 
 # import sqlite3
+import time
 import psycopg2
 import psycopg2.extras
 from timdb.runningquestion import RunningQuestions
@@ -22,7 +23,19 @@ class TempDb(object):
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
-        self.db = psycopg2.connect('dbname=docker user=docker password=docker host=/run/postgresql')
+        tries = 0
+        while tries < 15:
+            try:
+                self.db = psycopg2.connect('dbname=docker user=docker password=docker host=/run/postgresql')
+                break
+            except psycopg2.OperationalError:
+                print("PostGre is not ready yet")
+                time.sleep(1)
+                tries += 1
+
+        if tries >= 14:
+            exit()
+
         self.cursor = self.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         self.runningquestions = RunningQuestions(self.db, self.cursor)
         self.showpoints = ShowPoints(self.db, self.cursor)
