@@ -23,8 +23,9 @@ class TempDb(object):
         :param db_path: The path of the database file.
         :param files_root_path: The root path where all the files will be stored.
         """
+        max_tries = 100
         tries = 0
-        while tries < 15:
+        while tries < 100:
             try:
                 self.db = psycopg2.connect('dbname=docker user=docker password=docker host=/run/postgresql')
                 break
@@ -33,7 +34,7 @@ class TempDb(object):
                 time.sleep(1)
                 tries += 1
 
-        if tries >= 14:
+        if tries >= max_tries - 1:
             exit()
 
         self.cursor = self.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
