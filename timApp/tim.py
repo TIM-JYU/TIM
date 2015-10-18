@@ -1375,7 +1375,7 @@ def delete_question_temp_data(asked_id, lecture_id, tempdb):
     tempdb.usersextended.delete_all_from_question(asked_id)
     tempdb.newanswers.delete_question_answers(asked_id)
     tempdb.showpoints.stop_showing_points(lecture_id)
-    tempdb.pointsshown.delete_all_from_question(lecture_id)
+    tempdb.pointsshown.delete_all_from_lecture(lecture_id)
     tempdb.pointsclosed.delete_all_from_lecture(lecture_id)
 
 
