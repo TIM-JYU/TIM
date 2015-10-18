@@ -24,10 +24,6 @@
             </div>
         </div>
     </div>
-    <pop-up-dialog show="pollingStopped" caption="'Polling paused'" elem-id="'pausedWindow'">
-        <ng-include
-                src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>
-    </pop-up-dialog>
     <pop-up-dialog show="showLectureOptions" caption="'Join the lecture'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
@@ -62,6 +58,9 @@
         <ng-include
                 src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
     </pop-up-dialog>
-
+    <pop-up-dialog show="pollingStopped" caption="'Polling paused'" elem-id="'pausedWindow'">
+        <ng-include
+                src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>
+    </pop-up-dialog>
     {% include 'side_menu.html' %}
 </div>
