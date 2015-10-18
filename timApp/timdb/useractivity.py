@@ -24,7 +24,7 @@ class UserActivity(TempDbBase):
 
         exists = cursor.fetchall()
 
-        if exists:
+        if not exists:
             cursor.execute("""
                 INSERT INTO UserActivity(lecture_id, user_id, active)
                 VALUES (%s,%s,%s)

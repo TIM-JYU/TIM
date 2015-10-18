@@ -779,7 +779,6 @@ def get_lecture_users(timdb, tempdb, lecture_id):
     lecture = timdb.lectures.get_lecture(lecture_id)
     lecturers = []
     students = []
-    users = timdb.lectures.get_users_from_leture(lecture_id)
 
     activity = tempdb.useractivity.get_all_user_activity(lecture_id)
 
