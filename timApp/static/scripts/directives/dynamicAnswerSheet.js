@@ -177,10 +177,11 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
                     var timeBetween = 100;
+                    var maxCount = timeLeft / timeBetween + 5 * timeBetween;
                     $scope.progressElem = $("#progressBar");
                     $scope.progressText = $("#progressLabel");
                     $scope.start = function () {
-                        promise = $interval($scope.internalControl.updateBar, timeBetween);
+                        promise = $interval($scope.internalControl.updateBar, timeBetween, maxCount);
                     };
                     $scope.start();
                 }
@@ -199,7 +200,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 } else {
                     if (!$scope.$parent.isLecturer) {
                         $interval.cancel(promise);
-                        clearInterval(promise);
                         $element.empty();
                         $scope.$emit('closeQuestion');
                     }
@@ -219,7 +219,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $scope.progressText.text(Math.max((timeLeft / 1000), 0).toFixed(0) + " s");
                 if (barFilled >= $scope.progressElem.attr("max")) {
                     $scope.$parent.questionEnded = true;
-                    clearInterval(promise);
                     $interval.cancel(promise);
                     if (!$scope.$parent.isLecturer) {
                         $scope.internalControl.answerToQuestion();
@@ -230,7 +229,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
             };
 
             $scope.internalControl.endQuestion = function () {
-                clearInterval(promise);
                 $interval.cancel(promise);
                 var max = $scope.progressElem.attr("max");
                 $scope.progressElem.attr("value", max);
@@ -303,7 +301,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 if (!$scope.$parent.isLecturer) {
                     $element.empty();
                     $interval.cancel(promise);
-                    clearInterval(promise);
                 }
                 $scope.$emit('answerToQuestion', {answer: answers, askedId: $scope.$parent.askedId});
             };
@@ -315,7 +312,6 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
              */
             $scope.internalControl.closeQuestion = function () {
                 $interval.cancel(promise);
-                clearInterval(promise);
                 $element.empty();
                 $scope.$emit('closeQuestion');
                 if ($scope.$parent.isLecturer) $rootScope.$broadcast('closeAnswerSheetForGood');
