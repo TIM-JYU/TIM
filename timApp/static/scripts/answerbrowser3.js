@@ -145,6 +145,16 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 };
 
+                $scope.indexOfSelected = function () {
+                    var arrayLength = $scope.filteredAnswers.length;
+                    for (var i = 0; i < arrayLength; i++) {
+                        if ($scope.filteredAnswers[i].id === $scope.selectedAnswer.id) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                };
+
                 $scope.getTeacherData = function () {
                     if ($scope.answers.length > 0)
                         return {
@@ -286,6 +296,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.saveTeacher = false;
                 $scope.users = null;
                 $scope.answers = [];
+                $scope.filteredAnswers = [];
                 $scope.onlyValid = true;
                 $scope.selectedAnswer = null;
                 $scope.taskInfo = null;
