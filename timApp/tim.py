@@ -1580,7 +1580,8 @@ def answer_to_question():
         else:
             timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, whole_answer, time_now,
                                              points)
-    tempdb.newanswers.user_answered(lecture_id, asked_id, current_user)
+        tempdb.newanswers.user_answered(lecture_id, asked_id, current_user)
+
     tempdb.usersanswered.add_user_info(lecture_id, asked_id, current_user)
 
     return jsonResponse("")
