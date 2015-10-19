@@ -218,13 +218,13 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $scope.progressElem.attr("value", (barFilled));
                 $scope.progressText.text(Math.max((timeLeft / 1000), 0).toFixed(0) + " s");
                 if (barFilled >= $scope.progressElem.attr("max")) {
-                    $scope.$parent.questionEnded = true;
                     $interval.cancel(promise);
-                    if (!$scope.$parent.isLecturer) {
+                    if (!$scope.$parent.isLecturer && !$scope.$parent.questionEnded) {
                         $scope.internalControl.answerToQuestion();
                     } else {
                         $scope.progressText.text("Time's up");
                     }
+                    $scope.$parent.questionEnded = true;
                 }
             };
 
