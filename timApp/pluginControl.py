@@ -18,7 +18,7 @@ from containerLink import get_plugin_needs_browser
 from documentmodel.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
 from timdb.timdbbase import TimDbException
-
+import utils
 
 LAZYSTART= "<!--lazy "
 LAZYEND = " lazy-->"
@@ -107,8 +107,8 @@ def parse_plugin_values(par, global_attrs=None):
                     return {'error': 'global_plugin_attrs should be a dict, not str'}
                 global_attrs = deepcopy(global_attrs)
                 final_values = global_attrs.get('all', {})
-                final_values.update(global_attrs.get(par.get_attrs()['plugin'], {}))
-                final_values.update(values)
+                utils.merge(final_values, global_attrs.get(par.get_attrs()['plugin'], {}))
+                utils.merge(final_values, values)
                 values = final_values
             return {"markup": values}
     except Exception as e:

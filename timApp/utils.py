@@ -28,3 +28,20 @@ def date_to_relative(d):
         return '1 hour ago'
     else:
         return '{} hours ago'.format(s//3600)
+
+
+def merge(a, b):
+    """Merges two dictionaries recursively. Stores the result in the first dictionary.
+    :param a: The first dictionary.
+    :param b: The second dictionary.
+    """
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge(a[key], b[key])
+            elif a[key] == b[key]:
+                pass
+            else:
+                a[key] = b[key]
+        else:
+            a[key] = b[key]
