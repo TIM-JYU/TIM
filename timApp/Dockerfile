@@ -79,7 +79,6 @@ run bower --allow-root install ng-file-upload#~3.0
 run bower --allow-root install jquery#~2.1
 run bower --allow-root install angular-sanitize#~1.3
 run bower --allow-root install bootstrap#~3.3
-run bower --allow-root install waypoints#~3.1
 run bower --allow-root install jquery-ui#~1.11
 run bower --allow-root install katex#~0.5
 run bower --allow-root install ng-table#~0.5
