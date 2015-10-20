@@ -1197,6 +1197,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             }
         }
 
+        /*
         $(document).on('visibilitychange', function () {
             if (document.visibilityState == 'hidden') {
                 console.log('hidden');
@@ -1220,6 +1221,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         });
 
         $(document).focus();
+        */
     }
 ])
 ;

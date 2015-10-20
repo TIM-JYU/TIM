@@ -6,70 +6,37 @@ from contracts import contract
 
 
 class TempInfoUserQuestion:
-    def __init__(self, db, cursor, table_name):
+    def __init__(self, db, table):
         self.db = db
-        self.cursor = cursor
-        self.table_name = table_name
+        self.table = table
 
     @contract
-    def add_user_info(self, lecture_id: "int", asked_id: "int", user_id: "int", commit: 'bool'=True):
+    def add_user_info(self, lecture_id: "int", asked_id: "int", user_id: "int"):
 
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            SELECT *
-            FROM {}
-            WHERE lecture_id = %s AND asked_id = %s AND user_id = %s
-        """.format(self.table_name), (lecture_id, asked_id, user_id))
-
-        exists = cursor.fetchall()
-
-        if not exists:
-            cursor.execute("""
-                INSERT INTO {} (lecture_id, asked_id, user_id)
-                VALUES (%s,%s,%s)
-            """.format(self.table_name), (lecture_id, asked_id, user_id))
-
-            if commit:
-                self.db.commit()
+        user_info = self.table(lecture_id, asked_id, user_id)
+        self.db.session.merge(user_info)
+        self.db.session.commit()
 
     @contract
-    def delete_user_info(self, lecture_id: "int", asked_id: "int", user_id: "int", commit: 'bool'=True):
-        self.cursor.execute("""
-            DELETE FROM {}
-            WHERE lecture_id = %s AND asked_id = %s AND user_id = %s
-        """.format(self.table_name), (lecture_id, asked_id, user_id))
+    def delete_user_info(self, lecture_id: "int", asked_id: "int", user_id: "int"):
 
-        if commit:
-            self.db.commit()
+        self.table.query.filter_by(lecture_id=lecture_id, asked_id=asked_id, user_id=user_id).delete()
+        self.db.session.commit()
 
     @contract
-    def delete_all_from_question(self, asked_id: "int", commit: 'bool'=True):
-        self.cursor.execute("""
-            DELETE FROM {}
-            WHERE asked_id = %s
-        """.format(self.table_name), [asked_id])
+    def delete_all_from_question(self, asked_id: "int"):
 
-        if commit:
-            self.db.commit()
+        self.table.query.filter_by(asked_id=asked_id).delete()
+        self.db.session.commit()
 
     @contract
-    def delete_all_from_lecture(self, lecture_id: "int", commit: 'bool'=True):
-        self.cursor.execute("""
-            DELETE FROM {}
-            WHERE lecture_id = %s
-        """.format(self.table_name), [lecture_id])
-
-        if commit:
-            self.db.commit()
+    def delete_all_from_lecture(self, lecture_id: "int"):
+        self.table.query.filter_by(lecture_id=lecture_id).delete()
+        self.db.session.commit()
 
     @contract
-    def has_user_info(self, asked_id: "int", user_id: "int", commit: "bool"=True):
-        self.cursor.execute("""
-            SELECT *
-            FROM {}
-            WHERE asked_id = %s AND user_id = %s
-        """.format(self.table_name), (asked_id, user_id))
+    def has_user_info(self, asked_id: "int", user_id: "int"):
 
-        questions = self.cursor.fetchall()
-        return len(questions) > 0
+        rows = self.table.query.filter_by(asked_id=asked_id, user_id=user_id)
+        rows = rows.all()
+        return len(rows) > 0

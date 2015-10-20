@@ -29,9 +29,11 @@ run apt-get install -y libpq-dev # Needed by PostGreSQL
 # Install postgresql 9.3, version 9.4 didn't install correctly
 run apt-get install -y postgresql-9.3
 
+run pip3 install SQLAlchemy
 run pip3 install flask
 run pip3 install flask-compress
 run pip3 install flask-cache
+run pip3 install Flask-SQLAlchemy
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
 run pip3 install hypothesis

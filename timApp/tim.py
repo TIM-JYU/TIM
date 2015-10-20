@@ -51,7 +51,6 @@ else:
     assert default_secret != app.config['SECRET_KEY']
 # Compress(app)
 
-
 cache.init_app(app)
 
 app.register_blueprint(settings_page)
@@ -488,9 +487,9 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
     tempdb = getTempDb()
     current_user = getCurrentUserId()
     question = tempdb.runningquestions.get_lectures_running_questions(lecture_id)
-    if len(question) > 0:
+    if question:
         question = question[0]
-        asked_id = question['asked_id']
+        asked_id = question.asked_id
         already_shown = tempdb.usersshown.has_user_info(asked_id, current_user)
         already_answered = tempdb.usersanswered.has_user_info(asked_id, current_user)
         if already_answered:
@@ -499,7 +498,7 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
             else:
                 return None
         if (not already_shown or force) or (asked_id != current_question_id):
-            ask_time = question['ask_time']
+            ask_time = question.ask_time
             question_json = timdb.questions.get_asked_question(asked_id)[0]["json"]
             answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
             tempdb.usersshown.add_user_info(lecture_id, asked_id, current_user)
@@ -783,8 +782,8 @@ def get_lecture_users(timdb, tempdb, lecture_id):
     activity = tempdb.useractivity.get_all_user_activity(lecture_id)
 
     for user in activity:
-        user_id = user['user_id']
-        active = user['active']
+        user_id = user.user_id
+        active = user.active
         if lecture[0].get("lecturer") == user_id:
             lecturer = {"name": timdb.users.getUser(user_id).get("name"),
                         "active": active}
@@ -1427,7 +1426,7 @@ def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_tim
             stopped = True
             question = tempdb.runningquestions.get_running_question_by_id(asked_id)
             if question:
-                end_time = extra_time * 1000 + question['end_time']
+                end_time = extra_time * 1000 + question.end_time
                 stopped = False
 
             if stopped:
@@ -1569,6 +1568,8 @@ def answer_to_question():
     if already_answered:
         return jsonResponse({"alreadyAnswered": "You have already answered to question. Your first answer is saved."})
 
+    tempdb.usersanswered.add_user_info(lecture_id, asked_id, current_user)
+
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer[0]["answer"]):
         time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f"))
         question_points = timdb.questions.get_asked_question(asked_id)[0].get("points")
@@ -1581,8 +1582,6 @@ def answer_to_question():
             timdb.lecture_answers.add_answer(current_user, asked_id, lecture_id, whole_answer, time_now,
                                              points)
         tempdb.newanswers.user_answered(lecture_id, asked_id, current_user)
-
-    tempdb.usersanswered.add_user_info(lecture_id, asked_id, current_user)
 
     return jsonResponse("")
 

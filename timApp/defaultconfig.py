@@ -20,3 +20,4 @@ UPLOAD_FOLDER      = "./media/images/"
 USERNAME           = 'admin'
 SECRET_FILE_PATH   = './tim_secret.py'
 PERMANENT_SESSION_LIFETIME = timedelta(days=14)
+SQLALCHEMY_DATABASE_URI = "postgresql://docker:docker@localhost/docker"
