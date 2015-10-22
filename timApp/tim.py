@@ -38,6 +38,7 @@ from containerLink import PluginException
 from routes.settings import settings_page
 from routes.common import *
 from documentmodel.randutils import hashfunc
+from models import db
 
 app = Flask(__name__)
 app.jinja_env.trim_blocks = True
@@ -419,7 +420,7 @@ def get_updates():
                 if not already_extended:
                     tempdb.usersextended.add_user_info(lecture_id, current_question_id, current_user)
                     # Return this is question has been extended
-                    resp['new_end_time'] = question['end_time']
+                    resp['new_end_time'] = question.end_time
                     return jsonResponse(resp)
             else:
                 # Return this if question has ended or user has answered to it
@@ -512,7 +513,7 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
     else:
         question_to_show_points = tempdb.showpoints.get_currently_shown_points(lecture_id)
         if question_to_show_points:
-            asked_id = question_to_show_points[0]['asked_id']
+            asked_id = question_to_show_points[0].asked_id
             already_shown = tempdb.pointsshown.has_user_info(asked_id, current_user)
             already_closed = tempdb.pointsclosed.has_user_info(asked_id, current_user)
             if already_closed:
@@ -1732,6 +1733,12 @@ def get_user_settings():
 @app.before_request
 def make_session_permanent():
     session.permanent = True
+
+
+@app.after_request
+def shutdown_session(response):
+    db.session.remove()
+    return response
 
 
 def start_app():

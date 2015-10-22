@@ -1,10 +1,6 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, Column, Integer, String, Date, Float, BigInteger, Text
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import QueuePool
-from sqlalchemy.ext.declarative import declarative_base
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
@@ -13,10 +9,9 @@ from timdb.temp_info_for_user import TempInfoUserQuestion
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@localhost/docker"
-app.config['SQLALCHEMY_POOL_SIZE'] = 20
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@localhost:50005/docker"
 db = SQLAlchemy(app)
-db.engine.pool._use_threadlocal = True
+db.engine.pool.use_threadlocal = True
 
 
 class Runningquestion(db.Model):
@@ -69,9 +64,9 @@ class Showpoints(db.Model):
     asked_id = Column(Integer, primary_key=True)
     lecture_id = Column(Integer, nullable=False)
 
-    def __init__(self, asked_id, lecture_id):
-        self.asked_id = asked_id
+    def __init__(self, lecture_id, asked_id):
         self.lecture_id = lecture_id
+        self.asked_id = asked_id
 
 
 class Newanswer(db.Model):

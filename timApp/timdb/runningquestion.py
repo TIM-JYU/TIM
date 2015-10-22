@@ -9,7 +9,7 @@ class RunningQuestions(TempDbBase):
     @contract
     def add_running_question(self, lecture_id: "int", asked_id: "int", ask_time: "int", end_time: "int"=None):
         running = self.table(asked_id, lecture_id, ask_time, end_time)
-        self.db.session.add(running)
+        self.db.session.merge(running)
         self.db.session.commit()
 
     @contract

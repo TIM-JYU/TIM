@@ -287,6 +287,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         }, 1);
 
                         var answer = {"askedId": id};
+                        $scope.current_question_id = id;
                         $scope.getLectureAnswers(answer);
                     }
                     $rootScope.$broadcast("setQuestionJson", {
@@ -360,6 +361,11 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.$on('closeQuestion', function () {
             $scope.current_question_id = false;
             $scope.showAnswerWindow = false;
+        });
+
+
+        $scope.$on('questionStopped', function() {
+            $scope.current_question_id = false;
         });
 
 
@@ -978,7 +984,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
                         // If 'new_end_time' is not undefined, extend or end question according to new_end_time
-                        if (typeof answer.new_end_time !== "undefined") {
+                        if (typeof answer.new_end_time !== "undefined" && !$scope.isLecturer) {
                             $rootScope.$broadcast('update_end_time', answer.new_end_time);
                         // If 'question' or 'result' is in answer, show question/explanation accordingly
                         } else if (typeof answer.points_closed !== "undefined") {

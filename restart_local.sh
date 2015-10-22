@@ -85,4 +85,8 @@ fi
 if param nginx ; then
   docker run -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx
 fi
+
+if param postgre; then
+  docker run -d --name postgre -p 50005:5432 -v /opt/tim/database/:/var/lib/postgresql/9.3/main postgre
+fi
 exit 0
