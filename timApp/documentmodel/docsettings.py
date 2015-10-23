@@ -1,5 +1,5 @@
 from contracts import new_contract
-from pluginControl import parse_plugin_values
+from utils import parse_plugin_values
 from documentmodel.docparagraph import DocParagraph
 
 
@@ -22,12 +22,12 @@ class DocSettings:
             if 'error' in yaml_vals:
                 return DocSettings()
             else:
-                return DocSettings(dict=yaml_vals['markup'])
+                return DocSettings(settings_dict=yaml_vals['markup'])
         else:
             return DocSettings()
 
-    def __init__(self, dict=None):
-        self.__dict = dict if dict else {}
+    def __init__(self, settings_dict=None):
+        self.__dict = settings_dict if settings_dict else {}
 
     def get_settings(self):
         return self.__dict

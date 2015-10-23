@@ -35,6 +35,9 @@ var timApp = angular.module('timApp', [
                         var match = re.exec(response.config.url);
                         var taskId = match[1];
                         $rootScope.$broadcast('answerSaved', {taskId: taskId});
+                        if (response.data.error) {
+                            $window.alert(response.data.error);
+                        }
                     }
                     return response;
                 }

@@ -34,7 +34,7 @@ from routes.slide import slide_page
 from routes.login import login_page
 from routes.logger import logger_bp
 from timdb.timdbbase import TimDbException
-from containerLink import PluginException
+from plugin import PluginException
 from routes.settings import settings_page
 from routes.common import *
 from documentmodel.randutils import hashfunc

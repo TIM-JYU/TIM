@@ -1,5 +1,7 @@
+import datetime
 import json
 from documentmodel.docparagraph import DocParagraph
+from plugin import date_format
 
 
 class DocParagraphEncoder(json.JSONEncoder):
@@ -10,3 +12,5 @@ class DocParagraphEncoder(json.JSONEncoder):
                     't': o.get_hash(),
                     'id': o.get_id(),
                     'attrs': o.get_attrs()}
+        if isinstance(o, datetime.datetime):
+            return o.strftime(date_format)

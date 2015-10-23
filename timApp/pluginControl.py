@@ -1,118 +1,23 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 from collections import OrderedDict
-from copy import deepcopy
 import json
-import re
-
-import yaml
-from yaml import CLoader
-import yaml.parser
-import yaml.scanner
 import time
 
-from containerLink import call_plugin_html, call_plugin_multihtml, PluginException, PLUGINS
+from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
+from plugin import PluginException
 from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from containerLink import get_plugin_needs_browser
 from documentmodel.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
 from timdb.timdbbase import TimDbException
-import utils
+from utils import parse_plugin_values
 
 LAZYSTART= "<!--lazy "
 LAZYEND = " lazy-->"
 NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
-
-
-def correct_yaml(text):
-    """
-      Inserts missing spaces after : Like  width:20 => width: 20
-      Also gives an other way to write multiline attributes, by starting
-      the multiline like: program: |!!  (!! could be any number and any non a-z,A-Z chars 
-      and ending it by !! in first column
-
-    :param text: text to convert proper yaml
-    :return: text that is proper yaml
-    :type text: str
-    """
-    lines = text.splitlines()
-    s = ""
-    p = re.compile("^[^ :]*:[^ ]")  # kissa:istuu
-    pm = re.compile("^[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
-    multiline = False
-    end_str = ''
-    for line in lines:
-        line = line.rstrip()
-        if p.match(line) and not multiline:
-            line = line.replace(':', ': ', 1)
-        if pm.match(line):
-            multiline = True
-            line, end_str = line.split("|", 1)
-            end_str = end_str.rstrip()
-            s = s + line + "|\n"
-            continue
-        if multiline:
-            if line == end_str:
-                multiline = False
-                continue
-            line = " " + line
-        s = s + line + "\n"
-    return s
-
-
-def parse_yaml(text):
-    """
-
-    :type text: str
-    :return:
-    """
-
-    if len(text) == 0:
-        return False
-    try:
-        text = correct_yaml(text)
-        values = yaml.load(text, Loader=CLoader)
-    except yaml.parser.ParserError as e:
-        return str(e)
-    except yaml.scanner.ScannerError as e:
-        return str(e)
-    try:
-        if type(values) is str:
-            return values
-        else:
-            return values
-    except KeyError:
-        return "Missing identifier"
-
-
-def parse_plugin_values(par, global_attrs=None):
-    """
-
-    :type par: DocParagraph
-    :return:
-    :rtype: dict
-    """
-    try:
-        # We get the yaml str by removing the first and last lines of the paragraph markup
-        par_md = par.get_markdown()
-        yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
-        values = parse_yaml(yaml_str)
-        if type(values) is str:
-            return {'error': "YAML is malformed: " + values}
-        else:
-            if global_attrs:
-                if type(global_attrs) is str:
-                    return {'error': 'global_plugin_attrs should be a dict, not str'}
-                global_attrs = deepcopy(global_attrs)
-                final_values = global_attrs.get('all', {})
-                utils.merge(final_values, global_attrs.get(par.get_attrs()['plugin'], {}))
-                utils.merge(final_values, values)
-                values = final_values
-            return {"markup": values}
-    except Exception as e:
-        return {'error': "Unknown error: " + str(e)}
 
 
 def get_error_html(plugin_name, message):
@@ -288,7 +193,7 @@ def pluginify(pars,
 
         if 'multihtml' in reqs and reqs['multihtml']:
             try:
-                response = call_plugin_multihtml(plugin_name, json.dumps([val for _, val in plugin_block_map.items()]))
+                response = call_plugin_multihtml(plugin_name, [val for _, val in plugin_block_map.items()])
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
