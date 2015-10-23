@@ -8,7 +8,7 @@ from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html
 from .randutils import *
 from timdb.timdbbase import TimDbException
-import containerLink
+
 
 class DocParagraphBase:
     pass
