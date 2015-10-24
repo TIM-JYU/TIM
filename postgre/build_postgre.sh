@@ -22,5 +22,5 @@ checkdir /opt/postgre/data $DATA_DIR
 cp ownership.sh /opt/postgre/conf/ownership.sh
 chmod a+x postgresql/conf/ownership.sh
 
-docker stop postgre_init
-docker rm postgre_init
+docker stop $CONTAINER_NAME
+docker rm $CONTAINER_NAME
