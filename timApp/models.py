@@ -6,10 +6,21 @@ from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
 from timdb.temp_info_for_user import TempInfoUserQuestion
+import os
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_tim"
+
+timname = None
+if "TIM_NAME" in os.environ:
+    timname = os.environ.get("TIM_NAME")
+else:
+    print("Missing TIM_NAME environment variable. Exiting..")
+    exit()
+
+
+app.config.from_envvar('TIM_NAME', silent=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
 db = SQLAlchemy(app)
 db.engine.pool.use_threadlocal = True
 
