@@ -71,6 +71,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             }
         })
             .success(function () {
+                $scope.$emit('questionStopped');
                 $scope.questionEnded = true;
                 $scope.dynamicAnswerSheetControl.endQuestion();
                 console.log("Question ", $scope.askedId, " stopped");
@@ -127,6 +128,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             }
         })
             .success(function () {
+                $scope.current_points_id = $scope.askedId;
                 $scope.result = true;
                 $scope.dynamicAnswerSheetControl.createAnswer();
             })

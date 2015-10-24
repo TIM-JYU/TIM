@@ -29,9 +29,11 @@ run apt-get install -y libpq-dev # Needed by PostGreSQL
 # Install postgresql 9.3, version 9.4 didn't install correctly
 run apt-get install -y postgresql-9.3
 
+run pip3 install SQLAlchemy
 run pip3 install flask
 run pip3 install flask-compress
 run pip3 install flask-cache
+run pip3 install Flask-SQLAlchemy
 run pip3 install beautifulsoup4
 run pip3 install pycontracts
 run pip3 install hypothesis
@@ -116,17 +118,6 @@ run sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/ss
 
 # Configure timezone and locale
 run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
-
-user postgres
-run /etc/init.d/postgresql start &&\
-  psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-  createdb -O docker docker
-
-user root
-
-run sed 's/.*local.*.*all.*all.*peer/local all all md5/' /etc/postgresql/9.3/main/pg_hba.conf > /etc/postgresql/9.3/main/pg_hba2.conf
-run rm /etc/postgresql/9.3/main/pg_hba.conf
-run mv /etc/postgresql/9.3/main/pg_hba2.conf /etc/postgresql/9.3/main/pg_hba.conf
 
 # Default startup command
 cmd cd /service/timApp && source initenv.sh && python3 launch.py

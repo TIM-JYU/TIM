@@ -1,8 +1,5 @@
-__author__ = 'juuso'
-
-
 class TempDbBase:
 
-    def __init__(self, db, cursor):
+    def __init__(self, db, table):
         self.db = db
-        self.cursor = cursor
+        self.table = table

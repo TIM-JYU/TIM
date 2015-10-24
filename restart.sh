@@ -36,6 +36,10 @@ fi
 if param timdev ; then
     docker stop timdev &
 fi
+
+if param postgre ; then
+    docker stop postgre &
+fi
 wait
 
 # Remove stopped containers
@@ -49,6 +53,10 @@ fi
 
 if param timdev ; then
     docker rm timdev &
+fi
+
+if param postgre ; then
+    docker rm postgre &
 fi
 wait
 
@@ -70,6 +78,15 @@ if param profile ; then
   TIM_SETTINGS='TIM_SETTINGS=/service/timApp/profileconfig.py'
   END_SHELL=''
   DAEMON_FLAG=''
+fi
+
+if param postgre ; then
+# Restart postgre container
+docker run -d --name postgre \
+    -v /opt/postgre/data:/var/lib/postgresql \
+    -v /opt/postgre/log:/var/log/postgresql \
+    -v /opt/postgre/conf:/etc/postgresql \
+    -t -i postgre /bin/bash -c '/etc/postgresql/ownership.sh && sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf ; /bin/bash'
 fi
 
 if param timdev ; then
