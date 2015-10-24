@@ -70,7 +70,7 @@ if param plugins ; then
 fi
 
 if param postgre ; then
-  docker run -d --name postgre -p 50005:5432 \
+  docker run -d --name postgre \
   -v /opt/postgre/data:/var/lib/postgresql \
   -v /opt/postgre/log:/var/log/postgresql \
   -v /opt/postgre/conf:/etc/postgresql \
