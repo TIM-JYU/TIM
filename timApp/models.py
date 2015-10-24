@@ -9,7 +9,7 @@ from timdb.temp_info_for_user import TempInfoUserQuestion
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@localhost:50005/docker"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_tim"
 db = SQLAlchemy(app)
 db.engine.pool.use_threadlocal = True
 
