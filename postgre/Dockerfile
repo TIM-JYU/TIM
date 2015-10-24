@@ -30,11 +30,9 @@ USER postgres
 #       allows the RUN command to span multiple lines.
 RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-    createdb -O docker docker &&\
-    createdb -O docker tempdb_tim &&\
-    createdb -O docker timdb_tim
+    createdb -O docker docker
 
-run sed -i 's/.*host.*.*all.*all.*127.*md5/host all all 0.0.0.0\/0 md5/' /etc/postgresql/9.3/main/pg_hba.conf > /etc/postgresql/9.3/main/pg_hba2.conf
+run sed -i 's/.*host.*.*all.*all.*127.*md5/host all all 0.0.0.0\/0 md5/' /etc/postgresql/9.3/main/pg_hba.conf
 
 # And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
 RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
@@ -45,4 +43,4 @@ EXPOSE 5432
 USER root
 
 # Set the default command to run when starting the container
-CMD /usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf
+CMD sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf
