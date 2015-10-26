@@ -21,27 +21,13 @@ run apt-get install -y libyaml-dev # C-parser for PyYAML
 run pip3 install flask
 run pip3 install flask-compress
 run pip3 install flask-cache
-run pip3 install beautifulsoup4
 run pip3 install pycontracts
 run pip3 install hypothesis
-run pip3 install gitpylib
 run pip3 install lxml
 run pip3 install pyaml
 run pip3 install ansi2html
 run pip3 install cssutils
 run pip3 install mmh3
-
-# Install pygit2 and dependencies
-run apt-get install -y wget
-run apt-get update
-run apt-get install -y cmake
-run wget https://github.com/libgit2/libgit2/archive/v0.23.1.tar.gz && tar xzf v0.23.1.tar.gz
-run cd libgit2-0.23.1/ && cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 . && make install
-
-run apt-get install -y libffi-dev
-env LD_LIBRARY_PATH /usr/local/lib
-run pip3 install cffi
-run pip3 install pygit2
 
 run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b5 eventlet tornado aiohttp
 
@@ -52,11 +38,6 @@ run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b5 event
 # After this, pip3 stops working because it depends
 # on older version of requests package.
 run pip3 install requests --upgrade
-
-# Remove pip. It's no longer needed, we get slightly smaller image and less programs
-# for a potential attacker to use.
-# UPDATE: Don't remove pip; it causes problems with running tests.
-# run apt-get -y --purge remove python3-pip
 
 # Set name and email for git.
 run git config --global user.email "agent@docker.com"
