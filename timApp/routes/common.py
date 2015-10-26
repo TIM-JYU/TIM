@@ -11,7 +11,6 @@ from timdb.docidentifier import DocIdentifier
 from werkzeug.exceptions import default_exceptions, HTTPException
 from flask import make_response, abort as flask_abort
 import time
-import models
 
 def getCurrentUserId():
     uid = session.get('user_id')
@@ -38,10 +37,6 @@ def getTimDb():
                         files_root_path=current_app.config['FILES_PATH'],
                         current_user_name=getCurrentUserName())
     return g.timdb
-
-
-def getTempDb():
-    return models.tempdb
 
 
 def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):

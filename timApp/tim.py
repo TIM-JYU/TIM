@@ -38,7 +38,8 @@ from containerLink import PluginException
 from routes.settings import settings_page
 from routes.common import *
 from documentmodel.randutils import hashfunc
-from models import db
+from flask.ext.sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
 app.jinja_env.trim_blocks = True
@@ -51,6 +52,21 @@ if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
 else:
     assert default_secret != app.config['SECRET_KEY']
 # Compress(app)
+
+timname = None
+if "TIM_NAME" in os.environ:
+    timname = os.environ.get("TIM_NAME")
+else:
+    print("Missing TIM_NAME environment variable. Exiting..")
+    exit()
+
+app.config.from_envvar('TIM_NAME', silent=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
+db = SQLAlchemy(app)
+
+# db.engine.pool.use_threadlocal = True # This may be needless
+
+import models
 
 cache.init_app(app)
 
@@ -1730,15 +1746,13 @@ def get_user_settings():
         return {}
 
 
+def getTempDb():
+    return models.tempdb
+
+
 @app.before_request
 def make_session_permanent():
     session.permanent = True
-
-
-@app.after_request
-def shutdown_session(response):
-    db.session.remove()
-    return response
 
 
 def start_app():

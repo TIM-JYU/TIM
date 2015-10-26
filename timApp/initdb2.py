@@ -8,6 +8,7 @@ from timdb.docidentifier import DocIdentifier
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import blocktypes
 from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME
+import models
 
 
 def create_user(timdb, name, real_name, email, password='', is_admin=False):
@@ -17,6 +18,10 @@ def create_user(timdb, name, real_name, email, password='', is_admin=False):
     if is_admin:
         timdb.users.addUserToAdmins(user_id)
     return user_id, user_group
+
+
+def initialize_temp_database():
+    models.initialize_temp_database()
 
 
 def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files', create_docs=True):
