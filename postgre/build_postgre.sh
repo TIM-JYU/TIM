@@ -1,7 +1,7 @@
 #!/bin/sh
 
-CONF_DIR=/etc/postgresql/
-DATA_DIR=/var/lib/postgresql/
+CONF_DIR=/etc/postgresql/9.3
+DATA_DIR=/var/lib/postgresql/9.3
 CONTAINER_NAME=postgre_init
 
 checkdir() {
