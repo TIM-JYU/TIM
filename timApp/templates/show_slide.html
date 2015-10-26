@@ -189,7 +189,7 @@
         });
     }
 
-    if (GetURLParameter('controls') === undefined && is_owner) pollTimeout = setTimeout(refresh, 250);
+    {# if (GetURLParameter('controls') === undefined && is_owner) pollTimeout = setTimeout(refresh, 250); #}
 
 
     function updateSlideStatus(h, v, f) {
@@ -206,12 +206,12 @@
                     /*
                     console.log('Viety palvelimelle: ');
                     console.log(data);*/
-                    pollTimeout = setTimeout(refresh, 250);
+                    // pollTimeout = setTimeout(refresh, 250);
                     receiving = true;
                 },
                 error: function() {
                     console.log('error');
-                    pollTimeout = setTimeout(refresh, 250);
+                    // pollTimeout = setTimeout(refresh, 250);
                     receiving = true;
                 }
             })
