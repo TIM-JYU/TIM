@@ -285,8 +285,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   (t=="sage" ? '<div class="outputSage no-popup-menu"></div>' :"")+ 
 
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
-				  (t === "comtest" || t === "tauno" || t === "parsons" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
-				  (t === "comtest" || t === "tauno" || t === "parsons" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
+				  (t === "comtest" || t === "tauno" || t === "parsons" || true ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
+				  (t === "comtest" || t === "tauno" || t === "parsons" || true ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
@@ -738,7 +738,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
             $scope.docLink = "Document";
 	        return;
 	    }
-        $scope.docLink ="Close document";
+        $scope.docLink ="Hide document";
 		var t = languageTypes.getRunType($scope.type,"cs");
 		$scope.doRunCode(t, false, {"document": true});
 	};
@@ -1196,11 +1196,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		var step = 0;
 		var nl = "";
 		var nls = "";
+        var needReplace = !!$scope.replace;
         var regexp = new RegExp($scope.replace);
 		for (var i in st) if ( st.hasOwnProperty(i) ) {
 			var s = st[i];
 			// if ( s.indexOf($scope.replace) >= 0 ) {
-            if ( regexp.test(s) ) {
+            if ( needReplace && regexp.test(s) ) {
 				r += nl + $scope.usercode;
 				if ( step === 0 ) { step++; nls = ""; continue; }
 			} else { 
