@@ -1,35 +1,16 @@
-from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy import Table, Column, Integer, String, Date, Float, BigInteger, Text
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
 from timdb.temp_info_for_user import TempInfoUserQuestion
-import os
-
-
-app = Flask(__name__)
-
-timname = None
-if "TIM_NAME" in os.environ:
-    timname = os.environ.get("TIM_NAME")
-else:
-    print("Missing TIM_NAME environment variable. Exiting..")
-    exit()
-
-
-app.config.from_envvar('TIM_NAME', silent=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
-db = SQLAlchemy(app)
-db.engine.pool.use_threadlocal = True
+from tim import db
 
 
 class Runningquestion(db.Model):
-    asked_id = Column(Integer, primary_key=True)
-    lecture_id = Column(Integer, primary_key=True)
-    ask_time = Column(BigInteger, nullable=False)
-    end_time = Column(BigInteger)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, primary_key=True)
+    ask_time = db.Column(db.BigInteger, nullable=False)
+    end_time = db.Column(db.BigInteger)
 
     def __init__(self, asked_id, lecture_id, ask_time, end_time=None):
         self.asked_id = asked_id
@@ -39,9 +20,9 @@ class Runningquestion(db.Model):
 
 
 class Usershown(db.Model):
-    lecture_id = Column(Integer, nullable=False)
-    asked_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, nullable=False)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
 
     def __init__(self, lecture_id, asked_id, user_id):
         self.asked_id = asked_id
@@ -50,9 +31,9 @@ class Usershown(db.Model):
 
 
 class Useranswered(db.Model):
-    lecture_id = Column(Integer, nullable=False)
-    asked_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, nullable=False)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
 
     def __init__(self, lecture_id, asked_id, user_id):
         self.asked_id = asked_id
@@ -61,9 +42,9 @@ class Useranswered(db.Model):
 
 
 class Userextended(db.Model):
-    lecture_id = Column(Integer, nullable=False)
-    asked_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, nullable=False)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
 
     def __init__(self, lecture_id, asked_id, user_id):
         self.asked_id = asked_id
@@ -72,8 +53,8 @@ class Userextended(db.Model):
 
 
 class Showpoints(db.Model):
-    asked_id = Column(Integer, primary_key=True)
-    lecture_id = Column(Integer, nullable=False)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, nullable=False)
 
     def __init__(self, lecture_id, asked_id):
         self.lecture_id = lecture_id
@@ -81,9 +62,9 @@ class Showpoints(db.Model):
 
 
 class Newanswer(db.Model):
-    lecture_id = Column(Integer, nullable=False)
-    asked_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, nullable=False)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
 
     def __init__(self, lecture_id, asked_id, user_id):
         self.lecture_id = lecture_id
@@ -92,9 +73,9 @@ class Newanswer(db.Model):
 
 
 class Useractivity(db.Model):
-    lecture_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
-    active = Column(Text)
+    lecture_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
+    active = db.Column(db.Text)
 
     def __init__(self, lecture_id, user_id, active):
         self.lecture_id = lecture_id
@@ -103,9 +84,9 @@ class Useractivity(db.Model):
 
 
 class Pointsshown(db.Model):
-    lecture_id = Column(Integer, nullable=False)
-    asked_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, nullable=False)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
 
     def __init__(self, lecture_id, asked_id, user_id):
         self.asked_id = asked_id
@@ -114,9 +95,9 @@ class Pointsshown(db.Model):
 
 
 class Pointsclosed(db.Model):
-    lecture_id = Column(Integer, nullable=False)
-    asked_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, nullable=False)
+    asked_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
 
     def __init__(self, lecture_id, asked_id, user_id):
         self.asked_id = asked_id

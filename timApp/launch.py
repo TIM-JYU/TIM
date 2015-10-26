@@ -8,7 +8,6 @@ import ephemeralclient
 import sys
 import subprocess
 from filemodehelper import change_permission_and_retry
-import models
 
 scripts_path = os.path.join('static', 'scripts')
 bower_path = os.path.join(scripts_path, 'bower_components')
@@ -49,7 +48,7 @@ if __name__ == '__main__':
             d = dumboclient.launch_dumbo()
             ephemeral_started = True
             dumbo_started = True
-        models.initialize_temp_database()
+        initdb2.initialize_temp_database()
         initdb2.initialize_database()
         initdb2.update_database()
         if len(sys.argv) <= 1:

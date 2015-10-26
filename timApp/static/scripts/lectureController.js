@@ -960,7 +960,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     }
                 })
                     .success(function (answer) {
-
+                        $scope.requestOnTheWay = false;
                         if (!answer.isLecture) {
                             $scope.showBasicView(answer);
                             return;
@@ -994,7 +994,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             $scope.showQuestion(answer);
                         }
 
-                        $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
                         if ($scope.polling) {
 
@@ -1155,6 +1154,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
 
         $scope.gotFocus = function () {
             if (typeof $scope.timeout !== 'undefined') $window.clearTimeout($scope.timeout);
+            if (typeof timeout !== 'undefined') $window.clearTimeout(timeout);
             $scope.polling = true;
             $scope.pollingStopped = false;
             $scope.$apply();
