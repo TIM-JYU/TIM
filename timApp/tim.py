@@ -1194,18 +1194,6 @@ def get_document(doc_id, doc_ver):
     return Document(doc_id=doc_id, modifier_group_id=getCurrentUserGroup())
 
 
-def get_paragraph(doc, par_id):
-    """
-
-    :type doc: Document
-    :type par_id: str
-    :rtype: DocParagraph
-    """
-    if not doc.has_paragraph(par_id):
-        return None
-    return DocParagraph.get_latest(doc_id=doc.doc_id, par_id=par_id)
-
-
 @app.route("/postNote", methods=['POST'])
 def post_note():
     jsondata = request.get_json()
@@ -1222,7 +1210,7 @@ def post_note():
     verifyCommentRight(doc_id)
     # verify_document_version(doc_id, doc_ver)
     doc = get_document(doc_id, doc_ver)
-    par = get_paragraph(doc, par_id)
+    par = doc.get_paragraph(par_id)
     if par is None:
         abort(400, 'Non-existent paragraph')
     timdb = getTimDb()
