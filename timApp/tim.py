@@ -470,6 +470,7 @@ def get_updates():
                  "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers, "students": students,
                  "lectureEnding": lecture_ending})
 
+        db.session.remove()
         # Myös tämä sleep kannattaa poistaa.
         time.sleep(1)
         step += 1
