@@ -71,7 +71,7 @@ def dereference_pars(pars, edit_window=False):
                 new_pars += par.get_referenced_pars(edit_window=edit_window)
             except TimDbException as e:
                 err_par = DocParagraph.create(
-                    par.doc_id,
+                    par.doc,
                     md=str(e),
                     html='<div class="pluginError">' + sanitize_html(str(e)) + '</div>')
 

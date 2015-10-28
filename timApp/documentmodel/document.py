@@ -67,8 +67,11 @@ class Document:
         return os.path.exists(os.path.join(froot, 'docs', str(doc_id)))
 
     @contract
-    def get_settings(self) -> 'DocSettings':
-        return DocSettings.from_paragraph(next(self.__iter__()))
+    def get_settings(self) -> 'DocSettings|None':
+        try:
+            return DocSettings.from_paragraph(next(self.__iter__()))
+        except StopIteration:
+            return None
 
     @contract
     def create(self, ignore_exists : 'bool' = False):
@@ -134,6 +137,11 @@ class Document:
         major = self.__get_largest_file_number(basedir, default=0)
         minor = 0 if major < 1 else self.__get_largest_file_number(os.path.join(basedir, str(major)), default=0)
         return major, minor
+
+    @contract
+    def get_id_version(self) -> 'tuple(int, int, int)':
+        major, minor = self.get_version()
+        return self.doc_id, major, minor
 
     @contract
     def get_document_path(self) -> 'str':
@@ -227,7 +235,7 @@ class Document:
 
     @contract
     def get_paragraph(self, par_id: 'str') -> 'DocParagraph':
-        return DocParagraph.get_latest(self.doc_id, par_id, self.files_root)
+        return DocParagraph.get_latest(self, par_id, self.files_root)
 
     @contract
     def add_paragraph(
@@ -245,7 +253,7 @@ class Document:
         :return: The new paragraph object.
         """
         p = DocParagraph.create(
-            doc_id=self.doc_id,
+            doc=self,
             par_id=par_id,
             md=text,
             attrs=attrs,
@@ -286,7 +294,7 @@ class Document:
                     if not line:
                         return
                     if line.startswith(par_id):
-                        p = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
+                        p = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
                         p.remove_link(self.doc_id)
                     else:
                         f.write(line)
@@ -308,7 +316,7 @@ class Document:
             return self.add_paragraph(text=text, par_id=par_id, attrs=attrs, properties=properties)
 
         p = DocParagraph.create(
-            doc_id=self.doc_id,
+            doc=self,
             par_id=par_id,
             md=text,
             attrs=attrs,
@@ -342,12 +350,12 @@ class Document:
         """
         if not self.has_paragraph(par_id):
             raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
-        p_src = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
+        p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
         p_src.remove_link(self.doc_id)
         old_hash = p_src.get_hash()
         p = DocParagraph.create(
             md=new_text,
-            doc_id=self.doc_id,
+            doc=self,
             par_id=par_id,
             attrs=new_attrs,
             props=new_properties,
@@ -405,7 +413,7 @@ class Document:
         :param text: The new text for the document.
         """
         new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
-        old_pars = [DocParagraph.from_dict(doc_id=self.doc_id, d=d)
+        old_pars = [DocParagraph.from_dict(doc=self, d=d)
                     for d in DocumentParser(original).add_missing_attributes().validate_structure().get_blocks()]
 
         self._perform_update(new_pars, old_pars)
@@ -569,10 +577,10 @@ class DocParagraphIter:
                     # Line contains both par_id and t
                     par_id, t = line.replace('\n', '').split('/')
                     # Make a copy of the paragraph to avoid modifying cached instance
-                    return DocParagraph.get(self.doc.doc_id, par_id, t, self.doc.files_root)
+                    return DocParagraph.get(self.doc, par_id, t, self.doc.files_root)
                 else:
                     # Line contains just par_id, use the latest t
-                    return DocParagraph.get_latest(self.doc.doc_id, line.replace('\n', ''), self.doc.files_root)
+                    return DocParagraph.get_latest(self.doc, line.replace('\n', ''), self.doc.files_root)
 
     def __close(self):
         if self.f:

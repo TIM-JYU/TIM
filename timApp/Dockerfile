@@ -30,6 +30,8 @@ run pip3 install cssutils
 run pip3 install mmh3
 
 run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b5 eventlet tornado aiohttp
+run pip3 install cachetools
+run pip3 install beautifulsoup4
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six

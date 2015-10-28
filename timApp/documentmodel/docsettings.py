@@ -6,6 +6,8 @@ from documentmodel.docparagraph import DocParagraph
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
     css_key = 'css'
+    macros_key = 'macros'
+    macro_delimiter_key = 'macro_delimiter'
 
     @classmethod
     def from_paragraph(cls, par):
@@ -38,6 +40,10 @@ class DocSettings:
     def css(self):
         return self.__dict.get(self.css_key)
 
+    def get_macros(self):
+        return self.__dict.get(self.macros_key)
 
+    def get_macro_delimiter(self):
+        return self.__dict.get(self.macro_delimiter_key)
 
 new_contract('DocSettings', DocSettings)

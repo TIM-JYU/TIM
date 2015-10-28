@@ -1,8 +1,9 @@
 from copy import deepcopy
-import functools
 import os
 
+from cachetools import cached, LRUCache
 from contracts import contract, new_contract
+
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html
@@ -22,16 +23,18 @@ class DocParagraph(DocParagraphBase):
     default_files_root = 'tim_files'
 
     @contract
-    def __init__(self, doc_id: 'int|None'=None, files_root: 'str|None'=None):
-        self.doc_id = doc_id
+    def __init__(self, doc, files_root: 'str|None'=None):
+        self.doc = doc
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
+        self.html = None
+        self.__htmldata = None
 
     @classmethod
     @contract
     def create(cls,
-               doc_id: 'int',
+               doc,
                par_id: 'str|None' = None,
                md: 'str' = '',
                html: 'str|None' = None,
@@ -39,51 +42,57 @@ class DocParagraph(DocParagraphBase):
                props: 'dict|None' = None,
                files_root: 'str|None' = None) -> 'DocParagraph':
 
-        par = DocParagraph(doc_id, files_root)
+        par = DocParagraph(doc, files_root)
+        par.html = html
         par.__data = {
             'id': random_id() if par_id is None else par_id,
             'md': md,
             't': hashfunc(md, attrs),
-            'html': html,
             'links': [],
             'attrs': {} if attrs is None else attrs,
             'props': {} if props is None else props
         }
-        par._mkhtmldata()
+        par._cache_props()
         return par
 
     @classmethod
     @contract
-    def from_dict(cls, doc_id: 'int', d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
-        par = DocParagraph(doc_id, files_root)
+    def from_dict(cls, doc, d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
+        par = DocParagraph(doc, files_root)
         par.__data = dict(d)
-        par._mkhtmldata()
+        par._cache_props()
         return par
 
     @classmethod
     @contract
-    def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+    def get_latest(cls, doc, par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         froot = cls.get_default_files_root() if files_root is None else files_root
         try:
-            t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
-            return cls.get(doc_id, par_id, t, files_root=froot)
+            t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
+            return cls.get(doc, par_id, t, files_root=froot)
         except FileNotFoundError as e:
-            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
 
     @classmethod
     @contract
-    def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+    def get(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         try:
-            return cls.__get(doc_id, par_id, t, files_root)
+            par = cls.__get(doc, par_id, t, files_root)
+
+            # Clear __htmldata and html attributes because we don't want them to be in __get's cache
+            par.html = None
+            return par
         except FileNotFoundError as e:
-            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
 
     @classmethod
-    @functools.lru_cache(maxsize=65536)
+    @cached(cache=LRUCache(maxsize=65536), key=lambda cls, doc, par_id, t, files_root: (doc.doc_id, par_id, t))
     @contract
-    def __get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
-        with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
-            return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
+    def __get(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+        """Loads a paragraph from file system based on given parameters.
+        """
+        with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
+            return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
 
     def __iter__(self):
         return self.__data.__iter__()
@@ -94,9 +103,9 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     @contract
-    def _get_path(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_path(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.join(froot, 'pars', str(doc_id), par_id, t)
+        return os.path.join(froot, 'pars', str(doc.doc_id), par_id, t)
 
     @classmethod
     @contract
@@ -109,16 +118,14 @@ class DocParagraph(DocParagraphBase):
         return self.__data
 
     def _mkhtmldata(self):
-        self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
-        self.__is_ref = self.is_par_reference() or self.is_area_reference()
-        self.__is_setting = 'settings' in self.get_attrs()
+        self._cache_props()
 
         if self.original:
             self.__htmldata = dict(self.original.__data)
             self.__htmldata['attrs_str'] = self.original.get_attrs_str()
             self.__htmldata['doc_id'] = self.original.doc_id
 
-            self.__htmldata['ref_doc_id'] = self.doc_id
+            self.__htmldata['ref_doc_id'] = self.doc.doc_id
             self.__htmldata['ref_id'] = self.__data['id']
             self.__htmldata['ref_t'] = self.__data['t']
             self.__htmldata['ref_attrs'] = self.__data['attrs']
@@ -126,20 +133,30 @@ class DocParagraph(DocParagraphBase):
         else:
             self.__htmldata = dict(self.__data)
             self.__htmldata['attrs_str'] = self.get_attrs_str()
-            self.__htmldata['doc_id'] = self.doc_id
+            self.__htmldata['doc_id'] = self.doc.doc_id
 
-        self.__htmldata['html'] = self.get_html()
+        try:
+            self.__htmldata['html'] = self.get_html()
+        except Exception as e:
+            self.__htmldata['html'] = '<div class="pluginError">{}</div>'.format(e)
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
-        self.__htmldata['is_plugin'] =  self.is_plugin()
+        self.__htmldata['is_plugin'] = self.is_plugin()
         self.__htmldata['needs_browser'] = True #self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
+
+    def _cache_props(self):
+        self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
+        self.__is_ref = self.is_par_reference() or self.is_area_reference()
+        self.__is_setting = 'settings' in self.get_attrs()
 
     @contract
     def html_dict(self) -> 'dict':
+        #if self.__htmldata is None:
+        self._mkhtmldata()
         return self.__htmldata
 
     @contract
     def get_doc_id(self) -> 'int':
-        return self.doc_id
+        return self.doc.doc_id
 
     @contract
     def get_id(self) -> 'str':
@@ -163,13 +180,16 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_html(self) -> 'str':
-        if self.__data.get('html'):
-            return self.__data['html']
-        if self.__is_setting:
-            self.__set_html('<p class="docsettings">&nbsp;</p>')
+        curr_html = self.html
+        if curr_html:
+            return curr_html
+        if self.is_setting():
+            new_html = '<p class="docsettings">&nbsp;</p>'
         else:
-            self.__set_html(md_to_html(self.get_markdown()))
-        return self.__data['html']
+            macros, delimiter = self.__get_macro_info(self.doc)
+            new_html = md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=delimiter)
+        self.__set_html(new_html)
+        return new_html
 
     @contract
     def get_ref_html(self, classname="parref", write_link=False, link_class="parlink", linked_paragraph=None) -> 'str':
@@ -202,18 +222,17 @@ class DocParagraph(DocParagraphBase):
         """.format(self.__get_html(), self.get_doc_id())
 
     def sanitize_html(self):
-        if self.html_sanitized or not self.__data['html']:
+        if self.html_sanitized or not self.html:
             return
-        new_html = sanitize_html(self.__data['html'])
-        self.__data['html'] = new_html
-        self.__htmldata['html'] = new_html
-        self.html_sanitized = True
+        new_html = sanitize_html(self.html)
+        self.__set_html(new_html, True)
 
     @contract
-    def __set_html(self, new_html: 'str'):
-        self.__data['html'] = new_html
-        self.__htmldata['html'] = new_html
-        self.html_sanitized = False
+    def __set_html(self, new_html: 'str', sanitized=False):
+        self.html = new_html
+        if self.__htmldata is not None:
+            self.__htmldata['html'] = new_html
+        self.html_sanitized = sanitized
 
     @contract
     def __set_trans_html(self, referencing_par: 'DocParagraph', show_original: 'bool',
@@ -294,14 +313,15 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_path(self) -> 'str':
-        return self._get_path(self.get_doc_id(), self.get_id(), self.get_hash(), files_root=self.files_root)
+        return self._get_path(self.doc, self.get_id(), self.get_hash(), files_root=self.files_root)
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
             return False
         with open(self.get_path(), 'r') as f:
             self.__data = json.loads(f.read())
-            self._mkhtmldata()
+            self._cache_props()
+            self.__htmldata = None
             return True
 
     def __write(self):
@@ -332,7 +352,7 @@ class DocParagraph(DocParagraphBase):
             f.write(json.dumps(self.__data))
 
     def set_latest(self):
-        linkpath = self._get_path(self.get_doc_id(), self.get_id(), 'current', files_root=self.files_root)
+        linkpath = self._get_path(self.doc, self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
         if os.path.islink(linkpath) or os.path.isfile(linkpath):
@@ -425,7 +445,8 @@ class DocParagraph(DocParagraphBase):
 
     def set_original(self, orig):
         self.original = orig
-        self._mkhtmldata()
+        self._cache_props()
+        self.__htmldata = None
 
     def get_original(self):
         return self.original
@@ -435,3 +456,13 @@ class DocParagraph(DocParagraphBase):
 
     def is_setting(self):
         return self.__is_setting
+
+    @classmethod
+    @cached(cache=LRUCache(maxsize=65536), key=lambda cls, doc: doc.get_id_version())
+    def __get_macro_info(cls, doc):
+        if doc is None:
+            return None, None
+        settings = doc.get_settings()
+        if settings is None:
+            return None, None
+        return settings.get_macros(), settings.get_macro_delimiter()
