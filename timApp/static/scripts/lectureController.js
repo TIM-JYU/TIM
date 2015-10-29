@@ -220,6 +220,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             // $scope.showLectureOptions = true;
                             $scope.lectureAnswer = answer;
                             $scope.showLectureView($scope.lectureAnswer);
+                            $scope.lectureSettings.useWall = true;
+                            $scope.lectureSettings.useQuestions = true;
                         }
                         return true;
                     }
