@@ -289,7 +289,7 @@ class DocumentTest(TimDbTest):
                               'macro_delimiter': '%%'}, d.get_settings().get_settings())
 
         self.assertEqual('<p>this is testvalue and year is 2015</p>', macro_par.get_html())
-
+        d = Document(d.doc_id)  # Make a new instance of the document to test cache invalidation
         d.modify_paragraph(settings_par.get_id(),
                            '```\n'
                            'macro_delimiter: "%%"\n'

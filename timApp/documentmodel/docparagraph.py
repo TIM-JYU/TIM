@@ -79,8 +79,13 @@ class DocParagraph(DocParagraphBase):
         try:
             par = cls.__get(doc, par_id, t, files_root)
 
-            # Clear __htmldata and html attributes because we don't want them to be in __get's cache
+            # Clear html attribute because we don't want it to be in __get's cache.
             par.html = None
+
+            # Update document reference because the document may have been modified; we don't want to use the
+            # old reference from cache.
+            par.doc = doc
+
             return par
         except FileNotFoundError as e:
             return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
@@ -187,9 +192,15 @@ class DocParagraph(DocParagraphBase):
             new_html = '<p class="docsettings">&nbsp;</p>'
         else:
             macros, delimiter = self.__get_macro_info(self.doc)
-            new_html = md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=delimiter)
+            new_html = self.__get_html_using_macros(macros, delimiter)
         self.__set_html(new_html)
         return new_html
+
+    @contract
+    @cached(cache=LRUCache(maxsize=65536),
+            key=lambda self, macros, delimiter: (self.doc.doc_id, self.get_id(), self.get_hash(), str(macros), delimiter))
+    def __get_html_using_macros(self, macros: 'dict(str,str)', macro_delimiter: 'str') -> 'str':
+        return md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=macro_delimiter)
 
     @contract
     def get_ref_html(self, classname="parref", write_link=False, link_class="parlink", linked_paragraph=None) -> 'str':
