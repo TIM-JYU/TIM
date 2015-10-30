@@ -123,7 +123,9 @@ def pluginify(pars,
         plugin_name = block.get_attr('plugin')
 
         if attr_taskId and plugin_name:
-            vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs())
+            vals = parse_plugin_values(block, global_attrs=settings.global_plugin_attrs(),
+                                       macros=settings.get_macros(),
+                                       macro_delimiter=settings.get_macro_delimiter())
             if 'error' in vals:
                 html_pars[idx]['html'] = get_error_html(plugin_name, vals['error'])
                 continue

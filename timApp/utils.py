@@ -4,6 +4,7 @@ from datetime import datetime
 import re
 import yaml
 from yaml import CLoader
+from markdownconverter import expand_macros
 
 
 def date_to_relative(d):
@@ -112,7 +113,10 @@ def parse_yaml(text):
         return "Missing identifier"
 
 
-def parse_plugin_values(par, global_attrs=None):
+def parse_plugin_values(par,
+                        global_attrs=None,
+                        macros=None,
+                        macro_delimiter=None):
     """
 
     :type par: DocParagraph
@@ -122,7 +126,9 @@ def parse_plugin_values(par, global_attrs=None):
     try:
         # We get the yaml str by removing the first and last lines of the paragraph markup
         par_md = par.get_markdown()
-        yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
+        yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
+                                 macros=macros,
+                                 macro_delimiter=macro_delimiter)
         values = parse_yaml(yaml_str)
         if type(values) is str:
             return {'error': "YAML is malformed: " + values}
