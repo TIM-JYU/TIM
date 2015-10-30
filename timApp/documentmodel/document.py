@@ -27,6 +27,7 @@ class Document:
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)
         self.files_root = self.get_default_files_root() if not files_root else files_root
         self.modifier_group_id = modifier_group_id
+        self.version = None
 
     @classmethod
     def get_default_files_root(cls):
@@ -133,9 +134,12 @@ class Document:
         Gets the latest version of the document as a major-minor tuple.
         :return: Latest version, or (-1, 0) if there isn't yet one.
         """
+        if self.version is not None:
+            return self.version
         basedir = os.path.join(self.files_root, 'docs', str(self.doc_id))
         major = self.__get_largest_file_number(basedir, default=0)
         minor = 0 if major < 1 else self.__get_largest_file_number(os.path.join(basedir, str(major)), default=0)
+        self.version = major, minor
         return major, minor
 
     @contract
@@ -204,6 +208,7 @@ class Document:
             with open(self.get_version_path(ver), 'w'):
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
+        self.version = ver
         return ver
 
     @contract
