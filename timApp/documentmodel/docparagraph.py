@@ -128,7 +128,7 @@ class DocParagraph(DocParagraphBase):
         if self.original:
             self.__htmldata = dict(self.original.__data)
             self.__htmldata['attrs_str'] = self.original.get_attrs_str()
-            self.__htmldata['doc_id'] = self.original.doc_id
+            self.__htmldata['doc_id'] = self.original.doc.doc_id
 
             self.__htmldata['ref_doc_id'] = self.doc.doc_id
             self.__htmldata['ref_id'] = self.__data['id']
