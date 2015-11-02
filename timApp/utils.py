@@ -144,3 +144,13 @@ def parse_plugin_values(par,
             return {"markup": values}
     except Exception as e:
         return {'error': "Unknown error: " + str(e)}
+
+
+def count_chars(md, char):
+    num_ticks = 0
+    for i, c in enumerate(md):
+        if c == char:
+            num_ticks = i + 1
+        else:
+            break
+    return num_ticks
