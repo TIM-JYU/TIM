@@ -2,6 +2,23 @@
 {% if rights.editable or rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
 {% endif %}
+
+{% if route == "view" and text|length == 0 and rights.editable %}
+    <div class="par"
+         id="null"
+         t=""
+         attrs="{}"
+         ng-non-bindable>
+
+        <div class="parContent">
+            <p>Click left side to edit. You can get help with editing from editor's Help tab.</p>
+            <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
+        </div>
+        {{ editline|safe }}
+    </div>
+{% endif %}
+
+
 {% for t in text %}
     <div class="{{ t.cls|trim}} {{ t.is_plugin|trim}}"
          id="{{ t.id }}"

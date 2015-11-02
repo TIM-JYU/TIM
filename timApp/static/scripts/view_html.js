@@ -225,9 +225,11 @@ timApp.controller("ViewCtrl", [
             var url;
             var par_id = sc.getParId($par);
             var par_next_id = sc.getParId($par.next());
+            if (par_next_id == "null")
+                par_next_id = null;
 
             // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-            if ($par.hasClass("new")) {
+            if (par_id == "null" || $par.hasClass("new")) {
                 url = '/newParagraph/';
             } else {
                 url = '/postParagraph/';
@@ -268,7 +270,7 @@ timApp.controller("ViewCtrl", [
                         {name: 'markread', desc: 'Mark as read'}
                     ]
                 },
-                "after-save": 'addSavedParAndDeleteHelp(saveData, extraData)',
+                "after-save": 'addSavedParToDom(saveData, extraData)',
                 "after-cancel": 'handleCancel(extraData)',
                 "after-delete": 'handleDelete(saveData, extraData)',
                 "preview-url": '/preview/' + sc.docId,
@@ -276,7 +278,8 @@ timApp.controller("ViewCtrl", [
             };
             if (options.showDelete) {
                 caption = 'Edit paragraph';
-                attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
+                if (par_id != "null")
+                    attrs["initial-text-url"] = '/getBlock/' + sc.docId + "/" + par_id;
             }
             sc.toggleEditor($par, options, attrs, caption);
         };
@@ -544,9 +547,8 @@ timApp.controller("ViewCtrl", [
             return $(".par[ref-id='" + ref +  "']");
         };
 
-        sc.addSavedParAndDeleteHelp = function (data, extraData) {
-            sc.addSavedParToDom(data, extraData);
-            sc.deleteHelpParagraph();
+        sc.removeDefaultPars = function () {
+            sc.getElementByParId("null").remove();
         };
 
         sc.addSavedParToDom = function (data, extraData) {
@@ -556,6 +558,7 @@ timApp.controller("ViewCtrl", [
             } else {
                 $par = sc.getElementByParId(extraData.par);
             }
+
             // check if we were editing an area
             if (angular.isDefined(extraData.area_start) &&
                 angular.isDefined(extraData.area_start) &&
@@ -574,12 +577,8 @@ timApp.controller("ViewCtrl", [
             http.defaults.headers.common.Version = data.version;
             sc.editing = false;
             sc.cancelArea();
+            sc.removeDefaultPars();
             sc.markPageDirty();
-        };
-
-        sc.deleteHelpParagraph = function() {
-            var $par = sc.getElementByParHash('LTB4NDU1YzYxMTI=');
-            $par.remove();
         };
 
         sc.isReference = function ($par) {
