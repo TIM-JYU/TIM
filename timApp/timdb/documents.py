@@ -75,6 +75,22 @@ class Documents(TimDbBase):
         return document
 
     @contract
+    def create_translation(self, original_doc: 'Document', name: 'str', owner_group_id: 'int') -> 'Document':
+        """Creates a translation document with the specified name.
+
+        :param original_doc: The original document to be translated.
+        :param name: The name of the document to be created.
+        :param owner_group_id: The id of the owner group.
+        :returns: The newly created document object.
+        """
+
+        if not original_doc.exists():
+            raise TimDbException('The document does not exist!')
+
+        doc = self.create(name, owner_group_id)
+        return doc
+
+    @contract
     def delete(self, document_id: 'int'):
         """Deletes the specified document.
         

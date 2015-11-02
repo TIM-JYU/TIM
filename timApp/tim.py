@@ -1121,6 +1121,19 @@ def create_document():
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
                        getCurrentUserGroup())
 
+@app.route("/translate/<docname>/<language>", methods=["GET"])
+def create_translation(docname, language):
+    #jsondata = request.get_json()
+    timdb = getTimDb()
+    src_doc_id = timdb.documents.get_document_id(docname)
+    if not hasViewAccess(src_doc_id):
+        abort(403)
+
+    src_doc = Document(src_doc_id)
+    new_name = docname + "-" + language
+    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group).doc_id
+    return create_item(new_name, 'document', factory, getCurrentUserGroup())
+
 
 @app.route("/createFolder", methods=["POST"])
 def create_folder():
