@@ -282,6 +282,16 @@ class Document:
         return p
 
     @contract
+    def add_ref_paragraph(self, src_par: 'DocParagraph', text: 'str|None' = None) -> 'DocParagraph':
+        ref_attrs = {
+            'r': 'tr' if text else '',
+            'rd': src_par.get_doc_id(),
+            'rp': src_par.get_id(),
+            'rt': src_par.get_hash()
+        }
+        return self.add_paragraph(text, attrs=ref_attrs)
+
+    @contract
     def delete_paragraph(self, par_id: 'str'):
         """
         Removes a paragraph from the document.

@@ -18,7 +18,7 @@ class DocSettings:
         :return: The DocSettings object.
         """
         if par.is_reference():
-            par = par.get_referenced_pars()[0]
+            par = par.get_referenced_pars(set_html=False)[0]
         if par.is_setting():
             yaml_vals = parse_plugin_values(par)
             if 'error' in yaml_vals:

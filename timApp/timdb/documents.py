@@ -88,6 +88,10 @@ class Documents(TimDbBase):
             raise TimDbException('The document does not exist!')
 
         doc = self.create(name, owner_group_id)
+
+        for par in original_doc:
+            doc.add_ref_paragraph(par, par.get_markdown())
+
         return doc
 
     @contract

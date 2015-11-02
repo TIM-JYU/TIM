@@ -65,11 +65,14 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     @contract
-    def get_latest(cls, doc, par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+    def get_latest(cls, doc, par_id: 'str', files_root: 'str|None' = None, cache: 'bool' = True) -> 'DocParagraph':
         froot = cls.get_default_files_root() if files_root is None else files_root
         try:
             t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
-            return cls.get(doc, par_id, t, files_root=froot)
+            if cache:
+                return cls.get(doc, par_id, t, files_root=froot)
+            else:
+                return cls.__get.__wrapped__(cls, doc, par_id, t, files_root=froot)
         except FileNotFoundError as e:
             return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
 
@@ -404,14 +407,15 @@ class DocParagraph(DocParagraphBase):
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, edit_window=False):
+    def get_referenced_pars(self, edit_window=False, set_html=True):
         def reference_par(ref_par, attrs, classname='parref', trclassname='partranslate', write_link=False):
             par = deepcopy(ref_par)
             par.set_attr('classes', (self.get_attr('classes') or []) + (ref_par.get_attr('classes') or []))
-            if 'r' in attrs and attrs['r'] == 'tr':
-                par.__set_trans_html(self, edit_window, classname, trclassname, write_link)
-            else:
-                par.__set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
+            if set_html:
+                if 'r' in attrs and attrs['r'] == 'tr':
+                    par.__set_trans_html(self, edit_window, classname, trclassname, write_link)
+                else:
+                    par.__set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
             par.set_original(self)
             return par
 
@@ -424,10 +428,12 @@ class DocParagraph(DocParagraphBase):
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
         if self.is_par_reference():
+            if self.get_doc_id() == int(attrs['rd']) and self.get_id() == attrs['rp']:
+                raise TimDbException('Paragraph is referencing itself!')
             if not ref_doc.has_paragraph(attrs['rp']):
                 raise TimDbException('The referenced paragraph does not exist.')
 
-            ref_par = ref_doc.get_paragraph(attrs['rp'])
+            ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root, cache=False)
             return [reference_par(ref_par, attrs, write_link=True)]
 
         elif self.is_area_reference():
@@ -438,8 +444,7 @@ class DocParagraph(DocParagraphBase):
             if n == 1:
                 return [reference_par(ref_pars[0], attrs, write_link=True)]
 
-            i = 0
-            for ref_par in ref_pars:
+            for i in range(0, len(ref_pars)):
                 if i == 0:
                     par = reference_par(ref_pars[i], attrs, classname="parref-begin", write_link=True)
                 elif i == n - 1:
@@ -448,7 +453,6 @@ class DocParagraph(DocParagraphBase):
                     par = reference_par(ref_pars[i], attrs, classname="parref-mid")
 
                 pars.append(par)
-                i += 1
 
             return pars
         else:
