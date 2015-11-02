@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-import requests
-from requests.exceptions import Timeout
 import json
 
+import requests
+from requests.exceptions import Timeout
 
-class PluginException(Exception):
-    """The exception that is thrown when an error occurs during a plugin call."""
-    pass
-
+from documentmodel.docparagraphencoder import DocParagraphEncoder
+from plugin import PluginException
 
 TIM_URL = ""
 
@@ -44,7 +42,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None):
 
 
 def call_plugin_html(plugin, info, state, task_id=None):
-    plugin_data = json.dumps({"markup": info, "state": state, "taskID": task_id})
+    plugin_data = json.dumps({"markup": info, "state": state, "taskID": task_id}, cls=DocParagraphEncoder)
     return call_plugin_generic(plugin,
                                'post',
                                'html',
@@ -56,7 +54,7 @@ def call_plugin_multihtml(plugin, plugin_data):
     return call_plugin_generic(plugin,
                                'post',
                                'multihtml',
-                               data=plugin_data,
+                               data=json.dumps(plugin_data, cls=DocParagraphEncoder),
                                headers={'Content-type': 'application/json'})
 
 
@@ -74,7 +72,7 @@ def call_plugin_answer(plugin, answer_data):
     return call_plugin_generic(plugin,
                                'put',
                                'answer',
-                               json.dumps(answer_data),
+                               json.dumps(answer_data, cls=DocParagraphEncoder),
                                headers={'Content-type': 'application/json'})
 
 

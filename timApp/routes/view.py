@@ -134,7 +134,9 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     if not hasViewAccess(doc_id):
         if not loggedIn():
             session['came_from'] = request.url
-            return render_template('loginpage.html', target_url=url_for('login_page.loginWithKorppi'), came_from=request.url)
+            return render_template('loginpage.html',
+                                   target_url=url_for('login_page.loginWithKorppi'),
+                                   came_from=request.url), 403
         else:
             abort(403)
 
@@ -186,9 +188,14 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
+
     doc = Document(doc_id)
+    doc_settings = doc.get_settings()
+    doc_css = doc_settings.css() if doc_settings else None
+
     # TODO: Check if doc variable is needed
     result = render_template(template_name,
+                             route="view",
                              docID=doc_id,
                              docName=doc_name,
                              text=texts,
@@ -200,7 +207,7 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
                              jsMods=modules,
                              custom_css_files=custom_css_files,
                              custom_css=custom_css,
-                             doc_css=doc.get_settings().css(),
+                             doc_css=doc_css,
                              start_index=start_index,
                              teacher_mode=teacher,
                              lecture_mode=lecture,

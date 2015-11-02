@@ -54,6 +54,7 @@ def logout():
     session.pop('real_name', None)
     session.pop('appcookie', None)
     session.pop('altlogin', None)
+    session.pop('came_from', None)
     session['user_name'] = 'Anonymous'
     return redirect(url_for('start_page'))
 

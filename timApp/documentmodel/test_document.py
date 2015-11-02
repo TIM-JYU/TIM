@@ -274,6 +274,33 @@ class DocumentTest(TimDbTest):
                                  new_ids[start_repl_index:start_repl_index + repl_length])
             self.assertEqual(length_diff, len(new_ids) - len(ids))
 
+    def test_macros(self):
+        d = Document()
+        d.create()
+        settings_par = d.add_paragraph('```\n'
+                                       'macro_delimiter: "%%"\n'
+                                       'macros:\n'
+                                       ' testmacro: testvalue\n'
+                                       ' year: "2015"\n'
+                                       '```', attrs={'settings': ''})
+        macro_par = d.add_paragraph('this is %%testmacro%% and year is %%year%%')
+        macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
+        self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
+                              'macro_delimiter': '%%'}, d.get_settings().get_settings())
+
+        self.assertEqual('<p>this is testvalue and year is 2015</p>', macro_par.get_html())
+        d = Document(d.doc_id)  # Make a new instance of the document to test cache invalidation
+        d.modify_paragraph(settings_par.get_id(),
+                           '```\n'
+                           'macro_delimiter: "%%"\n'
+                           'macros:\n'
+                           ' testmacro: anothervalue\n'
+                           ' year: "2016"\n'
+                           '```',
+                           new_attrs={'settings': ''})
+
+        macro_par = d.get_paragraph(macro_par.get_id())
+        self.assertEqual('<p>this is anothervalue and year is 2016</p>', macro_par.get_html())
 
 if __name__ == '__main__':
     unittest.main()

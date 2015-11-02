@@ -5,20 +5,23 @@
     <span ng-show="answers.length > 0 && !changed">
     <button ng-click="previous()">&larr;</button>
     <select ng-model="selectedAnswer"
-            ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers track by answer.id"
+            ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
             ng-change="changeAnswer()"></select>
     <button ng-click="next()">&rarr;</button>
-    {{ filteredAnswers.length - filteredAnswers.indexOf(selectedAnswer) }}/<a ng-click="setNewest()">{{ filteredAnswers.length }}</a>
+    {{ filteredAnswers.length - indexOfSelected() }}/<a ng-click="setNewest()">{{ filteredAnswers.length }}</a>
     <label ng-show="anyInvalid"><input type="checkbox" ng-model="onlyValid">Show valid only</label>
     <span ng-show="$parent.teacherMode" > | <a href="{{getLink()}}" ng-mousedown="getAllAnswers()" >All answers</a></span>
     <br> 
     <label ng-show="$parent.teacherMode">Points:<input ng-model="points" type="text"></label>
     <span ng-show="!$parent.teacherMode && points !== null">Points: {{ points }}</span>
-    <span ng-show="!selectedAnswer.valid">(invalid)</span>
+    <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
+    <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
     <label ng-show="$parent.teacherMode">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
     </label>
     </span>
+    <span ng-show="taskInfo.starttime"><br>Start time: {{ taskInfo.starttime }}</span>
+    <span ng-show="taskInfo.deadline"><br>Deadline: {{ taskInfo.deadline }}</span>
     <div ng-show="selectedAnswer.collaborators.length > 1 && !changed">
         Collaborators:
         <ul>
