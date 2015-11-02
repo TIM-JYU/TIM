@@ -54,19 +54,7 @@ class Documents(TimDbBase):
         content = self.trim_markdown(content)
         par = doc.insert_paragraph(content, prev_par_id, attrs, properties)
         self.update_last_modified(doc)
-        self.remove_help_paragraph(doc)
         return [par], doc
-
-    @contract
-    def remove_help_paragraph(self, doc: 'Document'):
-        i = 0
-        for par in doc:
-            if par.get_hash() == 'LTB4NDU1YzYxMTI=':
-                self.delete_paragraph(doc, par.get_id())
-                return
-            if i > 1:
-                return
-            i += 1
 
     @contract
     def create(self, name: 'str', owner_group_id: 'int') -> 'Document':
@@ -83,11 +71,28 @@ class Documents(TimDbBase):
         document_id = self.insertBlockToDb(name, owner_group_id, blocktypes.DOCUMENT)
         document = Document(document_id, modifier_group_id=owner_group_id)
         document.create()
-        document.add_paragraph("Click left side to edit. You can get help with editing from editor's Help tab."
-                               "\n\nEdit or delete this paragraph.")
-
         self.add_name(document_id, name)
         return document
+
+    @contract
+    def create_translation(self, original_doc: 'Document', name: 'str', owner_group_id: 'int') -> 'Document':
+        """Creates a translation document with the specified name.
+
+        :param original_doc: The original document to be translated.
+        :param name: The name of the document to be created.
+        :param owner_group_id: The id of the owner group.
+        :returns: The newly created document object.
+        """
+
+        if not original_doc.exists():
+            raise TimDbException('The document does not exist!')
+
+        doc = self.create(name, owner_group_id)
+
+        for par in original_doc:
+            doc.add_ref_paragraph(par, par.get_markdown())
+
+        return doc
 
     @contract
     def delete(self, document_id: 'int'):

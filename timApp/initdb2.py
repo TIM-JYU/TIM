@@ -3,6 +3,7 @@
 
 import os
 import mkfolders
+import sqlalchemy
 from timdb.docidentifier import DocIdentifier
 
 from timdb.timdb2 import TimDb
@@ -19,8 +20,27 @@ def create_user(timdb, name, real_name, email, password='', is_admin=False):
         timdb.users.addUserToAdmins(user_id)
     return user_id, user_group
 
+def postgre_create_database(db_name):
+    #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
+    engine = sqlalchemy.create_engine("postgresql://docker:docker@postgre:5432/postgres")
+    conn = engine.connect()
+    conn.execute("commit")
+    try:
+        conn.execute("create database " + db_name)
+    except sqlalchemy.exc.ProgrammingError as e:
+        if 'already exists' not in str(e):
+            raise e
+    conn.close()
 
 def initialize_temp_database():
+    timname = None
+    if "TIM_NAME" in os.environ:
+        timname = os.environ.get("TIM_NAME")
+    else:
+        print("Missing TIM_NAME environment variable. Exiting..")
+        exit()
+    
+    postgre_create_database('tempdb_' + timname)
     models.initialize_temp_database()
 
 
@@ -214,3 +234,4 @@ WHERE valid IS NULL)
 if __name__ == "__main__":
     initialize_database()
     initialize_temp_database()
+

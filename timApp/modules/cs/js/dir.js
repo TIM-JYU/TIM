@@ -275,7 +275,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
-				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">Document</a>&nbsp&nbsp</span>'+
+				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
@@ -285,8 +285,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   (t=="sage" ? '<div class="outputSage no-popup-menu"></div>' :"")+ 
 
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
-				  (t === "comtest" || t === "tauno" || t === "parsons" ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
-				  (t === "comtest" || t === "tauno" || t === "parsons" ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
+				  (t === "comtest" || t === "tauno" || t === "parsons" || true ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
+				  (t === "comtest" || t === "tauno" || t === "parsons" || true ? '<pre class="unitTestRed"    ng-if="runTestRed">{{comtestError}}</pre>' : "") +
 				  // '<p>{{resImage}}</p>'+
 				  // '<p>Testi valituksesta</p>' +
 				  '<pre class="csRunError" ng-if="runError">{{error}}</pre>'+
@@ -403,6 +403,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"editorModes","01");
             // csApp.set(scope,attrs,"program");
 
+            scope.docLink = "Document";
             scope.editorMode = parseInt(scope.editorMode);
             scope.editorText = [scope.normal,scope.highlight,scope.parsons,scope.jsparsons];
             scope.editorModeIndecies =[];
@@ -734,8 +735,10 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	$scope.runDocument = function() {
 	    if ( $scope.docURL ) {
 	        $scope.closeDocument();
+            $scope.docLink = "Document";
 	        return;
 	    }
+        $scope.docLink ="Hide document";
 		var t = languageTypes.getRunType($scope.type,"cs");
 		$scope.doRunCode(t, false, {"document": true});
 	};
@@ -1193,11 +1196,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		var step = 0;
 		var nl = "";
 		var nls = "";
+        var needReplace = !!$scope.replace;
         var regexp = new RegExp($scope.replace);
 		for (var i in st) if ( st.hasOwnProperty(i) ) {
 			var s = st[i];
 			// if ( s.indexOf($scope.replace) >= 0 ) {
-            if ( regexp.test(s) ) {
+            if ( needReplace && regexp.test(s) ) {
 				r += nl + $scope.usercode;
 				if ( step === 0 ) { step++; nls = ""; continue; }
 			} else { 

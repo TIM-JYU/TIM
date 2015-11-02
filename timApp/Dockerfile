@@ -58,6 +58,7 @@ run pip3 install cffi
 run pip3 install pygit2
 
 run pip3 install git+https://github.com/benoitc/gunicorn.git gevent==1.1b5 eventlet tornado aiohttp
+run pip3 install cachetools
 
 # Need to update the package "six"; otherwise there will be a strange error with Flask's reloader
 # run pip3 install -U six
@@ -88,11 +89,11 @@ expose 22
 run apt-get install -y npm
 run npm install -g bower
 run ln -s /usr/bin/nodejs /usr/bin/node
-run bower --allow-root install angular#~1.3
+run bower --allow-root install angular#~1.4
 run bower --allow-root install angular-ui-ace#36844ff7c0e0d9445bc8e31514d7f0f59cb8b048
 run bower --allow-root install ng-file-upload#~3.0
 run bower --allow-root install jquery#~2.1
-run bower --allow-root install angular-sanitize#~1.3
+run bower --allow-root install angular-sanitize#~1.4
 run bower --allow-root install bootstrap#~3.3
 run bower --allow-root install waypoints#~3.1
 run bower --allow-root install jquery-ui#~1.11

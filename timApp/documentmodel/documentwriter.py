@@ -72,7 +72,7 @@ class DocumentWriter:
                 attr_str += self.attrs_to_str(v)
             else:
                 attr_str += k + '="'
-                for char in v:
+                for char in str(v):
                     if char in ('"', '\\'):
                         attr_str += '\\'
                     attr_str += char

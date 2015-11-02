@@ -207,6 +207,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.showDialog("Wrong access code!");
                         return false;
                     } else {
+                        $scope.focusOn();
                         $scope.studentTable = [];
                         $scope.lecturerTable = [];
                         input.removeClass('errorBorder');
@@ -216,8 +217,11 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             $scope.lectureSettings.useWall = true;
                             $scope.lectureSettings.useQuestions = true;
                         } else {
-                            $scope.showLectureOptions = true;
+                            // $scope.showLectureOptions = true;
                             $scope.lectureAnswer = answer;
+                            $scope.showLectureView($scope.lectureAnswer);
+                            $scope.lectureSettings.useWall = true;
+                            $scope.lectureSettings.useQuestions = true;
                         }
                         return true;
                     }
@@ -990,8 +994,17 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         } else if (typeof answer.points_closed !== "undefined") {
                             $scope.current_points_id = false;
                             $rootScope.$broadcast('update_end_time', null);
-                        } else if ((answer.question || answer.result) && !$scope.isLecturer) {
-                            $scope.showQuestion(answer);
+                        } else if ((answer.question || answer.result)) {
+                            if ($scope.isLecturer) {
+                                if (answer.result) {
+                                    $scope.current_question_id = false;
+                                    $scope.current_points_id = answer.askedId;
+                                } else {
+                                    $scope.current_question_id = answer.askedId;
+                                }
+                            } else {
+                                $scope.showQuestion(answer);
+                            }
                         }
 
                         $window.clearTimeout(timeout);
@@ -1153,14 +1166,15 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         $scope.gotFocus = function () {
+            if (!$scope.lectureSettings.inLecture) return;
+            console.log('Got focus');
             if (typeof $scope.timeout !== 'undefined') $window.clearTimeout($scope.timeout);
             if (typeof timeout !== 'undefined') $window.clearTimeout(timeout);
             $scope.polling = true;
             $scope.pollingStopped = false;
             $scope.$apply();
             if (!$scope.requestOnTheWay) $scope.startLongPolling($scope.lastID);
-            console.log('Got focus');
-            angular.element($window).off('focus.gotfocus');
+            $scope.focusOff();
         };
 
         /*
@@ -1215,9 +1229,15 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             }
         });
 
-        angular.element($window).on('focus.gotfocus', function () {
-            $scope.gotFocus();
-        });
+        $scope.focusOn = function () {
+            angular.element($window).on('focus.gotfocus', function () {
+                $scope.gotFocus();
+            });
+        };
+
+        $scope.focusOff = function () {
+            angular.element($window).off('focus.gotfocus');
+        };
 
         angular.element($window).on('blur', function () {
             angular.element($window).on('focus.gotfocus', function () {
@@ -1225,7 +1245,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             });
         });
 
-        $(document).focus();
+        $scope.focusOn();
     }
 ])
 ;
