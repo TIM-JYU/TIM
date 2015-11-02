@@ -205,12 +205,16 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
                                                                       do_lazy=do_lazy,
                                                                       edit_window=edit_window,
                                                                       settings=doc.get_settings())
-    req_json = request.get_json()
+    #req_json = request.get_json()
 
-    if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
-        ref_doc_id = req_json.get('ref-doc-id')
-        ref_id = req_json.get('ref-id')
-        html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
+    #if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
+    #    ref_doc_id = req_json.get('ref-doc-id')
+    #    ref_id = req_json.get('ref-id')
+    #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
+
+    if edit_window:
+        # Skip readings and notes
+        return html_pars, js_paths, css_paths, modules
 
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)

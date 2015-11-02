@@ -243,6 +243,28 @@ class Document:
         return DocParagraph.get_latest(self, par_id, self.files_root)
 
     @contract
+    def add_paragraph_obj(self, p: 'DocParagraph') -> 'DocParagraph':
+        """
+        Appends a new paragraph into the document.
+        :param p: Paragraph to be added.
+        :return: The same paragraph object, or None if could not add.
+        """
+        p.get_html()
+        p.add_link(self.doc_id)
+        p.set_latest()
+        old_ver = self.get_version()
+        new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
+        old_path = self.get_version_path(old_ver)
+        new_path = self.get_version_path(new_ver)
+        if os.path.exists(old_path):
+            shutil.copyfile(old_path, new_path)
+
+        with open(new_path, 'a') as f:
+            f.write(p.get_id() + '/' + p.get_hash())
+            f.write('\n')
+        return p
+
+    @contract
     def add_paragraph(
             self,
             text: 'str',
@@ -265,30 +287,20 @@ class Document:
             props=properties,
             files_root=self.files_root
         )
-
-        p.get_html()
-        p.add_link(self.doc_id)
-        p.set_latest()
-        old_ver = self.get_version()
-        new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
-        old_path = self.get_version_path(old_ver)
-        new_path = self.get_version_path(new_ver)
-        if os.path.exists(old_path):
-            shutil.copyfile(old_path, new_path)
-
-        with open(new_path, 'a') as f:
-            f.write(p.get_id() + '/' + p.get_hash())
-            f.write('\n')
-        return p
+        return self.add_paragraph_obj(p)
 
     @contract
     def add_ref_paragraph(self, src_par: 'DocParagraph', text: 'str|None' = None) -> 'DocParagraph':
         ref_attrs = {
-            'r': 'tr' if text else '',
-            'rd': src_par.get_doc_id(),
             'rp': src_par.get_id(),
             'rt': src_par.get_hash()
         }
+        rd = src_par.get_doc_id()
+        if self.get_settings().get_source_document() != rd:
+            ref_attrs['rd'] = rd,
+        if text:
+            ref_attrs['r'] = 'tr'
+
         return self.add_paragraph(text, attrs=ref_attrs)
 
     @contract
@@ -535,7 +547,7 @@ class Document:
         for par in old_pars:
             self.delete_paragraph(par)
 
-    def get_named_section(self, section_name):
+    def get_named_section(self, section_name, cache=True):
         start_found = False
         end_found = False
         pars = []
@@ -543,7 +555,11 @@ class Document:
             if par.get_attr('area') == section_name:
                 start_found = True
             if start_found:
-                pars.append(par)
+                if cache:
+                    pars.append(par)
+                else:
+                    pars.append(DocParagraph.get_latest(
+                        self, par.get_id(), cache=False, files_root=self.files_root))
             if par.get_attr('area_end') == section_name:
                 end_found = True
                 break
@@ -556,7 +572,11 @@ class Document:
         refs = set()
         for par in self:
             if par.is_reference():
-                refs.add(int(par.get_attr('rd')))
+                try:
+                    refs.add(int(par.get_rd()))
+                except (ValueError, TypeError):
+                    print('Invalid document reference: ' + str(par.get_rd()))
+
 
         return refs
 
