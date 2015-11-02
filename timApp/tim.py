@@ -1137,7 +1137,7 @@ def create_document():
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
                        getCurrentUserGroup())
 
-@app.route("/translate/<docname>/<language>", methods=["GET"])
+@app.route("/translate/<path:docname>/<language>", methods=["GET"])
 def create_translation(docname, language):
     #jsondata = request.get_json()
     timdb = getTimDb()
