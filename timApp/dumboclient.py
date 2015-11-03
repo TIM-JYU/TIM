@@ -2,6 +2,7 @@
 import json
 import os
 import subprocess
+from subprocess import DEVNULL, STDOUT
 import requests
 import time
 
@@ -23,7 +24,7 @@ def launch_dumbo():
 
     old = os.getcwd()
     os.chdir(path)
-    p = subprocess.Popen([os.path.join(".", "Dumbo"), "-p", "8000"])
+    p = subprocess.Popen([os.path.join(".", "Dumbo"), "-p", "8000"], stdout=DEVNULL, stderr=STDOUT)
     os.chdir(old)
     time.sleep(0.1)
     return p
