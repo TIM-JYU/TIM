@@ -84,6 +84,7 @@ class TimTest(TimDbTest):
                             self.json_put(a, '/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
         self.assertResponse('Success',
                             self.json_put(a, '/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
+        Document(doc_id).add_paragraph('Hello')
         pars = Document(doc_id).get_paragraphs()
         self.assertEqual(1, len(pars))
         first_id = pars[0].get_id()

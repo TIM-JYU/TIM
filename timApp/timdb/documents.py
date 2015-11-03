@@ -14,6 +14,7 @@ from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 from timdb.docidentifier import DocIdentifier
 from ephemeralclient import EphemeralException, EphemeralClient, EPHEMERAL_URL
 from documentmodel.document import Document
+from documentmodel.docsettings import DocSettings
 
 
 class Documents(TimDbBase):
@@ -89,8 +90,16 @@ class Documents(TimDbBase):
 
         doc = self.create(name, owner_group_id)
 
+        settings = DocSettings()
+        settings.set_source_document(original_doc.doc_id)
+        doc.add_paragraph_obj(settings.to_paragraph(doc))
+
         for par in original_doc:
-            doc.add_ref_paragraph(par, par.get_markdown())
+            ref_attrs = {'r': 'tr', 'rp': par.get_id()}
+            #ref_par = DocParagraph.create(doc, md = par.get_markdown(), attrs=ref_attrs)
+            doc.add_paragraph(par.get_markdown(), attrs=ref_attrs)
+            #doc.add_paragraph_obj(ref_par)
+            #doc.add_ref_paragraph(par, par.get_markdown())
 
         return doc
 

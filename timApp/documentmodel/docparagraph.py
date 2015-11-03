@@ -171,6 +171,17 @@ class DocParagraph(DocParagraphBase):
         return self.__data['id']
 
     @contract
+    def get_rd(self) -> 'str|None':
+        if 'rd' in self.__data['attrs']:
+            return self.get_attr('rd')
+
+        default_rd = self.doc.get_settings().get_source_document()
+        if default_rd is not None:
+            return  default_rd
+
+        return None
+
+    @contract
     def is_different_from(self, par) -> 'bool':
         return self.get_hash() != par.get_hash() or self.get_attrs() != par.get_attrs()
 
@@ -283,8 +294,8 @@ class DocParagraph(DocParagraphBase):
 
         if attr_name == 'taskId':
             self.__is_plugin = bool(attr_val)
-        elif attr_name == 'rd':
-            self.__is_ref = bool(attr_val)
+        elif attr_name == 'rp' or attr_name == 'ra':
+            self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
     @contract
     def get_attrs(self) -> 'dict':
@@ -399,10 +410,10 @@ class DocParagraph(DocParagraphBase):
         return self.__is_ref
 
     def is_par_reference(self):
-        return self.get_attr('rd') is not None and self.get_attr('rp') is not None
+        return self.get_attr('rp') is not None
 
     def is_area_reference(self):
-        return self.get_attr('rd') is not None and self.get_attr('ra') is not None
+        return self.get_attr('ra') is not None
 
     def __repr__(self):
         return self.__data.__repr__()
@@ -411,24 +422,33 @@ class DocParagraph(DocParagraphBase):
         def reference_par(ref_par, attrs, classname='parref', trclassname='partranslate', write_link=False):
             par = deepcopy(ref_par)
             par.set_attr('classes', (self.get_attr('classes') or []) + (ref_par.get_attr('classes') or []))
+            par.set_original(self)
             if set_html:
                 if 'r' in attrs and attrs['r'] == 'tr':
                     par.__set_trans_html(self, edit_window, classname, trclassname, write_link)
                 else:
                     par.__set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
-            par.set_original(self)
             return par
 
         attrs = self.get_attrs()
+        if 'rd' in attrs:
+            ref_docid = attrs['rd']
+        else:
+            settings = self.doc.get_settings()
+            default_rd = settings.get_source_document()
+            if default_rd is None:
+                raise TimDbException('Source document for reference not specified.')
+            ref_docid = default_rd
+
         from documentmodel.document import Document  # Document import needs to be here to avoid circular import
         try:
-            ref_doc = Document(int(attrs['rd']))
+            ref_doc = Document(int(ref_docid))
         except ValueError as e:
             raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
         if self.is_par_reference():
-            if self.get_doc_id() == int(attrs['rd']) and self.get_id() == attrs['rp']:
+            if self.get_doc_id() == int(ref_docid) and self.get_id() == attrs['rp']:
                 raise TimDbException('Paragraph is referencing itself!')
             if not ref_doc.has_paragraph(attrs['rp']):
                 raise TimDbException('The referenced paragraph does not exist.')
@@ -437,7 +457,7 @@ class DocParagraph(DocParagraphBase):
             return [reference_par(ref_par, attrs, write_link=True)]
 
         elif self.is_area_reference():
-            ref_pars = ref_doc.get_named_section(attrs['ra'])
+            ref_pars = ref_doc.get_named_section(attrs['ra'], cache=False)
             pars = []
             n = len(ref_pars)
 

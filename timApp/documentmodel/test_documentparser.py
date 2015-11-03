@@ -187,6 +187,8 @@ test
         # ignore 'type' because some of them are now 'atom'
         self.assertListEqual([{'md': p['md'], 'attrs': p['attrs']} for p in expected],
                              [{'md': p['md'], 'attrs': p['attrs']} for p in DocumentParser(exported).get_blocks()])
+        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```\nasd'}], DocumentParser('```\nasd').get_blocks())
+        self.assertListEqual([{'attrs': {}, 'type': 'code', 'md': '```'}], DocumentParser('```').get_blocks())
 
     def test_validation(self):
         failures = [
@@ -221,6 +223,10 @@ test
 # """,
 """
 #- {id=someinvalid}
+""",
+"""
+```
+``` {a=b}
 """]
 
         oks = [
@@ -237,6 +243,9 @@ test
 #- {area=test3 .some}
 #- {area_end=test3}
 #- {area_end=test}
+""",
+"""```
+``{a=b}
 """]
         for f in failures:
             with self.assertRaises(ValidationException, msg=f):
