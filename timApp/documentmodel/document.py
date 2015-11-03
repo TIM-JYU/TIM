@@ -70,9 +70,12 @@ class Document:
     @contract
     def get_settings(self) -> 'DocSettings|None':
         try:
-            return DocSettings.from_paragraph(next(self.__iter__()))
+            i = self.__iter__()
+            return DocSettings.from_paragraph(next(i))
         except StopIteration:
             return None
+        finally:
+            i.close()
 
     @contract
     def create(self, ignore_exists : 'bool' = False):
@@ -605,7 +608,7 @@ class DocParagraphIter:
         while True:
             line = self.f.readline()
             if not line:
-                self.__close()
+                self.close()
                 raise StopIteration
             if line != '\n':
                 if len(line) > 14:
@@ -617,7 +620,7 @@ class DocParagraphIter:
                     # Line contains just par_id, use the latest t
                     return DocParagraph.get_latest(self.doc, line.replace('\n', ''), self.doc.files_root)
 
-    def __close(self):
+    def close(self):
         if self.f:
             self.f.close()
             self.f = None
