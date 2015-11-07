@@ -63,7 +63,7 @@ class DocSettings:
         return self.__dict.get(self.css_key)
 
     def get_macros(self):
-        return self.__dict.get(self.macros_key)
+        return self.__dict.get(self.macros_key, {})
 
     def get_macro_delimiter(self):
         return self.__dict.get(self.macro_delimiter_key, '%%')
