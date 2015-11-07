@@ -35,7 +35,7 @@ run pip3 install flask-compress
 run pip3 install flask-cache
 run pip3 install Flask-SQLAlchemy
 run pip3 install beautifulsoup4
-run pip3 install pycontracts
+run pip3 install pycontracts==1.7.6 # latest version doesn't install on python3
 run pip3 install hypothesis
 run pip3 install gitpylib
 run pip3 install lxml
