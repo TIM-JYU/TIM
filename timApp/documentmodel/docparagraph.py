@@ -203,7 +203,12 @@ class DocParagraph(DocParagraphBase):
         if curr_html:
             return curr_html
         if self.is_setting():
-            new_html = '<p class="docsettings">&nbsp;</p>'
+            from documentmodel.docsettings import DocSettings
+
+            if DocSettings.is_valid_paragraph(self):
+                new_html = '<p class="docsettings">&nbsp;</p>'
+            else:
+                new_html = '<div class="pluginError">Invalid settings paragraph detected</div>'
         else:
             macros, delimiter = self.__get_macro_info(self.doc)
             new_html = self.__get_html_using_macros(macros, delimiter)

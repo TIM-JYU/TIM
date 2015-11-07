@@ -1,6 +1,7 @@
 from contracts import contract, new_contract
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
+from markdownconverter import expand_macros
 
 
 class DocSettings:
@@ -9,6 +10,16 @@ class DocSettings:
     macros_key = 'macros'
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = "source_document"
+
+    @classmethod
+    def is_valid_paragraph(cls, par):
+        if par.is_reference():
+            par = par.get_referenced_pars(set_html=False)[0]
+        if not par.is_setting():
+            return True
+
+        md = par.get_markdown().replace('```', '').replace('~~~', '')
+        return parse_yaml(md).__class__ != str
 
     @classmethod
     def from_paragraph(cls, par):
@@ -21,16 +32,19 @@ class DocSettings:
         if par.is_reference():
             par = par.get_referenced_pars(set_html=False)[0]
         if par.is_setting():
-            yaml_vals = parse_yaml(par.get_markdown())
-            if yaml_vals is str:
-                print("DocSettings yaml parse error: " + yaml_vals)
+            md = par.get_markdown().replace('```', '').replace('~~~', '')
+            yaml_vals = parse_yaml(md)
+            if yaml_vals.__class__ == str:
+                #raise ValueError("DocSettings yaml parse error: " + yaml_vals)
+                #print("DocSettings yaml parse error: " + yaml_vals)
                 return DocSettings()
             else:
                 return DocSettings(settings_dict=yaml_vals)
         else:
             return DocSettings()
 
-    def __init__(self, settings_dict=None):
+    @contract
+    def __init__(self, settings_dict: 'dict|None' = None):
         self.__dict = settings_dict if settings_dict else {}
 
     @contract
@@ -52,7 +66,7 @@ class DocSettings:
         return self.__dict.get(self.macros_key)
 
     def get_macro_delimiter(self):
-        return self.__dict.get(self.macro_delimiter_key)
+        return self.__dict.get(self.macro_delimiter_key, '%%')
 
     @contract
     def get_source_document(self) -> 'int|None':
