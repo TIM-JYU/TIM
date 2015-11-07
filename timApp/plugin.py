@@ -25,6 +25,8 @@ class Plugin:
                                                 macros=doc.get_settings().get_macros(),
                                                 macro_delimiter=doc.get_settings().get_macro_delimiter())
         if 'error' in plugin_data:
+            if type(plugin_data) is str:
+                raise PluginException(plugin_data + ' Task id: ' + task_id_name)
             raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
         p = Plugin(task_id, plugin_data['markup'], par.get_attrs()['plugin'])
         return p

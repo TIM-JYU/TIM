@@ -72,7 +72,7 @@ def slide_document(doc_name):
 
 
 @contract
-def parse_range(start_index: 'int|None', end_index: 'int|None') -> 'range|None':
+def parse_range(start_index: 'int|str|None', end_index: 'int|str|None') -> 'range|None':
     if start_index is None and end_index is None:
         return None
     return( int(start_index), int(end_index) )

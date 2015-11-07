@@ -7,8 +7,12 @@ from htmlSanitize import sanitize_html
 from jinja2 import Environment
 
 
+def has_macros(text, macros, macro_delimiter=None):
+    return macro_delimiter is not None and len(macros) > 0 and macro_delimiter in text
+
+
 def expand_macros_regex(text, macros, macro_delimiter=None):
-    if macro_delimiter is None:
+    if not has_macros(text, macros, macro_delimiter):
         return text
     return re.sub('{0}([a-zA-Z]+){0}'.format(re.escape(macro_delimiter)),
                   lambda match: macros.get(match.group(1), 'UNKNOWN MACRO: ' + match.group(1)),
@@ -16,7 +20,7 @@ def expand_macros_regex(text, macros, macro_delimiter=None):
 
 
 def expand_macros_jinja2(text, macros, macro_delimiter=None):
-    if macro_delimiter is None:
+    if not has_macros(text, macros, macro_delimiter):
         return text
     env = Environment(variable_start_string=macro_delimiter,
                       variable_end_string=macro_delimiter,
@@ -30,7 +34,7 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None):
 
 
 expand_macros = expand_macros_jinja2
-
+#expand_macros = expand_macros_regex
 
 @contract
 def md_to_html(text: str, sanitize: bool=True, macros: 'dict(str:str)|None'=None, macro_delimiter=None) -> str:
