@@ -8,7 +8,7 @@ from jinja2 import Environment
 
 
 def has_macros(text, macros, macro_delimiter=None):
-    return macro_delimiter is not None and len(macros) > 0 # and macro_delimiter in text
+    return macro_delimiter is not None and len(macros) > 0 and macro_delimiter in text
 
 
 def expand_macros_regex(text, macros, macro_delimiter=None):
@@ -68,10 +68,13 @@ def md_list_to_html_list(texts: 'list(str)',
     :type texts: list[str]
     :param texts: The list of markdown texts to be converted.
     """
-
-    texts = [expand_macros(text, macros, macro_delimiter) for text in texts]
-
     from time import time
+
+    t0 = time()
+    texts = [expand_macros(text, macros, macro_delimiter) for text in texts]
+    t1 = time()
+    print("expand_macros for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
+
     t0 = time()
     raw = call_dumbo(texts)
     t1 = time()
