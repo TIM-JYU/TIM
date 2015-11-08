@@ -8,7 +8,7 @@ from jinja2 import Environment
 
 
 def has_macros(text, macros, macro_delimiter=None):
-    return macro_delimiter is not None and len(macros) > 0 and macro_delimiter in text
+    return macro_delimiter is not None and len(macros) > 0 # and macro_delimiter in text
 
 
 def expand_macros_regex(text, macros, macro_delimiter=None):
@@ -49,6 +49,7 @@ def md_to_html(text: str, sanitize: bool=True, macros: 'dict(str:str)|None'=None
     text = expand_macros(text, macros, macro_delimiter)
 
     raw = call_dumbo([text])
+
     if sanitize:
         return sanitize_html(raw[0])
     else:
@@ -70,7 +71,12 @@ def md_list_to_html_list(texts: 'list(str)',
 
     texts = [expand_macros(text, macros, macro_delimiter) for text in texts]
 
+    from time import time
+    t0 = time()
     raw = call_dumbo(texts)
+    t1 = time()
+    print("Dumbo call for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
+
     if sanitize:
         return [sanitize_html(p) for p in raw]
     else:

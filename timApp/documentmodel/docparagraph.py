@@ -6,7 +6,7 @@ from contracts import contract, new_contract
 
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html
+from markdownconverter import md_to_html, md_list_to_html_list
 from .randutils import *
 from timdb.timdbbase import TimDbException
 
@@ -198,22 +198,49 @@ class DocParagraph(DocParagraphBase):
         return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
 
     @contract
+    def __get_setting_html(self) -> 'str':
+        from documentmodel.docsettings import DocSettings
+
+        if DocSettings.is_valid_paragraph(self):
+            return '<p class="docsettings">&nbsp;</p>'
+        else:
+            return '<div class="pluginError">Invalid settings paragraph detected</div>'
+
+    @contract
     def get_html(self) -> 'str':
         curr_html = self.html
         if curr_html:
             return curr_html
         if self.is_setting():
-            from documentmodel.docsettings import DocSettings
-
-            if DocSettings.is_valid_paragraph(self):
-                new_html = '<p class="docsettings">&nbsp;</p>'
-            else:
-                new_html = '<div class="pluginError">Invalid settings paragraph detected</div>'
+            return self.__get_setting_html()
         else:
             macros, delimiter = self.__get_macro_info(self.doc)
             new_html = self.__get_html_using_macros(macros, delimiter)
         self.__set_html(new_html)
         return new_html
+
+    @classmethod
+    @contract
+    def preload_htmls(cls, pars: 'list(DocParagraph)' = None):
+        """
+        Asks for paragraphs in batch from Dumbo to avoid multiple requests
+        :param pars: Paragraphs to preload
+        """
+        if len(pars) == 0:
+            return []
+        first_index = 0
+        macros = None
+        macro_delim = None
+        if pars[0].is_setting():
+            from documentmodel.docsettings import DocSettings
+            settings = DocSettings.from_paragraph(pars[0])
+            pars[0].html = pars[0].__get_setting_html()
+            macros = settings.get_macros()
+            macro_delim = settings.get_macro_delimiter()
+            first_index = 1
+        htmls = md_list_to_html_list([par.get_markdown() for par in pars], macros=macros, macro_delimiter=macro_delim)
+        for i in range(first_index, len(pars)):
+            pars[i].html = htmls[i]
 
     @contract
     @cached(cache=LRUCache(maxsize=65536),

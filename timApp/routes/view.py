@@ -13,6 +13,7 @@ from options import *
 import traceback
 import time
 import tim
+from markdownconverter import expand_macros
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -159,6 +160,17 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     else:
         users = []
     current_user = timdb.users.getUser(user)
+
+    DocParagraph.preload_htmls(xs)
+
+    doc = Document(doc_id)
+    doc_settings = doc.get_settings()
+    doc_css = doc_settings.css() if doc_settings else None
+
+    src_doc = doc_settings.get_source_document()
+    if src_doc is not None:
+        DocParagraph.preload_htmls(Document(src_doc).get_paragraphs())
+
     texts, jsPaths, cssPaths, modules = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
 
     reqs = pluginControl.get_all_reqs()
@@ -188,10 +200,6 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
-
-    doc = Document(doc_id)
-    doc_settings = doc.get_settings()
-    doc_css = doc_settings.css() if doc_settings else None
 
     # TODO: Check if doc variable is needed
     result = render_template(template_name,
