@@ -172,9 +172,10 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     doc_settings = doc.get_settings()
     doc_css = doc_settings.css() if doc_settings else None
 
-    src_doc = doc_settings.get_source_document()
-    if src_doc is not None:
-        DocParagraph.preload_htmls(Document(src_doc).get_paragraphs())
+    if doc_settings:
+        src_doc = doc_settings.get_source_document()
+        if src_doc is not None:
+            DocParagraph.preload_htmls(Document(src_doc).get_paragraphs())
 
     texts, jsPaths, cssPaths, modules = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
 
