@@ -68,17 +68,17 @@ def md_list_to_html_list(texts: 'list(str)',
     :type texts: list[str]
     :param texts: The list of markdown texts to be converted.
     """
-    from time import time
+    #from time import time
 
-    t0 = time()
+    #t0 = time()
     texts = [expand_macros(text, macros, macro_delimiter) for text in texts]
-    t1 = time()
-    print("expand_macros for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
+    #t1 = time()
+    #print("expand_macros for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
 
-    t0 = time()
+    #t0 = time()
     raw = call_dumbo(texts)
-    t1 = time()
-    print("Dumbo call for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
+    #t1 = time()
+    #print("Dumbo call for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
 
     if sanitize:
         return [sanitize_html(p) for p in raw]
