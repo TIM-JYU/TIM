@@ -5,6 +5,7 @@ run mkdir /etc/nginx/conf
 add tim.conf /etc/nginx/sites-enabled/
 add plugin.conf /etc/nginx/conf/
 add nginx.conf /etc/nginx/
+add startup.sh /
 
 run rm /etc/nginx/conf.d/default.conf
 
