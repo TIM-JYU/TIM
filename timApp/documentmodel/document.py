@@ -622,12 +622,18 @@ class DocParagraphIter:
             self.f = None
 
 
-@functools.lru_cache(maxsize=1024)
 @contract
 def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tuple)':
     doc = Document(doc_id)
-    html_table = [par.get_html() for par in DocParagraphIter(doc, version)
-                  if (par.get_markdown().startswith('#') or (par.is_multi_block() and par.has_headers()))]
+    pars = []
+    for par in DocParagraphIter(doc, version):
+        md = par.get_markdown()
+        if (len(md) > 2 and md[0] == '#' and md[1] != '.')\
+            or (par.is_multi_block() and par.has_headers()):
+                pars.append(par)
+
+    DocParagraph.preload_htmls(pars)
+    html_table = [par.get_html() for par in pars]
     index = []
     current_headers = None
     for html in html_table:
