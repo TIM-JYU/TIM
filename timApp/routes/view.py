@@ -146,7 +146,12 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     except (ValueError, TypeError):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
+
+    from time import time
+    t0 = time()
     xs = get_document(doc_id, view_range)
+    print("Loaded all paragraphs in {} s.".format(time() - t0))
+
     user = getCurrentUserId()
 
     if teacher:

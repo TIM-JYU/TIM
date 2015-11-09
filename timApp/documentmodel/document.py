@@ -550,7 +550,7 @@ class Document:
         for par in old_pars:
             self.delete_paragraph(par)
 
-    def get_named_section(self, section_name, cache=True):
+    def get_named_section(self, section_name):
         start_found = False
         end_found = False
         pars = []
@@ -558,11 +558,7 @@ class Document:
             if par.get_attr('area') == section_name:
                 start_found = True
             if start_found:
-                if cache:
-                    pars.append(par)
-                else:
-                    pars.append(DocParagraph.get_latest(
-                        self, par.get_id(), cache=False, files_root=self.files_root))
+                pars.append(par)
             if par.get_attr('area_end') == section_name:
                 end_found = True
                 break

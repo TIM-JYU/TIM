@@ -1,7 +1,6 @@
 from copy import deepcopy
 import os
 
-from cachetools import cached, LRUCache
 from contracts import contract, new_contract
 
 from documentmodel.documentwriter import DocumentWriter
@@ -65,14 +64,11 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     @contract
-    def get_latest(cls, doc, par_id: 'str', files_root: 'str|None' = None, cache: 'bool' = True) -> 'DocParagraph':
+    def get_latest(cls, doc, par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         froot = cls.get_default_files_root() if files_root is None else files_root
         try:
             t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
-            if cache:
-                return cls.get(doc, par_id, t, files_root=froot)
-            else:
-                return cls.__get.__wrapped__(cls, doc, par_id, t, files_root=froot)
+            return cls.get(doc, par_id, t, files_root=froot)
         except FileNotFoundError as e:
             return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
 
@@ -80,27 +76,12 @@ class DocParagraph(DocParagraphBase):
     @contract
     def get(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         try:
-            par = cls.__get(doc, par_id, t, files_root)
-
-            # Clear html attribute because we don't want it to be in __get's cache.
-            par.html = None
-
-            # Update document reference because the document may have been modified; we don't want to use the
-            # old reference from cache.
-            par.doc = doc
-
-            return par
+            """Loads a paragraph from file system based on given parameters.
+            """
+            with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
+                return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
         except FileNotFoundError as e:
             return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
-
-    @classmethod
-    @cached(cache=LRUCache(maxsize=65536), key=lambda cls, doc, par_id, t, files_root: (doc.doc_id, par_id, t))
-    @contract
-    def __get(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
-        """Loads a paragraph from file system based on given parameters.
-        """
-        with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
-            return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
 
     def __iter__(self):
         return self.__data.__iter__()
@@ -243,9 +224,7 @@ class DocParagraph(DocParagraphBase):
             pars[i].html = htmls[i]
 
     @contract
-    @cached(cache=LRUCache(maxsize=65536),
-            key=lambda self, macros, delimiter: (self.doc.doc_id, self.get_id(), self.get_hash(), str(macros), delimiter))
-    def __get_html_using_macros(self, macros: 'dict(str,str)', macro_delimiter: 'str') -> 'str':
+    def __get_html_using_macros(self, macros: 'dict(str:str)', macro_delimiter: 'str') -> 'str':
         return md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=macro_delimiter)
 
     @contract
@@ -485,11 +464,11 @@ class DocParagraph(DocParagraphBase):
             if not ref_doc.has_paragraph(attrs['rp']):
                 raise TimDbException('The referenced paragraph does not exist.')
 
-            ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root, cache=False)
+            ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
             return [reference_par(ref_par, attrs, write_link=True)]
 
         elif self.is_area_reference():
-            ref_pars = ref_doc.get_named_section(attrs['ra'], cache=False)
+            ref_pars = ref_doc.get_named_section(attrs['ra'])
             pars = []
             n = len(ref_pars)
 
@@ -525,7 +504,6 @@ class DocParagraph(DocParagraphBase):
         return self.__is_setting
 
     @classmethod
-    @cached(cache=LRUCache(maxsize=65536), key=lambda cls, doc: doc.get_id_version())
     def __get_macro_info(cls, doc):
         if doc is None:
             return None, None
