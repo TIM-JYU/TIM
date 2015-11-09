@@ -1,9 +1,13 @@
+from flask.ext.sqlalchemy import SQLAlchemy
+
 from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
 from timdb.temp_info_for_user import TempInfoUserQuestion
-from tim import db
+from tim_app import app
+
+db = SQLAlchemy(app)
 
 
 class Runningquestion(db.Model):

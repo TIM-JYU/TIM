@@ -100,7 +100,7 @@ if param tim ; then
 fi
 
 if param nginx ; then
-  docker run -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx
+  docker run -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ -e "DOCKER_BRIDGE=$(ip ro | grep docker0 | grep -oP '(?<=src )([\d\.]+)')" local_nginx /startup.sh
 fi
 
 exit 0
