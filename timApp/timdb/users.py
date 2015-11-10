@@ -489,6 +489,7 @@ class Users(TimDbBase):
     def userHasAdminAccess(self, user_id: 'int') -> 'bool':
         return self.isUserIdInGroup(user_id, 'Administrators')
 
+    @contract
     def userHasViewAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user has view access to the specified block.
 
@@ -496,30 +497,35 @@ class Users(TimDbBase):
         :param block_id:
         :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
         """
-        return self.userHasAccess(user_id, block_id, self.get_view_access_id())
+        return self.userHasAccess(user_id, block_id, self.get_view_access_id(), self.get_edit_access_id())
 
     @contract
-    def userHasAccess(self, user_id: 'int', block_id: 'int', access_id: 'int') -> 'bool':
-        """Returns whether the user has view access to the specified block.
+    def userHasAccess(self, user_id: 'int', block_id: 'int', *access_ids) -> 'bool':
+        """Returns whether the user has any of the specific kind of access types to the specified block.
         
-        :param user_id:
-        :param block_id:
-        :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
+        :param user_id: The user id.
+        :param block_id: The block id.
+        :param access_ids: List of access type ids to be checked.
+        :returns: True if the user with id 'user_id' has a specific kind of access to the block 'block_id',
+                  false otherwise.
         """
 
         if self.userIsOwner(user_id, block_id):
             return True
-        if self.checkUserGroupAccess(block_id, self.getUserGroupByName(ANONYMOUS_GROUPNAME), access_id):
-            return True
-        if user_id > 0 and self.checkUserGroupAccess(block_id, self.getUserGroupByName(LOGGED_IN_GROUPNAME), access_id):
-            return True
-        result = self.db.execute("""SELECT id FROM User WHERE
-                          id = ?
-                          AND User.id IN
-                              (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                                  (SELECT UserGroup_id FROM BlockAccess WHERE Block_id = ? AND type = ?))
-                          """, [user_id, block_id, access_id]).fetchall()
-        return len(result) > 0
+        for access_id in access_ids:
+            if self.checkUserGroupAccess(block_id, self.getUserGroupByName(ANONYMOUS_GROUPNAME), access_id):
+                return True
+            if user_id > 0 and self.checkUserGroupAccess(block_id, self.getUserGroupByName(LOGGED_IN_GROUPNAME), access_id):
+                return True
+            result = self.db.execute("""SELECT id FROM User WHERE
+                              id = ?
+                              AND User.id IN
+                                  (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
+                                      (SELECT UserGroup_id FROM BlockAccess WHERE Block_id = ? AND type = ?))
+                              """, [user_id, block_id, access_id]).fetchone()
+            if result is not None:
+                return True
+        return False
 
     @contract
     def userHasEditAccess(self, user_id: 'int', block_id: 'int') -> 'bool':

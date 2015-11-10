@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import contracts
-import logging
-import os
 import imghdr
 import io
 import re
-import time
 import datetime
 from time import mktime
 import posixpath
@@ -23,7 +20,6 @@ from bs4 import UnicodeDammit
 
 from ReverseProxied import ReverseProxied
 import containerLink
-from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from routes.cache import cache
 from routes.answer import answers
@@ -34,39 +30,16 @@ from routes.slide import slide_page
 from routes.login import login_page
 from routes.logger import logger_bp
 from timdb.timdbbase import TimDbException
-from containerLink import PluginException
+from plugin import PluginException
 from routes.settings import settings_page
 from routes.common import *
 from documentmodel.randutils import hashfunc
-from flask.ext.sqlalchemy import SQLAlchemy
+import models
+from models import db
+from tim_app import app
 
-
-app = Flask(__name__)
-app.jinja_env.trim_blocks = True
-app.jinja_env.lstrip_blocks = True
-app.config.from_pyfile('defaultconfig.py', silent=False)
-app.config.from_envvar('TIM_SETTINGS', silent=True)
-default_secret = app.config['SECRET_KEY']
-if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
-    print('WARNING: secret file not found, using default values - do not run in production!')
-else:
-    assert default_secret != app.config['SECRET_KEY']
-# Compress(app)
-
-timname = None
-if "TIM_NAME" in os.environ:
-    timname = os.environ.get("TIM_NAME")
-else:
-    print("Missing TIM_NAME environment variable. Exiting..")
-    exit()
-
-app.config.from_envvar('TIM_NAME', silent=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
-db = SQLAlchemy(app)
 
 # db.engine.pool.use_threadlocal = True # This may be needless
-
-import models
 
 cache.init_app(app)
 
@@ -1137,6 +1110,19 @@ def create_document():
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
                        getCurrentUserGroup())
 
+@app.route("/translate/<path:docname>/<language>", methods=["GET"])
+def create_translation(docname, language):
+    #jsondata = request.get_json()
+    timdb = getTimDb()
+    src_doc_id = timdb.documents.get_document_id(docname)
+    if not hasViewAccess(src_doc_id):
+        abort(403)
+
+    src_doc = Document(src_doc_id)
+    new_name = docname + "-" + language
+    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group).doc_id
+    return create_item(new_name, 'document', factory, getCurrentUserGroup())
+
 
 @app.route("/createFolder", methods=["POST"])
 def create_folder():
@@ -1210,18 +1196,6 @@ def get_document(doc_id, doc_ver):
     return Document(doc_id=doc_id, modifier_group_id=getCurrentUserGroup())
 
 
-def get_paragraph(doc, par_id):
-    """
-
-    :type doc: Document
-    :type par_id: str
-    :rtype: DocParagraph
-    """
-    if not doc.has_paragraph(par_id):
-        return None
-    return DocParagraph.get_latest(doc_id=doc.doc_id, par_id=par_id)
-
-
 @app.route("/postNote", methods=['POST'])
 def post_note():
     jsondata = request.get_json()
@@ -1238,7 +1212,7 @@ def post_note():
     verifyCommentRight(doc_id)
     # verify_document_version(doc_id, doc_ver)
     doc = get_document(doc_id, doc_ver)
-    par = get_paragraph(doc, par_id)
+    par = doc.get_paragraph(par_id)
     if par is None:
         abort(400, 'Non-existent paragraph')
     timdb = getTimDb()

@@ -1,5 +1,6 @@
 """Defines the DocumentWriter class."""
 from documentmodel.documentparser import DocumentParser
+from utils import count_chars
 
 
 class DocumentWriter:
@@ -35,10 +36,7 @@ class DocumentWriter:
                 num_ticks = 3
                 for b in blocks:
                     if b['type'] == 'code':
-                        for i, c in enumerate(b['md']):
-                            if c != '`':
-                                num_ticks = max(num_ticks, i + 1)
-                                break
+                        num_ticks = count_chars(b['md'], '`') + 1
                 text += '`'*num_ticks + ' {' + self.attrs_to_str(atomized) + '}\n' + p['md'] + '\n' + '`'*num_ticks
             else:
                 attrs_str = self.attrs_to_str(p)
@@ -72,7 +70,7 @@ class DocumentWriter:
                 attr_str += self.attrs_to_str(v)
             else:
                 attr_str += k + '="'
-                for char in v:
+                for char in str(v):
                     if char in ('"', '\\'):
                         attr_str += '\\'
                     attr_str += char

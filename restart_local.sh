@@ -93,14 +93,14 @@ fi
 
 if param tim ; then
   if param sshd ; then
-    docker run --name tim -p 50001:5000 -p 49999:22 --link postgre -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh && /usr/sbin/sshd -D ; /bin/bash'
+    docker run --name tim -p 50001:5000 -p 49999:22 --link postgre -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh && export TIM_NAME=tim ; /usr/sbin/sshd -D ; /bin/bash'
   else
-    docker run --name tim -p 50001:5000 --link postgre -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+    docker run --name tim -p 50001:5000 --link postgre -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
   fi
 fi
 
 if param nginx ; then
-  docker run -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ local_nginx
+  docker run -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ -e "DOCKER_BRIDGE=$(ip ro | grep docker0 | grep -oP '(?<=src )([\d\.]+)')" local_nginx /startup.sh
 fi
 
 exit 0

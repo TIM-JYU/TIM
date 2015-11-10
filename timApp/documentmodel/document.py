@@ -27,6 +27,7 @@ class Document:
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)
         self.files_root = self.get_default_files_root() if not files_root else files_root
         self.modifier_group_id = modifier_group_id
+        self.version = None
 
     @classmethod
     def get_default_files_root(cls):
@@ -67,8 +68,14 @@ class Document:
         return os.path.exists(os.path.join(froot, 'docs', str(doc_id)))
 
     @contract
-    def get_settings(self) -> 'DocSettings':
-        return DocSettings.from_paragraph(next(self.__iter__()))
+    def get_settings(self) -> 'DocSettings|None':
+        try:
+            i = self.__iter__()
+            return DocSettings.from_paragraph(next(i))
+        except StopIteration:
+            return None
+        finally:
+            i.close()
 
     @contract
     def create(self, ignore_exists : 'bool' = False):
@@ -130,10 +137,18 @@ class Document:
         Gets the latest version of the document as a major-minor tuple.
         :return: Latest version, or (-1, 0) if there isn't yet one.
         """
+        if self.version is not None:
+            return self.version
         basedir = os.path.join(self.files_root, 'docs', str(self.doc_id))
         major = self.__get_largest_file_number(basedir, default=0)
         minor = 0 if major < 1 else self.__get_largest_file_number(os.path.join(basedir, str(major)), default=0)
+        self.version = major, minor
         return major, minor
+
+    @contract
+    def get_id_version(self) -> 'tuple(int, int, int)':
+        major, minor = self.get_version()
+        return self.doc_id, major, minor
 
     @contract
     def get_document_path(self) -> 'str':
@@ -196,6 +211,7 @@ class Document:
             with open(self.get_version_path(ver), 'w'):
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
+        self.version = ver
         return ver
 
     @contract
@@ -227,7 +243,29 @@ class Document:
 
     @contract
     def get_paragraph(self, par_id: 'str') -> 'DocParagraph':
-        return DocParagraph.get_latest(self.doc_id, par_id, self.files_root)
+        return DocParagraph.get_latest(self, par_id, self.files_root)
+
+    @contract
+    def add_paragraph_obj(self, p: 'DocParagraph') -> 'DocParagraph':
+        """
+        Appends a new paragraph into the document.
+        :param p: Paragraph to be added.
+        :return: The same paragraph object, or None if could not add.
+        """
+        p.get_html()
+        p.add_link(self.doc_id)
+        p.set_latest()
+        old_ver = self.get_version()
+        new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
+        old_path = self.get_version_path(old_ver)
+        new_path = self.get_version_path(new_ver)
+        if os.path.exists(old_path):
+            shutil.copyfile(old_path, new_path)
+
+        with open(new_path, 'a') as f:
+            f.write(p.get_id() + '/' + p.get_hash())
+            f.write('\n')
+        return p
 
     @contract
     def add_paragraph(
@@ -245,28 +283,28 @@ class Document:
         :return: The new paragraph object.
         """
         p = DocParagraph.create(
-            doc_id=self.doc_id,
+            doc=self,
             par_id=par_id,
             md=text,
             attrs=attrs,
             props=properties,
             files_root=self.files_root
         )
+        return self.add_paragraph_obj(p)
 
-        p.get_html()
-        p.add_link(self.doc_id)
-        p.set_latest()
-        old_ver = self.get_version()
-        new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
-        old_path = self.get_version_path(old_ver)
-        new_path = self.get_version_path(new_ver)
-        if os.path.exists(old_path):
-            shutil.copyfile(old_path, new_path)
+    @contract
+    def add_ref_paragraph(self, src_par: 'DocParagraph', text: 'str|None' = None) -> 'DocParagraph':
+        ref_attrs = {
+            'rp': src_par.get_id(),
+            'rt': src_par.get_hash()
+        }
+        rd = src_par.get_doc_id()
+        if self.get_settings().get_source_document() != rd:
+            ref_attrs['rd'] = rd,
+        if text:
+            ref_attrs['r'] = 'tr'
 
-        with open(new_path, 'a') as f:
-            f.write(p.get_id() + '/' + p.get_hash())
-            f.write('\n')
-        return p
+        return self.add_paragraph(text, attrs=ref_attrs)
 
     @contract
     def delete_paragraph(self, par_id: 'str'):
@@ -286,7 +324,7 @@ class Document:
                     if not line:
                         return
                     if line.startswith(par_id):
-                        p = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
+                        p = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
                         p.remove_link(self.doc_id)
                     else:
                         f.write(line)
@@ -308,7 +346,7 @@ class Document:
             return self.add_paragraph(text=text, par_id=par_id, attrs=attrs, properties=properties)
 
         p = DocParagraph.create(
-            doc_id=self.doc_id,
+            doc=self,
             par_id=par_id,
             md=text,
             attrs=attrs,
@@ -342,12 +380,12 @@ class Document:
         """
         if not self.has_paragraph(par_id):
             raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
-        p_src = DocParagraph.get_latest(self.doc_id, par_id, files_root=self.files_root)
+        p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
         p_src.remove_link(self.doc_id)
         old_hash = p_src.get_hash()
         p = DocParagraph.create(
             md=new_text,
-            doc_id=self.doc_id,
+            doc=self,
             par_id=par_id,
             attrs=new_attrs,
             props=new_properties,
@@ -405,7 +443,7 @@ class Document:
         :param text: The new text for the document.
         """
         new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
-        old_pars = [DocParagraph.from_dict(doc_id=self.doc_id, d=d)
+        old_pars = [DocParagraph.from_dict(doc=self, d=d)
                     for d in DocumentParser(original).add_missing_attributes().validate_structure().get_blocks()]
 
         self._perform_update(new_pars, old_pars)
@@ -533,7 +571,11 @@ class Document:
         refs = set()
         for par in self:
             if par.is_reference():
-                refs.add(int(par.get_attr('rd')))
+                try:
+                    refs.add(int(par.get_rd()))
+                except (ValueError, TypeError):
+                    print('Invalid document reference: ' + str(par.get_rd()))
+
 
         return refs
 
@@ -562,30 +604,36 @@ class DocParagraphIter:
         while True:
             line = self.f.readline()
             if not line:
-                self.__close()
+                self.close()
                 raise StopIteration
             if line != '\n':
                 if len(line) > 14:
                     # Line contains both par_id and t
                     par_id, t = line.replace('\n', '').split('/')
                     # Make a copy of the paragraph to avoid modifying cached instance
-                    return DocParagraph.get(self.doc.doc_id, par_id, t, self.doc.files_root)
+                    return DocParagraph.get(self.doc, par_id, t, self.doc.files_root)
                 else:
                     # Line contains just par_id, use the latest t
-                    return DocParagraph.get_latest(self.doc.doc_id, line.replace('\n', ''), self.doc.files_root)
+                    return DocParagraph.get_latest(self.doc, line.replace('\n', ''), self.doc.files_root)
 
-    def __close(self):
+    def close(self):
         if self.f:
             self.f.close()
             self.f = None
 
 
-@functools.lru_cache(maxsize=1024)
 @contract
 def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tuple)':
     doc = Document(doc_id)
-    html_table = [par.get_html() for par in DocParagraphIter(doc, version)
-                  if (par.get_markdown().startswith('#') or (par.is_multi_block() and par.has_headers()))]
+    pars = []
+    for par in DocParagraphIter(doc, version):
+        md = par.get_markdown()
+        if (len(md) > 2 and md[0] == '#' and md[1] != '.')\
+            or (par.is_multi_block() and par.has_headers()):
+                pars.append(par)
+
+    DocParagraph.preload_htmls(pars)
+    html_table = [par.get_html() for par in pars]
     index = []
     current_headers = None
     for html in html_table:

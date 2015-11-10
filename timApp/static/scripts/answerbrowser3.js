@@ -145,6 +145,16 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 };
 
+                $scope.indexOfSelected = function () {
+                    var arrayLength = $scope.filteredAnswers.length;
+                    for (var i = 0; i < arrayLength; i++) {
+                        if ($scope.filteredAnswers[i].id === $scope.selectedAnswer.id) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                };
+
                 $scope.getTeacherData = function () {
                     if ($scope.answers.length > 0)
                         return {
@@ -218,9 +228,25 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     if ($scope.changed) {
                         $scope.getAvailableAnswers($scope.shouldUpdateHtml);
                         $scope.changed = false;
+                        $scope.loadInfo();
                         $scope.firstLoad = false;
                         $scope.shouldUpdateHtml = false;
                     }
+                };
+
+                $scope.loadInfo = function () {
+                    if ($scope.taskInfo !== null) {
+                        return;
+                    }
+                    $scope.loading++;
+                    $http.get('/taskinfo/' + $scope.taskId)
+                        .success(function (data, status, headers, config) {
+                            $scope.taskInfo = data;
+                        }).error(function (data, status, headers, config) {
+                            $window.alert('Error getting taskinfo: ' + data.error);
+                        }).finally(function () {
+                            $scope.loading--;
+                        });
                 };
 
                 
@@ -270,8 +296,10 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.saveTeacher = false;
                 $scope.users = null;
                 $scope.answers = [];
+                $scope.filteredAnswers = [];
                 $scope.onlyValid = true;
                 $scope.selectedAnswer = null;
+                $scope.taskInfo = null;
                 $scope.anyInvalid = false;
 
                 $scope.$watchGroup(['onlyValid', 'answers'], function (newValues, oldValues, scope) {

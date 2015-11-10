@@ -11,8 +11,8 @@ class MarkdownConverterTest(unittest.TestCase):
         self.d = dumboclient.launch_dumbo()
         time.sleep(0.1)  # Need to wait a bit to make sure Dumbo is up when running the test
 
-    def check_conversion(self, html, md):
-        self.assertEqual(html, md_to_html(md))
+    def check_conversion(self, html, md, macros=None, delimiter=None):
+        self.assertEqual(html, md_to_html(md, sanitize=True, macros=macros, macro_delimiter=delimiter))
 
     def test_markdown(self):
         cases = [('', ''),
@@ -29,6 +29,13 @@ class MarkdownConverterTest(unittest.TestCase):
             self.check_conversion(html, md)
 
         self.assertListEqual([html for html, _ in cases], md_list_to_html_list([md for _, md in cases]))
+
+        macrotests = [('<p>hello world!</p>',
+                       'hello %%somemacro%%!',
+                       {'somemacro': 'world'})]
+
+        for html, md, macros in macrotests:
+            self.check_conversion(html, md, macros, delimiter='%%')
 
     def tearDown(self):
         self.d.kill()

@@ -13,6 +13,11 @@ RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97
 #     of PostgreSQL, ``9.3``.
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
+# Set locale
+RUN locale-gen en_US.utf8
+RUN dpkg-reconfigure locales
+RUN export LC_ALL="en_US.utf8"
+
 # Install ``python-software-properties``, ``software-properties-common`` and PostgreSQL 9.3
 #  There are some warnings (in red) that show up during the build. You can hide
 #  them by prefixing each apt-get statement with DEBIAN_FRONTEND=noninteractive
@@ -44,3 +49,4 @@ USER root
 
 # Set the default command to run when starting the container
 CMD sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf
+

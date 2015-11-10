@@ -58,7 +58,7 @@ def update_document(doc_id, version):
     doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
-        get_pars_from_editor_text(doc_id, content, break_on_elements=True)
+        get_pars_from_editor_text(doc, content, break_on_elements=True)
         d = timdb.documents.update_document(doc, content, original)
     except (TimDbException, ValidationException) as e:
         return abort(400, str(e))
@@ -90,7 +90,7 @@ def modify_paragraph():
     area_end = request.get_json().get('area_end')
     editing_area = area_start and area_end
     try:
-        editor_pars = get_pars_from_editor_text(doc_id, md, break_on_elements=editing_area)
+        editor_pars = get_pars_from_editor_text(doc, md, break_on_elements=editing_area)
     except ValidationException as e:
         return abort(400, str(e))
 
@@ -101,7 +101,7 @@ def modify_paragraph():
         except ValidationException as e:
             return abort(400, str(e))
     else:
-        original_par = DocParagraph.get_latest(doc_id=doc_id, par_id=par_id)
+        original_par = DocParagraph.get_latest(doc=doc, par_id=par_id)
         pars = []
 
         separate_pars = DocumentParser(md).get_blocks()
@@ -151,29 +151,31 @@ def preview(doc_id):
     text, = verify_json_params('text')
     if not request.get_json().get('isComment'):
         editing_area = request.get_json().get('area_start') is not None and request.get_json().get('area_end') is not None
+        doc = Document(doc_id)
         try:
-            blocks = get_pars_from_editor_text(doc_id, text, break_on_elements=editing_area)
+            blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
         except ValidationException as e:
             err_html = '<div class="pluginError">{}</div>'.format(sanitize_html(str(e)))
-            blocks = [DocParagraph.create(doc_id=doc_id, md=err_html, html=err_html)]
-        return par_response(blocks, doc_id)
+            blocks = [DocParagraph.create(doc=doc, md=err_html, html=err_html)]
+        return par_response(blocks, doc_id, edit_window=True)
     else:
         return jsonResponse({'texts': md_to_html(text)})
 
 
-def par_response(blocks, doc_id):
-    pars, js_paths, css_paths, modules = post_process_pars(blocks, doc_id, getCurrentUserId(), edit_window=True)
+def par_response(blocks, doc_id, edit_window=False):
+    pars, js_paths, css_paths, modules = post_process_pars(blocks, doc_id, getCurrentUserId(), edit_window=edit_window)
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
                                                   rights=get_rights(doc_id)),
+                         'route': 'preview',
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
                          'version': Document(doc_id).get_version()})
 
 
-def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
-    blocks = [DocParagraph.create(doc_id=doc_id, md=par['md'], attrs=par.get('attrs'))
+def get_pars_from_editor_text(doc, text, break_on_elements=False):
+    blocks = [DocParagraph.create(doc=doc, md=par['md'], attrs=par.get('attrs'))
               for par in DocumentParser(text).validate_structure().get_blocks(break_on_code_block=break_on_elements,
                                                                               break_on_header=break_on_elements,
                                                                               break_on_normal=break_on_elements)]
@@ -181,8 +183,8 @@ def get_pars_from_editor_text(doc_id, text, break_on_elements=False):
         if p.is_reference():
             try:
                 refdoc = int(p.get_attr('rd'))
-            except ValueError:
-                return blocks
+            except (ValueError, TypeError):
+                continue
             if getTimDb().documents.exists(refdoc)\
                     and not getTimDb().users.userHasViewAccess(getCurrentUserId(), refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
@@ -214,13 +216,14 @@ def add_paragraph():
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
     verifyEditAccess(doc_id)
     version = request.headers.get('Version', '')
+    doc = get_newest_document(doc_id)
     try:
-        editor_pars = get_pars_from_editor_text(doc_id, md)
+        editor_pars = get_pars_from_editor_text(doc, md)
     except ValidationException as e:
         return abort(400, str(e))
 
     # verify_document_version(doc_id, version)
-    doc = get_newest_document(doc_id)
+
     pars = []
     separate_pars = DocumentParser(md).get_blocks()
     is_multi_block = len(separate_pars) > 1
