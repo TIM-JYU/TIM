@@ -1731,6 +1731,33 @@ def index_page():
                            settings=settings)
 
 
+@app.route("/getslidestatus/")
+def getslidestatus():
+    if 'doc_id' not in request.args:
+        abort(404, "Missing doc id")
+    doc_id = int(request.args['doc_id'])
+    tempdb = getTempDb()
+    status = tempdb.slidestatuses.get_status(doc_id)
+    if status:
+        status = status.status
+    else:
+        status = None
+    return jsonResponse(status)
+
+
+@app.route("/setslidestatus")
+def setslidestatus():
+    print(request.args)
+    if 'doc_id' not in request.args or 'status' not in request.args:
+        abort(404, "Missing doc id or status")
+    doc_id = int(request.args['doc_id'])
+    verifyOwnership(doc_id)
+    status = request.args['status']
+    tempdb = getTempDb()
+    tempdb.slidestatuses.update_or_add_status(doc_id, status)
+    return jsonResponse("")
+
+
 def user_in_lecture():
     timdb = getTimDb()
     current_user = getCurrentUserId()

@@ -2,6 +2,7 @@ from timdb.runningquestion import RunningQuestions
 from timdb.useractivity import UserActivity
 from timdb.newanswers import NewAnswers
 from timdb.showpoints import ShowPoints
+from timdb.slidestatus import SlideStatuses
 from timdb.temp_info_for_user import TempInfoUserQuestion
 from tim import db
 
@@ -105,6 +106,15 @@ class Pointsclosed(db.Model):
         self.user_id = user_id
 
 
+class SlideStatus(db.Model):
+    doc_id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.Text, nullable=False)
+
+    def __init__(self, lecture_id, status):
+        self.lecture_id = lecture_id
+        self.status = status
+
+
 class TempDb(object):
     def __init__(self):
         self.runningquestions = RunningQuestions(db, Runningquestion)
@@ -116,6 +126,7 @@ class TempDb(object):
         self.usersanswered = TempInfoUserQuestion(db, Useranswered)
         self.pointsshown = TempInfoUserQuestion(db, Pointsshown)
         self.pointsclosed = TempInfoUserQuestion(db, Pointsclosed)
+        self.slidestatuses = SlideStatuses(db, SlideStatus)
 
 tempdb = TempDb()
 
