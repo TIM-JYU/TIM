@@ -98,7 +98,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             'showLectureOptions': false,
             'useQuestions': true,
             'useWall': true,
-            'useAnswers': true
+            'useAnswers': true,
+            'useNotPollingDialog': true
         };
 
         var wall = $('#wall');

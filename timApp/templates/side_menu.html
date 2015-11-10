@@ -123,6 +123,11 @@
                                 <input type="checkbox" ng-model="lectureSettings.useAnswers">
                             </label>
                         </li>
+                        <li ng-show="isLecturer">
+                            <label> Show 'not polling' dialog
+                                <input type="checkbox" ng-model="lectureSettings.useNotPollingDialog">
+                            </label>
+                        </li>
                     </ul>
                     {% endraw %}
                     </div>
