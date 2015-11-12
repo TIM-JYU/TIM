@@ -44,14 +44,16 @@ def initialize_temp_database():
     models.initialize_temp_database()
 
 
-def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files', create_docs=True):
+def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files', create_docs=True, print_progress=True):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     if os.path.exists(db_path):
-        print('{} already exists, no need to initialize'.format(files_root_path))
+        if print_progress:
+            print('{} already exists, no need to initialize'.format(files_root_path))
         return
-    print('initializing the database in {}...'.format(files_root_path), end='')
+    if print_progress:
+        print('initializing the database in {}...'.format(files_root_path), end='')
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     timdb.initialize_tables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
@@ -71,7 +73,8 @@ def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files',
                                                          'Multiple choice plugin example',
                                                          anon_group)
     timdb.close()
-    print(' done.')
+    if print_progress:
+        print(' done.')
 
 
 def update_database():
