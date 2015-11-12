@@ -382,7 +382,7 @@ timApp.controller("ViewCtrl", [
                 caption = 'Add comment';
                 url = '/postNote';
                 data = {
-                    access: 'everyone',
+                    access: sc.$storage.noteAccess,
                     tags: {
                         difficult: false,
                         unclear: false
@@ -1037,7 +1037,8 @@ timApp.controller("ViewCtrl", [
         sc.editorFunctions = sc.getEditorFunctions();
 
         sc.$storage = $localStorage.$default({
-            defaultAction: null
+            defaultAction: null,
+            noteAccess: 'everyone'
         });
 
         try {
