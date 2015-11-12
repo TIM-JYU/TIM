@@ -166,16 +166,16 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
         users = []
     current_user = timdb.users.getUser(user)
 
-    DocParagraph.preload_htmls(xs)
-
     doc = Document(doc_id)
     doc_settings = doc.get_settings()
     doc_css = doc_settings.css() if doc_settings else None
+    DocParagraph.preload_htmls(xs, doc_settings)
 
     if doc_settings:
-        src_doc = doc_settings.get_source_document()
-        if src_doc is not None:
-            DocParagraph.preload_htmls(Document(src_doc).get_paragraphs())
+        src_doc_id = doc_settings.get_source_document()
+        if src_doc_id is not None:
+            src_doc = Document(src_doc_id)
+            DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings())
 
     texts, jsPaths, cssPaths, modules = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
 

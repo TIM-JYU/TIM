@@ -632,7 +632,7 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
             or (par.is_multi_block() and par.has_headers()):
                 pars.append(par)
 
-    DocParagraph.preload_htmls(pars)
+    DocParagraph.preload_htmls(pars, doc.get_settings())
     html_table = [par.get_html() for par in pars]
     index = []
     current_headers = None

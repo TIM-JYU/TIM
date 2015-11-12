@@ -4,8 +4,9 @@ import os
 from contracts import contract, new_contract
 
 from documentmodel.documentwriter import DocumentWriter
+from dumboclient import call_dumbo
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html, md_list_to_html_list
+from markdownconverter import md_to_html, md_list_to_html_list, expand_macros
 from .randutils import *
 from timdb.timdbbase import TimDbException
 
@@ -128,6 +129,7 @@ class DocParagraph(DocParagraphBase):
             self.__htmldata['html'] = self.get_html()
         except Exception as e:
             self.__htmldata['html'] = '<div class="pluginError">{}</div>'.format(e)
+
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
         self.__htmldata['is_plugin'] = self.is_plugin()
         self.__htmldata['needs_browser'] = True #self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
@@ -139,7 +141,6 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def html_dict(self) -> 'dict':
-        #if self.__htmldata is None:
         self._mkhtmldata()
         return self.__htmldata
 
@@ -189,39 +190,61 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_html(self) -> 'str':
-        curr_html = self.html
-        if curr_html:
-            return curr_html
+        if self.html:
+            return self.html
+        if self.is_plugin():
+            return ''
         if self.is_setting():
             return self.__get_setting_html()
+
+        macros, delimiter = self.__get_macro_info(self.doc)
+
+        if 'h' in self.__data:
+            # Cached html, we only need to apply macros
+            new_html = expand_macros(self.__data['h'], macros, delimiter)
         else:
-            macros, delimiter = self.__get_macro_info(self.doc)
+            # Get html from Dumbo (slow!)
             new_html = self.__get_html_using_macros(macros, delimiter)
+
         self.__set_html(new_html)
         return new_html
 
     @classmethod
     @contract
-    def preload_htmls(cls, pars: 'list(DocParagraph)' = None):
+    def preload_htmls(cls, pars: 'list(DocParagraph)', settings):
         """
         Asks for paragraphs in batch from Dumbo to avoid multiple requests
         :param pars: Paragraphs to preload
         """
-        if len(pars) == 0:
-            return []
-        first_index = 0
-        macros = None
-        macro_delim = None
-        if pars[0].is_setting():
-            from documentmodel.docsettings import DocSettings
-            settings = DocSettings.from_paragraph(pars[0])
-            pars[0].html = pars[0].__get_setting_html()
-            macros = settings.get_macros()
-            macro_delim = settings.get_macro_delimiter()
-            first_index = 1
-        htmls = md_list_to_html_list([par.get_markdown() for par in pars], macros=macros, macro_delimiter=macro_delim)
-        for i in range(first_index, len(pars)):
-            pars[i].html = htmls[i]
+        unloaded_mds = []
+        unloaded_pars = []
+        macros = settings.get_macros() if settings else None
+        macro_delim = settings.get_macro_delimiter() if settings else None
+
+        dyn = 0
+        l = 0
+
+        for par in pars:
+            if par.html is not None or par.is_dynamic():
+                dyn += 1
+                continue
+            if 'h' in par.__data:
+                par.html = expand_macros(par.__data['h'], macros, macro_delim)
+                l += 1
+            else:
+                unloaded_mds.append(par.get_markdown())
+                unloaded_pars.append(par)
+
+        print("{} paragraphs are marked dynamic".format(dyn))
+        print("{} paragraphs are cached".format(l))
+        print("{} paragraphs are not cached".format(len(unloaded_pars)))
+
+        if len(unloaded_pars) > 0:
+            htmls = call_dumbo(unloaded_mds)
+            for i in range(0, len(htmls)):
+                unloaded_pars[i].__data['h'] = htmls[i]
+                unloaded_pars[i].html = expand_macros(htmls[i], macros, macro_delim)
+                unloaded_pars[i].__write()
 
     @contract
     def __get_html_using_macros(self, macros: 'dict(str:str)|None', macro_delimiter: 'str|None') -> 'str':
@@ -496,6 +519,9 @@ class DocParagraph(DocParagraphBase):
 
     def get_original(self):
         return self.original
+
+    def is_dynamic(self):
+        return self.__is_plugin or self.__is_ref or self.__is_setting
 
     def is_plugin(self):
         return self.__is_plugin
