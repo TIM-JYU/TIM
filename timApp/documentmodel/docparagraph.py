@@ -224,7 +224,7 @@ class DocParagraph(DocParagraphBase):
             pars[i].html = htmls[i]
 
     @contract
-    def __get_html_using_macros(self, macros: 'dict(str:str)', macro_delimiter: 'str') -> 'str':
+    def __get_html_using_macros(self, macros: 'dict(str:str)|None', macro_delimiter: 'str|None') -> 'str':
         return md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=macro_delimiter)
 
     @contract
