@@ -278,5 +278,13 @@ class DocumentTest(TimDbTest):
         macro_par = d.get_paragraph(macro_par.get_id())
         self.assertEqual('<p>this is anothervalue and year is 2016</p>', macro_par.get_html())
 
+    def test_import(self):
+        timdb = self.get_db()
+        from timdb.users import ANONYMOUS_GROUPNAME
+        anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
+        timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
+                                                  'Multiple choice plugin example',
+                                                  anon_group)
+
 if __name__ == '__main__':
     unittest.main()
