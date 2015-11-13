@@ -447,6 +447,13 @@ timApp.controller("ViewCtrl", [
             return e;
         };
 
+        $($window).resize(function (e) {
+            var selected = $('.par.lightselect, .par.selected');
+            if (selected.length > 0) {
+                selected[0].scrollIntoView();
+            }
+        });
+
         sc.onClick = function (className, func) {
             var downEvent = null;
             var downCoords = null;
