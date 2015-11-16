@@ -15,7 +15,7 @@ class DocumentWriter:
         :param pars: A sequence of paragraphs representing the document.
         """
         self.pars = pars
-        self.ignored_attrs = ['md', 'type', 'html', 'links', 'doc_id', 'props']
+        self.ignored_attrs = ['md', 'type', 'html', 'links', 'doc_id', 'props', 'h']
         if not export_hashes:
             self.ignored_attrs.append('t')
         if not export_ids:
