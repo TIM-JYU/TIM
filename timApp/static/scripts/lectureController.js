@@ -17,12 +17,11 @@ var timApp = angular.module('timApp');
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
 //TODO: Button, to get questions and wall.
-timApp.controller("LectureController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout', "$location",
+timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScope', '$timeout',
 
-    function ($scope, controller, http, $window, $rootScope, $timeout, $location) {
+    function ($scope, http, $window, $rootScope, $timeout) {
         "use strict";
         $scope.docNamePath = "";
-        $scope.location = $location.host();
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
