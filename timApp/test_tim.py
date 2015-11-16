@@ -181,6 +181,12 @@ class TimTest(TimDbTest):
         self.assertDictResponse({'text': edit_text}, a.jreq('/getBlock/{}/{}'.format(doc_id, first_id),
                                                             {'docId': doc_id, 'par': first_id}))
 
+        self.assertDictResponse({'text': Document(doc_id).export_section(first_id, second_par_id)},
+                                a.get('/getBlock/{}/{}'.format(doc_id, first_id),
+                                      query_string={'docId': doc_id,
+                                                    'area_start': first_id,
+                                                    'area_end': second_par_id}))
+
 
 if __name__ == '__main__':
     unittest.main()
