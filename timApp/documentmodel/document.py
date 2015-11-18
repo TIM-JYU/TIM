@@ -215,18 +215,6 @@ class Document:
         return ver
 
     @contract
-    def get_name(self) -> 'str':
-        """
-        Gets the document name from its main heading.
-        :return: Document name or "Document n" if not found.
-        """
-        for par in self:
-            md = par.get_markdown().lstrip()
-            if md.startswith('#'):
-                return md.lstrip('# ')
-        return "Document {}".format(self.doc_id)
-
-    @contract
     def has_paragraph(self, par_id: 'str') -> 'bool':
         """
         Checks if the document has the given paragraph.

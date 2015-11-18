@@ -250,36 +250,6 @@ class DocParagraph(DocParagraphBase):
     def __get_html_using_macros(self, macros: 'dict(str:str)|None', macro_delimiter: 'str|None') -> 'str':
         return md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=macro_delimiter)
 
-    @contract
-    def get_ref_html(self, classname="parref", write_link=False, link_class="parlink", linked_paragraph=None) -> 'str':
-        if linked_paragraph is None:
-            linked_paragraph = self
-        linkhtml = ''
-        if write_link:
-            from documentmodel.document import Document
-            doc = Document(linked_paragraph.get_doc_id())
-            linkhtml = '<a class="{2}" href="/view/{0}">{1}</a>'.format(linked_paragraph.get_doc_id(),
-                                                                        doc.get_name(), link_class)
-        return """
-            <div class="{0}">
-                {1}
-                {2}
-            </div>
-        """.format(classname, linkhtml, self.get_html())
-
-    @contract
-    def __get_html(self) -> 'str':
-        if self.get_original() is None:
-            return self.__get_html()
-
-        # Referenced paragraph
-        return """
-            <div class="parref">
-                <a class="parlink" href="{1}">Dokumentti {1}</a>
-                {0}
-            </div>
-        """.format(self.__get_html(), self.get_doc_id())
-
     def sanitize_html(self):
         if self.html_sanitized or not self.html:
             return
@@ -292,21 +262,6 @@ class DocParagraph(DocParagraphBase):
         if self.__htmldata is not None:
             self.__htmldata['html'] = new_html
         self.html_sanitized = sanitized
-
-    @contract
-    def __set_trans_html(self, referencing_par: 'DocParagraph', show_original: 'bool',
-                       from_class: 'str' = 'partranslatefrom', to_class: 'str' = 'partranslate',
-                       show_link: 'bool' = False):
-        if show_original:
-            html = '{}\n{}'.format(referencing_par.get_ref_html(classname=to_class, write_link=show_link,
-                                                                link_class="trlink", linked_paragraph=self),
-                                   self.get_ref_html(classname=from_class, link_class="trfromlink",
-                                                     write_link=show_link))
-        else:
-            html = referencing_par.get_ref_html(classname=to_class, write_link=show_link, link_class="trlink",
-                                                linked_paragraph=self)
-
-        self.__set_html(html)
 
     @contract
     def get_links(self) -> 'list(str)':
@@ -452,24 +407,32 @@ class DocParagraph(DocParagraphBase):
     def __repr__(self):
         return self.__data.__repr__()
 
+    @classmethod
+    def __rrepl(cls, s, old, new):
+        rindex = s.rfind(old)
+        return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
+
     def get_referenced_pars(self, edit_window=False, set_html=True):
         def reference_par(ref_par, attrs, classname='parref', trclassname='partranslate', write_link=False):
             par = deepcopy(ref_par)
-            par.set_attr('classes', (self.get_attr('classes') or []) + (ref_par.get_attr('classes') or []))
             par.set_original(self)
             if set_html:
-                if 'r' in attrs and attrs['r'] == 'tr':
-                    par.__set_trans_html(self, edit_window, classname, trclassname, write_link)
-                else:
-                    par.__set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
+                html = self.get_html() if self.get_attr('r') == 'tr' else ref_par.get_html()
+                if write_link:
+                    srclink = '&nbsp;<a class="parlink" href="/view/{0}#{1}">[{0}]</a></p>'.format(ref_par.get_doc_id(), ref_par.get_id())
+                    html = self.__rrepl(html, '</p>', srclink)
+                    print(html)
+                par.__set_html(html)
             return par
 
         attrs = self.get_attrs()
+        is_default_rd = False
         if 'rd' in attrs:
             ref_docid = attrs['rd']
         else:
             settings = self.doc.get_settings()
             default_rd = settings.get_source_document()
+            is_default_rd = True
             if default_rd is None:
                 raise TimDbException('Source document for reference not specified.')
             ref_docid = default_rd
@@ -488,15 +451,15 @@ class DocParagraph(DocParagraphBase):
                 raise TimDbException('The referenced paragraph does not exist.')
 
             ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
-            return [reference_par(ref_par, attrs, write_link=True)]
+            return [reference_par(ref_par, attrs, write_link=not is_default_rd)]
 
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
             pars = []
             n = len(ref_pars)
 
-            if n == 1:
-                return [reference_par(ref_pars[0], attrs, write_link=True)]
+            if n < 2 or is_default_rd:
+                return [reference_par(ref_par, attrs, write_link=not is_default_rd) for ref_par in ref_pars]
 
             for i in range(0, len(ref_pars)):
                 if i == 0:
