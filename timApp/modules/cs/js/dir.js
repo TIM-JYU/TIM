@@ -220,19 +220,18 @@ csApp.directiveTemplateCS = function(t,isInput) {
 	csApp.taunoPHIndex = 3;
     csLogTime("dir templ " + t);
     if ( TESTWITHOUTPLUGINS ) return '';
-    var taunoText = "Tauno";
-    if ( t === "simcir" ) taunoText = "SimCir";
+    
 	return  '<div class="csRunDiv no-popup-menu" ng-cloak>' + 
     
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-if="stem" class="stem" >{{stem}}</p>' +
   				  (t === "tauno" || t === "simcir" ?
-				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">hide ' + taunoText + '</a></p>' +
+				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">{{hideTaunoText}}</a></p>' +
 				    '<div ><p></p></div>' + // Tauno code place holder nr 3!!
-				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">Click here to show ' + taunoText + '</a></p>' +
-				    (t === "tauno" ? '<p ng-if="taunoOn" class="pluginHide"" ><a ng-click="copyTauno()">copy from Tauno</a> | <a ng-click="hideTauno()">hide Tauno</a></p>' +
-				    '<p ng-if="taunoOn" class="taunoOhje">Kopioi Taunolla tekemäsi koodi "copy from Tauno"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa että ajossa voi olla eri taulukko kuin Taunossa!</a></p>' 
+				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">{{showTaunoText}}</a></p>' +
+                    (t === "tauno" ? '<p ng-if="taunoOn" class="pluginHide"" ><a ng-click="copyTauno()">{{copyFromTaunoText}}</a> | <a ng-click="hideTauno()">{{hideTaunoText}}</a></p>' +
+				    '<p ng-if="taunoOn" class="taunoOhje">{{taunoOhjeText}}</a></p>' 
                     : '<p ng-if="taunoOn && !noeditor" class="pluginHide"" ><a ng-click="copyFromSimcir()">copy from SimCir</a> | <a ng-click="copyToSimcir()">copy to SimCir</a> | <a ng-click="hideTauno()">hide SimCir</a></p>') +
 					"" : "") +   
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
@@ -347,7 +346,24 @@ csApp.directiveFunction = function(t,isInput) {
             scope.taskId  = element.parent().attr("id");
             scope.isFirst = true;
             if ( scope.$parent.$$prevSibling ) scope.isFirst = false;
+            csApp.set(scope,attrs,"lang","fi");
+            var english = scope.lang=="en"; 
+            scope.english = english;
 
+            if ( (t == "tauno" || t === "simcir") ) { // Tauno translations
+                var taunoText = "Tauno";
+                if ( t === "simcir" ) taunoText = "SimCir";
+                scope.hideTaunoText = (english ? "hide ": "piilota ") + taunoText;
+                scope.showTaunoText = (english ? "Click here to show ": "Näytä ") +  taunoText;
+                scope.taunoOhjeText = english ? 
+                  'Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run-button. Note that the running code may have different code than in Tauno!':
+                  'Kopioi Taunolla tekemäsi koodi "kopioi Taunosta"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa että ajossa voi olla eri taulukko kuin Taunossa!';
+                scope.copyFromTaunoText = english ? "copy from Tauno" : "kopioi Taunosta";  
+                scope.copyFromSimCirText = english ? "copy from SimCir" : "kopioi SimCiristä";  
+                scope.copyToSimCirText = english ? "copy to SimCir" : "kopioi SimCiriin";  
+            }
+            
+            
 			csApp.set(scope,attrs,"type","cs");
             scope.isText = languageTypes.getRunType(scope.type,false) == "text";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
@@ -372,10 +388,10 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"rows",1);
 			csApp.set(scope,attrs,"maxrows",100);
 			csApp.set(scope,attrs,"attrs.bycode");
-			csApp.set(scope,attrs,"placeholder","Write your code here");
-			csApp.set(scope,attrs,"inputplaceholder","Write your input here");
-			csApp.set(scope,attrs,"argsplaceholder",scope.isText ? "Write file name here" : "Write your program args here");
-			csApp.set(scope,attrs,"argsstem",scope.isText ? "File name:" : "Args:");
+			csApp.set(scope,attrs,"placeholder",english ? "Write your code here": "Kirjoita koodi tähän:");
+			csApp.set(scope,attrs,"inputplaceholder",english ? "Write your input here": "Kirjoita syöte tähän");
+			csApp.set(scope,attrs,"argsplaceholder",scope.isText ? (english ? "Write file name here" : "Kirjoita tiedoston nimi tähän" ) : (english ? "Write your program args here": "Kirjoita ohjelman argumentit tähän"));
+			csApp.set(scope,attrs,"argsstem",scope.isText ? (english ? "File name:" : "Tiedoston nimi:") : (english ? "Args:": "Args"));
 			csApp.set(scope,attrs,"userinput","");
 			csApp.set(scope,attrs,"userargs",scope.isText ? scope.filename : "");
 			csApp.set(scope,attrs,"inputstem","");
@@ -390,14 +406,14 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"button","");
             csApp.set(scope,attrs,"noeditor",scope.isSimcir ? "True" : false);
             csApp.set(scope,attrs,"norun",false);
-            csApp.set(scope,attrs,"normal","Normal");
+            csApp.set(scope,attrs,"normal",english ? "Normal": "Tavallinen");
             csApp.set(scope,attrs,"highlight","Highlight");
             csApp.set(scope,attrs,"parsons","Parsons");
             csApp.set(scope,attrs,"jsparsons","JS-Parsons");
             csApp.set(scope,attrs,"editorMode",0);
-            csApp.set(scope,attrs,"showCodeOn","Näytä koko koodi");
-            csApp.set(scope,attrs,"showCodeOff","Piilota muu koodi");
-            csApp.set(scope,attrs,"resetText","Alusta");
+            csApp.set(scope,attrs,"showCodeOn",english ? "Show all code" : "Näytä koko koodi");
+            csApp.set(scope,attrs,"showCodeOff",english ? "Hide extra code": "Piilota muu koodi");
+            csApp.set(scope,attrs,"resetText", english ? "Reset" : "Alusta");
             csApp.set(scope,attrs,"blind",false);
             csApp.set(scope,attrs,"words",false);
             csApp.set(scope,attrs,"editorModes","01");
@@ -415,7 +431,7 @@ csApp.directiveFunction = function(t,isInput) {
 			scope.minRows = csApp.getInt(scope.rows);
 			scope.maxRows = csApp.getInt(scope.maxrows);
             
-            scope.toggleEditorText = ["Muokkaa","Piilota"];
+            scope.toggleEditorText = [english ? "Edit": "Muokkaa",english ? "Hide": "Piilota"];
 
             if ( scope.toggleEditor && scope.toggleEditor != "True" ) scope.toggleEditorText =  scope.toggleEditor.split("|");
             
@@ -442,10 +458,10 @@ csApp.directiveFunction = function(t,isInput) {
 
             scope.showInput = (scope.type.indexOf("input") >= 0);
             scope.showArgs = (scope.type.indexOf("args") >= 0);
-            scope.buttonText = "Aja";
+            scope.buttonText = english ? "Run": "Aja";
             if ( scope.type.indexOf("text") >= 0 || scope.isSimcir) { // || scope.isSage ) {
                 scope.isRun = true;
-                scope.buttonText = "Tallenna";
+                scope.buttonText = english ? "Save": "Tallenna";
             }            
             if ( scope.button ) {
                 scope.isRun = true;
@@ -1077,12 +1093,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         */
         var v = this.getVid();
 		var p = "";
-		// var tt = "http://users.jyu.fi/~ji/js/tdbg/";
-		// var tt = "http://tim-beta.it.jyu.fi/cs/ptauno/indexi.html";
-		var tt = "/cs/tauno/index.html?";
-		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://users.jyu.fi/~vesal/js/ptauno/index.html";
-		// if ( $scope.taunotype && $scope.taunotype == "ptauno" ) tt = "http://tim-beta.it.jyu.fi/cs/ptauno/index.html";
-		if ( $scope.taunotype && $scope.taunotype === "ptauno" ) tt = "/cs/tauno/index.html?s&";
+		var tt = "/cs/tauno/index.html?lang="+$scope.lang+"&";
+		if ( $scope.taunotype && $scope.taunotype === "ptauno" ) tt = "/cs/tauno/index.html?lang="+$scope.lang+"&s&";
 		var taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
 		var s = $scope.table;
 		if ( s && s.length > 0) {

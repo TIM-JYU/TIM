@@ -1,4 +1,4 @@
-fmediant {
+﻿fmediant {
     text-align: justify;
 }
 
@@ -315,6 +315,7 @@ ul ul ul, ol ol ol {
     display: inherit;
 }
 
+
 .parContent {
     position: relative;
 }
@@ -366,6 +367,7 @@ a.parlink:hover {
     text-decoration: none;
 }
 
+ 
 #previewDiv {
     max-width: 52em;
     clear: both;
@@ -1832,7 +1834,7 @@ p.plgfooter {
 #dialog-refresh {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 6;
     border: 1px solid;
     background: white
 }
