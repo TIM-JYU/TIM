@@ -67,6 +67,18 @@ class Document:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.exists(os.path.join(froot, 'docs', str(doc_id)))
 
+    @classmethod
+    @contract
+    def version_exists(cls, doc_id: 'int', doc_ver: 'tuple(int,int)', files_root: 'str|None' = None) -> 'bool':
+        """
+        Checks if a document version exists.
+        :param doc_id: Document id.
+        :param doc_ver: Document version.
+        :return: Boolean.
+        """
+        froot = cls.get_default_files_root() if files_root is None else files_root
+        return os.path.isfile(os.path.join(froot, 'docs', str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
+
     @contract
     def get_settings(self) -> 'DocSettings|None':
         try:
@@ -571,17 +583,21 @@ class Document:
     def get_paragraphs(self) -> 'list(DocParagraph)':
         return [par for par in self]
 
+    def get_latest_version(self):
+        from documentmodel.documentversion import DocumentVersion
+        return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id)
 
 new_contract('Document', Document)
 
 
 class DocParagraphIter:
-    def __init__(self, doc: 'Document', version:'tuple(int,int)|None'=None):
+    def __init__(self, doc: 'Document¦None' = None, version:'tuple(int,int)|None'=None):
         self.doc = doc
         self.next_index = 0
-        ver = doc.get_version() if version is None else version
-        name = doc.get_version_path(ver)
-        self.f = open(name, 'r') if os.path.isfile(name) else None
+        if doc is not None:
+            ver = doc.get_version() if version is None else version
+            name = doc.get_version_path(ver)
+            self.f = open(name, 'r') if os.path.isfile(name) else None
 
     def __iter__(self):
         return self

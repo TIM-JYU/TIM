@@ -82,15 +82,15 @@ def dereference_pars(pars, edit_window=False):
     return new_pars
 
 
-def pluginify(pars,
+def pluginify(doc,
+              pars,
               user,
               answer_db,
               user_id,
               custom_state=None,
               sanitize=True,
               do_lazy=False,
-              edit_window=False,
-              settings=None):
+              edit_window=False):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
@@ -106,6 +106,7 @@ def pluginify(pars,
     :type pars: list[DocParagraph]
     """
 
+    settings = doc.get_settings()
     pars = dereference_pars(pars, edit_window)
     if sanitize:
         for par in pars:
