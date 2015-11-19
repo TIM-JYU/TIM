@@ -1,16 +1,14 @@
-from difflib import SequenceMatcher
-import functools
 import json
 import os
 import shutil
-
 from datetime import datetime
-from time import time
+from difflib import SequenceMatcher
 from tempfile import mkstemp
-from lxml import etree
-from io import StringIO, BytesIO
+from time import time
 
 from contracts import contract, new_contract
+from lxml import etree, html
+
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
 from documentmodel.documentparser import DocumentParser
@@ -624,9 +622,9 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
     html_table = [par.get_html() for par in pars]
     index = []
     current_headers = None
-    for html in html_table:
+    for htmlstr in html_table:
         try:
-            index_entry = etree.fromstring(html)
+            index_entry = html.fragment_fromstring(htmlstr, create_parent=True)
         except etree.XMLSyntaxError:
             continue
         if index_entry.tag == 'div':
@@ -637,4 +635,3 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
     if current_headers is not None:
         index.append(current_headers)
     return index
-
