@@ -587,6 +587,10 @@ class Document:
         from documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id)
 
+    def get_original_document(self):
+        src_docid = self.get_settings().get_source_document()
+        return Document(src_docid) if src_docid is not None else None
+
 new_contract('Document', Document)
 
 

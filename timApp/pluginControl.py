@@ -58,17 +58,19 @@ def try_load_json(json_str):
         return json_str
 
 
-def dereference_pars(pars, edit_window=False):
+def dereference_pars(pars, edit_window=False, source_doc=None):
     """Resolves references in the given paragraphs.
 
     :type pars: list[DocParagraph]
     :param pars: The DocParagraphs to be processed.
+    :param edit_window: Calling from edit window or not.
+    :param source_doc: Default document for referencing.
     """
     new_pars = []
     for par in pars:
         if par.is_reference():
             try:
-                new_pars += par.get_referenced_pars(edit_window=edit_window)
+                new_pars += par.get_referenced_pars(edit_window=edit_window, source_doc=source_doc)
             except TimDbException as e:
                 err_par = DocParagraph.create(
                     par.doc,
@@ -107,7 +109,7 @@ def pluginify(doc,
     """
 
     settings = doc.get_settings()
-    pars = dereference_pars(pars, edit_window)
+    pars = dereference_pars(pars, edit_window, source_doc=doc.get_original_document())
     if sanitize:
         for par in pars:
             par.sanitize_html()
