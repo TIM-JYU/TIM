@@ -2,7 +2,9 @@
 
 import json
 import unittest
+
 from flask import session
+
 import tim
 from documentmodel.document import Document
 from markdownconverter import md_to_html
@@ -67,7 +69,7 @@ class TimTest(TimDbTest):
         timdb = self.get_db()
         a = TimTest.app
 
-        login_resp = self.login_test1(a)
+        login_resp = self.login_test1()
         self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
         doc_names = ['users/testuser1/testing',
                      'users/testuser1/testing2',
@@ -151,7 +153,7 @@ class TimTest(TimDbTest):
             self.assertEqual(1, len(notes))
             test2_note_id = notes[0]['id']
 
-        self.login_test1(a)
+        self.login_test1()
         self.assertInResponse(comment_of_test2,
                               a.get('/note/{}'.format(test2_note_id)))
         with a as a:
@@ -179,33 +181,30 @@ class TimTest(TimDbTest):
             "par_next": None
         })
 
-    def new_par(self, a, doc_id, text, next_id):
-        return a.jpost('/newParagraph/', {
+    def new_par(self, doc_id, text, next_id=None):
+        return TimTest.app.jpost('/newParagraph/', {
             "text": text,
             "docId": doc_id,
             "par_next": next_id
         })
 
-    def login_test1(self, a):
-        return a.post('/altlogin',
-                      data={'email': 'test1@example.com', 'password': 'test1pass'},
-                      follow_redirects=True)
+    def login_test1(self):
+        return TimTest.app.post('/altlogin',
+                                data={'email': 'test1@example.com', 'password': 'test1pass'},
+                                follow_redirects=True)
 
     def test_macro_doc(self):
         a = TimTest.app
-        self.login_test1(a)
+        self.login_test1()
         docname = 'users/testuser1/macrotest'
-        resp = load_json(a.jpost('/createDocument', {
-            'doc_name': docname
-        }))
-        doc = Document(resp['id'])
-        self.new_par(a, doc.doc_id, """
+        doc = self.create_doc(docname)
+        self.new_par(doc.doc_id, """
 ``` {settings=""}
 macro_delimiter: "%%"
 macros:
  rivi: kerros
 ```
-""", None)
+""")
         table_text = """
 {% set sarakeleveys = 50 %}
 {% set sarakkeet = ['eka', 'toka', 'kolmas', 'neljäs'] %}
@@ -221,8 +220,72 @@ macros:
         """
         table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
 
-        self.assertInResponse(table_html, self.new_par(a, doc.doc_id, table_text, None), json_key='texts')
+        self.assertInResponse(table_html, self.new_par(doc.doc_id, table_text, None), json_key='texts')
         self.assertInResponse(table_html, a.get('/view/' + docname))
+
+    def test_index_one_heading_per_par(self):
+        self.login_test1()
+        doc = self.create_doc('users/testuser1/indextest', """
+# Heading level 1
+Lorem ipsum.
+#-
+## Heading level 2
+#-
+### Heading level 3
+#-
+# Second heading level 1
+        """)
+        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'},
+                           [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
+                            {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
+                          ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
+                           [])], doc.get_index())
+
+    def test_index_many_headings_per_par(self):
+        self.login_test1()
+        doc = self.create_doc('users/testuser1/indextest2', """
+# Heading level 1
+Lorem ipsum.
+## Heading level 2
+
+### Heading level 3
+#-
+# Second heading level 1
+        """)
+        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'},
+                           [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
+                            {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
+                          ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
+                           [])], doc.get_index())
+
+    def test_index_duplicate_headings(self):
+        self.login_test1()
+        doc = self.create_doc('users/testuser1/indextest3', """
+# Same
+
+# Same
+        """)
+        self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
+                          ({'id': 'same-1', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+
+        doc = self.create_doc('users/testuser1/indextest4', """
+# Same
+#-
+# Same
+        """)
+        self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
+                          ({'id': 'same-1', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+
+    def create_doc(self, docname, initial_par=None, assert_status=200):
+        resp = TimTest.app.jpost('/createDocument', {
+            'doc_name': docname
+        })
+        self.assertResponseStatus(resp, assert_status)
+        resp_data = load_json(resp)
+        doc = Document(resp_data['id'])
+        if initial_par is not None:
+            self.new_par(doc.doc_id, initial_par)
+        return doc
 
 
 if __name__ == '__main__':
