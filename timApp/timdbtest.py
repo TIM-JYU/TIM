@@ -27,7 +27,7 @@ class TimDbTest(unittest.TestCase):
             shutil.rmtree(cls.test_files_path, onerror=change_permission_and_retry)
         Document.default_files_root = cls.test_files_path
         DocParagraph.default_files_root = cls.test_files_path
-        initdb2.initialize_database(cls.db_path, cls.test_files_path, create_docs=False)
+        initdb2.initialize_database(cls.db_path, cls.test_files_path, create_docs=False, print_progress=False)
 
     @classmethod
     def tearDownClass(cls):

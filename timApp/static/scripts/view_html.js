@@ -382,7 +382,7 @@ timApp.controller("ViewCtrl", [
                 caption = 'Add comment';
                 url = '/postNote';
                 data = {
-                    access: 'everyone',
+                    access: sc.$storage.noteAccess,
                     tags: {
                         difficult: false,
                         unclear: false
@@ -446,6 +446,15 @@ timApp.controller("ViewCtrl", [
             }
             return e;
         };
+
+        $($window).resize(function (e) {
+            if (e.target === $window) {
+                var selected = $('.par.lightselect, .par.selected');
+                if (selected.length > 0) {
+                    selected[0].scrollIntoView();
+                }
+            }
+        });
 
         sc.onClick = function (className, func) {
             var downEvent = null;
@@ -1037,7 +1046,8 @@ timApp.controller("ViewCtrl", [
         sc.editorFunctions = sc.getEditorFunctions();
 
         sc.$storage = $localStorage.$default({
-            defaultAction: null
+            defaultAction: null,
+            noteAccess: 'everyone'
         });
 
         try {

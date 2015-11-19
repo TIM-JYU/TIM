@@ -1,6 +1,7 @@
 from contracts import contract, new_contract
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
+from markdownconverter import expand_macros
 
 
 class DocSettings:
@@ -9,6 +10,16 @@ class DocSettings:
     macros_key = 'macros'
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = "source_document"
+
+    @classmethod
+    def is_valid_paragraph(cls, par):
+        if par.is_reference():
+            par = par.get_referenced_pars(set_html=False)[0]
+        if not par.is_setting():
+            return True
+
+        md = par.get_markdown().replace('```', '').replace('~~~', '')
+        return parse_yaml(md).__class__ != str
 
     @classmethod
     def from_paragraph(cls, par):
@@ -21,8 +32,10 @@ class DocSettings:
         if par.is_reference():
             par = par.get_referenced_pars(set_html=False)[0]
         if par.is_setting():
-            yaml_vals = parse_yaml(par.get_markdown())
-            if yaml_vals is str:
+            md = par.get_markdown().replace('```', '').replace('~~~', '')
+            yaml_vals = parse_yaml(md)
+            if type(yaml_vals) is str:
+                #raise ValueError("DocSettings yaml parse error: " + yaml_vals)
                 print("DocSettings yaml parse error: " + yaml_vals)
                 return DocSettings()
             else:
@@ -30,8 +43,19 @@ class DocSettings:
         else:
             return DocSettings()
 
-    def __init__(self, settings_dict=None):
+    @contract
+    def __init__(self, settings_dict: 'dict|None' = None):
         self.__dict = settings_dict if settings_dict else {}
+        self.sanitize_macros()
+
+    def sanitize_macros(self):
+        macros = self.__dict.get(self.macros_key, {})
+        if type(macros) is dict:
+            macros = {str(k): str(macros[k]) for k in macros}
+        else:
+            macros = {}
+
+        self.__dict[self.macros_key] = macros
 
     @contract
     def to_paragraph(self, doc) -> 'DocParagraph':
@@ -42,17 +66,20 @@ class DocSettings:
     def get_settings(self) -> 'dict':
         return self.__dict
 
-    def global_plugin_attrs(self):
-        return self.__dict.get(self.global_plugin_attrs_key)
+    @contract
+    def global_plugin_attrs(self) -> 'dict':
+        return self.__dict.get(self.global_plugin_attrs_key, {})
 
     def css(self):
         return self.__dict.get(self.css_key)
 
-    def get_macros(self):
-        return self.__dict.get(self.macros_key)
+    @contract
+    def get_macros(self) -> 'dict':
+        return self.__dict.get(self.macros_key, {})
 
-    def get_macro_delimiter(self):
-        return self.__dict.get(self.macro_delimiter_key)
+    @contract
+    def get_macro_delimiter(self) -> 'str':
+        return self.__dict.get(self.macro_delimiter_key, '%%')
 
     @contract
     def get_source_document(self) -> 'int|None':

@@ -129,6 +129,7 @@ def parse_plugin_values(par,
         yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
                                  macros=macros,
                                  macro_delimiter=macro_delimiter)
+        #print("yaml str is: " + yaml_str)
         values = parse_yaml(yaml_str)
         if type(values) is str:
             return {'error': "YAML is malformed: " + values}

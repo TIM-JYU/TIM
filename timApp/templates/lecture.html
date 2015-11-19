@@ -24,15 +24,14 @@
             </div>
         </div>
     </div>
-    <pop-up-dialog show="pollingStopped" caption="'Polling paused'" elem-id="'pausedWindow'">
+    <pop-up-dialog show="pollingStopped && lectureSettings.useNotPollingDialog" caption="'Polling paused'" elem-id="'pausedWindow'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>
     </pop-up-dialog>
-    <pop-up-dialog show="showLectureOptions" caption="'Join the lecture'">
+    {# <pop-up-dialog show="showLectureOptions" caption="'Join the lecture'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
-    </pop-up-dialog>
-
+    </pop-up-dialog> #}
     <pop-up-dialog show="showLectureForm" caption="'Create lecture'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>

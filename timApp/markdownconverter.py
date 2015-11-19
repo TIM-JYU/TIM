@@ -7,8 +7,12 @@ from htmlSanitize import sanitize_html
 from jinja2 import Environment
 
 
+def has_macros(text, macros, macro_delimiter=None):
+    return macro_delimiter is not None and len(macros) > 0 and macro_delimiter in text
+
+
 def expand_macros_regex(text, macros, macro_delimiter=None):
-    if macro_delimiter is None:
+    if not has_macros(text, macros, macro_delimiter):
         return text
     return re.sub('{0}([a-zA-Z]+){0}'.format(re.escape(macro_delimiter)),
                   lambda match: macros.get(match.group(1), 'UNKNOWN MACRO: ' + match.group(1)),
@@ -16,7 +20,7 @@ def expand_macros_regex(text, macros, macro_delimiter=None):
 
 
 def expand_macros_jinja2(text, macros, macro_delimiter=None):
-    if macro_delimiter is None:
+    if not has_macros(text, macros, macro_delimiter):
         return text
     env = Environment(variable_start_string=macro_delimiter,
                       variable_end_string=macro_delimiter,
@@ -30,7 +34,7 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None):
 
 
 expand_macros = expand_macros_jinja2
-
+#expand_macros = expand_macros_regex
 
 @contract
 def md_to_html(text: str, sanitize: bool=True, macros: 'dict(str:str)|None'=None, macro_delimiter=None) -> str:
@@ -45,6 +49,7 @@ def md_to_html(text: str, sanitize: bool=True, macros: 'dict(str:str)|None'=None
     text = expand_macros(text, macros, macro_delimiter)
 
     raw = call_dumbo([text])
+
     if sanitize:
         return sanitize_html(raw[0])
     else:
@@ -63,10 +68,18 @@ def md_list_to_html_list(texts: 'list(str)',
     :type texts: list[str]
     :param texts: The list of markdown texts to be converted.
     """
+    #from time import time
 
+    #t0 = time()
     texts = [expand_macros(text, macros, macro_delimiter) for text in texts]
+    #t1 = time()
+    #print("expand_macros for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
 
+    #t0 = time()
     raw = call_dumbo(texts)
+    #t1 = time()
+    #print("Dumbo call for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
+
     if sanitize:
         return [sanitize_html(p) for p in raw]
     else:

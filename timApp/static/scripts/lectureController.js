@@ -17,12 +17,11 @@ var timApp = angular.module('timApp');
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
 //TODO: Button, to get questions and wall.
-timApp.controller("LectureController", ['$scope', '$controller', "$http", "$window", '$rootScope', '$timeout', "$location",
+timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScope', '$timeout',
 
-    function ($scope, controller, http, $window, $rootScope, $timeout, $location) {
+    function ($scope, http, $window, $rootScope, $timeout) {
         "use strict";
         $scope.docNamePath = "";
-        $scope.location = $location.host();
         $scope.lectureStartTime = "";
         $scope.lectureEndTime = "";
         $scope.lectureName = "";
@@ -98,7 +97,8 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
             'showLectureOptions': false,
             'useQuestions': true,
             'useWall': true,
-            'useAnswers': true
+            'useAnswers': true,
+            'useNotPollingDialog': true
         };
 
         var wall = $('#wall');
@@ -207,6 +207,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.showDialog("Wrong access code!");
                         return false;
                     } else {
+                        $scope.focusOn();
                         $scope.studentTable = [];
                         $scope.lecturerTable = [];
                         input.removeClass('errorBorder');
@@ -216,8 +217,11 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             $scope.lectureSettings.useWall = true;
                             $scope.lectureSettings.useQuestions = true;
                         } else {
-                            $scope.showLectureOptions = true;
+                            // $scope.showLectureOptions = true;
                             $scope.lectureAnswer = answer;
+                            $scope.showLectureView($scope.lectureAnswer);
+                            $scope.lectureSettings.useWall = true;
+                            $scope.lectureSettings.useQuestions = true;
                         }
                         return true;
                     }
@@ -287,6 +291,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         }, 1);
 
                         var answer = {"askedId": id};
+                        $scope.current_question_id = id;
                         $scope.getLectureAnswers(answer);
                     }
                     $rootScope.$broadcast("setQuestionJson", {
@@ -360,6 +365,11 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         $scope.$on('closeQuestion', function () {
             $scope.current_question_id = false;
             $scope.showAnswerWindow = false;
+        });
+
+
+        $scope.$on('questionStopped', function() {
+            $scope.current_question_id = false;
         });
 
 
@@ -954,7 +964,7 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                     }
                 })
                     .success(function (answer) {
-
+                        $scope.requestOnTheWay = false;
                         if (!answer.isLecture) {
                             $scope.showBasicView(answer);
                             return;
@@ -978,17 +988,25 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                         $scope.addPeopleToList(answer.lecturers, $scope.lecturerTable);
 
                         // If 'new_end_time' is not undefined, extend or end question according to new_end_time
-                        if (typeof answer.new_end_time !== "undefined") {
+                        if (typeof answer.new_end_time !== "undefined" && !$scope.isLecturer) {
                             $rootScope.$broadcast('update_end_time', answer.new_end_time);
                         // If 'question' or 'result' is in answer, show question/explanation accordingly
                         } else if (typeof answer.points_closed !== "undefined") {
                             $scope.current_points_id = false;
                             $rootScope.$broadcast('update_end_time', null);
-                        } else if ((answer.question || answer.result) && !$scope.isLecturer) {
-                            $scope.showQuestion(answer);
+                        } else if ((answer.question || answer.result)) {
+                            if ($scope.isLecturer) {
+                                if (answer.result) {
+                                    $scope.current_question_id = false;
+                                    $scope.current_points_id = answer.askedId;
+                                } else {
+                                    $scope.current_question_id = answer.askedId;
+                                }
+                            } else {
+                                $scope.showQuestion(answer);
+                            }
                         }
 
-                        $scope.requestOnTheWay = false;
                         $window.clearTimeout(timeout);
                         if ($scope.polling) {
 
@@ -1041,7 +1059,6 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                             }
                         } else {
                             $scope.pollingStopped = true;
-                            //$('#pausedWindow').center();
                             $window.console.log("Got answer but not polling anymore.");
                         }
                     })
@@ -1149,14 +1166,18 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
         };
 
         $scope.gotFocus = function () {
-            //if (typeof $scope.timeout !== 'undefined') $window.clearTimeout($scope.timeout);
+            if (!$scope.lectureSettings.inLecture) return;
+            console.log('Got focus');
+            if (typeof $scope.timeout !== 'undefined') $window.clearTimeout($scope.timeout);
+            if (typeof timeout !== 'undefined') $window.clearTimeout(timeout);
             $scope.polling = true;
             $scope.pollingStopped = false;
             $scope.$apply();
             if (!$scope.requestOnTheWay) $scope.startLongPolling($scope.lastID);
-            console.log('Got focus');
+            $scope.focusOff();
         };
 
+        /*
         jQuery.fn.center = function (parent) {
             if (parent) {
                 parent = this.parent();
@@ -1168,27 +1189,63 @@ timApp.controller("LectureController", ['$scope', '$controller', "$http", "$wind
                 "left": ((($(parent).width() - this.outerWidth()) / 2) + $(parent).scrollLeft() + "px")
             });
             return this;
-        };
+        };*/
 
         $scope.lostFocus = function () {
             console.log('Lost focus');
             $scope.polling = false;
-            /*
-            $scope.timeout = $window.setTimeout(function() {
-                console.log('Stopped polling');
-
-            }, 5000);*/
+            angular.element($window).on('focus.gotfocus', function () {
+                $scope.gotFocus();
+            });
         };
 
-        angular.element($window).on('focus', function () {
-            $scope.gotFocus();
+        $scope.eventKey = null;
+
+        var stateKey;
+        var keys = {
+            hidden: "visibilitychange",
+            webkitHidden: "webkitvisibilitychange",
+            mozHidden: "mozvisibilitychange",
+            msHidden: "msvisibilitychange"
+        };
+
+        for (stateKey in keys) {
+            if (stateKey in document) {
+                $scope.eventKey = keys[stateKey];
+                console.log(keys[stateKey]);
+                break;
+            }
+        }
+
+        $(document).on('visibilitychange', function () {
+            if (document.visibilityState == 'hidden') {
+                console.log('hidden');
+                $scope.timeout = $window.setTimeout(function() {
+                    $scope.lostFocus();
+                }, 1000)
+            } else {
+                $scope.gotFocus();
+                console.log('visible');
+            }
         });
+
+        $scope.focusOn = function () {
+            angular.element($window).on('focus.gotfocus', function () {
+                $scope.gotFocus();
+            });
+        };
+
+        $scope.focusOff = function () {
+            angular.element($window).off('focus.gotfocus');
+        };
 
         angular.element($window).on('blur', function () {
-            $scope.lostFocus();
+            angular.element($window).on('focus.gotfocus', function () {
+                $scope.gotFocus();
+            });
         });
 
-        $(document).focus();
+        $scope.focusOn();
     }
 ])
 ;

@@ -19,8 +19,8 @@ DROP TABLE IF EXISTS PointsClosed;
 CREATE TABLE RunningQuestion (
   asked_id    INTEGER NOT NULL PRIMARY KEY,
   lecture_id  INTEGER NOT NULL,
-  ask_time    INTEGER NOT NULL,
-  end_time    INTEGER
+  ask_time    BIGINT NOT NULL,
+  end_time    BIGINT
 );
 
 CREATE TABLE UserShown (

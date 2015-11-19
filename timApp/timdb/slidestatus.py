@@ -1,25 +1,24 @@
-"""
-Used to handle temp data that is related to lecture, question and user
-"""
-
 from contracts import contract
 from sqlalchemy.exc import IntegrityError
+from timdb.tempdbbase import TempDbBase
 
 
-class TempInfoUserQuestion:
-    def __init__(self, db, table):
-        self.db = db
-        self.table = table
-
+class SlideStatuses(TempDbBase):
     @contract
-    def add_user_info(self, lecture_id: "int", asked_id: "int", user_id: "int"):
-        user_info = self.table(lecture_id, asked_id, user_id)
+    def update_or_add_status(self, doc_id: "int", status: "str"):
+        status = self.table(doc_id, status)
         try:
-            self.db.session.merge(user_info)
+            self.db.session.merge(status)
             self.db.session.commit()
         except IntegrityError:
             print("Info already exists")
             self.db.session.rollback()
+
+    @contract
+    def get_status(self, doc_id: "int"):
+        rows = self.table.query.filter_by(doc_id=doc_id)
+        row = rows.first()
+        return row
 
     @contract
     def delete_user_info(self, lecture_id: "int", asked_id: "int", user_id: "int"):

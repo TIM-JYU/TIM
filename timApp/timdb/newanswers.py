@@ -1,86 +1,38 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase
+from timdb.tempdbbase import TempDbBase
 
 
-class NewAnswers(TimDbBase):
+class NewAnswers(TempDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
     @contract
-    def user_answered(self, lecture_id: "int", asked_id: "int", user_id: "int", commit: 'bool'=True):
-        """
-        Adds info that question has been extended for user
-        :param asked_id: asked question id
-        :param user_id: user id
-        :return:
-        """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            INSERT INTO NewAnswer(lecture_id, asked_id, user_id)
-            VALUES (?,?,?)
-        """, [lecture_id, asked_id, user_id])
-
-        if commit:
-            self.db.commit()
+    def user_answered(self, lecture_id: "int", asked_id: "int", user_id: "int"):
+        new_answer = self.table(lecture_id, asked_id, user_id)
+        self.db.session.add(new_answer)
+        self.db.session.commit()
 
     @contract
-    def delete_question_answers(self, asked_id: "int", commit: 'bool'=True):
-        """
-        Remove a running question that is related to lecture
-        :param asked_id: asked questions id
-        :return:
-        """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            DELETE FROM NewAnswer
-            WHERE asked_id = ?
-        """, [asked_id])
-
-        if commit:
-            self.db.commit()
+    def delete_question_answers(self, asked_id: "int"):
+        self.table.query.filter_by(asked_id=asked_id).delete()
+        self.db.session.commit()
 
     @contract
-    def delete_lecture_answers(self, lecture_id: "int", commit: 'bool'=True):
-        """
-        Remove a running question that is related to lecture
-        :param asked_id: asked questions id
-        :return:
-        """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            DELETE FROM NewAnswer
-            WHERE lecture_id = ?
-        """, [lecture_id])
-
-        if commit:
-            self.db.commit()
+    def delete_lecture_answers(self, lecture_id: "int"):
+        self.table.query.filter_by(lecture_id=lecture_id).delete()
+        self.db.session.commit()
 
     @contract
-    def get_new_answers(self, asked_id: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
+    def get_new_answers(self, asked_id: "int"):
+        answers = self.table.query.filter_by(asked_id=asked_id)
+        new_answers = answers.all()
 
-        cursor.execute("""
-            SELECT user_id
-            FROM NewAnswer
-            WHERE asked_id = ?
-        """, [asked_id])
+        new_user_ids = []
 
-        users = cursor.fetchall()
-        user_ids = []
+        if new_answers:
+            for answer in new_answers:
+                new_user_ids.append(answer.user_id)
+                self.db.session.delete(answer)
+            self.db.session.commit()
 
-        for user in users:
-            user_ids.append(user['user_id'])
-        
-        cursor.execute("""
-            DELETE
-            FROM NewAnswer
-            WHERE asked_id = ? AND user_id IN (%s)
-        """ % ', '.join('?' * len(user_ids)), [asked_id] + user_ids)
-
-        if commit:
-            self.db.commit()
-
-        return user_ids
+        return new_user_ids

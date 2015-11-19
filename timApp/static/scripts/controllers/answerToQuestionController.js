@@ -56,7 +56,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
      */
     $scope.close = function (callback) {
         if ($scope.isLecturer) $scope.stopQuestion(callback);
-        else if ($scope.result) $scope.$emit('pointsClosed', $scope.askedId);
+        if ($scope.result) $scope.$emit('pointsClosed', $scope.askedId);
         $scope.dynamicAnswerSheetControl.closeQuestion();
     };
 
@@ -71,6 +71,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             }
         })
             .success(function () {
+                $scope.$emit('questionStopped');
                 $scope.questionEnded = true;
                 $scope.dynamicAnswerSheetControl.endQuestion();
                 console.log("Question ", $scope.askedId, " stopped");
@@ -127,6 +128,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
             }
         })
             .success(function () {
+                $scope.current_points_id = $scope.askedId;
                 $scope.result = true;
                 $scope.dynamicAnswerSheetControl.createAnswer();
             })

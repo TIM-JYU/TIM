@@ -13,6 +13,7 @@ from options import *
 import traceback
 import time
 import tim
+from markdownconverter import expand_macros
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -72,7 +73,7 @@ def slide_document(doc_name):
 
 
 @contract
-def parse_range(start_index: 'int|None', end_index: 'int|None') -> 'range|None':
+def parse_range(start_index: 'int|str|None', end_index: 'int|str|None') -> 'range|None':
     if start_index is None and end_index is None:
         return None
     return( int(start_index), int(end_index) )
@@ -145,7 +146,12 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     except (ValueError, TypeError):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
+
+    #from time import time
+    #t0 = time()
     xs = get_document(doc_id, view_range)
+    #print("Loaded all paragraphs in {} s.".format(time() - t0))
+
     user = getCurrentUserId()
 
     if teacher:
@@ -159,6 +165,18 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     else:
         users = []
     current_user = timdb.users.getUser(user)
+
+    doc = Document(doc_id)
+    doc_settings = doc.get_settings()
+    doc_css = doc_settings.css() if doc_settings else None
+    DocParagraph.preload_htmls(xs, doc_settings)
+
+    if doc_settings:
+        src_doc_id = doc_settings.get_source_document()
+        if src_doc_id is not None:
+            src_doc = Document(src_doc_id)
+            DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings())
+
     texts, jsPaths, cssPaths, modules = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
 
     reqs = pluginControl.get_all_reqs()
@@ -188,10 +206,6 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
-
-    doc = Document(doc_id)
-    doc_settings = doc.get_settings()
-    doc_css = doc_settings.css() if doc_settings else None
 
     # TODO: Check if doc variable is needed
     result = render_template(template_name,

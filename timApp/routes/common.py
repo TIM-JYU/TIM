@@ -5,12 +5,11 @@ from documentmodel.document import Document
 import pluginControl
 
 from timdb.timdb2 import TimDb
-from timdb.tempdb import TempDb
 from flask import current_app, session, abort, g, Response, request
 import json
 from timdb.docidentifier import DocIdentifier
 from werkzeug.exceptions import default_exceptions, HTTPException
-from flask import make_response, abort as flask_abort, request
+from flask import make_response, abort as flask_abort
 import time
 
 def getCurrentUserId():
@@ -38,17 +37,6 @@ def getTimDb():
                         files_root_path=current_app.config['FILES_PATH'],
                         current_user_name=getCurrentUserName())
     return g.timdb
-
-
-def getTempDb():
-    """
-
-    :rtype : TempDb
-    """
-    if not hasattr(g, 'tempdb'):
-        g.tempdb = TempDb(db_path=current_app.config['TEMP_DATABASE'],
-                          files_root_path=current_app.config['FILES_PATH'])
-    return g.tempdb
 
 
 def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):

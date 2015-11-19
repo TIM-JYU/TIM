@@ -1,16 +1,14 @@
-from difflib import SequenceMatcher
-import functools
 import json
 import os
 import shutil
-
 from datetime import datetime
-from time import time
+from difflib import SequenceMatcher
 from tempfile import mkstemp
-from lxml import etree
-from io import StringIO, BytesIO
+from time import time
 
 from contracts import contract, new_contract
+from lxml import etree, html
+
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
 from documentmodel.documentparser import DocumentParser
@@ -213,18 +211,6 @@ class Document:
         self.__write_changelog(ver, op, par_id, op_params)
         self.version = ver
         return ver
-
-    @contract
-    def get_name(self) -> 'str':
-        """
-        Gets the document name from its main heading.
-        :return: Document name or "Document n" if not found.
-        """
-        for par in self:
-            md = par.get_markdown().lstrip()
-            if md.startswith('#'):
-                return md.lstrip('# ')
-        return "Document {}".format(self.doc_id)
 
     @contract
     def has_paragraph(self, par_id: 'str') -> 'bool':
@@ -550,7 +536,7 @@ class Document:
         for par in old_pars:
             self.delete_paragraph(par)
 
-    def get_named_section(self, section_name, cache=True):
+    def get_named_section(self, section_name):
         start_found = False
         end_found = False
         pars = []
@@ -558,11 +544,7 @@ class Document:
             if par.get_attr('area') == section_name:
                 start_found = True
             if start_found:
-                if cache:
-                    pars.append(par)
-                else:
-                    pars.append(DocParagraph.get_latest(
-                        self, par.get_id(), cache=False, files_root=self.files_root))
+                pars.append(par)
             if par.get_attr('area_end') == section_name:
                 end_found = True
                 break
@@ -626,17 +608,23 @@ class DocParagraphIter:
             self.f = None
 
 
-@functools.lru_cache(maxsize=1024)
 @contract
 def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tuple)':
     doc = Document(doc_id)
-    html_table = [par.get_html() for par in DocParagraphIter(doc, version)
-                  if (par.get_markdown().startswith('#') or (par.is_multi_block() and par.has_headers()))]
+    pars = []
+    for par in DocParagraphIter(doc, version):
+        md = par.get_markdown()
+        if (len(md) > 2 and md[0] == '#' and md[1] != '.')\
+            or (par.is_multi_block() and par.has_headers()):
+                pars.append(par)
+
+    DocParagraph.preload_htmls(pars, doc.get_settings())
+    html_table = [par.get_html() for par in pars]
     index = []
     current_headers = None
-    for html in html_table:
+    for htmlstr in html_table:
         try:
-            index_entry = etree.fromstring(html)
+            index_entry = html.fragment_fromstring(htmlstr, create_parent=True)
         except etree.XMLSyntaxError:
             continue
         if index_entry.tag == 'div':
@@ -647,4 +635,3 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
     if current_headers is not None:
         index.append(current_headers)
     return index
-
