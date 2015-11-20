@@ -3,6 +3,7 @@
 import os
 from sqlite3 import Connection
 
+from copy import deepcopy
 from contracts import contract
 from ansi2html import Ansi2HTMLConverter
 import sqlite3
@@ -104,8 +105,8 @@ class Documents(TimDbBase):
                 if par.is_setting():
                     continue
 
-            ref_attrs = {'r': 'tr', 'rp': par.get_id()}
-            doc.add_paragraph(par.get_markdown(), attrs=ref_attrs)
+            ref_par = par.create_reference(doc, r='tr', add_rd=False)
+            doc.add_paragraph_obj(ref_par)
 
         return doc
 

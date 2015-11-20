@@ -55,6 +55,26 @@ class DocParagraph(DocParagraphBase):
         par._cache_props()
         return par
 
+    @contract
+    def create_reference(self, doc, r: 'str|None' = None, add_rd: 'bool' = True) -> 'DocParagraph':
+        par = DocParagraph(doc, self.files_root)
+        par.__data = dict(self.__data)
+        par.__data['rp'] = self.get_id()
+        par.__data.pop('ra', None)
+
+        if add_rd:
+            par.__data['rd'] = self.get_doc_id()
+        else:
+            par.__data.pop('rd', None)
+
+        if r is not None:
+            par.__data['r'] = r
+        else:
+            par.__data.pop('r', None)
+
+        par._cache_props()
+        return par
+
     @classmethod
     @contract
     def from_dict(cls, doc, d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
@@ -414,10 +434,18 @@ class DocParagraph(DocParagraphBase):
 
     def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None):
         def reference_par(ref_par, write_link=False):
-            par = deepcopy(ref_par)
+            tr = self.get_attr('r') == 'tr'
+            if tr:
+                par = DocParagraph.create(ref_par.doc, md=self.get_markdown(),
+                                          attrs=ref_par.get_attrs(), props=ref_par.get_properties())
+            else:
+                par = deepcopy(ref_par)
+
             par.set_original(self)
+            if tr:
+                pass
             if set_html:
-                html = self.get_html() if self.get_attr('r') == 'tr' else ref_par.get_html()
+                html = self.get_html() if tr else ref_par.get_html()
                 if write_link:
                     srclink = '&nbsp;<a class="parlink" href="/view/{0}#{1}">[{0}]</a></p>'.format(ref_par.get_doc_id(), ref_par.get_id())
                     html = self.__rrepl(html, '</p>', srclink)
