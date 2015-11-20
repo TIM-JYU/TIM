@@ -436,7 +436,7 @@ class DocParagraph(DocParagraphBase):
         def reference_par(ref_par, write_link=False):
             tr = self.get_attr('r') == 'tr'
             if tr:
-                par = DocParagraph.create(ref_par.doc, md=self.get_markdown(),
+                par = DocParagraph.create(ref_par.doc, par_id=ref_par.get_id(), md=self.get_markdown(),
                                           attrs=ref_par.get_attrs(), props=ref_par.get_properties())
             else:
                 par = deepcopy(ref_par)
