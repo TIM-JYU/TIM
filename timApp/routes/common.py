@@ -180,19 +180,17 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_window=False):
+def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_window=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
-    group = timdb.users.getPersonalUserGroup(user_id)
-    doc = Document(doc_id)
-    html_pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
+    html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
+                                                                      pars,
                                                                       current_user['name'],
                                                                       timdb.answers,
                                                                       user_id,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
-                                                                      edit_window=edit_window,
-                                                                      settings=doc.get_settings())
+                                                                      edit_window=edit_window)
     #req_json = request.get_json()
 
     #if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
@@ -214,6 +212,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
         p['status'] = ''
         p['notes'] = []
 
+    group = timdb.users.getPersonalUserGroup(user_id)
     readings = timdb.readings.getReadings(group, doc)
 
     for r in readings:

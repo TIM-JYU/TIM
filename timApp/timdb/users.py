@@ -1,6 +1,6 @@
 import json
 from contracts import contract, new_contract
-from timdb.timdbbase import TimDbBase
+from timdb.timdbbase import TimDbBase, TimDbException
 
 import hashlib
 import sqlite3
@@ -356,6 +356,10 @@ class Users(TimDbBase):
     def getPersonalUserGroup(self, user_id: 'int') -> 'int':
         """Gets the personal user group for the user.
         """
+        user = self.getUser(user_id)
+        if user is None:
+            raise TimDbException("No such user")
+
         userName = self.getUser(user_id)['name']
         groups = self.getUserGroupsByName(userName)
         if len(groups) > 0:

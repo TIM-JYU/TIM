@@ -58,17 +58,19 @@ def try_load_json(json_str):
         return json_str
 
 
-def dereference_pars(pars, edit_window=False):
+def dereference_pars(pars, edit_window=False, source_doc=None):
     """Resolves references in the given paragraphs.
 
     :type pars: list[DocParagraph]
     :param pars: The DocParagraphs to be processed.
+    :param edit_window: Calling from edit window or not.
+    :param source_doc: Default document for referencing.
     """
     new_pars = []
     for par in pars:
         if par.is_reference():
             try:
-                new_pars += par.get_referenced_pars(edit_window=edit_window)
+                new_pars += par.get_referenced_pars(edit_window=edit_window, source_doc=source_doc)
             except TimDbException as e:
                 err_par = DocParagraph.create(
                     par.doc,
@@ -82,31 +84,35 @@ def dereference_pars(pars, edit_window=False):
     return new_pars
 
 
-def pluginify(pars,
+def pluginify(doc,
+              pars,
               user,
               answer_db,
               user_id,
               custom_state=None,
               sanitize=True,
               do_lazy=False,
-              edit_window=False,
-              settings=None):
+              edit_window=False):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
-    :param sanitize: Whether the blocks should be sanitized before processing.
+    :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
     :param user: The current user's username.
     :param answer_db: A reference to the answer database.
     :param user_id: The user id.
     :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
                          If this parameter is specified, the expression len(blocks) MUST be 1.
+    :param sanitize: Whether the blocks should be sanitized before processing.
+    :param do_lazy Whether to use lazy versions of the plugins.
+    :param edit_window Whether the method is called from the edit window or not.
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
 
     :type pars: list[DocParagraph]
     """
 
-    pars = dereference_pars(pars, edit_window)
+    settings = doc.get_settings()
+    pars = dereference_pars(pars, edit_window, source_doc=doc.get_original_document())
     if sanitize:
         for par in pars:
             par.sanitize_html()

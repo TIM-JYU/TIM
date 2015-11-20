@@ -3,6 +3,7 @@
 import os
 from sqlite3 import Connection
 
+from copy import deepcopy
 from contracts import contract
 from ansi2html import Ansi2HTMLConverter
 import sqlite3
@@ -93,17 +94,19 @@ class Documents(TimDbBase):
             raise TimDbException('The document does not exist!')
 
         doc = self.create(name, owner_group_id)
-
-        settings = DocSettings()
-        settings.set_source_document(original_doc.doc_id)
-        doc.add_paragraph_obj(settings.to_paragraph(doc))
+        first_par = True
 
         for par in original_doc:
-            ref_attrs = {'r': 'tr', 'rp': par.get_id()}
-            #ref_par = DocParagraph.create(doc, md = par.get_markdown(), attrs=ref_attrs)
-            doc.add_paragraph(par.get_markdown(), attrs=ref_attrs)
-            #doc.add_paragraph_obj(ref_par)
-            #doc.add_ref_paragraph(par, par.get_markdown())
+            if first_par:
+                first_par = False
+                settings = DocSettings.from_paragraph(par) if par.is_setting() else DocSettings()
+                settings.set_source_document(original_doc.doc_id)
+                doc.add_paragraph_obj(settings.to_paragraph(doc))
+                if par.is_setting():
+                    continue
+
+            ref_par = par.create_reference(doc, r='tr', add_rd=False)
+            doc.add_paragraph_obj(ref_par)
 
         return doc
 

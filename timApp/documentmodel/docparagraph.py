@@ -55,6 +55,26 @@ class DocParagraph(DocParagraphBase):
         par._cache_props()
         return par
 
+    @contract
+    def create_reference(self, doc, r: 'str|None' = None, add_rd: 'bool' = True) -> 'DocParagraph':
+        par = DocParagraph(doc, self.files_root)
+        par.__data = dict(self.__data)
+        par.__data['rp'] = self.get_id()
+        par.__data.pop('ra', None)
+
+        if add_rd:
+            par.__data['rd'] = self.get_doc_id()
+        else:
+            par.__data.pop('rd', None)
+
+        if r is not None:
+            par.__data['r'] = r
+        else:
+            par.__data.pop('r', None)
+
+        par._cache_props()
+        return par
+
     @classmethod
     @contract
     def from_dict(cls, doc, d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
@@ -153,7 +173,7 @@ class DocParagraph(DocParagraphBase):
         return self.__data['id']
 
     @contract
-    def get_rd(self) -> 'str|None':
+    def get_rd(self) -> 'int|str|None':
         if 'rd' in self.__data['attrs']:
             return self.get_attr('rd')
 
@@ -235,9 +255,9 @@ class DocParagraph(DocParagraphBase):
                 unloaded_mds.append(par.get_markdown())
                 unloaded_pars.append(par)
 
-        print("{} paragraphs are marked dynamic".format(dyn))
-        print("{} paragraphs are cached".format(l))
-        print("{} paragraphs are not cached".format(len(unloaded_pars)))
+        #print("{} paragraphs are marked dynamic".format(dyn))
+        #print("{} paragraphs are cached".format(l))
+        #print("{} paragraphs are not cached".format(len(unloaded_pars)))
 
         if len(unloaded_pars) > 0:
             htmls = call_dumbo(unloaded_mds)
@@ -412,38 +432,53 @@ class DocParagraph(DocParagraphBase):
         rindex = s.rfind(old)
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
-    def get_referenced_pars(self, edit_window=False, set_html=True):
-        def reference_par(ref_par, attrs, classname='parref', trclassname='partranslate', write_link=False):
-            par = deepcopy(ref_par)
+    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None):
+        def reference_par(ref_par, write_link=False):
+            tr = self.get_attr('r') == 'tr'
+            if tr:
+                par = DocParagraph.create(ref_par.doc, md=self.get_markdown(),
+                                          attrs=ref_par.get_attrs(), props=ref_par.get_properties())
+            else:
+                par = deepcopy(ref_par)
+
             par.set_original(self)
+            if tr:
+                pass
             if set_html:
-                html = self.get_html() if self.get_attr('r') == 'tr' else ref_par.get_html()
+                html = self.get_html() if tr else ref_par.get_html()
                 if write_link:
                     srclink = '&nbsp;<a class="parlink" href="/view/{0}#{1}">[{0}]</a></p>'.format(ref_par.get_doc_id(), ref_par.get_id())
                     html = self.__rrepl(html, '</p>', srclink)
-                    print(html)
                 par.__set_html(html)
             return par
 
         attrs = self.get_attrs()
         is_default_rd = False
         if 'rd' in attrs:
-            ref_docid = attrs['rd']
+            try:
+                ref_docid = int(attrs['rd'])
+            except ValueError as e:
+                raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
         else:
-            settings = self.doc.get_settings()
-            default_rd = settings.get_source_document()
+            if source_doc is not None:
+                default_rd = source_doc.doc_id
+            else:
+                settings = self.doc.get_settings()
+                default_rd = settings.get_source_document()
             is_default_rd = True
             if default_rd is None:
                 raise TimDbException('Source document for reference not specified.')
             ref_docid = default_rd
 
-        from documentmodel.document import Document  # Document import needs to be here to avoid circular import
-        try:
-            ref_doc = Document(int(ref_docid))
-        except ValueError as e:
-            raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
+        if source_doc is None:
+            from documentmodel.document import Document  # Document import needs to be here to avoid circular import
+            ref_doc = Document(ref_docid)
+        else:
+            ref_doc = source_doc
+
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
+
         if self.is_par_reference():
             if self.get_doc_id() == int(ref_docid) and self.get_id() == attrs['rp']:
                 raise TimDbException('Paragraph is referencing itself!')
@@ -451,27 +486,11 @@ class DocParagraph(DocParagraphBase):
                 raise TimDbException('The referenced paragraph does not exist.')
 
             ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
-            return [reference_par(ref_par, attrs, write_link=not is_default_rd)]
+            return [reference_par(ref_par, write_link=not is_default_rd)]
 
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
-            pars = []
-            n = len(ref_pars)
-
-            if n < 2 or is_default_rd:
-                return [reference_par(ref_par, attrs, write_link=not is_default_rd) for ref_par in ref_pars]
-
-            for i in range(0, len(ref_pars)):
-                if i == 0:
-                    par = reference_par(ref_pars[i], attrs, classname="parref-begin", write_link=True)
-                elif i == n - 1:
-                    par = reference_par(ref_pars[i], attrs, classname="parref-end")
-                else:
-                    par = reference_par(ref_pars[i], attrs, classname="parref-mid")
-
-                pars.append(par)
-
-            return pars
+            return [reference_par(ref_par, write_link=not is_default_rd) for ref_par in ref_pars]
         else:
             assert False
 

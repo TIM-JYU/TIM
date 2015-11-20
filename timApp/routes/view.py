@@ -166,7 +166,7 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
         users = []
     current_user = timdb.users.getUser(user)
 
-    doc = Document(doc_id)
+    doc = Document(doc_id).get_latest_version()
     doc_settings = doc.get_settings()
     doc_css = doc_settings.css() if doc_settings else None
     DocParagraph.preload_htmls(xs, doc_settings)
@@ -177,7 +177,8 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
             src_doc = Document(src_doc_id)
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings())
 
-    texts, jsPaths, cssPaths, modules = post_process_pars(xs, doc_id, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
+    texts, jsPaths, cssPaths, modules = post_process_pars(
+        doc, xs, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
 
     reqs = pluginControl.get_all_reqs()
 
