@@ -201,12 +201,12 @@ def get_state():
     doc = Document(doc_id)
     block = doc.get_paragraph(par_id)
 
-    texts, js_paths, css_paths, modules = pluginControl.pluginify([block],
+    texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
+                                                                  [block],
                                                                   user['name'],
                                                                   timdb.answers,
                                                                   user_id,
-                                                                  custom_state=state,
-                                                                  settings=doc.get_settings())
+                                                                  custom_state=state)
     return jsonResponse(texts[0])
 
 

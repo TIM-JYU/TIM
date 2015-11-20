@@ -101,7 +101,8 @@ class Documents(TimDbBase):
                 settings = DocSettings.from_paragraph(par) if par.is_setting() else DocSettings()
                 settings.set_source_document(original_doc.doc_id)
                 doc.add_paragraph_obj(settings.to_paragraph(doc))
-                continue
+                if par.is_setting():
+                    continue
 
             ref_attrs = {'r': 'tr', 'rp': par.get_id()}
             doc.add_paragraph(par.get_markdown(), attrs=ref_attrs)

@@ -80,12 +80,12 @@ class Document:
         return os.path.isfile(os.path.join(froot, 'docs', str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
 
     @contract
-    def get_settings(self) -> 'DocSettings|None':
+    def get_settings(self) -> 'DocSettings':
         try:
             i = self.__iter__()
             return DocSettings.from_paragraph(next(i))
         except StopIteration:
-            return None
+            return DocSettings()
         finally:
             i.close()
 

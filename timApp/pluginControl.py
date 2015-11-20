@@ -96,13 +96,16 @@ def pluginify(doc,
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
-    :param sanitize: Whether the blocks should be sanitized before processing.
+    :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
     :param user: The current user's username.
     :param answer_db: A reference to the answer database.
     :param user_id: The user id.
     :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
                          If this parameter is specified, the expression len(blocks) MUST be 1.
+    :param sanitize: Whether the blocks should be sanitized before processing.
+    :param do_lazy Whether to use lazy versions of the plugins.
+    :param edit_window Whether the method is called from the edit window or not.
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
 
     :type pars: list[DocParagraph]

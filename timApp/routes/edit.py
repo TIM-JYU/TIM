@@ -154,16 +154,18 @@ def preview(doc_id):
         doc = Document(doc_id)
         try:
             blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
-        except ValidationException as e:
+            return par_response(blocks, doc_id, edit_window=True)
+        except Exception as e:
             err_html = '<div class="pluginError">{}</div>'.format(sanitize_html(str(e)))
             blocks = [DocParagraph.create(doc=doc, md=err_html, html=err_html)]
-        return par_response(blocks, doc_id, edit_window=True)
+            return par_response(blocks, doc_id, edit_window=True)
     else:
         return jsonResponse({'texts': md_to_html(text)})
 
 
 def par_response(blocks, doc_id, edit_window=False):
-    pars, js_paths, css_paths, modules = post_process_pars(blocks, doc_id, getCurrentUserId(), edit_window=edit_window)
+    doc = Document(doc_id)
+    pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, getCurrentUserId(), edit_window=edit_window)
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
                                                   rights=get_rights(doc_id)),

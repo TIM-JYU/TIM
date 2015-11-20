@@ -61,12 +61,12 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
         users = []
     current_user = timdb.users.getUser(user)
     doc = Document(doc_id)
-    texts, js_paths, css_paths, modules = pluginControl.pluginify(xs,
+    texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
+                                                                  xs,
                                                                   current_user['name'],
                                                                   timdb.answers,
                                                                   current_user['id'],
-                                                                  sanitize=False,
-                                                                  settings=doc.get_settings())
+                                                                  sanitize=False)
 
     modules.append("ngSanitize")
     modules.append("angularFileUpload")
