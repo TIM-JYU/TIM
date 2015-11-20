@@ -448,9 +448,11 @@ timApp.controller("ViewCtrl", [
         };
 
         $($window).resize(function (e) {
-            var selected = $('.par.lightselect, .par.selected');
-            if (selected.length > 0) {
-                selected[0].scrollIntoView();
+            if (e.target === $window) {
+                var selected = $('.par.lightselect, .par.selected');
+                if (selected.length > 0) {
+                    selected[0].scrollIntoView();
+                }
             }
         });
 
