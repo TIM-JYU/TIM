@@ -37,6 +37,7 @@ class DocParagraph(DocParagraphBase):
                doc,
                par_id: 'str|None' = None,
                md: 'str' = '',
+               t: 'str|None' = None,
                html: 'str|None' = None,
                attrs: 'dict|None' = None,
                props: 'dict|None' = None,
@@ -47,7 +48,7 @@ class DocParagraph(DocParagraphBase):
         par.__data = {
             'id': random_id() if par_id is None else par_id,
             'md': md,
-            't': hashfunc(md, attrs),
+            't': hashfunc(md, attrs) if t is None else t,
             'links': [],
             'attrs': {} if attrs is None else attrs,
             'props': {} if props is None else props
@@ -437,6 +438,7 @@ class DocParagraph(DocParagraphBase):
             tr = self.get_attr('r') == 'tr'
             if tr:
                 par = DocParagraph.create(ref_par.doc, par_id=ref_par.get_id(), md=self.get_markdown(),
+                                          t=ref_par.get_hash(),
                                           attrs=ref_par.get_attrs(), props=ref_par.get_properties())
             else:
                 par = deepcopy(ref_par)
