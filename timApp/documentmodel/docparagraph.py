@@ -255,9 +255,9 @@ class DocParagraph(DocParagraphBase):
                 unloaded_mds.append(par.get_markdown())
                 unloaded_pars.append(par)
 
-        print("{} paragraphs are marked dynamic".format(dyn))
-        print("{} paragraphs are cached".format(l))
-        print("{} paragraphs are not cached".format(len(unloaded_pars)))
+        #print("{} paragraphs are marked dynamic".format(dyn))
+        #print("{} paragraphs are cached".format(l))
+        #print("{} paragraphs are not cached".format(len(unloaded_pars)))
 
         if len(unloaded_pars) > 0:
             htmls = call_dumbo(unloaded_mds)
@@ -449,7 +449,6 @@ class DocParagraph(DocParagraphBase):
                 if write_link:
                     srclink = '&nbsp;<a class="parlink" href="/view/{0}#{1}">[{0}]</a></p>'.format(ref_par.get_doc_id(), ref_par.get_id())
                     html = self.__rrepl(html, '</p>', srclink)
-                    print(html)
                 par.__set_html(html)
             return par
 
