@@ -174,7 +174,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                 var emptyData = [];
                 if (angular.isDefined(question.DATA.ROWS)) {
                     angular.forEach(question.DATA.ROWS, function (row) {
-                        labels.push(row.text);
+                        var text = row.text;
+                        var max = 15;
+                        if (text.length > max) text = text.substring(0, max-1) + '...';
+                        labels.push(text);
                         emptyData.push(0);
                     });
                 }
