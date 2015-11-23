@@ -4,7 +4,6 @@ from contracts import contract
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from ephemeralclient import EphemeralClient, EPHEMERAL_URL
 from markdownconverter import md_to_html
 from timdb.timdbbase import TimDbBase
 

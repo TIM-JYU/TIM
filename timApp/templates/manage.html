@@ -75,7 +75,7 @@ if (isFolder) {
     
     <div class="margin">
         {{objNameC}} owner: <select ng-model="doc.owner"
-                              ng-options="group.name for group in userGroups track by group.id"
+                              ng-options="group.name for group in userGroups | orderBy:'name' track by group.id"
             ng-change="changeOwner()">
 
     </select>

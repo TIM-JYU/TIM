@@ -2,6 +2,7 @@ import re
 
 from documentmodel.attributeparser import AttributeParser
 from documentmodel.randutils import hashfunc, random_id, is_valid_id
+from utils import count_chars
 
 
 class SplitterException(Exception):
@@ -86,6 +87,17 @@ class DocumentParser:
         classed_areas = []
         found_area_ends = set()
         for r in self._blocks:
+            if r['type'] == 'code':
+                md = r['md']
+                try:
+                    last_line = md[md.rindex('\n')+1:]
+                    num_ticks = count_chars(md, '`')
+                    if last_line.startswith('`'*num_ticks):
+                        attrs, start_index = AttributeParser(last_line).get_attributes()
+                        if start_index is not None:
+                            raise ValidationException('The end of code block contains attributes: {}'.format(attrs))
+                except ValueError:
+                    pass
             curr_id = r.get('id')
             if curr_id is not None:
                 if curr_id in found_ids:
@@ -215,7 +227,7 @@ class DocumentParser:
             if line.startswith(code_block_marker):
                 break
             block_lines.append(line)
-        if not is_atom and line is not None:
+        if not is_atom and line is not None and line.startswith(code_block_marker):
             block_lines.append(line)
         result = {'md': '\n'.join(block_lines), 'type': 'atom' if is_atom else 'code'}
         self.extract_attrs(result, tokens)

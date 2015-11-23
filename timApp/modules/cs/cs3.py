@@ -991,10 +991,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "jypeli":
                     if s.find(" Main(") >= 0: mainfile = ""
                     #cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing /cs/jypeli/Ohjelma.cs %s" % (
-                    cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing %s %s" % (
+                    cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics /r:System.Drawing %s %s" % (
                         exename, mainfile, csfname)
                 elif ttype == "comtest":
-                    cmdline = "java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s" % (
+                    jypeliref = "/r:System.Numerics /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing"
+                    cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " + jypeliref +" /reference:/usr/lib/mono/gac/nunit.framework/2.6.0.0__96d09a1eb7f44a77/nunit.framework.dll %s %s") % (
                         csfname, testdll, csfname, testcs)
                 elif ttype == "jcomtest":
                     cmdline = "java comtest.ComTest %s && javac %s %s" % (csfname, csfname, testcs)
@@ -1039,7 +1040,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "fs":
                     cmdline = "fsharpc --out:%s %s" % (exename, csfname)
                 elif ttype == "cs":
-                    cmdline = "mcs /out:%s %s" % (exename, csfname)
+                    cmdline = "mcs /r:System.Numerics /out:%s %s" % (exename, csfname)
                 else:
                     cmdline = ""
 

@@ -5,12 +5,11 @@ from documentmodel.document import Document
 import pluginControl
 
 from timdb.timdb2 import TimDb
-from timdb.tempdb import TempDb
 from flask import current_app, session, abort, g, Response, request
 import json
 from timdb.docidentifier import DocIdentifier
 from werkzeug.exceptions import default_exceptions, HTTPException
-from flask import make_response, abort as flask_abort, request
+from flask import make_response, abort as flask_abort
 import time
 
 def getCurrentUserId():
@@ -38,17 +37,6 @@ def getTimDb():
                         files_root_path=current_app.config['FILES_PATH'],
                         current_user_name=getCurrentUserName())
     return g.timdb
-
-
-def getTempDb():
-    """
-
-    :rtype : TempDb
-    """
-    if not hasattr(g, 'tempdb'):
-        g.tempdb = TempDb(db_path=current_app.config['TEMP_DATABASE'],
-                          files_root_path=current_app.config['FILES_PATH'])
-    return g.tempdb
 
 
 def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):
@@ -192,25 +180,27 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_window=False):
+def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_window=False):
     timdb = getTimDb()
     current_user = timdb.users.getUser(user_id)
-    group = timdb.users.getPersonalUserGroup(user_id)
-    doc = Document(doc_id)
-    html_pars, js_paths, css_paths, modules = pluginControl.pluginify(pars,
+    html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
+                                                                      pars,
                                                                       current_user['name'],
                                                                       timdb.answers,
                                                                       user_id,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
-                                                                      edit_window=edit_window,
-                                                                      settings=doc.get_settings())
-    req_json = request.get_json()
+                                                                      edit_window=edit_window)
+    #req_json = request.get_json()
 
-    if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
-        ref_doc_id = req_json.get('ref-doc-id')
-        ref_id = req_json.get('ref-id')
-        html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
+    #if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':
+    #    ref_doc_id = req_json.get('ref-doc-id')
+    #    ref_id = req_json.get('ref-id')
+    #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
+
+    if edit_window:
+        # Skip readings and notes
+        return html_pars, js_paths, css_paths, modules
 
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
@@ -222,6 +212,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
         p['status'] = ''
         p['notes'] = []
 
+    group = timdb.users.getPersonalUserGroup(user_id)
     readings = timdb.readings.getReadings(group, doc)
 
     for r in readings:
@@ -229,8 +220,7 @@ def post_process_pars(pars, doc_id, user_id, sanitize=True, do_lazy=False, edit_
         pars = pars_dict.get(key)
         if pars:
             for p in pars:
-                p['status'] = 'read' if r['par_hash'] == (p.get('ref_t')
-                                              or p['t']) else 'modified'
+                p['status'] = 'read' if r['par_hash'] == p['t'] else 'modified'
     
     notes = timdb.notes.getNotes(group, doc)
     for n in notes:

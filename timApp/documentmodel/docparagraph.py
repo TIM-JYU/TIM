@@ -1,14 +1,15 @@
 from copy import deepcopy
-import functools
 import os
 
 from contracts import contract, new_contract
+
 from documentmodel.documentwriter import DocumentWriter
+from dumboclient import call_dumbo
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html
+from markdownconverter import md_to_html, md_list_to_html_list, expand_macros
 from .randutils import *
 from timdb.timdbbase import TimDbException
-import containerLink
+
 
 class DocParagraphBase:
     pass
@@ -22,68 +23,87 @@ class DocParagraph(DocParagraphBase):
     default_files_root = 'tim_files'
 
     @contract
-    def __init__(self, doc_id: 'int|None'=None, files_root: 'str|None'=None):
-        self.doc_id = doc_id
+    def __init__(self, doc, files_root: 'str|None'=None):
+        self.doc = doc
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
+        self.html = None
+        self.__htmldata = None
 
     @classmethod
     @contract
     def create(cls,
-               doc_id: 'int',
+               doc,
                par_id: 'str|None' = None,
                md: 'str' = '',
+               t: 'str|None' = None,
                html: 'str|None' = None,
                attrs: 'dict|None' = None,
                props: 'dict|None' = None,
                files_root: 'str|None' = None) -> 'DocParagraph':
 
-        par = DocParagraph(doc_id, files_root)
+        par = DocParagraph(doc, files_root)
+        par.html = html
         par.__data = {
             'id': random_id() if par_id is None else par_id,
             'md': md,
-            't': hashfunc(md, attrs),
-            'html': html,
+            't': hashfunc(md, attrs) if t is None else t,
             'links': [],
             'attrs': {} if attrs is None else attrs,
             'props': {} if props is None else props
         }
-        par._mkhtmldata()
+        par._cache_props()
+        return par
+
+    @contract
+    def create_reference(self, doc, r: 'str|None' = None, add_rd: 'bool' = True) -> 'DocParagraph':
+        par = DocParagraph(doc, self.files_root)
+        par.__data = dict(self.__data)
+        par.__data['rp'] = self.get_id()
+        par.__data.pop('ra', None)
+
+        if add_rd:
+            par.__data['rd'] = self.get_doc_id()
+        else:
+            par.__data.pop('rd', None)
+
+        if r is not None:
+            par.__data['r'] = r
+        else:
+            par.__data.pop('r', None)
+
+        par._cache_props()
         return par
 
     @classmethod
     @contract
-    def from_dict(cls, doc_id: 'int', d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
-        par = DocParagraph(doc_id, files_root)
+    def from_dict(cls, doc, d: 'dict', files_root: 'str|None' = None) -> 'DocParagraph':
+        par = DocParagraph(doc, files_root)
         par.__data = dict(d)
-        par._mkhtmldata()
+        par._cache_props()
         return par
 
     @classmethod
     @contract
-    def get_latest(cls, doc_id: 'int', par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+    def get_latest(cls, doc, par_id: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         froot = cls.get_default_files_root() if files_root is None else files_root
         try:
-            t = os.readlink(cls._get_path(doc_id, par_id, 'current', froot))
-            return cls.get(doc_id, par_id, t, files_root=froot)
+            t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
+            return cls.get(doc, par_id, t, files_root=froot)
         except FileNotFoundError as e:
-            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
+            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
 
     @classmethod
     @contract
-    def get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
+    def get(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
         try:
-            return cls.__get(doc_id, par_id, t, files_root)
+            """Loads a paragraph from file system based on given parameters.
+            """
+            with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
+                return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
         except FileNotFoundError as e:
-            return DocParagraph.create(doc_id, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
-
-    @classmethod
-    @functools.lru_cache(maxsize=65536)
-    @contract
-    def __get(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'DocParagraph':
-        with open(cls._get_path(doc_id, par_id, t, files_root), 'r') as f:
-            return cls.from_dict(doc_id, json.loads(f.read()), files_root=files_root)
+            return DocParagraph.create(doc, par_id, 'ERROR: File not found! ' + str(e), files_root=files_root)
 
     def __iter__(self):
         return self.__data.__iter__()
@@ -94,9 +114,9 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     @contract
-    def _get_path(cls, doc_id: 'int', par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
+    def _get_path(cls, doc, par_id: 'str', t: 'str', files_root: 'str|None' = None) -> 'str':
         froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.join(froot, 'pars', str(doc_id), par_id, t)
+        return os.path.join(froot, 'pars', str(doc.doc_id), par_id, t)
 
     @classmethod
     @contract
@@ -109,16 +129,14 @@ class DocParagraph(DocParagraphBase):
         return self.__data
 
     def _mkhtmldata(self):
-        self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
-        self.__is_ref = self.is_par_reference() or self.is_area_reference()
-        self.__is_setting = 'settings' in self.get_attrs()
+        self._cache_props()
 
         if self.original:
             self.__htmldata = dict(self.original.__data)
             self.__htmldata['attrs_str'] = self.original.get_attrs_str()
-            self.__htmldata['doc_id'] = self.original.doc_id
+            self.__htmldata['doc_id'] = self.original.doc.doc_id
 
-            self.__htmldata['ref_doc_id'] = self.doc_id
+            self.__htmldata['ref_doc_id'] = self.doc.doc_id
             self.__htmldata['ref_id'] = self.__data['id']
             self.__htmldata['ref_t'] = self.__data['t']
             self.__htmldata['ref_attrs'] = self.__data['attrs']
@@ -126,24 +144,45 @@ class DocParagraph(DocParagraphBase):
         else:
             self.__htmldata = dict(self.__data)
             self.__htmldata['attrs_str'] = self.get_attrs_str()
-            self.__htmldata['doc_id'] = self.doc_id
+            self.__htmldata['doc_id'] = self.doc.doc_id
 
-        self.__htmldata['html'] = self.get_html()
+        try:
+            self.__htmldata['html'] = self.get_html()
+        except Exception as e:
+            self.__htmldata['html'] = '<div class="pluginError">{}</div>'.format(e)
+
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
-        self.__htmldata['is_plugin'] =  self.is_plugin()
+        self.__htmldata['is_plugin'] = self.is_plugin()
         self.__htmldata['needs_browser'] = True #self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
+
+    def _cache_props(self):
+        self.__is_plugin = self.get_attr('plugin') or ""  # self.get_attr('taskId')
+        self.__is_ref = self.is_par_reference() or self.is_area_reference()
+        self.__is_setting = 'settings' in self.get_attrs()
 
     @contract
     def html_dict(self) -> 'dict':
+        self._mkhtmldata()
         return self.__htmldata
 
     @contract
     def get_doc_id(self) -> 'int':
-        return self.doc_id
+        return self.doc.doc_id
 
     @contract
     def get_id(self) -> 'str':
         return self.__data['id']
+
+    @contract
+    def get_rd(self) -> 'int|str|None':
+        if 'rd' in self.__data['attrs']:
+            return self.get_attr('rd')
+
+        default_rd = self.doc.get_settings().get_source_document()
+        if default_rd is not None:
+            return  default_rd
+
+        return None
 
     @contract
     def is_different_from(self, par) -> 'bool':
@@ -162,73 +201,102 @@ class DocParagraph(DocParagraphBase):
         return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
 
     @contract
-    def get_html(self) -> 'str':
-        if self.__data.get('html'):
-            return self.__data['html']
-        if self.__is_setting:
-            self.__set_html('<p class="docsettings">&nbsp;</p>')
+    def __get_setting_html(self) -> 'str':
+        from documentmodel.docsettings import DocSettings
+
+        if DocSettings.is_valid_paragraph(self):
+            return '<p class="docsettings">&nbsp;</p>'
         else:
-            self.__set_html(md_to_html(self.get_markdown()))
-        return self.__data['html']
+            return '<div class="pluginError">Invalid settings paragraph detected</div>'
 
     @contract
-    def get_ref_html(self, classname="parref", write_link=False, link_class="parlink", linked_paragraph=None) -> 'str':
-        if linked_paragraph is None:
-            linked_paragraph = self
-        linkhtml = ''
-        if write_link:
-            from documentmodel.document import Document
-            doc = Document(linked_paragraph.get_doc_id())
-            linkhtml = '<a class="{2}" href="/view/{0}">{1}</a>'.format(linked_paragraph.get_doc_id(),
-                                                                        doc.get_name(), link_class)
-        return """
-            <div class="{0}">
-                {1}
-                {2}
-            </div>
-        """.format(classname, linkhtml, self.get_html())
+    def get_html(self) -> 'str':
+        if self.html:
+            return self.html
+        if self.is_plugin():
+            return ''
+        if self.is_setting():
+            return self.__get_setting_html()
+
+        macros, delimiter = self.__get_macro_info(self.doc)
+        cached = self.__data.get('h')
+        macro_hash = hashfunc(str(macros) + delimiter)
+        if cached is None or type(cached) is str:
+            self.__data['h'] = {}
+            new_html = self.__get_html_using_macros(macros, delimiter)
+        else:
+            new_html = cached.get(macro_hash)
+            if new_html is None:
+                # Get html from Dumbo (slow!)
+                new_html = self.__get_html_using_macros(macros, delimiter)
+
+        self.__set_html(new_html)
+        return new_html
+
+    @classmethod
+    @contract
+    def preload_htmls(cls, pars: 'list(DocParagraph)', settings):
+        """
+        Asks for paragraphs in batch from Dumbo to avoid multiple requests
+        :param settings: The document settings.
+        :param pars: Paragraphs to preload
+        """
+        unloaded_pars = []
+        macros = settings.get_macros() if settings else None
+        macro_delim = settings.get_macro_delimiter() if settings else None
+        macro_hash = hashfunc(str(macros) + macro_delim)
+
+        dyn = 0
+        l = 0
+
+        for par in pars:
+            if par.html is not None or par.is_dynamic():
+                dyn += 1
+                continue
+            cached = par.__data.get('h')
+            if cached is not None:
+                if type(cached) is str:
+                    par.__data['h'] = {}
+                    unloaded_pars.append(par)
+                else:
+                    if macro_hash in cached:
+                        par.html = cached[macro_hash]
+                        l += 1
+                    else:
+                        unloaded_pars.append(par)
+            else:
+                par.__data['h'] = {}
+                unloaded_pars.append(par)
+
+        #print("{} paragraphs are marked dynamic".format(dyn))
+        #print("{} paragraphs are cached".format(l))
+        #print("{} paragraphs are not cached".format(len(unloaded_pars)))
+
+        if len(unloaded_pars) > 0:
+            htmls = md_list_to_html_list([par.get_markdown() for par in unloaded_pars],
+                                         macros=macros,
+                                         macro_delimiter=macro_delim)
+            for par, h in zip(unloaded_pars, htmls):
+                par.__data['h'][macro_hash] = h
+                par.html = h
+                par.__write()
 
     @contract
-    def __get_html(self) -> 'str':
-        if self.get_original() is None:
-            return self.__get_html()
-
-        # Referenced paragraph
-        return """
-            <div class="parref">
-                <a class="parlink" href="{1}">Dokumentti {1}</a>
-                {0}
-            </div>
-        """.format(self.__get_html(), self.get_doc_id())
+    def __get_html_using_macros(self, macros: 'dict(str:str)|None', macro_delimiter: 'str|None') -> 'str':
+        return md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=macro_delimiter)
 
     def sanitize_html(self):
-        if self.html_sanitized or not self.__data['html']:
+        if self.html_sanitized or not self.html:
             return
-        new_html = sanitize_html(self.__data['html'])
-        self.__data['html'] = new_html
-        self.__htmldata['html'] = new_html
-        self.html_sanitized = True
+        new_html = sanitize_html(self.html)
+        self.__set_html(new_html, True)
 
     @contract
-    def __set_html(self, new_html: 'str'):
-        self.__data['html'] = new_html
-        self.__htmldata['html'] = new_html
-        self.html_sanitized = False
-
-    @contract
-    def __set_trans_html(self, referencing_par: 'DocParagraph', show_original: 'bool',
-                       from_class: 'str' = 'partranslatefrom', to_class: 'str' = 'partranslate',
-                       show_link: 'bool' = False):
-        if show_original:
-            html = '{}\n{}'.format(referencing_par.get_ref_html(classname=to_class, write_link=show_link,
-                                                                link_class="trlink", linked_paragraph=self),
-                                   self.get_ref_html(classname=from_class, link_class="trfromlink",
-                                                     write_link=show_link))
-        else:
-            html = referencing_par.get_ref_html(classname=to_class, write_link=show_link, link_class="trlink",
-                                                linked_paragraph=self)
-
-        self.__set_html(html)
+    def __set_html(self, new_html: 'str', sanitized=False):
+        self.html = new_html
+        if self.__htmldata is not None:
+            self.__htmldata['html'] = new_html
+        self.html_sanitized = sanitized
 
     @contract
     def get_links(self) -> 'list(str)':
@@ -250,8 +318,8 @@ class DocParagraph(DocParagraphBase):
 
         if attr_name == 'taskId':
             self.__is_plugin = bool(attr_val)
-        elif attr_name == 'rd':
-            self.__is_ref = bool(attr_val)
+        elif attr_name == 'rp' or attr_name == 'ra':
+            self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
     @contract
     def get_attrs(self) -> 'dict':
@@ -294,14 +362,15 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_path(self) -> 'str':
-        return self._get_path(self.get_doc_id(), self.get_id(), self.get_hash(), files_root=self.files_root)
+        return self._get_path(self.doc, self.get_id(), self.get_hash(), files_root=self.files_root)
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
             return False
         with open(self.get_path(), 'r') as f:
             self.__data = json.loads(f.read())
-            self._mkhtmldata()
+            self._cache_props()
+            self.__htmldata = None
             return True
 
     def __write(self):
@@ -332,7 +401,7 @@ class DocParagraph(DocParagraphBase):
             f.write(json.dumps(self.__data))
 
     def set_latest(self):
-        linkpath = self._get_path(self.get_doc_id(), self.get_id(), 'current', files_root=self.files_root)
+        linkpath = self._get_path(self.doc, self.get_id(), 'current', files_root=self.files_root)
         if linkpath == self.get_hash():
             return
         if os.path.islink(linkpath) or os.path.isfile(linkpath):
@@ -365,73 +434,104 @@ class DocParagraph(DocParagraphBase):
         return self.__is_ref
 
     def is_par_reference(self):
-        return self.get_attr('rd') is not None and self.get_attr('rp') is not None
+        return self.get_attr('rp') is not None
 
     def is_area_reference(self):
-        return self.get_attr('rd') is not None and self.get_attr('ra') is not None
+        return self.get_attr('ra') is not None
 
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, edit_window=False):
-        def reference_par(ref_par, attrs, classname='parref', trclassname='partranslate', write_link=False):
-            par = deepcopy(ref_par)
-            par.set_attr('classes', (self.get_attr('classes') or []) + (ref_par.get_attr('classes') or []))
-            if 'r' in attrs and attrs['r'] == 'tr':
-                par.__set_trans_html(self, edit_window, classname, trclassname, write_link)
+    @classmethod
+    def __rrepl(cls, s, old, new):
+        rindex = s.rfind(old)
+        return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
+
+    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None):
+        def reference_par(ref_par, write_link=False):
+            tr = self.get_attr('r') == 'tr'
+            if tr:
+                par = DocParagraph.create(ref_par.doc, par_id=ref_par.get_id(), md=self.get_markdown(),
+                                          t=ref_par.get_hash(),
+                                          attrs=ref_par.get_attrs(), props=ref_par.get_properties())
             else:
-                par.__set_html(ref_par.get_ref_html(classname=classname, write_link=write_link))
+                par = deepcopy(ref_par)
+
             par.set_original(self)
+            if tr:
+                pass
+            if set_html:
+                html = self.get_html() if tr else ref_par.get_html()
+                if write_link:
+                    srclink = '&nbsp;<a class="parlink" href="/view/{0}#{1}">[{0}]</a></p>'.format(ref_par.get_doc_id(), ref_par.get_id())
+                    html = self.__rrepl(html, '</p>', srclink)
+                par.__set_html(html)
             return par
 
         attrs = self.get_attrs()
-        from documentmodel.document import Document  # Document import needs to be here to avoid circular import
-        try:
-            ref_doc = Document(int(attrs['rd']))
-        except ValueError as e:
-            raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
+        is_default_rd = False
+        if 'rd' in attrs:
+            try:
+                ref_docid = int(attrs['rd'])
+            except ValueError as e:
+                raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
+        else:
+            if source_doc is not None:
+                default_rd = source_doc.doc_id
+            else:
+                settings = self.doc.get_settings()
+                default_rd = settings.get_source_document()
+            is_default_rd = True
+            if default_rd is None:
+                raise TimDbException('Source document for reference not specified.')
+            ref_docid = default_rd
+
+        if source_doc is None:
+            from documentmodel.document import Document  # Document import needs to be here to avoid circular import
+            ref_doc = Document(ref_docid)
+        else:
+            ref_doc = source_doc
+
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
+
         if self.is_par_reference():
+            if self.get_doc_id() == int(ref_docid) and self.get_id() == attrs['rp']:
+                raise TimDbException('Paragraph is referencing itself!')
             if not ref_doc.has_paragraph(attrs['rp']):
                 raise TimDbException('The referenced paragraph does not exist.')
 
-            ref_par = ref_doc.get_paragraph(attrs['rp'])
-            return [reference_par(ref_par, attrs, write_link=True)]
+            ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
+            return [reference_par(ref_par, write_link=not is_default_rd)]
 
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
-            pars = []
-            n = len(ref_pars)
-
-            if n == 1:
-                return [reference_par(ref_pars[0], attrs, write_link=True)]
-
-            i = 0
-            for ref_par in ref_pars:
-                if i == 0:
-                    par = reference_par(ref_pars[i], attrs, classname="parref-begin", write_link=True)
-                elif i == n - 1:
-                    par = reference_par(ref_pars[i], attrs, classname="parref-end")
-                else:
-                    par = reference_par(ref_pars[i], attrs, classname="parref-mid")
-
-                pars.append(par)
-                i += 1
-
-            return pars
+            return [reference_par(ref_par, write_link=not is_default_rd) for ref_par in ref_pars]
         else:
             assert False
 
     def set_original(self, orig):
         self.original = orig
-        self._mkhtmldata()
+        self._cache_props()
+        self.__htmldata = None
 
     def get_original(self):
         return self.original
+
+    def is_dynamic(self):
+        return self.__is_plugin or self.__is_ref or self.__is_setting
 
     def is_plugin(self):
         return self.__is_plugin
 
     def is_setting(self):
         return self.__is_setting
+
+    @classmethod
+    def __get_macro_info(cls, doc):
+        if doc is None:
+            return None, None
+        settings = doc.get_settings()
+        if settings is None:
+            return None, None
+        return settings.get_macros(), settings.get_macro_delimiter()

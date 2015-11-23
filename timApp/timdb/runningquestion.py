@@ -1,116 +1,47 @@
 from contracts import contract
-from timdb.timdbbase import TimDbBase
+from timdb.tempdbbase import TempDbBase
 
 
-class RunningQuestions(TimDbBase):
+class RunningQuestions(TempDbBase):
     """
     LectureAnswer class to handle database for lecture answers
     """
     @contract
-    def add_running_question(self, lecture_id: "int", asked_id: "int", ask_time: "int", end_time: "int"=None,
-                             commit: 'bool'=True):
-        """
-        Adds a running question that is related to lecture
-        :param lecture_id: lecture id
-        :param asked_id: asked questions id
-        :return:
-        """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            INSERT INTO RunningQuestion(lecture_id, asked_id, ask_time, end_time)
-            VALUES (?,?,?,?)
-        """, [lecture_id, asked_id, ask_time, end_time])
-
-        if commit:
-            self.db.commit()
+    def add_running_question(self, lecture_id: "int", asked_id: "int", ask_time: "int", end_time: "int"=None):
+        running = self.table(asked_id, lecture_id, ask_time, end_time)
+        self.db.session.merge(running)
+        self.db.session.commit()
 
     @contract
-    def delete_running_question(self, asked_id: "int", commit: 'bool'=True):
-        """
-        Remove a running question that is related to lecture
-        :param asked_id: asked questions id
-        :return:
-        """
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            DELETE FROM RunningQuestion
-            WHERE  asked_id = ?
-        """, [asked_id])
-
-        if commit:
-            self.db.commit()
+    def delete_running_question(self, asked_id: "int"):
+        self.table.query.filter_by(asked_id=asked_id).delete()
+        self.db.session.commit()
 
     @contract
-    def delete_lectures_running_questions(self, lecture_id: "int", commit: 'bool'=True):
-        """
-        Remove a running question that is related to lecture
-        :param asked_id: asked questions id
-        :return:
-        """
-        cursor = self.db.cursor()
+    def delete_lectures_running_questions(self, lecture_id: "int"):
+        self.table.query.filter_by(lecture_id=lecture_id).delete()
+        self.db.session.commit()
 
-        cursor.execute("""
-            DELETE FROM RunningQuestion
-            WHERE lecture_id = ?
-        """, [lecture_id])
-
-        if commit:
-            self.db.commit()
-
+    @contract
     def get_lectures_running_questions(self, lecture_id: "int"):
-        cursor = self.db.cursor()
+        questions = self.table.query.filter_by(lecture_id=lecture_id)
+        return questions.all()
 
-        cursor.execute("""
-            SELECT *
-            FROM RunningQuestion
-            WHERE lecture_id = ?
-        """, [lecture_id])
-
-        questions = cursor.fetchall()
-        return questions
-
+    @contract
     def get_running_question_by_id(self, asked_id: "int"):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            SELECT *
-            FROM RunningQuestion
-            WHERE asked_id = ?
-        """, [asked_id])
-
-        question = cursor.fetchone()
+        questions = self.table.query.filter_by(asked_id=asked_id)
+        question = questions.first()
         return question
 
-    def extend_question(self, asked_id: "int", extend: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
-        
-        cursor.execute("""
-            SELECT end_time
-            FROM RunningQuestion
-            WHERE asked_id = ?
-        """, [asked_id])
-        
-        end_time = cursor.fetchone()[0]
-        end_time += extend
-        
-        cursor.execute("""
-            UPDATE RunningQuestion
-            SET end_time = ?
-            WHERE asked_id = ?
-        """, [end_time, asked_id])
+    @contract
+    def extend_question(self, asked_id: "int", extend: "int"):
+        questions = self.table.query.filter_by(asked_id=asked_id)
+        question = questions.first()
+        question.end_time += extend
+        self.db.session.commit()
 
-        if commit:
-            self.db.commit()
-
-    def get_end_time(self, asked_id: "int", commit: "bool"=True):
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-            SELECT end_time
-            FROM RunningQuestion
-            WHERE asked_id = ?
-        """, [asked_id])
-
-        return cursor.fetchone()
+    @contract
+    def get_end_time(self, asked_id: "int"):
+        questions = self.table.query.filter_by(asked_id=asked_id)
+        question = questions.first()
+        return question.end_time

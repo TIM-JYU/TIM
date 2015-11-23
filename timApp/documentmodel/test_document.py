@@ -4,31 +4,22 @@ Run from parent directory with command:
 python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py
 """
 
-import os
 import random
 import unittest
-import shutil
 
+from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
-from filemodehelper import change_permission_and_retry
-from documentmodel.document import Document
 from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
 from timdbtest import TimDbTest
 
 
 class DocumentTest(TimDbTest):
-    def cleanup(self):
-        if os.path.exists(TimDbTest.test_files_path):
-            # Safety mechanism
-            assert TimDbTest.test_files_path == 'doctest_files'
-            shutil.rmtree(TimDbTest.test_files_path, onerror=change_permission_and_retry)
-
-    def init_testdoc(self):
-        self.cleanup()
-        d = Document(doc_id=1)
-        d.create()
+    def init_testdoc(self, doc_id=None):
+        d = Document(doc_id=doc_id)
+        self.assertFalse(d.exists())
+        self.get_db().documents.create(str(d.doc_id), 0, d.doc_id)
         return d
     
     def add_pars(self, d, num_docs):
@@ -37,20 +28,15 @@ class DocumentTest(TimDbTest):
         return pars
 
     def test_document_create(self):
-        self.cleanup()
-        d = Document(doc_id=1)
-        self.assertFalse(Document.doc_exists(1))
-        d.create()
-        self.assertTrue(Document.doc_exists(1))
-        self.assertEqual(2, Document.get_next_free_id())
+        d = self.init_testdoc()
+        self.assertTrue(d.exists())
+        self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog())
 
-        d = Document(doc_id=2)
-        self.assertFalse(Document.doc_exists(2))
-        d.create()
-        self.assertTrue(Document.doc_exists(2))
-        self.assertEqual(3, Document.get_next_free_id())
+        d = self.init_testdoc()
+        self.assertTrue(d.exists())
+        self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog())
 
@@ -199,46 +185,38 @@ class DocumentTest(TimDbTest):
             self.assertEqual(13 + i, len(d.get_changelog()))
 
     def test_document_remove(self):
-        self.cleanup()
+        free = Document.get_next_free_id()
+        db = self.get_db()
+        for i in range(free, free + 5):
+            if i != free + 2:
+                self.init_testdoc(i)
 
-        self.assertFalse(Document.doc_exists(doc_id=1))
-        self.assertFalse(Document.doc_exists(doc_id=2))
-        self.assertFalse(Document.doc_exists(doc_id=3))
-        self.assertFalse(Document.doc_exists(doc_id=4))
-        self.assertFalse(Document.doc_exists(doc_id=5))
-
-        for i in range(1, 6):
-            if i != 3:
-                d = Document(doc_id=i)
-                d.create()
-
-        self.assertEqual(6, Document.get_next_free_id())
+        self.assertEqual(free + 5, Document.get_next_free_id())
 
         with self.assertRaises(DocExistsError):
-            Document.remove(doc_id=3)
+            Document.remove(doc_id=free + 2)
 
-        Document.remove(doc_id=2)
-        self.assertFalse(Document.doc_exists(doc_id=2))
-        self.assertEqual(6, Document.get_next_free_id())
+        db.documents.delete(free + 1)
+        self.assertFalse(Document.doc_exists(doc_id=free + 1))
+        self.assertEqual(free + 5, Document.get_next_free_id())
 
-        Document.remove(doc_id=5)
-        self.assertFalse(Document.doc_exists(doc_id=5))
-        self.assertEqual(5, Document.get_next_free_id())
+        db.documents.delete(free + 4)
+        self.assertFalse(Document.doc_exists(doc_id=free + 4))
+        self.assertEqual(free + 4, Document.get_next_free_id())
 
-        Document.remove(doc_id=1)
-        self.assertFalse(Document.doc_exists(doc_id=1))
-        self.assertEqual(5, Document.get_next_free_id())
+        db.documents.delete(free)
+        self.assertFalse(Document.doc_exists(doc_id=free))
+        self.assertEqual(free + 4, Document.get_next_free_id())
 
-        Document.remove(doc_id=4)
-        self.assertFalse(Document.doc_exists(doc_id=4))
-        self.assertEqual(1, Document.get_next_free_id())
+        db.documents.delete(free + 3)
+        self.assertFalse(Document.doc_exists(doc_id=free + 3))
+        self.assertEqual(free, Document.get_next_free_id())
 
     def test_update(self):
         self.maxDiff = None
         random.seed(0)
         for i in range(1, 5):
-            d = Document()
-            d.create()
+            d = self.init_testdoc()
             for _ in range(0, i):
                 d.add_paragraph(random_paragraph())
             fulltext = d.export_markdown()
@@ -257,8 +235,7 @@ class DocumentTest(TimDbTest):
         self.maxDiff = None
         random.seed(0)
         for i in range(6, 10):
-            d = Document()
-            d.create()
+            d = self.init_testdoc()
             for _ in range(0, i):
                 d.add_paragraph(random_paragraph())
             ids = [par.get_id() for par in d]
@@ -274,6 +251,40 @@ class DocumentTest(TimDbTest):
                                  new_ids[start_repl_index:start_repl_index + repl_length])
             self.assertEqual(length_diff, len(new_ids) - len(ids))
 
+    def test_macros(self):
+        d = self.init_testdoc()
+        settings_par = d.add_paragraph('```\n'
+                                       'macro_delimiter: "%%"\n'
+                                       'macros:\n'
+                                       ' testmacro: testvalue\n'
+                                       ' year: "2015"\n'
+                                       '```', attrs={'settings': ''})
+        macro_par = d.add_paragraph('this is %%testmacro%% and year is %%year%%')
+        macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
+        self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
+                              'macro_delimiter': '%%'}, d.get_settings().get_settings())
+
+        self.assertEqual('<p>this is testvalue and year is 2015</p>', macro_par.get_html())
+        d = Document(d.doc_id)  # Make a new instance of the document to test cache invalidation
+        d.modify_paragraph(settings_par.get_id(),
+                           '```\n'
+                           'macro_delimiter: "%%"\n'
+                           'macros:\n'
+                           ' testmacro: anothervalue\n'
+                           ' year: "2016"\n'
+                           '```',
+                           new_attrs={'settings': ''})
+
+        macro_par = d.get_paragraph(macro_par.get_id())
+        self.assertEqual('<p>this is anothervalue and year is 2016</p>', macro_par.get_html())
+
+    def test_import(self):
+        timdb = self.get_db()
+        from timdb.users import ANONYMOUS_GROUPNAME
+        anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
+        timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
+                                                  'Multiple choice plugin example',
+                                                  anon_group)
 
 if __name__ == '__main__':
     unittest.main()

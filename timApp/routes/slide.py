@@ -5,33 +5,9 @@ from flask import jsonify
 from routes.view import *
 import pluginControl
 
-slidestatuses = {}
-
 slide_page = Blueprint('slide_page',
                        __name__,
                        url_prefix='')
-
-
-@slide_page.route("/getslidestatus/<path:doc_id>")
-def getslidestatus(doc_id):
-    try:
-        doc_id = int(doc_id)
-        status = slidestatuses[doc_id]
-    except (KeyError, ValueError):
-        return abort(400, "Could not get slide status.")
-    return jsonify(status)
-
-
-@slide_page.route("/setslidestatus/<path:doc_id>", methods=['POST'])
-def setslidestatus(doc_id):
-    try:
-        doc_id = int(doc_id)
-    except (KeyError, ValueError):
-        abort(400, "Cannot set slide status.")
-    verifyOwnership(doc_id)
-    data = request.json
-    slidestatuses[doc_id] = data
-    return jsonify(data)
 
 
 @view_page.route("/show_slide/<path:doc_name>")
@@ -85,12 +61,12 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
         users = []
     current_user = timdb.users.getUser(user)
     doc = Document(doc_id)
-    texts, js_paths, css_paths, modules = pluginControl.pluginify(xs,
+    texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
+                                                                  xs,
                                                                   current_user['name'],
                                                                   timdb.answers,
                                                                   current_user['id'],
-                                                                  sanitize=False,
-                                                                  settings=doc.get_settings())
+                                                                  sanitize=False)
 
     modules.append("ngSanitize")
     modules.append("angularFileUpload")

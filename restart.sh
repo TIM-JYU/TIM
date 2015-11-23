@@ -36,6 +36,10 @@ fi
 if param timdev ; then
     docker stop timdev &
 fi
+
+if param postgre ; then
+    docker stop postgre &
+fi
 wait
 
 # Remove stopped containers
@@ -49,6 +53,10 @@ fi
 
 if param timdev ; then
     docker rm timdev &
+fi
+
+if param postgre ; then
+    docker rm postgre &
 fi
 wait
 
@@ -72,19 +80,28 @@ if param profile ; then
   DAEMON_FLAG=''
 fi
 
+if param postgre ; then
+# Restart postgre container
+docker run -d --name postgre \
+    -v /opt/postgre/data:/var/lib/postgresql \
+    -v /opt/postgre/log:/var/log/postgresql \
+    -v /opt/postgre/conf:/etc/postgresql \
+    -t -i postgre /bin/bash -c '/etc/postgresql/ownership.sh && sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf ; /bin/bash'
+fi
+
 if param timdev ; then
 # Start timdev
-docker run --name timdev -p 50002:5000 -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --name timdev -p 50002:5000 --link postgre:postgre -v /opt/tim-dev/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timdev ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param timbeta ; then
 # Start timbeta
-docker run --name timbeta -p 50000:5000 -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --name timbeta -p 50000:5000 --link postgre:postgre -v /opt/tim-beta/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=timbeta ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 if param tim ; then
 # Start tim
-docker run --name tim -p 50001:5000 --cpuset=0,0 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --name tim -p 50001:5000 --link postgre:postgre --cpuset=0,0 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 #trap '' 0

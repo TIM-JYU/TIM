@@ -132,7 +132,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.previous = function () {
                     var newIndex = $scope.filteredAnswers.indexOf($scope.selectedAnswer) + 1;
                     if (newIndex >= $scope.filteredAnswers.length) {
-                        newIndex = 0;
+                        newIndex = 0; 
                     }
                     $scope.selectedAnswer = $scope.filteredAnswers[newIndex];
                     $scope.changeAnswer();
@@ -143,6 +143,17 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         $scope.selectedAnswer = $scope.filteredAnswers[0];
                         $scope.changeAnswer();
                     }
+                };
+
+                $scope.indexOfSelected = function () {
+                    if ( !$scope.filteredAnswers ) return -1;
+                    var arrayLength = $scope.filteredAnswers.length;
+                    for (var i = 0; i < arrayLength; i++) {
+                        if ($scope.filteredAnswers[i].id === $scope.selectedAnswer.id) {
+                            return i;
+                        }
+                    }
+                    return -1;
                 };
 
                 $scope.getTeacherData = function () {
@@ -174,7 +185,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.getAvailableAnswers = function (updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
-                    if (!$scope.$parent.rights.browse_own_answers) {
+                    if ( !$scope.$parent.rights || !$scope.$parent.rights.browse_own_answers) {
                         return;
                     }
                     if ($scope.user === null) {
@@ -274,7 +285,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 if ( GLOBALBrowseUser ) {
                     $scope.user = GLOBALBrowseUser;
                 }    
-                else if ($scope.$parent.users.length > 0) {
+                else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) { 
                     $scope.user = $scope.$parent.users[0];
                 } else {
                     $scope.user = null;
@@ -286,6 +297,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.saveTeacher = false;
                 $scope.users = null;
                 $scope.answers = [];
+                $scope.filteredAnswers = [];
                 $scope.onlyValid = true;
                 $scope.selectedAnswer = null;
                 $scope.taskInfo = null;

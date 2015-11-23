@@ -2,8 +2,8 @@ var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
 
-timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window',
-    function ($upload, $http, $sce, $compile, $window) {
+timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window', '$localStorage',
+    function ($upload, $http, $sce, $compile, $window, $localStorage) {
         return {
             templateUrl: "/static/templates/parEditor.html",
             restrict: 'E',
@@ -338,6 +338,8 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
             },
             link: function ($scope, $element, $attrs) {
 
+                $scope.$storage = $localStorage;
+
                 $scope.tables = {};
 
                 $scope.tables['normal'] = "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
@@ -470,6 +472,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         });
                         if ($scope.options.destroyAfterSave) {
                             $element.remove();
+                        }
+                        if (angular.isDefined($scope.extraData.access)) {
+                            $scope.$storage.noteAccess = $scope.extraData.access;
                         }
                     }).error(function (data, status, headers, config) {
                         $window.alert("Failed to save: " + data.error);

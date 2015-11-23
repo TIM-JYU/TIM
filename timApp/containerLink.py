@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-import requests
-from requests.exceptions import Timeout
 import json
 
+import requests
+from requests.exceptions import Timeout
 
-class PluginException(Exception):
-    """The exception that is thrown when an error occurs during a plugin call."""
-    pass
+from documentmodel.docparagraphencoder import DocParagraphEncoder
+from plugin import PluginException
+from tim_app import app
 
+BRIDGE = app.config['DOCKER_BRIDGE']
 
 TIM_URL = ""
 
@@ -15,21 +16,20 @@ TIM_URL = ""
 # Plugins with numeric IP-address are running there as well, they just don't have routes
 # defined in nginx, and as such must be accessed through tim-beta localhost. However,
 # as TIM is run from a docker container, pointing to tim-beta's localhost
-# must be made through a special bridge, which for docker containers is
-# by default 172.17.42.1
+# must be made through a special bridge.
 PLUGINS = {
-    "csPlugin":      {"host": "http://172.17.42.1:56000/cs/"},
-    "taunoPlugin":   {"host": "http://172.17.42.1:56000/cs/tauno/"},
-    "simcirPlugin":  {"host": "http://172.17.42.1:56000/cs/simcir/"},
-    "csPluginRikki": {"host": "http://172.17.42.1:56000/cs/rikki/"},  # demonstrates a broken plugin
-    "showCode":      {"host": "http://172.17.42.1:55000/svn/", "browser": False},
-    "showImage":     {"host": "http://172.17.42.1:55000/svn/image/", "browser": False},
-    "showVideo":     {"host": "http://172.17.42.1:55000/svn/video/", "browser": False},
-    "mcq":           {"host": "http://172.17.42.1:57000/"},
-    "mmcq":          {"host": "http://172.17.42.1:58000/"},
-    "shortNote":     {"host": "http://172.17.42.1:59000/"},
-    "graphviz":      {"host": "http://172.17.42.1:60000/", "browser": False},
-    "pali":          {"host": "http://172.17.42.1:61000/"}
+    "csPlugin":      {"host": BRIDGE + ":56000/cs/"},
+    "taunoPlugin":   {"host": BRIDGE + ":56000/cs/tauno/"},
+    "simcirPlugin":  {"host": BRIDGE + ":56000/cs/simcir/"},
+    "csPluginRikki": {"host": BRIDGE + ":56000/cs/rikki/"},  # demonstrates a broken plugin
+    "showCode":      {"host": BRIDGE + ":55000/svn/", "browser": False},
+    "showImage":     {"host": BRIDGE + ":55000/svn/image/", "browser": False},
+    "showVideo":     {"host": BRIDGE + ":55000/svn/video/", "browser": False},
+    "mcq":           {"host": BRIDGE + ":57000/"},
+    "mmcq":          {"host": BRIDGE + ":58000/"},
+    "shortNote":     {"host": BRIDGE + ":59000/"},
+    "graphviz":      {"host": BRIDGE + ":60000/", "browser": False},
+    "pali":          {"host": BRIDGE + ":61000/"}
 }
 
 
@@ -44,7 +44,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None):
 
 
 def call_plugin_html(plugin, info, state, task_id=None):
-    plugin_data = json.dumps({"markup": info, "state": state, "taskID": task_id})
+    plugin_data = json.dumps({"markup": info, "state": state, "taskID": task_id}, cls=DocParagraphEncoder)
     return call_plugin_generic(plugin,
                                'post',
                                'html',
@@ -56,7 +56,7 @@ def call_plugin_multihtml(plugin, plugin_data):
     return call_plugin_generic(plugin,
                                'post',
                                'multihtml',
-                               data=plugin_data,
+                               data=json.dumps(plugin_data, cls=DocParagraphEncoder),
                                headers={'Content-type': 'application/json'})
 
 
@@ -74,11 +74,11 @@ def call_plugin_answer(plugin, answer_data):
     return call_plugin_generic(plugin,
                                'put',
                                'answer',
-                               json.dumps(answer_data),
+                               json.dumps(answer_data, cls=DocParagraphEncoder),
                                headers={'Content-type': 'application/json'})
 
 
-# Get lists of js and css files required by plugin, as well as list of Angular modules they define. 
+# Get lists of js and css files required by plugin, as well as list of Angular modules they define.
 def plugin_reqs(plugin):
     return call_plugin_generic(plugin, 'get', 'reqs')
 
