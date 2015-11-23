@@ -4,6 +4,7 @@ import json
 import unittest
 
 from flask import session
+from lxml import html
 
 import tim
 from documentmodel.document import Document
@@ -275,6 +276,18 @@ Lorem ipsum.
         """)
         self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+
+    def test_plugin(self):
+        self.login_test1()
+        docname = 'users/testuser1/plugintest'
+        with open('example_docs/mmcq_example.md', encoding='utf-8') as f:
+            doc = self.create_doc(docname, f.read())
+        resp = TimTest.app.get('/view/' + docname)
+        self.assertResponseStatus(resp)
+        ht = resp.get_data(as_text=True)
+        tree = html.fromstring(ht)
+        plugs = tree.findall(r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample"]'.format(doc.doc_id))
+        self.assertEqual(1, len(plugs))
 
     def create_doc(self, docname, initial_par=None, assert_status=200):
         resp = TimTest.app.jpost('/createDocument', {
