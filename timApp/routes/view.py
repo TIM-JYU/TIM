@@ -10,26 +10,24 @@ from flask import Blueprint, render_template, url_for
 from .common import *
 import pluginControl
 from options import *
-import traceback
 import time
 import tim
-from markdownconverter import expand_macros
 
 view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
 
 
-# @cache.memoize(3600)
-def get_whole_document(document_id):
-    pars = [par for par in getTimDb().documents.get_document_with_autoimport(DocIdentifier(id=document_id, hash=''))]
+def get_whole_document(doc):
+    pars = [par for par in doc]
     return pars
 
+
 @contract
-def get_partial_document(document_id: 'int', view_range: 'range') -> 'list(DocParagraph)':
+def get_partial_document(doc: 'Document', view_range: 'range') -> 'list(DocParagraph)':
     i = 0
     pars = []
-    for par in Document(document_id):
+    for par in doc:
         if i >= view_range[1]:
             break
         if i >= view_range[0]:
@@ -37,11 +35,14 @@ def get_partial_document(document_id: 'int', view_range: 'range') -> 'list(DocPa
         i += 1
     return pars
 
+
 @contract
-def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'list(DocParagraph)':
+def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'tuple(Document,list(DocParagraph))':
     # Separated into 2 functions for optimization
     # (don't cache partial documents and don't check ranges in the loop for whole ones)
-    return get_whole_document(doc_id) if view_range is None else get_partial_document(doc_id, view_range)
+    doc = Document(doc_id).get_latest_version()
+    doc.load_pars()
+    return doc, (get_whole_document(doc) if view_range is None else get_partial_document(doc, view_range))
 
 
 @view_page.route("/view_content/<path:doc_name>")
@@ -149,7 +150,7 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
 
     #from time import time
     #t0 = time()
-    xs = get_document(doc_id, view_range)
+    doc, xs = get_document(doc_id, view_range)
     #print("Loaded all paragraphs in {} s.".format(time() - t0))
 
     user = getCurrentUserId()
@@ -166,7 +167,6 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
         users = []
     current_user = timdb.users.getUser(user)
 
-    doc = Document(doc_id).get_latest_version()
     doc_settings = doc.get_settings()
     doc_css = doc_settings.css() if doc_settings else None
     DocParagraph.preload_htmls(xs, doc_settings)

@@ -27,6 +27,9 @@ class Document:
         self.modifier_group_id = modifier_group_id
         self.version = None
 
+        # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
+        self.par_cache = None
+
     @classmethod
     def get_default_files_root(cls):
         return cls.default_files_root
@@ -38,7 +41,10 @@ class Document:
         return count
 
     def __iter__(self):
-        return DocParagraphIter(self)
+        if self.par_cache is None:
+            return DocParagraphIter(self)
+        else:
+            return self.par_cache.__iter__()
 
     @classmethod
     @contract
@@ -77,8 +83,16 @@ class Document:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.isfile(os.path.join(froot, 'docs', str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
 
+    def load_pars(self):
+        """
+        Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.
+        """
+        self.par_cache = [par for par in self]
+
     @contract
     def get_settings(self) -> 'DocSettings':
+        if self.par_cache is not None:
+            return DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings()
         try:
             i = self.__iter__()
             return DocSettings.from_paragraph(next(i))

@@ -46,7 +46,7 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
             abort(403)
 
     start_index = max(view_range[0], 0) if view_range else 0
-    xs = get_document(doc_id, view_range)
+    doc, xs = get_document(doc_id, view_range)
     user = getCurrentUserId()
 
     if teacher:
@@ -60,7 +60,6 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
     else:
         users = []
     current_user = timdb.users.getUser(user)
-    doc = Document(doc_id)
     texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                   xs,
                                                                   current_user['name'],
