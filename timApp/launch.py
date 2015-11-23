@@ -1,12 +1,17 @@
+import multiprocessing
 import os
 import shutil
-import multiprocessing
-import dumboclient
-import initdb2
-import tim
-import ephemeralclient
-import sys
 import subprocess
+import sys
+
+# IMPORTANT: tim needs to be the first non-standard import because we want to disable contracts
+# before any @contract decorator is encountered.
+import tim
+
+import dumboclient
+import ephemeralclient
+import initdb2
+
 from filemodehelper import change_permission_and_retry
 
 scripts_path = os.path.join('static', 'scripts')

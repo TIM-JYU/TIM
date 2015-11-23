@@ -18,6 +18,16 @@ from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
 
+from tim_app import app
+
+# IMPORTANT: We want to disable contracts (if requested) as early as possible
+# before any @contract decorator is encountered.
+if app.config['CONTRACTS_ENABLED']:
+    print('Contracts are ENABLED')
+else:
+    contracts.disable_all()
+    print('Contracts are DISABLED')
+
 from ReverseProxied import ReverseProxied
 import containerLink
 from documentmodel.document import Document
@@ -36,7 +46,6 @@ from routes.common import *
 from documentmodel.randutils import hashfunc
 import models
 from models import db
-from tim_app import app
 
 
 # db.engine.pool.use_threadlocal = True # This may be needless
@@ -60,11 +69,6 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 print('Debug mode: {}'.format(app.config['DEBUG']))
 print('Profiling: {}'.format(app.config['PROFILE']))
-if app.config['CONTRACTS_ENABLED']:
-    print('Contracts are ENABLED')
-else:
-    contracts.disable_all()
-    print('Contracts are DISABLED')
 
 KNOWN_TAGS = ['difficult', 'unclear']
 
