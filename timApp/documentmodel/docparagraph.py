@@ -219,13 +219,16 @@ class DocParagraph(DocParagraphBase):
             return self.__get_setting_html()
 
         macros, delimiter = self.__get_macro_info(self.doc)
-
-        if 'h' in self.__data:
-            # Cached html, we only need to apply macros
-            new_html = expand_macros(self.__data['h'], macros, delimiter)
-        else:
-            # Get html from Dumbo (slow!)
+        cached = self.__data.get('h')
+        macro_hash = hashfunc(str(macros) + delimiter)
+        if cached is None or type(cached) is str:
+            self.__data['h'] = {}
             new_html = self.__get_html_using_macros(macros, delimiter)
+        else:
+            new_html = cached.get(macro_hash)
+            if new_html is None:
+                # Get html from Dumbo (slow!)
+                new_html = self.__get_html_using_macros(macros, delimiter)
 
         self.__set_html(new_html)
         return new_html
@@ -235,12 +238,13 @@ class DocParagraph(DocParagraphBase):
     def preload_htmls(cls, pars: 'list(DocParagraph)', settings):
         """
         Asks for paragraphs in batch from Dumbo to avoid multiple requests
+        :param settings: The document settings.
         :param pars: Paragraphs to preload
         """
-        unloaded_mds = []
         unloaded_pars = []
         macros = settings.get_macros() if settings else None
         macro_delim = settings.get_macro_delimiter() if settings else None
+        macro_hash = hashfunc(str(macros) + macro_delim)
 
         dyn = 0
         l = 0
@@ -249,11 +253,19 @@ class DocParagraph(DocParagraphBase):
             if par.html is not None or par.is_dynamic():
                 dyn += 1
                 continue
-            if 'h' in par.__data:
-                par.html = expand_macros(par.__data['h'], macros, macro_delim)
-                l += 1
+            cached = par.__data.get('h')
+            if cached is not None:
+                if type(cached) is str:
+                    par.__data['h'] = {}
+                    unloaded_pars.append(par)
+                else:
+                    if macro_hash in cached:
+                        par.html = cached[macro_hash]
+                        l += 1
+                    else:
+                        unloaded_pars.append(par)
             else:
-                unloaded_mds.append(par.get_markdown())
+                par.__data['h'] = {}
                 unloaded_pars.append(par)
 
         #print("{} paragraphs are marked dynamic".format(dyn))
@@ -261,11 +273,13 @@ class DocParagraph(DocParagraphBase):
         #print("{} paragraphs are not cached".format(len(unloaded_pars)))
 
         if len(unloaded_pars) > 0:
-            htmls = call_dumbo(unloaded_mds)
-            for i in range(0, len(htmls)):
-                unloaded_pars[i].__data['h'] = htmls[i]
-                unloaded_pars[i].html = expand_macros(htmls[i], macros, macro_delim)
-                unloaded_pars[i].__write()
+            htmls = md_list_to_html_list([par.get_markdown() for par in unloaded_pars],
+                                         macros=macros,
+                                         macro_delimiter=macro_delim)
+            for par, h in zip(unloaded_pars, htmls):
+                par.__data['h'][macro_hash] = h
+                par.html = h
+                par.__write()
 
     @contract
     def __get_html_using_macros(self, macros: 'dict(str:str)|None', macro_delimiter: 'str|None') -> 'str':
