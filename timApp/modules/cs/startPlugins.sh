@@ -52,9 +52,10 @@ wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar -O Graphics.
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar -O Ali.jar -nv
 
 
-sudo mkdir -p cs
-sudo chmod 777 cs
+mkdir -p cs
+sudo chown -R $(id -un):$(id -gn) cs
 cd cs
+rm -f comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
 
 fi
