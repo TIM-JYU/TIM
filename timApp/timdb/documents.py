@@ -218,6 +218,7 @@ class Documents(TimDbBase):
         cursor.execute('SELECT name, public FROM DocEntry WHERE id = ?' + public_clause, [document_id])
         return self.resultAsDictionary(cursor)
 
+    @contract
     def get_first_document_name(self, document_id: 'int') -> 'str':
         """Gets the first public (or non-public if not found) name for a document id.
 

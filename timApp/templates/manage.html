@@ -63,7 +63,8 @@ if (isFolder) {
         <li>{{ message }}</li> {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    
+
+    {% if name and fullname %}
     <div ng-show="crumbs" class="breadcrumb-div">
         <ol id="docpath" class="breadcrumb">
             <li ng-repeat="c in crumbs" ng-class="$last?'active':''">
@@ -71,7 +72,7 @@ if (isFolder) {
             </li>
         </ol>
     </div>
-
+    {% endif %}
     
     <div class="margin">
         {{objNameC}} owner: <select ng-model="doc.owner"

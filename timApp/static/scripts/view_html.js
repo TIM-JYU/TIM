@@ -491,6 +491,22 @@ timApp.controller("ViewCtrl", [
             });
         };
 
+        sc.onMouseOver = function (className, func) {
+            $document.on('mouseover', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e))) {
+                    e.preventDefault();
+                }
+            });
+        };
+
+        sc.onMouseOut = function (className, func) {
+            $document.on('mouseout', className, function (e) {
+                if (func($(this), sc.fixPageCoords(e))) {
+                    e.preventDefault();
+                }
+            });
+        };
+
         sc.showEditWindow = function (e, $par) {
             $(".par.new").remove();
             sc.toggleParEditor($par, {showDelete: true, area: false});
@@ -1014,6 +1030,62 @@ timApp.controller("ViewCtrl", [
                 sc.selection.pars.addClass('selected');
             }
         });
+
+        sc.onMouseOver('.parlink', function ($this, e) {
+            sc.over_reflink = true;
+
+            var $par = $this.parent();
+            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+            var params;
+
+            try {
+                params = {
+                    docid: e.target.attributes['data-docid'].value,
+                    parid: e.target.attributes['data-parid'].value
+                };
+            } catch (TypeError) {
+                // The element was modified
+                return;
+            }
+
+            sc.showRefPopup(e, $this, coords, params);
+        });
+
+        sc.onMouseOver('.ref-popup', function ($this, e) {
+            sc.over_popup = true;
+        });
+
+        sc.onMouseOut('.ref-popup', function ($this, e) {
+            sc.over_popup = false;
+            sc.hideRefPopup();
+        });
+
+        sc.onMouseOut('.parlink', function ($this, e) {
+            sc.over_reflink = false;
+            sc.hideRefPopup();
+        });
+
+        sc.showRefPopup = function (e, $ref, coords, attrs) {
+            var $popup = $('<ref-popup>');
+            $popup.offset(coords);
+
+            for (var attr in attrs) {
+                if (attrs.hasOwnProperty(attr)) {
+                    $popup.attr(attr, attrs[attr]);
+                }
+            }
+
+            $ref.prepend($popup); // need to prepend to DOM before compiling
+            $compile($popup[0])(sc);
+            return $popup;
+        };
+
+        sc.hideRefPopup = function() {
+            if (sc.over_reflink || sc.over_popup)
+                return;
+
+            $(".refPopup").remove();
+        };
 
         sc.startArea = function (e, $par) {
             sc.selection.start = sc.getParId($par);

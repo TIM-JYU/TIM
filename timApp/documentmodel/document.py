@@ -595,6 +595,19 @@ class Document:
     def get_paragraphs(self) -> 'list(DocParagraph)':
         return [par for par in self]
 
+    @contract
+    def get_closest_paragraph_title(self, par_id: 'str|None'):
+        last_title = None
+        for par in self:
+            title = par.get_title()
+            if title is not None:
+                last_title = title
+            if par.get_id() == par_id:
+                return last_title
+
+        return None
+
+
     def get_latest_version(self):
         from documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id)

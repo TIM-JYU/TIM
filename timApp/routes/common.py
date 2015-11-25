@@ -113,7 +113,7 @@ def canWriteToFolder(folderName):
 
         folder, _ = timdb.folders.split_location(folder)
 
-    return timdb.users.isUserInGroup(getCurrentUserName(), 'Administrators')
+    return timdb.users.userHasAdminAccess(getCurrentUserId())
 
 
 def jsonResponse(jsondata, status_code=200):

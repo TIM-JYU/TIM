@@ -197,6 +197,15 @@ class DocParagraph(DocParagraphBase):
         return self.__data['md']
 
     @contract
+    def get_title(self) -> 'str|None':
+        md = self.__data['md']
+        if len(md) < 3 or md[0] != '#' or md[1] == '-':
+            return None
+
+        attr_index = md.find('{')
+        return md[2:attr_index].strip() if attr_index > 0 else md[2:].strip()
+
+    @contract
     def get_exported_markdown(self) -> 'str':
         return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
 
@@ -463,7 +472,13 @@ class DocParagraph(DocParagraphBase):
             if set_html:
                 html = self.get_html() if tr else ref_par.get_html()
                 if write_link:
-                    srclink = '&nbsp;<a class="parlink" href="/view/{0}#{1}">[{0}]</a></p>'.format(ref_par.get_doc_id(), ref_par.get_id())
+                    srclink = """&nbsp;
+                                    <a class="parlink"
+                                       href="/view/{0}#{1}"
+                                       data-docid="{0}" data-parid="{1}"
+                                       <sup>[*]</sup></a>
+                                 </p>
+                              """.format(ref_par.get_doc_id(), ref_par.get_id())
                     html = self.__rrepl(html, '</p>', srclink)
                 par.__set_html(html)
             return par

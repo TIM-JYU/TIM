@@ -404,12 +404,23 @@ class Users(TimDbBase):
         return groups
 
     @contract
-    def isUserInGroup(self, user_name: 'str', usergroup_name: 'str') -> 'bool':
+    def get_users_in_group(self, group_id: 'int', limit:'int'=1000) -> 'list(dict)':
         cursor = self.db.cursor()
-        cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
-                          User_id      = (SELECT id FROM User WHERE name = ?) AND
-                          UserGroup_id = (SELECT id FROM UserGroup WHERE name = ?)
-                       """, [user_name, usergroup_name])
+        cursor.execute("""SELECT UserGroupMember.User_id as id, User.real_name as name from UserGroupMember
+                          INNER JOIN User ON UserGroupMember.User_id=User.id
+                          WHERE UserGroupMember.UserGroup_id=?
+                          LIMIT ?
+                       """, [group_id, limit])
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def getGroupUsers(self, group_id: 'int') -> 'list(dict)':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT User_id as id, User_name FROM UserGroupMember WHERE
+                          User_name = (SELECT name FROM User WHERE id = ?) AND
+                          User_id   = (SELECT id FROM UserGroup WHERE UserGroup_id = ?)
+                       """)
+
         return len(cursor.fetchall()) > 0
 
     @contract

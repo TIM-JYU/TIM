@@ -72,6 +72,29 @@ def lecture_view(doc_name):
 def slide_document(doc_name):
     return view(doc_name, 'view_html.html', slide=True)
 
+@view_page.route("/par_info/<int:doc_id>/<par_id>")
+def par_info(doc_id, par_id):
+    timdb = getTimDb()
+    info = {}
+
+    def just_name(fullpath):
+        return ('/' + fullpath).rsplit('/', 1)[1]
+
+    doc_name = timdb.documents.get_first_document_name(doc_id)
+    info['doc_name'] = just_name(doc_name) if doc_name is not None else 'Document #{}'.format(doc_id)
+
+    group = timdb.users.getOwnerGroup(doc_id)
+    users = timdb.users.get_users_in_group(group['id'], limit=2)
+    if len(users) == 1:
+        info['doc_author'] = '{} ({})'.format(users[0]['name'], group['name'])
+    else:
+        info['doc_author'] = group['name']
+
+    par_name = Document(doc_id).get_closest_paragraph_title(par_id)
+    if par_name is not None:
+        info['par_name'] = par_name
+
+    return jsonResponse(info)
 
 @contract
 def parse_range(start_index: 'int|str|None', end_index: 'int|str|None') -> 'range|None':

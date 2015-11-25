@@ -1312,6 +1312,24 @@ img.console {
     min-height: 50px;
 }
 
+.refPopup {
+    position: relative;
+    white-space: nowrap;
+    margin: 0;
+    background-color: #f8f8ff;
+    z-index: 100;
+    font-size: 12px;
+}
+
+.refPopup span {
+    padding: 3px;
+    display: table;
+}
+
+.refPopup label {
+    font-weight: bold;
+}
+
 .actionButtonRow {
     display: table-row;
 }

@@ -31,8 +31,11 @@ def manage(doc_id):
         doc_data['fulltext'] = ''
     else:
         doc = Document(doc_id)
-        doc_data = timdb.documents.get_document(doc_id)
-        doc_data['fullname'] = doc_data['name']
+        doc_data = {'id': doc_id}
+        doc_name = timdb.documents.get_first_document_name(doc_id)
+        if doc_name is not None:
+            doc_data['name'] = doc_name
+            doc_data['fullname'] = doc_name
         doc_data['versions'] = [entry for entry in doc.get_changelog()]
         doc_data['fulltext'] = doc.export_markdown()
         for ver in doc_data['versions']:
@@ -123,7 +126,7 @@ def add_alias(doc_id, new_alias):
 
     parent_folder, _ = timdb.folders.split_location(new_alias)
 
-    if not timdb.users.isUserInGroup(userName, 'Administrators') and not canWriteToFolder(parent_folder):
+    if not canWriteToFolder(parent_folder):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.folders.create(parent_folder, getCurrentUserGroup())
