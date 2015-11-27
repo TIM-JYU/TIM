@@ -510,6 +510,8 @@ class DocParagraph(DocParagraphBase):
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
 
+        write_link = not (is_default_rd or (attrs.get('rl', 'all') == 'no'))
+
         if self.is_par_reference():
             if self.get_doc_id() == int(ref_docid) and self.get_id() == attrs['rp']:
                 raise TimDbException('Paragraph is referencing itself!')
@@ -517,14 +519,14 @@ class DocParagraph(DocParagraphBase):
                 raise TimDbException('The referenced paragraph does not exist.')
 
             ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
-            return [reference_par(ref_par, write_link=not is_default_rd)]
+            return [reference_par(ref_par, write_link=write_link)]
 
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
             if attrs['r'] == 'tr' and len(ref_pars) > 0:
-                return [reference_par(ref_pars[0], write_link=not is_default_rd)]
+                return [reference_par(ref_pars[0], write_link=write_link)]
             else:
-                return [reference_par(ref_par, write_link=not is_default_rd) for ref_par in ref_pars]
+                return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]
         else:
             assert False
 
