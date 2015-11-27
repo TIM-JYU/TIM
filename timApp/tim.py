@@ -154,7 +154,6 @@ def upload_file():
 
     user_name = getCurrentUserName()
     if not timdb.users.userHasAdminAccess(getCurrentUserId()) \
-            and not timdb.users.isUserInGroup(user_name, "Timppa-projektiryhmä") \
             and re.match('^users/' + user_name + '/', filename) is None:
         abort(403, "You're not authorized to write here.")
 
