@@ -510,7 +510,8 @@ class DocParagraph(DocParagraphBase):
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
 
-        write_link = not (is_default_rd or (attrs.get('rl', 'all') == 'no'))
+        rl_attr = attrs.get('rl', 'all')
+        write_link = (rl_attr == 'force') or not (is_default_rd or (rl_attr == 'no'))
 
         if self.is_par_reference():
             if self.get_doc_id() == int(ref_docid) and self.get_id() == attrs['rp']:
