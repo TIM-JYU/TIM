@@ -1,8 +1,7 @@
 from contracts import contract, new_contract
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
-from markdownconverter import expand_macros
-
+from timdb.timdbbase import TimDbException
 
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
@@ -30,7 +29,11 @@ class DocSettings:
         :return: The DocSettings object.
         """
         if par.is_reference():
-            par = par.get_referenced_pars(set_html=False)[0]
+            try:
+                par = par.get_referenced_pars(set_html=False)[0]
+            except TimDbException as e:
+                # Invalid reference, ignore for now
+                return DocSettings()
         if par.is_setting():
             md = par.get_markdown().replace('```', '').replace('~~~', '')
             yaml_vals = parse_yaml(md)
