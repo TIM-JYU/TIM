@@ -521,7 +521,10 @@ class DocParagraph(DocParagraphBase):
 
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
-            return [reference_par(ref_par, write_link=not is_default_rd) for ref_par in ref_pars]
+            if attrs['r'] == 'tr' and len(ref_pars) > 0:
+                return [reference_par(ref_pars[0], write_link=not is_default_rd)]
+            else:
+                return [reference_par(ref_par, write_link=not is_default_rd) for ref_par in ref_pars]
         else:
             assert False
 
