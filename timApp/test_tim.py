@@ -221,12 +221,18 @@ macros:
         """
         table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
 
-        self.assertInResponse(table_html, self.new_par(doc.doc_id, table_text, None), json_key='texts')
+        self.assertInResponse(table_html, self.new_par(doc.doc_id, table_text), json_key='texts')
         self.assertInResponse(table_html, a.get('/view/' + docname))
 
     def test_index_one_heading_per_par(self):
         self.login_test1()
         doc = self.create_doc('users/testuser1/indextest', """
+``` {settings=""}
+macro_delimiter: "%%"
+macros:
+ rivi: kerros
+```
+#-
 # Heading level 1
 Lorem ipsum.
 #-
@@ -240,6 +246,28 @@ Lorem ipsum.
                            [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
+                           [])], doc.get_index())
+        doc = self.create_doc('users/testuser1/indextest5', """
+``` {settings=""}
+auto_number_headings: true
+```
+#-
+# Heading level 1
+Lorem ipsum.
+#-
+## Heading level 2
+#-
+## Second heading level 2
+#-
+### Heading level 3
+#-
+# Second heading level 1
+        """)
+        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '1. Heading level 1'},
+                           [{'id': 'heading-level-2', 'level': 2, 'text': '1.1. Heading level 2'},
+                            {'id': 'second-heading-level-2', 'level': 2, 'text': '1.2. Second heading level 2'},
+                            {'id': 'heading-level-3', 'level': 3, 'text': '1.2.1. Heading level 3'}]),
+                          ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
                            [])], doc.get_index())
 
     def test_index_many_headings_per_par(self):

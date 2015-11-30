@@ -30,6 +30,9 @@ class Document:
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
         self.par_cache = None
 
+        # Used for accessing previous/next paragraphs quickly based on id
+        self.par_map = None
+
     @classmethod
     def get_default_files_root(cls):
         return cls.default_files_root
@@ -88,6 +91,17 @@ class Document:
         Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.
         """
         self.par_cache = [par for par in self]
+        self.par_map = {}
+        for i in range(0, len(self.par_cache)):
+            curr_p = self.par_cache[i].get_id()
+            prev_p = self.par_cache[i-1] if i > 0 else None
+            next_p = self.par_cache[i+1] if i+1 < len(self.par_cache) else None
+            self.par_map[curr_p] = {'p': prev_p, 'n': next_p}
+
+    def get_previous_par(self, par):
+        if self.par_map is None:
+            self.load_pars()
+        return self.par_map[par.get_id()]['p']
 
     @contract
     def get_settings(self) -> 'DocSettings':
@@ -666,7 +680,12 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
                 pars.append(par)
 
     DocParagraph.preload_htmls(pars, doc.get_settings())
-    html_table = [par.get_html() for par in pars]
+    html_list = [par.get_html() for par in pars]
+    return get_index_from_html_list(html_list)
+
+
+@contract
+def get_index_from_html_list(html_table: 'list(str)') -> 'list(tuple)':
     index = []
     current_headers = None
     for htmlstr in html_table:
@@ -676,9 +695,9 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
             continue
         if index_entry.tag == 'div':
             for header in index_entry.iter('h1', 'h2', 'h3'):
-                current_headers = doc.add_index_entry(index, current_headers, header)
+                current_headers = Document.add_index_entry(index, current_headers, header)
         elif index_entry.tag.startswith('h'):
-            current_headers = doc.add_index_entry(index, current_headers, index_entry)
+            current_headers = Document.add_index_entry(index, current_headers, index_entry)
     if current_headers is not None:
         index.append(current_headers)
     return index

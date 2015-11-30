@@ -9,6 +9,7 @@ class DocSettings:
     macros_key = 'macros'
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = "source_document"
+    auto_number_headings_key = 'auto_number_headings'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -91,5 +92,9 @@ class DocSettings:
     @contract
     def set_source_document(self, source_docid: 'int|None'):
         self.__dict[self.source_document_key] = source_docid
+
+    @contract
+    def auto_number_headings(self) -> 'bool':
+        return self.__dict.get(self.auto_number_headings_key, False)
 
 new_contract('DocSettings', DocSettings)

@@ -1,7 +1,10 @@
 from copy import deepcopy
 import os
 
+import shelve
 from contracts import contract, new_contract
+from fcache.cache import FileCache
+from lxml import html
 
 from documentmodel.documentwriter import DocumentWriter
 from dumboclient import call_dumbo
@@ -228,16 +231,21 @@ class DocParagraph(DocParagraphBase):
             return self.__get_setting_html()
 
         macros, delimiter = self.__get_macro_info(self.doc)
+        m = str(macros) + delimiter
         cached = self.__data.get('h')
-        macro_hash = hashfunc(str(macros) + delimiter)
+        # auto_macros = self.get_auto_macro_values(macros, delimiter)
+        macro_hash = hashfunc(m)
+        # auto_macro_hash = hashfunc(m + str(auto_macros))
         if cached is None or type(cached) is str:
             self.__data['h'] = {}
-            new_html = self.__get_html_using_macros(macros, delimiter)
+            new_html = self.__get_html_using_macros(macros,
+                                                    delimiter)
         else:
             new_html = cached.get(macro_hash)
             if new_html is None:
                 # Get html from Dumbo (slow!)
-                new_html = self.__get_html_using_macros(macros, delimiter)
+                new_html = self.__get_html_using_macros(macros,
+                                                        delimiter)
 
         self.__set_html(new_html)
         return new_html
@@ -253,7 +261,7 @@ class DocParagraph(DocParagraphBase):
         unloaded_pars = []
         macros = settings.get_macros() if settings else None
         macro_delim = settings.get_macro_delimiter() if settings else None
-        macro_hash = hashfunc(str(macros) + macro_delim)
+        m = str(macros) + macro_delim
 
         dyn = 0
         l = 0
@@ -263,36 +271,88 @@ class DocParagraph(DocParagraphBase):
                 dyn += 1
                 continue
             cached = par.__data.get('h')
+            auto_macros = par.get_auto_macro_values(macros, macro_delim)
+            auto_macro_hash = hashfunc(m + str(auto_macros))
+            tup = (par, auto_macro_hash, auto_macros)
             if cached is not None:
                 if type(cached) is str:
                     par.__data['h'] = {}
-                    unloaded_pars.append(par)
+                    unloaded_pars.append(tup)
                 else:
-                    if macro_hash in cached:
-                        par.html = cached[macro_hash]
+                    if auto_macro_hash in cached:
+                        par.html = cached[auto_macro_hash]
                         l += 1
                     else:
-                        unloaded_pars.append(par)
+                        unloaded_pars.append(tup)
             else:
                 par.__data['h'] = {}
-                unloaded_pars.append(par)
+                unloaded_pars.append(tup)
 
-        #print("{} paragraphs are marked dynamic".format(dyn))
-        #print("{} paragraphs are cached".format(l))
-        #print("{} paragraphs are not cached".format(len(unloaded_pars)))
+        # print("{} paragraphs are marked dynamic".format(dyn))
+        # print("{} paragraphs are cached".format(l))
+        # print("{} paragraphs are not cached".format(len(unloaded_pars)))
 
         if len(unloaded_pars) > 0:
-            htmls = md_list_to_html_list([par.get_markdown() for par in unloaded_pars],
+            htmls = md_list_to_html_list([par.get_markdown() for par, _, _ in unloaded_pars],
                                          macros=macros,
-                                         macro_delimiter=macro_delim)
-            for par, h in zip(unloaded_pars, htmls):
-                par.__data['h'][macro_hash] = h
+                                         macro_delimiter=macro_delim,
+                                         auto_macros=[auto_macros for _, _, auto_macros in unloaded_pars],
+                                         auto_number_headings=settings.auto_number_headings())
+            for (par, auto_macro_hash, _), h in zip(unloaded_pars, htmls):
+                par.__data['h'][auto_macro_hash] = h
                 par.html = h
                 par.__write()
 
+    def get_auto_macro_values(self, macros, macro_delim):
+        cache = shelve.Shelf(FileCache('tim_auto_macros', serialize=False))
+        key = str((self.get_id(), self.doc.get_version()))
+        cached = cache.get(key)
+        if cached is not None:
+            return cached
+
+        prev_par = self.doc.get_previous_par(self)
+        if prev_par is None:
+            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
+        else:
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim)
+
+        if prev_par is None or prev_par.is_dynamic():
+            cache[key] = prev_par_auto_values
+            return prev_par_auto_values
+
+        pre_html = prev_par.__get_html_using_macros(macros, macro_delim)
+        tree = html.fragment_fromstring(pre_html, create_parent=True).getchildren()
+        if len(tree) == 1 and tree[0].tag == 'div':
+            tree = tree[0].getchildren()
+        deltas = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+        for e in tree:
+            if e.tag.startswith('h'):
+                level = int(e.tag[1])
+                deltas[level] += 1
+                for i in range(level + 1, 7):
+                    deltas[i] = 0
+        result = prev_par_auto_values
+        found_nonzero = False
+        for i in range(1, 7):
+            if found_nonzero:
+                result['h'][i] = 0
+            result['h'][i] += deltas[i]
+            found_nonzero = found_nonzero or deltas[i] > 0
+        cache[key] = result
+        cache.close()
+        return result
+
     @contract
-    def __get_html_using_macros(self, macros: 'dict(str:str)|None', macro_delimiter: 'str|None') -> 'str':
-        return md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=macro_delimiter)
+    def __get_html_using_macros(self, macros: 'dict(str:str)|None',
+                                macro_delimiter: 'str|None',
+                                auto_macros: 'dict|None'=None,
+                                auto_number_headings: 'bool'=False) -> 'str':
+        return md_to_html(self.get_markdown(),
+                          sanitize=True,
+                          macros=macros,
+                          macro_delimiter=macro_delimiter,
+                          auto_macros=auto_macros,
+                          auto_number_headings=auto_number_headings)
 
     def sanitize_html(self):
         if self.html_sanitized or not self.html:
