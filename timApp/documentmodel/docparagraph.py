@@ -9,7 +9,7 @@ from lxml import html
 from documentmodel.documentwriter import DocumentWriter
 from dumboclient import call_dumbo
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html, md_list_to_html_list, expand_macros
+from markdownconverter import md_to_html, md_list_to_html_list, expand_macros, HEADING_TAGS
 from .randutils import *
 from timdb.timdbbase import TimDbException
 
@@ -326,7 +326,7 @@ class DocParagraph(DocParagraphBase):
             tree = tree[0].getchildren()
         deltas = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
         for e in tree:
-            if e.tag.startswith('h'):
+            if e.tag in HEADING_TAGS:
                 level = int(e.tag[1])
                 deltas[level] += 1
                 for i in range(level + 1, 7):

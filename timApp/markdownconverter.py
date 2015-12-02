@@ -1,14 +1,13 @@
 """Provides functions for converting markdown-formatted text to HTML."""
+import re
 from copy import copy
 
 from contracts import contract
-import re
-
+from jinja2 import Environment
 from lxml import html
 
 from dumboclient import call_dumbo
 from htmlSanitize import sanitize_html
-from jinja2 import Environment
 
 
 def has_macros(text, macros, macro_delimiter=None):
@@ -110,9 +109,9 @@ def md_list_to_html_list(texts: 'list(str)',
 
 def insert_heading_numbers(m, pre_html):
     tree = html.fragment_fromstring(pre_html, create_parent=True)
-    deltas = copy(m['h'])  # TODO: Maybe no need to copy
+    deltas = m['h']
     for e in tree.iterchildren():
-        if e.tag.startswith('h'):
+        if e.tag in HEADING_TAGS:
             level = int(e.tag[1])
             deltas[level] += 1
             for i in range(level + 1, 7):
@@ -125,3 +124,6 @@ def insert_heading_numbers(m, pre_html):
             e.text = full_heading + ' ' + e.text
     final_html = ''.join(map(lambda x: html.tostring(x).decode('utf-8'), tree.iterchildren()))
     return final_html
+
+
+HEADING_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}

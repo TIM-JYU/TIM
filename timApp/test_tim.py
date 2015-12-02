@@ -235,6 +235,9 @@ macros:
 #-
 # Heading level 1
 Lorem ipsum.
+
+---
+
 #-
 ## Heading level 2
 #-
@@ -254,6 +257,9 @@ auto_number_headings: true
 #-
 # Heading level 1
 Lorem ipsum.
+
+---
+
 #-
 ## Heading level 2
 #-
@@ -275,6 +281,9 @@ Lorem ipsum.
         doc = self.create_doc('users/testuser1/indextest2', """
 # Heading level 1
 Lorem ipsum.
+
+---
+
 ## Heading level 2
 
 ### Heading level 3
