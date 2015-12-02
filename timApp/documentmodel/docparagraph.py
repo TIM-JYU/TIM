@@ -252,11 +252,12 @@ class DocParagraph(DocParagraphBase):
 
     @classmethod
     @contract
-    def preload_htmls(cls, pars: 'list(DocParagraph)', settings):
+    def preload_htmls(cls, pars: 'list(DocParagraph)', settings, clear_cache=False):
         """
-        Asks for paragraphs in batch from Dumbo to avoid multiple requests
+        Asks for paragraphs in batch from Dumbo to avoid multiple requests.
+        :param clear_cache: Whether the HTML cache ('h' key) should be refreshed.
         :param settings: The document settings.
-        :param pars: Paragraphs to preload
+        :param pars: Paragraphs to preload.
         """
         unloaded_pars = []
         macros = settings.get_macros() if settings else None
@@ -267,15 +268,17 @@ class DocParagraph(DocParagraphBase):
         l = 0
 
         for par in pars:
-            if par.html is not None or par.is_dynamic():
+            if par.is_dynamic():
                 dyn += 1
+                continue
+            if not clear_cache and par.html is not None:
                 continue
             cached = par.__data.get('h')
             auto_macros = par.get_auto_macro_values(macros, macro_delim)
             auto_macro_hash = hashfunc(m + str(auto_macros))
             tup = (par, auto_macro_hash, auto_macros)
             if cached is not None:
-                if type(cached) is str:
+                if clear_cache or type(cached) is str:
                     par.__data['h'] = {}
                     unloaded_pars.append(tup)
                 else:
