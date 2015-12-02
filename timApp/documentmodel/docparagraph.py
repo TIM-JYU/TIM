@@ -267,6 +267,7 @@ class DocParagraph(DocParagraphBase):
         dyn = 0
         l = 0
 
+        cache = shelve.open('/tmp/tim_auto_macros')
         for par in pars:
             if par.is_dynamic():
                 dyn += 1
@@ -274,7 +275,7 @@ class DocParagraph(DocParagraphBase):
             if not clear_cache and par.html is not None:
                 continue
             cached = par.__data.get('h')
-            auto_macros = par.get_auto_macro_values(macros, macro_delim)
+            auto_macros = par.get_auto_macro_values(macros, macro_delim, cache)
             auto_macro_hash = hashfunc(m + str(auto_macros))
             tup = (par, auto_macro_hash, auto_macros)
             if cached is not None:
@@ -290,6 +291,7 @@ class DocParagraph(DocParagraphBase):
             else:
                 par.__data['h'] = {}
                 unloaded_pars.append(tup)
+        cache.close()
 
         # print("{} paragraphs are marked dynamic".format(dyn))
         # print("{} paragraphs are cached".format(l))
@@ -306,8 +308,7 @@ class DocParagraph(DocParagraphBase):
                 par.html = h
                 par.__write()
 
-    def get_auto_macro_values(self, macros, macro_delim):
-        cache = shelve.Shelf(FileCache('tim_auto_macros', serialize=False))
+    def get_auto_macro_values(self, macros, macro_delim, cache):
         key = str((self.get_id(), self.doc.get_version()))
         cached = cache.get(key)
         if cached is not None:
@@ -317,7 +318,7 @@ class DocParagraph(DocParagraphBase):
         if prev_par is None:
             prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
         else:
-            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim)
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, cache)
 
         if prev_par is None or prev_par.is_dynamic():
             cache[key] = prev_par_auto_values
@@ -342,7 +343,6 @@ class DocParagraph(DocParagraphBase):
             result['h'][i] += deltas[i]
             found_nonzero = found_nonzero or deltas[i] > 0
         cache[key] = result
-        cache.close()
         return result
 
     @contract
