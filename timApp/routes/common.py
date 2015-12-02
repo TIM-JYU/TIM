@@ -148,7 +148,7 @@ def verify_document_version(doc_id, version):
                    'Please refresh the page and try again.')
 
 
-def verify_json_params(*args, require=True):
+def verify_json_params(*args, require=True, default=None):
     """
 
     :type args: list[str]
@@ -157,12 +157,15 @@ def verify_json_params(*args, require=True):
     result = ()
     json_params = request.get_json()
     for arg in args:
-        if arg not in json_params:
-            if require:
-                abort(400, 'Missing required parameter in request: {}'.format(arg))
-            else:
-                continue
-        result = result + (json_params[arg],)
+        if arg in json_params:
+            val = json_params[arg]
+        elif not require:
+            val = default
+        else:
+            abort(400, 'Missing required parameter in request: {}'.format(arg))
+            return ()
+
+        result += (val,)
     return result
 
 

@@ -549,6 +549,10 @@ class Document:
         for p in self:
             if p.get_attr('taskId') == task_id_name:
                 return p
+            if p.is_reference():
+                for rp in p.get_referenced_pars():
+                    if rp.get_attr('taskId') == task_id_name:
+                        return rp
         return None
 
     def get_last_modified(self):

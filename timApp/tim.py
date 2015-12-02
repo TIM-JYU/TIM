@@ -1113,9 +1113,15 @@ def create_document():
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
                        getCurrentUserGroup())
 
+
 @app.route("/translate/<path:docname>/<language>", methods=["GET"])
 def create_translation(docname, language):
-    #jsondata = request.get_json()
+    params = request.get_json()
+
+    # Filter for allowed reference parameters
+    if params is not None:
+        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
+
     timdb = getTimDb()
     src_doc_id = timdb.documents.get_document_id(docname)
     if not hasViewAccess(src_doc_id):
@@ -1123,8 +1129,28 @@ def create_translation(docname, language):
 
     src_doc = Document(src_doc_id)
     new_name = docname + "-" + language
-    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group).doc_id
+    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group, params).doc_id
     return create_item(new_name, 'document', factory, getCurrentUserGroup())
+
+
+@app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])
+def create_citation_doc(docid, newname):
+    params = request.get_json()
+
+    # Filter for allowed reference parameters
+    if params is not None:
+        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
+        params['r'] = 'c'
+    else:
+        params = {'r': 'c'}
+
+    timdb = getTimDb()
+    if not hasViewAccess(docid):
+        abort(403)
+
+    src_doc = Document(docid)
+    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group, params).doc_id
+    return create_item(newname, 'document', factory, getCurrentUserGroup())
 
 
 @app.route("/createFolder", methods=["POST"])
