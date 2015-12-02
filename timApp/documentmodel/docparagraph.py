@@ -454,15 +454,16 @@ class DocParagraph(DocParagraphBase):
         rindex = s.rfind(old)
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
-    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None):
+    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True):
         def reference_par(ref_par, write_link=False):
             tr = self.get_attr('r') == 'tr'
-            doc = ref_par.doc if self.get_attr('r_docid') == 'src' else self.doc
+            doc = ref_par.doc
             md = self.get_markdown() if tr else ref_par.get_markdown()
             attrs = self.get_attrs() if tr else ref_par.get_attrs()
             props = self.get_properties() if tr else ref_par.get_properties()
 
-            par = DocParagraph.create(doc, md=md, t=ref_par.get_hash(), attrs=attrs, props=props)
+            par = DocParagraph.create(doc, par_id=ref_par.get_id(), md=md, t=ref_par.get_hash(),
+                                           attrs=attrs, props=props)
             par.set_original(self)
 
             if set_html:
@@ -520,7 +521,7 @@ class DocParagraph(DocParagraphBase):
 
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
-            if attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
+            if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
                 return [reference_par(ref_pars[0], write_link=write_link)]
             else:
                 return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]

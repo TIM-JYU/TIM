@@ -208,7 +208,11 @@ def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_win
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
     for htmlpar in html_pars:
-        key = htmlpar.get('ref_id') or htmlpar['id'], htmlpar.get('ref_doc_id') or htmlpar['doc_id']
+        if htmlpar.get('ref_id') and htmlpar.get('ref_doc_id'):
+            key = htmlpar.get('ref_id'), htmlpar.get('ref_doc_id')
+            pars_dict[key].append(htmlpar)
+
+        key = htmlpar['id'], htmlpar['doc_id']
         pars_dict[key].append(htmlpar)
 
     for p in html_pars:
@@ -226,6 +230,7 @@ def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_win
                 p['status'] = 'read' if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t') else 'modified'
     
     notes = timdb.notes.getNotes(group, doc)
+
     for n in notes:
         key = (n['par_id'], n['doc_id'])
         pars = pars_dict.get(key)
@@ -240,12 +245,8 @@ def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_win
     return html_pars, js_paths, css_paths, modules
 
 
-def get_referenced_par_from_req(par):
+def get_referenced_pars_from_req(par):
     if par.is_reference():
-        refs = par.get_referenced_pars()
-        for ref in refs:
-            if ref.get_id() == request.get_json().get('ref-id'):
-                return ref
-        abort(400, 'Invalid reference par id')
+        return [ref_par for ref_par in par.get_referenced_pars(set_html=False, tr_get_one=False)]
     else:
-        return par
+        return [par]

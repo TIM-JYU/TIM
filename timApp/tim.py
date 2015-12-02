@@ -1246,7 +1246,10 @@ def post_note():
         abort(400, 'Non-existent paragraph')
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    par = get_referenced_par_from_req(par)
+
+    if par.get_attr('r') != 'tr':
+        par = get_referenced_pars_from_req(par)[0]
+
     timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
     return par_response([Document(doc_id).get_paragraph(par_id)],
                         doc_id)
@@ -1685,6 +1688,8 @@ def get_read_paragraphs(doc_id):
 def set_read_paragraph(doc_id, specifier):
     verifyReadMarkingRight(doc_id)
     timdb = getTimDb()
+    group_id = getCurrentUserGroup()
+
     # todo: document versions
     # version = request.headers.get('Version', 'latest')
     # verify_document_version(doc_id, version)
@@ -1692,8 +1697,10 @@ def set_read_paragraph(doc_id, specifier):
     par = doc.get_paragraph(specifier)
     if par is None:
         return abort(400, 'Non-existent paragraph')
-    par = get_referenced_par_from_req(par)
-    timdb.readings.setAsRead(getCurrentUserGroup(), Document(par.get_doc_id()), par)
+
+    for par in get_referenced_pars_from_req(par):
+        timdb.readings.setAsRead(group_id, Document(par.get_doc_id()), par)
+
     return okJsonResponse()
 
 
