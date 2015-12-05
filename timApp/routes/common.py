@@ -39,65 +39,85 @@ def getTimDb():
     return g.timdb
 
 
-def verifyEditAccess(block_id, message="Sorry, you don't have permission to edit this resource."):
+def verify_edit_access(block_id, message="Sorry, you don't have permission to edit this resource."):
     timdb = getTimDb()
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), block_id):
+    if not timdb.users.has_edit_access(getCurrentUserId(), block_id):
         abort(403, message)
 
-def hasEditAccess(block_id):
-    timdb = getTimDb()
-    return timdb.users.userHasEditAccess(getCurrentUserId(), block_id)
 
-def verifyViewAccess(block_id, require=True):
+def has_edit_access(block_id):
     timdb = getTimDb()
-    if not timdb.users.userHasViewAccess(getCurrentUserId(), block_id):
+    return timdb.users.has_edit_access(getCurrentUserId(), block_id)
+
+
+def verify_view_access(block_id, require=True):
+    timdb = getTimDb()
+    if not timdb.users.has_view_access(getCurrentUserId(), block_id):
         if not require:
             return False
         abort(403, "Sorry, you don't have permission to view this resource.")
     return True
 
-def hasViewAccess(block_id):
+
+def verify_teacher_access(block_id, require=True):
     timdb = getTimDb()
-    return timdb.users.userHasViewAccess(getCurrentUserId(), block_id)
+    if not timdb.users.has_teacher_access(getCurrentUserId(), block_id):
+        if not require:
+            return False
+        abort(403, "Sorry, you don't have permission to view this resource.")
+    return True
 
-def hasCommentRight(doc_id):
-    return hasViewAccess(doc_id) and loggedIn()
 
-def verifyCommentRight(doc_id):
-    if not hasCommentRight(doc_id):
+def has_view_access(block_id):
+    timdb = getTimDb()
+    return timdb.users.has_view_access(getCurrentUserId(), block_id)
+
+
+def has_comment_right(doc_id):
+    return has_view_access(doc_id) and logged_in()
+
+
+def verify_comment_right(doc_id):
+    if not has_comment_right(doc_id):
         abort(403)
 
-def hasReadMarkingRight(doc_id):
-    return hasViewAccess(doc_id) and loggedIn()
 
-def verifyReadMarkingRight(doc_id):
-    if not hasReadMarkingRight(doc_id):
+def has_read_marking_right(doc_id):
+    return has_view_access(doc_id) and logged_in()
+
+
+def verify_read_marking_right(doc_id):
+    if not has_read_marking_right(doc_id):
         abort(403)
 
 
 def get_rights(doc_id):
-    return {'editable': hasEditAccess(doc_id),
-            'can_mark_as_read': hasReadMarkingRight(doc_id),
-            'can_comment': hasCommentRight(doc_id),
-            'browse_own_answers': loggedIn()
+    return {'editable': has_edit_access(doc_id),
+            'can_mark_as_read': has_read_marking_right(doc_id),
+            'can_comment': has_comment_right(doc_id),
+            'browse_own_answers': logged_in()
             }
 
 
 def verifyLoggedIn():
-    if not loggedIn():
+    if not logged_in():
         abort(403, "You have to be logged in to perform this action.")
 
-def hasOwnership(block_id):
+
+def has_ownership(block_id):
     timdb = getTimDb()
     return timdb.users.userIsOwner(getCurrentUserId(), block_id)
 
-def verifyOwnership(block_id):
+
+def verify_ownership(block_id):
     timdb = getTimDb()
     if not timdb.users.userIsOwner(getCurrentUserId(), block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
 
-def loggedIn():
+
+def logged_in():
     return getCurrentUserId() != 0
+
 
 def canWriteToFolder(folderName):
     timdb = getTimDb()
@@ -109,11 +129,11 @@ def canWriteToFolder(folderName):
 
         folderId = timdb.folders.get_folder_id(folder)
         if folderId is not None:
-            return hasEditAccess(folderId)
+            return has_edit_access(folderId)
 
         folder, _ = timdb.folders.split_location(folder)
 
-    return timdb.users.userHasAdminAccess(getCurrentUserId())
+    return timdb.users.has_admin_access(getCurrentUserId())
 
 
 def jsonResponse(jsondata, status_code=200):

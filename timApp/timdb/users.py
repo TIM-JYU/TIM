@@ -214,6 +214,15 @@ class Users(TimDbBase):
         return self.hashPassword(password) == hash
 
     @contract
+    def get_rights_holders(self, block_id: 'int'):
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT b.UserGroup_id as gid, u.name as name, a.id as access_type, a.name as access_name FROM BlockAccess b
+                          JOIN UserGroup u ON b.UserGroup_id = u.id
+                          JOIN AccessType a ON b.type = a.id
+                          WHERE Block_id = ?""", [block_id])
+        return self.resultAsDictionary(cursor)
+
+    @contract
     def getEditors(self, block_id: 'int'):
         """Gets the users that are allowed to edit the speficied block.
         
@@ -380,7 +389,7 @@ class Users(TimDbBase):
         """
 
         cursor = self.db.cursor()
-        if self.userHasAdminAccess(user_id):
+        if self.has_admin_access(user_id):
             # Admin is part of every user group
             cursor.execute("""SELECT id, name FROM UserGroup ORDER BY id ASC""")
         else:
@@ -432,7 +441,7 @@ class Users(TimDbBase):
                        """, [user_id, usergroup_name])
         return len(cursor.fetchall()) > 0
 
-    def __grantAccess(self, group_id: 'int', block_id: 'int', access_type: 'str'):
+    def grant_access(self, group_id: 'int', block_id: 'int', access_type: 'str'):
         """Grants access to a group for a block.
         
         :param group_id: The group id to which to grant view access.
@@ -456,7 +465,7 @@ class Users(TimDbBase):
         :param block_id: The id of the block for which to grant view access.
         """
 
-        self.__grantAccess(group_id, block_id, 'view')
+        self.grant_access(group_id, block_id, 'view')
 
     @contract
     def grantEditAccess(self, group_id: 'int', block_id: 'int'):
@@ -466,7 +475,7 @@ class Users(TimDbBase):
         :param block_id: The id of the block for which to grant view access.
         """
 
-        self.__grantAccess(group_id, block_id, 'edit')
+        self.grant_access(group_id, block_id, 'edit')
 
     @contract
     def removeViewAccess(self, group_id: 'int', block_id: 'int'):
@@ -485,6 +494,13 @@ class Users(TimDbBase):
         return self.get_access_type_id('view')
 
     @contract
+    def remove_access(self, group_id: 'int', block_id: 'int', access_type: 'str'):
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = ? AND Block_id = ? AND type = ?",
+                       [group_id, block_id, self.get_access_type_id(access_type)])
+        self.db.commit()
+
+    @contract
     def removeEditAccess(self, group_id: 'int', block_id: 'int'):
         """Removes edit access from a user for a block.
         
@@ -497,29 +513,63 @@ class Users(TimDbBase):
                        [group_id, block_id, self.get_edit_access_id()])
         self.db.commit()
 
-    def get_edit_access_id(self):
+    @contract
+    def get_edit_access_id(self) -> 'int':
         return self.get_access_type_id('edit')
 
     @contract
-    def userHasAdminAccess(self, user_id: 'int') -> 'bool':
+    def get_teacher_access_id(self) -> 'int':
+        return self.get_access_type_id('teacher')
+
+    @contract
+    def get_manage_access_id(self) -> 'int':
+        return self.get_access_type_id('manage')
+
+    @contract
+    def has_admin_access(self, user_id: 'int') -> 'bool':
         return self.isUserIdInGroup(user_id, 'Administrators')
 
     @contract
-    def userHasViewAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
+    def has_view_access(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user has view access to the specified block.
 
-        :param user_id:
-        :param block_id:
+        :param user_id: The user id to check.
+        :param block_id: The block id to check.
         :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
         """
-        return self.userHasAccess(user_id, block_id, self.get_view_access_id(), self.get_edit_access_id())
+        return self.has_access(user_id,
+                               block_id,
+                               self.get_view_access_id(),
+                               self.get_edit_access_id(),
+                               self.get_manage_access_id(),
+                               self.get_teacher_access_id())
 
     @contract
-    def userHasAccess(self, user_id: 'int', block_id: 'int', *access_ids) -> 'bool':
+    def has_teacher_access(self, user_id: 'int', block_id: 'int') -> 'bool':
+        """Returns whether the user has teacher access to the specified block.
+
+        :param user_id: The user id to check.
+        :param block_id: The block id to check.
+        :returns: True if the user with id 'user_id' has teacher access to the block 'block_id', false otherwise.
+        """
+        return self.has_access(user_id, block_id, self.get_manage_access_id(), self.get_teacher_access_id())
+
+    @contract
+    def has_manage_access(self, user_id: 'int', block_id: 'int') -> 'bool':
+        """Returns whether the user has manage access to the specified block.
+
+        :param user_id: The user id to check.
+        :param block_id: The block id to check.
+        :returns: True if the user with id 'user_id' has manage access to the block 'block_id', false otherwise.
+        """
+        return self.has_access(user_id, block_id, self.get_manage_access_id())
+
+    @contract
+    def has_access(self, user_id: 'int', block_id: 'int', *access_ids) -> 'bool':
         """Returns whether the user has any of the specific kind of access types to the specified block.
         
-        :param user_id: The user id.
-        :param block_id: The block id.
+        :param user_id: The user id to check.
+        :param block_id: The block id to check.
         :param access_ids: List of access type ids to be checked.
         :returns: True if the user with id 'user_id' has a specific kind of access to the block 'block_id',
                   false otherwise.
@@ -543,7 +593,7 @@ class Users(TimDbBase):
         return False
 
     @contract
-    def userHasEditAccess(self, user_id: 'int', block_id: 'int') -> 'bool':
+    def has_edit_access(self, user_id: 'int', block_id: 'int') -> 'bool':
         """Returns whether the user has edit access to the specified block.
         
         :param user_id:
@@ -551,7 +601,7 @@ class Users(TimDbBase):
         :returns: True if the user with id 'user_id' has edit access to the block 'block_id', false otherwise.
         """
 
-        return self.userHasAccess(user_id, block_id, self.get_edit_access_id())
+        return self.has_access(user_id, block_id, self.get_edit_access_id(), self.get_manage_access_id())
 
     def checkUserGroupAccess(self, block_id: 'int', usergroup_id: 'int|None', access_id: 'int') -> 'bool':
         if usergroup_id is None:
@@ -571,7 +621,7 @@ class Users(TimDbBase):
         :param block_id:
         :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
         """
-        if self.userHasAdminAccess(user_id):
+        if self.has_admin_access(user_id):
             return True
 
         cursor = self.db.cursor()
@@ -638,3 +688,6 @@ class Users(TimDbBase):
             for row in result:
                 self.access_type_map[row[1]] = row[0]
         return self.access_type_map[access_type]
+
+    def get_access_types(self):
+        return self.resultAsDictionary(self.db.execute("""SELECT id, name FROM AccessType"""))

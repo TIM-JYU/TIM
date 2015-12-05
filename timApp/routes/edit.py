@@ -29,7 +29,7 @@ def update_document(doc_id, version):
     doc_identifier = DocIdentifier(doc_id, version)
     if not timdb.documents.exists(doc_id):
         abort(404)
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
+    if not timdb.users.has_edit_access(getCurrentUserId(), doc_id):
         abort(403)
     # verify_document_version(doc_id, version)
     if 'file' in request.files:
@@ -77,7 +77,7 @@ def modify_paragraph():
     """
     timdb = getTimDb()
     doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
-    verifyEditAccess(doc_id)
+    verify_edit_access(doc_id)
 
     current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, par_id))
     version = request.headers.get('Version', '')
@@ -188,7 +188,7 @@ def get_pars_from_editor_text(doc, text, break_on_elements=False):
             except (ValueError, TypeError):
                 continue
             if getTimDb().documents.exists(refdoc)\
-                    and not getTimDb().users.userHasViewAccess(getCurrentUserId(), refdoc):
+                    and not getTimDb().users.has_view_access(getCurrentUserId(), refdoc):
                 raise ValidationException("You don't have view access to document {}".format(refdoc))
     return blocks
 
@@ -216,7 +216,7 @@ def add_paragraph():
     """
     timdb = getTimDb()
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
-    verifyEditAccess(doc_id)
+    verify_edit_access(doc_id)
     version = request.headers.get('Version', '')
     doc = get_newest_document(doc_id)
     try:
@@ -256,7 +256,7 @@ def delete_paragraph(doc_id):
     :return: A JSON object containing the version of the new document.
     """
     timdb = getTimDb()
-    verifyEditAccess(doc_id)
+    verify_edit_access(doc_id)
     version = request.headers.get('Version', '')
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
     # verify_document_version(doc_id, version)

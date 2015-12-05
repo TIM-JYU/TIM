@@ -34,10 +34,10 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
             return try_return_folder(doc_name)
 
     if teacher:
-        verifyOwnership(doc_id)
+        verify_teacher_access(doc_id)
 
-    if not hasViewAccess(doc_id):
-        if not loggedIn():
+    if not has_view_access(doc_id):
+        if not logged_in():
             session['came_from'] = request.url
             return render_template('loginpage.html',
                                    target_url=url_for('login_page.loginWithKorppi'),
@@ -89,11 +89,11 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
                            custom_css=custom_css,
                            start_index=start_index,
                            teacher_mode=teacher,
-                           is_owner=hasOwnership(doc_id),
+                           is_owner=has_ownership(doc_id),
                            group=usergroup,
                            settings=settings,
-                           rights={'editable': hasEditAccess(doc_id),
-                                   'can_mark_as_read': hasReadMarkingRight(doc_id),
-                                   'can_comment': hasCommentRight(doc_id),
-                                   'browse_own_answers': loggedIn()
+                           rights={'editable': has_edit_access(doc_id),
+                                   'can_mark_as_read': has_read_marking_right(doc_id),
+                                   'can_comment': has_comment_right(doc_id),
+                                   'browse_own_answers': logged_in()
                                    })

@@ -294,7 +294,7 @@ def quickLogin(username):
        For developer use only.
     """
     timdb = getTimDb()
-    if not timdb.users.userHasAdminAccess(getCurrentUserId()):
+    if not timdb.users.has_admin_access(getCurrentUserId()):
         abort(403)
     user = timdb.users.getUserByName(username)
     if user is None:

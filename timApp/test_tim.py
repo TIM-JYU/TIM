@@ -86,14 +86,10 @@ class TimTest(TimDbTest):
                                         'doc_name': n
                                     }))
             doc_ids.add(doc_id + idx)
-        self.assertResponse('Success',
-                            a.jput('/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
-        self.assertResponse('Success',
-                            a.jput('/addPermission/{}/{}/{}'.format(4, 'Logged-in users', 'view')))
-        self.assertResponse('Success',
-                            a.jput('/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
-        self.assertResponse('Success',
-                            a.jput('/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
+        self.assertResponse('Success', a.jput('/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
+        self.assertResponse('Success', a.jput('/addPermission/{}/{}/{}'.format(4, 'Logged-in users', 'view')))
+        self.assertResponse('Success', a.jput('/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
+        self.assertResponse('Success', a.jput('/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
         Document(doc_id).add_paragraph('Hello')
         pars = Document(doc_id).get_paragraphs()
         self.assertEqual(1, len(pars))
@@ -106,6 +102,7 @@ class TimTest(TimDbTest):
                                                     'docId': doc_id,
                                                     'par': first_id}))
         self.assertInResponse(html_comment_of_test1, a.get('/view/' + doc_name))
+        self.assertResponseStatus(a.get('/teacher/' + doc_name))
         edit_text = 'testing editing now...\nnew line\n'
         par_html = md_to_html(edit_text)
         self.assertInResponse(par_html, self.post_par(a, doc_id, edit_text, first_id))
@@ -128,17 +125,19 @@ class TimTest(TimDbTest):
         self.assertResponseStatus(a.get('/view/' + str(3)))
 
         # Login as another user
-        a.post('/altlogin',
-               data={'email': 'test2@example.com', 'password': 'test2pass'})
+        self.login_test2()
         view_resp = a.get('/view/' + doc_name)
         self.assertInResponse('Logged in as: Test user 2 (testuser2)', view_resp)
         self.assertInResponse(comment_of_test1, view_resp)
         not_viewable_docs = {7}
-        for view_id in doc_ids - not_viewable_docs:
+        viewable_docs = doc_ids - not_viewable_docs
+        for view_id in viewable_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)))
+            self.assertResponseStatus(a.get('/teacher/' + doc_name), 403)
 
         for view_id in not_viewable_docs:
             self.assertResponseStatus(a.get('/view/' + str(view_id)), 403)
+            self.assertResponseStatus(a.get('/teacher/' + doc_name), 403)
         self.assertResponseStatus(a.get('/view/1'), 404)
 
         with a as a:
@@ -157,6 +156,10 @@ class TimTest(TimDbTest):
         self.login_test1()
         self.assertInResponse(comment_of_test2,
                               a.get('/note/{}'.format(test2_note_id)))
+        teacher_right_docs = {6}
+        for i in teacher_right_docs:
+            self.assertResponse('Success', a.jput('/addPermission/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
+
         with a as a:
             self.assertResponseStatus(a.jpost('/deleteNote', {'id': test2_note_id,
                                                               'docId': doc_id,
@@ -173,6 +176,16 @@ class TimTest(TimDbTest):
                                       query_string={'docId': doc_id,
                                                     'area_start': first_id,
                                                     'area_end': second_par_id}))
+
+        self.login_test2()
+        for view_id in viewable_docs - teacher_right_docs:
+            self.assertResponseStatus(a.get('/view/' + str(view_id)))
+            self.assertResponseStatus(a.get('/teacher/' + str(view_id)), 403)
+            self.assertResponseStatus(a.jput('/addPermission/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')), 403)
+        for view_id in teacher_right_docs:
+            self.assertResponseStatus(a.get('/view/' + str(view_id)))
+            self.assertResponseStatus(a.get('/teacher/' + str(view_id)))
+            self.assertResponseStatus(a.jput('/addPermission/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')), 403)
 
     def post_par(self, a, doc_id, text, par_id):
         return a.jpost('/postParagraph/', {
@@ -192,6 +205,11 @@ class TimTest(TimDbTest):
     def login_test1(self):
         return TimTest.app.post('/altlogin',
                                 data={'email': 'test1@example.com', 'password': 'test1pass'},
+                                follow_redirects=True)
+
+    def login_test2(self):
+        return TimTest.app.post('/altlogin',
+                                data={'email': 'test2@example.com', 'password': 'test2pass'},
                                 follow_redirects=True)
 
     def test_macro_doc(self):

@@ -46,9 +46,9 @@ def save_answer(plugintype, task_id):
     doc_id, task_id_name = Plugin.parse_task_id(task_id)
     # If the user doesn't have access to the document, we need to check if the plugin was referenced
     # from another document
-    if not verifyViewAccess(doc_id, require=False):
+    if not verify_view_access(doc_id, require=False):
         orig_doc = request.get_json().get('ref_from', {}).get('docId', doc_id)
-        verifyViewAccess(orig_doc)
+        verify_view_access(orig_doc)
         par_id = request.get_json().get('ref_from', {}).get('par', doc_id)
         par = Document(orig_doc).get_paragraph(par_id)
         if not par.is_reference():
@@ -63,7 +63,7 @@ def save_answer(plugintype, task_id):
     answer_browser_data = request.get_json().get('abData', {})
     is_teacher = answer_browser_data.get('teacher', False)
     if is_teacher:
-        verifyOwnership(doc_id)
+        verify_teacher_access(doc_id)
     plugin = Plugin.from_task_id(task_id)
 
     if plugin.type != plugintype:
@@ -73,7 +73,7 @@ def save_answer(plugintype, task_id):
     old_answers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
 
     # Get the newest answer (state). Only for logged in users.
-    state = pluginControl.try_load_json(old_answers[0]['content']) if loggedIn() and len(old_answers) > 0 else None
+    state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
     answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
 
@@ -130,7 +130,7 @@ def get_hidden_name(user_id):
 
 
 def should_hide_name(doc_id, user_id):
-    return not getTimDb().users.userIsOwner(user_id, doc_id) and user_id != getCurrentUserId()
+    return not getTimDb().users.has_teacher_access(user_id, doc_id) and user_id != getCurrentUserId()
 
 
 @answers.route("/taskinfo/<task_id>")
@@ -155,7 +155,7 @@ def get_answers(task_id, user_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
     if user_id != getCurrentUserId():
-        verifyOwnership(doc_id)
+        verify_teacher_access(doc_id)
     if user is None:
         abort(400, 'Non-existent user')
     user_answers = timdb.answers.getAnswers(user_id, task_id)
@@ -176,7 +176,7 @@ def get__all_answers(task_id):
     if not usergroup: usergroup = 0
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
-    verifyOwnership(doc_id)
+    verify_teacher_access(doc_id)
     all_answers = timdb.answers.get_all_answers(task_id, usergroup, hide_names_in_teacher(doc_id))
     return jsonResponse(all_answers)
 
@@ -189,12 +189,12 @@ def get_state():
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
     if user_id != getCurrentUserId():
-        verifyOwnership(doc_id)
+        verify_teacher_access(doc_id)
     if user is None:
         abort(400, 'Non-existent user')
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
-    if not hasViewAccess(doc_id):
+    if not has_view_access(doc_id):
         abort(403, 'Permission denied')
 
     # version = request.headers['Version']
@@ -213,7 +213,7 @@ def get_state():
 @answers.route("/getTaskUsers/<task_id>")
 def get_task_users(task_id):
     doc_id, task_id_name = Plugin.parse_task_id(task_id)
-    verifyOwnership(doc_id)
+    verify_teacher_access(doc_id)
     usergroup = request.args.get('group')
     users = getTimDb().answers.get_users_by_taskid(task_id)
     if usergroup is not None:
