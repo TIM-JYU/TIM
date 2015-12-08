@@ -81,20 +81,25 @@ class Documents(TimDbBase):
         return document
 
     @contract
-    def create_translation(self, original_doc: 'Document', name: 'str', owner_group_id: 'int') -> 'Document':
+    def create_translation(self, original_doc: 'Document', name: 'str', owner_group_id: 'int',
+                           ref_attribs: 'dict(str:str)|None' = None) -> 'Document':
         """Creates a translation document with the specified name.
 
         :param original_doc: The original document to be translated.
         :param name: The name of the document to be created.
         :param owner_group_id: The id of the owner group.
+        :param ref_attribs: Reference attributes to be used globally.
         :returns: The newly created document object.
         """
 
         if not original_doc.exists():
             raise TimDbException('The document does not exist!')
 
+        ref_attrs = ref_attribs if ref_attribs is not None else []
+
         doc = self.create(name, owner_group_id)
         first_par = True
+        r = ref_attrs['r'] if 'r' in ref_attrs else 'tr'
 
         for par in original_doc:
             if first_par:
@@ -105,7 +110,10 @@ class Documents(TimDbBase):
                 if par.is_setting():
                     continue
 
-            ref_par = par.create_reference(doc, r='tr', add_rd=False)
+            ref_par = par.create_reference(doc, r, add_rd=False)
+            for attr in ref_attrs:
+                ref_par.set_attr(attr, ref_attrs[attr])
+
             doc.add_paragraph_obj(ref_par)
 
         return doc

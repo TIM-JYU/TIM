@@ -61,20 +61,16 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def create_reference(self, doc, r: 'str|None' = None, add_rd: 'bool' = True) -> 'DocParagraph':
-        par = DocParagraph(doc, self.files_root)
-        par.__data = dict(self.__data)
-        par.__data['rp'] = self.get_id()
-        par.__data.pop('ra', None)
-
-        if add_rd:
-            par.__data['rd'] = self.get_doc_id()
+        if 'r' == 'tr':
+            par = DocParagraph.create(doc, files_root=self.files_root, md=self.get_markdown(),
+                                      attrs=self.get_attrs(), props=self.get_properties())
         else:
-            par.__data.pop('rd', None)
+            par = DocParagraph.create(doc, files_root=self.files_root)
 
-        if r is not None:
-            par.__data['r'] = r
-        else:
-            par.__data.pop('r', None)
+        par.set_attr('r', r)
+        par.set_attr('rd', self.get_doc_id() if add_rd else None)
+        par.set_attr('rp', self.get_id())
+        par.set_attr('ra', None)
 
         par._cache_props()
         return par
@@ -385,6 +381,8 @@ class DocParagraph(DocParagraphBase):
     def set_attr(self, attr_name: 'str', attr_val, dereference=False):
         if dereference and self.original:
             self.original.set_attr(attr_name, attr_val, True)
+        elif attr_val is None:
+            self.__data['attrs'].pop(attr_name, None)
         else:
             self.__data['attrs'][attr_name] = attr_val
 
@@ -519,19 +517,18 @@ class DocParagraph(DocParagraphBase):
         rindex = s.rfind(old)
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
-    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None):
+    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True):
         def reference_par(ref_par, write_link=False):
             tr = self.get_attr('r') == 'tr'
-            if tr:
-                par = DocParagraph.create(ref_par.doc, par_id=ref_par.get_id(), md=self.get_markdown(),
-                                          t=ref_par.get_hash(),
-                                          attrs=ref_par.get_attrs(), props=ref_par.get_properties())
-            else:
-                par = deepcopy(ref_par)
+            doc = ref_par.doc
+            md = self.get_markdown() if tr else ref_par.get_markdown()
+            attrs = self.get_attrs() if tr else ref_par.get_attrs()
+            props = self.get_properties() if tr else ref_par.get_properties()
 
+            par = DocParagraph.create(doc, par_id=ref_par.get_id(), md=md, t=ref_par.get_hash(),
+                                           attrs=attrs, props=props)
             par.set_original(self)
-            if tr:
-                pass
+
             if set_html:
                 html = self.get_html() if tr else ref_par.get_html()
                 if write_link:
@@ -587,7 +584,7 @@ class DocParagraph(DocParagraphBase):
 
         elif self.is_area_reference():
             ref_pars = ref_doc.get_named_section(attrs['ra'])
-            if attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
+            if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
                 return [reference_par(ref_pars[0], write_link=write_link)]
             else:
                 return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]

@@ -122,7 +122,7 @@ def try_return_folder(doc_name):
                            userName=getCurrentUserName(),
                            userId=getCurrentUserId(),
                            userGroups=possible_groups,
-                           is_owner=hasOwnership(block_id),
+                           is_owner=has_ownership(block_id),
                            docName=folder_name,
                            folder=True,
                            in_lecture=is_in_lecture,
@@ -154,10 +154,10 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
             return try_return_folder(doc_name)
 
     if teacher:
-        verifyOwnership(doc_id)
+        verify_teacher_access(doc_id)
 
-    if not hasViewAccess(doc_id):
-        if not loggedIn():
+    if not has_view_access(doc_id):
+        if not logged_in():
             session['came_from'] = request.url
             return render_template('loginpage.html',
                                    target_url=url_for('login_page.loginWithKorppi'),
@@ -252,7 +252,7 @@ def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, 
                              lecture_mode=lecture,
                              slide_mode=slide,
                              in_lecture=is_in_lecture,
-                             is_owner=hasOwnership(doc_id),
+                             is_owner=has_ownership(doc_id),
                              group=usergroup,
                              rights=get_rights(doc_id),
                              reqs=reqs,

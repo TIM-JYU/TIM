@@ -470,7 +470,7 @@ class Document:
         """
         new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
         old_pars = [DocParagraph.from_dict(doc=self, d=d)
-                    for d in DocumentParser(original).add_missing_attributes().validate_structure().get_blocks()]
+                    for d in DocumentParser(original).add_missing_attributes().get_blocks()]
 
         self._perform_update(new_pars, old_pars)
 
@@ -563,6 +563,10 @@ class Document:
         for p in self:
             if p.get_attr('taskId') == task_id_name:
                 return p
+            if p.is_reference():
+                for rp in p.get_referenced_pars():
+                    if rp.get_attr('taskId') == task_id_name:
+                        return rp
         return None
 
     def get_last_modified(self):

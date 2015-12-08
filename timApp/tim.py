@@ -112,7 +112,7 @@ def document_diff(doc_id, doc_hash):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id):
         abort(404)
-    verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
+    verify_edit_access(doc_id, "Sorry, you don't have permission to download this document.")
     try:
         doc_diff = timdb.documents.getDifferenceToPrevious(DocIdentifier(doc_id, doc_hash))
         return render_template('diff.html', diff_html=doc_diff)
@@ -125,7 +125,7 @@ def document_history(doc_id, doc_hash):
     timdb = getTimDb()
     if not timdb.documents.exists(doc_id):
         abort(404)
-    verifyEditAccess(doc_id, "Sorry, you don't have permission to download this document.")
+    verify_edit_access(doc_id, "Sorry, you don't have permission to download this document.")
     try:
         doc_data = timdb.documents.getDocumentMarkdown(DocIdentifier(doc_id, doc_hash))
         return Response(doc_data, mimetype="text/plain")
@@ -140,7 +140,7 @@ def download_document(doc_id):
 
 @app.route('/upload/', methods=['POST'])
 def upload_file():
-    if not loggedIn():
+    if not logged_in():
         abort(403, 'You have to be logged in to upload a file.')
     timdb = getTimDb()
 
@@ -153,7 +153,7 @@ def upload_file():
     filename = posixpath.join(folder, secure_filename(file.filename))
 
     user_name = getCurrentUserName()
-    if not timdb.users.userHasAdminAccess(getCurrentUserId()) \
+    if not timdb.users.has_admin_access(getCurrentUserId()) \
             and re.match('^users/' + user_name + '/', filename) is None:
         abort(403, "You're not authorized to write here.")
 
@@ -207,7 +207,7 @@ def get_image(image_id, image_filename):
     timdb = getTimDb()
     if not timdb.images.imageExists(image_id, image_filename):
         abort(404)
-    verifyViewAccess(image_id)
+    verify_view_access(image_id)
     img_data = timdb.images.getImage(image_id, image_filename)
     imgtype = imghdr.what(None, h=img_data)
     f = io.BytesIO(img_data)
@@ -219,7 +219,7 @@ def get_file(file_id, file_filename):
     timdb = getTimDb()
     if not timdb.files.fileExists(file_id, file_filename):
         abort(404)
-    verifyViewAccess(file_id)
+    verify_view_access(file_id)
     img_data = timdb.files.getFile(file_id, file_filename)
     f = io.BytesIO(img_data)
     return send_file(f)
@@ -229,7 +229,7 @@ def get_file(file_id, file_filename):
 def get_all_images():
     timdb = getTimDb()
     images = timdb.images.getImages()
-    allowedImages = [image for image in images if timdb.users.userHasViewAccess(getCurrentUserId(), image['id'])]
+    allowedImages = [image for image in images if timdb.users.has_view_access(getCurrentUserId(), image['id'])]
     return jsonResponse(allowedImages)
 
 
@@ -587,7 +587,7 @@ def add_question():
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     timdb = getTimDb()
-    if not timdb.users.userHasEditAccess(getCurrentUserId(), doc_id):
+    if not timdb.users.has_edit_access(getCurrentUserId(), doc_id):
         abort(403)
     par_id = request.args.get('par_id')
     points = request.args.get('points')
@@ -663,7 +663,7 @@ def start_future_lecture():
     tempdb = getTempDb()
     lecture_code = request.args.get('lecture_code')
     doc_id = int(request.args.get("doc_id"))
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     time_now = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     lecture = timdb.lectures.update_lecture_starting_time(lecture, time_now)
@@ -812,7 +812,7 @@ def get_running_lectures(doc_id=None):
     is_lecturer = False
     if doc_id:
         list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
-        is_lecturer = hasOwnership(doc_id)
+        is_lecturer = has_ownership(doc_id)
     current_lecture_codes = []
     future_lectures = []
     for lecture in list_of_lectures:
@@ -838,7 +838,7 @@ def create_lecture():
     if request.args.get("lecture_id"):
         lecture_id = int(request.args.get("lecture_id"))
     doc_id = int(request.args.get("doc_id"))
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     timdb = getTimDb()
     start_time = request.args.get("start_date")
     end_time = request.args.get("end_date")
@@ -882,7 +882,7 @@ def end_lecture():
 
     doc_id = int(request.args.get("doc_id"))
     lecture_id = int(request.args.get("lecture_id"))
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     timdb = getTimDb()
     timdb.lectures.delete_users_from_lecture(lecture_id)
 
@@ -914,7 +914,7 @@ def extend_lecture():
     doc_id = int(request.args.get("doc_id"))
     lecture_id = int(request.args.get("lecture_id"))
     new_end_time = request.args.get("new_end_time")
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     timdb = getTimDb()
     timdb.lectures.extend_lecture(lecture_id, new_end_time)
     return jsonResponse("")
@@ -926,7 +926,7 @@ def delete_lecture():
     if not request.args.get("doc_id") or not request.args.get("lecture_id"):
         abort(400)
     doc_id = int(request.args.get("doc_id"))
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     lecture_id = int(request.args.get("lecture_id"))
     timdb = getTimDb()
     timdb.messages.delete_messages_from_lecture(lecture_id, True)
@@ -1031,7 +1031,7 @@ def uploaded_file(filename):
 def get_documents():
     timdb = getTimDb()
     docs = timdb.documents.get_documents()
-    allowed_docs = [doc for doc in docs if timdb.users.userHasViewAccess(getCurrentUserId(), doc['id'])]
+    allowed_docs = [doc for doc in docs if timdb.users.has_view_access(getCurrentUserId(), doc['id'])]
 
     req_folder = request.args.get('folder')
     if req_folder is not None and len(req_folder) == 0:
@@ -1054,8 +1054,8 @@ def get_documents():
         uid = getCurrentUserId()
         doc['name'] = docname
         doc['fullname'] = fullname
-        doc['canEdit'] = timdb.users.userHasEditAccess(uid, doc['id'])
-        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.userHasAdminAccess(uid)
+        doc['canEdit'] = timdb.users.has_edit_access(uid, doc['id'])
+        doc['isOwner'] = timdb.users.userIsOwner(getCurrentUserId(), doc['id']) or timdb.users.has_admin_access(uid)
         doc['owner'] = timdb.users.getOwnerGroup(doc['id'])
         final_docs.append(doc)
 
@@ -1068,11 +1068,11 @@ def get_folders():
     root_path = request.args.get('root_path')
     timdb = getTimDb()
     folders = timdb.folders.get_folders(root_path)
-    allowed_folders = [f for f in folders if timdb.users.userHasViewAccess(getCurrentUserId(), f['id'])]
+    allowed_folders = [f for f in folders if timdb.users.has_view_access(getCurrentUserId(), f['id'])]
     uid = getCurrentUserId()
 
     for f in allowed_folders:
-        f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.userHasAdminAccess(uid)
+        f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.has_admin_access(uid)
         f['owner'] = timdb.users.getOwnerGroup(f['id'])
 
     allowed_folders.sort(key=lambda f: f['name'].lower())
@@ -1080,7 +1080,7 @@ def get_folders():
 
 
 def create_item(item_name, item_type, create_function, owner_group_id):
-    if not loggedIn():
+    if not logged_in():
         abort(403, 'You have to be logged in to create a {}.'.format(item_type))
 
     if item_name.startswith('/') or item_name.endswith('/'):
@@ -1113,18 +1113,44 @@ def create_document():
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
                        getCurrentUserGroup())
 
+
 @app.route("/translate/<path:docname>/<language>", methods=["GET"])
 def create_translation(docname, language):
-    #jsondata = request.get_json()
+    params = request.get_json()
+
+    # Filter for allowed reference parameters
+    if params is not None:
+        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
+
     timdb = getTimDb()
     src_doc_id = timdb.documents.get_document_id(docname)
-    if not hasViewAccess(src_doc_id):
+    if not has_view_access(src_doc_id):
         abort(403)
 
     src_doc = Document(src_doc_id)
     new_name = docname + "-" + language
-    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group).doc_id
+    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group, params).doc_id
     return create_item(new_name, 'document', factory, getCurrentUserGroup())
+
+
+@app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])
+def create_citation_doc(docid, newname):
+    params = request.get_json()
+
+    # Filter for allowed reference parameters
+    if params is not None:
+        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
+        params['r'] = 'c'
+    else:
+        params = {'r': 'c'}
+
+    timdb = getTimDb()
+    if not has_view_access(docid):
+        abort(403)
+
+    src_doc = Document(docid)
+    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group, params).doc_id
+    return create_item(newname, 'document', factory, getCurrentUserGroup())
 
 
 @app.route("/createFolder", methods=["POST"])
@@ -1138,7 +1164,7 @@ def create_folder():
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
-    verifyEditAccess(doc_id)
+    verify_edit_access(doc_id)
     area_start = request.args.get('area_start')
     area_end = request.args.get('area_end')
     if area_start and area_end:
@@ -1159,7 +1185,7 @@ def plugin_call(plugin, filename):
 
 @app.route("/index/<int:doc_id>")
 def get_index(doc_id):
-    verifyViewAccess(doc_id)
+    verify_view_access(doc_id)
     index = Document(doc_id).get_index()
     if not index:
         return jsonResponse({'empty': True})
@@ -1212,7 +1238,7 @@ def post_note():
     doc_id = jsondata['docId']
     doc_ver = request.headers.get('Version')
     par_id = jsondata['par']
-    verifyCommentRight(doc_id)
+    verify_comment_right(doc_id)
     # verify_document_version(doc_id, doc_ver)
     doc = get_document(doc_id, doc_ver)
     par = doc.get_paragraph(par_id)
@@ -1220,7 +1246,10 @@ def post_note():
         abort(400, 'Non-existent paragraph')
     timdb = getTimDb()
     group_id = getCurrentUserGroup()
-    par = get_referenced_par_from_req(par)
+
+    if par.get_attr('r') != 'tr':
+        par = get_referenced_pars_from_req(par)[0]
+
     timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
     return par_response([Document(doc_id).get_paragraph(par_id)],
                         doc_id)
@@ -1232,7 +1261,7 @@ def edit_note():
     jsondata = request.get_json()
     group_id = getCurrentUserGroup()
     doc_id = int(jsondata['docId'])
-    verifyViewAccess(doc_id, getCurrentUserGroup())
+    verify_view_access(doc_id, getCurrentUserGroup())
     note_text = jsondata['text']
     access = jsondata['access']
     par_id = jsondata['par']
@@ -1276,7 +1305,7 @@ def get_server_time():
 
 @app.route("/questions/<int:doc_id>")
 def get_questions(doc_id):
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     timdb = getTimDb()
     questions = timdb.questions.get_doc_questions(doc_id)
     return jsonResponse(questions)
@@ -1284,7 +1313,7 @@ def get_questions(doc_id):
 
 @app.route("/getLectureWithName", methods=['POST'])
 def get_lecture_with_name(lecture_code, doc_id):
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     timdb = getTimDb()
     lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     return jsonResponse(lecture)
@@ -1316,7 +1345,7 @@ def ask_question():
     else:
         asked_id = int(request.args.get('asked_id'))
 
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
 
     if lecture_id < 0:
         abort(400, "Not valid lecture id")
@@ -1353,7 +1382,7 @@ def ask_question():
 
     thread_to_stop_question.start()
 
-    verifyOwnership(int(doc_id))
+    verify_ownership(int(doc_id))
     tempdb = getTempDb()
     delete_question_temp_data(asked_id, lecture_id, tempdb)
 
@@ -1496,7 +1525,7 @@ def delete_question():
     doc_id = int(request.args.get('doc_id'))
     question_id = int(request.args.get('question_id'))
 
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     timdb = getTimDb()
     timdb.questions.delete_question(question_id)
     timdb.lecture_answers.delete_answers_from_question(question_id)
@@ -1510,7 +1539,7 @@ def get_lecture_answers():
     if not request.args.get('asked_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
-    verifyOwnership(int(request.args.get('doc_id')))
+    verify_ownership(int(request.args.get('doc_id')))
     asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
 
@@ -1648,7 +1677,7 @@ def get_note(note_id):
 
 @app.route("/read/<int:doc_id>", methods=['GET'])
 def get_read_paragraphs(doc_id):
-    verifyReadMarkingRight(doc_id)
+    verify_read_marking_right(doc_id)
     timdb = getTimDb()
     doc = Document(doc_id)
     readings = timdb.readings.getReadings(getCurrentUserGroup(), doc)
@@ -1657,8 +1686,10 @@ def get_read_paragraphs(doc_id):
 
 @app.route("/read/<int:doc_id>/<specifier>", methods=['PUT'])
 def set_read_paragraph(doc_id, specifier):
-    verifyReadMarkingRight(doc_id)
+    verify_read_marking_right(doc_id)
     timdb = getTimDb()
+    group_id = getCurrentUserGroup()
+
     # todo: document versions
     # version = request.headers.get('Version', 'latest')
     # verify_document_version(doc_id, version)
@@ -1666,14 +1697,16 @@ def set_read_paragraph(doc_id, specifier):
     par = doc.get_paragraph(specifier)
     if par is None:
         return abort(400, 'Non-existent paragraph')
-    par = get_referenced_par_from_req(par)
-    timdb.readings.setAsRead(getCurrentUserGroup(), Document(par.get_doc_id()), par)
+
+    for par in get_referenced_pars_from_req(par):
+        timdb.readings.setAsRead(group_id, Document(par.get_doc_id()), par)
+
     return okJsonResponse()
 
 
 @app.route("/read/<int:doc_id>", methods=['PUT'])
 def mark_all_read(doc_id):
-    verifyReadMarkingRight(doc_id)
+    verify_read_marking_right(doc_id)
     timdb = getTimDb()
     # todo: document versions
     # version = request.headers.get('Version', 'latest')
@@ -1728,7 +1761,7 @@ def setslidestatus():
     if 'doc_id' not in request.args or 'status' not in request.args:
         abort(404, "Missing doc id or status")
     doc_id = int(request.args['doc_id'])
-    verifyOwnership(doc_id)
+    verify_ownership(doc_id)
     status = request.args['status']
     tempdb = getTempDb()
     tempdb.slidestatuses.update_or_add_status(doc_id, status)

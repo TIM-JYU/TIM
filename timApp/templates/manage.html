@@ -41,8 +41,8 @@ table td {
 <script>
 var isFolder = {{isFolder}};
 var doc = {{doc|tojson|safe}};
-var editors = {{editors|tojson|safe}};
-var viewers = {{viewers|tojson|safe}};
+var grouprights = {{grouprights|tojson|safe}};
+var accessTypes = {{access_types|tojson}};
 var groups = {{user_groups|tojson|safe}};
 
 if (isFolder) {
@@ -82,41 +82,26 @@ if (isFolder) {
     </select>
         <span ng-show="ownerUpdating">Updating...</span>
     </div>
-    <div class="margin">
-        Editors:
-        <p ng-show="editors.length == 0">This {{objName}} doesn't have editors.</p>
+    <div class="margin" ng-repeat="type in accessTypes">
+        Groups with {{ '{{ type.name }}' }} right:
+
         <ul>
-            <li ng-repeat="editor in editors">{{ '{{editor.name}}' }} (<a ng-click="removeConfirm(editor, 'edit')">remove</a>)
+            <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{ '{{group.name}}' }} (<a ng-click="removeConfirm(group, type.name)">remove</a>)
             </li>
         </ul>
-        <button ng-show="!showAddEditor" ng-click="showAddEditor = true; focusEditor = true">Add editor</button>
-        <div ng-show="showAddEditor">
-            <form ng-submit="addPermission(editorName, 'edit')">
-                <label>Name: <input type="text" ng-model="editorName" focus-me="focusEditor"></label>
-                <button type="submit" ng-disabled="!editorName">Add</button>
-                <button type="button" ng-click="showAddEditor = false">Cancel</button>
-                <button type="button" ng-click="addPermission('Korppi users', 'edit')">Add Korppi users</button>
-                <button type="button" ng-click="addPermission('Logged-in users', 'edit')">Add logged-in users</button>
-                <button type="button"  ng-click="addPermission('Anonymous users', 'edit')">Add anonymous users</button>
-            </form>
-        </div>
+        <p ng-show="filtered.length == 0">This {{ objName }} doesn't have groups with {{ '{{ type.name }}' }} right.</p>
     </div>
     <div class="margin">
-        Viewers:
-        <p ng-show="viewers.length == 0">This {{objName}} doesn't have viewers.</p>
-        <ul>
-            <li ng-repeat="viewer in viewers">{{ '{{viewer.name}}' }} (<a ng-click="removeConfirm(viewer, 'view')">remove</a>)
-            </li>
-        </ul>
-        <button ng-show="!showAddViewer" ng-click="showAddViewer = true; focusViewer = true">Add viewer</button>
-        <div ng-show="showAddViewer">
-            <form ng-submit="addPermission(viewerName, 'view')">
-                <label>Name: <input type="text" ng-model="viewerName" focus-me="focusViewer"></label>
-                <button type="submit" ng-disabled="!viewerName">Add</button>
-                <button type="button" ng-click="showAddViewer = false">Cancel</button>
-                <button type="button" ng-click="addPermission('Korppi users', 'view')">Add Korppi users</button>
-                <button type="button" ng-click="addPermission('Logged-in users', 'view')">Add logged-in users</button>
-                <button type="button" ng-click="addPermission('Anonymous users', 'view')">Add anonymous users</button>
+        <button ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</button>
+        <div ng-show="showAddRight">
+            <form ng-submit="addPermission(groupName, accessType)">
+                <label>Name: <input type="text" ng-model="groupName" focus-me="focusEditor"></label>
+                <select ng-model="accessType" ng-options="access.name for access in accessTypes track by access.id"></select>
+                <button type="submit" ng-disabled="!groupName">Add</button>
+                <button type="button" ng-click="showAddRight = false">Cancel</button>
+                <button type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users</button>
+                <button type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in users</button>
+                <button type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous users</button>
             </form>
         </div>
     </div>

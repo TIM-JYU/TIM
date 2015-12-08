@@ -70,15 +70,14 @@ PermApp.controller("PermCtrl", [
 
         sc.getPermissions = function () {
             $http.get('/getPermissions/' + sc.doc.id).success(function (data, status, headers, config) {
-                sc.editors = data.editors;
-                sc.viewers = data.viewers;
+                sc.grouprights = data.grouprights;
             }).error(function (data, status, headers, config) {
                 alert("Could not fetch permissions.");
             });
         };
 
-        sc.removePermission = function (group, type) {
-            $http.put('/removePermission/' + sc.doc.id + '/' + group.UserGroup_id + '/' + type).success(
+        sc.removePermission = function (right, type) {
+            $http.put('/removePermission/' + sc.doc.id + '/' + right.gid + '/' + type).success(
                 function (data, status, headers, config) {
                     sc.getPermissions();
                 }).error(function (data, status, headers, config) {
@@ -87,15 +86,14 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.addPermission = function (groupname, type) {
-            console.log("/addPermission/" + sc.doc.id + "/" + groupname + "/" + type);
-            $http.put('/addPermission/' + sc.doc.id + '/' + groupname + '/' + type).success(
+            console.log("/addPermission/" + sc.doc.id + "/" + groupname + "/" + type.name);
+            $http.put('/addPermission/' + sc.doc.id + '/' + groupname + '/' + type.name).success(
                 function (data, status, headers, config) {
                     sc.getPermissions();
+                    sc.showAddRight = false;
                 }).error(function (data, status, headers, config) {
                     alert(data.error);
                 });
-            sc.showAddEditor = false;
-            sc.showAddViewer = false;
         };
 
         sc.renameFolder = function (newName) {
@@ -255,9 +253,10 @@ PermApp.controller("PermCtrl", [
                 });
         };
 
-        sc.editors = editors;
-        sc.viewers = viewers;
+        sc.grouprights = grouprights;
         sc.userGroups = groups;
+        sc.accessTypes = accessTypes;
+        sc.accessType = sc.accessTypes[0];
         sc.doc = doc;
         sc.crumbs = crumbs;
         sc.isFolder = isFolder;
