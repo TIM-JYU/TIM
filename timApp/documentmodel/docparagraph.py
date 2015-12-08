@@ -1,17 +1,15 @@
-from copy import deepcopy
 import os
-
 import shelve
-from contracts import contract, new_contract
-from fcache.cache import FileCache
-from lxml import html
 
+from contracts import contract, new_contract
+
+from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
-from dumboclient import call_dumbo
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html, md_list_to_html_list, expand_macros, HEADING_TAGS
-from .randutils import *
+from markdownconverter import md_to_html, md_list_to_html_list, expand_macros
 from timdb.timdbbase import TimDbException
+from utils import count_chars
+from .randutils import *
 
 
 class DocParagraphBase:
@@ -320,14 +318,12 @@ class DocParagraph(DocParagraphBase):
             cache[key] = prev_par_auto_values
             return prev_par_auto_values
 
-        pre_html = prev_par.__get_html_using_macros(macros, macro_delim)
-        tree = html.fragment_fromstring(pre_html, create_parent=True).getchildren()
-        if len(tree) == 1 and tree[0].tag == 'div':
-            tree = tree[0].getchildren()
+        md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
+        blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
         deltas = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
-        for e in tree:
-            if e.tag in HEADING_TAGS:
-                level = int(e.tag[1])
+        for e in blocks:
+            level = count_chars(e['md'], '#')
+            if level > 0:
                 deltas[level] += 1
                 for i in range(level + 1, 7):
                     deltas[i] = 0

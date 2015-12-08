@@ -278,6 +278,10 @@ Lorem ipsum.
 
 ---
 
+```
+# Not a header
+```
+
 #-
 ## Heading level 2
 #-
