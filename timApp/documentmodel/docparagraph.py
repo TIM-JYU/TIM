@@ -296,11 +296,15 @@ class DocParagraph(DocParagraphBase):
                                          macros=macros,
                                          macro_delimiter=macro_delim,
                                          auto_macros=[auto_macros for _, _, auto_macros in unloaded_pars],
+                                         attr_list=[par.get_attrs() for par, _, _ in unloaded_pars],
                                          auto_number_headings=settings.auto_number_headings())
             for (par, auto_macro_hash, _), h in zip(unloaded_pars, htmls):
                 par.__data['h'][auto_macro_hash] = h
                 par.html = h
                 par.__write()
+
+    def has_class(self, class_name):
+        return class_name in self.__data.get('attrs', {}).get('classes', {})
 
     def get_auto_macro_values(self, macros, macro_delim, cache):
         key = str((self.get_id(), self.doc.get_version()))
@@ -314,7 +318,7 @@ class DocParagraph(DocParagraphBase):
         else:
             prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, cache)
 
-        if prev_par is None or prev_par.is_dynamic():
+        if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
             cache[key] = prev_par_auto_values
             return prev_par_auto_values
 

@@ -283,6 +283,8 @@ Lorem ipsum.
 ```
 
 #-
+# Unnumbered {.nonumber}
+#-
 ## Heading level 2
 #-
 ## Second heading level 2
@@ -291,7 +293,8 @@ Lorem ipsum.
 #-
 # Second heading level 1
         """)
-        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '1. Heading level 1'},
+        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '1. Heading level 1'}, []),
+                          ({'id': 'unnumbered', 'level': 1, 'text': 'Unnumbered'},
                            [{'id': 'heading-level-2', 'level': 2, 'text': '1.1. Heading level 2'},
                             {'id': 'second-heading-level-2', 'level': 2, 'text': '1.2. Second heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': '1.2.1. Heading level 3'}]),
@@ -308,12 +311,15 @@ Lorem ipsum.
 
 ## Heading level 2
 
+## Unnumbered {.nonumber}
+
 ### Heading level 3
 #-
 # Second heading level 1
         """)
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'},
                            [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
+                            {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
                             {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
                            [])], doc.get_index())

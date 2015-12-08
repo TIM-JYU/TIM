@@ -73,6 +73,7 @@ def md_list_to_html_list(texts: 'list(str)',
                          macros: 'dict(str:str)|None'=None,
                          macro_delimiter=None,
                          auto_macros=None,
+                         attr_list=None,
                          auto_number_headings=False) -> 'list(str)':
     """
     Converts the specified list of markdown texts to an HTML list.
@@ -96,8 +97,11 @@ def md_list_to_html_list(texts: 'list(str)',
     if auto_macros:
         if auto_number_headings:
             processed = []
-            for pre_html, m in zip(raw, auto_macros):
-                final_html = insert_heading_numbers(m, pre_html)
+            for pre_html, m, attrs in zip(raw, auto_macros, attr_list):
+                if 'nonumber' in attrs.get('classes', {}):
+                    final_html = pre_html
+                else:
+                    final_html = insert_heading_numbers(m, pre_html)
                 processed.append(final_html)
             raw = processed
 
@@ -107,9 +111,9 @@ def md_list_to_html_list(texts: 'list(str)',
         return raw
 
 
-def insert_heading_numbers(m, pre_html):
+def insert_heading_numbers(auto_macros, pre_html):
     tree = html.fragment_fromstring(pre_html, create_parent=True)
-    deltas = m['h']
+    deltas = auto_macros['h']
     for e in tree.iterchildren():
         if e.tag in HEADING_TAGS:
             level = int(e.tag[1])
