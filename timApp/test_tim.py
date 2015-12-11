@@ -398,9 +398,15 @@ auto_number_headings: true
 # Same
 #-
 # Same
+
+# Same
+#-
+# Same
         """)
         self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
-                          ({'id': 'same-1', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+                          ({'id': 'same-1', 'level': 1, 'text': 'Same'}, []),
+                          ({'id': 'same-1-1', 'level': 1, 'text': 'Same'}, []),
+                          ({'id': 'same-3', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
 
     def test_plugin(self):
         self.login_test1()

@@ -1,5 +1,6 @@
 import os
 import shelve
+from collections import defaultdict
 
 from contracts import contract, new_contract
 
@@ -322,7 +323,7 @@ class DocParagraph(DocParagraphBase):
 
         prev_par = self.doc.get_previous_par(self)
         if prev_par is None:
-            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
+            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}, 'usedh': defaultdict(int)}
         else:
             prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, cache)
 
@@ -333,8 +334,11 @@ class DocParagraph(DocParagraphBase):
         md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
         blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
         deltas = prev_par_auto_values['h']
+        used = prev_par_auto_values['usedh']
         for e in blocks:
             level = count_chars(e['md'], '#')
+            title = e['md'][level:].strip()
+            used[title] += 1
             if level > 0:
                 deltas[level] += 1
                 for i in range(level + 1, 7):

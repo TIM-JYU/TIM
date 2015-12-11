@@ -59,8 +59,7 @@ def md_to_html(text: str,
     raw = call_dumbo([text])
 
     if auto_macros:
-        if auto_number_headings:
-            raw[0] = insert_heading_numbers(auto_macros, raw[0])
+        raw[0] = insert_heading_numbers(auto_macros, raw[0], auto_number_headings)
     if sanitize:
         return sanitize_html(raw[0])
     else:
@@ -95,15 +94,14 @@ def md_list_to_html_list(texts: 'list(str)',
     #print("Dumbo call for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
 
     if auto_macros:
-        if auto_number_headings:
-            processed = []
-            for pre_html, m, attrs in zip(raw, auto_macros, attr_list):
-                if 'nonumber' in attrs.get('classes', {}):
-                    final_html = pre_html
-                else:
-                    final_html = insert_heading_numbers(m, pre_html)
-                processed.append(final_html)
-            raw = processed
+        processed = []
+        for pre_html, m, attrs in zip(raw, auto_macros, attr_list):
+            if 'nonumber' in attrs.get('classes', {}):
+                final_html = pre_html
+            else:
+                final_html = insert_heading_numbers(m, pre_html, auto_number_headings)
+            processed.append(final_html)
+        raw = processed
 
     if sanitize:
         return [sanitize_html(p) for p in raw]
@@ -111,11 +109,15 @@ def md_list_to_html_list(texts: 'list(str)',
         return raw
 
 
-def insert_heading_numbers(auto_macros, pre_html):
+def insert_heading_numbers(auto_macros, pre_html, auto_number_headings=True):
     tree = html.fragment_fromstring(pre_html, create_parent=True)
     deltas = auto_macros['h']
+    used = auto_macros['usedh']
     for e in tree.iterchildren():
-        if e.tag in HEADING_TAGS:
+        hcount = used.get(e.text, 0)
+        if hcount > 0:
+            e.attrib['id'] += '-' + str(hcount)
+        if auto_number_headings and e.tag in HEADING_TAGS:
             level = int(e.tag[1])
             deltas[level] += 1
             for i in range(level + 1, 7):
