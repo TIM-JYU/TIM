@@ -301,6 +301,20 @@ Lorem ipsum.
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
                            [])], doc.get_index())
 
+        pars = doc.get_paragraphs()
+        self.post_par(TimTest.app, doc.doc_id, """
+``` {settings=""}
+auto_number_headings: false
+```""", pars[0].get_id())
+
+        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'}, []),
+                          ({'id': 'unnumbered', 'level': 1, 'text': 'Unnumbered'},
+                           [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
+                            {'id': 'second-heading-level-2', 'level': 2, 'text': 'Second heading level 2'},
+                            {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
+                          ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
+                           [])], doc.get_index())
+
     def test_index_many_headings_per_par(self):
         self.login_test1()
         doc = self.create_doc('users/testuser1/indextest2', """
