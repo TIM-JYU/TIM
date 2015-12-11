@@ -307,6 +307,14 @@ class DocParagraph(DocParagraphBase):
         return class_name in self.__data.get('attrs', {}).get('classes', {})
 
     def get_auto_macro_values(self, macros, macro_delim, cache):
+        """Gets the auto macros values for the current paragraph.
+        Auto macros include things like current heading/table/figure numbers.
+        :param macros: Macros to apply for the paragraph.
+        :param cache: Cache object from which to retrieve and store the auto macro data.
+        :return: Auto macro values as a dict.
+        :param macro_delim: Delimiter for macros.
+        """
+
         key = str((self.get_id(), self.doc.get_version()))
         cached = cache.get(key)
         if cached is not None:
@@ -324,7 +332,7 @@ class DocParagraph(DocParagraphBase):
 
         md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
         blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
-        deltas = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+        deltas = prev_par_auto_values['h']
         for e in blocks:
             level = count_chars(e['md'], '#')
             if level > 0:
@@ -332,12 +340,6 @@ class DocParagraph(DocParagraphBase):
                 for i in range(level + 1, 7):
                     deltas[i] = 0
         result = prev_par_auto_values
-        found_nonzero = False
-        for i in range(1, 7):
-            if found_nonzero:
-                result['h'][i] = 0
-            result['h'][i] += deltas[i]
-            found_nonzero = found_nonzero or deltas[i] > 0
         cache[key] = result
         return result
 

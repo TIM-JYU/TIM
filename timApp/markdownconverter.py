@@ -121,9 +121,10 @@ def insert_heading_numbers(auto_macros, pre_html):
             for i in range(level + 1, 7):
                 deltas[i] = 0
             full_heading = ''
-            for i in range(1, 7):
-                if deltas[i] == 0:
+            for i in range(6, 0, -1):
+                if deltas[i] != 0:
                     break
+            for i in range(1, i + 1):
                 full_heading += str(deltas[i]) + '.'
             e.text = full_heading + ' ' + e.text
     final_html = ''.join(map(lambda x: html.tostring(x).decode('utf-8'), tree.iterchildren()))
