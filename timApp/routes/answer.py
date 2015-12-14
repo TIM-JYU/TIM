@@ -101,7 +101,7 @@ def save_answer(plugintype, task_id):
             pass
         if not is_teacher:
             is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
-            timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
+            result['savedNew'] = timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
             if not is_valid:
                 result['error'] = explanation
         else:
@@ -120,7 +120,7 @@ def save_answer(plugintype, task_id):
                 points = answer_browser_data.get('points', points)
                 if points == "":
                     points = None
-                timdb.answers.saveAnswer(users, task_id, json.dumps(save_object), points, tags, valid=True)
+                result['savedNew'] = timdb.answers.saveAnswer(users, task_id, json.dumps(save_object), points, tags, valid=True)
 
     return jsonResponse(result)
 

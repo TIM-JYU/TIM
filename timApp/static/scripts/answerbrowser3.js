@@ -82,6 +82,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
             },
             link: function ($scope, $element, $attrs) {
                 $scope.element = $element.parents('.par');
+                $scope.parContent = $scope.element.find('.parContent');
                 //$scope.$parent = $scope.$parent; // muutos koska scope on syntynyt tuon toisen lapseksi
                 timLogTime("answerbrowser link","answ");
                 
@@ -97,6 +98,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
+                    if ($scope.selectedAnswer === null) {
+                        return;
+                    }
                     $scope.points = $scope.selectedAnswer.points;
                     var $par = $scope.element;
                     var par_id = $scope.$parent.getParId($par);
@@ -112,6 +116,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         var newhtml = makeNotLazy(data.html);
                         var plugin = $par.find('.parContent');
                         plugin.html($compile(newhtml)($scope));
+                        plugin.css('opacity', '1.0');
                         $scope.$parent.processAllMathDelayed(plugin);
                     }).error(function (data, status, headers, config) {
                         $window.alert('Error getting answers: ' + data.error);
@@ -121,7 +126,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.next = function () {
-                    var newIndex = $scope.filteredAnswers.indexOf($scope.selectedAnswer) - 1;
+                    var newIndex = $scope.findSelectedAnswerIndex() - 1;
                     if (newIndex < 0) {
                         newIndex = $scope.filteredAnswers.length - 1;
                     }
@@ -130,7 +135,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 };
 
                 $scope.previous = function () {
-                    var newIndex = $scope.filteredAnswers.indexOf($scope.selectedAnswer) + 1;
+                    var newIndex = $scope.findSelectedAnswerIndex() + 1;
                     if (newIndex >= $scope.filteredAnswers.length) {
                         newIndex = 0; 
                     }
@@ -194,14 +199,17 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.loading++;
                     $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id + '?rnd='+Math.random())  
                         .success(function (data, status, headers, config) {
-                            $scope.answers = data;
-                            if ($scope.answers.length > 0) {
+                            if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
+                                $scope.answers = data;
                                 $scope.selectedAnswer = $scope.answers[0];
                                 $scope.points = $scope.selectedAnswer.points;
                                 if (updateHtml) {
                                     $scope.changeAnswer();
                                 }
+                            } else {
+                                $scope.answers = data;
                             }
+                            $scope.fetchedUser = $scope.user;
                         }).error(function (data, status, headers, config) {
                             $window.alert('Error getting answers: ' + data.error);
                         }).finally(function () {
@@ -217,18 +225,25 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 });
 
+                $scope.hasUserChanged = function () {
+                    return ($scope.user || {}).id !== ($scope.fetchedUser || {}).id;
+                };
+
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
                     GLOBALBrowseUser = args.user;
-                    $scope.changed = true;
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
+                    if ($scope.hasUserChanged()) {
+                        $scope.parContent.css('opacity', '0.3');
+                    } else {
+                        $scope.parContent.css('opacity', '1.0');
+                    }
                 });
 
                 $scope.loadIfChanged = function () {
-                    if ($scope.changed) {
+                    if ($scope.hasUserChanged()) {
                         $scope.getAvailableAnswers($scope.shouldUpdateHtml);
-                        $scope.changed = false;
                         $scope.loadInfo();
                         $scope.firstLoad = false;
                         $scope.shouldUpdateHtml = false;
@@ -277,6 +292,18 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         });
                 };
 
+                $scope.findSelectedAnswerIndex = function () {
+                    if ($scope.filteredAnswers === null) {
+                        return -1;
+                    }
+                    for (var i = 0; i < $scope.filteredAnswers.length; i++) {
+                        if ($scope.filteredAnswers[i].id === $scope.selectedAnswer.id) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                };
+
 
                 $scope.getLink = function() {
                      return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
@@ -291,7 +318,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.user = null;
                 }
 
-                $scope.changed = true;
+                $scope.fetchedUser = null;
                 $scope.firstLoad = true;
                 $scope.shouldUpdateHtml = false;
                 $scope.saveTeacher = false;
@@ -312,7 +339,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         $scope.anyInvalid = true;
                         return !$scope.onlyValid;
                     });
-                    if ($scope.filteredAnswers.indexOf($scope.selectedAnswer) < 0) {
+                    if ($scope.findSelectedAnswerIndex() < 0) {
                         $scope.setNewest();
                     }
                 });

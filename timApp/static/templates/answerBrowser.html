@@ -2,7 +2,7 @@
     <select ng-show="$parent.teacherMode && users.length > 0" ng-model="user"
             ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
             ng-change="getAvailableAnswers()"></select>
-    <span ng-show="answers.length > 0 && !changed">
+    <span ng-show="answers.length > 0 && !hasUserChanged()">
     <button ng-click="previous()">&larr;</button>
     <select ng-model="selectedAnswer"
             ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
@@ -22,13 +22,13 @@
     </span>
     <span ng-show="taskInfo.starttime"><br>Start time: {{ taskInfo.starttime }}</span>
     <span ng-show="taskInfo.deadline"><br>Deadline: {{ taskInfo.deadline }}</span>
-    <div ng-show="selectedAnswer.collaborators.length > 1 && !changed">
+    <div ng-show="selectedAnswer.collaborators.length > 1 && !hasUserChanged()">
         Collaborators:
         <ul>
             <li ng-repeat="c in selectedAnswer.collaborators">{{ c.real_name }}</li>
         </ul>
     </div>
-    <span ng-show="$parent.teacherMode && changed && !firstLoad">(hover/click to update)</span>
-    <span ng-show="!changed && answers.length == 0 && $parent.teacherMode">(no answers)</span>
+    <span ng-show="$parent.teacherMode && hasUserChanged() && !firstLoad">(hover/click to update)</span>
+    <span ng-show="!hasUserChanged() && answers.length == 0 && $parent.teacherMode">(no answers)</span>
     <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="loading"> -->
 </div>

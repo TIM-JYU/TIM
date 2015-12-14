@@ -31,7 +31,7 @@ class Answers(TimDbBase):
             cursor.execute("""UPDATE Answer SET points = ? WHERE id = ?""",
                            [points, existing_answers[0]['id']])
             self.db.commit()
-            return
+            return False
 
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on, valid)'
                        'VALUES (?,?,?,CURRENT_TIMESTAMP,?)',
@@ -46,6 +46,7 @@ class Answers(TimDbBase):
             cursor.execute('INSERT INTO AnswerTag (answer_id, tag) VALUES (?,?)', [answer_id, tag])
 
         self.db.commit()
+        return True
 
     @contract
     def getAnswers(self, user_id: 'int', task_id: 'str') -> 'list(dict)':
