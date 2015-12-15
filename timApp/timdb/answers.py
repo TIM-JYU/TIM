@@ -51,9 +51,10 @@ class Answers(TimDbBase):
         return True
 
     @contract
-    def get_answers(self, user_id: 'int', task_id: 'str') -> 'list(dict)':
+    def get_answers(self, user_id: 'int', task_id: 'str', get_collaborators: 'bool'=True) -> 'list(dict)':
         """Gets the answers of a user in a task, ordered descending by submission time.
         
+        :param get_collaborators: Whether collaborators for each answer should be fetched.
         :param user_id: The id of the user.
         :param task_id: The id of the task.
         """
@@ -68,6 +69,9 @@ class Answers(TimDbBase):
                           ORDER BY answered_on DESC""", [task_id, user_id])
 
         answers = self.resultAsDictionary(cursor)
+        if not get_collaborators:
+            return answers
+
         answer_dict = defaultdict(list)
         for row in cursor.execute("""SELECT answer_id, user_id, real_name FROM UserAnswer
                           JOIN Answer ON Answer.id = UserAnswer.answer_id

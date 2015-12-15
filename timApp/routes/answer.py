@@ -70,7 +70,7 @@ def save_answer(plugintype, task_id):
         abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
 
     # Load old answers
-    old_answers = timdb.answers.get_answers(getCurrentUserId(), task_id)
+    old_answers = timdb.answers.get_answers(getCurrentUserId(), task_id, get_collaborators=False)
 
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
