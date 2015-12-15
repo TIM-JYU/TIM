@@ -1,4 +1,6 @@
 """"""
+from collections import defaultdict
+
 from timdb.timdbbase import TimDbBase
 from contracts import contract
 import json
@@ -49,7 +51,7 @@ class Answers(TimDbBase):
         return True
 
     @contract
-    def getAnswers(self, user_id: 'int', task_id: 'str') -> 'list(dict)':
+    def get_answers(self, user_id: 'int', task_id: 'str') -> 'list(dict)':
         """Gets the answers of a user in a task, ordered descending by submission time.
         
         :param user_id: The id of the user.
@@ -66,13 +68,16 @@ class Answers(TimDbBase):
                           ORDER BY answered_on DESC""", [task_id, user_id])
 
         answers = self.resultAsDictionary(cursor)
+        answer_dict = defaultdict(list)
+        for row in cursor.execute("""SELECT answer_id, user_id, real_name FROM UserAnswer
+                          JOIN Answer ON Answer.id = UserAnswer.answer_id
+                          JOIN User ON UserAnswer.user_id = User.id
+                          WHERE answer_id IN (%s)""" % ','.join('?' * len(answers)),
+                                  [answer['id'] for answer in answers]).fetchall():
+            answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2]})
+
         for answer in answers:
-            cursor.execute("""SELECT user_id, real_name FROM UserAnswer
-                              JOIN Answer ON Answer.id = UserAnswer.answer_id
-                              JOIN User ON UserAnswer.user_id = User.id
-                              WHERE answer_id = ?""", [answer['id']])
-            r = self.resultAsDictionary(cursor)
-            answer['collaborators'] = r
+            answer['collaborators'] = answer_dict[answer['id']]
         return answers
 
     @contract

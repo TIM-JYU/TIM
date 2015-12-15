@@ -70,7 +70,7 @@ def save_answer(plugintype, task_id):
         abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
 
     # Load old answers
-    old_answers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
+    old_answers = timdb.answers.get_answers(getCurrentUserId(), task_id)
 
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
@@ -158,7 +158,7 @@ def get_answers(task_id, user_id):
         verify_teacher_access(doc_id)
     if user is None:
         abort(400, 'Non-existent user')
-    user_answers = timdb.answers.getAnswers(user_id, task_id)
+    user_answers = timdb.answers.get_answers(user_id, task_id)
     if hide_names_in_teacher(doc_id):
         for answer in user_answers:
             for c in answer['collaborators']:
