@@ -42,7 +42,13 @@ PermApp.controller("PermCtrl", [
         sc.getAliases = function() {
             $http.get('/alias/' + sc.doc.id, {
             }).success(function (data, status, headers, config) {
-                sc.aliases = data;
+                if (sc.aliases.length > 0 &&
+                    (data.length == 0 || data[0].fullname != sc.aliases[0].fullname))
+                        // The first name has changed, reload to update the links
+                        location.reload();
+                else
+                    sc.aliases = data;
+
             }).error(function (data, status, headers, config) {
                 alert(data.message);
             });

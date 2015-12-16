@@ -178,14 +178,13 @@ def remove_alias(doc_id, alias):
         return jsonResponse({'message': "You don't have permission to delete this object."}, 403)
 
     userName = getCurrentUserName()
-    is_admin = timdb.users.isUserInGroup(userName, 'Administrators')
 
-    if not is_admin and len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
+    if len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
         return jsonResponse({'message': "You can't delete the only name the document has."}, 403)
 
     parent_folder, _ = timdb.folders.split_location(alias)
 
-    if not is_admin and not canWriteToFolder(parent_folder):
+    if not canWriteToFolder(parent_folder):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.documents.delete_name(doc_id, alias)
