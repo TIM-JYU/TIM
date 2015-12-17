@@ -170,12 +170,12 @@ order by u.id,a.task_id;
                 FROM User
                 JOIN UserAnswer ON User.id = UserAnswer.user_id
                 JOIN Answer ON Answer.id = UserAnswer.answer_id
-                JOIN (SELECT Answer.id, MAX(answered_on)
+                JOIN (SELECT Answer.id, UserAnswer.user_id, MAX(answered_on)
                       FROM Answer
                       JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
                       WHERE Answer.valid = 1
                       GROUP BY UserAnswer.user_id, Answer.task_id
-                      )tmp ON tmp.id = Answer.id
+                      )tmp ON tmp.id = Answer.id AND User.id = tmp.user_id
                 WHERE task_id IN (%s)
                 %s
                 GROUP BY User.id
