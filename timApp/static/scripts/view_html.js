@@ -479,9 +479,7 @@ timApp.controller("ViewCtrl", [
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
-                $window.console.log("tock");
                 if (downEvent !== null) {
-                    $window.console.log("event!");
                     if (func($(this), downEvent)) {
                         e.preventDefault();
                     }
