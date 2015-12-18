@@ -72,17 +72,19 @@ class Answers(TimDbBase):
         if not get_collaborators:
             return answers
 
+        self.set_collaborators(answers)
+        return answers
+
+    def set_collaborators(self, answers):
         answer_dict = defaultdict(list)
-        for row in cursor.execute("""SELECT answer_id, user_id, real_name FROM UserAnswer
+        for row in self.db.execute("""SELECT answer_id, user_id, real_name FROM UserAnswer
                           JOIN Answer ON Answer.id = UserAnswer.answer_id
                           JOIN User ON UserAnswer.user_id = User.id
                           WHERE answer_id IN (%s)""" % ','.join('?' * len(answers)),
                                   [answer['id'] for answer in answers]).fetchall():
             answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2]})
-
         for answer in answers:
             answer['collaborators'] = answer_dict[answer['id']]
-        return answers
 
     @contract
     def get_newest_answers(self, user_id: 'int', task_ids: 'list(str)') -> 'list(dict)':
@@ -225,3 +227,16 @@ order by u.id,a.task_id;
                            WHERE task_id = ?
                            ORDER BY real_name ASC""", [task_id]))
         return result
+
+    @contract
+    def get_answer(self, answer_id: 'int') -> 'dict|None':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT id, task_id, content, points,
+                                 datetime(answered_on, 'localtime') as answered_on, valid
+                          FROM Answer
+                          WHERE id = ?
+                          ORDER BY answered_on DESC""", [answer_id])
+
+        answers = self.resultAsDictionary(cursor)
+        self.set_collaborators(answers)
+        return answers[0] if len(answers) > 0 else None

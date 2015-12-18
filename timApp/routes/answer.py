@@ -184,18 +184,35 @@ def get__all_answers(task_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, str, int, str])
+    doc_id, par_id, user_id, answer_id = unpack_args('doc_id',
+                                                     'par_id',
+                                                     'user_id',
+                                                     'answer_id', types=[int, str, int, int])
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
+    is_teacher = False
     if user_id != getCurrentUserId():
         verify_teacher_access(doc_id)
+        is_teacher = True
     if user is None:
         abort(400, 'Non-existent user')
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     if not has_view_access(doc_id):
         abort(403, 'Permission denied')
+
+    answer = timdb.answers.get_answer(answer_id)
+    if answer is None:
+        abort(400, 'Non-existent answer')
+    access = False
+    if any(a['user_id'] == user_id for a in answer['collaborators']):
+        access = True
+    task_doc_id, task_name = Plugin.parse_task_id(answer['task_id'])
+    if is_teacher and task_doc_id == doc_id:
+        access = True
+    if not access:
+        abort(403, "You don't have access to this answer.")
 
     # version = request.headers['Version']
     doc = Document(doc_id)
@@ -206,7 +223,7 @@ def get_state():
                                                                   user['name'],
                                                                   timdb.answers,
                                                                   user_id,
-                                                                  custom_state=state)
+                                                                  custom_state=answer['content'])
     return jsonResponse(texts[0])
 
 

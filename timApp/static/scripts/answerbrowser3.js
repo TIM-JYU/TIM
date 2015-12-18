@@ -110,7 +110,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             doc_id: $scope.$parent.docId,
                             par_id: par_id,
                             user_id: $scope.user.id,
-                            state: $scope.selectedAnswer.content
+                            answer_id: $scope.selectedAnswer.id
                         }
                     }).success(function (data, status, headers, config) {
                         var newhtml = makeNotLazy(data.html);
