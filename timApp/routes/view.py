@@ -139,19 +139,13 @@ def show_time(s):
     debug_time = nyt
 
 
-def view(doc_name, template_name, usergroup=None, teacher=False, lecture=False, slide=False):
+def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False):
 
     timdb = getTimDb()
-    doc_id = timdb.documents.get_document_id(doc_name)
-    if doc_id is None or not timdb.documents.exists(doc_id):
-        # Backwards compatibility: try to use as document id
-        try:
-            doc_id = int(doc_name)
-            if not timdb.documents.exists(doc_id):
-                return try_return_folder(doc_name)
-            doc_name = timdb.documents.get_first_document_name(doc_id)
-        except ValueError:
-            return try_return_folder(doc_name)
+    doc_id, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
+
+    if doc_id is None:
+        return try_return_folder(doc_path)
 
     if teacher:
         verify_teacher_access(doc_id)

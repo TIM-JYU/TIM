@@ -8,31 +8,35 @@ manage_page = Blueprint('manage_page',
                         __name__,
                         url_prefix='')  # TODO: Better URL prefix.
 
-@manage_page.route("/manage/<int:doc_id>")
-def manage(doc_id):
+@manage_page.route("/manage/<path:path>")
+def manage(path):
     timdb = getTimDb()
     isFolder = False
-    if not timdb.documents.exists(doc_id):
-        if timdb.folders.exists(doc_id):
-            isFolder = True
-        else:
+    doc_id, doc_name = timdb.documents.resolve_doc_id_name(path)
+    if doc_id is None:
+        folder_id = timdb.folders.get_folder_id(path.rstrip('/'))
+        if folder_id is None:
             abort(404)
+        isFolder = True
+        block_id = folder_id
+    else:
+        block_id = doc_id
 
-    if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
+    if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
         abort(403)
 
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
-    grouprights = timdb.users.get_rights_holders(doc_id)
+    grouprights = timdb.users.get_rights_holders(block_id)
     access_types = timdb.users.get_access_types()
 
     if isFolder:
-        doc_data = timdb.folders.get(doc_id)
+        doc_data = timdb.folders.get(block_id)
         doc_data['versions'] = []
         doc_data['fulltext'] = ''
     else:
-        doc = Document(doc_id)
-        doc_data = {'id': doc_id}
-        doc_name = timdb.documents.get_first_document_name(doc_id)
+        doc = Document(block_id)
+        doc_data = {'id': block_id}
+        doc_name = timdb.documents.get_first_document_name(block_id)
         if doc_name is not None:
             doc_data['name'] = doc_name
             doc_data['fullname'] = doc_name
@@ -41,7 +45,7 @@ def manage(doc_id):
         for ver in doc_data['versions']:
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
-    doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
+    doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
     return render_template('manage.html',
                            objName='folder' if isFolder else 'document',
                            objNameC='Folder' if isFolder else 'Document',
