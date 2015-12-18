@@ -1004,7 +1004,7 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
-        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end'], function (newValues, oldValues, scope) {
+        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
         });
 
@@ -1098,18 +1098,49 @@ timApp.controller("ViewCtrl", [
         sc.nothing = function () {
         };
 
+        sc.goToEditor = function (e, $par) {
+            $('pareditor')[0].scrollIntoView();
+        };
+
+        sc.closeAndSave = function (e, $par) {
+            $('pareditor').isolateScope().saveClicked();
+            sc.showOptionsWindow(e, $par);
+        };
+
+        sc.closeWithoutSaving = function (e, $par) {
+            $('pareditor').isolateScope().cancelClicked();
+            sc.showOptionsWindow(e, $par);
+        };
+
         sc.getEditorFunctions = function () {
-            return [
-                {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
-                {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
-                {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
-                {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-                {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
-                {func: sc.startArea, desc: 'Start selecting area', show: sc.rights.editable && sc.selection.start === null},
-                {func: sc.beginAreaEditing, desc: 'Edit area', show: sc.selection.start !== null && sc.rights.editable},
-                {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
-                {func: sc.nothing, desc: 'Close menu', show: true}
-            ];
+            if (sc.editing) {
+                return [
+                    {func: sc.goToEditor, desc: 'Go to editor', show: true},
+                    {func: sc.closeAndSave, desc: 'Close editor and save', show: true},
+                    {func: sc.closeWithoutSaving, desc: 'Close editor and cancel', show: true},
+                    {func: sc.nothing, desc: 'Close menu', show: true}
+                ];
+            } else {
+                return [
+                    {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+                    {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
+                    {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
+                    {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
+                    {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
+                    {
+                        func: sc.startArea,
+                        desc: 'Start selecting area',
+                        show: sc.rights.editable && sc.selection.start === null
+                    },
+                    {
+                        func: sc.beginAreaEditing,
+                        desc: 'Edit area',
+                        show: sc.selection.start !== null && sc.rights.editable
+                    },
+                    {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
+                    {func: sc.nothing, desc: 'Close menu', show: true}
+                ];
+            }
         };
 
 
