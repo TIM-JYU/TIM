@@ -67,24 +67,22 @@ def md_to_html(text: str,
 
 
 @contract
-def md_list_to_html_list(texts: 'list(str)',
+def md_list_to_html_list(pars,
+                         settings,
                          sanitize: bool=True,
-                         macros: 'dict(str:str)|None'=None,
-                         macro_delimiter=None,
-                         auto_macros=None,
-                         attr_list=None,
-                         auto_number_headings=False) -> 'list(str)':
+                         auto_macros=None
+                         ):
     """
     Converts the specified list of markdown texts to an HTML list.
 
     :param sanitize: Whether the HTML should be sanitized. Default is True.
-    :type texts: list[str]
-    :param texts: The list of markdown texts to be converted.
+    :type pars: list[DocParagraph]
+    :param pars: The list of markdown texts to be converted.
     """
     #from time import time
 
     #t0 = time()
-    texts = [expand_macros(text, macros, macro_delimiter) for text in texts]
+    texts = [expand_macros(p.get_markdown(), settings.get_macros(), settings.get_macro_delimiter()) for p in pars]
     #t1 = time()
     #print("expand_macros for {} paragraphs took {} seconds.".format(len(texts), t1 - t0))
 
@@ -95,11 +93,11 @@ def md_list_to_html_list(texts: 'list(str)',
 
     if auto_macros:
         processed = []
-        for pre_html, m, attrs in zip(raw, auto_macros, attr_list):
+        for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
             if 'nonumber' in attrs.get('classes', {}):
                 final_html = pre_html
             else:
-                final_html = insert_heading_numbers(m, pre_html, auto_number_headings)
+                final_html = insert_heading_numbers(m, pre_html, settings.auto_number_headings())
             processed.append(final_html)
         raw = processed
 

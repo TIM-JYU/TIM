@@ -1,6 +1,7 @@
 import os
 import shelve
 from collections import defaultdict
+from copy import copy
 
 from contracts import contract, new_contract
 
@@ -254,6 +255,9 @@ class DocParagraph(DocParagraphBase):
         :param settings: The document settings.
         :param pars: Paragraphs to preload.
         """
+        if not pars:
+            return
+
         unloaded_pars = []
         macros = settings.get_macros() if settings else None
         macro_delim = settings.get_macro_delimiter() if settings else None
@@ -262,7 +266,11 @@ class DocParagraph(DocParagraphBase):
         dyn = 0
         l = 0
 
-        cache = shelve.open('/tmp/tim_auto_macros')
+        doc_id = pars[0].doc.doc_id
+
+        cache = shelve.open('/tmp/tim_auto_macros_' + str(doc_id))
+        heading_cache = shelve.open('/tmp/heading_cache_' + str(doc_id))
+        cumulative_headings = []
         for par in pars:
             if par.is_dynamic():
                 dyn += 1
@@ -270,36 +278,39 @@ class DocParagraph(DocParagraphBase):
             if not clear_cache and par.html is not None:
                 continue
             cached = par.__data.get('h')
-            auto_macros = par.get_auto_macro_values(macros, macro_delim, cache)
+            auto_macros = par.get_auto_macro_values(macros, macro_delim, cache, heading_cache)
             auto_macro_hash = hashfunc(m + str(auto_macros))
-            tup = (par, auto_macro_hash, auto_macros)
+
             if cached is not None:
                 if clear_cache or type(cached) is str:
-                    par.__data['h'] = {}
-                    unloaded_pars.append(tup)
+                    pass
                 else:
                     if auto_macro_hash in cached:
                         par.html = cached[auto_macro_hash]
                         l += 1
-                    else:
-                        unloaded_pars.append(tup)
+                        continue
+            if cumulative_headings:
+                cumulative_headings.append(copy(cumulative_headings[-1]))
             else:
-                par.__data['h'] = {}
-                unloaded_pars.append(tup)
+                cumulative_headings.append(defaultdict(int))
+            for h in heading_cache.get(par.get_id()):
+                cumulative_headings[-1][h] += 1
+            tup = (par, auto_macro_hash, auto_macros, cumulative_headings[-1])
+            par.__data['h'] = {}
+            unloaded_pars.append(tup)
+
         cache.close()
+        heading_cache.close()
 
         # print("{} paragraphs are marked dynamic".format(dyn))
         # print("{} paragraphs are cached".format(l))
         # print("{} paragraphs are not cached".format(len(unloaded_pars)))
 
         if len(unloaded_pars) > 0:
-            htmls = md_list_to_html_list([par.get_markdown() for par, _, _ in unloaded_pars],
-                                         macros=macros,
-                                         macro_delimiter=macro_delim,
-                                         auto_macros=[auto_macros for _, _, auto_macros in unloaded_pars],
-                                         attr_list=[par.get_attrs() for par, _, _ in unloaded_pars],
-                                         auto_number_headings=settings.auto_number_headings())
-            for (par, auto_macro_hash, _), h in zip(unloaded_pars, htmls):
+            htmls = md_list_to_html_list([par for par, _, _, _ in unloaded_pars],
+                                         auto_macros=({'h': auto_macros['h'], 'usedh': hs} for _, _, auto_macros, hs in unloaded_pars),
+                                         settings=settings)
+            for (par, auto_macro_hash, _, _), h in zip(unloaded_pars, htmls):
                 par.__data['h'][auto_macro_hash] = h
                 par.html = h
                 par.__write()
@@ -307,9 +318,10 @@ class DocParagraph(DocParagraphBase):
     def has_class(self, class_name):
         return class_name in self.__data.get('attrs', {}).get('classes', {})
 
-    def get_auto_macro_values(self, macros, macro_delim, cache):
+    def get_auto_macro_values(self, macros, macro_delim, cache, headings):
         """Gets the auto macros values for the current paragraph.
         Auto macros include things like current heading/table/figure numbers.
+        :param headings: A cache object to store headings into.
         :param macros: Macros to apply for the paragraph.
         :param cache: Cache object from which to retrieve and store the auto macro data.
         :return: Auto macro values as a dict.
@@ -323,26 +335,29 @@ class DocParagraph(DocParagraphBase):
 
         prev_par = self.doc.get_previous_par(self)
         if prev_par is None:
-            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}, 'usedh': defaultdict(int)}
+            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
+            headings[self.get_id()] = []
         else:
-            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, cache)
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, cache, headings)
 
         if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
             cache[key] = prev_par_auto_values
+            headings[self.get_id()] = []
             return prev_par_auto_values
 
         md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
         blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
         deltas = prev_par_auto_values['h']
-        used = prev_par_auto_values['usedh']
+        titles = []
         for e in blocks:
             level = count_chars(e['md'], '#')
             title = e['md'][level:].strip()
-            used[title] += 1
+            titles.append(title)
             if level > 0:
                 deltas[level] += 1
                 for i in range(level + 1, 7):
                     deltas[i] = 0
+        headings[self.get_id()] = titles
         result = prev_par_auto_values
         cache[key] = result
         return result
