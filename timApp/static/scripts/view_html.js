@@ -445,12 +445,17 @@ timApp.controller("ViewCtrl", [
             }
             return e;
         };
-
+        
+        sc.oldWidth = $($window).width();
         $($window).resize(function (e) {
             if (e.target === $window) {
-                var selected = $('.par.lightselect, .par.selected');
-                if (selected.length > 0) {
-                    selected[0].scrollIntoView();
+                var newWidth = $($window).width();
+                if (newWidth !== sc.oldWidth) {
+                    sc.oldWidth = newWidth;
+                    var selected = $('.par.lightselect, .par.selected');
+                    if (selected.length > 0) {
+                        selected[0].scrollIntoView();
+                    }
                 }
             }
         });
