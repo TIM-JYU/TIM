@@ -428,3 +428,21 @@ class Documents(TimDbBase):
                        [blocktypes.DOCUMENT, doc.doc_id])
         if commit:
             self.db.commit()
+
+    @contract
+    def resolve_doc_id_name(self, doc_path: 'str') -> 'tuple(int,str)|tuple(None,None)':
+        """Returns document id and name based on its path.
+        :param doc_path: The document path.
+        """
+        doc_id = self.get_document_id(doc_path)
+        if doc_id is None or not self.exists(doc_id):
+            # Backwards compatibility: try to use as document id
+            try:
+                doc_id = int(doc_path)
+                if not self.exists(doc_id):
+                    return None, None
+                doc_name = self.get_first_document_name(doc_id)
+                return doc_id, doc_name
+            except ValueError:
+                return None, None
+        return doc_id, doc_path

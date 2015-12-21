@@ -70,7 +70,7 @@ def save_answer(plugintype, task_id):
         abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
 
     # Load old answers
-    old_answers = timdb.answers.getAnswers(getCurrentUserId(), task_id)
+    old_answers = timdb.answers.get_answers(getCurrentUserId(), task_id, get_collaborators=False)
 
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
@@ -101,7 +101,7 @@ def save_answer(plugintype, task_id):
             pass
         if not is_teacher:
             is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
-            timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
+            result['savedNew'] = timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
             if not is_valid:
                 result['error'] = explanation
         else:
@@ -120,7 +120,7 @@ def save_answer(plugintype, task_id):
                 points = answer_browser_data.get('points', points)
                 if points == "":
                     points = None
-                timdb.answers.saveAnswer(users, task_id, json.dumps(save_object), points, tags, valid=True)
+                result['savedNew'] = timdb.answers.saveAnswer(users, task_id, json.dumps(save_object), points, tags, valid=True)
 
     return jsonResponse(result)
 
@@ -158,7 +158,7 @@ def get_answers(task_id, user_id):
         verify_teacher_access(doc_id)
     if user is None:
         abort(400, 'Non-existent user')
-    user_answers = timdb.answers.getAnswers(user_id, task_id)
+    user_answers = timdb.answers.get_answers(user_id, task_id)
     if hide_names_in_teacher(doc_id):
         for answer in user_answers:
             for c in answer['collaborators']:
@@ -184,18 +184,35 @@ def get__all_answers(task_id):
 @answers.route("/getState")
 def get_state():
     timdb = getTimDb()
-    doc_id, par_id, user_id, state = unpack_args('doc_id', 'par_id', 'user_id', 'state', types=[int, str, int, str])
+    doc_id, par_id, user_id, answer_id = unpack_args('doc_id',
+                                                     'par_id',
+                                                     'user_id',
+                                                     'answer_id', types=[int, str, int, int])
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
+    is_teacher = False
     if user_id != getCurrentUserId():
         verify_teacher_access(doc_id)
+        is_teacher = True
     if user is None:
         abort(400, 'Non-existent user')
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     if not has_view_access(doc_id):
         abort(403, 'Permission denied')
+
+    answer = timdb.answers.get_answer(answer_id)
+    if answer is None:
+        abort(400, 'Non-existent answer')
+    access = False
+    if any(a['user_id'] == user_id for a in answer['collaborators']):
+        access = True
+    task_doc_id, task_name = Plugin.parse_task_id(answer['task_id'])
+    if is_teacher and task_doc_id == doc_id:
+        access = True
+    if not access:
+        abort(403, "You don't have access to this answer.")
 
     # version = request.headers['Version']
     doc = Document(doc_id)
@@ -206,7 +223,7 @@ def get_state():
                                                                   user['name'],
                                                                   timdb.answers,
                                                                   user_id,
-                                                                  custom_state=state)
+                                                                  custom_state=answer['content'])
     return jsonResponse(texts[0])
 
 

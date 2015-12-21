@@ -1,4 +1,6 @@
 """"""
+from collections import defaultdict
+
 from timdb.timdbbase import TimDbBase
 from contracts import contract
 import json
@@ -31,7 +33,7 @@ class Answers(TimDbBase):
             cursor.execute("""UPDATE Answer SET points = ? WHERE id = ?""",
                            [points, existing_answers[0]['id']])
             self.db.commit()
-            return
+            return False
 
         cursor.execute('INSERT INTO Answer (task_id, content, points, answered_on, valid)'
                        'VALUES (?,?,?,CURRENT_TIMESTAMP,?)',
@@ -46,11 +48,13 @@ class Answers(TimDbBase):
             cursor.execute('INSERT INTO AnswerTag (answer_id, tag) VALUES (?,?)', [answer_id, tag])
 
         self.db.commit()
+        return True
 
     @contract
-    def getAnswers(self, user_id: 'int', task_id: 'str') -> 'list(dict)':
+    def get_answers(self, user_id: 'int', task_id: 'str', get_collaborators: 'bool'=True) -> 'list(dict)':
         """Gets the answers of a user in a task, ordered descending by submission time.
         
+        :param get_collaborators: Whether collaborators for each answer should be fetched.
         :param user_id: The id of the user.
         :param task_id: The id of the task.
         """
@@ -65,14 +69,22 @@ class Answers(TimDbBase):
                           ORDER BY answered_on DESC""", [task_id, user_id])
 
         answers = self.resultAsDictionary(cursor)
-        for answer in answers:
-            cursor.execute("""SELECT user_id, real_name FROM UserAnswer
-                              JOIN Answer ON Answer.id = UserAnswer.answer_id
-                              JOIN User ON UserAnswer.user_id = User.id
-                              WHERE answer_id = ?""", [answer['id']])
-            r = self.resultAsDictionary(cursor)
-            answer['collaborators'] = r
+        if not get_collaborators:
+            return answers
+
+        self.set_collaborators(answers)
         return answers
+
+    def set_collaborators(self, answers):
+        answer_dict = defaultdict(list)
+        for row in self.db.execute("""SELECT answer_id, user_id, real_name FROM UserAnswer
+                          JOIN Answer ON Answer.id = UserAnswer.answer_id
+                          JOIN User ON UserAnswer.user_id = User.id
+                          WHERE answer_id IN (%s)""" % ','.join('?' * len(answers)),
+                                  [answer['id'] for answer in answers]).fetchall():
+            answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2]})
+        for answer in answers:
+            answer['collaborators'] = answer_dict[answer['id']]
 
     @contract
     def get_newest_answers(self, user_id: 'int', task_ids: 'list(str)') -> 'list(dict)':
@@ -160,12 +172,12 @@ order by u.id,a.task_id;
                 FROM User
                 JOIN UserAnswer ON User.id = UserAnswer.user_id
                 JOIN Answer ON Answer.id = UserAnswer.answer_id
-                JOIN (SELECT Answer.id, MAX(answered_on)
+                JOIN (SELECT Answer.id, UserAnswer.user_id, MAX(answered_on)
                       FROM Answer
                       JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
                       WHERE Answer.valid = 1
                       GROUP BY UserAnswer.user_id, Answer.task_id
-                      )tmp ON tmp.id = Answer.id
+                      )tmp ON tmp.id = Answer.id AND User.id = tmp.user_id
                 WHERE task_id IN (%s)
                 %s
                 GROUP BY User.id
@@ -215,3 +227,16 @@ order by u.id,a.task_id;
                            WHERE task_id = ?
                            ORDER BY real_name ASC""", [task_id]))
         return result
+
+    @contract
+    def get_answer(self, answer_id: 'int') -> 'dict|None':
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT id, task_id, content, points,
+                                 datetime(answered_on, 'localtime') as answered_on, valid
+                          FROM Answer
+                          WHERE id = ?
+                          ORDER BY answered_on DESC""", [answer_id])
+
+        answers = self.resultAsDictionary(cursor)
+        self.set_collaborators(answers)
+        return answers[0] if len(answers) > 0 else None

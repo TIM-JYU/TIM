@@ -30,11 +30,10 @@ var timApp = angular.module('timApp', [
                     return config;
                 },
                 'response': function (response) {
-
                     if (re.test(response.config.url)) {
                         var match = re.exec(response.config.url);
                         var taskId = match[1];
-                        $rootScope.$broadcast('answerSaved', {taskId: taskId});
+                        $rootScope.$broadcast('answerSaved', {taskId: taskId, savedNew: response.data.savedNew});
                         if (response.data.error) {
                             $window.alert(response.data.error);
                         }
@@ -446,12 +445,17 @@ timApp.controller("ViewCtrl", [
             }
             return e;
         };
-
+        
+        sc.oldWidth = $($window).width();
         $($window).resize(function (e) {
             if (e.target === $window) {
-                var selected = $('.par.lightselect, .par.selected');
-                if (selected.length > 0) {
-                    selected[0].scrollIntoView();
+                var newWidth = $($window).width();
+                if (newWidth !== sc.oldWidth) {
+                    sc.oldWidth = newWidth;
+                    var selected = $('.par.lightselect, .par.selected');
+                    if (selected.length > 0) {
+                        selected[0].scrollIntoView();
+                    }
                 }
             }
         });
@@ -480,9 +484,7 @@ timApp.controller("ViewCtrl", [
                 downEvent = null;
             });
             $document.on('mouseup touchend', className, function (e) {
-                $window.console.log("tock");
                 if (downEvent !== null) {
-                    $window.console.log("event!");
                     if (func($(this), downEvent)) {
                         e.preventDefault();
                     }
@@ -1005,8 +1007,13 @@ timApp.controller("ViewCtrl", [
         sc.defaultAction = {func: sc.showOptionsWindow, desc: 'Show options window'};
         timLogTime("VieCtrl end","view");
         sc.selection = {start: null, end: null};
-        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end'], function (newValues, oldValues, scope) {
+        sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
+            if (sc.editing) {
+                sc.notification = "Editor is already open.";
+            } else {
+                sc.notification = "";
+            }
         });
 
         sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
@@ -1099,18 +1106,49 @@ timApp.controller("ViewCtrl", [
         sc.nothing = function () {
         };
 
+        sc.goToEditor = function (e, $par) {
+            $('pareditor')[0].scrollIntoView();
+        };
+
+        sc.closeAndSave = function (e, $par) {
+            $('pareditor').isolateScope().saveClicked();
+            sc.showOptionsWindow(e, $par);
+        };
+
+        sc.closeWithoutSaving = function (e, $par) {
+            $('pareditor').isolateScope().cancelClicked();
+            sc.showOptionsWindow(e, $par);
+        };
+
         sc.getEditorFunctions = function () {
-            return [
-                {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
-                {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
-                {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
-                {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
-                {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
-                {func: sc.startArea, desc: 'Start selecting area', show: sc.rights.editable && sc.selection.start === null},
-                {func: sc.beginAreaEditing, desc: 'Edit area', show: sc.selection.start !== null && sc.rights.editable},
-                {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
-                {func: sc.nothing, desc: 'Close menu', show: true}
-            ];
+            if (sc.editing) {
+                return [
+                    {func: sc.goToEditor, desc: 'Go to editor', show: true},
+                    {func: sc.closeAndSave, desc: 'Close editor and save', show: true},
+                    {func: sc.closeWithoutSaving, desc: 'Close editor and cancel', show: true},
+                    {func: sc.nothing, desc: 'Close menu', show: true}
+                ];
+            } else {
+                return [
+                    {func: sc.showNoteWindow, desc: 'Comment/note', show: sc.rights.can_comment},
+                    {func: sc.showEditWindow, desc: 'Edit', show: sc.rights.editable},
+                    {func: sc.showAddParagraphAbove, desc: 'Add paragraph above', show: sc.rights.editable},
+                    {func: sc.showAddParagraphBelow, desc: 'Add paragraph below', show: sc.rights.editable},
+                    {func: sc.addQuestion, desc: 'Create question', show: sc.lectureMode && sc.rights.editable},
+                    {
+                        func: sc.startArea,
+                        desc: 'Start selecting area',
+                        show: sc.rights.editable && sc.selection.start === null
+                    },
+                    {
+                        func: sc.beginAreaEditing,
+                        desc: 'Edit area',
+                        show: sc.selection.start !== null && sc.rights.editable
+                    },
+                    {func: sc.cancelArea, desc: 'Cancel area', show: sc.selection.start !== null},
+                    {func: sc.nothing, desc: 'Close menu', show: true}
+                ];
+            }
         };
 
 

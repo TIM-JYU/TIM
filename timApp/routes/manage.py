@@ -1,38 +1,42 @@
 """Routes for manage view."""
 from flask import Blueprint, render_template
+
 from .common import *
-from timdb.docidentifier import DocIdentifier
-from documentmodel.document import Document
 
 manage_page = Blueprint('manage_page',
                         __name__,
                         url_prefix='')  # TODO: Better URL prefix.
 
-@manage_page.route("/manage/<int:doc_id>")
-def manage(doc_id):
+
+@manage_page.route("/manage/<path:path>")
+def manage(path):
     timdb = getTimDb()
     isFolder = False
-    if not timdb.documents.exists(doc_id):
-        if timdb.folders.exists(doc_id):
-            isFolder = True
-        else:
+    doc_id, doc_name = timdb.documents.resolve_doc_id_name(path)
+    if doc_id is None:
+        folder_id = timdb.folders.get_folder_id(path.rstrip('/'))
+        if folder_id is None:
             abort(404)
+        isFolder = True
+        block_id = folder_id
+    else:
+        block_id = doc_id
 
-    if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
+    if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
         abort(403)
 
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
-    grouprights = timdb.users.get_rights_holders(doc_id)
+    grouprights = timdb.users.get_rights_holders(block_id)
     access_types = timdb.users.get_access_types()
 
     if isFolder:
-        doc_data = timdb.folders.get(doc_id)
+        doc_data = timdb.folders.get(block_id)
         doc_data['versions'] = []
         doc_data['fulltext'] = ''
     else:
-        doc = Document(doc_id)
-        doc_data = {'id': doc_id}
-        doc_name = timdb.documents.get_first_document_name(doc_id)
+        doc = Document(block_id)
+        doc_data = {'id': block_id}
+        doc_name = timdb.documents.get_first_document_name(block_id)
         if doc_name is not None:
             doc_data['name'] = doc_name
             doc_data['fullname'] = doc_name
@@ -41,7 +45,7 @@ def manage(doc_id):
         for ver in doc_data['versions']:
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
-    doc_data['owner'] = timdb.users.getOwnerGroup(doc_id)
+    doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
     return render_template('manage.html',
                            objName='folder' if isFolder else 'document',
                            objNameC='Folder' if isFolder else 'Document',
@@ -50,6 +54,7 @@ def manage(doc_id):
                            access_types=access_types,
                            user_groups=possible_groups,
                            isFolder=str(isFolder).lower())
+
 
 @manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])
 def changeOwner(doc_id, new_owner):
@@ -62,6 +67,7 @@ def changeOwner(doc_id, new_owner):
         abort(403, "You must belong to the new usergroup.")
     timdb.documents.setOwner(doc_id, new_owner)
     return "Success"
+
 
 @manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
 def addPermission(doc_id, group_name, perm_type):
@@ -83,6 +89,7 @@ def addPermission(doc_id, group_name, perm_type):
         abort(400, 'Invalid permission type.')
     return "Success"
 
+
 @manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def removePermission(doc_id, group_id, perm_type):
     timdb = getTimDb()
@@ -96,11 +103,13 @@ def removePermission(doc_id, group_id, perm_type):
         abort(400, 'Unknown permission type')
     return "Success"
 
+
 @manage_page.route("/alias/<int:doc_id>/", methods=["GET"])
 def getDocNames(doc_id):
     timdb = getTimDb()
     names = timdb.documents.get_names(doc_id, include_nonpublic=True)
     return jsonResponse(names)
+
 
 @manage_page.route("/alias/<int:doc_id>/<path:new_alias>", methods=["PUT"])
 def add_alias(doc_id, new_alias):
@@ -115,8 +124,6 @@ def add_alias(doc_id, new_alias):
     if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
 
-    userName = getCurrentUserName()
-
     if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
         return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
 
@@ -128,6 +135,7 @@ def add_alias(doc_id, new_alias):
     timdb.folders.create(parent_folder, getCurrentUserGroup())
     timdb.documents.add_name(doc_id, new_alias, is_public)
     return "Success"
+
 
 @manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["POST"])
 def change_alias(doc_id, alias):
@@ -145,7 +153,6 @@ def change_alias(doc_id, alias):
     if not timdb.users.has_manage_access(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to rename this object."}, 403)
 
-    userName = getCurrentUserName()
     new_parent, _ = timdb.folders.split_location(new_alias)
 
     if alias != new_alias:
@@ -177,19 +184,17 @@ def remove_alias(doc_id, alias):
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this object."}, 403)
 
-    userName = getCurrentUserName()
-    is_admin = timdb.users.isUserInGroup(userName, 'Administrators')
-
-    if not is_admin and len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
+    if len(timdb.documents.get_document_names(doc_id, include_nonpublic=True)) < 2:
         return jsonResponse({'message': "You can't delete the only name the document has."}, 403)
 
     parent_folder, _ = timdb.folders.split_location(alias)
 
-    if not is_admin and not canWriteToFolder(parent_folder):
+    if not canWriteToFolder(parent_folder):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.documents.delete_name(doc_id, alias)
     return "Success"
+
 
 @manage_page.route("/rename/<int:doc_id>", methods=["PUT"])
 def rename_folder(doc_id):
@@ -220,6 +225,7 @@ def rename_folder(doc_id):
     timdb.folders.rename(doc_id, new_name)
     return "Success"
 
+
 @manage_page.route("/getPermissions/<int:doc_id>")
 def getPermissions(doc_id):
     timdb = getTimDb()
@@ -242,6 +248,7 @@ def getPermissions(doc_id):
     grouprights = timdb.users.get_rights_holders(doc_id)
     return jsonResponse({'doc': doc_data, 'grouprights': grouprights})
 
+
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
 def deleteDocument(doc_id):
     timdb = getTimDb()
@@ -251,6 +258,7 @@ def deleteDocument(doc_id):
         return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
     timdb.documents.delete(doc_id)
     return "Success"
+
 
 @manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
 def deleteFolder(doc_id):
@@ -264,4 +272,3 @@ def deleteFolder(doc_id):
 
     timdb.folders.delete(doc_id)
     return "Success"
-
