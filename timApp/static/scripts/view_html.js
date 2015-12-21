@@ -1004,6 +1004,11 @@ timApp.controller("ViewCtrl", [
         sc.selection = {start: null, end: null};
         sc.$watchGroup(['lectureMode', 'selection.start', 'selection.end', 'editing'], function (newValues, oldValues, scope) {
             sc.editorFunctions = sc.getEditorFunctions();
+            if (sc.editing) {
+                sc.notification = "Editor is already open.";
+            } else {
+                sc.notification = "";
+            }
         });
 
         sc.$watchGroup(['selection.start', 'selection.end'], function (newValues, oldValues, scope) {
