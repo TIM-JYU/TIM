@@ -26,7 +26,7 @@ PermApp.controller("PermCtrl", [
             if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
                 return sc.doc.versions[0];
             }
-            return "";
+            return ""; 
         };
 
         sc.getJustDocName = function(fullName) {
@@ -229,6 +229,64 @@ PermApp.controller("PermCtrl", [
             sc.onFileSelect('/update/' + doc.id + '/' + doc.versions[0], $files);
         };
 
+        sc.convertDocument = function (doc) {
+            var text = sc.tracWikiText;
+            sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/";
+            //var text = sc.fulltext;
+            text = text.replace(/\[\[PageOutline\]\].*\n/g,"");  // remove contents
+            text = text.replace(/\r\n/g,"\n");                   // change windows nl's
+            text = text.replace(/{{{(.*?)}}}/, "`$1`");         // change verbatim 
+            // text = text.replace(/{{{\n(.*?)\n}}}/, "```\n$1\n```"); // change code blocks
+            text = text.replace(/\n{{{\n/g, "\n#-\n```\n"); // change code blocks
+            text = text.replace(/\n}}}\n/g, "\n```\n"); // change code blocks
+            text = text.replace(/\n====\s+(.*?)\s+====.*\n/g, '\n#-\n#### $1\n'); // headings
+            text = text.replace(/\n===\s+(.*?)\s+===.*\n/g, '\n#-\n### $1\n');
+            text = text.replace(/\n==\s+(.*?)\s+==.*\n/g, '\n#-\n## $1\n');
+            text = text.replace(/\n=\s+(.*?)\s+=.*\n/g, '\n#-\n# $1\n');
+            // text = text.replace(/^ \d+. ', r'1.'); 
+            lines = text.split("\n");
+            for (var i=0; i<lines.length; i++) {
+                var line = lines[i];
+                if ( true || line.lastIndexOf('    ',0) !== 0 ) {
+                    line = line.replace(/\[(https?:\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]($1)');
+                    line = line.replace(/\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]('+(sc.wikiRoot || "")+'$1)');
+                    line = line.replace(/\!(([A-Z][a-z0-9]+){2,})/, '$1');
+                    line = line.replace(/\'\'\'(.*?)\'\'\'/, '**$1**');  // bold
+                    line = line.replace(/\'\'(.*?)\'\'/, '*$1*');   // italics
+                }
+                lines[i] = line;
+            }
+            text = lines.join("\n");
+
+/*            
+
+text = re.sub(r'(?m)^====\s+(.*?)\s+====.*$', r'#-\n#### \1', text)
+text = re.sub(r'(?m)^===\s+(.*?)\s+===.*$', r'#-\n### \1', text)
+text = re.sub(r'(?m)^==\s+(.*?)\s+==.*$', r'#-\n## \1', text)
+text = re.sub(r'(?m)^=\s+(.*?)\s+=.*$', r'#-\n# \1', text)
+#text = re.sub(r'^       * ', r'****', text)
+#text = re.sub(r'^     * ', r'***', text)
+#text = re.sub(r'^   * ', r'**', text)
+#text = re.sub(r'^ * ', r'*', text)
+text = re.sub(r'^ \d+. ', r'1.', text)
+
+a = []
+for line in text.split('\n'):
+    if True or not line.startswith('    '):
+        line = re.sub(r'\[(https?://[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](\1)', line)
+        line = re.sub(r'\[(wiki:[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](/\1/)', line)
+        line = re.sub(r'\!(([A-Z][a-z0-9]+){2,})', r'\1', line)
+        line = re.sub(r'\'\'\'(.*?)\'\'\'', r'*\1*', line)
+        line = re.sub(r'\'\'(.*?)\'\'', r'_\1_', line)
+        line = re.sub(r'\(/wiki:', r'(https://trac.cc.jyu.fi/projects/ohj2/wiki/', line)
+    a.append(line)
+text = '\n'.join(a)
+*/
+            //sc.tracWikiText = text;
+            sc.fulltext = text;
+        }
+
+        
         sc.saveDocument = function (doc) {
             sc.saving = true;
             $http.post('/update/' + doc.id + '/' + doc.versions[0],

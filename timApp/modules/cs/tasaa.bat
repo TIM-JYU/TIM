@@ -1,5 +1,5 @@
-@xcopy t:\tim\timApp\static\stylesheet.css e:\kurssit\tim\timApp\static\ /d /Y
-@pushd E:\kurssit\tim\timApp\modules\cs
+@xcopy t:\tim\timApp\static\stylesheet.css e:\tim\timApp\static\ /d /Y
+@pushd E:\tim\timApp\modules\cs
 @cd t:\cs
 @t:
 @kopioi *.py e:    /q /s
@@ -14,7 +14,7 @@
 @kopioi dr*.* e:   /q /s
 @xcopy  ptauno\index.html E:\kurssit\pauno\taulukko.html /d /Y
 @xcopy  ptauno\taulukko.* E:\kurssit\pauno\  /d /Y
-cd E:\kurssit\tim\timApp\modules\cs\templates
+cd E:\tim\timApp\modules\cs\templates
 cd templates
 @kopioi *.* e:     /q /s
 cd ..

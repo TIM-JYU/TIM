@@ -76,15 +76,15 @@ ConsolePWD.getPWD = function() {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["jypeli","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","r"];
-languageTypes.aceModes     = ["csharp","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","r"];
+languageTypes.runTypes     = ["jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","r"];
+languageTypes.aceModes     = ["csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","r"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
-languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit"];
+languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit","scomtest"];
 
 // If test type is comtest, how to change it for specific languages
-languageTypes.impTestTypes = {cs:"comtest", console:"comtest", cc:"ccomtest", java:"jcomtest"};
+languageTypes.impTestTypes = {cs:"comtest", console:"comtest", cc:"ccomtest", java:"jcomtest", scala:"scomtest"};
 languageTypes.impTestTypes["c++"] = "ccomtest";
 
 languageTypes.whatIsIn = function (types, type, def) {
@@ -104,6 +104,15 @@ languageTypes.whatIsInAce = function (types, type, def) {
         if ( type.indexOf(types[i]) >= 0 ) return languageTypes.aceModes[i];
     return def;
 };
+
+
+languageTypes.isAllType = function(type) {
+"use strict";
+    if (!type) return false;
+    type = type.toLowerCase();
+    return type.indexOf("all") >= 0;
+};
+
 
 languageTypes.getRunType = function(type,def) {
 "use strict";
@@ -234,6 +243,11 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				    '<p ng-if="taunoOn" class="taunoOhje">{{taunoOhjeText}}</a></p>' 
                     : '<p ng-if="taunoOn && !noeditor" class="pluginHide"" ><a ng-click="copyFromSimcir()">copy from SimCir</a> | <a ng-click="copyToSimcir()">copy to SimCir</a> | <a ng-click="hideTauno()">hide SimCir</a></p>') +
 					"" : "") +   
+                  '<div ng-show="isAll" style="float: right;">{{languageText}} '+
+                    '<select ng-model="selectedLanguage" ng-required ng-init="progLanguag=\'java\'">'+
+                      '<option ng-repeat="item in progLanguages" value="{{item}}">{{item}}</option>'+
+                    '</select>'+
+                  '</div>'+  
 				  '<pre ng-if="viewCode && codeover">{{code}}</pre>'+
 				  '<div class="csRunCode">'+
                   // '<p></p>'+
@@ -363,6 +377,7 @@ csApp.directiveFunction = function(t,isInput) {
                 scope.copyToSimCirText = english ? "copy to SimCir" : "kopioi SimCiriin";  
             }
             
+            scope.languageText = english ? "language: " : "kieli: ";  
             
 			csApp.set(scope,attrs,"type","cs");
             scope.isText = languageTypes.getRunType(scope.type,false) == "text";
@@ -370,6 +385,7 @@ csApp.directiveFunction = function(t,isInput) {
             scope.isSimcir = t === "simcir";
             
 			csApp.set(scope,attrs,"file");
+			csApp.set(scope,attrs,"viewCode",false);
 			csApp.set(scope,attrs,"filename");
 			csApp.set(scope,attrs,"lang");
 			csApp.set(scope,attrs,"width");
@@ -394,6 +410,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"argsstem",scope.isText ? (english ? "File name:" : "Tiedoston nimi:") : (english ? "Args:": "Args"));
 			csApp.set(scope,attrs,"userinput","");
 			csApp.set(scope,attrs,"userargs",scope.isText ? scope.filename : "");
+			csApp.set(scope,attrs,"selectedLanguage", scope.type);
 			csApp.set(scope,attrs,"inputstem","");
 			csApp.set(scope,attrs,"inputrows",1);
 			csApp.set(scope,attrs,"toggleEditor",scope.isSimcir ? "True" : false);
@@ -419,6 +436,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"editorModes","01");
             // csApp.set(scope,attrs,"program");
 
+            
             scope.docLink = "Document";
             scope.editorMode = parseInt(scope.editorMode);
             scope.editorText = [scope.normal,scope.highlight,scope.parsons,scope.jsparsons];
@@ -452,7 +470,8 @@ csApp.directiveFunction = function(t,isInput) {
                 if ( scope.maxRows < 0 && scope.maxRows < rowCount ) scope.maxRows = rowCount; 
             } else if ( scope.maxRows < 0 ) scope.maxRows = 10;
             
-            scope.isRun = languageTypes.getRunType(scope.type,false) !== false && scope.norun == false;
+            scope.isAll  = languageTypes.isAllType(scope.type);
+            scope.isRun = (languageTypes.getRunType(scope.type,false) !== false  || scope.isAll ) && scope.norun == false;
             scope.isTest = languageTypes.getTestType(scope.type,false) !== false;
             scope.isDocument = (scope.type.indexOf("doc") >= 0);
 
@@ -501,6 +520,15 @@ csApp.directiveFunction = function(t,isInput) {
                 b = b.replace('$space$' , " ");
                 scope.buttons = b.split("\n");
             }
+            
+            
+            if ( scope.isAll ) {
+                var langs = attrs.languages || scope.attrs.languages;
+                if ( langs ) scope.progLanguages = langs.split(/[\n;\/]/);
+                else scope.progLanguages = languageTypes.runTypes;
+            }
+            
+            
             /*
             var editArea = element[0].getElementsByClassName('csEditArea');
             var editor = ace.edit(editArea);
@@ -518,7 +546,7 @@ csApp.directiveFunction = function(t,isInput) {
                 if ( argsEdit.length > 0  )  argsEdit[0].setAttribute('style',styleArgs);
             }
             
-            
+            scope.changeCodeLink();
             csLogTime(scope.taskId);
             
             // if ( scope.isSage ) alustaSage(scope);
@@ -719,31 +747,30 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         csLogTime(msg + " " + $scope.taskId);
         return true;
     }
-    $scope.runCodeAuto = function() {
-        window.clearInterval($scope.runTimer);
-		var t = languageTypes.getRunType($scope.type,"cs");  
+    
+    $scope.runCodeCommon = function(nosave, extraMarkUp)
+    {
+		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
         if ( t == "md" ) { $scope.showMD(); return; }
         if ( t == "js" ) { $scope.showJS(); return; }
-		$scope.doRunCode(t,true);
+		$scope.doRunCode(t,nosave);
+    }
+    
+    $scope.runCodeAuto = function() {
+        window.clearInterval($scope.runTimer);
+		$scope.runCodeCommon(true);
 	};
 	
 	$scope.runCodeLink = function() {
-		var t = languageTypes.getRunType($scope.type,"cs"); 
-        if ( t == "md" ) { $scope.showMD() ; return; }
-        if ( t == "js" ) { $scope.showJS(); return; }
-		$scope.doRunCode(t,false);
+		$scope.runCodeCommon(false);
 	};
 	
 	$scope.runCode = function() {
-		var t = languageTypes.getRunType($scope.type,"cs"); 
-        if ( t == "md" ) { $scope.showMD(); } // return; }
-        if ( t == "js" ) { $scope.showJS(); } // return; }
-        // if ( $scope.sageButton ) $scope.sageButton.click();
-		$scope.doRunCode(t,false);
+		$scope.runCodeCommon(false);
 	};
 	
 	$scope.runTest = function() {
-		var t = languageTypes.getTestType($scope.type,"comtest"); 
+		var t = languageTypes.getTestType($scope.selectedLanguage,"comtest"); 
 		$scope.doRunCode(t,false);
 	};
 	
@@ -755,7 +782,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	        return;
 	    }
         $scope.docLink ="Hide document";
-		var t = languageTypes.getRunType($scope.type,"cs");
+		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");
 		$scope.doRunCode(t, false, {"document": true});
 	};
 
@@ -860,6 +887,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		//		  alert($scope.usercode);
         if ( nosave ) params.input.nosave = true;
         if ( extraMarkUp ) jQuery.extend(params.input.markup, extraMarkUp);
+        if ( $scope.isAll ) jQuery.extend(params.input, {'selectedLanguage': $scope.selectedLanguage});
         var url = "/cs/answer";
         // url = "http://tim-beta.it.jyu.fi/cs/answer";
         if ( $scope.plugin ) {
@@ -1156,14 +1184,17 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	};
 	
 	
-	$scope.showCode = function() {
-		$scope.viewCode = !$scope.viewCode;
-        
+    $scope.changeCodeLink = function() {
         if ( $scope.viewCode ) 
             $scope.showCodeLink = $scope.showCodeOff;
         else
             $scope.showCodeLink = $scope.showCodeOn;
 
+    }
+    
+	$scope.showCode = function() {
+		$scope.viewCode = !$scope.viewCode;
+        $scope.changeCodeLink();
 		$scope.localcode = undefined;
 		$scope.showCodeNow();
 	};

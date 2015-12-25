@@ -169,6 +169,17 @@ if (isFolder) {
             <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument(doc)">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
+        <div><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
+        <div ng-hide="!showTracWiki">
+            <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
+            TracWiki page below and then press "Convert TracWiki" button to get the text converted
+            above as MarkDown.  Then you can edit the MarkDown before pressing Save.
+            You may need to add extra empty lines before lists.</p>
+            <p>Wiki root: <input  ng-model="wikiRoot"  value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></p>
+            <textarea class="docEditor" ng-model="tracWikiText"></textarea>
+            <button ng-click="convertDocument(doc)">Convert TracWiki</button> 
+        </div>
+        </div>
     </form>
 
     <div ng-show="!isFolder">
