@@ -82,26 +82,30 @@ if (isFolder) {
     </select>
         <span ng-show="ownerUpdating">Updating...</span>
     </div>
-    <div class="margin" ng-repeat="type in accessTypes">
-        Groups with {{ '{{ type.name }}' }} right:
-
+        
+    <div class="margin rights-list" ng-repeat="type in accessTypes">
+        <a ng-click="showAddRight = true; focusEditor = true ">{{ '{{ type.name }}' }} right</a>:
+        <span ng-show="filtered.length == 0">none</span> 
+ 
         <ul>
             <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{ '{{group.name}}' }} (<a ng-click="removeConfirm(group, type.name)">remove</a>)
             </li>
         </ul>
-        <p ng-show="filtered.length == 0">This {{ objName }} doesn't have groups with {{ '{{ type.name }}' }} right.</p>
-    </div>
+        <!-- <p ng-show="filtered.length == 0">This {{ objName }} doesn't have groups with {{ '{{ type.name }}' }} right.</p> -->
+   </div>
     <div class="margin">
-        <button ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</button>
-        <div ng-show="showAddRight">
+        <a ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</a>
+        <div ng-show="showAddRight" class="rights-list">
             <form ng-submit="addPermission(groupName, accessType)">
-                <label>Name: <input type="text" ng-model="groupName" focus-me="focusEditor"></label>
-                <select ng-model="accessType" ng-options="access.name for access in accessTypes track by access.id"></select>
+                <label>Right: <select ng-model="accessType" ng-options="access.name for access in accessTypes track by access.id"></select></label>
+                <label>name: <input type="text" ng-model="groupName" focus-me="focusEditor" placeholder='enter userid or group name'></label>
                 <button type="submit" ng-disabled="!groupName">Add</button>
                 <button type="button" ng-click="showAddRight = false">Cancel</button>
+                
                 <button type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users</button>
                 <button type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in users</button>
                 <button type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous users</button>
+                
             </form>
         </div>
     </div>
@@ -175,7 +179,7 @@ if (isFolder) {
             TracWiki page below and then press "Convert TracWiki" button to get the text converted
             above as MarkDown.  Then you can edit the MarkDown before pressing Save.
             You may need to add extra empty lines before lists.</p>
-            <p>Wiki root: <input  ng-model="wikiRoot"  value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></p>
+            <p>Wiki root: <input  ng-model="wikiRoot" size="50" value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></p>
             <textarea class="docEditor" ng-model="tracWikiText"></textarea>
             <button ng-click="convertDocument(doc)">Convert TracWiki</button> 
         </div>

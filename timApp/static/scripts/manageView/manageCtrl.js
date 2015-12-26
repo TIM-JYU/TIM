@@ -22,6 +22,7 @@ PermApp.controller("PermCtrl", [
     '$upload',
     '$window',
     function (sc, $http, $upload, $window) {
+        sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
         $http.defaults.headers.common.Version = function() {
             if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
                 return sc.doc.versions[0];
@@ -231,12 +232,14 @@ PermApp.controller("PermCtrl", [
 
         sc.convertDocument = function (doc) {
             var text = sc.tracWikiText;
-            sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/";
+            wikiSource = sc.wikiRoot.replace("wiki","browser");
             //var text = sc.fulltext;
             text = text.replace(/\[\[PageOutline\]\].*\n/g,"");  // remove contents
+            text = text.replace(/ !([a-zA-Z])/g," $1");                   // remove cat !IsBig
             text = text.replace(/\r\n/g,"\n");                   // change windows nl's
-            text = text.replace(/{{{(.*?)}}}/, "`$1`");         // change verbatim 
+            text = text.replace(/{{{(.*?)}}}/g, "`$1`");         // change verbatim 
             // text = text.replace(/{{{\n(.*?)\n}}}/, "```\n$1\n```"); // change code blocks
+            text = text.replace(/\n{{{#!comment\n((.|\s|\S)*?)\n}}}\n/g, "\n#- {.comment}\n$1\n#-\n"); // comments
             text = text.replace(/\n{{{\n/g, "\n#-\n```\n"); // change code blocks
             text = text.replace(/\n}}}\n/g, "\n```\n"); // change code blocks
             text = text.replace(/\n====\s+(.*?)\s+====.*\n/g, '\n#-\n#### $1\n'); // headings
@@ -248,8 +251,11 @@ PermApp.controller("PermCtrl", [
             for (var i=0; i<lines.length; i++) {
                 var line = lines[i];
                 if ( true || line.lastIndexOf('    ',0) !== 0 ) {
-                    line = line.replace(/\[(https?:\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]($1)');
-                    line = line.replace(/\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]('+(sc.wikiRoot || "")+'$1)');
+                    line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$3]($1)'); // ordinary links
+                    line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+(\[.*?\])\]/g, '[$3]($1)');   // links like [url [text]]
+                    line = line.replace(/\[wiki:([^\s\[\]]+)\]/g, '[$1]('+(sc.wikiRoot || "")+'$1)'); // [wiki:local] -> [local](URL)
+                    line = line.replace(/\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]('+(sc.wikiRoot || "")+'$1)'); // [wiki:local text] -> [text](URL)
+                    line = line.replace(/\[source:([^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]('+(wikiSource || "")+'$1)');
                     line = line.replace(/\!(([A-Z][a-z0-9]+){2,})/, '$1');
                     line = line.replace(/\'\'\'(.*?)\'\'\'/, '**$1**');  // bold
                     line = line.replace(/\'\'(.*?)\'\'/, '*$1*');   // italics

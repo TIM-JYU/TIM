@@ -1828,3 +1828,11 @@ p.plgfooter {
 p.docsettings {
     margin-top: -3.4em;
 }
+
+
+.rights-list {
+    font-size: smaller;
+    margin-left: 2em;
+    margin-right: -5em;
+    text-align: left;
+}
