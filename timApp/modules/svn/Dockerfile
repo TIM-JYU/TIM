@@ -18,6 +18,7 @@ run apt-get install -y wget
 # run apt-get -y --purge remove python3-pip
 
 # pypy3:
+run apt-get update
 run apt-get install -y curl
 RUN curl http://buildbot.pypy.org/nightly/py3k/pypy-c-jit-latest-linux64.tar.bz2 | tar -jxf - && mv pypy* /opt/pypy3
 #ENV PYTHONPATH /opt/pypy3/site-packages
