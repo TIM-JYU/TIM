@@ -844,7 +844,7 @@ timApp.controller("ViewCtrl", [
                     var $h = $(this);
                     var id = $h.attr('id');
                     if (angular.isDefined(id)) {
-                        $h.prepend($("<a>", {
+                        $h.append($("<a>", {
                             text: '#',
                             href: '#' + id,
                             class: 'headerlink',
