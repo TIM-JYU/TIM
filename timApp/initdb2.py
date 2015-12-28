@@ -9,6 +9,7 @@ from timdb.docidentifier import DocIdentifier
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import blocktypes
 from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME
+from tim_app import app
 import models
 
 
@@ -33,14 +34,7 @@ def postgre_create_database(db_name):
     conn.close()
 
 def initialize_temp_database():
-    timname = None
-    if "TIM_NAME" in os.environ:
-        timname = os.environ.get("TIM_NAME")
-    else:
-        print("Missing TIM_NAME environment variable. Exiting..")
-        exit()
-    
-    postgre_create_database('tempdb_' + timname)
+    postgre_create_database('tempdb_' + app.config['TIM_NAME'])
     models.initialize_temp_database()
 
 
