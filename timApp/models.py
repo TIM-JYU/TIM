@@ -136,7 +136,7 @@ tempdb = TempDb()
 
 
 def initialize_temp_database():
-    print('initializing the temp database', end='')
+    print('initializing the temp database...', end='')
     db.drop_all()
     db.create_all()
     print(' done.')
