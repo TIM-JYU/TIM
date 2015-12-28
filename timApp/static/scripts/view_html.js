@@ -838,14 +838,20 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.setHeaderLinks = function () {
-            $(".par h1, .par h2, .par h3, .par h4, .par h5, .par h6").each(function () {
-                var $par = $(this).parent();
-                $par.append($("<a>", {
-                    text: '#',
-                    href: '#' + $(this).attr('id'),
-                    class: 'headerlink',
-                    title: 'Permanent link'
-                }));
+            $(".parContent").each(function () {
+                var $p = $(this);
+                $p.find('h1, h2, h3, h4, h5, h6').each(function () {
+                    var $h = $(this);
+                    var id = $h.attr('id');
+                    if (angular.isDefined(id)) {
+                        $h.prepend($("<a>", {
+                            text: '#',
+                            href: '#' + id,
+                            class: 'headerlink',
+                            title: 'Permanent link'
+                        }));
+                    }
+                });
             });
         };
 

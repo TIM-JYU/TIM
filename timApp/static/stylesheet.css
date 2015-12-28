@@ -305,14 +305,19 @@ ul ul ul, ol ol ol {
 }
 
 .headerlink {
-    position: absolute;
-    right: 0;
-    top: 0;
-    display: none;
+    float: right;
+    visibility: hidden;
+    font-size: small;
+}
+
+.par > .headerlink {
+    font-size: large;
+    position: relative;
+    right: -0.5em;
 }
 
 .par:hover .headerlink {
-    display: inherit;
+    visibility: inherit;
 }
 
 .parContent {
@@ -1415,7 +1420,7 @@ img.console {
     }
 
     .headerlink {
-        display: none;
+        visibility: hidden;
     }
 
     #header {
