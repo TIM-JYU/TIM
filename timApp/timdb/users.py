@@ -691,3 +691,15 @@ class Users(TimDbBase):
 
     def get_access_types(self):
         return self.resultAsDictionary(self.db.execute("""SELECT id, name FROM AccessType"""))
+
+    @contract
+    def remove_membership(self, uid: 'int', gid: 'int') -> 'int':
+        """Removes membership of a user from a group.
+        :param uid: The user id.
+        :param gid: The group id.
+        :returns: The number of affected rows (0 or 1).
+        """
+        c = self.db.cursor()
+        c.execute("""DELETE FROM UserGroupMember WHERE User_id = ? and UserGroup_id = ?""", [uid, gid])
+        self.db.commit()
+        return c.rowcount
