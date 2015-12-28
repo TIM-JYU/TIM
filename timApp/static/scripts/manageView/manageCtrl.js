@@ -1,16 +1,19 @@
 var PermApp = angular.module('permApp', ['ngSanitize', 'angularFileUpload']);
 
-PermApp.directive('focusMe', function ($timeout) {
+// from https://stackoverflow.com/questions/14833326
+PermApp.directive('focusMe', function ($timeout, $parse) {
     return {
         link: function (scope, element, attrs) {
-            scope.$watch(attrs.focusMe, function (value) {
+            var model = $parse(attrs.focusMe);
+            scope.$watch(model, function (value) {
                 if (value === true) {
-                    // $timeout(function() {
-                    element[0].focus();
-                    element[0].select();
-                    scope[attrs.focusMe] = false;
-                    // });
+                    $timeout(function () {
+                        element[0].focus();
+                    });
                 }
+            });
+            element.bind('blur', function () {
+                scope.$apply(model.assign(scope, false));
             });
         }
     };
@@ -55,6 +58,12 @@ PermApp.controller("PermCtrl", [
             });
 
             return [];
+        };
+
+        sc.showAddRightFn = function (type) {
+            sc.accessType = type;
+            sc.showAddRight = true;
+            sc.focusEditor = true;
         };
 
         sc.changeOwner = function() {
