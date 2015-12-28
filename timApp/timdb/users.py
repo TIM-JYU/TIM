@@ -313,15 +313,15 @@ class Users(TimDbBase):
         return result[0] if len(result) > 0 else None
 
     @contract
-    def groupExists(self, group_id: 'int') -> 'bool':
-        """Checks if the group with the specified id. exists
+    def group_exists(self, group_name: 'str') -> 'bool':
+        """Checks if the group with the specified name exists
 
-        :param group_id: The id of the group.
+        :param group_name: The name of the group.
         :returns: Boolean.
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE id = ?', [group_id])
+        cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [group_name])
         return cursor.fetchone() is not None
 
     @contract
