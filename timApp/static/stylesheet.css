@@ -209,7 +209,7 @@ td p {
     background: yellow;
 }
 
-.pluginError {
+.pluginError, .error {
     border: 1px solid red;
     background-color: pink;
 }
