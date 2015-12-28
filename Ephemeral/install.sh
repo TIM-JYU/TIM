@@ -1,8 +1,13 @@
 #!/bin/sh
 # A script to install everything and build Ephemeral. Run this in Ephemeral directory.
 
+opts=""
+if [ $# -gt 0 -a $1 = "--no-cache" ] ; then
+    opts="$1"
+fi
+
 # Build Ephemeral
-docker build --tag="ephemeral" .
+docker build --tag="ephemeral" $opts .
 
 # Create folder for logs
 mkdir -p dist/build/Ephemeral/log
