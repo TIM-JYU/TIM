@@ -316,7 +316,7 @@ ul ul ul, ol ol ol {
     right: -0.5em;
 }
 
-.par:hover .headerlink {
+*:hover > .headerlink {
     visibility: inherit;
 }
 
