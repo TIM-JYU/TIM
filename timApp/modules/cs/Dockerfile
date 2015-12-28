@@ -94,8 +94,19 @@ RUN apt-get install -y postgresql-client
     
 run apt-get update
 RUN apt-get install -y r-base    
-    
+
+#
+# Scala 
+#
+run apt-get remove scala-library scala
+run wget http://downloads.typesafe.com/scala/2.11.7/scala-2.11.7.deb
+run dpkg -i scala-2.11.7.deb
+run apt-get update
+run apt-get install scala    
 # Install Docker from Docker Inc. repositories.
+
+
+
 #RUN curl -sSL https://get.docker.com/ubuntu/ | sh
 
 # Install the magic wrapper.
@@ -108,13 +119,14 @@ RUN apt-get install -y r-base
 #CMD ["sudo","wrapdocker"]
 # RUN sudo /usr/local/bin/wrapdocker
 
-run apt-get install doxygen
+run apt-get install -y doxygen
 
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 # run useradd -M agent 
 run useradd -m agent
 ENV HOME /home/agent
+run mkdir -p /service
 run chown -R agent /service
 
 # run groupadd docker

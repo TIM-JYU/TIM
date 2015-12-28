@@ -169,7 +169,8 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     dargs = ["docker", "run", "--name", tmpname, "--rm=true", "-v", "/opt/cs:/cs/:ro", "-v",
              "/tmp/uhome/" + udir + ":/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
-             "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh"]
+             # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
+             "-w", "/home/agent", "cs3s", "/cs/rcmd.sh", urndname + ".sh"]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -208,7 +209,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         remove(cwd + "/" + stderrf)
         remove(cwd + '/pwd.txt')
         os.system("docker rm -f " + tmpname)
-        return -9, '', ''
+        return -9, '', '', pwd
     except IOError as e:
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
@@ -465,11 +466,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(self.headers)
 
     def do_GET(self):
-        # print("do_GET ==================================================")
+        print("do_GET ==================================================")
         self.do_all(get_params(self))
 
     def do_POST(self):
-        # print("do_POST =================================================")
+        print("do_POST =================================================")
 
         if self.path.find('/multihtml') < 0:
             self.do_all(post_params(self))
@@ -501,6 +502,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if userinput: query.query["userinput"] = [userinput]
             userargs = get_json_param(query.jso, "state", "userargs", None)
             if userargs: query.query["userargs"] = [userargs]
+            selected_language = get_json_param(query.jso, "state", "selectedLanguage", None)
+            if selected_language: query.query["selectedLanguage"] = [selected_language]
             ttype = get_param(query, "type", "cs").lower()
             if is_tauno: ttype = 'tauno'
             if is_simcir: ttype = 'simcir'
@@ -518,8 +521,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(ts)
 
     def do_PUT(self):
-        # print("do_PUT =================================================")
+        print("do_PUT =================================================")
+        t1put = time.time()
         self.do_all(post_params(self))
+        t2 = time.time()
+        ts = "do_PUT: %7.4f" % (t2 - t1put)
+        print(ts)
 
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
@@ -674,6 +681,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if usercode: query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
             if userinput: query.query["userinput"] = [userinput]
+            selected_language = get_json_param(query.jso, "input", "selectedLanguage", None)
+            if selected_language: save["selectedLanguage"] = selected_language
             userargs = get_json_param(query.jso, "input", "userargs", None)
             is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
 
@@ -754,6 +763,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if ttype == "c++":
                 csfname = "/tmp/%s/%s.cpp" % (basename, filename)
                 fileext = "cpp"
+
+            if ttype == "scala":
+                csfname = "/tmp/%s/%s.scala" % (basename, filename)
+                fileext = "scala"
 
             if ttype == "fs":
                 csfname = "/tmp/%s/%s.fs" % (basename, filename)
@@ -894,9 +907,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if userinput:
                 save["userinput"] = userinput
                 if userinput[-1:] != "\n": userinput += "\n"
-            nosave = get_json_param(query.jso, "input", "nosave", None)
+            nosave = get_param(query, "nosave", None)     
+            nosave = get_json_param(query.jso, "input", "nosave", nosave)
 
             if not nosave: result["save"] = save
+
+            if ttype == "scala":
+                csfname = "/tmp/%s/%s.scala" % (basename, filename)
+                classname = filename
+                fileext = "scala"
 
             if "java" in ttype or "jcomtest" in ttype or "junit" in ttype or "graphics" in ttype:
                 # java
@@ -1003,6 +1022,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = "javac %s" % javaname
                 elif ttype == "java" or ttype == "graphics":
                     cmdline = "javac -Xlint:all -cp %s %s" % (classpath, javaname)
+                elif ttype == "scala":
+                    cmdline = "scalac %s" % (csfname)
                 elif ttype == "cc":
                     cmdline = "gcc -Wall %s -o %s" % (csfname, exename)
                 elif ttype == "c++":
@@ -1110,6 +1131,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if is_doc:
                 pass  # jos doc ei ajeta
+            elif get_param(query, "justCompile", False):
+                pass  # jos pelkkä käännös, ei ajeta
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                            uargs=userargs, ulimit="ulimit -f 80000")
@@ -1317,6 +1340,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("java: ", javaclassname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
                     code, out, err, pwd = run2(["java", "-cp", classpath, javaclassname], cwd=prgpath, timeout=10,
+                                               env=env, stdin=stdin, ulimit="ulimit -f 10000",
+                                               uargs=userargs)
+                elif ttype == "scala":
+                    print("scala: ", classname)
+                    # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
+                    code, out, err, pwd = run2(["scala", classname], cwd=prgpath, timeout=10,
                                                env=env, stdin=stdin, ulimit="ulimit -f 10000",
                                                uargs=userargs)
                 elif ttype == "shell":

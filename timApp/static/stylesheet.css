@@ -209,7 +209,7 @@ td p {
     background: yellow;
 }
 
-.pluginError {
+.pluginError, .error {
     border: 1px solid red;
     background-color: pink;
 }
@@ -305,14 +305,19 @@ ul ul ul, ol ol ol {
 }
 
 .headerlink {
-    position: absolute;
-    right: 0;
-    top: 0;
-    display: none;
+    float: right;
+    visibility: hidden;
+    font-size: small;
 }
 
-.par:hover .headerlink {
-    display: inherit;
+.par > .headerlink {
+    font-size: large;
+    position: relative;
+    right: -0.5em;
+}
+
+*:hover > .headerlink {
+    visibility: inherit;
 }
 
 .parContent {
@@ -1415,7 +1420,7 @@ img.console {
     }
 
     .headerlink {
-        display: none;
+        visibility: hidden;
     }
 
     #header {
@@ -1827,4 +1832,12 @@ p.plgfooter {
 
 p.docsettings {
     margin-top: -3.4em;
+}
+
+
+.rights-list {
+    font-size: smaller;
+    margin-left: 2em;
+    margin-right: -5em;
+    text-align: left;
 }

@@ -14,9 +14,14 @@ def manage(path):
     isFolder = False
     doc_id, doc_name = timdb.documents.resolve_doc_id_name(path)
     if doc_id is None:
-        folder_id = timdb.folders.get_folder_id(path.rstrip('/'))
-        if folder_id is None:
-            abort(404)
+        try:
+            folder_id = int(path)
+            if not timdb.folders.exists(folder_id):
+                abort(404)
+        except ValueError:
+            folder_id = timdb.folders.get_folder_id(path.rstrip('/'))
+            if folder_id is None:
+                abort(404)
         isFolder = True
         block_id = folder_id
     else:

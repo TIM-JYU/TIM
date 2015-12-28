@@ -1,16 +1,19 @@
 var PermApp = angular.module('permApp', ['ngSanitize', 'angularFileUpload']);
 
-PermApp.directive('focusMe', function ($timeout) {
+// from https://stackoverflow.com/questions/14833326
+PermApp.directive('focusMe', function ($timeout, $parse) {
     return {
         link: function (scope, element, attrs) {
-            scope.$watch(attrs.focusMe, function (value) {
+            var model = $parse(attrs.focusMe);
+            scope.$watch(model, function (value) {
                 if (value === true) {
-                    // $timeout(function() {
-                    element[0].focus();
-                    element[0].select();
-                    scope[attrs.focusMe] = false;
-                    // });
+                    $timeout(function () {
+                        element[0].focus();
+                    });
                 }
+            });
+            element.bind('blur', function () {
+                scope.$apply(model.assign(scope, false));
             });
         }
     };
@@ -22,11 +25,12 @@ PermApp.controller("PermCtrl", [
     '$upload',
     '$window',
     function (sc, $http, $upload, $window) {
+        sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
         $http.defaults.headers.common.Version = function() {
             if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
                 return sc.doc.versions[0];
             }
-            return "";
+            return ""; 
         };
 
         sc.getJustDocName = function(fullName) {
@@ -54,6 +58,12 @@ PermApp.controller("PermCtrl", [
             });
 
             return [];
+        };
+
+        sc.showAddRightFn = function (type) {
+            sc.accessType = type;
+            sc.showAddRight = true;
+            sc.focusEditor = true;
         };
 
         sc.changeOwner = function() {
@@ -229,6 +239,69 @@ PermApp.controller("PermCtrl", [
             sc.onFileSelect('/update/' + doc.id + '/' + doc.versions[0], $files);
         };
 
+        sc.convertDocument = function (doc) {
+            var text = sc.tracWikiText;
+            wikiSource = sc.wikiRoot.replace("wiki","browser");
+            //var text = sc.fulltext;
+            text = text.replace(/\[\[PageOutline\]\].*\n/g,"");  // remove contents
+            text = text.replace(/ !([a-zA-Z])/g," $1");                   // remove cat !IsBig
+            text = text.replace(/\r\n/g,"\n");                   // change windows nl's
+            text = text.replace(/{{{(.*?)}}}/g, "`$1`");         // change verbatim 
+            // text = text.replace(/{{{\n(.*?)\n}}}/, "```\n$1\n```"); // change code blocks
+            text = text.replace(/\n{{{#!comment\n((.|\s|\S)*?)\n}}}\n/g, "\n#- {.comment}\n$1\n#-\n"); // comments
+            text = text.replace(/\n{{{\n/g, "\n#-\n```\n"); // change code blocks
+            text = text.replace(/\n}}}\n/g, "\n```\n"); // change code blocks
+            text = text.replace(/\n====\s+(.*?)\s+====.*\n/g, '\n#-\n#### $1\n'); // headings
+            text = text.replace(/\n===\s+(.*?)\s+===.*\n/g, '\n#-\n### $1\n');
+            text = text.replace(/\n==\s+(.*?)\s+==.*\n/g, '\n#-\n## $1\n');
+            text = text.replace(/\n=\s+(.*?)\s+=.*\n/g, '\n#-\n# $1\n');
+            // text = text.replace(/^ \d+. ', r'1.'); 
+            lines = text.split("\n");
+            for (var i=0; i<lines.length; i++) {
+                var line = lines[i];
+                if ( true || line.lastIndexOf('    ',0) !== 0 ) {
+                    line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$3]($1)'); // ordinary links
+                    line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+(\[.*?\])\]/g, '[$3]($1)');   // links like [url [text]]
+                    line = line.replace(/\[wiki:([^\s\[\]]+)\]/g, '[$1]('+(sc.wikiRoot || "")+'$1)'); // [wiki:local] -> [local](URL)
+                    line = line.replace(/\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]('+(sc.wikiRoot || "")+'$1)'); // [wiki:local text] -> [text](URL)
+                    line = line.replace(/\[source:([^\s\[\]]+)\s+([^\[\]]+)\]/g, '[$2]('+(wikiSource || "")+'$1)');
+                    line = line.replace(/\!(([A-Z][a-z0-9]+){2,})/, '$1');
+                    line = line.replace(/\'\'\'(.*?)\'\'\'/, '**$1**');  // bold
+                    line = line.replace(/\'\'(.*?)\'\'/, '*$1*');   // italics
+                }
+                lines[i] = line;
+            }
+            text = lines.join("\n");
+
+/*            
+
+text = re.sub(r'(?m)^====\s+(.*?)\s+====.*$', r'#-\n#### \1', text)
+text = re.sub(r'(?m)^===\s+(.*?)\s+===.*$', r'#-\n### \1', text)
+text = re.sub(r'(?m)^==\s+(.*?)\s+==.*$', r'#-\n## \1', text)
+text = re.sub(r'(?m)^=\s+(.*?)\s+=.*$', r'#-\n# \1', text)
+#text = re.sub(r'^       * ', r'****', text)
+#text = re.sub(r'^     * ', r'***', text)
+#text = re.sub(r'^   * ', r'**', text)
+#text = re.sub(r'^ * ', r'*', text)
+text = re.sub(r'^ \d+. ', r'1.', text)
+
+a = []
+for line in text.split('\n'):
+    if True or not line.startswith('    '):
+        line = re.sub(r'\[(https?://[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](\1)', line)
+        line = re.sub(r'\[(wiki:[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](/\1/)', line)
+        line = re.sub(r'\!(([A-Z][a-z0-9]+){2,})', r'\1', line)
+        line = re.sub(r'\'\'\'(.*?)\'\'\'', r'*\1*', line)
+        line = re.sub(r'\'\'(.*?)\'\'', r'_\1_', line)
+        line = re.sub(r'\(/wiki:', r'(https://trac.cc.jyu.fi/projects/ohj2/wiki/', line)
+    a.append(line)
+text = '\n'.join(a)
+*/
+            //sc.tracWikiText = text;
+            sc.fulltext = text;
+        }
+
+        
         sc.saveDocument = function (doc) {
             sc.saving = true;
             $http.post('/update/' + doc.id + '/' + doc.versions[0],
