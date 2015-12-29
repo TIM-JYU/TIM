@@ -261,7 +261,7 @@ class DocParagraph(DocParagraphBase):
         unloaded_pars = []
         macros = settings.get_macros() if settings else None
         macro_delim = settings.get_macro_delimiter() if settings else None
-        m = str(macros) + macro_delim + str(settings.auto_number_headings()) + settings.heading_format()
+        m = str(macros) + macro_delim + str(settings.auto_number_headings()) + str(settings.heading_format())
 
         dyn = 0
         l = 0

@@ -100,7 +100,22 @@ class DocSettings:
         return self.__dict.get(self.auto_number_headings_key, False)
 
     @contract
-    def heading_format(self) -> 'str':
-        return self.__dict.get(self.heading_format_key, '{h1}.{h2}.{h3}.{h4}.{h5}.{h6}')
+    def heading_format(self) -> 'dict':
+        defaults = {1: '{h1}. {text}',
+                    2: '{h1}.{h2} {text}',
+                    3: '{h1}.{h2}.{h3} {text}',
+                    4: '{h1}.{h2}.{h3}.{h4} {text}',
+                    5: '{h1}.{h2}.{h3}.{h4}.{h5} {text}',
+                    6: '{h1}.{h2}.{h3}.{h4}.{h5}.{h6} {text}'}
+        hformat = self.__dict.get(self.heading_format_key)
+        if hformat is None:
+            return defaults
+        return {1: hformat.get(1, defaults[1]),
+                2: hformat.get(2, defaults[2]),
+                3: hformat.get(3, defaults[3]),
+                4: hformat.get(4, defaults[4]),
+                5: hformat.get(5, defaults[5]),
+                6: hformat.get(6, defaults[6])}
+
 
 new_contract('DocSettings', DocSettings)

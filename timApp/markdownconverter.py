@@ -126,20 +126,15 @@ def insert_heading_numbers(auto_macros, pre_html, auto_number_headings=True, hea
             for i in range(6, 0, -1):
                 if deltas[i] != 0:
                     break
-            hvals = {'h1': '', 'h2': '', 'h3': '', 'h4': '', 'h5': '', 'h6': ''}
+            values = {'text': e.text}
             for i in range(1, i + 1):
-                hvals['h' + str(i)] = deltas[i]
+                values['h' + str(i)] = deltas[i]
             try:
-                heading_num = heading_format.format(**hvals)
-                # The heading number is usually of the form '1.2.3....' so we want to strip those extra dots
-                last_format_char = heading_format[-1]
-                heading_num = heading_num.rstrip(heading_num[-1])
-                if last_format_char != '}':
-                    heading_num += last_format_char
+                formatted = heading_format[level].format(**values)
             except (KeyError, ValueError, IndexError) as ex:
-                heading_num = '[ERROR]'
+                formatted = '[ERROR] ' + e.text
 
-            e.text = heading_num + ' ' + e.text
+            e.text = formatted
     final_html = ''.join(map(lambda x: html.tostring(x).decode('utf-8'), tree.iterchildren()))
     return final_html
 

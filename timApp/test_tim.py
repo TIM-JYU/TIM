@@ -274,7 +274,8 @@ Lorem ipsum.
         doc = self.create_doc(initial_par="""
 ``` {settings=""}
 auto_number_headings: true
-heading_format: "{h1}.{h2}.{h3}.{h4}.{h5}.{h6}."
+heading_format:
+  2: "{h1}.{h2}. {text}"
 ```
 #-
 # Heading level 1
@@ -301,7 +302,7 @@ Lorem ipsum.
                           ({'id': 'unnumbered', 'level': 1, 'text': 'Unnumbered'},
                            [{'id': 'heading-level-2', 'level': 2, 'text': '1.1. Heading level 2'},
                             {'id': 'second-heading-level-2', 'level': 2, 'text': '1.2. Second heading level 2'},
-                            {'id': 'heading-level-3', 'level': 3, 'text': '1.2.1. Heading level 3'}]),
+                            {'id': 'heading-level-3', 'level': 3, 'text': '1.2.1 Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
                            [])], doc.get_index())
 
@@ -322,14 +323,19 @@ auto_number_headings: false
         self.post_par(TimTest.app, doc.doc_id, """
 ``` {settings=""}
 auto_number_headings: true
-heading_format: "{"
+heading_format:
+  2: "{"
+  3: "{"
+  4: "{"
+  5: "{"
+  6: "{"
 ```""", pars[0].get_id())
-        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '[ERROR] Heading level 1'}, []),
+        self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '1. Heading level 1'}, []),
                           ({'id': 'unnumbered', 'level': 1, 'text': 'Unnumbered'},
                            [{'id': 'heading-level-2', 'level': 2, 'text': '[ERROR] Heading level 2'},
                             {'id': 'second-heading-level-2', 'level': 2, 'text': '[ERROR] Second heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': '[ERROR] Heading level 3'}]),
-                          ({'id': 'second-heading-level-1', 'level': 1, 'text': '[ERROR] Second heading level 1'},
+                          ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
                            [])], doc.get_index())
 
     def test_index_many_headings_per_par(self):
@@ -381,21 +387,20 @@ Lorem ipsum.
         self.new_par(doc, """
 ``` {settings=}
 auto_number_headings: true
-heading_format: "{h1}.{h2}.{h3}.{h4}.{h5}.{h6}."
 ```
         """, ins_pos)
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '1. Heading level 1'},
-                           [{'id': 'heading-level-3', 'level': 3, 'text': '1.0.1. Heading level 3'},
+                           [{'id': 'heading-level-3', 'level': 3, 'text': '1.0.1 Heading level 3'},
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
-                            {'id': 'second-heading-level-3', 'level': 3, 'text': '1.0.2. Second heading level 3'}]),
+                            {'id': 'second-heading-level-3', 'level': 3, 'text': '1.0.2 Second heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
                            [])], doc.get_index())
         self.new_par(doc, """# New heading""", ins_pos)
         self.assertEqual([({'id': 'new-heading', 'level': 1, 'text': '1. New heading'}, []),
                           ({'id': 'heading-level-1', 'level': 1, 'text': '2. Heading level 1'},
-                           [{'id': 'heading-level-3', 'level': 3, 'text': '2.0.1. Heading level 3'},
+                           [{'id': 'heading-level-3', 'level': 3, 'text': '2.0.1 Heading level 3'},
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
-                            {'id': 'second-heading-level-3', 'level': 3, 'text': '2.0.2. Second heading level 3'}]),
+                            {'id': 'second-heading-level-3', 'level': 3, 'text': '2.0.2 Second heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '3. Second heading level 1'},
                            [])], doc.get_index())
 
