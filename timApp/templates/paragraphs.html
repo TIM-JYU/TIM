@@ -1,4 +1,4 @@
-{% set arealine = '<div class="arealine areacollapse" title="Click to collapse / expand"></div>' %}
+{% set arealine = '<div class="arealine areaexpand" title="Click to expand / collapse"></div>' %}
 {% set editline = '' %}
 {% if rights.editable or rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
@@ -30,6 +30,7 @@
      {% endif %}
      {% if area %}
          data-area="{{ area|safe }}"
+         style="display: none;"
      {% endif %}
      {% if t.ref_id %}
          ref-id="{{ t.ref_id }}"
