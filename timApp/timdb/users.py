@@ -313,15 +313,15 @@ class Users(TimDbBase):
         return result[0] if len(result) > 0 else None
 
     @contract
-    def groupExists(self, group_id: 'int') -> 'bool':
-        """Checks if the group with the specified id. exists
+    def group_exists(self, group_name: 'str') -> 'bool':
+        """Checks if the group with the specified name exists
 
-        :param group_id: The id of the group.
+        :param group_name: The name of the group.
         :returns: Boolean.
         """
 
         cursor = self.db.cursor()
-        cursor.execute('SELECT id FROM UserGroup WHERE id = ?', [group_id])
+        cursor.execute('SELECT id FROM UserGroup WHERE name = ?', [group_name])
         return cursor.fetchone() is not None
 
     @contract
@@ -691,3 +691,15 @@ class Users(TimDbBase):
 
     def get_access_types(self):
         return self.resultAsDictionary(self.db.execute("""SELECT id, name FROM AccessType"""))
+
+    @contract
+    def remove_membership(self, uid: 'int', gid: 'int') -> 'int':
+        """Removes membership of a user from a group.
+        :param uid: The user id.
+        :param gid: The group id.
+        :returns: The number of affected rows (0 or 1).
+        """
+        c = self.db.cursor()
+        c.execute("""DELETE FROM UserGroupMember WHERE User_id = ? and UserGroup_id = ?""", [uid, gid])
+        self.db.commit()
+        return c.rowcount

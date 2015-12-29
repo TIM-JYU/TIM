@@ -39,6 +39,12 @@ def getTimDb():
     return g.timdb
 
 
+def verify_admin():
+    timdb = getTimDb()
+    if not timdb.users.has_admin_access(getCurrentUserId()):
+        abort(403, 'This action requires administrative rights.')
+
+
 def verify_edit_access(block_id, message="Sorry, you don't have permission to edit this resource."):
     timdb = getTimDb()
     if not timdb.users.has_edit_access(getCurrentUserId(), block_id):
