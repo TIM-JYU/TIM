@@ -3,6 +3,7 @@ from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
 from timdb.timdbbase import TimDbException
 
+
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
     css_key = 'css'
@@ -10,6 +11,7 @@ class DocSettings:
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = "source_document"
     auto_number_headings_key = 'auto_number_headings'
+    heading_format_key = 'heading_format'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -96,5 +98,9 @@ class DocSettings:
     @contract
     def auto_number_headings(self) -> 'bool':
         return self.__dict.get(self.auto_number_headings_key, False)
+
+    @contract
+    def heading_format(self) -> 'str':
+        return self.__dict.get(self.heading_format_key, '{h1}.{h2}.{h3}.{h4}.{h5}.{h6}')
 
 new_contract('DocSettings', DocSettings)

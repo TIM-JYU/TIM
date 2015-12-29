@@ -97,7 +97,10 @@ def md_list_to_html_list(pars,
             if 'nonumber' in attrs.get('classes', {}):
                 final_html = pre_html
             else:
-                final_html = insert_heading_numbers(m, pre_html, settings.auto_number_headings())
+                final_html = insert_heading_numbers(m,
+                                                    pre_html,
+                                                    settings.auto_number_headings(),
+                                                    settings.heading_format())
             processed.append(final_html)
         raw = processed
 
@@ -107,7 +110,7 @@ def md_list_to_html_list(pars,
         return raw
 
 
-def insert_heading_numbers(auto_macros, pre_html, auto_number_headings=True):
+def insert_heading_numbers(auto_macros, pre_html, auto_number_headings=True, heading_format=''):
     tree = html.fragment_fromstring(pre_html, create_parent=True)
     deltas = auto_macros['h']
     used = auto_macros['usedh']
@@ -120,13 +123,23 @@ def insert_heading_numbers(auto_macros, pre_html, auto_number_headings=True):
             deltas[level] += 1
             for i in range(level + 1, 7):
                 deltas[i] = 0
-            full_heading = ''
             for i in range(6, 0, -1):
                 if deltas[i] != 0:
                     break
+            hvals = {'h1': '', 'h2': '', 'h3': '', 'h4': '', 'h5': '', 'h6': ''}
             for i in range(1, i + 1):
-                full_heading += str(deltas[i]) + '.'
-            e.text = full_heading + ' ' + e.text
+                hvals['h' + str(i)] = deltas[i]
+            try:
+                heading_num = heading_format.format(**hvals)
+                # The heading number is usually of the form '1.2.3....' so we want to strip those extra dots
+                last_format_char = heading_format[-1]
+                heading_num = heading_num.rstrip(heading_num[-1])
+                if last_format_char != '}':
+                    heading_num += last_format_char
+            except (KeyError, ValueError, IndexError) as ex:
+                heading_num = '[ERROR]'
+
+            e.text = heading_num + ' ' + e.text
     final_html = ''.join(map(lambda x: html.tostring(x).decode('utf-8'), tree.iterchildren()))
     return final_html
 
