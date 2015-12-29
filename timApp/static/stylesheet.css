@@ -197,6 +197,11 @@ td p {
     background: #3CC; /* rgb(236,103,27); */
 }
 
+.arealine:hover {
+    opacity: 0.5;
+    background: #F60; /* rgb(236,103,27); */
+}
+
 .readline.read {
     display: none;
 }
@@ -332,7 +337,7 @@ ul ul ul, ol ol ol {
     background: inherit;
 }
 
-#previewDiv .editline, #previewDiv .readline, .csrunPreview  .editline, .csrunPreview  .readline { 
+#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview  .editline, .csrunPreview  .readline {
     display: none;
 }
 
@@ -386,11 +391,54 @@ ul ul ul, ol ol ol {
     border-color: #F60; /* rgb(236,103,27); */
 }
 
-.editline {
+/*.editline {
     position: absolute;
     left: -1.2em;
     z-index: 3;
     width: 3em;
+    height: 100%;
+    top: 0;
+}*/
+
+.editline {
+    position: absolute;
+    left: -1.2em;
+    z-index: 3;
+    width: 1.5em;
+    height: 100%;
+    top: 0;
+}
+
+.areacollapse::before {
+    color: #D8D8D8;
+    content: "[-]";
+}
+
+.areaexpand::before {
+    color: #D8D8D8;
+    content: "[+]";
+}
+
+.areapartline::before {
+    color: #D8D8D8;
+    content: "|";
+}
+
+.arealine {
+    position: absolute;
+    left: 0.5em;
+    z-index: 2;
+    width: 1em;
+    height: 100%;
+    top: 0;
+    cursor: pointer;
+}
+
+.areapartline {
+    position: absolute;
+    left: 0.75em;
+    z-index: 2;
+    width: 0.2em;
     height: 100%;
     top: 0;
 }

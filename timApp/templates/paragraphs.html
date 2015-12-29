@@ -1,3 +1,4 @@
+{% set arealine = '<div class="arealine areacollapse" title="Click to collapse / expand"></div>' %}
 {% set editline = '' %}
 {% if rights.editable or rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
@@ -24,6 +25,12 @@
          id="{{ t.id }}"
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
+     {% if t.attrs.area %}
+         data-area-start="{{ t.attrs.area|safe }}"
+     {% endif %}
+     {% if area %}
+         data-area="{{ area|safe }}"
+     {% endif %}
      {% if t.ref_id %}
          ref-id="{{ t.ref_id }}"
          ref-t="{{ t.ref_t }}"
@@ -42,6 +49,18 @@
     <div class="parContent"{% if t.attrs.taskId %} id="{{ t.attrs.taskId }}"{% endif %}>
         {{ t.html|safe }}
     </div>
+
+    {% if t.attrs.area_end == area %}
+        {% set area = none %}
+    {% endif %}
+
+    {% if area %}
+        <div class="areapartline"></div>
+    {% elif t.attrs.area %}
+        {{ arealine|safe }}
+        {% set area = t.attrs.area %}
+    {% endif %}
+
     {{ editline|safe }}
     <div class="{{ ['readline', t.status]|join(' ')|trim }}"
          title="Click to mark this paragraph as read"></div>
