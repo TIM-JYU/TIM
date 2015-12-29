@@ -197,11 +197,6 @@ td p {
     background: #3CC; /* rgb(236,103,27); */
 }
 
-.arealine:hover {
-    opacity: 0.5;
-    background: #F60; /* rgb(236,103,27); */
-}
-
 .readline.read {
     display: none;
 }
@@ -404,7 +399,7 @@ ul ul ul, ol ol ol {
     position: absolute;
     left: -1.2em;
     z-index: 3;
-    width: 1.5em;
+    width: 3em;
     height: 100%;
     top: 0;
 }
@@ -426,9 +421,9 @@ ul ul ul, ol ol ol {
 
 .arealine {
     position: absolute;
-    left: 0.5em;
+    left: -2.5em;
     z-index: 2;
-    width: 1em;
+    width: 1.5em;
     height: 100%;
     top: 0;
     cursor: pointer;
@@ -436,7 +431,7 @@ ul ul ul, ol ol ol {
 
 .areapartline {
     position: absolute;
-    left: 0.75em;
+    left: -2.25em;
     z-index: 2;
     width: 0.2em;
     height: 100%;
