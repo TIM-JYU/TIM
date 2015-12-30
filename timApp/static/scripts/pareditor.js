@@ -385,6 +385,14 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     "| Appelsiini    |  2.10 €       | - auttaa keripukkiin |\n" +
                     "|               |               | - makea              |\n" +
                     "+---------------+---------------+----------------------+\n";
+                   
+                $scope.tables['pipe'] = ": Taulukko, jossa tolpat määräävat sarkkeiden paikat.\n\n" +
+                    "|Oikea  | Vasen | Oletus | Keskitetty |\n" +
+                    "|------:|:-----|---------|:------:|\n" + 
+                    "|   12  |  12  |    12   |    12  |\n" +
+                    "|  123  |  123 |   123   |   123  |\n" +
+                    "|    1  |    1 |     1   |     1  |\n";
+                    
 
                 $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function (event) {
                     var editor = $($element).find("#pareditor").get(0);
