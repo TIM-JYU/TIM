@@ -1,3 +1,4 @@
+{% set arealine = '<div class="arealine areaexpand" title="Click to expand / collapse"></div>' %}
 {% set editline = '' %}
 {% if rights.editable or rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
@@ -24,24 +25,43 @@
          id="{{ t.id }}"
          t="{{ t.t }}"
          attrs="{{ t.attrs_str }}"
+     {% if t.attrs.area %}
+         data-area-start="{{ t.attrs.area|safe }}"
+     {% endif %}
+     {% if area %}
+         data-area="{{ area|safe }}"
+         style="display: none;"
+     {% endif %}
      {% if t.ref_id %}
          ref-id="{{ t.ref_id }}"
          ref-t="{{ t.ref_t }}"
          ref-attrs="{{ t.ref_attrs_str }}"
          ref-doc-id="{{ t.ref_doc_id }}"
      {% endif %}
-            {% if t.is_plugin %}>
-                {% if t.needs_browser %}
+    {% if not t.is_plugin %}ng-non-bindable{% endif %}>
+    {% if t.attrs.taskId %}
+        <a href="#{{ t.attrs.taskId }}" title="Permlink" class="headerlink">#</a>
+    {% endif %}
+            {% if t.is_plugin and t.needs_browser %}
                     <answerbrowserlazy
                             task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ (t.ref_attrs or t.attrs)['taskId'] }}">
                     </answerbrowserlazy>
-                {% endif %}
-            {% else %}
-                ng-non-bindable>
             {% endif %}
-    <div class="parContent">
+    <div class="parContent"{% if t.attrs.taskId %} id="{{ t.attrs.taskId }}"{% endif %}>
         {{ t.html|safe }}
     </div>
+
+    {% if t.attrs.area_end == area %}
+        {% set area = none %}
+    {% endif %}
+
+    {% if area %}
+        <div class="areapartline"></div>
+    {% elif t.attrs.area %}
+        {{ arealine|safe }}
+        {% set area = t.attrs.area %}
+    {% endif %}
+
     {{ editline|safe }}
     <div class="{{ ['readline', t.status]|join(' ')|trim }}"
          title="Click to mark this paragraph as read"></div>

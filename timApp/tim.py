@@ -18,6 +18,7 @@ from werkzeug.utils import secure_filename
 from flask.helpers import send_file
 from bs4 import UnicodeDammit
 
+from routes.groups import groups
 from tim_app import app
 
 # IMPORTANT: We want to disable contracts (if requested) as early as possible
@@ -62,6 +63,7 @@ app.register_blueprint(slide_page)
 app.register_blueprint(login_page)
 app.register_blueprint(logger_bp)
 app.register_blueprint(answers)
+app.register_blueprint(groups)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',

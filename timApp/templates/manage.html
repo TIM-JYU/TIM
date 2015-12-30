@@ -84,7 +84,7 @@ if (isFolder) {
     </div>
         
     <div class="margin rights-list" ng-repeat="type in accessTypes">
-        <a ng-click="showAddRight = true; focusEditor = true ">{{ '{{ type.name }}' }} right</a>:
+        <a ng-click="showAddRightFn(type)">{{ '{{ type.name }}' }} right</a>:
         <span ng-show="filtered.length == 0">none</span> 
  
         <ul>

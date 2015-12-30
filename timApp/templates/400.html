@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 {% block title %}400 Bad Request{% endblock %}
 {% block content %}
-    <p class="errormsg">{{ message }}</p>
+    <p class="errormsg">{{ message or 'Bad request.' }}</p>
 {% endblock %}

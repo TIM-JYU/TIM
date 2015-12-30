@@ -650,6 +650,27 @@ timApp.controller("ViewCtrl", [
             return sc.showOptionsWindow(e, $par, coords);
         });
 
+        sc.setAreaAttr = function(area, attr, value) {
+            var area_selector = "[data-area=" + area + "]";
+            $(area_selector).css(attr, value);
+        };
+
+        sc.onClick(".areacollapse", function ($this, e) {
+            $this.removeClass("areacollapse");
+            var area_name = $this.parent().attr('data-area-start');
+            console.log("Collapse " + area_name);
+            sc.setAreaAttr(area_name, "display", "none");
+            $this.addClass("areaexpand");
+        });
+
+        sc.onClick(".areaexpand", function ($this, e) {
+            $this.removeClass("areaexpand");
+            var area_name = $this.parent().attr('data-area-start');
+            console.log("Expand " + area_name);
+            sc.setAreaAttr(area_name, "display", "");
+            $this.addClass("areacollapse");
+        });
+
         sc.showNoteWindow = function (e, $par) {
             sc.toggleNoteEditor($par, {isNew: true});
         };

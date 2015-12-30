@@ -20,12 +20,6 @@ else:
 
 # Compress(app)
 
-timname = None
-if "TIM_NAME" in os.environ:
-    timname = os.environ.get("TIM_NAME")
-else:
-    print("Missing TIM_NAME environment variable. Exiting..")
-    exit()
-
-app.config.from_envvar('TIM_NAME', silent=True)
+timname = os.environ.get('TIM_NAME', 'tim')
+app.config['TIM_NAME'] = timname
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname

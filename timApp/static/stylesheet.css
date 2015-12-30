@@ -209,7 +209,7 @@ td p {
     background: yellow;
 }
 
-.pluginError {
+.pluginError, .error {
     border: 1px solid red;
     background-color: pink;
 }
@@ -305,14 +305,19 @@ ul ul ul, ol ol ol {
 }
 
 .headerlink {
-    position: absolute;
-    right: 0;
-    top: 0;
-    display: none;
+    float: right;
+    visibility: hidden;
+    font-size: small;
 }
 
-.par:hover .headerlink {
-    display: inherit;
+.par > .headerlink {
+    font-size: large;
+    position: relative;
+    right: -0.5em;
+}
+
+*:hover > .headerlink {
+    visibility: inherit;
 }
 
 .parContent {
@@ -327,7 +332,7 @@ ul ul ul, ol ol ol {
     background: inherit;
 }
 
-#previewDiv .editline, #previewDiv .readline, .csrunPreview  .editline, .csrunPreview  .readline { 
+#previewDiv .editline, #previewDiv .readline, #previewDiv .arealine .csrunPreview  .editline, .csrunPreview  .readline {
     display: none;
 }
 
@@ -381,11 +386,54 @@ ul ul ul, ol ol ol {
     border-color: #F60; /* rgb(236,103,27); */
 }
 
+/*.editline {
+    position: absolute;
+    left: -1.2em;
+    z-index: 3;
+    width: 3em;
+    height: 100%;
+    top: 0;
+}*/
+
 .editline {
     position: absolute;
     left: -1.2em;
     z-index: 3;
     width: 3em;
+    height: 100%;
+    top: 0;
+}
+
+.areacollapse::before {
+    color: #D8D8D8;
+    content: "[-]";
+}
+
+.areaexpand::before {
+    color: #D8D8D8;
+    content: "[+]";
+}
+
+.areapartline::before {
+    color: #D8D8D8;
+    content: "|";
+}
+
+.arealine {
+    position: absolute;
+    left: -2.5em;
+    z-index: 2;
+    width: 1.5em;
+    height: 100%;
+    top: 0;
+    cursor: pointer;
+}
+
+.areapartline {
+    position: absolute;
+    left: -2.25em;
+    z-index: 2;
+    width: 0.2em;
     height: 100%;
     top: 0;
 }
@@ -1415,7 +1463,7 @@ img.console {
     }
 
     .headerlink {
-        display: none;
+        visibility: hidden;
     }
 
     #header {
