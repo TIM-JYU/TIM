@@ -568,6 +568,7 @@ timApp.controller("ViewCtrl", [
             $par.remove();
             sc.editing = false;
             sc.cancelArea();
+            sc.updateChangedPars(data.changed_pars);
         };
 
         sc.getElementByRefId = function (ref) {
@@ -606,6 +607,18 @@ timApp.controller("ViewCtrl", [
             sc.cancelArea();
             sc.removeDefaultPars();
             sc.markPageDirty();
+            sc.updateChangedPars(data.changed_pars);
+        };
+
+        sc.updateChangedPars = function (pars) {
+            for (var key in pars) {
+                if (pars.hasOwnProperty(key)) {
+                    var $par = sc.getElementByParId(key);
+                    var newPar = $($compile(pars[key])(sc));
+                    $par.replaceWith(newPar);
+                    sc.processAllMathDelayed(newPar);
+                }
+            }
         };
 
         sc.isReference = function ($par) {

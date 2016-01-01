@@ -86,11 +86,7 @@ class Document:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.isfile(os.path.join(froot, 'docs', str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
 
-    def load_pars(self):
-        """
-        Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.
-        """
-        self.par_cache = [par for par in self]
+    def __update_par_map(self):
         self.par_map = {}
         for i in range(0, len(self.par_cache)):
             curr_p = self.par_cache[i].get_id()
@@ -98,10 +94,42 @@ class Document:
             next_p = self.par_cache[i+1] if i+1 < len(self.par_cache) else None
             self.par_map[curr_p] = {'p': prev_p, 'n': next_p}
 
-    def get_previous_par(self, par):
+    def load_pars(self):
+        """
+        Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.
+        """
+        self.par_cache = [par for par in self]
+        self.__update_par_map()
+
+    def get_previous_par(self, par, assume_last=False):
         if self.par_map is None:
             self.load_pars()
-        return self.par_map[par.get_id()]['p']
+        prev = self.par_map.get(par.get_id())
+        if prev:
+            return prev['p']
+        if assume_last:
+            return self.par_cache[-1] if self.par_cache else None
+        return None
+
+    def get_pars_till(self, par):
+        pars = []
+        i = self.__iter__()
+        try:
+            while True:
+                p = next(i)
+                pars.append(p)
+                if par.get_id() == p.get_id():
+                    break
+        except StopIteration:
+            pass
+
+        # TODO: improve this
+        # 'i' might be a ListIterator or DocParagraphIter depending on whether the pars were cached
+        try:
+            i.close()
+        except AttributeError:
+            pass
+        return pars
 
     @contract
     def get_settings(self) -> 'DocSettings':
@@ -250,6 +278,8 @@ class Document:
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
         self.version = ver
+        self.par_cache = None
+        self.par_map = None
         return ver
 
     @contract
@@ -278,7 +308,6 @@ class Document:
         :param p: Paragraph to be added.
         :return: The same paragraph object, or None if could not add.
         """
-        p.get_html()
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
@@ -633,6 +662,23 @@ class Document:
     def get_original_document(self):
         src_docid = self.get_settings().get_source_document()
         return Document(src_docid) if src_docid is not None else None
+
+    def get_last_par(self):
+        pars = [par for par in self]
+        return pars[-1] if pars else None
+
+    def insert_temporary_pars(self, pars, context_par):
+        self.load_pars()
+
+        if context_par is None:
+            self.par_cache = pars + self.par_cache
+        else:
+            i = 0
+            for i, par in enumerate(self.par_cache):
+                if par.get_id() == context_par.get_id():
+                    break
+            self.par_cache = self.par_cache[:i+1] + pars + self.par_cache[i+1:]
+        self.__update_par_map()
 
 new_contract('Document', Document)
 
