@@ -46,8 +46,8 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/' + cssFile + '.css') }}">
     {% endfor %}
 
+    {{ (doc_css | safe ) if doc_css }}
     <style type="text/css">
-        {{ doc_css if doc_css }}
         {{ custom_css if custom_css }}
     </style>
     <script>

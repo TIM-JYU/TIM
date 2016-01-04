@@ -3,6 +3,7 @@
 from contracts import contract, new_contract
 
 from documentmodel.document import DocParagraph
+from htmlSanitize import sanitize_html
 
 new_contract('range', 'tuple(int, int)')
 
@@ -185,7 +186,8 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
     current_user = timdb.users.getUser(user)
 
     doc_settings = doc.get_settings()
-    doc_css = doc_settings.css() if doc_settings else None
+    raw_css = doc_settings.css() if doc_settings else None
+    doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>')[5:-6] if raw_css else None
     DocParagraph.preload_htmls(xs, doc_settings)
 
     if doc_settings:
