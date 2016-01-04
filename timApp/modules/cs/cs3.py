@@ -10,6 +10,7 @@ import uuid
 import io
 import shutil
 import shlex
+import signal
 import socketserver
 # from signal import alarm, signal, SIGALRM, SIGKILL
 from subprocess import PIPE, Popen, check_output
@@ -170,7 +171,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + ":/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "cs3s", "/cs/rcmd.sh", urndname + ".sh"]
+             "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh"]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -531,7 +532,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
 
+    # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python        
+    def signal_handler(self, signum, frame):
+        raise Exception("Timed out!")
+
     def do_all(self, query):
+        signal.signal(signal.SIGALRM, self.signal_handler)
+        signal.alarm(20)   # Ten seconds
+        try:
+            self.do_all_t(query)
+        except Exception  as e:
+            print("Timed out!", e)
+        
+        
+    def do_all_t(self, query):
         pwd = ""
         print(threading.currentThread().getName())
         result = {}  # query.jso
@@ -942,6 +956,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     filepath = prgpath + "/" + package.replace(".", "/")
                     mkdirs(filepath)
                     javaclassname = package + "." + classname
+                filename = javaclassname + ".java"    
                 javaname = filepath + "/" + classname + ".java"
                 fileext = "java"
                 csfname = javaname
@@ -1150,7 +1165,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_doc:
                 pass  # jos doc ei ajeta
             elif get_param(query, "justCompile", False):
-                pass  # jos pelkkä käännös, ei ajeta
+                #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
+                code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                            uargs=userargs, ulimit="ulimit -f 80000")
@@ -1529,16 +1545,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 # Jos ajaa Linuxissa ThreadingMixIn, niin chdir vaihtaa kaikkien hakemistoa?
 # Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
 
-# if __debug__:
-if True:
+if __debug__:
+# if True:
     class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         """Handle requests in a separate thread."""
 
     print("Debug mode/ThreadingMixIn")
-# else:
-#    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
-#        """Handle requests in a separate thread."""
-#    print("Normal mode/ForkingMixIn")
+else:
+    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
+        """Handle requests in a separate thread."""
+    print("Normal mode/ForkingMixIn")
 
 
 if __name__ == '__main__':
