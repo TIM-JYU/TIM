@@ -7,6 +7,7 @@ date_format = '%Y-%m-%d %H:%M:%S'
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
+    points_rule_key = 'pointsRule'
 
     def __init__(self, task_id, values, plugin_type):
         self.task_id = task_id
@@ -52,6 +53,18 @@ class Plugin:
 
     def starttime(self, default=None):
         return self.values.get(self.starttime_key, default)
+
+    def points_rule(self, default=None):
+        return self.values.get(self.points_rule_key, default)
+
+    def max_points(self, default=None):
+        return self.points_rule({}).get('maxPoints', default)
+
+    def user_min_points(self, default=None):
+        return self.points_rule({}).get('allowUserMin', default)
+
+    def user_max_points(self, default=None):
+        return self.points_rule({}).get('allowUserMax', default)
 
 
 class PluginException(Exception):

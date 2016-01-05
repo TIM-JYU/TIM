@@ -101,6 +101,24 @@ def save_answer(plugintype, task_id):
             pass
         if not is_teacher:
             is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
+            if answer_browser_data.get('giveCustomPoints'):
+                custom_points = answer_browser_data.get('points')
+                try:
+                    custom_points_float = float(custom_points)
+                except ValueError:
+                    result['error'] = 'Wrong format for custom points.'
+                else:
+                    # Small hack: we differentiate custom points from automatic points by appending a space character
+                    # at the end of the custom points
+                    custom_points += ' '
+                    points_min = plugin.user_min_points()
+                    points_max = plugin.user_max_points()
+                    if points_min is None or points_max is None:
+                        result['error'] = 'You cannot give yourself custom points in this task.'
+                    elif not (points_min <= custom_points_float <= points_max):
+                        result['error'] = 'Points must be in range [{},{}]'.format(points_min, points_max)
+                    else:
+                        points = custom_points
             result['savedNew'] = timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
             if not is_valid:
                 result['error'] = explanation
@@ -136,7 +154,9 @@ def should_hide_name(doc_id, user_id):
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
     plugin = Plugin.from_task_id(task_id)
-    tim_vars = {'maxPoints': plugin.values.get('pointsRule', {}).get('maxPoints'),
+    tim_vars = {'maxPoints': plugin.max_points(),
+                'userMin': plugin.user_min_points(),
+                'userMax': plugin.user_max_points(),
                 'deadline': plugin.deadline(),
                 'starttime': plugin.starttime()}
     return jsonResponse(tim_vars)

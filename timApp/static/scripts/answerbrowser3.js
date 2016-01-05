@@ -96,12 +96,21 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     $scope.getAvailableAnswers();
                 });
 
+                $scope.updatePoints = function () {
+                    $scope.points = $scope.selectedAnswer.points;
+                    if ($scope.points !== null && $scope.points.length > 0) {
+                        $scope.giveCustomPoints = $scope.points.slice(-1) === " ";
+                    } else {
+                        $scope.giveCustomPoints = false;
+                    }
+                };
+
                 $scope.loading = 0;
                 $scope.changeAnswer = function () {
                     if ($scope.selectedAnswer === null) {
                         return;
                     }
-                    $scope.points = $scope.selectedAnswer.points;
+                    $scope.updatePoints();
                     var $par = $scope.element;
                     var par_id = $scope.$parent.getParId($par);
                     $scope.loading++;
@@ -161,18 +170,19 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     return -1;
                 };
 
-                $scope.getTeacherData = function () {
+                $scope.getBrowserData = function () {
                     if ($scope.answers.length > 0)
                         return {
                             answer_id: $scope.selectedAnswer.id,
                             saveTeacher: $scope.saveTeacher,
-                            teacher: true,
-                            points: $scope.points
+                            teacher: $scope.$parent.teacherMode,
+                            points: $scope.points,
+                            giveCustomPoints: $scope.giveCustomPoints
                         };
                     else
                         return {
                             saveTeacher: false,
-                            teacher: true
+                            teacher: $scope.$parent.teacherMode
                         };
                 };
 
@@ -202,7 +212,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
                                 $scope.answers = data;
                                 $scope.selectedAnswer = $scope.answers[0];
-                                $scope.points = $scope.selectedAnswer.points;
+                                $scope.updatePoints();
                                 if (updateHtml) {
                                     $scope.changeAnswer();
                                 }
@@ -240,6 +250,13 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         $scope.parContent.css('opacity', '1.0');
                     }
                 });
+
+                $scope.allowCustomPoints = function () {
+                    if ($scope.taskInfo === null) {
+                        return false;
+                    }
+                    return $scope.taskInfo.userMin !== null && $scope.taskInfo.userMax !== null;
+                };
 
                 $scope.loadIfChanged = function () {
                     if ($scope.hasUserChanged()) {
@@ -329,6 +346,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.selectedAnswer = null;
                 $scope.taskInfo = null;
                 $scope.anyInvalid = false;
+                $scope.giveCustomPoints = false;
 
                 $scope.$watchGroup(['onlyValid', 'answers'], function (newValues, oldValues, scope) {
                     $scope.anyInvalid = false;

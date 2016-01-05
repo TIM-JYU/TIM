@@ -18,11 +18,9 @@ var timApp = angular.module('timApp', [
                         var match = re.exec(config.url);
                         var taskId = match[1];
                         var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
-                        if ($window.teacherMode && ab.isolateScope() ) {
+                        if (ab.isolateScope() ) {
                             var browserScope = ab.isolateScope();
-                            if (ab.scope().teacherMode) {
-                                angular.extend(config.data, {abData: browserScope.getTeacherData()});
-                            }
+                            angular.extend(config.data, {abData: browserScope.getBrowserData()});
                         }
                         var $par = ab.parents('.par');
                         if ( ab.scope() ) angular.extend(config.data, {ref_from: {docId: ab.scope().docId, par: $par.attr('id')}});
