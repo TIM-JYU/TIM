@@ -58,7 +58,8 @@ def manage(path):
                            grouprights=grouprights,
                            access_types=access_types,
                            user_groups=possible_groups,
-                           isFolder=str(isFolder).lower())
+                           folder=isFolder,
+                           rights=get_rights(block_id))
 
 
 @manage_page.route("/changeOwner/<int:doc_id>/<int:new_owner>", methods=["PUT"])

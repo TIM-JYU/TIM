@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ docName }}{% endblock %}
+{% block title %}{{ doc.name }}{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
@@ -51,8 +51,8 @@
         {{ custom_css if custom_css }}
     </style>
     <script>
-        var docId = JSON.parse({{docID|tojson|safe}});
-        var docName = {{docName|tojson|safe}};
+        var docId = JSON.parse({{doc.id|tojson|safe}});
+        var docName = {{doc.name|tojson|safe}};
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};
         var reqs = {{reqs|tojson}};
@@ -109,7 +109,7 @@
                             </td>
                         </tr>
                     </table>
-                    <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ docId }}.csv">Export
+                    <a ng-mousedown="csv.generate()" ng-href="{{ csv.link() }}" download="users_{{ doc.id }}.csv">Export
                         to CSV</a>
                     &nbsp;&nbsp;
                     <input type="text" size="5" name="korppiExportId" ng-model="expkorppi.korppiExportId">
@@ -122,7 +122,7 @@
         {% endif %}
         {% if slide_mode %}
             <div class="paragraphs">
-                <iframe id="slideFrame" src="/show_slide/{{ docName }}" allowfullscreen></iframe>
+                <iframe id="slideFrame" src="/show_slide/{{ doc.name }}" allowfullscreen></iframe>
             </div>
         {% else %}
             {% include 'view_content.html' %}

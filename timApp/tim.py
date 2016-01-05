@@ -722,7 +722,6 @@ def show_lecture_info(lecture_id):
     settings = get_user_settings()
     return render_template("lectureInfo.html",
                            doc=doc,
-                           docId=lecture.get("doc_id"),
                            lectureId=lecture_id,
                            lectureCode=lecture.get("lecture_code"),
                            lectureStartTime=lecture.get("start_time"),
@@ -1742,7 +1741,8 @@ def index_page():
                            userId=current_user,
                            userGroups=possible_groups,
                            in_lecture=in_lecture,
-                           settings=settings)
+                           settings=settings,
+                           root=True)
 
 
 @app.route("/getslidestatus/")

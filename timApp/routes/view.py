@@ -111,6 +111,7 @@ def try_return_folder(doc_name):
 
     if block_id is None:
         abort(404)
+    doc = timdb.folders.get(block_id)
     user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
@@ -119,12 +120,9 @@ def try_return_folder(doc_name):
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
     settings = tim.get_user_settings()
     return render_template('index.html',
-                           docID=block_id,
-                           userName=getCurrentUserName(),
-                           userId=getCurrentUserId(),
+                           doc=doc,
                            userGroups=possible_groups,
-                           is_owner=has_ownership(block_id),
-                           docName=folder_name,
+                           rights=get_rights(block_id),
                            folder=True,
                            in_lecture=is_in_lecture,
                            settings=settings)
@@ -227,11 +225,9 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
-    # TODO: Check if doc variable is needed
     result = render_template(template_name,
                              route="view",
-                             docID=doc_id,
-                             docName=doc_name,
+                             doc={'id': doc_id, 'name': doc_name},
                              text=texts,
                              plugin_users=users,
                              current_user=current_user,
