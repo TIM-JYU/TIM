@@ -218,6 +218,12 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                                 }
                             } else {
                                 $scope.answers = data;
+                                $scope.updateFiltered();
+                                var i = $scope.findSelectedAnswerIndex();
+                                if (i >= 0) {
+                                    $scope.selectedAnswer = $scope.filteredAnswers[i];
+                                    $scope.updatePoints();
+                                }
                             }
                             $scope.fetchedUser = $scope.user;
                         }).error(function (data, status, headers, config) {
@@ -348,7 +354,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                 $scope.anyInvalid = false;
                 $scope.giveCustomPoints = false;
 
-                $scope.$watchGroup(['onlyValid', 'answers'], function (newValues, oldValues, scope) {
+                $scope.updateFiltered = function (newValues, oldValues, scope) {
                     $scope.anyInvalid = false;
                     $scope.filteredAnswers = $filter('filter')($scope.answers, function (value, index, array) {
                         if (value.valid) {
@@ -360,7 +366,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     if ($scope.findSelectedAnswerIndex() < 0) {
                         $scope.setNewest();
                     }
-                });
+                };
+
+                $scope.$watchGroup(['onlyValid', 'answers'], $scope.updateFiltered);
 
                 $scope.checkUsers();
                 $element.parent().on('mouseenter touchstart', function () {
