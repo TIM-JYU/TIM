@@ -5,7 +5,7 @@
 
     <script>
         var groups = {{userGroups|tojson|safe}};
-        var folder = "{{doc.fullname if not root else ''}}";
+        var folder = "{{doc.fullname if doc else ''}}";
         var crumbs = getBreadcrumbs(folder);
         {% include 'breadcrumbs.js' %}
     </script>
@@ -36,7 +36,7 @@
         {% if in_lecture %}
             {% include 'lecture_head.html' %}
             <script>
-            {% if not root %}
+            {% if doc %}
                 var docId = JSON.parse({{doc.id|tojson|safe}});
                 var docName = {{doc.name|tojson|safe}};
             {% endif %}

@@ -1744,8 +1744,7 @@ def index_page():
                            userId=current_user,
                            userGroups=possible_groups,
                            in_lecture=in_lecture,
-                           settings=settings,
-                           root=True)
+                           settings=settings)
 
 
 @app.route("/getslidestatus/")

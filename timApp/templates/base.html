@@ -68,7 +68,7 @@
 
     <div id="header">
         {% block header %}
-            {% if not root %}
+            {% if doc %}
                 <a href="/view/{{ doc.fullname or doc.name }}">View</a>
                 {% if rights.manage %}
                     | <a href="/manage/{{ doc.fullname or doc.name }}">Manage</a>
