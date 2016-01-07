@@ -86,6 +86,9 @@ timApp.controller("ViewCtrl", [
         sc.firstTimeQuestions = true;
         sc.mathJaxLoaded = false;
         sc.mathJaxLoadDefer = null;
+        sc.hideRefresh = false;
+        sc.hidePending = false;
+        sc.pendingUpdates = {};
         var EDITOR_CLASS = "editorArea";
         var EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
@@ -95,12 +98,13 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.closeRefreshDlg = function() {
-            $("#dialog-refresh").hide();
+            sc.hideRefresh = true;
         };
 
         sc.markPageDirty = function() {
             var e = angular.element('#page_is_dirty');
             e.val('1');
+            sc.hideRefresh = true;
         };
 
         sc.markPageNotDirty = function() {
@@ -112,30 +116,6 @@ timApp.controller("ViewCtrl", [
             var e = angular.element('#page_is_dirty');
             return e.val() === '1';
         };
-
-        if (sc.isPageDirty()) {
-            var dlg = $("#dialog-refresh");
-            dlg.attr("tim-draggable-fixed", '');
-            dlg.css("display", "block");
-            $compile(dlg[0])(sc);
-
-            // alternative way using jQuery UI; position is not fixed
-            //$("#dialog-refresh").dialog({
-            //    resizable: false,
-            //    height: 200,
-            //    modal: true,
-            //    buttons: {
-            //        "Refresh": function () {
-            //            $(this).dialog("close");
-            //            sc.markPageNotDirty();
-            //            $window.location.reload();
-            //        },
-            //        "No": function () {
-            //            $(this).dialog("close");
-            //        }
-            //    }
-            //});
-        }
 
         sc.processAllMathDelayed = function ($elem) {
             $timeout(function () {
@@ -566,7 +546,7 @@ timApp.controller("ViewCtrl", [
             $par.remove();
             sc.editing = false;
             sc.cancelArea();
-            sc.updateChangedPars(data.changed_pars);
+            sc.updatePendingPars(data.changed_pars);
         };
 
         sc.getElementByRefId = function (ref) {
@@ -605,18 +585,35 @@ timApp.controller("ViewCtrl", [
             sc.cancelArea();
             sc.removeDefaultPars();
             sc.markPageDirty();
-            sc.updateChangedPars(data.changed_pars);
+            sc.updatePendingPars(data.changed_pars);
         };
 
-        sc.updateChangedPars = function (pars) {
-            for (var key in pars) {
-                if (pars.hasOwnProperty(key)) {
+        sc.pendingUpdatesCount = function () {
+            return Object.keys(sc.pendingUpdates).length;
+        };
+
+        sc.showUpdateDialog = function () {
+            return !sc.hidePending && sc.pendingUpdatesCount() > 0;
+        };
+
+        sc.updatePendingPars = function (pars) {
+            angular.extend(sc.pendingUpdates, pars);
+            sc.hidePending = false;
+            if (sc.pendingUpdatesCount() < 10) {
+                sc.updatePending();
+            }
+        };
+
+        sc.updatePending = function () {
+            for (var key in sc.pendingUpdates) {
+                if (sc.pendingUpdates.hasOwnProperty(key)) {
                     var $par = sc.getElementByParId(key);
-                    var newPar = $($compile(pars[key])(sc));
+                    var newPar = $($compile(sc.pendingUpdates[key])(sc));
                     $par.replaceWith(newPar);
                     sc.processAllMathDelayed(newPar);
                 }
             }
+            sc.pendingUpdates = {};
         };
 
         sc.isReference = function ($par) {
