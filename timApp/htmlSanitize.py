@@ -2,6 +2,7 @@
 import lxml
 import lxml.etree
 from lxml.html.clean import Cleaner
+from lxml.html import fromstring, tostring
 
 
 TIM_SAFE_TAGS = ['a',
@@ -72,7 +73,13 @@ c = Cleaner(allow_tags=TIM_SAFE_TAGS, remove_unknown_tags=False, safe_attrs=TIM_
 # NOTE: lxml cleaner is a LOT faster than bleach.
 def sanitize_html(html_string):
     try:
-        return c.clean_html(html_string)
+        doc = fromstring(html_string)
+        c(doc)
+        cleaned = tostring(doc, encoding='ascii').decode('ascii')
+        if cleaned.startswith('<div>'):
+            return cleaned[5:-6]
+        else:
+            return cleaned
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
         return ""
     except lxml.etree.XMLSyntaxError:  # Not yet sure why thrown

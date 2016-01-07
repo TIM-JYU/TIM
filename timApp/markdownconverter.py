@@ -66,16 +66,13 @@ def md_to_html(text: str,
         return raw[0]
 
 
-@contract
 def md_list_to_html_list(pars,
                          settings,
-                         sanitize: bool=True,
                          auto_macros=None
                          ):
     """
     Converts the specified list of markdown texts to an HTML list.
 
-    :param sanitize: Whether the HTML should be sanitized. Default is True.
     :type pars: list[DocParagraph]
     :param pars: The list of markdown texts to be converted.
     """
@@ -104,10 +101,7 @@ def md_list_to_html_list(pars,
             processed.append(final_html)
         raw = processed
 
-    if sanitize:
-        return [sanitize_html(p) for p in raw]
-    else:
-        return raw
+    return raw
 
 
 def insert_heading_numbers(auto_macros, pre_html, auto_number_headings=True, heading_format=''):

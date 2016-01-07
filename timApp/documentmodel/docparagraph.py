@@ -282,13 +282,15 @@ class DocParagraph(DocParagraphBase):
                                          auto_macros=({'h': auto_macros['h'], 'usedh': hs} for _, _, auto_macros, hs, _ in unloaded_pars),
                                          settings=settings)
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
+                # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
+                # so they are comparable
+                if h != old_html:
+                    h = sanitize_html(h)
+                    changed_pars.append(par)
                 par.__data['h'][auto_macro_hash] = h
-                par.__set_html(h)
+                par.__set_html(h, sanitized=True)
                 if persist:
                     par.__write()
-                if h != old_html:
-                    # print('old: "{}" new: {}'.format(old_html, h))
-                    changed_pars.append(par)
         return changed_pars
 
     @classmethod
