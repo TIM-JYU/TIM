@@ -18,11 +18,9 @@ var timApp = angular.module('timApp', [
                         var match = re.exec(config.url);
                         var taskId = match[1];
                         var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
-                        if ($window.teacherMode && ab.isolateScope() ) {
+                        if (ab.isolateScope() ) {
                             var browserScope = ab.isolateScope();
-                            if (ab.scope().teacherMode) {
-                                angular.extend(config.data, {abData: browserScope.getTeacherData()});
-                            }
+                            angular.extend(config.data, {abData: browserScope.getBrowserData()});
                         }
                         var $par = ab.parents('.par');
                         if ( ab.scope() ) angular.extend(config.data, {ref_from: {docId: ab.scope().docId, par: $par.attr('id')}});
@@ -661,6 +659,27 @@ timApp.controller("ViewCtrl", [
             }
             var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
             return sc.showOptionsWindow(e, $par, coords);
+        });
+
+        sc.setAreaAttr = function(area, attr, value) {
+            var area_selector = "[data-area=" + area + "]";
+            $(area_selector).css(attr, value);
+        };
+
+        sc.onClick(".areacollapse", function ($this, e) {
+            $this.removeClass("areacollapse");
+            var area_name = $this.parent().attr('data-area-start');
+            console.log("Collapse " + area_name);
+            sc.setAreaAttr(area_name, "display", "none");
+            $this.addClass("areaexpand");
+        });
+
+        sc.onClick(".areaexpand", function ($this, e) {
+            $this.removeClass("areaexpand");
+            var area_name = $this.parent().attr('data-area-start');
+            console.log("Expand " + area_name);
+            sc.setAreaAttr(area_name, "display", "");
+            $this.addClass("areacollapse");
         });
 
         sc.showNoteWindow = function (e, $par) {

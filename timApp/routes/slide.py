@@ -76,8 +76,7 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
     settings = tim.get_user_settings()
     return render_template(template_name,
-                           docID=doc_id,
-                           docName=doc_name,
+                           doc={'id': doc_id, 'name': doc_name},
                            text=texts,
                            plugin_users=users,
                            current_user=current_user,

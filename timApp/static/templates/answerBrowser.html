@@ -12,10 +12,15 @@
     <label ng-show="anyInvalid"><input type="checkbox" ng-model="onlyValid">Show valid only</label>
     <span ng-show="$parent.teacherMode" > | <a href="{{getLink()}}" ng-mousedown="getAllAnswers()" >All answers</a></span>
     <br> 
-    <label ng-show="$parent.teacherMode">Points:<input ng-model="points" type="text"></label>
-    <span ng-show="!$parent.teacherMode && points !== null">Points: {{ points }}</span>
+    <label ng-show="$parent.teacherMode || giveCustomPoints">
+        Points:<input ng-model="points" type="text" size="1">
+    </label>
+    <span ng-show="!$parent.teacherMode && points !== null && !giveCustomPoints">Points: {{ points }}</span>
     <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
     <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
+    <label ng-show="!$parent.teacherMode && allowCustomPoints()">
+        <input type="checkbox" ng-model="giveCustomPoints">Set custom points
+    </label>
     <label ng-show="$parent.teacherMode">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
     </label>

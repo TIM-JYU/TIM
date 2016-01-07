@@ -50,12 +50,12 @@ wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar -O co
 
 wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar -O Graphics.jar -nv
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar -O Ali.jar -nv
+wget https://svn.cc.jyu.fi/srv/svn/ohj2/FXExamples/trunk/FXGui/fxgui.jar -O fxgui.jar -nv
 
 
-mkdir -p cs
-sudo chown -R $(id -un):$(id -gn) cs
+sudo mkdir -p cs
+sudo chmod 777 cs
 cd cs
-rm -f comtest*.jar*
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
 
 fi

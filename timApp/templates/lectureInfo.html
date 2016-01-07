@@ -25,7 +25,7 @@
     {% include 'lecture_head.html' %}
 
     <script>
-        var docId = {{docId|tojson|safe}};
+        var docId = {{doc.id|tojson|safe}};
         var lectureId = {{lectureId|tojson|safe}};
         var lectureCode = {{lectureCode|tojson|safe}};
         var lectureStartTime = {{lectureStartTime|tojson|safe}};

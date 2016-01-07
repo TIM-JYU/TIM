@@ -10,6 +10,7 @@ import uuid
 import io
 import shutil
 import shlex
+import signal
 import socketserver
 # from signal import alarm, signal, SIGALRM, SIGKILL
 from subprocess import PIPE, Popen, check_output
@@ -170,7 +171,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "/tmp/uhome/" + udir + ":/home/agent/",
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
-             "-w", "/home/agent", "cs3s", "/cs/rcmd.sh", urndname + ".sh"]
+             "-w", "/home/agent", "cs3", "/cs/rcmd.sh", urndname + ".sh"]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     try:
@@ -286,7 +287,7 @@ def get_html(ttype, query):
     if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
         if allow_anonymous != "true":
-            return NOLAZY + '<p class="pluginError">The interactive plugin works only for users who are <a href="/">logged in</a></p><pre class="csRunDiv">' + get_param(
+            return NOLAZY + '<p class="pluginError"><a href="/">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
                 query, "byCode", "") + '</pre>'
     do_lazy = is_lazy(query)
     # do_lazy = False
@@ -531,7 +532,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
 
+    # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python        
+    def signal_handler(self, signum, frame):
+        raise Exception("Timed out!")
+
     def do_all(self, query):
+        signal.signal(signal.SIGALRM, self.signal_handler)
+        signal.alarm(20)   # Ten seconds
+        try:
+            self.do_all_t(query)
+        except Exception  as e:
+            print("Timed out!", e)
+        
+        
+    def do_all_t(self, query):
         pwd = ""
         print(threading.currentThread().getName())
         result = {}  # query.jso
@@ -726,13 +740,24 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             rndname = generate_filename()
             delete_tmp = True
             opt = get_param(query, "opt", "")
-            if get_param(query, "path", "") == "user" and self.user_id:
-                task_id = get_param(query, "taskID", "")
-                doc_id, dummy = (task_id + "NONE.none").split(".", 1)
-                print(task_id, doc_id)
-                basename = "user/" + hash_user_dir(self.user_id) + "/" + doc_id
+            task_id = get_param(query, "taskID", "")
+            doc_id, dummy = (task_id + "NONE.none").split(".", 1)
+            
+            upath = get_param(query, "path", "")  # from user/sql do user and /sql
+            epath = "/" + doc_id
+            if "/" in upath:                      # if user/ do just user and ""
+                upath, epath = upath.split("/",1)
+                if epath: epath = "/" + epath
+            
+            if upath == "user" and self.user_id:
+                userpath = "user/" + hash_user_dir(self.user_id)
+                mustpath = "/tmp/" + userpath
+                basename =  userpath + epath
+                fullpath = "/tmp/" + basename # check it is sure under userpath
+                if not os.path.abspath(fullpath).startswith(mustpath): basename = userpath + "/ERRORPATH"
                 delete_tmp = False
                 mkdirs("/tmp/user")
+                print(task_id, doc_id, fullpath)
             else:
                 # Generate random cs and exe filenames
                 basename = "tmp/" + rndname
@@ -740,6 +765,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             filename = get_param(query, "filename", "prg")
 
             ifilename = get_param(query, "inputfilename", "/input.txt")
+            
+            # TODO: Validoi filename, ifilename yms jossa voi olla mm ..
+            
             # csfname = "/tmp/%s.cs" % basename
             # exename = "/tmp/%s.exe" % basename
             csfname = "/tmp/%s/%s.cs" % (basename, filename)
@@ -862,7 +890,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 fileext = "cpp"
                 # testcs = "/tmp/%s/%s.cpp" % (basename, filename)
                 testcs = u"{0:s}.cpp".format(filename)
-            if "text" in ttype:
+            if "text" in ttype or "xml" in ttype or "css" in ttype:
                 # text file
                 if userargs: filename = userargs
                 csfname = "/tmp/%s/%s" % (basename, filename)
@@ -928,6 +956,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     filepath = prgpath + "/" + package.replace(".", "/")
                     mkdirs(filepath)
                     javaclassname = package + "." + classname
+                filename = javaclassname + ".java"    
                 javaname = filepath + "/" + classname + ".java"
                 fileext = "java"
                 csfname = javaname
@@ -1036,6 +1065,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = ""
                 elif ttype == "text":
                     cmdline = ""
+                elif ttype == "xml":
+                    cmdline = ""
+                elif ttype == "css":
+                    cmdline = ""
                 elif ttype == "shell":
                     cmdline = ""
                 elif ttype == "jjs":
@@ -1132,7 +1165,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_doc:
                 pass  # jos doc ei ajeta
             elif get_param(query, "justCompile", False):
-                pass  # jos pelkkä käännös, ei ajeta
+                #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
+                code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
                 code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                            uargs=userargs, ulimit="ulimit -f 80000")
@@ -1187,9 +1221,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
                 print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % rndname)
                 # TODO: clean up screenshot directory
-                # p = re.compile('Number of joysticks:.*\n.*')
+                p = re.compile('Xlib:  extension "RANDR" missing on display ":1"\.\n')
                 # out = out.replace("Number of joysticks:.*","")
-                # out = p.sub("", out)
+                err = p.sub("", err)
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
                 else:
@@ -1420,8 +1454,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("py2: ", exename)
                     code, out, err, pwd = run2(["python2", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                                                uargs=userargs)
-                elif ttype == "text":
-                    print("text: ", csfname)
+                elif ttype == "text" or ttype == "xml" or ttype == "css":
+                    print(ttype,": ", csfname)
                     showname = filename
                     if showname == "prg": showname = ""
                     code, out, err, pwd = (0, "".encode("utf-8"), ("tallennettu " + showname).encode("utf-8"), "")
@@ -1511,16 +1545,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 # Jos ajaa Linuxissa ThreadingMixIn, niin chdir vaihtaa kaikkien hakemistoa?
 # Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
 
-# if __debug__:
-if True:
+if __debug__:
+# if True:
     class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         """Handle requests in a separate thread."""
 
     print("Debug mode/ThreadingMixIn")
-# else:
-#    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
-#        """Handle requests in a separate thread."""
-#    print("Normal mode/ForkingMixIn")
+else:
+    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
+        """Handle requests in a separate thread."""
+    print("Normal mode/ForkingMixIn")
 
 
 if __name__ == '__main__':
