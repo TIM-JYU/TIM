@@ -546,7 +546,17 @@ timApp.controller("ViewCtrl", [
             $par.remove();
             sc.editing = false;
             sc.cancelArea();
-            sc.updatePendingPars(data.changed_pars);
+            sc.beginUpdate();
+        };
+
+        sc.beginUpdate = function () {
+            http.get('/getUpdatedPars/' + sc.docId)
+                .success(function (data, status, headers, config) {
+                    sc.updatePendingPars(data.changed_pars);
+                })
+                .error(function () {
+                    $window.alert('Error occurred when getting updated paragraphs.')
+                });
         };
 
         sc.getElementByRefId = function (ref) {
@@ -585,7 +595,7 @@ timApp.controller("ViewCtrl", [
             sc.cancelArea();
             sc.removeDefaultPars();
             sc.markPageDirty();
-            sc.updatePendingPars(data.changed_pars);
+            sc.beginUpdate();
         };
 
         sc.pendingUpdatesCount = function () {

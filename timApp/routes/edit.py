@@ -139,7 +139,9 @@ def modify_paragraph():
                                                      properties=properties)
             pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
-    return par_response(pars, doc, update_cache=True, context_par=doc.get_previous_par(original_par))
+    return par_response(pars,
+                        doc,
+                        update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
@@ -178,7 +180,9 @@ def preview(doc_id):
 
 def par_response(blocks, doc, edit_window=False, update_cache=False, context_par=None):
     if update_cache:
-        changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(), doc.get_settings(), context_par=context_par, persist=update_cache)
+        changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
+                                                  doc.get_settings(),
+                                                  persist=update_cache)
     else:
         changed_pars = []
         DocParagraph.preload_htmls(blocks, doc.get_settings(), context_par=context_par, persist=update_cache)
@@ -250,10 +254,6 @@ def add_paragraph():
         return abort(400, str(e))
 
     # verify_document_version(doc_id, version)
-    if par_next_id is None:
-        context_par = doc.get_last_par()
-    else:
-        context_par = doc.get_previous_par(doc.get_paragraph(par_next_id))
     pars = []
     separate_pars = DocumentParser(md).get_blocks()
     is_multi_block = len(separate_pars) > 1
@@ -273,7 +273,7 @@ def add_paragraph():
                                                  properties=properties)
         pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
-    return par_response(pars, doc, update_cache=True, context_par=context_par)
+    return par_response(pars, doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
@@ -294,4 +294,13 @@ def delete_paragraph(doc_id):
     else:
         par_id, = verify_json_params('par')
         timdb.documents.delete_paragraph(doc, par_id)
-    return par_response([], doc, update_cache=True)
+    return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+
+
+@edit_page.route("/getUpdatedPars/<int:doc_id>")
+def get_updated_pars(doc_id):
+    """
+    Gets updated paragraphs that were changed e.g. as the result of adding headings or modifying macros.
+    """
+    verify_view_access(doc_id)
+    return par_response([], Document(doc_id), update_cache=True)

@@ -474,7 +474,7 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_path(self) -> 'str':
-        return self._get_path(self.doc, self.get_id(), self.get_hash(), files_root=self.files_root)
+        return self._get_path(self.doc, self.__data['id'], self.__data['t'], files_root=self.files_root)
 
     def __read(self):
         if not os.path.isfile(self.get_path()):

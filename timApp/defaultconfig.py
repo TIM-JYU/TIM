@@ -24,3 +24,4 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 DOCKER_BRIDGE_IP   = check_output("ip ro get 8.8.8.8 | grep -oP '(?<=via )([\d\.]+)'",
                                   shell=True).decode('utf-8')[:-1]
 DOCKER_BRIDGE      = 'http://' + DOCKER_BRIDGE_IP
+IMMEDIATE_PRELOAD  = False
