@@ -76,7 +76,10 @@ class Plugin:
                     default = 100000000
             except TypeError:
                 default = 100000000
-        return self.values.get(self.answer_limit_key, default)
+        val = self.values.get(self.answer_limit_key, default)
+        if val is None:
+            val = 100000000
+        return val
 
 
 class PluginException(Exception):
