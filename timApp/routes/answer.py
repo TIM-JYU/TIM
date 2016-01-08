@@ -22,8 +22,8 @@ def is_answer_valid(plugin, old_answers, tim_info):
     :param tim_info: The tim_info structure returned by the plugin or None.
     :return: True if the answer should be considered valid, False otherwise.
     """
-    if plugin.type == 'mmcq' and len(old_answers) > 0:
-        return False, 'Only the first answer counts.'
+    if plugin.answer_limit() <= len(old_answers):
+        return False, 'You have exceeded the answering limit.'
     if plugin.starttime(default=datetime(1970, 1, 1)) > datetime.now():
         return False, 'You cannot submit answers yet.'
     if plugin.deadline(default=datetime.max) < datetime.now():

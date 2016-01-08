@@ -8,6 +8,8 @@ class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
     points_rule_key = 'pointsRule'
+    answer_limit_key = 'answerLimit'
+    limit_defaults = {'mmcq': 1}
 
     def __init__(self, task_id, values, plugin_type):
         self.task_id = task_id
@@ -65,6 +67,16 @@ class Plugin:
 
     def user_max_points(self, default=None):
         return self.points_rule({}).get('allowUserMax', default)
+
+    def answer_limit(self, default=None):
+        if default is None:
+            default = self.limit_defaults.get(self.type)
+            try:
+                if default < 0:
+                    default = 100000000
+            except TypeError:
+                default = 100000000
+        return self.values.get(self.answer_limit_key, default)
 
 
 class PluginException(Exception):
