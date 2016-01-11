@@ -49,7 +49,6 @@ if __name__ == '__main__':
     dumbo_started = False
     try:
         if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-            p = ephemeralclient.launch_ephemeral(ignore_signals='pudb' in sys.modules)
             d = dumboclient.launch_dumbo()
             ephemeral_started = True
             dumbo_started = True
