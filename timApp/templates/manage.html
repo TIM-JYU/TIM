@@ -155,7 +155,22 @@ if (isFolder) {
         </table>
     </div>
 
-    <button ng-show="!isFolder" ng-click="markAllAsRead()">Mark document as read</button>
+    <span ng-show="!isFolder">
+        <button ng-click="toggleDiv('translate')">Create a translation</button>
+        <button ng-click="toggleDiv('cite')">Create a cited copy</button>
+        <button ng-click="markAllAsRead()">Mark document as read</button>
+    </span>
+
+    <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
+        <label for="language">Target language or identifier:</label><input id="language" type="text" ng-model="translationName"/>
+        <button ng-click="createTranslation()">Create translation</button>
+    </div>
+
+    <div class="margin rights-list" ng-show="showCreateDiv == 'cite'">
+        <label for="docname">New document name:</label><input id="language" type="text" ng-model="citationName"/>
+        <button ng-click="createCitation()">Create cited copy</button>
+    </div>
+
     <span ng-show="readUpdating">Loading...</span>
     <form class="uploadForm margin" ng-show="!isFolder">
         Upload a new version for this {{objName}}

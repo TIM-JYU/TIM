@@ -1086,25 +1086,27 @@ def create_item(item_name, item_type, create_function, owner_group_id):
     if not logged_in():
         abort(403, 'You have to be logged in to create a {}.'.format(item_type))
 
-    if item_name.startswith('/') or item_name.endswith('/'):
-        abort(400, 'The {} name cannot start or end with /.'.format(item_type))
+    if item_name is not None:
+        if item_name.startswith('/') or item_name.endswith('/'):
+            abort(400, 'The {} name cannot start or end with /.'.format(item_type))
 
-    if re.match('^(\d)*$', item_name) is not None:
-        abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
+        if re.match('^(\d)*$', item_name) is not None:
+            abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
 
     timdb = getTimDb()
     username = getCurrentUserName()
 
-    if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
-        abort(403, 'Item with a same name already exists.')
+    if item_name is not None:
+        if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
+            abort(403, 'Item with a same name already exists.')
 
-    if not canWriteToFolder(item_name):
-        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
+        if not canWriteToFolder(item_name):
+            abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
 
-    item_path, _ = timdb.folders.split_location(item_name)
-    folder_id = timdb.folders.create(item_path, owner_group_id)
+        item_path, _ = timdb.folders.split_location(item_name)
+        folder_id = timdb.folders.create(item_path, owner_group_id)
+
     item_id = create_function(item_name, owner_group_id)
-
     return jsonResponse({'id': item_id, 'name': item_name})
 
 
@@ -1112,28 +1114,23 @@ def create_item(item_name, item_type, create_function, owner_group_id):
 def create_document():
     jsondata = request.get_json()
     doc_name = jsondata['doc_name']
+
     timdb = getTimDb()
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
                        getCurrentUserGroup())
 
 
-@app.route("/translate/<path:docname>/<language>", methods=["GET"])
-def create_translation(docname, language):
+@app.route("/translate/<int:doc_id>/<language>", methods=["GET"])
+def create_translation(doc_id, language):
     params = request.get_json()
 
-    # Filter for allowed reference parameters
-    if params is not None:
-        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
-
     timdb = getTimDb()
-    src_doc_id = timdb.documents.get_document_id(docname)
-    if not has_view_access(src_doc_id):
+    if not has_view_access(doc_id):
         abort(403)
 
-    src_doc = Document(src_doc_id)
-    new_name = docname + "-" + language
+    src_doc = Document(doc_id)
     factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group, params).doc_id
-    return create_item(new_name, 'document', factory, getCurrentUserGroup())
+    return create_item(None, 'document', factory, getCurrentUserGroup())
 
 
 @app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])

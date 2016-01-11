@@ -359,6 +359,33 @@ text = '\n'.join(a)
                 });
         };
 
+        sc.toggleDiv = function(divName) {
+            if (sc.showCreateDiv == divName)
+                sc.showCreateDiv = "";
+            else
+                sc.showCreateDiv = divName;
+        };
+
+        sc.createTranslation = function() {
+            $http.put('/translate/' + sc.doc.id + "/" + sc.translationName + '?_=' + Date.now())
+                .success(function (data, status, headers, config) {
+                    location.assign("/view/" + data.name);
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not create a translation. Error message is: ' + data.error);
+                }).finally(function (data, status, headers, config) {
+                });
+        };
+
+        sc.createCitation = function() {
+            $http.put('/cite/' + sc.doc.id + "/" + sc.citationName + '?_=' + Date.now())
+                .success(function (data, status, headers, config) {
+                    location.assign("/view/" + data.name);
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not create a translation. Error message is: ' + data.error);
+                }).finally(function (data, status, headers, config) {
+                });
+        };
+
         sc.grouprights = grouprights;
         sc.userGroups = groups;
         sc.accessTypes = accessTypes;
@@ -374,6 +401,7 @@ text = '\n'.join(a)
         doc.fulltext = doc.fulltext.trim();
         sc.fulltext = doc.fulltext;
         sc.aliases = sc.getAliases();
+        sc.showCreateDiv = "";
 
         if (isFolder) {
             sc.newName = doc.name;
