@@ -728,7 +728,7 @@ def show_lecture_info(lecture_id):
                            lectureEndTime=lecture.get("end_time"),
                            in_lecture=in_lecture,
                            settings=settings,
-                           rights=get_rights(doc.doc_id))
+                           rights=get_rights(doc['id']))
 
 
 # Route to get show lecture info of some specific lecture
