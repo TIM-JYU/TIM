@@ -24,8 +24,8 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None):
         return text
     env = Environment(variable_start_string=macro_delimiter,
                       variable_end_string=macro_delimiter,
-                      comment_start_string='{#',
-                      comment_end_string='#}',
+                      comment_start_string='{!!!',
+                      comment_end_string='!!!}',
                       block_start_string='{%',
                       block_end_string='%}',
                       lstrip_blocks=True,
