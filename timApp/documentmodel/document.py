@@ -101,13 +101,13 @@ class Document:
         self.par_cache = [par for par in self]
         self.__update_par_map()
 
-    def get_previous_par(self, par, assume_last=False):
+    def get_previous_par(self, par, get_last_if_no_prev=False):
         if self.par_map is None:
             self.load_pars()
         prev = self.par_map.get(par.get_id())
         if prev:
             return prev['p']
-        if assume_last:
+        if get_last_if_no_prev:
             return self.par_cache[-1] if self.par_cache else None
         return None
 

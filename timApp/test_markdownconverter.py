@@ -5,7 +5,7 @@ import time
 import dumboclient
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.docsettings import DocSettings
-from markdownconverter import md_to_html, md_list_to_html_list
+from markdownconverter import md_to_html, par_list_to_html_list
 
 
 class MarkdownConverterTest(unittest.TestCase):
@@ -31,8 +31,8 @@ class MarkdownConverterTest(unittest.TestCase):
             self.check_conversion(html, md)
 
         self.assertListEqual([html for html, _ in cases],
-                             md_list_to_html_list([DocParagraph.create(None, md=md) for _, md in cases],
-                                                  settings=DocSettings()))
+                             par_list_to_html_list([DocParagraph.create(None, md=md) for _, md in cases],
+                                                   settings=DocSettings()))
 
         macrotests = [('<p>hello world!</p>',
                        'hello %%somemacro%%!',

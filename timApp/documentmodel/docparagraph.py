@@ -8,7 +8,7 @@ from contracts import contract, new_contract
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html, md_list_to_html_list, expand_macros
+from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
 from timdb.timdbbase import TimDbException
 from utils import count_chars
 from .randutils import *
@@ -218,7 +218,7 @@ class DocParagraph(DocParagraphBase):
             return '<div class="pluginError">Invalid settings paragraph detected</div>'
 
     @contract
-    def get_html(self, assume_last=False, persist=False) -> 'str':
+    def get_html(self) -> 'str':
         if self.html is not None:
             return self.html
         if self.is_plugin():
@@ -229,8 +229,8 @@ class DocParagraph(DocParagraphBase):
         # get_html might get called from preview, so we don't want to save anything by default
         DocParagraph.preload_htmls([self],
                                    self.doc.get_settings(),
-                                   context_par=self.doc.get_previous_par(self, assume_last=assume_last),
-                                   persist=persist)
+                                   context_par=self.doc.get_previous_par(self, get_last_if_no_prev=False),
+                                   persist=False)
         return self.html
 
     @classmethod
@@ -238,9 +238,12 @@ class DocParagraph(DocParagraphBase):
     def preload_htmls(cls, pars: 'list(DocParagraph)', settings, clear_cache=False, context_par=None, persist=True):
         """
         Loads the HTML for each paragraph in the given list.
-        :param clear_cache: Whether the HTML cache ('h' key) should be refreshed.
+        :param context_par: The context paragraph. Required only for previewing for now.
+        :param persist: Whether the result of preloading should be saved to disk.
+        :param clear_cache: Whether all caches should be refreshed.
         :param settings: The document settings.
         :param pars: Paragraphs to preload.
+        :return: A list of paragraphs whose HTML changed as the result of preloading.
         """
         if not pars:
             return
@@ -278,9 +281,9 @@ class DocParagraph(DocParagraphBase):
 
         changed_pars = []
         if len(unloaded_pars) > 0:
-            htmls = md_list_to_html_list([par for par, _, _, _, _ in unloaded_pars],
-                                         auto_macros=({'h': auto_macros['h'], 'usedh': hs} for _, _, auto_macros, hs, _ in unloaded_pars),
-                                         settings=settings)
+            htmls = par_list_to_html_list([par for par, _, _, _, _ in unloaded_pars],
+                                          auto_macros=({'h': auto_macros['h'], 'headings': hs} for _, _, auto_macros, hs, _ in unloaded_pars),
+                                          settings=settings)
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable
@@ -294,7 +297,19 @@ class DocParagraph(DocParagraphBase):
         return changed_pars
 
     @classmethod
-    def get_unloaded_pars(cls, pars, settings, cache, heading_cache, clear_cache=False):
+    def get_unloaded_pars(cls, pars, settings, auto_macro_cache, heading_cache, clear_cache=False):
+        """
+        Finds out which of the given paragraphs need to be preloaded again.
+
+        :param pars: The list of paragraphs to be processed.
+        :param settings: The settings for the document.
+        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
+        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
+         in that paragraph.
+        :param clear_cache: Whether all caches should be refreshed.
+        :return: A 5-tuple of the form:
+          (paragraph, hash of the auto macro values, auto macros, so far used headings, old HTML).
+        """
         cumulative_headings = []
         unloaded_pars = []
         dyn = 0
@@ -309,21 +324,21 @@ class DocParagraph(DocParagraphBase):
             if not clear_cache and par.html is not None:
                 continue
             cached = par.__data.get('h')
-            auto_macros = par.get_auto_macro_values(macros, macro_delim, cache, heading_cache)
+            auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
             auto_macro_hash = hashfunc(m + str(auto_macros))
 
             par_headings = heading_cache.get(par.get_id())
             if cumulative_headings:
                 # Performance optimization: copy only if the set of headings changes
                 if par_headings:
-                    last = cumulative_headings[-1].copy()
+                    all_headings_so_far = cumulative_headings[-1].copy()
                 else:
-                    last = cumulative_headings[-1]
+                    all_headings_so_far = cumulative_headings[-1]
             else:
-                last = defaultdict(int)
-            cumulative_headings.append(last)
+                all_headings_so_far = defaultdict(int)
+            cumulative_headings.append(all_headings_so_far)
             for h in par_headings:
-                last[h] += 1
+                all_headings_so_far[h] += 1
 
             if not clear_cache and cached is not None:
                 if type(cached) is str:  # Compatibility
@@ -342,7 +357,7 @@ class DocParagraph(DocParagraphBase):
             else:
                 old_html = None
 
-            tup = (par, auto_macro_hash, auto_macros, last, old_html)
+            tup = (par, auto_macro_hash, auto_macros, all_headings_so_far, old_html)
             par.__data['h'] = {}
             unloaded_pars.append(tup)
         return unloaded_pars
@@ -350,31 +365,34 @@ class DocParagraph(DocParagraphBase):
     def has_class(self, class_name):
         return class_name in self.__data.get('attrs', {}).get('classes', {})
 
-    def get_auto_macro_values(self, macros, macro_delim, cache, headings):
+    def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache):
         """Gets the auto macros values for the current paragraph.
         Auto macros include things like current heading/table/figure numbers.
-        :param headings: A cache object to store headings into.
+
+        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
+         in that paragraph.
         :param macros: Macros to apply for the paragraph.
-        :param cache: Cache object from which to retrieve and store the auto macro data.
+        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
         :return: Auto macro values as a dict.
         :param macro_delim: Delimiter for macros.
+        :return: A dict(str, dict(int,int)) containing the auto macro information.
         """
 
         key = str((self.get_id(), self.doc.get_version()))
-        cached = cache.get(key)
+        cached = auto_macro_cache.get(key)
         if cached is not None:
             return cached
 
         prev_par = self.doc.get_previous_par(self)
         if prev_par is None:
             prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
-            headings[self.get_id()] = []
+            heading_cache[self.get_id()] = []
         else:
-            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, cache, headings)
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
 
         if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
-            cache[key] = prev_par_auto_values
-            headings[self.get_id()] = []
+            auto_macro_cache[key] = prev_par_auto_values
+            heading_cache[self.get_id()] = []
             return prev_par_auto_values
 
         md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
@@ -389,9 +407,9 @@ class DocParagraph(DocParagraphBase):
                 deltas[level] += 1
                 for i in range(level + 1, 7):
                     deltas[i] = 0
-        headings[self.get_id()] = titles
+        heading_cache[self.get_id()] = titles
         result = {'h': deltas}
-        cache[key] = result
+        auto_macro_cache[key] = result
         return result
 
     def sanitize_html(self):
