@@ -395,20 +395,20 @@ class Documents(TimDbBase):
         return [par], doc
 
     @contract
-    def update_document(self, doc: 'Document', new_content: 'str', original_content: 'str'=None) -> 'Document':
+    def update_document(self, doc: 'Document', new_content: 'str', original_content: 'str'=None,
+                        strict_validation=True) -> 'Document':
         """Updates a document.
         
         :param doc: The id of the document to be updated.
         :param new_content: The new content of the document.
+        :param original_content: The original content of the document.
+        :param strict_validation: Whether to use stricter validation rules for areas etc.
         :returns: The id of the new document.
         """
 
         assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc)
 
-        try:
-            doc.update(new_content, original_content)
-        except ValidationException as e:
-            raise TimDbException(e)
+        doc.update(new_content, original_content, strict_validation)
         self.update_last_modified(doc, commit=False)
         self.db.commit()
         return doc

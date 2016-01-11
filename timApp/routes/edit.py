@@ -5,7 +5,7 @@ from flask import Blueprint, render_template
 from .common import *
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from documentmodel.documentparser import DocumentParser, ValidationException
+from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html
 from routes.common import post_process_pars
@@ -50,6 +50,7 @@ def update_document(doc_id, version):
             return jsonResponse({'message': 'Malformed request - fulltext missing.'}, 400)
         content = request_json['fulltext']
         original = request_json['original']
+        strict_validation = request_json.get('ignore_warnings', None) != True
 
     if original is None:
         abort(400, 'Missing parameter: original')
@@ -59,7 +60,9 @@ def update_document(doc_id, version):
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
         get_pars_from_editor_text(doc, content, break_on_elements=True)
-        d = timdb.documents.update_document(doc, content, original)
+        d = timdb.documents.update_document(doc, content, original, strict_validation)
+    except ValidationWarning as e:
+        return jsonResponse({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
         return abort(400, str(e))
     chg = d.get_changelog()

@@ -449,12 +449,14 @@ class Document:
                                     if end_index + 1 < len(all_par_ids) else None)
 
     @contract
-    def update(self, text: 'str', original: 'str'):
+    def update(self, text: 'str', original: 'str', strict_validation=True):
         """Replaces the document's contents with the specified text.
 
         :param text: The new text for the document.
+        :param original: The original text for the document.
+        :param strict_validation: Whether to use stricter validation rules for areas etc.
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
+        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(is_whole_document=strict_validation).get_blocks()
         old_pars = [DocParagraph.from_dict(doc=self, d=d)
                     for d in DocumentParser(original).add_missing_attributes().get_blocks()]
 
