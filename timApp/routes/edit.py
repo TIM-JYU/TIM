@@ -178,9 +178,10 @@ def par_response(blocks, doc_id, edit_window=False):
 
 def get_pars_from_editor_text(doc, text, break_on_elements=False):
     blocks = [DocParagraph.create(doc=doc, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(text).validate_structure().get_blocks(break_on_code_block=break_on_elements,
-                                                                              break_on_header=break_on_elements,
-                                                                              break_on_normal=break_on_elements)]
+              for par in DocumentParser(text).validate_structure(
+                  is_whole_document=False).get_blocks(break_on_code_block=break_on_elements,
+                                                      break_on_header=break_on_elements,
+                                                      break_on_normal=break_on_elements)]
     for p in blocks:
         if p.is_reference():
             try:
