@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ doc.name }}{% endblock %}
+{% block title %}{{ doc.shortname }}{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>

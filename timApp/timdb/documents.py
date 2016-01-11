@@ -446,3 +446,10 @@ class Documents(TimDbBase):
             except ValueError:
                 return None, None
         return doc_id, doc_path
+
+    @contract
+    def get_short_name(self, full_name: 'str|None') -> 'str|None':
+        if full_name is None:
+            return None
+        parts = full_name.rsplit('/', 1)
+        return parts[len(parts) - 1]
