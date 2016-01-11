@@ -3,12 +3,15 @@ from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
 from timdb.timdbbase import TimDbException
 
+
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
     css_key = 'css'
     macros_key = 'macros'
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = "source_document"
+    auto_number_headings_key = 'auto_number_headings'
+    heading_format_key = 'heading_format'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -91,5 +94,28 @@ class DocSettings:
     @contract
     def set_source_document(self, source_docid: 'int|None'):
         self.__dict[self.source_document_key] = source_docid
+
+    @contract
+    def auto_number_headings(self) -> 'bool':
+        return self.__dict.get(self.auto_number_headings_key, False)
+
+    @contract
+    def heading_format(self) -> 'dict':
+        defaults = {1: '{h1}. {text}',
+                    2: '{h1}.{h2} {text}',
+                    3: '{h1}.{h2}.{h3} {text}',
+                    4: '{h1}.{h2}.{h3}.{h4} {text}',
+                    5: '{h1}.{h2}.{h3}.{h4}.{h5} {text}',
+                    6: '{h1}.{h2}.{h3}.{h4}.{h5}.{h6} {text}'}
+        hformat = self.__dict.get(self.heading_format_key)
+        if hformat is None:
+            return defaults
+        return {1: hformat.get(1, defaults[1]),
+                2: hformat.get(2, defaults[2]),
+                3: hformat.get(3, defaults[3]),
+                4: hformat.get(4, defaults[4]),
+                5: hformat.get(5, defaults[5]),
+                6: hformat.get(6, defaults[6])}
+
 
 new_contract('DocSettings', DocSettings)
