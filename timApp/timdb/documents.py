@@ -181,7 +181,6 @@ class Documents(TimDbBase):
                        [new_name, public, doc_id, old_name])
         self.db.commit()
 
-
     @contract
     def delete_paragraph(self, doc: 'Document', par_id: 'str') -> 'Document':
         """Deletes a paragraph from a document.

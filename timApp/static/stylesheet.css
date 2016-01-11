@@ -1884,3 +1884,11 @@ p.docsettings {
     margin-right: -5em;
     text-align: left;
 }
+
+.rights-list p {
+    margin-left: 0;
+}
+
+.shortedit {
+    max-width: 4.5em;
+}
