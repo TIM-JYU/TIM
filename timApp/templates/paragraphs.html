@@ -1,4 +1,5 @@
-{% set arealine = '<div class="arealine areaexpand" title="Click to expand / collapse"></div>' %}
+{% set areaeline = '<div class="arealine areaexpand" title="Click to expand / collapse"></div>' %}
+{% set areacline = '<div class="arealine areacollapse" title="Click to collapse / expand"></div>' %}
 {% set editline = '' %}
 {% if rights.editable or rights.can_comment %}
     {% set editline = '<div class="editline" title="Click to edit this paragraph"></div>' %}
@@ -30,7 +31,9 @@
      {% endif %}
      {% if area %}
          data-area="{{ area|safe }}"
-         style="display: none;"
+         {% if area_collapse %}
+             style="display: none;"
+         {% endif %}
      {% endif %}
      {% if t.ref_id %}
          ref-id="{{ t.ref_id }}"
@@ -57,9 +60,15 @@
 
     {% if area %}
         <div class="areapartline"></div>
-    {% elif t.attrs.area %}
-        {{ arealine|safe }}
+    {% elif t.attrs.area and t.attrs.collapse %}
         {% set area = t.attrs.area %}
+        {% if t.attrs.collapse == "true" %}
+            {% set area_collapse = true %}
+            {{ areaeline|safe }}
+        {% else %}
+            {% set area_collapse = false %}
+            {{ areacline|safe }}
+        {% endif %}
     {% endif %}
 
     {{ editline|safe }}
