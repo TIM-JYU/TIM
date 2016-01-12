@@ -2,6 +2,7 @@
 from bs4 import UnicodeDammit
 from flask import Blueprint, render_template
 
+from routes import logger
 from .common import *
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
@@ -82,7 +83,7 @@ def modify_paragraph():
     doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
     verify_edit_access(doc_id)
 
-    current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, par_id))
+    logger.log_message("Editing file: {}, paragraph {}".format(doc_id, par_id), 'INFO')
     version = request.headers.get('Version', '')
     # verify_document_version(doc_id, version)
     doc = get_newest_document(doc_id)

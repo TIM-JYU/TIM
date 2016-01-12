@@ -591,13 +591,14 @@ class Document:
         return log
 
     def get_paragraph_by_task(self, task_id_name):
-        for p in self:
-            if p.get_attr('taskId') == task_id_name:
-                return p
-            if p.is_reference():
-                for rp in p.get_referenced_pars():
-                    if rp.get_attr('taskId') == task_id_name:
-                        return rp
+        with self.__iter__() as it:
+            for p in it:
+                if p.get_attr('taskId') == task_id_name:
+                    return p
+                if p.is_reference():
+                    for rp in p.get_referenced_pars():
+                        if rp.get_attr('taskId') == task_id_name:
+                            return rp
         return None
 
     def get_last_modified(self):
@@ -693,6 +694,12 @@ class DocParagraphIter:
             ver = doc.get_version() if version is None else version
             name = doc.get_version_path(ver)
             self.f = open(name, 'r') if os.path.isfile(name) else None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def __iter__(self):
         return self

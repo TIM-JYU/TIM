@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Blueprint
 
 from .common import *
-from plugin import Plugin
+from plugin import Plugin, PluginException
 import pluginControl
 import containerLink
 
@@ -64,7 +64,10 @@ def save_answer(plugintype, task_id):
     is_teacher = answer_browser_data.get('teacher', False)
     if is_teacher:
         verify_teacher_access(doc_id)
-    plugin = Plugin.from_task_id(task_id)
+    try:
+        plugin = Plugin.from_task_id(task_id)
+    except PluginException as e:
+        return abort(400, str(e))
 
     if plugin.type != plugintype:
         abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
