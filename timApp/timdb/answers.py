@@ -155,7 +155,7 @@ order by u.id,a.task_id;
             self.db.execute("""SELECT id, task_id, content, points
                                FROM Answer
                                WHERE id IN (%s)
-                               ORDER BY answered_on DESC
+                               ORDER BY answered_on, id DESC
                             """ % template, list(common_answers_ids)))
         return common_answers
 

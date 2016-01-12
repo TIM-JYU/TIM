@@ -132,6 +132,22 @@ class Document:
         return pars
 
     @contract
+    def set_settings(self, settings: 'dict'):
+        first_par = None
+        with self.__iter__() as i:
+            for p in i:
+                first_par = p
+                break
+        new_par = DocSettings(settings).to_paragraph(self)
+        if first_par is None:
+            self.add_paragraph_obj(new_par)
+        else:
+            if not first_par.is_setting():
+                self.insert_paragraph_obj(new_par, insert_before_id=first_par.get_id())
+            else:
+                self.modify_paragraph_obj(first_par.get_id(), new_par)
+
+    @contract
     def get_settings(self) -> 'DocSettings':
         if self.par_cache is not None:
             return DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings()
@@ -265,8 +281,9 @@ class Document:
     def __increment_version(self, op: 'str', par_id: 'str', increment_major: 'bool',
                             op_params: 'dict|None' = None) -> 'tuple(int, int)':
         ver_exists = True
+        ver = self.get_version()
         while ver_exists:
-            old_ver = self.get_version()
+            old_ver = ver
             ver = (old_ver[0] + 1, 0) if increment_major else (old_ver[0], old_ver[1] + 1)
             ver_exists = os.path.isfile(self.get_version_path(ver))
         if increment_major:
@@ -408,7 +425,10 @@ class Document:
             props=properties,
             files_root=self.files_root
         )
+        return self.insert_paragraph_obj(p, insert_before_id=insert_before_id)
 
+    @contract
+    def insert_paragraph_obj(self, p: 'DocParagraph', insert_before_id: 'str|None') -> 'DocParagraph':
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
@@ -433,11 +453,7 @@ class Document:
         :param new_text: New text.
         :return: The new paragraph object.
         """
-        if not self.has_paragraph(par_id):
-            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
-        p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
-        p_src.remove_link(self.doc_id)
-        old_hash = p_src.get_hash()
+
         p = DocParagraph.create(
             md=new_text,
             doc=self,
@@ -446,10 +462,21 @@ class Document:
             props=new_properties,
             files_root=self.files_root
         )
+        return self.modify_paragraph_obj(par_id, p)
+
+    @contract
+    def modify_paragraph_obj(self, par_id: 'str', p: 'DocParagraph') -> 'DocParagraph':
+        if not self.has_paragraph(par_id):
+            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
+
+        p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
+        p_src.remove_link(self.doc_id)
+        p.set_id(par_id)
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
+        old_hash = p_src.get_hash()
         new_ver = self.__increment_version('Modified', par_id, increment_major=False,
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
         old_line = '{}/{}\n'.format(par_id, old_hash)

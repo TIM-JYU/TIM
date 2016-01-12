@@ -262,7 +262,7 @@ class DocumentTest(TimDbTest):
         macro_par = d.add_paragraph('this is %%testmacro%% and year is %%year%%')
         macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
         self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
-                              'macro_delimiter': '%%'}, d.get_settings().get_settings())
+                              'macro_delimiter': '%%'}, d.get_settings().get_dict())
 
         self.assertEqual('<p>this is testvalue and year is 2015</p>', macro_par.get_html())
         d = Document(d.doc_id)  # Make a new instance of the document to test cache invalidation

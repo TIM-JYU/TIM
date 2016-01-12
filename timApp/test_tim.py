@@ -36,8 +36,9 @@ class TimTest(TimRouteTest):
         self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(4, 'Logged-in users', 'view')))
         self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
         self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
-        Document(doc_id).add_paragraph('Hello')
-        pars = Document(doc_id).get_paragraphs()
+        doc = Document(doc_id)
+        doc.add_paragraph('Hello')
+        pars = doc.get_paragraphs()
         self.assertEqual(1, len(pars))
         first_id = pars[0].get_id()
         comment_of_test1 = 'This is a comment.'
@@ -51,19 +52,19 @@ class TimTest(TimRouteTest):
         self.assertResponseStatus(a.get('/teacher/' + doc_name))
         edit_text = 'testing editing now...\nnew line\n'
         par_html = md_to_html(edit_text)
-        self.assertInResponse(par_html, self.post_par(doc_id, edit_text, first_id))
+        self.assertInResponse(par_html, self.post_par(doc, edit_text, first_id))
         self.assertDictResponse({'text': edit_text}, a.get('/getBlock/{}/{}'.format(doc_id, first_id)))
-        self.assertInResponse(par_html, self.post_par(doc_id, edit_text, first_id))
+        self.assertInResponse(par_html, self.post_par(doc, edit_text, first_id))
         par2_text = 'new par'
         par2_html = md_to_html(par2_text)
         self.assertManyInResponse([par_html, par2_html],
-                                  self.post_par(doc_id, edit_text + '#-\n' + par2_text, first_id))
+                                  self.post_par(doc, edit_text + '#-\n' + par2_text, first_id))
         pars = Document(doc_id).get_paragraphs()
         self.assertEqual(2, len(pars))
         second_par_id = pars[1].get_id()
         par2_new_text = '    ' + par2_text
         par2_new_html = md_to_html(par2_new_text)
-        self.assertInResponse(par2_new_html, self.post_par(doc_id, par2_new_text, second_par_id))
+        self.assertInResponse(par2_new_html, self.post_par(doc, par2_new_text, second_par_id))
         self.assertResponseStatus(a.post('/logout', follow_redirects=True))
         self.assertResponseStatus(a.get('/settings/'), 403)
         for d in doc_ids - {3}:
@@ -138,13 +139,7 @@ class TimTest(TimRouteTest):
     def test_macro_doc(self):
         a = self.app
         self.login_test1()
-        doc = self.create_doc(initial_par="""
-``` {settings=""}
-macro_delimiter: "%%"
-macros:
- rivi: kerros
-```
-""")
+        doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}})
         table_text = """
 {% set sarakeleveys = 50 %}
 {% set sarakkeet = ['eka', 'toka', 'kolmas', 'neljäs'] %}

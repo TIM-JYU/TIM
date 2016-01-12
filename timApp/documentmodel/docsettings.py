@@ -2,6 +2,7 @@ from contracts import contract, new_contract
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
 from timdb.timdbbase import TimDbException
+import yaml
 
 
 class DocSettings:
@@ -65,11 +66,11 @@ class DocSettings:
 
     @contract
     def to_paragraph(self, doc) -> 'DocParagraph':
-        text = "\n".join(['{}: {}'.format(k, self.__dict[k]) for k in self.__dict ])
+        text = '```\n' + yaml.dump(self.__dict) + '\n```'
         return DocParagraph.create(doc, md=text, attrs={"settings": ""})
 
     @contract
-    def get_settings(self) -> 'dict':
+    def get_dict(self) -> 'dict':
         return self.__dict
 
     @contract
