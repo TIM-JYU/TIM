@@ -591,6 +591,10 @@ class DocParagraph(DocParagraphBase):
 
             if set_html:
                 html = self.get_html() if tr else ref_par.get_html()
+                
+                # if html is empty, use the source
+                if html == '':
+                    html = ref_par.get_html()
                 if write_link:
                     srclink = """&nbsp;
                                     <a class="parlink"
@@ -660,7 +664,9 @@ class DocParagraph(DocParagraphBase):
         return self.original
 
     def is_dynamic(self):
-        return self.__is_plugin or self.__is_ref or self.__is_setting
+        return self.__is_plugin \
+               or (self.__is_ref and self.__data.get('attrs', {}).get('r', '') != 'tr')\
+               or self.__is_setting
 
     def is_plugin(self):
         return self.__is_plugin
