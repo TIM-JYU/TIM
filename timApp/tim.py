@@ -1130,13 +1130,19 @@ def get_translations(doc_id):
     if not has_view_access(doc_id):
         abort(403)
 
-    return jsonResponse(timdb.documents.get_translations(doc_id))
+    trlist = timdb.documents.get_translations(doc_id)
+    for tr in trlist:
+        src_name = timdb.documents.get_first_document_name(doc_id)
+        owner_id = timdb.documents.get_owner(tr['id'])
+        tr['name'] = timdb.documents.get_translation_path(doc_id, src_name, tr['lang_id'])
+        tr['owner'] = timdb.users.get_user_group_name(owner_id) if owner_id else None
+
+    return jsonResponse(trlist)
 
 
-@app.route("/translate/<int:doc_id>/<language>", methods=["GET"])
+@app.route("/translate/<int:doc_id>/<language>", methods=["POST"])
 def create_translation(doc_id, language):
-    params = request.get_json()
-    title = params.get('doc_title', None) if params is not None else None
+    title = request.get_json().get('doc_title', None)
     timdb = getTimDb()
 
     if not timdb.documents.exists(doc_id):
@@ -1153,10 +1159,10 @@ def create_translation(doc_id, language):
     doc = timdb.documents.create_translation(src_doc, None, getCurrentUserGroup())
     timdb.documents.add_translation(doc.doc_id, src_doc.doc_id, language, title)
 
-    src_doc_name = timdb.documents.get_first_document_name(doc.doc_id)
-    doc_name = src_doc_name + '/' + language if src_doc_name is not None else str(doc.doc_id)
+    src_doc_name = timdb.documents.get_first_document_name(src_doc.doc_id)
+    doc_name = timdb.documents.get_translation_path(doc_id, src_doc_name, language)
 
-    return jsonResponse([{'id': doc.doc_id, 'title': title, 'name': doc_name}])
+    return jsonResponse({'id': doc.doc_id, 'title': title, 'name': doc_name})
 
 
 @app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])

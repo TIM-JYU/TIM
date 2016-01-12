@@ -33,6 +33,10 @@ PermApp.controller("PermCtrl", [
             return ""; 
         };
 
+        sc.navigate = function(verb, path) {
+            location.href = '/' + verb + '/' + path;
+        };
+
         sc.getJustDocName = function(fullName) {
             i = fullName.lastIndexOf('/');
             return i < 0 ? fullName : fullName.substr(i + 1);
@@ -54,7 +58,19 @@ PermApp.controller("PermCtrl", [
                     sc.aliases = data;
 
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert("Error loading aliases: " + data.message);
+            });
+
+            return [];
+        };
+
+        sc.getTranslations = function() {
+            $http.get('/translations/' + sc.doc.id, {
+            }).success(function (data, status, headers, config) {
+                sc.translations = data;
+
+            }).error(function (data, status, headers, config) {
+                alert("Error loading translations: " + data.message);
             });
 
             return [];
@@ -367,10 +383,10 @@ text = '\n'.join(a)
         };
 
         sc.createTranslation = function() {
-            $http.get('/translate/' + sc.doc.id + "/" + sc.translationName, {
+            $http.post('/translate/' + sc.doc.id + "/" + sc.translationName, {
                 'doc_title': sc.translationTitle
             }).success(function (data, status, headers, config) {
-                location.assign("/view/" + data.name);
+                location.href = "/view/" + data.name;
             }).error(function (data, status, headers, config) {
                 $window.alert('Could not create a translation. Error message is: ' + data.error);
             });
@@ -401,6 +417,7 @@ text = '\n'.join(a)
         doc.fulltext = doc.fulltext.trim();
         sc.fulltext = doc.fulltext;
         sc.aliases = sc.getAliases();
+        sc.translations = sc.getTranslations();
         sc.showCreateDiv = "";
 
         if (isFolder) {

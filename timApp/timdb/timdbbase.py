@@ -97,6 +97,17 @@ class TimDbBase(object):
         return result[0] == 1
 
     @contract
+    def get_owner(self, block_id: 'int') -> 'int|None':
+        """Returns the owner group for a block.
+
+        :param block_id: The id of the block.
+        """
+        cursor = self.db.cursor()
+        cursor.execute('SELECT UserGroup_id FROM Block WHERE id = ?', [block_id])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
+
+    @contract
     def setOwner(self, block_id: 'int', usergroup_id: 'int'):
         """Changes the owner group for a block.
 

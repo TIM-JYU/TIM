@@ -155,10 +155,31 @@ if (isFolder) {
         </table>
     </div>
 
+    <div ng-show="!isFolder">
+        Translations:
+        <table class="borderless">
+            <tr>
+                <th>Language</th>
+                <th>Title</th>
+                <th>Maintainer</th>
+                <th>Actions</th>
+            </tr>
+            <tr ng-repeat="tr in translations">
+                <td><input type="text" class="shortedit" ng-model="tr.lang_id" placeholder="Language"/></td>
+                <td><input type="text" ng-model="tr.title" placeholder="Title"/></td>
+                <td>{{ '{{tr.owner}}' }}</td>
+                <td>
+                    <button ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
+                    <button ng-click="navigate('view', tr.name)">View</button>
+                    <button ng-click="navigate('manage', tr.name)">Manage</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <span ng-show="!isFolder">
         <button ng-click="toggleDiv('translate')">Create a translation</button>
         <button ng-click="toggleDiv('cite')">Create a cited copy</button>
-        <button ng-click="markAllAsRead()">Mark document as read</button>
     </span>
 
     <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
@@ -213,7 +234,8 @@ if (isFolder) {
     </div>
 
     <div class="margin" ng-show="!isFolder">
-        <button ng-click="deleteDocument(doc.id)">Delete document</button>
+        <button ng-click="markAllAsRead()">Mark document as read</button>
+        <button class="redbutton" ng-click="deleteDocument(doc.id)">Delete document</button>
     </div>
 
     <div class="margin" ng-show="isFolder">

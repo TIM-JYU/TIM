@@ -193,7 +193,7 @@ def verify_json_params(*args, require=True, default=None):
     :rtype: tuple[str]
     """
     result = ()
-    json_params = request.get_json()
+    json_params = request.get_json() or []
     for arg in args:
         if arg in json_params:
             val = json_params[arg]

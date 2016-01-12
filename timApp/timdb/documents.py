@@ -135,6 +135,7 @@ class Documents(TimDbBase):
         cursor.execute('DELETE FROM DocEntry WHERE id = ?', [document_id])
         cursor.execute('DELETE FROM ReadParagraphs where doc_id = ?', [document_id])
         cursor.execute('DELETE FROM UserNotes where doc_id = ?', [document_id])
+        cursor.execute('DELETE FROM Translation WHERE doc_id = ? OR src_docid = ?', [document_id, document_id])
         self.db.commit()
 
         Document.remove(document_id)
@@ -191,7 +192,7 @@ class Documents(TimDbBase):
     @contract
     def get_translations(self, doc_id: 'int') -> 'list(dict)':
         cursor = self.db.cursor()
-        cursor.execute("SELECT doc_id, lang_id, doc_title FROM Translation WHERE src_docid = ?", [doc_id])
+        cursor.execute("SELECT doc_id as id, lang_id, doc_title as title FROM Translation WHERE src_docid = ?", [doc_id])
         return self.resultAsDictionary(cursor)
 
     @contract
@@ -201,6 +202,13 @@ class Documents(TimDbBase):
                        [src_docid, lang_id])
         result = cursor.fetchone()
         return result[0] if result is not None else None
+
+    @contract
+    def get_translation_path(self, doc_id: 'int', src_doc_name: 'str|None', lang_id: 'str|None') -> 'str':
+        if src_doc_name is None or lang_id is None:
+            return str(doc_id)
+
+        return src_doc_name + '/' + lang_id
 
     @contract
     def translation_exists(self, src_doc_id: 'int', lang_id: 'str') -> 'bool':
