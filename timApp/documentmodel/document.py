@@ -30,6 +30,9 @@ class Document:
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
         self.par_cache = None
 
+        # Used for accessing previous/next paragraphs quickly based on id
+        self.par_map = None
+
     @classmethod
     def get_default_files_root(cls):
         return cls.default_files_root
@@ -83,11 +86,66 @@ class Document:
         froot = cls.get_default_files_root() if files_root is None else files_root
         return os.path.isfile(os.path.join(froot, 'docs', str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
 
+    def __update_par_map(self):
+        self.par_map = {}
+        for i in range(0, len(self.par_cache)):
+            curr_p = self.par_cache[i].get_id()
+            prev_p = self.par_cache[i-1] if i > 0 else None
+            next_p = self.par_cache[i+1] if i+1 < len(self.par_cache) else None
+            self.par_map[curr_p] = {'p': prev_p, 'n': next_p}
+
     def load_pars(self):
         """
         Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster.
         """
         self.par_cache = [par for par in self]
+        self.__update_par_map()
+
+    def get_previous_par(self, par, get_last_if_no_prev=False):
+        if self.par_map is None:
+            self.load_pars()
+        prev = self.par_map.get(par.get_id())
+        if prev:
+            return prev['p']
+        if get_last_if_no_prev:
+            return self.par_cache[-1] if self.par_cache else None
+        return None
+
+    def get_pars_till(self, par):
+        pars = []
+        i = self.__iter__()
+        try:
+            while True:
+                p = next(i)
+                pars.append(p)
+                if par.get_id() == p.get_id():
+                    break
+        except StopIteration:
+            pass
+
+        # TODO: improve this
+        # 'i' might be a ListIterator or DocParagraphIter depending on whether the pars were cached
+        try:
+            i.close()
+        except AttributeError:
+            pass
+        return pars
+
+    @contract
+    def set_settings(self, settings: 'dict'):
+        first_par = None
+        with self.__iter__() as i:
+            for p in i:
+                first_par = p
+                break
+        new_par = DocSettings(settings).to_paragraph(self)
+        if first_par is None:
+            self.add_paragraph_obj(new_par)
+        else:
+            if not first_par.is_setting():
+                self.insert_paragraph_obj(new_par, insert_before_id=first_par.get_id())
+            else:
+                self.modify_paragraph_obj(first_par.get_id(), new_par)
 
     @contract
     def get_settings(self) -> 'DocSettings':
@@ -223,8 +281,9 @@ class Document:
     def __increment_version(self, op: 'str', par_id: 'str', increment_major: 'bool',
                             op_params: 'dict|None' = None) -> 'tuple(int, int)':
         ver_exists = True
+        ver = self.get_version()
         while ver_exists:
-            old_ver = self.get_version()
+            old_ver = ver
             ver = (old_ver[0] + 1, 0) if increment_major else (old_ver[0], old_ver[1] + 1)
             ver_exists = os.path.isfile(self.get_version_path(ver))
         if increment_major:
@@ -236,6 +295,8 @@ class Document:
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
         self.version = ver
+        self.par_cache = None
+        self.par_map = None
         return ver
 
     @contract
@@ -264,7 +325,6 @@ class Document:
         :param p: Paragraph to be added.
         :return: The same paragraph object, or None if could not add.
         """
-        p.get_html()
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
@@ -365,7 +425,10 @@ class Document:
             props=properties,
             files_root=self.files_root
         )
+        return self.insert_paragraph_obj(p, insert_before_id=insert_before_id)
 
+    @contract
+    def insert_paragraph_obj(self, p: 'DocParagraph', insert_before_id: 'str|None') -> 'DocParagraph':
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
@@ -390,11 +453,7 @@ class Document:
         :param new_text: New text.
         :return: The new paragraph object.
         """
-        if not self.has_paragraph(par_id):
-            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
-        p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
-        p_src.remove_link(self.doc_id)
-        old_hash = p_src.get_hash()
+
         p = DocParagraph.create(
             md=new_text,
             doc=self,
@@ -403,10 +462,21 @@ class Document:
             props=new_properties,
             files_root=self.files_root
         )
+        return self.modify_paragraph_obj(par_id, p)
+
+    @contract
+    def modify_paragraph_obj(self, par_id: 'str', p: 'DocParagraph') -> 'DocParagraph':
+        if not self.has_paragraph(par_id):
+            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
+
+        p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
+        p_src.remove_link(self.doc_id)
+        p.set_id(par_id)
         new_hash = p.get_hash()
         p.add_link(self.doc_id)
         p.set_latest()
         old_ver = self.get_version()
+        old_hash = p_src.get_hash()
         new_ver = self.__increment_version('Modified', par_id, increment_major=False,
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
         old_line = '{}/{}\n'.format(par_id, old_hash)
@@ -432,7 +502,7 @@ class Document:
         :param par_id_first: The id of the paragraph that denotes the start of the section.
         :param par_id_last: The id of the paragraph that denotes the end of the section.
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
+        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(is_whole_document=False).get_blocks()
         new_par_id_set = set([par['id'] for par in new_pars])
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
@@ -449,12 +519,14 @@ class Document:
                                     if end_index + 1 < len(all_par_ids) else None)
 
     @contract
-    def update(self, text: 'str', original: 'str'):
+    def update(self, text: 'str', original: 'str', strict_validation=True):
         """Replaces the document's contents with the specified text.
 
         :param text: The new text for the document.
+        :param original: The original text for the document.
+        :param strict_validation: Whether to use stricter validation rules for areas etc.
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_structure().get_blocks()
+        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(is_whole_document=strict_validation).get_blocks()
         old_pars = [DocParagraph.from_dict(doc=self, d=d)
                     for d in DocumentParser(original).add_missing_attributes().get_blocks()]
 
@@ -546,13 +618,14 @@ class Document:
         return log
 
     def get_paragraph_by_task(self, task_id_name):
-        for p in self:
-            if p.get_attr('taskId') == task_id_name:
-                return p
-            if p.is_reference():
-                for rp in p.get_referenced_pars():
-                    if rp.get_attr('taskId') == task_id_name:
-                        return rp
+        with self.__iter__() as it:
+            for p in it:
+                if p.get_attr('taskId') == task_id_name:
+                    return p
+                if p.is_reference():
+                    for rp in p.get_referenced_pars():
+                        if rp.get_attr('taskId') == task_id_name:
+                            return rp
         return None
 
     def get_last_modified(self):
@@ -620,6 +693,23 @@ class Document:
         src_docid = self.get_settings().get_source_document()
         return Document(src_docid) if src_docid is not None else None
 
+    def get_last_par(self):
+        pars = [par for par in self]
+        return pars[-1] if pars else None
+
+    def insert_temporary_pars(self, pars, context_par):
+        self.load_pars()
+
+        if context_par is None:
+            self.par_cache = pars + self.par_cache
+        else:
+            i = 0
+            for i, par in enumerate(self.par_cache):
+                if par.get_id() == context_par.get_id():
+                    break
+            self.par_cache = self.par_cache[:i+1] + pars + self.par_cache[i+1:]
+        self.__update_par_map()
+
 new_contract('Document', Document)
 
 
@@ -631,6 +721,12 @@ class DocParagraphIter:
             ver = doc.get_version() if version is None else version
             name = doc.get_version_path(ver)
             self.f = open(name, 'r') if os.path.isfile(name) else None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def __iter__(self):
         return self
@@ -670,7 +766,12 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
                 pars.append(par)
 
     DocParagraph.preload_htmls(pars, doc.get_settings())
-    html_table = [par.get_html() for par in pars]
+    html_list = [par.get_html() for par in pars]
+    return get_index_from_html_list(html_list)
+
+
+@contract
+def get_index_from_html_list(html_table: 'list(str)') -> 'list(tuple)':
     index = []
     current_headers = None
     for htmlstr in html_table:
@@ -680,9 +781,9 @@ def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tup
             continue
         if index_entry.tag == 'div':
             for header in index_entry.iter('h1', 'h2', 'h3'):
-                current_headers = doc.add_index_entry(index, current_headers, header)
+                current_headers = Document.add_index_entry(index, current_headers, header)
         elif index_entry.tag.startswith('h'):
-            current_headers = doc.add_index_entry(index, current_headers, index_entry)
+            current_headers = Document.add_index_entry(index, current_headers, index_entry)
     if current_headers is not None:
         index.append(current_headers)
     return index

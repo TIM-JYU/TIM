@@ -2,10 +2,11 @@
 from bs4 import UnicodeDammit
 from flask import Blueprint, render_template
 
+from routes import logger
 from .common import *
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from documentmodel.documentparser import DocumentParser, ValidationException
+from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html
 from routes.common import post_process_pars
@@ -50,16 +51,19 @@ def update_document(doc_id, version):
             return jsonResponse({'message': 'Malformed request - fulltext missing.'}, 400)
         content = request_json['fulltext']
         original = request_json['original']
+        strict_validation = request_json.get('ignore_warnings', None) != True
 
     if original is None:
         abort(400, 'Missing parameter: original')
     if content is None:
         return jsonResponse({'message': 'Failed to convert the file to UTF-8.'}, 400)
-    doc = Document(doc_id, modifier_group_id=getCurrentUserGroup())
+    doc = get_newest_document(doc_id)
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
         get_pars_from_editor_text(doc, content, break_on_elements=True)
-        d = timdb.documents.update_document(doc, content, original)
+        d = timdb.documents.update_document(doc, content, original, strict_validation)
+    except ValidationWarning as e:
+        return jsonResponse({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
         return abort(400, str(e))
     chg = d.get_changelog()
@@ -79,7 +83,7 @@ def modify_paragraph():
     doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
     verify_edit_access(doc_id)
 
-    current_app.logger.info("Editing file: {}, paragraph {}".format(doc_id, par_id))
+    logger.log_message("Editing file: {}, paragraph {}".format(doc_id, par_id), 'INFO')
     version = request.headers.get('Version', '')
     # verify_document_version(doc_id, version)
     doc = get_newest_document(doc_id)
@@ -100,8 +104,9 @@ def modify_paragraph():
             pars = doc.get_section(new_start, new_end)
         except ValidationException as e:
             return abort(400, str(e))
+        original_par = doc.get_paragraph(new_start)
     else:
-        original_par = DocParagraph.get_latest(doc=doc, par_id=par_id)
+        original_par = doc.get_paragraph(par_id)
         pars = []
 
         separate_pars = DocumentParser(md).get_blocks()
@@ -138,49 +143,78 @@ def modify_paragraph():
                                                      properties=properties)
             pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
-    return par_response(pars, doc_id)
+    return par_response(pars,
+                        doc,
+                        update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
 def preview(doc_id):
     """Route for previewing a paragraph.
 
-    :param doc_id: The id of the document in which the preview will be renderer. Unused so far.
+    :param doc_id: The id of the document in which the preview will be rendered.
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
     """
     text, = verify_json_params('text')
-    if not request.get_json().get('isComment'):
-        editing_area = request.get_json().get('area_start') is not None and request.get_json().get('area_end') is not None
+    rjson = request.get_json()
+    if not rjson.get('isComment'):
+        area_start = rjson.get('area_start')
+        editing_area = area_start is not None and rjson.get('area_end') is not None
         doc = Document(doc_id)
+        next_par_id = rjson.get('par_next')
+        if editing_area:
+            context_par = doc.get_previous_par(doc.get_paragraph(area_start))
+        elif next_par_id:
+            context_par = doc.get_previous_par(doc.get_paragraph(next_par_id))
+            if doc.has_paragraph(rjson.get('par')):  # rjson['par'] is 'NEW_PAR' when adding a new paragraph
+                context_par = doc.get_previous_par(context_par)
+        else:
+            context_par = doc.get_last_par()
         try:
             blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
-            return par_response(blocks, doc_id, edit_window=True)
+            doc.insert_temporary_pars(blocks, context_par)
+            return par_response(blocks, doc, edit_window=True, context_par=context_par)
         except Exception as e:
             err_html = '<div class="pluginError">{}</div>'.format(sanitize_html(str(e)))
             blocks = [DocParagraph.create(doc=doc, md=err_html, html=err_html)]
-            return par_response(blocks, doc_id, edit_window=True)
+            return par_response(blocks, doc, edit_window=True)
     else:
         return jsonResponse({'texts': md_to_html(text)})
 
 
-def par_response(blocks, doc_id, edit_window=False):
-    doc = Document(doc_id)
+def par_response(blocks, doc, edit_window=False, update_cache=False, context_par=None):
+    if update_cache:
+        changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
+                                                  doc.get_settings(),
+                                                  persist=update_cache)
+    else:
+        changed_pars = []
+        DocParagraph.preload_htmls(blocks, doc.get_settings(), context_par=context_par, persist=update_cache)
+
     pars, js_paths, css_paths, modules = post_process_pars(doc, blocks, getCurrentUserId(), edit_window=edit_window)
+
+    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, getCurrentUserId(), edit_window=edit_window)
+
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
-                                                  rights=get_rights(doc_id)),
+                                                  rights=get_rights(doc.doc_id)),
                          'route': 'preview',
                          'js': js_paths,
                          'css': css_paths,
                          'angularModule': modules,
-                         'version': Document(doc_id).get_version()})
+                         'changed_pars': {p['id']: render_template('paragraphs.html',
+                                                                   text=[p],
+                                                                   rights=get_rights(doc.doc_id)) for p in
+                                          changed_pars},
+                         'version': doc.get_version()})
 
 
 def get_pars_from_editor_text(doc, text, break_on_elements=False):
     blocks = [DocParagraph.create(doc=doc, md=par['md'], attrs=par.get('attrs'))
-              for par in DocumentParser(text).validate_structure().get_blocks(break_on_code_block=break_on_elements,
-                                                                              break_on_header=break_on_elements,
-                                                                              break_on_normal=break_on_elements)]
+              for par in DocumentParser(text).validate_structure(
+                  is_whole_document=False).get_blocks(break_on_code_block=break_on_elements,
+                                                      break_on_header=break_on_elements,
+                                                      break_on_normal=break_on_elements)]
     for p in blocks:
         if p.is_reference():
             try:
@@ -225,7 +259,6 @@ def add_paragraph():
         return abort(400, str(e))
 
     # verify_document_version(doc_id, version)
-
     pars = []
     separate_pars = DocumentParser(md).get_blocks()
     is_multi_block = len(separate_pars) > 1
@@ -245,7 +278,7 @@ def add_paragraph():
                                                  properties=properties)
         pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
-    return par_response(pars, doc_id)
+    return par_response(pars, doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
@@ -260,10 +293,19 @@ def delete_paragraph(doc_id):
     version = request.headers.get('Version', '')
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
     # verify_document_version(doc_id, version)
+    doc = get_newest_document(doc_id)
     if area_end and area_start:
-        new_doc = Document(doc_id)
-        new_doc.delete_section(area_start, area_end)
+        doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
-        new_doc = timdb.documents.delete_paragraph(get_newest_document(doc_id), par_id)
-    return jsonResponse({'version': new_doc.get_version()})
+        timdb.documents.delete_paragraph(doc, par_id)
+    return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
+
+
+@edit_page.route("/getUpdatedPars/<int:doc_id>")
+def get_updated_pars(doc_id):
+    """
+    Gets updated paragraphs that were changed e.g. as the result of adding headings or modifying macros.
+    """
+    verify_view_access(doc_id)
+    return par_response([], Document(doc_id), update_cache=True)

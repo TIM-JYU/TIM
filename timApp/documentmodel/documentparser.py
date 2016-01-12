@@ -12,6 +12,8 @@ class SplitterException(Exception):
 class ValidationException(Exception):
     pass
 
+class ValidationWarning(ValidationException):
+    pass
 
 class DocReader:
     """
@@ -79,7 +81,7 @@ class DocumentParser:
                 r['id'] = id_func()
         return self
 
-    def validate_structure(self, id_validator_func=is_valid_id):
+    def validate_structure(self, id_validator_func=is_valid_id, is_whole_document=True):
         self._parse_document(*self._last_setting)
         found_ids = set()
         found_tasks = set()
@@ -129,17 +131,18 @@ class DocumentParser:
                     raise ValidationException('Cannot have a zero-length area')
                 if area_end in classed_areas:
                     if area_end != classed_areas[-1]:
-                        raise ValidationException('Classed areas cannot overlap ("{}" and "{}")'
+                        raise ValidationWarning('Classed areas cannot overlap ("{}" and "{}")'
                                                   .format(classed_areas[-1], area_end))
                     classed_areas.pop()
-                if area_end not in found_areas:
-                    raise ValidationException('No start found for area "{}"'.format(area_end))
-                if area_end in found_area_ends:
-                    raise ValidationException('Area already ended: ' + area_end)
+                if is_whole_document:
+                    if area_end not in found_areas:
+                        raise ValidationWarning('No start found for area "{}"'.format(area_end))
+                    if area_end in found_area_ends:
+                        raise ValidationWarning('Area already ended: ' + area_end)
                 found_area_ends.add(area_end)
         unended_areas = found_areas - found_area_ends
-        if unended_areas:
-            raise ValidationException('Some areas were not ended: ' + str(unended_areas))
+        if is_whole_document and unended_areas:
+            raise ValidationWarning('Some areas were not ended: ' + str(unended_areas))
         return self
 
     def _parse_document(self, break_on_empty_line=False,

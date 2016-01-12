@@ -727,7 +727,8 @@ def show_lecture_info(lecture_id):
                            lectureStartTime=lecture.get("start_time"),
                            lectureEndTime=lecture.get("end_time"),
                            in_lecture=in_lecture,
-                           settings=settings)
+                           settings=settings,
+                           rights=get_rights(doc['id']))
 
 
 # Route to get show lecture info of some specific lecture
@@ -1254,8 +1255,9 @@ def post_note():
         par = get_referenced_pars_from_req(par)[0]
 
     timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
-    return par_response([Document(doc_id).get_paragraph(par_id)],
-                        doc_id)
+    doc = Document(doc_id)
+    return par_response([doc.get_paragraph(par_id)],
+                        doc)
 
 
 @app.route("/editNote", methods=['POST'])
@@ -1279,8 +1281,9 @@ def edit_note():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
     timdb.notes.modifyNote(note_id, note_text, access, tags)
-    return par_response([Document(doc_id).get_paragraph(par_id)],
-                        doc_id)
+    doc = Document(doc_id)
+    return par_response([doc.get_paragraph(par_id)],
+                        doc)
 
 
 @app.route("/deleteNote", methods=['POST'])
@@ -1295,8 +1298,9 @@ def delete_note():
             or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
     timdb.notes.deleteNote(note_id)
-    return par_response([Document(doc_id).get_paragraph(paragraph_id)],
-                        doc_id)
+    doc = Document(doc_id)
+    return par_response([doc.get_paragraph(paragraph_id)],
+                        doc)
 
 
 @app.route("/getServerTime", methods=['GET'])
