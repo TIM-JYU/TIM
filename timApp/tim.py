@@ -1121,17 +1121,42 @@ def create_document():
                        getCurrentUserGroup())
 
 
-@app.route("/translate/<int:doc_id>/<language>", methods=["GET"])
-def create_translation(doc_id, language):
-    params = request.get_json()
-
+@app.route("/translations/<int:doc_id>", methods=["GET"])
+def get_translations(doc_id):
     timdb = getTimDb()
+
+    if not timdb.documents.exists(doc_id):
+        abort(404)
     if not has_view_access(doc_id):
         abort(403)
 
+    return jsonResponse(timdb.documents.get_translations(doc_id))
+
+
+@app.route("/translate/<int:doc_id>/<language>", methods=["GET"])
+def create_translation(doc_id, language):
+    params = request.get_json()
+    title = params.get('doc_title', None) if params is not None else None
+    timdb = getTimDb()
+
+    if not timdb.documents.exists(doc_id):
+        abort(404)
+    if not has_view_access(doc_id):
+        abort(403)
+    if timdb.documents.translation_exists(doc_id, language):
+        abort(403, 'Translation already exists')
+    if not logged_in():
+        # todo: check for translation right
+        abort(403, 'You have to be logged in to create a translation')
+
     src_doc = Document(doc_id)
-    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group, params).doc_id
-    return create_item(None, 'document', factory, getCurrentUserGroup())
+    doc = timdb.documents.create_translation(src_doc, None, getCurrentUserGroup())
+    timdb.documents.add_translation(doc.doc_id, src_doc.doc_id, language, title)
+
+    src_doc_name = timdb.documents.get_first_document_name(doc.doc_id)
+    doc_name = src_doc_name + '/' + language if src_doc_name is not None else str(doc.doc_id)
+
+    return jsonResponse([{'id': doc.doc_id, 'title': title, 'name': doc_name}])
 
 
 @app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])

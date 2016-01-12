@@ -419,7 +419,7 @@ class DocParagraph(DocParagraphBase):
         self.__set_html(new_html, True)
 
     @contract
-    def __set_html(self, new_html: 'str', sanitized=False):
+    def __set_html(self, new_html: 'str', sanitized=False) -> 'str':
         self.html = new_html
         if self.__htmldata is not None:
             self.__htmldata['html'] = new_html

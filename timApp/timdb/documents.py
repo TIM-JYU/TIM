@@ -182,6 +182,42 @@ class Documents(TimDbBase):
         self.db.commit()
 
     @contract
+    def add_translation(self, doc_id: 'int', src_docid: 'int', lang_id: 'str', title: 'str|None'=None):
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO Translation (doc_id, src_docid, lang_id, doc_title) VALUES (?, ?, ?, ?)",
+                       [doc_id, src_docid, lang_id, title])
+        self.db.commit()
+
+    @contract
+    def get_translations(self, doc_id: 'int') -> 'list(dict)':
+        cursor = self.db.cursor()
+        cursor.execute("SELECT doc_id, lang_id, doc_title FROM Translation WHERE src_docid = ?", [doc_id])
+        return self.resultAsDictionary(cursor)
+
+    @contract
+    def get_translation(self, src_docid: 'int', lang_id: 'str') -> 'int|None':
+        cursor = self.db.cursor()
+        cursor.execute("SELECT doc_id FROM Translation WHERE src_docid = ? AND lang_id = ?",
+                       [src_docid, lang_id])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
+
+    @contract
+    def translation_exists(self, src_doc_id: 'int', lang_id: 'str') -> 'bool':
+        cursor = self.db.cursor()
+        cursor.execute("SELECT EXISTS(SELECT doc_id FROM Translation WHERE src_docid = ? AND lang_id = ?)",
+                       [src_doc_id, lang_id])
+        result = cursor.fetchone()
+        return result[0] == 1
+
+    @contract
+    def rename_translation(self, doc_id: 'int', new_title: 'str'):
+        cursor = self.db.cursor()
+        cursor.execute("UPDATE Translation SET doc_title = ? WHERE doc_id = ?",
+                       [new_title, doc_id])
+        self.db.commit()
+
+    @contract
     def delete_paragraph(self, doc: 'Document', par_id: 'str') -> 'Document':
         """Deletes a paragraph from a document.
         
@@ -204,7 +240,7 @@ class Documents(TimDbBase):
         return self.blockExists(document_id, blocktypes.DOCUMENT)
 
     @contract
-    def get_document_id(self, document_name: 'str') -> 'int|None':
+    def get_document_id(self, document_name: 'str', try_translation=True) -> 'int|None':
         """Gets the document's identifier by its name or None if not found.
         
         :param document_name: The name of the document.
@@ -212,9 +248,18 @@ class Documents(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM DocEntry WHERE name = ?', [document_name])
-
         row = cursor.fetchone()
-        return row[0] if row else None
+        if row is None:
+            # Try if it's a name for a translation
+            parts = document_name.rsplit('/', 1)
+            if len(parts) < 2:
+                return None
+            src_docid = self.get_document_id(parts[0], try_translation=False)
+            if src_docid is None:
+                return None
+            return self.get_translation(src_docid, parts[1])
+
+        return row[0]
 
     @contract
     def get_document_names(self, document_id: 'int', include_nonpublic=True) -> 'list(dict)':

@@ -367,17 +367,17 @@ text = '\n'.join(a)
         };
 
         sc.createTranslation = function() {
-            $http.put('/translate/' + sc.doc.id + "/" + sc.translationName + '?_=' + Date.now())
-                .success(function (data, status, headers, config) {
-                    location.assign("/view/" + data.name);
-                }).error(function (data, status, headers, config) {
-                    $window.alert('Could not create a translation. Error message is: ' + data.error);
-                }).finally(function (data, status, headers, config) {
-                });
+            $http.get('/translate/' + sc.doc.id + "/" + sc.translationName, {
+                'doc_title': sc.translationTitle
+            }).success(function (data, status, headers, config) {
+                location.assign("/view/" + data.name);
+            }).error(function (data, status, headers, config) {
+                $window.alert('Could not create a translation. Error message is: ' + data.error);
+            });
         };
 
         sc.createCitation = function() {
-            $http.put('/cite/' + sc.doc.id + "/" + sc.citationName + '?_=' + Date.now())
+            $http.get('/cite/' + sc.doc.id + "/" + sc.citationName + '?_=' + Date.now())
                 .success(function (data, status, headers, config) {
                     location.assign("/view/" + data.name);
                 }).error(function (data, status, headers, config) {
