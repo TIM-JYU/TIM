@@ -1,6 +1,6 @@
 """Routes for login view."""
 from .common import *
-from .logger import logMessage
+from .logger import log_message
 from email.mime.text import MIMEText
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
@@ -163,7 +163,7 @@ def altSignup():
         __sendMail(email, 'Your new TIM password', 'Your password is {}'.format(password))
         flash("A password has been sent to you. Please check your email.")
     except Exception as e:
-        logMessage('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)), 'ERROR')
+        log_message('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)), 'ERROR')
         flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
 
     return finishLogin(ready=False)

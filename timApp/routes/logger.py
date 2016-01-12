@@ -15,7 +15,8 @@ def record_params(setup_state):
     app = setup_state.app
 
     # current_app.logging.basicConfig(filename='timLog.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-    formatter = logging.Formatter("{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
+    formatter = logging.Formatter(
+            "{\"time\":%(asctime)s, \"file\": %(pathname)s, \"line\" :%(lineno)d, \"messageLevel\":  %(levelname)s, \"message\": %(message)s}")
     if not os.path.exists(app.config['LOG_DIR']):
         try:
             os.mkdir(app.config['LOG_DIR'])
@@ -30,24 +31,26 @@ def record_params(setup_state):
     logger = app.logger
 
     global LOG_LEVELS
-    LOG_LEVELS = {"CRITICAL" : app.logger.critical,
-                  "ERROR" : app.logger.error,
-                  "WARNING" : app.logger.warning,
+    LOG_LEVELS = {"CRITICAL": app.logger.critical,
+                  "ERROR": app.logger.error,
+                  "WARNING": app.logger.warning,
                   "INFO": app.logger.info,
-                  "DEBUG" : app.logger.debug}
+                  "DEBUG": app.logger.debug}
 
 
-
-# Logger call
-@logger_bp.route("/log/", methods=["POST"])
-def logMessageRoute():
+# Logger call, disable this for now because it's unused and has no authentication
+# @logger_bp.route("/log/", methods=["POST"])
+def log_message_route():
     jsondata = request.get_json()
     message = jsondata['message']
     level = jsondata['level']
-    logMessage(message, level)
-    return jsonResponse({}, 200)
+    log_message(message, level)
+    return okJsonResponse()
 
-def logMessage(message, level):
+
+def log_message(message, level):
+    if current_app.config['TESTING']:
+        return
     try:
         global LOG_LEVELS
         LOG_LEVELS[level](message)
