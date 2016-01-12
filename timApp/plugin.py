@@ -68,18 +68,8 @@ class Plugin:
     def user_max_points(self, default=None):
         return self.points_rule({}).get('allowUserMax', default)
 
-    def answer_limit(self, default=None):
-        if default is None:
-            default = self.limit_defaults.get(self.type)
-            try:
-                if default < 0:
-                    default = 100000000
-            except TypeError:
-                default = 100000000
-        val = self.values.get(self.answer_limit_key, default)
-        if val is None:
-            val = 100000000
-        return val
+    def answer_limit(self):
+        return self.values.get(self.answer_limit_key, self.limit_defaults.get(self.type))
 
 
 class PluginException(Exception):
