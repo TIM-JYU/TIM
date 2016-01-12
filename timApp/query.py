@@ -27,6 +27,7 @@ def command_help(db = None, params=None):
     stderr('QUIT                  - quit the program')
     stderr('---')
     stderr('Any other commands are interpreted as SQL and executed as such.')
+    stderr('Note: remember to end SQL queries with a semicolon.')
     stderr()
 
 
@@ -92,7 +93,10 @@ def interpret_command(db, cmdline):
     if cmd in COMMANDS:
         COMMANDS[cmd](db, params)
     else:
-        interpret_sql(db, cmdline)
+        query = cmdline
+        while not query.rstrip().endswith(';'):
+            query += ' ' + input().strip()
+        interpret_sql(db, query)
 
     return True
 
