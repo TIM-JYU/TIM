@@ -676,3 +676,7 @@ class DocParagraph(DocParagraphBase):
         if settings is None:
             return None, None
         return settings.get_macros(), settings.get_macro_delimiter()
+
+    @contract
+    def set_id(self, par_id: 'str'):
+        self.__data['id'] = par_id

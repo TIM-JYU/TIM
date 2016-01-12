@@ -66,10 +66,11 @@ class TimRouteTest(TimDbTest):
                              content_type='application/json',
                              method=method)
 
-    def post_par(self, doc_id, text, par_id):
+    def post_par(self, doc, text, par_id):
+        doc.version = None  # Force version update when calling get_version
         return self.json_post('/postParagraph/', {
             "text": text,
-            "docId": doc_id,
+            "docId": doc.doc_id,
             "par": par_id,
             "par_next": None
         })
@@ -94,7 +95,7 @@ class TimRouteTest(TimDbTest):
                              data={'email': 'test2@example.com', 'password': 'test2pass'},
                              follow_redirects=True)
 
-    def create_doc(self, docname=None, initial_par=None, assert_status=200):
+    def create_doc(self, docname=None, from_file=None, initial_par=None, settings=None, assert_status=200):
         if docname is None:
             docname = 'users/{}/doc{}'.format(self.current_user, self.doc_num)
             self.__class__.doc_num += 1
@@ -104,8 +105,13 @@ class TimRouteTest(TimDbTest):
         self.assertResponseStatus(resp, assert_status)
         resp_data = load_json(resp)
         doc = Document(resp_data['id'])
-        if initial_par is not None:
+        if from_file is not None:
+            with open(from_file, encoding='utf-8') as f:
+                self.new_par(doc, f.read())
+        elif initial_par is not None:
             self.new_par(doc, initial_par)
+        if settings is not None:
+            doc.set_settings(settings)
         return doc
 
 
