@@ -187,7 +187,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
     clear_cache = get_option(request, "nocache", False)
     doc_settings = doc.get_settings()
     raw_css = doc_settings.css() if doc_settings else None
-    doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>')[5:-6] if raw_css else None
+    doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
     DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
 
     if doc_settings:
