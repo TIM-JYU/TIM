@@ -66,7 +66,7 @@ class DocSettings:
 
     @contract
     def to_paragraph(self, doc) -> 'DocParagraph':
-        text = yaml.dump(self.__dict)
+        text = '```\n' + yaml.dump(self.__dict) + '\n```'
         return DocParagraph.create(doc, md=text, attrs={"settings": ""})
 
     @contract
