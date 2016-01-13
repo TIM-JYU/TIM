@@ -87,18 +87,17 @@ class TimTest(TimRouteTest):
             self.assertResponseStatus(a.get('/teacher/' + doc_name), 403)
         self.assertResponseStatus(a.get('/view/1'), 404)
 
-        with a as a:
-            comment_of_test2 = 'g8t54h954hy95hg54h'
-            self.assertInResponse(comment_of_test2,
-                                  self.json_post('/postNote', {'text': comment_of_test2,
-                                                               'access': 'everyone',
-                                                               'docId': doc_id,
-                                                               'par': first_id}))
+        comment_of_test2 = 'g8t54h954hy95hg54h'
+        self.assertInResponse(comment_of_test2,
+                              self.json_post('/postNote', {'text': comment_of_test2,
+                                                           'access': 'everyone',
+                                                           'docId': doc_id,
+                                                           'par': first_id}))
 
-            ug = timdb.users.getPersonalUserGroup(session['user_id'])
-            notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
-            self.assertEqual(1, len(notes))
-            test2_note_id = notes[0]['id']
+        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
+        self.assertEqual(1, len(notes))
+        test2_note_id = notes[0]['id']
 
         self.login_test1()
         self.assertInResponse(comment_of_test2,
@@ -107,13 +106,12 @@ class TimTest(TimRouteTest):
         for i in teacher_right_docs:
             self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
 
-        with a as a:
-            self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
-                                                                     'docId': doc_id,
-                                                                     'par': first_id}))
-            ug = timdb.users.getPersonalUserGroup(session['user_id'])
-            notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
-            self.assertEqual(1, len(notes))
+        self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
+                                                                 'docId': doc_id,
+                                                                 'par': first_id}))
+        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
+        self.assertEqual(1, len(notes))
 
         self.assertDictResponse({'text': edit_text}, self.json_req('/getBlock/{}/{}'.format(doc_id, first_id),
                                                                    {'docId': doc_id, 'par': first_id}))

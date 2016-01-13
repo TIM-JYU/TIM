@@ -3,6 +3,8 @@
 import json
 import unittest
 
+import flask
+
 import tim
 from documentmodel.document import Document
 from timdbtest import TimDbTest
@@ -17,7 +19,6 @@ class TimRouteTest(TimDbTest):
     A base class for running tests for TIM routes.
     """
     doc_num = 1
-    current_user = None
 
     @classmethod
     def setUpClass(cls):
@@ -25,6 +26,7 @@ class TimRouteTest(TimDbTest):
         tim.app.config['DATABASE'] = cls.db_path
         tim.app.config['TESTING'] = True
         cls.app = tim.app.test_client()
+        cls.app = cls.app.__enter__()
 
     def assertResponseStatus(self, resp, expect_status=200, return_json=False):
         resp_data = resp.get_data(as_text=True)
@@ -85,24 +87,28 @@ class TimRouteTest(TimDbTest):
         })
 
     def login_test1(self, force=False):
-        if not force and TimRouteTest.current_user == 'testuser1':
+        # Make a bogus request; something is wrong with session being cleared after a request if we're in a different
+        # test class when running multiple tests at once
+        self.app.get('/zzz')
+        if not force \
+                and self.app.application.got_first_request \
+                and flask.session.get('user_name') == 'testuser1'\
+                and flask.session.get('user_id') != 0:
             return
-        TimRouteTest.current_user = 'testuser1'
         return self.app.post('/altlogin',
                              data={'email': 'test1@example.com', 'password': 'test1pass'},
                              follow_redirects=True)
 
-    def login_test2(self):
-        if TimRouteTest.current_user == 'testuser2':
+    def login_test2(self, force=False):
+        if not force and self.app.application.got_first_request and flask.session['user_name'] == 'testuser2':
             return
-        TimRouteTest.current_user = 'testuser2'
         return self.app.post('/altlogin',
                              data={'email': 'test2@example.com', 'password': 'test2pass'},
                              follow_redirects=True)
 
     def create_doc(self, docname=None, from_file=None, initial_par=None, settings=None, assert_status=200):
         if docname is None:
-            docname = 'users/{}/doc{}'.format(self.current_user, self.doc_num)
+            docname = 'users/{}/doc{}'.format(flask.session['user_name'], self.doc_num)
             self.__class__.doc_num += 1
         resp = self.json_post('/createDocument', {
             'doc_name': docname
