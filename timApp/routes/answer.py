@@ -162,7 +162,8 @@ def get_task_info(task_id):
                 'userMin': plugin.user_min_points(),
                 'userMax': plugin.user_max_points(),
                 'deadline': plugin.deadline(),
-                'starttime': plugin.starttime()}
+                'starttime': plugin.starttime(),
+                'answerLimit': plugin.answer_limit()}
     return jsonResponse(tim_vars)
 
 
