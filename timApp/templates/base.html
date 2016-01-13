@@ -74,6 +74,16 @@
                     {% endif %}
                         | <a href="/lecture/{{ doc.name }}">Lecture view</a>
                         | <a href="/slide/{{ doc.name }}">Slide view</a>
+
+                    {% if translations %}
+                        <span style="float: right;">
+                            {% for tr in translations %}
+                                <a href="/{{ route }}/{{ tr.name }}">{{ tr.lang_id }}</a>
+                                {% if not loop.last %} | {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span style="clear: left"></span>
+                    {% endif %}
                 {% endif %}
             {% endif %}
         {% endblock %}

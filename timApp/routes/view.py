@@ -61,17 +61,17 @@ def view_document(doc_name):
 @view_page.route("/teacher/<path:doc_name>")
 def teacher_view(doc_name):
     usergroup = request.args.get('group')
-    return view(doc_name, 'view_html.html', usergroup=usergroup, teacher=True)
+    return view(doc_name, 'view_html.html', usergroup=usergroup, route="teacher")
 
 
 @view_page.route("/lecture/<path:doc_name>")
 def lecture_view(doc_name):
-    return view(doc_name, 'view_html.html', lecture=True)
+    return view(doc_name, 'view_html.html', route="lecture")
 
 
 @view_page.route("/slide/<path:doc_name>")
 def slide_document(doc_name):
-    return view(doc_name, 'view_html.html', slide=True)
+    return view(doc_name, 'view_html.html', route="slide")
 
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
 def par_info(doc_id, par_id):
@@ -138,7 +138,7 @@ def show_time(s):
     debug_time = nyt
 
 
-def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False):
+def view(doc_path, template_name, usergroup=None, route="view"):
 
     timdb = getTimDb()
     doc_id, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
@@ -147,7 +147,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
     if doc_id is None:
         return try_return_folder(doc_path)
 
-    if teacher:
+    if route == "teacher":
         verify_teacher_access(doc_id)
 
     if not has_view_access(doc_id):
@@ -172,7 +172,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
 
     user = getCurrentUserId()
 
-    if teacher:
+    if route == "teacher":
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
         if usergroup is not None:
@@ -228,7 +228,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
     result = render_template(template_name,
-                             route="view",
+                             route=route,
                              doc={'id': doc_id, 'name': doc_name, 'shortname': doc_shortname},
                              text=texts,
                              plugin_users=users,
@@ -241,13 +241,14 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
                              custom_css=custom_css,
                              doc_css=doc_css,
                              start_index=start_index,
-                             teacher_mode=teacher,
-                             lecture_mode=lecture,
-                             slide_mode=slide,
+                             teacher_mode=route == "teacher",
+                             lecture_mode=route == "lecture",
+                             slide_mode=route == "slide",
                              in_lecture=is_in_lecture,
                              is_owner=has_ownership(doc_id),
                              group=usergroup,
                              rights=get_rights(doc_id),
+                             translations=timdb.documents.get_translations(doc_id),
                              reqs=reqs,
                              settings=settings)
     return result

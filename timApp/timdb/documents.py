@@ -317,7 +317,15 @@ class Documents(TimDbBase):
         for alias in aliases:
             if alias['public']:
                 return alias['name']
-        return aliases[0]['name'] if len(aliases) > 0 else 'Untitled document'
+        if len(aliases) > 0:
+            return aliases[0]['name']
+
+        translations = self.get_translations(document_id)
+        for tr in translations:
+            if tr['id'] == document_id:
+                return tr['name']
+
+        return 'Untitled document'
 
     @contract
     def get_document(self, document_id: 'int') -> 'dict|None':

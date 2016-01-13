@@ -1169,7 +1169,7 @@ def update_translation(src_doc_id, doc_id):
 
     if not timdb.documents.exists(src_doc_id):
         abort(404, 'Source document not found')
-    if not timdb.documents.translation_exists(src_doc_id, doc_id=doc_id):
+    if doc_id != src_doc_id and not timdb.documents.translation_exists(src_doc_id, doc_id=doc_id):
         abort(404, 'Translated document not found')
 
     tr_id = timdb.documents.get_translation(src_doc_id, lang_id)
