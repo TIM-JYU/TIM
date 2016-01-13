@@ -1141,10 +1141,12 @@ def valid_language_id(lang_id):
     return re.match('^\w+$', lang_id) is not None
 
 
-@app.route("/translate/<int:doc_id>/<language>", methods=["POST"])
-def create_translation(doc_id, language):
+@app.route("/translate/<int:tr_doc_id>/<language>", methods=["POST"])
+def create_translation(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
     timdb = getTimDb()
+
+    doc_id = timdb.documents.get_translation_source(tr_doc_id)
 
     if not timdb.documents.exists(doc_id):
         abort(404, 'Document not found')

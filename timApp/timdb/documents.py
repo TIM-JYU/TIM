@@ -197,6 +197,13 @@ class Documents(TimDbBase):
             self.db.commit()
 
     @contract
+    def get_translation_source(self, doc_id: 'int') -> 'int':
+        cursor = self.db.cursor()
+        cursor.execute("SELECT src_docid FROM Translation WHERE doc_id = ?", [doc_id])
+        result = cursor.fetchone()
+        return result[0] if result is not None else doc_id
+
+    @contract
     def get_translations(self, doc_id: 'int') -> 'list(dict)':
         cursor = self.db.cursor()
         cursor.execute("SELECT src_docid FROM Translation WHERE doc_id = ?", [doc_id])
