@@ -1137,6 +1137,10 @@ def get_translations(doc_id):
     return jsonResponse(trlist)
 
 
+def valid_language_id(lang_id):
+    return re.match('^\w+$', lang_id) is not None
+
+
 @app.route("/translate/<int:doc_id>/<language>", methods=["POST"])
 def create_translation(doc_id, language):
     title = request.get_json().get('doc_title', None)
@@ -1144,8 +1148,11 @@ def create_translation(doc_id, language):
 
     if not timdb.documents.exists(doc_id):
         abort(404, 'Document not found')
+
     if not has_view_access(doc_id):
         abort(403, 'Permission denied')
+    if not valid_language_id(language):
+        abort(404, 'Invalid language identifier')
     if timdb.documents.translation_exists(doc_id, lang_id=language):
         abort(403, 'Translation already exists')
     if not logged_in():
@@ -1164,13 +1171,16 @@ def create_translation(doc_id, language):
 
 @app.route("/translation/<int:src_doc_id>/<int:doc_id>", methods=["POST"])
 def update_translation(src_doc_id, doc_id):
-    (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=False)
+    (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
     timdb = getTimDb()
 
     if not timdb.documents.exists(src_doc_id):
         abort(404, 'Source document not found')
     if doc_id != src_doc_id and not timdb.documents.translation_exists(src_doc_id, doc_id=doc_id):
         abort(404, 'Translated document not found')
+
+    if not valid_language_id(lang_id):
+        abort(404, 'Invalid language identifier')
 
     tr_id = timdb.documents.get_translation(src_doc_id, lang_id)
     if tr_id is not None and tr_id != doc_id:

@@ -33,10 +33,6 @@ PermApp.controller("PermCtrl", [
             return ""; 
         };
 
-        sc.navigate = function(verb, path) {
-            location.href = '/' + verb + '/' + path;
-        };
-
         sc.getJustDocName = function(fullName) {
             i = fullName.lastIndexOf('/');
             return i < 0 ? fullName : fullName.substr(i + 1);
@@ -65,6 +61,9 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.getTranslations = function() {
+            if (sc.isFolder)
+                return [];
+
             $http.get('/translations/' + sc.doc.id, {
             }).success(function (data, status, headers, config) {
                 sc.lang_id = "";

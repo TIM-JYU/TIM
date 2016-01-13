@@ -58,7 +58,7 @@ def manage(path):
     doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
     return render_template('manage.html',
                            route="manage",
-                           translations=timdb.documents.get_translations(doc_id),
+                           translations=timdb.documents.get_translations(doc_id) if not isFolder else None,
                            objName='folder' if isFolder else 'document',
                            objNameC='Folder' if isFolder else 'Document',
                            doc=doc_data,

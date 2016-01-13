@@ -202,7 +202,7 @@ class Documents(TimDbBase):
         cursor.execute("SELECT src_docid FROM Translation WHERE doc_id = ?", [doc_id])
         result = cursor.fetchone()
         src_docid = doc_id if result is None else result[0]
-        src_name = self.get_first_document_name(src_docid)
+        src_name = self.get_first_document_name(src_docid, check_translations=False)
 
         cursor.execute("""SELECT doc_id as id, lang_id, doc_title as title FROM Translation
                           WHERE src_docid = ?
@@ -307,7 +307,7 @@ class Documents(TimDbBase):
         return self.resultAsDictionary(cursor)
 
     @contract
-    def get_first_document_name(self, document_id: 'int') -> 'str':
+    def get_first_document_name(self, document_id: 'int', check_translations: 'bool' = True) -> 'str':
         """Gets the first public (or non-public if not found) name for a document id.
 
         :param document_id: The id of the document.
@@ -320,10 +320,11 @@ class Documents(TimDbBase):
         if len(aliases) > 0:
             return aliases[0]['name']
 
-        translations = self.get_translations(document_id)
-        for tr in translations:
-            if tr['id'] == document_id:
-                return tr['name']
+        if check_translations:
+            translations = self.get_translations(document_id)
+            for tr in translations:
+                if tr['id'] == document_id:
+                    return tr['name']
 
         return 'Untitled document'
 
