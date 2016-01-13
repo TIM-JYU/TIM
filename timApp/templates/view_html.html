@@ -1,4 +1,9 @@
 {% extends "base.html" %}
+
+{% set teacher_mode = route == "teacher" %}
+{% set lecture_mode = route == "lecture" %}
+{% set slide_mode = route == "slide" %}
+
 {% block title %}{{ doc.shortname }}{% endblock %}
 {% block head %}
     {{ super() }}
