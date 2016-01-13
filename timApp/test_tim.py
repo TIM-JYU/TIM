@@ -135,7 +135,6 @@ class TimTest(TimRouteTest):
                                       403)
 
     def test_macro_doc(self):
-        a = self.app
         self.login_test1()
         doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}})
         table_text = """
@@ -154,12 +153,26 @@ class TimTest(TimRouteTest):
         table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
 
         self.assertInResponse(table_html, self.new_par(doc, table_text), json_key='texts')
-        self.assertInResponse(table_html, a.get('/view/{}'.format(doc.doc_id)))
+        self.assertInResponse(table_html, self.app.get('/view/{}'.format(doc.doc_id)))
+
+    def test_macro_only_delimiter(self):
+        self.login_test1()
+        doc = self.create_doc(settings={'macro_delimiter': '%%'})
+        self.assertInResponse('123457', self.new_par(doc, '{% set a = 123456+1 %}%%a%%'), json_key='texts')
 
     def test_same_heading_as_par(self):
         self.login_test1()
         doc = self.create_doc(initial_par="""# Hello\n#-\nHello""")
         self.app.get('/view/{}'.format(doc.doc_id))
+
+    def test_broken_comment(self):
+        self.login_test1()
+        doc = self.create_doc(settings={'macros': {}, 'macro_delimiter': '%%'},
+                              initial_par="""```{atom=true}\nTest {!!! }\n```""")
+        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
+        self.assertEqual(1, len(syntax_errors))
+        self.assertIn('Syntax error in template:', syntax_errors[0].text)
 
 if __name__ == '__main__':
     unittest.main()

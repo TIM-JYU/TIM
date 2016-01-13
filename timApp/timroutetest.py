@@ -4,6 +4,7 @@ import json
 import unittest
 
 import flask
+from lxml import html
 
 import tim
 from documentmodel.document import Document
@@ -56,6 +57,13 @@ class TimRouteTest(TimDbTest):
     def assertDictResponse(self, expected, resp, expect_status=200):
         self.assertEqual(expect_status, resp.status_code)
         self.assertDictEqual(expected, load_json(resp))
+
+    def get(self, url, as_tree=False, **kwargs):
+        resp = self.app.get(url, **kwargs).get_data(as_text=True)
+        if as_tree:
+            return html.fromstring(resp)
+        else:
+            return resp
 
     def json_put(self, url, json_data=None):
         return self.json_req(url, json_data, 'PUT')

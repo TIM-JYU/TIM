@@ -2,7 +2,7 @@
 import re
 
 from contracts import contract
-from jinja2 import Environment
+from jinja2 import Environment, TemplateSyntaxError
 from lxml import html
 
 from dumboclient import call_dumbo
@@ -10,7 +10,7 @@ from htmlSanitize import sanitize_html
 
 
 def has_macros(text, macros, macro_delimiter=None):
-    return macro_delimiter is not None and len(macros) > 0 and macro_delimiter in text
+    return macro_delimiter is not None
 
 
 def expand_macros_regex(text, macros, macro_delimiter=None):
@@ -32,7 +32,10 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None):
                       block_end_string='%}',
                       lstrip_blocks=True,
                       trim_blocks=True)
-    return env.from_string(text).render(macros)
+    try:
+        return env.from_string(text).render(macros)
+    except TemplateSyntaxError as e:
+        return '<div class="error">Syntax error in template: {}</div>'.format(e)
 
 
 expand_macros = expand_macros_jinja2
