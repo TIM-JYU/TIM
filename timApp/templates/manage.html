@@ -164,6 +164,14 @@ if (isFolder) {
                 <th>Maintainer</th>
                 <th>Actions</th>
             </tr>
+            <tr>
+                <td><input type="text" class="shortedit" ng-model="lang_id" placeholder="Language"/></td>
+                <td>{{ '{{doc.shortname}}' }}</td>
+                <td>{{ '{{doc.owner.name}}' }}</td>
+                <td>
+                    <button ng-click="updateLanguage()" ng-disabled="lang_id == old_langid">Update</button>
+                </td>
+            </tr>
             <tr ng-repeat="tr in translations">
                 <td><input type="text" class="shortedit" ng-model="tr.lang_id" placeholder="Language"/></td>
                 <td><input type="text" ng-model="tr.title" placeholder="Title"/></td>

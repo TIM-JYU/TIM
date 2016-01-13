@@ -67,14 +67,58 @@ PermApp.controller("PermCtrl", [
         sc.getTranslations = function() {
             $http.get('/translations/' + sc.doc.id, {
             }).success(function (data, status, headers, config) {
-                sc.translations = data;
+                sc.lang_id = "";
+                sc.translations = [];
+
+                for (var i = 0; i < data.length; i++) {
+                    var tr = data[i];
+
+                    if (tr.id == sc.doc.id) {
+                        sc.lang_id = tr.lang_id;
+                    }
+                    else {
+                        trnew = JSON.parse(JSON.stringify(tr));
+                        trnew.old_langid = tr.lang_id;
+                        trnew.old_title = tr.title;
+                        sc.translations.push(trnew);
+                    }
+                }
+
+                sc.old_langid = sc.lang_id;
 
             }).error(function (data, status, headers, config) {
-                alert("Error loading translations: " + data.message);
+                alert("Error loading translations: " + data.error);
             });
 
             return [];
         };
+
+        sc.updateLanguage = function() {
+            $http.post('/translation/' + sc.doc.id + '/' + sc.doc.id, {
+                'new_langid': sc.lang_id,
+                'new_title': sc.doc.shortname
+            }).success(function (data, status, headers, config) {
+                sc.getTranslations();
+            }).error(function (data, status, headers, config) {
+                alert(data.error);
+            });
+        };
+
+        sc.trChanged = function(tr) {
+            return tr.title != tr.old_title || tr.lang_id != tr.old_langid;
+        };
+
+        sc.updateTranslation = function(tr) {
+            $http.post('/translation/' + sc.doc.id + '/' + tr.id, {
+                'new_langid': tr.lang_id,
+                'new_title': tr.title
+            }).success(function (data, status, headers, config) {
+                sc.getTranslations();
+            }).error(function (data, status, headers, config) {
+                alert(data.error);
+            });
+        };
+
 
         sc.showAddRightFn = function (type) {
             sc.accessType = type;

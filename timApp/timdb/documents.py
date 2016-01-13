@@ -190,10 +190,30 @@ class Documents(TimDbBase):
         self.db.commit()
 
     @contract
+    def remove_translation(self, doc_id: 'int', commit=True):
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM Translation WHERE doc_id = ?", [doc_id])
+        if commit:
+            self.db.commit()
+
+    @contract
     def get_translations(self, doc_id: 'int') -> 'list(dict)':
         cursor = self.db.cursor()
-        cursor.execute("SELECT doc_id as id, lang_id, doc_title as title FROM Translation WHERE src_docid = ?", [doc_id])
-        return self.resultAsDictionary(cursor)
+        cursor.execute("SELECT src_docid FROM Translation WHERE doc_id = ?", [doc_id])
+        result = cursor.fetchone()
+        src_docid = doc_id if result is None else result[0]
+        src_name = self.get_first_document_name(src_docid)
+
+        cursor.execute("""SELECT doc_id as id, lang_id, doc_title as title FROM Translation
+                          WHERE src_docid = ?
+                       """, [src_docid])
+        results = self.resultAsDictionary(cursor)
+
+        for tr in results:
+            tr['owner_id'] = self.get_owner(tr['id'])
+            tr['name'] = self.get_translation_path(doc_id, src_name, tr['lang_id'])
+
+        return results
 
     @contract
     def get_translation(self, src_docid: 'int', lang_id: 'str') -> 'int|None':
@@ -211,19 +231,24 @@ class Documents(TimDbBase):
         return src_doc_name + '/' + lang_id
 
     @contract
-    def translation_exists(self, src_doc_id: 'int', lang_id: 'str') -> 'bool':
+    def translation_exists(self, src_doc_id: 'int', lang_id: 'str|None'=None, doc_id: 'int|None'=None) -> 'bool':
+        if lang_id is None and doc_id is None:
+            raise TimDbException("translation_exists called with all parameters null")
+
         cursor = self.db.cursor()
-        cursor.execute("SELECT EXISTS(SELECT doc_id FROM Translation WHERE src_docid = ? AND lang_id = ?)",
-                       [src_doc_id, lang_id])
+        base_statement = "SELECT EXISTS(SELECT doc_id FROM Translation WHERE src_docid = ?{0})"
+        langid_clause = " AND lang_id = ?"
+        docid_clause = " AND doc_id = ?"
+
+        if doc_id is None:
+            cursor.execute(base_statement.format(langid_clause), [src_doc_id, lang_id])
+        elif lang_id is None:
+            cursor.execute(base_statement.format(docid_clause), [src_doc_id, doc_id])
+        else:
+            cursor.execute(base_statement.format(docid_clause + langid_clause), [src_doc_id, doc_id, lang_id])
+
         result = cursor.fetchone()
         return result[0] == 1
-
-    @contract
-    def rename_translation(self, doc_id: 'int', new_title: 'str'):
-        cursor = self.db.cursor()
-        cursor.execute("UPDATE Translation SET doc_title = ? WHERE doc_id = ?",
-                       [new_title, doc_id])
-        self.db.commit()
 
     @contract
     def delete_paragraph(self, doc: 'Document', par_id: 'str') -> 'Document':

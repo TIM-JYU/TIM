@@ -43,8 +43,13 @@ def manage(path):
         doc_data = {'id': block_id}
         doc_name = timdb.documents.get_first_document_name(block_id)
         if doc_name is not None:
+            doc_data['shortname'] = timdb.documents.get_short_name(doc_name)
             doc_data['name'] = doc_name
             doc_data['fullname'] = doc_name
+        else:
+            doc_data['shortname'] = None
+            doc_data['fullname'] = None
+
         doc_data['versions'] = [entry for entry in doc.get_changelog()]
         doc_data['fulltext'] = doc.export_markdown()
         for ver in doc_data['versions']:

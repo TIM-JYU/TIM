@@ -1126,16 +1126,13 @@ def get_translations(doc_id):
     timdb = getTimDb()
 
     if not timdb.documents.exists(doc_id):
-        abort(404)
+        abort(404, 'Document not found')
     if not has_view_access(doc_id):
-        abort(403)
+        abort(403, 'Permission denied')
 
     trlist = timdb.documents.get_translations(doc_id)
     for tr in trlist:
-        src_name = timdb.documents.get_first_document_name(doc_id)
-        owner_id = timdb.documents.get_owner(tr['id'])
-        tr['name'] = timdb.documents.get_translation_path(doc_id, src_name, tr['lang_id'])
-        tr['owner'] = timdb.users.get_user_group_name(owner_id) if owner_id else None
+        tr['owner'] = timdb.users.get_user_group_name(tr['owner_id']) if tr['owner_id'] else None
 
     return jsonResponse(trlist)
 
@@ -1146,10 +1143,10 @@ def create_translation(doc_id, language):
     timdb = getTimDb()
 
     if not timdb.documents.exists(doc_id):
-        abort(404)
+        abort(404, 'Document not found')
     if not has_view_access(doc_id):
-        abort(403)
-    if timdb.documents.translation_exists(doc_id, language):
+        abort(403, 'Permission denied')
+    if timdb.documents.translation_exists(doc_id, lang_id=language):
         abort(403, 'Translation already exists')
     if not logged_in():
         # todo: check for translation right
@@ -1163,6 +1160,31 @@ def create_translation(doc_id, language):
     doc_name = timdb.documents.get_translation_path(doc_id, src_doc_name, language)
 
     return jsonResponse({'id': doc.doc_id, 'title': title, 'name': doc_name})
+
+
+@app.route("/translation/<int:src_doc_id>/<int:doc_id>", methods=["POST"])
+def update_translation(src_doc_id, doc_id):
+    (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=False)
+    timdb = getTimDb()
+
+    if not timdb.documents.exists(src_doc_id):
+        abort(404, 'Source document not found')
+    if not timdb.documents.translation_exists(src_doc_id, doc_id=doc_id):
+        abort(404, 'Translated document not found')
+
+    tr_id = timdb.documents.get_translation(src_doc_id, lang_id)
+    if tr_id is not None and tr_id != doc_id:
+        abort(403, 'Translation ' + lang_id + ' already exists')
+
+    if not has_ownership(src_doc_id) and not has_ownership(doc_id):
+        abort(403, "You need ownership of either this or the translated document")
+
+    # Remove and add because we might be adding a language identifier for the source document
+    # In that case there may be nothing to update!
+    timdb.documents.remove_translation(doc_id, commit=False)
+    timdb.documents.add_translation(doc_id, src_doc_id, lang_id, doc_title)
+    print('update_translation({}, {})'.format(lang_id, doc_title))
+    return okJsonResponse()
 
 
 @app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])
