@@ -64,6 +64,12 @@ def teacher_view(doc_name):
     return view(doc_name, 'view_html.html', usergroup=usergroup, teacher=True)
 
 
+@view_page.route("/answers/<path:doc_name>")
+def see_answers_view(doc_name):
+    usergroup = request.args.get('group')
+    return view(doc_name, 'view_html.html', usergroup=usergroup, see_answers=True)
+
+
 @view_page.route("/lecture/<path:doc_name>")
 def lecture_view(doc_name):
     return view(doc_name, 'view_html.html', lecture=True)
@@ -138,7 +144,7 @@ def show_time(s):
     debug_time = nyt
 
 
-def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False):
+def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False, see_answers=False):
 
     timdb = getTimDb()
     doc_id, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
@@ -149,6 +155,9 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
 
     if teacher:
         verify_teacher_access(doc_id)
+
+    if see_answers:
+        verify_seeanswers_access(doc_id)
 
     if not has_view_access(doc_id):
         if not logged_in():
@@ -172,7 +181,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
 
     user = getCurrentUserId()
 
-    if teacher:
+    if teacher or see_answers:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
         if usergroup is not None:
@@ -241,7 +250,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
                              custom_css=custom_css,
                              doc_css=doc_css,
                              start_index=start_index,
-                             teacher_mode=teacher,
+                             teacher_mode=teacher or see_answers,
                              lecture_mode=lecture,
                              slide_mode=slide,
                              in_lecture=is_in_lecture,

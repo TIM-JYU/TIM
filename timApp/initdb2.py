@@ -89,7 +89,8 @@ def update_database():
     ver_old = ver
     update_dict = {0: update_datamodel,
                    1: update_answers,
-                   2: update_rights}
+                   2: update_rights,
+                   3: add_seeanswers_right}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -104,6 +105,14 @@ def update_database():
         print('Database is up to date.')
     else:
         print('Database was updated from version {} to {}.'.format(ver_old, ver))
+
+
+def add_seeanswers_right():
+    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+    timdb.execute_sql("""
+INSERT INTO AccessType(name) VALUES ('see answers')
+    """)
+    return True
 
 
 def update_rights():

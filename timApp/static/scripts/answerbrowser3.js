@@ -273,6 +273,10 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 };
 
+                $scope.showTeacher = function () {
+                    return $scope.$parent.teacherMode && $scope.$parent.rights.teacher;
+                };
+
                 $scope.getTriesLeft = function () {
                     if ($scope.taskInfo === null) {
                         return null;
