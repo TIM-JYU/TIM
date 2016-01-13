@@ -1157,7 +1157,7 @@ def create_translation(tr_doc_id, language):
         abort(404, 'Invalid language identifier')
     if timdb.documents.translation_exists(doc_id, lang_id=language):
         abort(403, 'Translation already exists')
-    if not logged_in():
+    if not has_manage_access(doc_id):
         # todo: check for translation right
         abort(403, 'You have to be logged in to create a translation')
 
