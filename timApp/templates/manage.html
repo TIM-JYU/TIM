@@ -166,10 +166,10 @@ if (isFolder) {
             </tr>
             <tr>
                 <td><input type="text" class="shortedit" ng-model="lang_id" placeholder="Language"/></td>
-                <td>{{ '{{doc.shortname}}' }}</td>
+                <td><input type="text" ng-model="doc.title" placeholder="Language"/></td>
                 <td>{{ '{{doc.owner.name}}' }}</td>
                 <td>
-                    <button ng-click="updateLanguage()" ng-disabled="lang_id == old_langid">Update</button>
+                    <button ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
                 </td>
             </tr>
             <tr ng-repeat="tr in translations">

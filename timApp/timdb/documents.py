@@ -210,6 +210,7 @@ class Documents(TimDbBase):
         results = self.resultAsDictionary(cursor)
 
         for tr in results:
+            tr['src_docid'] = src_docid
             tr['owner_id'] = self.get_owner(tr['id'])
             tr['name'] = self.get_translation_path(doc_id, src_name, tr['lang_id'])
 
@@ -220,6 +221,13 @@ class Documents(TimDbBase):
         cursor = self.db.cursor()
         cursor.execute("SELECT doc_id FROM Translation WHERE src_docid = ? AND lang_id = ?",
                        [src_docid, lang_id])
+        result = cursor.fetchone()
+        return result[0] if result is not None else None
+
+    @contract
+    def get_translation_title(self, doc_id: 'int') -> 'str|None':
+        cursor = self.db.cursor()
+        cursor.execute("SELECT doc_title FROM Translation WHERE doc_id = ?", [doc_id])
         result = cursor.fetchone()
         return result[0] if result is not None else None
 
@@ -537,8 +545,11 @@ class Documents(TimDbBase):
         return doc_id, doc_path
 
     @contract
-    def get_short_name(self, full_name: 'str|None') -> 'str|None':
+    def get_doc_title(self, doc_id: 'int', full_name: 'str|None') -> 'str|None':
+        title = self.get_translation_title(doc_id)
+        if title is not None:
+            return title
         if full_name is None:
-            return None
+            return "Untitled"
         parts = full_name.rsplit('/', 1)
         return parts[len(parts) - 1]

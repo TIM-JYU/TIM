@@ -83,6 +83,7 @@ PermApp.controller("PermCtrl", [
                     }
                 }
 
+                sc.old_title = doc.title;
                 sc.old_langid = sc.lang_id;
 
             }).error(function (data, status, headers, config) {
@@ -92,10 +93,14 @@ PermApp.controller("PermCtrl", [
             return [];
         };
 
-        sc.updateLanguage = function() {
-            $http.post('/translation/' + sc.doc.id + '/' + sc.doc.id, {
+        sc.metaChanged = function() {
+            return doc.title != sc.old_title || sc.lang_id != sc.old_langid;
+        };
+
+        sc.updateMetadata = function() {
+            $http.post('/translation/' + sc.doc.id, {
                 'new_langid': sc.lang_id,
-                'new_title': sc.doc.shortname
+                'new_title': sc.doc.title
             }).success(function (data, status, headers, config) {
                 sc.getTranslations();
             }).error(function (data, status, headers, config) {
@@ -108,7 +113,7 @@ PermApp.controller("PermCtrl", [
         };
 
         sc.updateTranslation = function(tr) {
-            $http.post('/translation/' + sc.doc.id + '/' + tr.id, {
+            $http.post('/translation/' + tr.id, {
                 'new_langid': tr.lang_id,
                 'new_title': tr.title
             }).success(function (data, status, headers, config) {

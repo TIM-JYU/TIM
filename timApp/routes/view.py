@@ -142,7 +142,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     timdb = getTimDb()
     doc_id, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
-    doc_shortname = timdb.documents.get_short_name(doc_name)
 
     if doc_id is None:
         return try_return_folder(doc_path)
@@ -227,9 +226,11 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
+    doc_title = timdb.documents.get_doc_title(doc_id, doc_name)
+
     result = render_template(template_name,
                              route=route,
-                             doc={'id': doc_id, 'name': doc_name, 'shortname': doc_shortname},
+                             doc={'id': doc_id, 'name': doc_name, 'title': doc_title},
                              text=texts,
                              plugin_users=users,
                              current_user=current_user,

@@ -1169,22 +1169,24 @@ def create_translation(doc_id, language):
     return jsonResponse({'id': doc.doc_id, 'title': title, 'name': doc_name})
 
 
-@app.route("/translation/<int:src_doc_id>/<int:doc_id>", methods=["POST"])
-def update_translation(src_doc_id, doc_id):
+@app.route("/translation/<int:doc_id>", methods=["POST"])
+def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
     timdb = getTimDb()
 
-    if not timdb.documents.exists(src_doc_id):
-        abort(404, 'Source document not found')
-    if doc_id != src_doc_id and not timdb.documents.translation_exists(src_doc_id, doc_id=doc_id):
-        abort(404, 'Translated document not found')
+    src_doc_id = None
+    translations = timdb.documents.get_translations(doc_id)
+    for tr in translations:
+        if tr['id'] == doc_id:
+            src_doc_id = tr['src_docid']
+        if tr['lang_id'] == lang_id and tr['id'] != doc_id:
+            abort(403, 'Translation ' + lang_id + ' already exists')
+
+    if src_doc_id is None or not timdb.documents.exists(src_doc_id):
+        abort(404)
 
     if not valid_language_id(lang_id):
-        abort(404, 'Invalid language identifier')
-
-    tr_id = timdb.documents.get_translation(src_doc_id, lang_id)
-    if tr_id is not None and tr_id != doc_id:
-        abort(403, 'Translation ' + lang_id + ' already exists')
+        abort(403, 'Invalid language identifier')
 
     if not has_ownership(src_doc_id) and not has_ownership(doc_id):
         abort(403, "You need ownership of either this or the translated document")
@@ -1193,7 +1195,6 @@ def update_translation(src_doc_id, doc_id):
     # In that case there may be nothing to update!
     timdb.documents.remove_translation(doc_id, commit=False)
     timdb.documents.add_translation(doc_id, src_doc_id, lang_id, doc_title)
-    print('update_translation({}, {})'.format(lang_id, doc_title))
     return okJsonResponse()
 
 

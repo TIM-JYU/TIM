@@ -4,7 +4,7 @@
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
 
-{% block title %}{{ doc.shortname }}{% endblock %}
+{% block title %}{{ doc.title }}{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
