@@ -17,6 +17,7 @@ class TimRouteTest(TimDbTest):
     A base class for running tests for TIM routes.
     """
     doc_num = 1
+    current_user = None
 
     @classmethod
     def setUpClass(cls):
@@ -83,14 +84,18 @@ class TimRouteTest(TimDbTest):
             "par_next": next_id
         })
 
-    def login_test1(self):
-        self.current_user = 'testuser1'
+    def login_test1(self, force=False):
+        if not force and TimRouteTest.current_user == 'testuser1':
+            return
+        TimRouteTest.current_user = 'testuser1'
         return self.app.post('/altlogin',
                              data={'email': 'test1@example.com', 'password': 'test1pass'},
                              follow_redirects=True)
 
     def login_test2(self):
-        self.current_user = 'testuser2'
+        if TimRouteTest.current_user == 'testuser2':
+            return
+        TimRouteTest.current_user = 'testuser2'
         return self.app.post('/altlogin',
                              data={'email': 'test2@example.com', 'password': 'test2pass'},
                              follow_redirects=True)

@@ -117,9 +117,10 @@ def insert_heading_numbers(html_str, heading_info, auto_number_headings=True, he
     used = heading_info['headings']
     for e in tree.iterchildren():
         hcount = used.get(e.text, 0)
-        if hcount > 0:
+        is_heading = e.tag in HEADING_TAGS
+        if hcount > 0 and is_heading:
             e.attrib['id'] += '-' + str(hcount)
-        if auto_number_headings and e.tag in HEADING_TAGS:
+        if auto_number_headings and is_heading:
             level = int(e.tag[1])
             counts[level] += 1
             for i in range(level + 1, 7):

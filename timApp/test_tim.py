@@ -16,7 +16,7 @@ class TimTest(TimRouteTest):
         timdb = self.get_db()
         a = self.app
 
-        login_resp = self.login_test1()
+        login_resp = self.login_test1(force=True)
         self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
         doc_names = ['users/testuser1/testing',
                      'users/testuser1/testing2',
@@ -158,6 +158,10 @@ class TimTest(TimRouteTest):
         self.assertInResponse(table_html, self.new_par(doc, table_text), json_key='texts')
         self.assertInResponse(table_html, a.get('/view/{}'.format(doc.doc_id)))
 
+    def test_same_heading_as_par(self):
+        self.login_test1()
+        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""")
+        self.app.get('/view/{}'.format(doc.doc_id))
 
 if __name__ == '__main__':
     unittest.main()
