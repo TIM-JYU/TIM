@@ -2,23 +2,33 @@
     <select ng-show="$parent.teacherMode && users.length > 0" ng-model="user"
             ng-options="(user.real_name + ' (' + user.name + ')') for user in users track by user.id"
             ng-change="getAvailableAnswers()"></select>
-    <span ng-show="answers.length > 0 && !hasUserChanged()">
+    <span ng-show="!hasUserChanged()">
+    <span ng-show="answers.length > 0">
     <button ng-click="previous()">&larr;</button>
     <select ng-model="selectedAnswer"
             ng-options="((filteredAnswers.length - idx) + '. ' + answer.answered_on) for (idx, answer) in filteredAnswers | orderBy:'answer.id' track by answer.id"
             ng-change="changeAnswer()"></select>
     <button ng-click="next()">&rarr;</button>
     {{ filteredAnswers.length - indexOfSelected() }}/<a ng-click="setNewest()">{{ filteredAnswers.length }}</a>
+    </span>
+    <span ng-show="taskInfo.answerLimit">Tries left: {{ getTriesLeft() }}</span>
+    <span ng-show="answers.length > 0">
     <label ng-show="anyInvalid"><input type="checkbox" ng-model="onlyValid">Show valid only</label>
     <span ng-show="$parent.teacherMode" > | <a href="{{getLink()}}" ng-mousedown="getAllAnswers()" >All answers</a></span>
     <br> 
-    <label ng-show="$parent.teacherMode">Points:<input ng-model="points" type="text"></label>
-    <span ng-show="!$parent.teacherMode && points !== null">Points: {{ points }}</span>
+    <label ng-show="$parent.teacherMode || giveCustomPoints">
+        Points:<input ng-model="points" type="text" size="1">
+    </label>
+    <span ng-show="!$parent.teacherMode && points !== null && !giveCustomPoints">Points: {{ points }}</span>
     <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
     <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
+    <label ng-show="!$parent.teacherMode && allowCustomPoints()">
+        <input type="checkbox" ng-model="giveCustomPoints">Set custom points
+    </label>
     <label ng-show="$parent.teacherMode">
         <input type="checkbox" ng-model="saveTeacher">Save teacher's fix
     </label>
+    </span>
     </span>
     <span ng-show="taskInfo.starttime"><br>Start time: {{ taskInfo.starttime }}</span>
     <span ng-show="taskInfo.deadline"><br>Deadline: {{ taskInfo.deadline }}</span>

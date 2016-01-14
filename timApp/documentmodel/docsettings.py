@@ -2,6 +2,8 @@ from contracts import contract, new_contract
 from utils import parse_yaml
 from documentmodel.docparagraph import DocParagraph
 from timdb.timdbbase import TimDbException
+import yaml
+
 
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
@@ -9,6 +11,8 @@ class DocSettings:
     macros_key = 'macros'
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = "source_document"
+    auto_number_headings_key = 'auto_number_headings'
+    heading_format_key = 'heading_format'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -16,9 +20,7 @@ class DocSettings:
             par = par.get_referenced_pars(set_html=False)[0]
         if not par.is_setting():
             return True
-
-        md = par.get_markdown().replace('```', '').replace('~~~', '')
-        return parse_yaml(md).__class__ != str
+        return isinstance(cls.parse_values(par), dict)
 
     @classmethod
     def from_paragraph(cls, par):
@@ -35,16 +37,20 @@ class DocSettings:
                 # Invalid reference, ignore for now
                 return DocSettings()
         if par.is_setting():
-            md = par.get_markdown().replace('```', '').replace('~~~', '')
-            yaml_vals = parse_yaml(md)
-            if type(yaml_vals) is str:
+            yaml_vals = cls.parse_values(par)
+            if not isinstance(yaml_vals, dict):
                 #raise ValueError("DocSettings yaml parse error: " + yaml_vals)
-                print("DocSettings yaml parse error: " + yaml_vals)
+                print("DocSettings yaml parse error: " + str(yaml_vals))
                 return DocSettings()
             else:
                 return DocSettings(settings_dict=yaml_vals)
         else:
             return DocSettings()
+
+    @staticmethod
+    def parse_values(par):
+        md = par.get_markdown().replace('```', '').replace('~~~', '')
+        return parse_yaml(md)
 
     @contract
     def __init__(self, settings_dict: 'dict|None' = None):
@@ -62,11 +68,11 @@ class DocSettings:
 
     @contract
     def to_paragraph(self, doc) -> 'DocParagraph':
-        text = "\n".join(['{}: {}'.format(k, self.__dict[k]) for k in self.__dict ])
+        text = '```\n' + yaml.dump(self.__dict) + '\n```'
         return DocParagraph.create(doc, md=text, attrs={"settings": ""})
 
     @contract
-    def get_settings(self) -> 'dict':
+    def get_dict(self) -> 'dict':
         return self.__dict
 
     @contract
@@ -91,5 +97,28 @@ class DocSettings:
     @contract
     def set_source_document(self, source_docid: 'int|None'):
         self.__dict[self.source_document_key] = source_docid
+
+    @contract
+    def auto_number_headings(self) -> 'bool':
+        return self.__dict.get(self.auto_number_headings_key, False)
+
+    @contract
+    def heading_format(self) -> 'dict':
+        defaults = {1: '{h1}. {text}',
+                    2: '{h1}.{h2} {text}',
+                    3: '{h1}.{h2}.{h3} {text}',
+                    4: '{h1}.{h2}.{h3}.{h4} {text}',
+                    5: '{h1}.{h2}.{h3}.{h4}.{h5} {text}',
+                    6: '{h1}.{h2}.{h3}.{h4}.{h5}.{h6} {text}'}
+        hformat = self.__dict.get(self.heading_format_key)
+        if hformat is None:
+            return defaults
+        return {1: hformat.get(1, defaults[1]),
+                2: hformat.get(2, defaults[2]),
+                3: hformat.get(3, defaults[3]),
+                4: hformat.get(4, defaults[4]),
+                5: hformat.get(5, defaults[5]),
+                6: hformat.get(6, defaults[6])}
+
 
 new_contract('DocSettings', DocSettings)

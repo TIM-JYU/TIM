@@ -37,11 +37,6 @@
     {% endblock %}
 </head>
 <body>
-<div id="dialog-refresh" caption="Refresh the page?">
-  <p>The page has been modified since the last reload. Refresh now?</p>
-    <button ng-click="reload()">Refresh</button>
-    <button ng-click="closeRefreshDlg()">No</button>
-</div>
 <form name="ignore_me">
     <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0" />
 </form>
@@ -68,62 +63,17 @@
 
     <div id="header">
         {% block header %}
-            {% set separator = '' %}
-            {% if self.title() != "TIM" %}
-                <!-- <div class="doctitle">{{ self.title() }}</div> -->
-            {% endif %}
-
-            {% if is_owner %}
-                <a href="/manage/{{ docID }}">Manage</a>
-                {% set separator = '|' %}
-            {% endif %}
-
-            {% if self.title() != "TIM" and is_owner %}
-                {% if lecture_mode or teacher_mode or slide_mode %}
-                    {{ separator|safe }}
-                    <a href="/view/{{ docName }}">Student view</a>
-                    {% set separator = '|' %}
+            {% if doc %}
+                <a href="/view/{{ doc.fullname or doc.name }}">View</a>
+                {% if rights.manage %}
+                    | <a href="/manage/{{ doc.fullname or doc.name }}">Manage</a>
                 {% endif %}
-                {% if not teacher_mode %}
-                    {{ separator|safe }}
-                    <a href="/teacher/{{ docName }}">Teacher view</a>
-                    {% set separator = '|' %}
-                {% endif %}
-                {% if not lecture_mode %}
-                    {{ separator|safe }}
-                    <a href="/lecture/{{ docName }}">Lecture view</a>
-                    {% set separator = '|' %}
-                {% endif %}
-                {% if not slide_mode %}
-                    {{ separator|safe }}
-                    <a href="/slide/{{ docName }}">Slide view</a>
-                    {% set separator = '|' %}
-                {% endif %}
-            {% elif folder or objName == 'folder' %}
-                {{ separator|safe }}
-                <a href="/view/{{ docName }}">View</a>
-            {% elif doc %}
-                <a href="/view/{{ doc.name }}">Student view</a>
-                |
-                <a href="/teacher/{{ doc.name }}">Teacher view</a>
-                |
-                <a href="/lecture/{{ doc.name }}">Lecture view</a>
-                |
-                <a href="/slide/{{ doc.name }}">Slide view</a>
-            {% elif docName %}
-                {% if lecture_mode or slide_mode %}
-                    <a href="/view/{{ docName }}">Student view</a>
-                    {% set separator = '|' %}
-                {% endif %}
-                {% if not lecture_mode %}
-                    {{ separator|safe }}
-                    <a href="/lecture/{{ docName }}">Lecture view</a>
-                    {% set separator = '|' %}
-                {% endif %}
-                {% if not slide_mode %}
-                    {{ separator|safe }}
-                    <a href="/slide/{{ docName }}">Slide view</a>
-                    {% set separator = '|' %}
+                {% if not folder %}
+                    {% if rights.teacher %}
+                        | <a href="/teacher/{{ doc.name }}">Teacher view</a>
+                    {% endif %}
+                        | <a href="/lecture/{{ doc.name }}">Lecture view</a>
+                        | <a href="/slide/{{ doc.name }}">Slide view</a>
                 {% endif %}
             {% endif %}
         {% endblock %}

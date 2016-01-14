@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>{{ docName }}</title>
+    <title>{{ doc.name }}</title>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -52,8 +52,8 @@
         {{ custom_css }}
     </style>
     <script>
-        var docId = {{docID|tojson|safe}};
-        var docName = {{docName|tojson|safe}};
+        var docId = {{doc.id|tojson|safe}};
+        var docName = {{doc.name|tojson|safe}};
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};
         var startIndex = {{start_index|tojson}};

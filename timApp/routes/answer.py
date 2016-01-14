@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Blueprint
 
 from .common import *
-from plugin import Plugin
+from plugin import Plugin, PluginException
 import pluginControl
 import containerLink
 
@@ -22,8 +22,9 @@ def is_answer_valid(plugin, old_answers, tim_info):
     :param tim_info: The tim_info structure returned by the plugin or None.
     :return: True if the answer should be considered valid, False otherwise.
     """
-    if plugin.type == 'mmcq' and len(old_answers) > 0:
-        return False, 'Only the first answer counts.'
+    answer_limit = plugin.answer_limit()
+    if answer_limit is not None and (answer_limit <= len(old_answers)):
+        return False, 'You have exceeded the answering limit.'
     if plugin.starttime(default=datetime(1970, 1, 1)) > datetime.now():
         return False, 'You cannot submit answers yet.'
     if plugin.deadline(default=datetime.max) < datetime.now():
@@ -64,7 +65,10 @@ def save_answer(plugintype, task_id):
     is_teacher = answer_browser_data.get('teacher', False)
     if is_teacher:
         verify_teacher_access(doc_id)
-    plugin = Plugin.from_task_id(task_id)
+    try:
+        plugin = Plugin.from_task_id(task_id)
+    except PluginException as e:
+        return abort(400, str(e))
 
     if plugin.type != plugintype:
         abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
@@ -101,6 +105,24 @@ def save_answer(plugintype, task_id):
             pass
         if not is_teacher:
             is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
+            if answer_browser_data.get('giveCustomPoints'):
+                custom_points = answer_browser_data.get('points')
+                try:
+                    custom_points_float = float(custom_points)
+                except ValueError:
+                    result['error'] = 'Wrong format for custom points.'
+                else:
+                    # Small hack: we differentiate custom points from automatic points by appending a space character
+                    # at the end of the custom points
+                    custom_points += ' '
+                    points_min = plugin.user_min_points()
+                    points_max = plugin.user_max_points()
+                    if points_min is None or points_max is None:
+                        result['error'] = 'You cannot give yourself custom points in this task.'
+                    elif not (points_min <= custom_points_float <= points_max):
+                        result['error'] = 'Points must be in range [{},{}]'.format(points_min, points_max)
+                    else:
+                        points = custom_points
             result['savedNew'] = timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
             if not is_valid:
                 result['error'] = explanation
@@ -136,9 +158,12 @@ def should_hide_name(doc_id, user_id):
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
     plugin = Plugin.from_task_id(task_id)
-    tim_vars = {'maxPoints': plugin.values.get('pointsRule', {}).get('maxPoints'),
+    tim_vars = {'maxPoints': plugin.max_points(),
+                'userMin': plugin.user_min_points(),
+                'userMax': plugin.user_max_points(),
                 'deadline': plugin.deadline(),
-                'starttime': plugin.starttime()}
+                'starttime': plugin.starttime(),
+                'answerLimit': plugin.answer_limit()}
     return jsonResponse(tim_vars)
 
 

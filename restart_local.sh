@@ -3,7 +3,7 @@
 # Stop the script if any error occurs
 set -e
 
-params="$*"
+params=${*/all/tim nginx postgre plugins}
 
 if [ "$params" = "" ] ; then
     echo "Usage: restart [tim [sshd]|nginx|plugins]..."
@@ -36,40 +36,40 @@ checkdir /opt/svn $PWD/timApp/modules/svn
 checkdir /opt/cs $PWD/timApp/modules/cs
 checkdir /opt/postgre $PWD/postgresql
 
-if param tim ; then
+if param tim; then
     docker stop tim &
 fi
 
-if param nginx ; then
+if param nginx; then
     docker stop nginx &
 fi
 
-if param postgre ; then
+if param postgre; then
     docker stop postgre &
 fi
 wait
 
 # Remove stopped containers
-if param tim ; then
+if param tim; then
     docker rm tim &
 fi
 
-if param nginx ; then
+if param nginx; then
     docker rm nginx &
 fi
 
-if param postgre ; then
+if param postgre; then
     docker rm postgre &
 fi
 wait
 
-if param plugins ; then
+if param plugins; then
  /opt/cs/startPlugins.sh
  /opt/svn/startPlugins.sh
  /opt/tim/timApp/modules/Haskell/startPlugins.sh
 fi
 
-if param postgre ; then
+if param postgre; then
   docker run -d --name postgre \
   -v /opt/postgre/data:/var/lib/postgresql \
   -v /opt/postgre/log:/var/log/postgresql \
@@ -91,7 +91,7 @@ if param profile ; then
   DAEMON_FLAG=''
 fi
 
-if param tim ; then
+if param tim; then
   if param sshd ; then
     docker run --name tim -p 50001:5000 -p 49999:22 --link postgre -v /opt/tim/:/service -d -t -i tim:$(./get_latest_date.sh) /bin/bash -c 'cd /service/timApp && source initenv.sh && export TIM_NAME=tim ; /usr/sbin/sshd -D ; /bin/bash'
   else
@@ -99,7 +99,7 @@ if param tim ; then
   fi
 fi
 
-if param nginx ; then
+if param nginx; then
   docker run -d --name nginx -p 80:80 -v /opt/cs/:/opt/cs/ -e "DOCKER_BRIDGE=$(ip ro | grep docker0 | grep -oP '(?<=src )([\d\.]+)')" local_nginx /startup.sh
 fi
 

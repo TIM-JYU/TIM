@@ -97,11 +97,23 @@ def verify_read_marking_right(doc_id):
         abort(403)
 
 
+def has_teacher_access(doc_id):
+    timdb = getTimDb()
+    return timdb.users.has_teacher_access(getCurrentUserId(), doc_id)
+
+
+def has_manage_access(doc_id):
+    timdb = getTimDb()
+    return timdb.users.has_manage_access(getCurrentUserId(), doc_id)
+
+
 def get_rights(doc_id):
     return {'editable': has_edit_access(doc_id),
             'can_mark_as_read': has_read_marking_right(doc_id),
             'can_comment': has_comment_right(doc_id),
-            'browse_own_answers': logged_in()
+            'browse_own_answers': logged_in(),
+            'teacher': has_teacher_access(doc_id),
+            'manage': has_manage_access(doc_id)
             }
 
 

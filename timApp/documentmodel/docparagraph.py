@@ -1,14 +1,17 @@
-from copy import deepcopy
 import os
+import shelve
+from collections import defaultdict
+from copy import copy
 
 from contracts import contract, new_contract
 
+from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
-from dumboclient import call_dumbo
 from htmlSanitize import sanitize_html
-from markdownconverter import md_to_html, md_list_to_html_list, expand_macros
-from .randutils import *
+from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
 from timdb.timdbbase import TimDbException
+from utils import count_chars
+from .randutils import *
 
 
 class DocParagraphBase:
@@ -216,79 +219,198 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_html(self) -> 'str':
-        if self.html:
+        if self.html is not None:
             return self.html
         if self.is_plugin():
-            return ''
+            return self.__set_html('')
         if self.is_setting():
-            return self.__get_setting_html()
+            return self.__set_html(self.__get_setting_html())
 
-        macros, delimiter = self.__get_macro_info(self.doc)
-        cached = self.__data.get('h')
-        macro_hash = hashfunc(str(macros) + delimiter)
-        if cached is None or type(cached) is str:
-            self.__data['h'] = {}
-            new_html = self.__get_html_using_macros(macros, delimiter)
-        else:
-            new_html = cached.get(macro_hash)
-            if new_html is None:
-                # Get html from Dumbo (slow!)
-                new_html = self.__get_html_using_macros(macros, delimiter)
-
-        self.__set_html(new_html)
-        return new_html
+        # get_html might get called from preview, so we don't want to save anything by default
+        DocParagraph.preload_htmls([self],
+                                   self.doc.get_settings(),
+                                   context_par=self.doc.get_previous_par(self, get_last_if_no_prev=False),
+                                   persist=False)
+        return self.html
 
     @classmethod
     @contract
-    def preload_htmls(cls, pars: 'list(DocParagraph)', settings):
+    def preload_htmls(cls, pars: 'list(DocParagraph)', settings, clear_cache=False, context_par=None, persist=True):
         """
-        Asks for paragraphs in batch from Dumbo to avoid multiple requests
+        Loads the HTML for each paragraph in the given list.
+        :param context_par: The context paragraph. Required only for previewing for now.
+        :param persist: Whether the result of preloading should be saved to disk.
+        :param clear_cache: Whether all caches should be refreshed.
         :param settings: The document settings.
-        :param pars: Paragraphs to preload
+        :param pars: Paragraphs to preload.
+        :return: A list of paragraphs whose HTML changed as the result of preloading.
         """
-        unloaded_pars = []
-        macros = settings.get_macros() if settings else None
-        macro_delim = settings.get_macro_delimiter() if settings else None
-        macro_hash = hashfunc(str(macros) + macro_delim)
+        if not pars:
+            return
 
+        doc_id_str = str(pars[0].doc.doc_id)
+
+        first_pars = []
+        if context_par is not None:
+            first_pars = pars[0].doc.get_pars_till(context_par)
+            pars = first_pars + pars
+
+        if not persist:
+            cache = {}
+            heading_cache = {}
+            with shelve.open('/tmp/tim_auto_macros_' + doc_id_str) as c,\
+                 shelve.open('/tmp/heading_cache_' + doc_id_str) as hc:
+
+                # Basically we want the cache objects to be non-persistent, so we convert them to normal dicts
+                # Find out better way if possible...
+                for par in first_pars:
+                    key = str((par.get_id(), par.doc.get_version()))
+                    value = c.get(key)
+                    if value is not None:
+                        cache[key] = value
+                    value = hc.get(par.get_id())
+                    if value is not None:
+                        heading_cache[par.get_id()] = value
+            unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
+        else:
+            with shelve.open('/tmp/tim_auto_macros_' + doc_id_str) as cache,\
+                 shelve.open('/tmp/heading_cache_' + doc_id_str) as heading_cache:
+                unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
+                for k, v in heading_cache.items():
+                    heading_cache[k] = v
+
+        changed_pars = []
+        if len(unloaded_pars) > 0:
+            htmls = par_list_to_html_list([par for par, _, _, _, _ in unloaded_pars],
+                                          auto_macros=({'h': auto_macros['h'], 'headings': hs} for _, _, auto_macros, hs, _ in unloaded_pars),
+                                          settings=settings)
+            for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
+                # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
+                # so they are comparable
+                if h != old_html:
+                    h = sanitize_html(h)
+                    changed_pars.append(par)
+                par.__data['h'][auto_macro_hash] = h
+                par.__set_html(h, sanitized=True)
+                if persist:
+                    par.__write()
+        return changed_pars
+
+    @classmethod
+    def get_unloaded_pars(cls, pars, settings, auto_macro_cache, heading_cache, clear_cache=False):
+        """
+        Finds out which of the given paragraphs need to be preloaded again.
+
+        :param pars: The list of paragraphs to be processed.
+        :param settings: The settings for the document.
+        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
+        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
+         in that paragraph.
+        :param clear_cache: Whether all caches should be refreshed.
+        :return: A 5-tuple of the form:
+          (paragraph, hash of the auto macro values, auto macros, so far used headings, old HTML).
+        """
+        cumulative_headings = []
+        unloaded_pars = []
         dyn = 0
         l = 0
-
+        macros = settings.get_macros() if settings else None
+        macro_delim = settings.get_macro_delimiter() if settings else None
+        m = str(macros) + macro_delim + str(settings.auto_number_headings()) + str(settings.heading_format())
         for par in pars:
-            if par.html is not None or par.is_dynamic():
+            if par.is_dynamic():
                 dyn += 1
                 continue
+            if not clear_cache and par.html is not None:
+                continue
             cached = par.__data.get('h')
-            if cached is not None:
-                if type(cached) is str:
-                    par.__data['h'] = {}
-                    unloaded_pars.append(par)
+            auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+            auto_macro_hash = hashfunc(m + str(auto_macros))
+
+            par_headings = heading_cache.get(par.get_id())
+            if cumulative_headings:
+                # Performance optimization: copy only if the set of headings changes
+                if par_headings:
+                    all_headings_so_far = cumulative_headings[-1].copy()
                 else:
-                    if macro_hash in cached:
-                        par.html = cached[macro_hash]
-                        l += 1
-                    else:
-                        unloaded_pars.append(par)
+                    all_headings_so_far = cumulative_headings[-1]
             else:
-                par.__data['h'] = {}
-                unloaded_pars.append(par)
+                all_headings_so_far = defaultdict(int)
+            cumulative_headings.append(all_headings_so_far)
+            for h in par_headings:
+                all_headings_so_far[h] += 1
 
-        #print("{} paragraphs are marked dynamic".format(dyn))
-        #print("{} paragraphs are cached".format(l))
-        #print("{} paragraphs are not cached".format(len(unloaded_pars)))
+            if not clear_cache and cached is not None:
+                if type(cached) is str:  # Compatibility
+                    old_html = cached
+                else:
+                    cached_html = cached.get(auto_macro_hash)
+                    if cached_html is not None:
+                        par.html = cached_html
+                        l += 1
+                        continue
+                    else:
+                        try:
+                            old_html = next(iter(cached.values()))
+                        except StopIteration:
+                            old_html = None
+            else:
+                old_html = None
 
-        if len(unloaded_pars) > 0:
-            htmls = md_list_to_html_list([par.get_markdown() for par in unloaded_pars],
-                                         macros=macros,
-                                         macro_delimiter=macro_delim)
-            for par, h in zip(unloaded_pars, htmls):
-                par.__data['h'][macro_hash] = h
-                par.html = h
-                par.__write()
+            tup = (par, auto_macro_hash, auto_macros, all_headings_so_far, old_html)
+            par.__data['h'] = {}
+            unloaded_pars.append(tup)
+        return unloaded_pars
 
-    @contract
-    def __get_html_using_macros(self, macros: 'dict(str:str)|None', macro_delimiter: 'str|None') -> 'str':
-        return md_to_html(self.get_markdown(), sanitize=True, macros=macros, macro_delimiter=macro_delimiter)
+    def has_class(self, class_name):
+        return class_name in self.__data.get('attrs', {}).get('classes', {})
+
+    def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache):
+        """Gets the auto macros values for the current paragraph.
+        Auto macros include things like current heading/table/figure numbers.
+
+        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
+         in that paragraph.
+        :param macros: Macros to apply for the paragraph.
+        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
+        :return: Auto macro values as a dict.
+        :param macro_delim: Delimiter for macros.
+        :return: A dict(str, dict(int,int)) containing the auto macro information.
+        """
+
+        key = str((self.get_id(), self.doc.get_version()))
+        cached = auto_macro_cache.get(key)
+        if cached is not None:
+            return cached
+
+        prev_par = self.doc.get_previous_par(self)
+        if prev_par is None:
+            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
+            heading_cache[self.get_id()] = []
+        else:
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+
+        if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
+            auto_macro_cache[key] = prev_par_auto_values
+            heading_cache[self.get_id()] = []
+            return prev_par_auto_values
+
+        md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
+        blocks = DocumentParser(md_expanded).get_blocks(break_on_empty_line=True)
+        deltas = copy(prev_par_auto_values['h'])
+        titles = []
+        for e in blocks:
+            level = count_chars(e['md'], '#')
+            if level > 0:
+                title = e['md'][level:].strip()
+                titles.append(title)
+                deltas[level] += 1
+                for i in range(level + 1, 7):
+                    deltas[i] = 0
+        heading_cache[self.get_id()] = titles
+        result = {'h': deltas}
+        auto_macro_cache[key] = result
+        return result
 
     def sanitize_html(self):
         if self.html_sanitized or not self.html:
@@ -302,6 +424,7 @@ class DocParagraph(DocParagraphBase):
         if self.__htmldata is not None:
             self.__htmldata['html'] = new_html
         self.html_sanitized = sanitized
+        return self.html
 
     @contract
     def get_links(self) -> 'list(str)':
@@ -369,7 +492,7 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_path(self) -> 'str':
-        return self._get_path(self.doc, self.get_id(), self.get_hash(), files_root=self.files_root)
+        return self._get_path(self.doc, self.__data['id'], self.__data['t'], files_root=self.files_root)
 
     def __read(self):
         if not os.path.isfile(self.get_path()):
@@ -468,6 +591,10 @@ class DocParagraph(DocParagraphBase):
 
             if set_html:
                 html = self.get_html() if tr else ref_par.get_html()
+                
+                # if html is empty, use the source
+                if html == '':
+                    html = ref_par.get_html()
                 if write_link:
                     srclink = """&nbsp;
                                     <a class="parlink"
@@ -537,7 +664,9 @@ class DocParagraph(DocParagraphBase):
         return self.original
 
     def is_dynamic(self):
-        return self.__is_plugin or self.__is_ref or self.__is_setting
+        return self.__is_plugin \
+               or (self.__is_ref and self.__data.get('attrs', {}).get('r', '') != 'tr')\
+               or self.__is_setting
 
     def is_plugin(self):
         return self.__is_plugin
@@ -553,3 +682,7 @@ class DocParagraph(DocParagraphBase):
         if settings is None:
             return None, None
         return settings.get_macros(), settings.get_macro_delimiter()
+
+    @contract
+    def set_id(self, par_id: 'str'):
+        self.__data['id'] = par_id

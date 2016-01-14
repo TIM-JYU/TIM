@@ -313,6 +313,33 @@ text = '\n'.join(a)
                     sc.fulltext = data.fulltext;
                     sc.doc.fulltext = sc.fulltext;
                     sc.doc.versions = data.versions;
+                    sc.saving = false;
+                }).error(function (data, status, headers, config) {
+                    sc.saving = false;
+                    console.log(data);
+                    if ('is_warning' in data && data.is_warning) {
+                        if ( confirm(data.error + "\n\nDo you still wish to save the document?") ) {
+                            sc.saveDocumentWithWarnings(doc);
+                        }
+                    }
+                    else {
+                        alert(data.error);
+                    }
+                });
+        };
+
+        sc.saveDocumentWithWarnings = function (doc) {
+            sc.saving = true;
+            $http.post('/update/' + doc.id + '/' + doc.versions[0],
+                {
+                    'fulltext': sc.fulltext,
+                    'original': sc.doc.fulltext,
+                    'ignore_warnings': true
+                }).success(
+                function (data, status, headers, config) {
+                    sc.fulltext = data.fulltext;
+                    sc.doc.fulltext = sc.fulltext;
+                    sc.doc.versions = data.versions;
                 }).error(function (data, status, headers, config) {
                     alert(data.error);
                 }).finally(function () {
