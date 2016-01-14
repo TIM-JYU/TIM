@@ -593,7 +593,7 @@ PRE {
     background-color: white;
 }
 
-p code {
+code { 
     font-size: 1.2em;
 }
 
@@ -1648,6 +1648,11 @@ p.plgfooter {
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 1200px) {
+    .arealine {
+        position: absolute;
+        right: -1.5em; 
+        left: auto;
+    }
     .editor {
         /* height: 5em; */
     }
@@ -1848,12 +1853,12 @@ p.plgfooter {
   }
 }
 
-#dialog-refresh {
-    display: none;
+.dialog {
     position: fixed;
     z-index: 6;
     border: 1px solid;
-    background: white
+    background: white;
+    top: 0;
 }
 
 .collapsed .parContent {  
