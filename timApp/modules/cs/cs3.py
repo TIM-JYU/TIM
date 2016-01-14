@@ -296,8 +296,8 @@ def get_html(ttype, query):
     js = query_params_to_map_check_parts(query)
     # print(js)
     if "byFile" in js and not ("byCode" in js):
-        js["byCode"] = get_url_lines_as_string(js["byFile"])
-    bycode = ""
+        js["byCode"] = get_url_lines_as_string(js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
+    bycode = ""  
     if "byCode" in js: bycode = js["byCode"]
     if get_param(query, "noeditor", False): bycode = ""
 
@@ -327,7 +327,10 @@ def get_html(ttype, query):
         r = "cs-console"
 
     if do_lazy:
-        # r = LAZYWORD + r;   
+        # r = LAZYWORD + r;    
+        if type(bycode) != type(''): 
+            print("Ei ollut string: ", bycode, jso)
+            bycode = '' + str(bycode)       
         ebycode = html.escape(bycode)
         lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,
                                                                                                     '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
@@ -454,6 +457,7 @@ def return_points(points_rule, result):
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, request, client_address, _server):
+        # print(request,client_address) 
         super().__init__(request, client_address, _server)
         self.user_id = "--"
 
@@ -740,6 +744,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             rndname = generate_filename()
             delete_tmp = True
             opt = get_param(query, "opt", "")
+            timeout = get_param(query, "timeout", 10)
             task_id = get_param(query, "taskID", "")
             doc_id, dummy = (task_id + "NONE.none").split(".", 1)
             
@@ -1107,7 +1112,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     
                 # self.wfile.write("*** Success!\n")
                 print("*** Compile Success")
-                if nocode: remove(csfname)
+                if nocode and ttype != "jcomtest": 
+                    print("Poistetaan ", ttype, csfname)
+                    remove(csfname)
                 # print(compiler_output)
             except subprocess.CalledProcessError as e:
                 '''
@@ -1390,7 +1397,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     extra = "cd $PWD\nsource "
                     try:
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
-                        code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                        code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
                                                    extra=extra)
                     except OSError as e:
@@ -1423,7 +1430,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                uargs=userargs)
                 elif ttype == "sql":
                     print("sql: ", exename)
-                    code, out, err, pwd = run2(["sqlite3", dbname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                    code, out, err, pwd = run2(["sqlite3", dbname], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                uargs=userargs)
                 elif ttype == "psql":
                     print("psql: ", exename)

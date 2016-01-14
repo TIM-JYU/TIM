@@ -536,7 +536,7 @@ csApp.directiveFunction = function(t,isInput) {
             editor.getSession().setMode("ace/mode/javascript");
             */
             //scope.out = element[0].getElementsByClassName('console');
-            if ( scope.attrs.autorun ) scope.runCodeLink();
+            if ( scope.attrs.autorun ) scope.runCodeLink(true);
             if ( scope.editorMode != 0 || scope.editorModes !== "01" ) scope.showOtherEditor(scope.editorMode);
             scope.mode = languageTypes.getAceModeType(scope.type,"");
             
@@ -751,8 +751,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
 		var t = languageTypes.getRunType($scope.selectedLanguage,"cs");  
-        if ( t == "md" ) { $scope.showMD(); return; }
-        if ( t == "js" ) { $scope.showJS(); return; }
+        if ( t == "md" ) { $scope.showMD(); if (nosave) return; }
+        if ( t == "js" ) { $scope.showJS(); if (nosave) return; } 
 		$scope.doRunCode(t,nosave);
     }
     
@@ -761,8 +761,8 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 		$scope.runCodeCommon(true);
 	};
 	
-	$scope.runCodeLink = function() {
-		$scope.runCodeCommon(false);
+	$scope.runCodeLink = function(nosave) {
+		$scope.runCodeCommon(nosave);
 	};
 	
 	$scope.runCode = function() {
