@@ -20,9 +20,7 @@ class DocSettings:
             par = par.get_referenced_pars(set_html=False)[0]
         if not par.is_setting():
             return True
-
-        md = par.get_markdown().replace('```', '').replace('~~~', '')
-        return parse_yaml(md).__class__ != str
+        return isinstance(cls.parse_values(par), dict)
 
     @classmethod
     def from_paragraph(cls, par):
@@ -39,16 +37,20 @@ class DocSettings:
                 # Invalid reference, ignore for now
                 return DocSettings()
         if par.is_setting():
-            md = par.get_markdown().replace('```', '').replace('~~~', '')
-            yaml_vals = parse_yaml(md)
-            if type(yaml_vals) is str:
+            yaml_vals = cls.parse_values(par)
+            if not isinstance(yaml_vals, dict):
                 #raise ValueError("DocSettings yaml parse error: " + yaml_vals)
-                print("DocSettings yaml parse error: " + yaml_vals)
+                print("DocSettings yaml parse error: " + str(yaml_vals))
                 return DocSettings()
             else:
                 return DocSettings(settings_dict=yaml_vals)
         else:
             return DocSettings()
+
+    @staticmethod
+    def parse_values(par):
+        md = par.get_markdown().replace('```', '').replace('~~~', '')
+        return parse_yaml(md)
 
     @contract
     def __init__(self, settings_dict: 'dict|None' = None):
@@ -66,7 +68,7 @@ class DocSettings:
 
     @contract
     def to_paragraph(self, doc) -> 'DocParagraph':
-        text = yaml.dump(self.__dict)
+        text = '```\n' + yaml.dump(self.__dict) + '\n```'
         return DocParagraph.create(doc, md=text, attrs={"settings": ""})
 
     @contract

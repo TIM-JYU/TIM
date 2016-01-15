@@ -2,7 +2,7 @@
 import re
 
 from contracts import contract
-from jinja2 import Environment
+from jinja2 import Environment, TemplateSyntaxError
 from lxml import html
 
 from dumboclient import call_dumbo
@@ -10,7 +10,7 @@ from htmlSanitize import sanitize_html
 
 
 def has_macros(text, macros, macro_delimiter=None):
-    return macro_delimiter is not None and len(macros) > 0 and macro_delimiter in text
+    return macro_delimiter is not None
 
 
 def expand_macros_regex(text, macros, macro_delimiter=None):
@@ -32,7 +32,10 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None):
                       block_end_string='%}',
                       lstrip_blocks=True,
                       trim_blocks=True)
-    return env.from_string(text).render(macros)
+    try:
+        return env.from_string(text).render(macros)
+    except TemplateSyntaxError as e:
+        return '<div class="error">Syntax error in template: {}</div>'.format(e)
 
 
 expand_macros = expand_macros_jinja2
@@ -117,9 +120,10 @@ def insert_heading_numbers(html_str, heading_info, auto_number_headings=True, he
     used = heading_info['headings']
     for e in tree.iterchildren():
         hcount = used.get(e.text, 0)
-        if hcount > 0:
+        is_heading = e.tag in HEADING_TAGS
+        if hcount > 0 and is_heading:
             e.attrib['id'] += '-' + str(hcount)
-        if auto_number_headings and e.tag in HEADING_TAGS:
+        if auto_number_headings and is_heading:
             level = int(e.tag[1])
             counts[level] += 1
             for i in range(level + 1, 7):

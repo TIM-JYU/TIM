@@ -273,6 +273,13 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                     }
                 };
 
+                $scope.getTriesLeft = function () {
+                    if ($scope.taskInfo === null) {
+                        return null;
+                    }
+                    return Math.max($scope.taskInfo.answerLimit - $scope.answers.length, 0);
+                };
+
                 $scope.loadInfo = function () {
                     if ($scope.taskInfo !== null) {
                         return;
