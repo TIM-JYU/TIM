@@ -40,7 +40,7 @@
         <button class="editorButton" title="Underline" ng-click="surroundClicked('<u>', '</u>'); wrapFn()"><u>U</u></button>
         <button class="editorButton" title="Strikethrough" ng-click="surroundClicked('<s>', '</s>'); wrapFn()"><s>Z</s></button>
         <button class="editorButton" title="Code (Ctrl-O)" ng-click="surroundClicked('`', '`'); wrapFn()">Code</button>
-        <button class="editorButton" title="Code block" ng-click="wrapFn(codeBlockClicked)">Code block</button>
+        <button class="editorButton" title="Code block (Ctrl-9)" ng-click="wrapFn(codeBlockClicked)">Code block</button>
         <button class="editorButton" title="Subscript" ng-click="surroundClicked('~', '~'); wrapFn()">X_</button>
         <button class="editorButton" title="Superscript" ng-click="surroundClicked('^', '^'); wrapFn()">X^</button>
         <button class="editorButton" title="Heading 1 (Ctrl-1)" ng-click="headerClicked('#')">H1</button>
@@ -57,7 +57,9 @@
         </button>
         <button class="editorButton" title="List item" ng-click="wrapFn(listClicked)">List</button>
         <button class="editorButton" title="Table" ng-click="tableClicked($event)">Table</button>
-        <button class="editorButton" title="Insert horizontal rule" ng-click="wrapFn(ruleClicked)">Rule</button>
+        <button class="editorButton" title="Break text to start a new slide" ng-click="wrapFn(ruleClicked)">Slide break</button>
+        <button class="editorButton" title="Break text to start a new paragraph (Shift-Enter)" ng-click="wrapFn(paragraphClicked)">Paragraph break</button>
+        <button class="editorButton" title="Forces line to end at cursor position (Ctrl-Enter)" ng-click="wrapFn(endLineClicked)">End line</button>
     </div>
     <div id="specialButtons" class="extraButtonArea hidden">
         <button class="editorButton" ng-click="charClicked($event)">@</button>
