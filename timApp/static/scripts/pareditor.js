@@ -851,7 +851,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             var toNextLine = "";
                         }
                         toNextLine = toNextLine.trim();
-                        $scope.editor.replaceSelectedText(pos + " " + editor.selectionStart + " " + editor.selectionEnd + toKeepInLine + "\\\n" + toNextLine);
+                        $scope.editor.replaceSelectedText(toKeepInLine + "\\\n" + toNextLine);
                         $scope.endClicked();
                     };
 
