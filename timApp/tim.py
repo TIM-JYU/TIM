@@ -1176,7 +1176,7 @@ def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
     timdb = getTimDb()
 
-    src_doc_id = None
+    src_doc_id = doc_id
     translations = timdb.documents.get_translations(doc_id)
     for tr in translations:
         if tr['id'] == doc_id:
@@ -1185,9 +1185,14 @@ def update_translation(doc_id):
             abort(403, 'Translation ' + lang_id + ' already exists')
 
     if src_doc_id is None or not timdb.documents.exists(src_doc_id):
-        abort(404)
+        abort(404, 'Source document does not exist')
 
     if not valid_language_id(lang_id):
+        if doc_id == src_doc_id and lang_id == "":
+            # Allow removing the language id for the document itself
+            timdb.documents.remove_translation(doc_id)
+            return okJsonResponse()
+
         abort(403, 'Invalid language identifier')
 
     if not has_ownership(src_doc_id) and not has_ownership(doc_id):
