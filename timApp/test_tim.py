@@ -16,7 +16,7 @@ class TimTest(TimRouteTest):
         timdb = self.get_db()
         a = self.app
 
-        login_resp = self.login_test1()
+        login_resp = self.login_test1(force=True)
         self.assertInResponse('Logged in as: Test user 1 (testuser1)', login_resp)
         doc_names = ['users/testuser1/testing',
                      'users/testuser1/testing2',
@@ -87,18 +87,17 @@ class TimTest(TimRouteTest):
             self.assertResponseStatus(a.get('/teacher/' + doc_name), 403)
         self.assertResponseStatus(a.get('/view/1'), 404)
 
-        with a as a:
-            comment_of_test2 = 'g8t54h954hy95hg54h'
-            self.assertInResponse(comment_of_test2,
-                                  self.json_post('/postNote', {'text': comment_of_test2,
-                                                               'access': 'everyone',
-                                                               'docId': doc_id,
-                                                               'par': first_id}))
+        comment_of_test2 = 'g8t54h954hy95hg54h'
+        self.assertInResponse(comment_of_test2,
+                              self.json_post('/postNote', {'text': comment_of_test2,
+                                                           'access': 'everyone',
+                                                           'docId': doc_id,
+                                                           'par': first_id}))
 
-            ug = timdb.users.getPersonalUserGroup(session['user_id'])
-            notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
-            self.assertEqual(1, len(notes))
-            test2_note_id = notes[0]['id']
+        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
+        self.assertEqual(1, len(notes))
+        test2_note_id = notes[0]['id']
 
         self.login_test1()
         self.assertInResponse(comment_of_test2,
@@ -107,13 +106,12 @@ class TimTest(TimRouteTest):
         for i in teacher_right_docs:
             self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
 
-        with a as a:
-            self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
-                                                                     'docId': doc_id,
-                                                                     'par': first_id}))
-            ug = timdb.users.getPersonalUserGroup(session['user_id'])
-            notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
-            self.assertEqual(1, len(notes))
+        self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
+                                                                 'docId': doc_id,
+                                                                 'par': first_id}))
+        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
+        self.assertEqual(1, len(notes))
 
         self.assertDictResponse({'text': edit_text}, self.json_req('/getBlock/{}/{}'.format(doc_id, first_id),
                                                                    {'docId': doc_id, 'par': first_id}))
@@ -137,7 +135,6 @@ class TimTest(TimRouteTest):
                                       403)
 
     def test_macro_doc(self):
-        a = self.app
         self.login_test1()
         doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}})
         table_text = """
@@ -156,8 +153,26 @@ class TimTest(TimRouteTest):
         table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
 
         self.assertInResponse(table_html, self.new_par(doc, table_text), json_key='texts')
-        self.assertInResponse(table_html, a.get('/view/{}'.format(doc.doc_id)))
+        self.assertInResponse(table_html, self.app.get('/view/{}'.format(doc.doc_id)))
 
+    def test_macro_only_delimiter(self):
+        self.login_test1()
+        doc = self.create_doc(settings={'macro_delimiter': '%%'})
+        self.assertInResponse('123457', self.new_par(doc, '{% set a = 123456+1 %}%%a%%'), json_key='texts')
+
+    def test_same_heading_as_par(self):
+        self.login_test1()
+        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""")
+        self.app.get('/view/{}'.format(doc.doc_id))
+
+    def test_broken_comment(self):
+        self.login_test1()
+        doc = self.create_doc(settings={'macros': {}, 'macro_delimiter': '%%'},
+                              initial_par="""```{atom=true}\nTest {!!! }\n```""")
+        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
+        self.assertEqual(1, len(syntax_errors))
+        self.assertIn('Syntax error in template:', syntax_errors[0].text)
 
 if __name__ == '__main__':
     unittest.main()

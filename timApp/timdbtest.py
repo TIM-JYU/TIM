@@ -11,9 +11,9 @@ from timdb.timdb2 import TimDb
 
 
 class TimDbTest(unittest.TestCase):
-    dumbo = dumboclient.launch_dumbo()
     test_files_path = 'doctest_files'
     db_path = 'doctest_files/tim.db'
+    dumbo = None
 
     @classmethod
     def get_db(cls):
@@ -28,6 +28,7 @@ class TimDbTest(unittest.TestCase):
         Document.default_files_root = cls.test_files_path
         DocParagraph.default_files_root = cls.test_files_path
         initdb2.initialize_database(cls.db_path, cls.test_files_path, create_docs=False, print_progress=False)
+        cls.dumbo = dumboclient.launch_dumbo()
 
     @classmethod
     def tearDownClass(cls):
