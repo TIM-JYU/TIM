@@ -92,13 +92,13 @@ run bower --allow-root install ng-file-upload#~3.0
 run bower --allow-root install jquery#~2.1
 run bower --allow-root install angular-sanitize#~1.4
 run bower --allow-root install bootstrap#~3.3
-run bower --allow-root install waypoints#~3.1
 run bower --allow-root install jquery-ui#~1.11
 run bower --allow-root install katex#~0.5
 run bower --allow-root install ng-table#~0.5
 run bower --allow-root install ng-table-export
 run bower --allow-root install rangyinputs
 run bower --allow-root install ngstorage#~0.3
+run bower --allow-root install chartjs#~1.0
 
 # We need to patch the ui-ace module to fix this issue: https://github.com/angular-ui/ui-ace/issues/27
 run sed -i 's/var opts = angular\.extend({}, options, scope\.$eval(attrs\.uiAce));/var opts = angular.extend({}, options, scope.$eval(attrs.uiAce, scope));/' /bower_components/angular-ui-ace/ui-ace.js
