@@ -827,30 +827,31 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.endClicked();
                         $scope.editor.replaceSelectedText("\n#-\n");
                     };
-
+                    /*
                     $scope.slideClicked = function () {
                         $scope.endClicked();
                         $scope.editor.replaceSelectedText($scope.editor.getSelection().text + "\n---------------\n");
                     };
-
+                    */
                     $scope.endLineClicked = function () {
+                        var editor = $scope.editor.get(0);
                         var selection = $scope.editor.getSelection();
+                        var value = $scope.editor.val();
                         var pos = selection.start;
                         $scope.selectLine(true);
                         var lineToBreak = $scope.editor.getSelection().text;
                         if(lineToBreak.length > 0) {
-                            var toKeepInLine = lineToBreak.substring(0, pos)
+                            var toKeepInLine = value.substring(editor.selectionStart, pos)
                         } else {
                             var toKeepInLine = "";
                         }
-                        if ((lineToBreak.length - pos) > 0) {
-                            var toNextLine = lineToBreak.substring(pos, lineToBreak.end);
-                        }
-                        else {
+                        if ((editor.selectionEnd - pos) > 0) {
+                            var toNextLine = value.substring(pos, editor.selectionEnd);
+                        } else {
                             var toNextLine = "";
                         }
                         toNextLine = toNextLine.trim();
-                        $scope.editor.replaceSelectedText(toKeepInLine + "\\\n" + toNextLine);
+                        $scope.editor.replaceSelectedText(pos + " " + editor.selectionStart + " " + editor.selectionEnd + toKeepInLine + "\\\n" + toNextLine);
                         $scope.endClicked();
                     };
 
@@ -1060,12 +1061,12 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.editor.navigateLineEnd();
                         $scope.snippetManager.insertSnippet($scope.editor, "\n#-\n");
                     };
-
+                    /*
                     $scope.slideClicked = function () {
                         $scope.editor.navigateLineEnd();
                         $scope.snippetManager.insertSnippet($scope.editor, "${0:$SELECTION}\n---------------\n");
                     };
-
+                    */
                     $scope.endLineClicked = function () {
                         var pos = $scope.editor.getCursorPosition();
                         var line = $scope.editor.session.getLine(pos.row);
