@@ -13,6 +13,8 @@ KORPPI_GROUPNAME = "Korppi users"
 LOGGED_IN_GROUPNAME = "Logged-in users"
 ADMIN_GROUPNAME = "Administrators"
 
+SPECIAL_GROUPS = {ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, ADMIN_GROUPNAME}
+
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
