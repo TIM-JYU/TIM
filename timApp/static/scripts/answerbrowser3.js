@@ -215,7 +215,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                                 }
                             } else {
                                 $scope.answers = data;
-                                if ($scope.answers.length == 0) {
+                                if ($scope.answers.length == 0 && $scope.$parent.teacherMode) {
                                     $scope.dimPlugin();
                                 }
                                 $scope.updateFiltered();
