@@ -57,21 +57,23 @@ def has_edit_access(block_id):
 
 
 def verify_view_access(block_id, require=True):
-    timdb = getTimDb()
-    if not timdb.users.has_view_access(getCurrentUserId(), block_id):
-        if not require:
-            return False
-        abort(403, "Sorry, you don't have permission to view this resource.")
-    return True
+    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require)
 
 
 def verify_teacher_access(block_id, require=True):
-    timdb = getTimDb()
-    if not timdb.users.has_teacher_access(getCurrentUserId(), block_id):
-        if not require:
-            return False
+    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require)
+
+
+def verify_seeanswers_access(block_id, require=True):
+    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require)
+
+
+def verify_access(has_access, require=True):
+    if has_access:
+        return True
+    if require:
         abort(403, "Sorry, you don't have permission to view this resource.")
-    return True
+    return False
 
 
 def has_view_access(block_id):
@@ -107,12 +109,18 @@ def has_manage_access(doc_id):
     return timdb.users.has_manage_access(getCurrentUserId(), doc_id)
 
 
+def has_seeanswers_access(doc_id):
+    timdb = getTimDb()
+    return timdb.users.has_seeanswers_access(getCurrentUserId(), doc_id)
+
+
 def get_rights(doc_id):
     return {'editable': has_edit_access(doc_id),
             'can_mark_as_read': has_read_marking_right(doc_id),
             'can_comment': has_comment_right(doc_id),
             'browse_own_answers': logged_in(),
             'teacher': has_teacher_access(doc_id),
+            'see_answers': has_seeanswers_access(doc_id),
             'manage': has_manage_access(doc_id)
             }
 
