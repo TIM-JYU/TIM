@@ -175,5 +175,22 @@ class TimTest(TimRouteTest):
         self.assertEqual(1, len(syntax_errors))
         self.assertIn('Syntax error in template:', syntax_errors[0].text)
 
+    def test_windows_eol(self):
+        """
+        Windows-style EOLs should work with Dumbo. If this test fails, try to recompile Dumbo.
+        """
+        self.login_test1()
+        md_table = """---\r\n|a|\r\n|-|"""
+        doc = self.create_doc(initial_par=md_table)
+        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        table_xpath = r'.//div[@class="par"]/div[@class="parContent"]/table'
+        tables = tree.findall(table_xpath)
+        self.assertEqual(1, len(tables))
+
+        self.assertInResponse(table_xpath,
+                              self.json_post('/preview/{}'.format(doc.doc_id), {'text': md_table}),
+                              json_key='texts',
+                              as_tree=True)
+
 if __name__ == '__main__':
     unittest.main()
