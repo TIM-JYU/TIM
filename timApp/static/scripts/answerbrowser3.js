@@ -215,6 +215,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                                 }
                             } else {
                                 $scope.answers = data;
+                                if ($scope.answers.length == 0) {
+                                    $scope.parContent.css('opacity', '0.3');
+                                }
                                 $scope.updateFiltered();
                                 var i = $scope.findSelectedAnswerIndex();
                                 if (i >= 0) {
