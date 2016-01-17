@@ -579,11 +579,13 @@ class DocParagraph(DocParagraphBase):
 
     def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True, cycle=None):
         if cycle is None:
-            cycle = set()
+            cycle = []
         par_doc_id = self.get_doc_id(), self.get_id()
         if par_doc_id in cycle:
-            raise TimDbException('Infinite referencing loop detected')
-        cycle.add(par_doc_id)
+            cycle.append(par_doc_id)
+            raise TimDbException(
+                'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in cycle)))
+        cycle.append(par_doc_id)
 
         def reference_par(ref_par, write_link=False):
             tr = self.get_attr('r') == 'tr'

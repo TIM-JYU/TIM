@@ -48,6 +48,12 @@ class ReferencingTest(TimRouteTest):
         tree = self.get('/view/{}'.format(doc1.doc_id), as_tree=True)
         result = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
         self.assertEqual(3, len(result))
+        self.assertEqual('Infinite referencing loop detected: {}:{} -> {}:{} -> {}:{} -> {}:{}'
+                         .format(doc1.doc_id, p1.get_id(),
+                                 doc1.doc_id, p3.get_id(),
+                                 doc1.doc_id, p2.get_id(),
+                                 doc1.doc_id, p1.get_id()),
+                         result[0].text)
 
     def test_cyclic_area_reference(self):
         self.login_test1()
