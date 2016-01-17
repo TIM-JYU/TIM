@@ -104,8 +104,8 @@
                     <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected"
                            export-csv="csv" export-korppi="expkorppi">
                         <tr ng-repeat="user in $data"
-                            ng-click="user.$selected = !user.$selected; changeUser(user)"
-                            ng-class="{'active': user.$selected}">
+                            ng-click="changeUser(user)"
+                            ng-class="{'active': user == selectedUser}">
                             <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
                                 {{user.real_name}}
                             </td>
