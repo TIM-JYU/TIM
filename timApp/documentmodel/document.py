@@ -643,14 +643,15 @@ class Document:
         start_found = False
         end_found = False
         pars = []
-        for par in self:
-            if par.get_attr('area') == section_name:
-                start_found = True
-            if start_found:
-                pars.append(par)
-            if par.get_attr('area_end') == section_name:
-                end_found = True
-                break
+        with self.__iter__() as i:
+            for par in i:
+                if par.get_attr('area') == section_name:
+                    start_found = True
+                if start_found:
+                    pars.append(par)
+                if par.get_attr('area_end') == section_name:
+                    end_found = True
+                    break
         if not start_found or not end_found:
             raise TimDbException('Area not found: ' + section_name)
         return pars
