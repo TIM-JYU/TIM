@@ -37,14 +37,19 @@ class TimRouteTest(TimDbTest):
         else:
             return resp_data
 
-    def assertInResponse(self, expected, resp, expect_status=200, json_key=None):
+    def assertInResponse(self, expected, resp, expect_status=200, json_key=None, as_tree=False):
         resp_text = resp.get_data(as_text=True)
         self.assertResponseStatus(resp, expect_status)
         if json_key is not None:
             resp_text = json.loads(resp_text)[json_key]
-        self.assertIn(expected, resp_text,
-                      msg="""\n--------THIS TEXT:--------\n{}\n--------WAS NOT FOUND IN:---------\n{}""".format(
-                              expected, resp_text))
+        assert_msg = """\n--------THIS TEXT:--------\n{}\n--------WAS NOT FOUND IN:---------\n{}""".format(
+                expected, resp_text)
+        if as_tree:
+            self.assertLessEqual(1, len(html.fragment_fromstring(resp_text, create_parent=True).findall(expected)),
+                                 msg=assert_msg)
+        else:
+            self.assertIn(expected, resp_text,
+                          msg=assert_msg)
 
     def assertManyInResponse(self, expecteds, resp, expect_status=200):
         for e in expecteds:
@@ -100,7 +105,7 @@ class TimRouteTest(TimDbTest):
         self.app.get('/zzz')
         if not force \
                 and self.app.application.got_first_request \
-                and flask.session.get('user_name') == 'testuser1'\
+                and flask.session.get('user_name') == 'testuser1' \
                 and flask.session.get('user_id') != 0:
             return
         return self.app.post('/altlogin',

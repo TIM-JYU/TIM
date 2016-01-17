@@ -5,14 +5,14 @@ import json
 import time
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
-from plugin import PluginException
+from plugin import PluginException, parse_plugin_values
 from containerLink import plugin_reqs
 from containerLink import get_plugin_tim_url
 from containerLink import get_plugin_needs_browser
 from documentmodel.docparagraph import DocParagraph
 from htmlSanitize import sanitize_html
 from timdb.timdbbase import TimDbException
-from utils import parse_plugin_values
+from utils import get_error_html
 
 LAZYSTART= "<!--lazy "
 LAZYEND = " lazy-->"
@@ -20,13 +20,13 @@ NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
 
 
-def get_error_html(plugin_name, message):
+def get_error_html_plugin(plugin_name, message):
     """
 
     :type message: str
     :type plugin_name: str
     """
-    return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
+    return get_error_html('Plugin {} error: {}'.format(plugin_name, message))
 
 
 def find_task_ids(blocks, doc_id):
@@ -75,7 +75,7 @@ def dereference_pars(pars, edit_window=False, source_doc=None):
                 err_par = DocParagraph.create(
                     par.doc,
                     md=str(e),
-                    html='<div class="pluginError">' + sanitize_html(str(e)) + '</div>')
+                    html=get_error_html(e))
 
                 new_pars.append(err_par)
         else:
@@ -133,7 +133,7 @@ def pluginify(doc,
                                        macros=settings.get_macros(),
                                        macro_delimiter=settings.get_macro_delimiter())
             if 'error' in vals:
-                html_pars[idx]['html'] = get_error_html(plugin_name, vals['error'])
+                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, vals['error'])
                 continue
 
             if plugin_name not in plugins:
@@ -168,13 +168,13 @@ def pluginify(doc,
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
-                html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
+                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
             continue
         try:
             reqs = json.loads(resp)
         except ValueError:
             for idx in plugin_block_map.keys():
-                html_pars[idx]['html'] = get_error_html(plugin_name, 'Failed to parse JSON from plugin reqs route.')
+                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse JSON from plugin reqs route.')
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -204,13 +204,13 @@ def pluginify(doc,
                 response = call_plugin_multihtml(plugin_name, [val for _, val in plugin_block_map.items()])
             except PluginException as e:
                 for idx in plugin_block_map.keys():
-                    html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
+                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError:
                 for idx in plugin_block_map.keys():
-                    html_pars[idx]['html'] = get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.')
+                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse plugin response from reqs route.')
                 continue
 
             needs_browser = get_plugin_needs_browser(plugin_name)
@@ -226,7 +226,7 @@ def pluginify(doc,
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
                 except PluginException as e:
-                    html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
+                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                     continue
                 html, is_lazy = make_lazy(html, val, do_lazy)
                 needs_browser = get_plugin_needs_browser(plugin_name)

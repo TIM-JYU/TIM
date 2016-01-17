@@ -3,6 +3,7 @@ from bs4 import UnicodeDammit
 from flask import Blueprint, render_template
 
 from routes import logger
+from utils import get_error_html
 from .common import *
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
@@ -175,8 +176,8 @@ def preview(doc_id):
             doc.insert_temporary_pars(blocks, context_par)
             return par_response(blocks, doc, edit_window=True, context_par=context_par)
         except Exception as e:
-            err_html = '<div class="pluginError">{}</div>'.format(sanitize_html(str(e)))
-            blocks = [DocParagraph.create(doc=doc, md=err_html, html=err_html)]
+            err_html = get_error_html(e)
+            blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
             return par_response(blocks, doc, edit_window=True)
     else:
         return jsonResponse({'texts': md_to_html(text)})

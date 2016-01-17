@@ -10,7 +10,7 @@ from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
 from timdb.timdbbase import TimDbException
-from utils import count_chars
+from utils import count_chars, get_error_html
 from .randutils import *
 
 
@@ -148,7 +148,7 @@ class DocParagraph(DocParagraphBase):
         try:
             self.__htmldata['html'] = self.get_html()
         except Exception as e:
-            self.__htmldata['html'] = '<div class="pluginError">{}</div>'.format(e)
+            self.__htmldata['html'] = get_error_html(e)
 
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
         self.__htmldata['is_plugin'] = self.is_plugin()
@@ -577,7 +577,14 @@ class DocParagraph(DocParagraphBase):
         rindex = s.rfind(old)
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
-    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True):
+    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True, cycle=None):
+        if cycle is None:
+            cycle = set()
+        par_doc_id = self.get_doc_id(), self.get_id()
+        if par_doc_id in cycle:
+            raise TimDbException('Infinite referencing loop detected')
+        cycle.add(par_doc_id)
+
         def reference_par(ref_par, write_link=False):
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
@@ -638,22 +645,33 @@ class DocParagraph(DocParagraphBase):
         write_link = (rl_attr == 'force') or not (is_default_rd or (rl_attr == 'no'))
 
         if self.is_par_reference():
-            if self.get_doc_id() == int(ref_docid) and self.get_id() == attrs['rp']:
-                raise TimDbException('Paragraph is referencing itself!')
             if not ref_doc.has_paragraph(attrs['rp']):
                 raise TimDbException('The referenced paragraph does not exist.')
 
             ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
-            return [reference_par(ref_par, write_link=write_link)]
-
+            if ref_par.is_reference():
+                ref_pars = ref_par.get_referenced_pars(edit_window=edit_window,
+                                                       set_html=set_html,
+                                                       source_doc=source_doc,
+                                                       cycle=cycle)
+            else:
+                ref_pars = [ref_par]
         elif self.is_area_reference():
-            ref_pars = ref_doc.get_named_section(attrs['ra'])
+            section_pars = ref_doc.get_named_section(attrs['ra'])
+            ref_pars = []
+            for p in section_pars:
+                if p.is_reference():
+                    ref_pars.extend(p.get_referenced_pars(edit_window=edit_window,
+                                                          set_html=set_html,
+                                                          source_doc=source_doc,
+                                                          cycle=cycle))
+                else:
+                    ref_pars.append(p)
             if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
                 return [reference_par(ref_pars[0], write_link=write_link)]
-            else:
-                return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]
         else:
             assert False
+        return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]
 
     def set_original(self, orig):
         self.original = orig
