@@ -39,7 +39,7 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, False])
         self.check_failed_answer(resp)
 
-        doc.set_settings({'global_plugin_attrs': {'all': {'answerLimit': None}}})
+        doc.set_settings({'global_plugin_attrs': {'mmcq': {'answerLimit': None}}})
         resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, True])
         self.check_ok_answer(resp)
         resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, True])
