@@ -387,6 +387,8 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$watchGroup(['onlyValid', 'answers'], $scope.updateFiltered);
 
+                // call checkUsers automatically for now; suitable only for lazy mode!
+                $scope.checkUsers();
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.checkUsers();
                 });
