@@ -65,9 +65,6 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
     }]);
 
 
-var GLOBALBrowseUser = null;    
-    
-
 timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window', '$filter',
     function ($upload, $http, $sce, $compile, $window, $filter) {
         "use strict";
@@ -247,7 +244,6 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
-                    GLOBALBrowseUser = args.user;
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
                     if ($scope.hasUserChanged()) {
@@ -343,9 +339,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                      return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
                 };
 
-                if ( GLOBALBrowseUser ) {
-                    $scope.user = GLOBALBrowseUser;
-                }    
+                if ( $scope.$parent.selectedUser ) {
+                    $scope.user = $scope.$parent.selectedUser;
+                }
                 else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) { 
                     $scope.user = $scope.$parent.users[0];
                 } else {
@@ -381,7 +377,6 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$watchGroup(['onlyValid', 'answers'], $scope.updateFiltered);
 
-                $scope.checkUsers();
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.checkUsers();
                 });
