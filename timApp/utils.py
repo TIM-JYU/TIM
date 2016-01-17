@@ -2,6 +2,9 @@
 import re
 from datetime import datetime
 
+import os
+
+import shutil
 import yaml
 from yaml import CLoader
 
@@ -133,3 +136,15 @@ def get_error_html(message):
     """
 
     return sanitize_html('<div class="error">{}</div>'.format(str(message)))
+
+
+def del_content(directory, onerror=None):
+    for f in os.listdir(directory):
+        f_path = os.path.join(directory, f)
+        try:
+            if os.path.isfile(f_path):
+                os.unlink(f_path)
+            elif os.path.isdir(f_path):
+                shutil.rmtree(f_path, onerror=onerror)
+        except Exception as e:
+            print(e)

@@ -19,7 +19,9 @@ class DocumentTest(TimDbTest):
     def init_testdoc(self, doc_id=None):
         d = Document(doc_id=doc_id)
         self.assertFalse(d.exists())
+        db = self.get_db()
         self.get_db().documents.create(str(d.doc_id), 0, d.doc_id)
+        db.close()
         return d
     
     def add_pars(self, d, num_docs):
@@ -211,6 +213,7 @@ class DocumentTest(TimDbTest):
         db.documents.delete(free + 3)
         self.assertFalse(Document.doc_exists(doc_id=free + 3))
         self.assertEqual(free, Document.get_next_free_id())
+        db.close()
 
     def test_update(self):
         self.maxDiff = None
@@ -285,6 +288,7 @@ class DocumentTest(TimDbTest):
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
                                                   'Multiple choice plugin example',
                                                   anon_group)
+        timdb.close()
 
 if __name__ == '__main__':
     unittest.main()

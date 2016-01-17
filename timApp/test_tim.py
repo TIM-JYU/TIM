@@ -133,6 +133,7 @@ class TimTest(TimRouteTest):
             self.assertResponseStatus(a.get('/teacher/' + str(view_id)))
             self.assertResponseStatus(self.json_put('/addPermission/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
                                       403)
+        timdb.close()
 
     def test_macro_doc(self):
         self.login_test1()

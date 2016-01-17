@@ -98,6 +98,7 @@ class UserTest(TimDbTest):
         self.assertFalse(db.users.has_edit_access(user_id, test_block_id))
         self.assertFalse(db.users.has_view_access(user_id, test_block_id))
         self.assertFalse(db.users.has_teacher_access(user_id, test_block_id))
+        db.close()
 
 if __name__ == '__main__':
     unittest.main()

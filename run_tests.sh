@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-docker run --rm -v /opt/tim/:/service -t -i tim:$(./get_latest_date.sh) /bin/bash -c \
+docker run --cap-add SYS_ADMIN --security-opt apparmor:unconfined --rm -v /opt/tim/:/service -t -i tim:$(./get_latest_date.sh) /bin/bash -c \
  "cd /service/timApp &&
  export TIM_NAME=timtest &&
  export TIM_SETTINGS=debugconfig.py &&
