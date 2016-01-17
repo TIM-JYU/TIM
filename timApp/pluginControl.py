@@ -74,7 +74,8 @@ def dereference_pars(pars, edit_window=False, source_doc=None):
             except TimDbException as e:
                 err_par = DocParagraph.create(
                     par.doc,
-                    md=str(e),
+                    par_id=par.get_id(),
+                    md='',
                     html=get_error_html(e))
 
                 new_pars.append(err_par)
