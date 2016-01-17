@@ -29,6 +29,7 @@ def copy_bower_libs():
     print(' Done.')
 
 if __name__ == '__main__':
+    sys.setrecursionlimit(10000)
     if not os.path.exists(scripts_path):
         raise Exception('static/scripts directory does not seem to exist, '
                         'make sure the working directory is correct')
