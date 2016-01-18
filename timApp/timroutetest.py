@@ -9,6 +9,7 @@ from lxml import html
 import tim
 from documentmodel.document import Document
 from timdbtest import TimDbTest
+from flask.testing import FlaskClient
 
 
 def load_json(resp):
@@ -27,7 +28,7 @@ class TimRouteTest(TimDbTest):
         tim.app.config['DATABASE'] = cls.db_path
         tim.app.config['TESTING'] = True
         cls.app = tim.app.test_client()
-        cls.app = cls.app.__enter__()
+        cls.app = cls.app.__enter__()  # type: FlaskClient
 
     def assertResponseStatus(self, resp, expect_status=200, return_json=False):
         resp_data = resp.get_data(as_text=True)
