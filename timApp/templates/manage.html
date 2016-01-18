@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Manage document{% endblock %}
+{% block title %}{{ doc.name }} - Manage{% endblock %}
 {% block head %}
 {{ super() }}
 <script src="{{url_for('static', filename='scripts/manageView/manageCtrl.js')}}"></script>
@@ -44,14 +44,8 @@ var doc = {{doc|tojson|safe}};
 var grouprights = {{grouprights|tojson|safe}};
 var accessTypes = {{access_types|tojson}};
 var groups = {{user_groups|tojson|safe}};
-
-if (isFolder) {
-    var crumbs = getBreadcrumbs(doc.fullname);
-}
-
-{% if isFolder %}
-    {% include 'breadcrumbs.js' %}
-{% endif %}
+{% include 'breadcrumbs.js' %}
+var crumbs = getBreadcrumbs(doc.fullname);
 
 </script>
 {% endblock %}
@@ -64,15 +58,7 @@ if (isFolder) {
     </ul>
     {% endif %} {% endwith %}
 
-    {% if name and fullname %}
-    <div ng-show="crumbs" class="breadcrumb-div">
-        <ol id="docpath" class="breadcrumb">
-            <li ng-repeat="c in crumbs" ng-class="$last?'active':''">
-                <a href="/view/{{ '{{ c.fullname }}' }}">{{ '{{ c.name }}' }}</a>
-            </li>
-        </ol>
-    </div>
-    {% endif %}
+    {% include 'breadcrumbs.html' %}
     
     <div class="margin">
         {{objNameC}} owner: <select ng-model="doc.owner"

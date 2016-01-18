@@ -12,7 +12,7 @@ manage_page = Blueprint('manage_page',
 def manage(path):
     timdb = getTimDb()
     isFolder = False
-    doc_id, doc_name = timdb.documents.resolve_doc_id_name(path)
+    doc_id, doc_name, doc_shortname = timdb.documents.resolve_doc_id_name(path)
     if doc_id is None:
         try:
             folder_id = int(path)
@@ -43,7 +43,7 @@ def manage(path):
         doc_data = {'id': block_id}
         doc_name = timdb.documents.get_first_document_name(block_id)
         if doc_name is not None:
-            doc_data['name'] = doc_name
+            doc_data['name'] = doc_shortname
             doc_data['fullname'] = doc_name
         doc_data['versions'] = [entry for entry in doc.get_changelog()]
         doc_data['fulltext'] = doc.export_markdown()
@@ -52,6 +52,7 @@ def manage(path):
 
     doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
     return render_template('manage.html',
+                           route='manage',
                            objName='folder' if isFolder else 'document',
                            objNameC='Folder' if isFolder else 'Document',
                            doc=doc_data,
