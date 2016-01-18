@@ -379,6 +379,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 } else {
                     $scope.setAceControllerFunctions();
                 }
+
+                /* Add citation info to help tab */
+                document.getElementById('helpCite').setAttribute('value', '#- {rd="' + $scope.extraData.docId + '" rl="no" rp="' + $scope.extraData.par +'"}');
+
             },
             link: function ($scope, $element, $attrs) {
 

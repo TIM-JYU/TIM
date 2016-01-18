@@ -550,6 +550,10 @@ ul ul ul, ol ol ol {
     content: "Add new paragraph here";
 }
 
+#editorHelpCiteText {
+    margin-left: 2.0em;
+}
+
 .addParButton {
     z-index: 2;
     right: -8.2em;
