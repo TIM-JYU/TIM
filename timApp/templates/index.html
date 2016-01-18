@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}TIM{% endblock %}
+{% block title %}{{'{} {}'.format(doc.name, '({})'.format(doc.location) if doc.location else '[root]') if doc else 'Root folder'}}{% endblock %}
 {% block head %}
     {{ super() }}
 
