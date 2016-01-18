@@ -86,8 +86,8 @@ class TimRouteTest(TimDbTest):
                              content_type='application/json',
                              method=method)
 
-    def post_par(self, doc, text, par_id):
-        doc.version = None  # Force version update when calling get_version
+    def post_par(self, doc: Document, text: str, par_id: str):
+        doc.clear_mem_cache()
         return self.json_post('/postParagraph/', {
             "text": text,
             "docId": doc.doc_id,
@@ -95,8 +95,8 @@ class TimRouteTest(TimDbTest):
             "par_next": None
         })
 
-    def new_par(self, doc, text, next_id=None):
-        doc.version = None  # Force version update when calling get_version
+    def new_par(self, doc: Document, text: str, next_id=None):
+        doc.clear_mem_cache()
         return self.json_post('/newParagraph/', {
             "text": text,
             "docId": doc.doc_id,
