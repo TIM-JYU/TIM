@@ -26,10 +26,10 @@ class GroupTest(TimRouteTest):
         self.assertDictResponse({'already_belongs': ['t1', 't3'], 'added': ['t2', 't4'], 'not_exist': ['t5']},
                                 self.json_req('/groups/addmember/testgroup1/t1,t2,t3,t4,t5'))
 
-        self.assertListResponse([{'email': None, 'id': 6, 'name': 't1', 'real_name': None},
-                                 {'email': None, 'id': 7, 'name': 't2', 'real_name': None},
-                                 {'email': None, 'id': 8, 'name': 't3', 'real_name': None},
-                                 {'email': None, 'id': 9, 'name': 't4', 'real_name': None}],
+        self.assertListResponse([{'email': 't1@example.com', 'id': 6, 'name': 't1', 'real_name': 't1'},
+                                 {'email': 't2@example.com', 'id': 7, 'name': 't2', 'real_name': 't2'},
+                                 {'email': 't3@example.com', 'id': 8, 'name': 't3', 'real_name': 't3'},
+                                 {'email': 't4@example.com', 'id': 9, 'name': 't4', 'real_name': 't4'}],
                                 self.json_req('/groups/show/testgroup1'))
 
         self.assertDictResponse({'removed': ['t1', 't3'], 'does_not_belong': [], 'not_exist': []},

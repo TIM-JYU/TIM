@@ -723,11 +723,11 @@ class Users(TimDbBase):
 
     @contract
     def create_user_with_group(self, name: 'str',
-                               real_name: 'str'=None,
-                               email: 'str'=None,
-                               password: 'str'='',
+                               real_name: 'str|None'=None,
+                               email: 'str|None'=None,
+                               password: 'str|None'=None,
                                is_admin: 'bool'=False):
-        user_id = self.createUser(name, real_name, email, password=password)
+        user_id = self.createUser(name, real_name or name, email or name + '@example.com', password=password or '')
         user_group = self.createUserGroup(name)
         self.addUserToGroup(user_group, user_id)
         if is_admin:
