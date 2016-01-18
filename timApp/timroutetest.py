@@ -37,14 +37,19 @@ class TimRouteTest(TimDbTest):
         else:
             return resp_data
 
-    def assertInResponse(self, expected, resp, expect_status=200, json_key=None):
+    def assertInResponse(self, expected, resp, expect_status=200, json_key=None, as_tree=False):
         resp_text = resp.get_data(as_text=True)
         self.assertResponseStatus(resp, expect_status)
         if json_key is not None:
             resp_text = json.loads(resp_text)[json_key]
-        self.assertIn(expected, resp_text,
-                      msg="""\n--------THIS TEXT:--------\n{}\n--------WAS NOT FOUND IN:---------\n{}""".format(
-                              expected, resp_text))
+        assert_msg = """\n--------THIS TEXT:--------\n{}\n--------WAS NOT FOUND IN:---------\n{}""".format(
+                expected, resp_text)
+        if as_tree:
+            self.assertLessEqual(1, len(html.fragment_fromstring(resp_text, create_parent=True).findall(expected)),
+                                 msg=assert_msg)
+        else:
+            self.assertIn(expected, resp_text,
+                          msg=assert_msg)
 
     def assertManyInResponse(self, expecteds, resp, expect_status=200):
         for e in expecteds:
@@ -57,6 +62,10 @@ class TimRouteTest(TimDbTest):
     def assertDictResponse(self, expected, resp, expect_status=200):
         self.assertEqual(expect_status, resp.status_code)
         self.assertDictEqual(expected, load_json(resp))
+
+    def assertListResponse(self, expected, resp, expect_status=200):
+        self.assertEqual(expect_status, resp.status_code)
+        self.assertListEqual(expected, load_json(resp))
 
     def get(self, url, as_tree=False, **kwargs):
         resp = self.app.get(url, **kwargs).get_data(as_text=True)
@@ -77,8 +86,8 @@ class TimRouteTest(TimDbTest):
                              content_type='application/json',
                              method=method)
 
-    def post_par(self, doc, text, par_id):
-        doc.version = None  # Force version update when calling get_version
+    def post_par(self, doc: Document, text: str, par_id: str):
+        doc.clear_mem_cache()
         return self.json_post('/postParagraph/', {
             "text": text,
             "docId": doc.doc_id,
@@ -86,8 +95,8 @@ class TimRouteTest(TimDbTest):
             "par_next": None
         })
 
-    def new_par(self, doc, text, next_id=None):
-        doc.version = None  # Force version update when calling get_version
+    def new_par(self, doc: Document, text: str, next_id=None):
+        doc.clear_mem_cache()
         return self.json_post('/newParagraph/', {
             "text": text,
             "docId": doc.doc_id,
@@ -95,23 +104,25 @@ class TimRouteTest(TimDbTest):
         })
 
     def login_test1(self, force=False):
+        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force)
+
+    def login_test2(self, force=False):
+        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force)
+
+    def login_test3(self, force=False):
+        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force)
+
+    def login(self, username, email, passw, force=False):
         # Make a bogus request; something is wrong with session being cleared after a request if we're in a different
         # test class when running multiple tests at once
         self.app.get('/zzz')
         if not force \
                 and self.app.application.got_first_request \
-                and flask.session.get('user_name') == 'testuser1'\
+                and flask.session.get('user_name') == username \
                 and flask.session.get('user_id') != 0:
             return
         return self.app.post('/altlogin',
-                             data={'email': 'test1@example.com', 'password': 'test1pass'},
-                             follow_redirects=True)
-
-    def login_test2(self, force=False):
-        if not force and self.app.application.got_first_request and flask.session['user_name'] == 'testuser2':
-            return
-        return self.app.post('/altlogin',
-                             data={'email': 'test2@example.com', 'password': 'test2pass'},
+                             data={'email': email, 'password': passw},
                              follow_redirects=True)
 
     def create_doc(self, docname=None, from_file=None, initial_par=None, settings=None, assert_status=200):

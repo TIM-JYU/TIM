@@ -47,7 +47,7 @@ class Document:
         if self.par_cache is None:
             return DocParagraphIter(self)
         else:
-            return self.par_cache.__iter__()
+            return CacheIterator(self.par_cache.__iter__())
 
     @classmethod
     @contract
@@ -582,7 +582,9 @@ class Document:
         return before_i
 
     def get_index(self) -> 'list(tuple)':
-        return get_index_for_version(self.doc_id, self.get_version())
+        DocParagraph.preload_htmls([par for par in DocParagraphIter(self)], self.get_settings())
+        html_list = [par.get_html() for par in self.get_paragraphs()]
+        return get_index_from_html_list(html_list)
 
     @staticmethod
     def add_index_entry(index_table, current_headers, header):
@@ -643,14 +645,15 @@ class Document:
         start_found = False
         end_found = False
         pars = []
-        for par in self:
-            if par.get_attr('area') == section_name:
-                start_found = True
-            if start_found:
-                pars.append(par)
-            if par.get_attr('area_end') == section_name:
-                end_found = True
-                break
+        with self.__iter__() as i:
+            for par in i:
+                if par.get_attr('area') == section_name:
+                    start_found = True
+                if start_found:
+                    pars.append(par)
+                if par.get_attr('area_end') == section_name:
+                    end_found = True
+                    break
         if not start_found or not end_found:
             raise TimDbException('Area not found: ' + section_name)
         return pars
@@ -710,17 +713,38 @@ class Document:
             self.par_cache = self.par_cache[:i+1] + pars + self.par_cache[i+1:]
         self.__update_par_map()
 
+    def clear_mem_cache(self):
+        self.par_cache = None
+        self.par_map = None
+        self.version = None
+
+
 new_contract('Document', Document)
 
 
+class CacheIterator:
+    def __init__(self, i):
+        self.i = i
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def __iter__(self):
+        return self.i
+
+    def __next__(self):
+        return self.i.__next__()
+
+
 class DocParagraphIter:
-    def __init__(self, doc: 'Document¦None' = None, version:'tuple(int,int)|None'=None):
+    def __init__(self, doc: 'Document'):
         self.doc = doc
         self.next_index = 0
-        if doc is not None:
-            ver = doc.get_version() if version is None else version
-            name = doc.get_version_path(ver)
-            self.f = open(name, 'r') if os.path.isfile(name) else None
+        name = doc.get_version_path(doc.get_version())
+        self.f = open(name, 'r') if os.path.isfile(name) else None
 
     def __enter__(self):
         return self
@@ -753,21 +777,6 @@ class DocParagraphIter:
         if self.f:
             self.f.close()
             self.f = None
-
-
-@contract
-def get_index_for_version(doc_id: 'int', version: 'tuple(int,int)') -> 'list(tuple)':
-    doc = Document(doc_id)
-    pars = []
-    for par in DocParagraphIter(doc, version):
-        md = par.get_markdown()
-        if (len(md) > 2 and md[0] == '#' and md[1] != '.')\
-            or (par.is_multi_block() and par.has_headers()):
-                pars.append(par)
-
-    DocParagraph.preload_htmls(pars, doc.get_settings())
-    html_list = [par.get_html() for par in pars]
-    return get_index_from_html_list(html_list)
 
 
 @contract

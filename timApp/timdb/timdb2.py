@@ -87,7 +87,6 @@ class TimDb(object):
 
     def close(self):
         """Closes the database connection."""
-        self.db.commit()
         self.db.close()
 
     def initialize_tables(self):

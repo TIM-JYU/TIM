@@ -72,6 +72,9 @@
                     {% if rights.teacher %}
                         | <a href="/teacher/{{ doc.name }}">Teacher view</a>
                     {% endif %}
+                    {% if rights.see_answers %}
+                        | <a href="/answers/{{ doc.name }}">Answers</a>
+                    {% endif %}
                         | <a href="/lecture/{{ doc.name }}">Lecture view</a>
                         | <a href="/slide/{{ doc.name }}">Slide view</a>
                 {% endif %}

@@ -13,6 +13,8 @@ KORPPI_GROUPNAME = "Korppi users"
 LOGGED_IN_GROUPNAME = "Logged-in users"
 ADMIN_GROUPNAME = "Administrators"
 
+SPECIAL_GROUPS = {ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, ADMIN_GROUPNAME}
+
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
@@ -490,7 +492,8 @@ class Users(TimDbBase):
                        [group_id, block_id, self.get_view_access_id()])
         self.db.commit()
 
-    def get_view_access_id(self):
+    @contract
+    def get_view_access_id(self) -> 'int':
         return self.get_access_type_id('view')
 
     @contract
@@ -526,6 +529,10 @@ class Users(TimDbBase):
         return self.get_access_type_id('manage')
 
     @contract
+    def get_seeanswers_access_id(self) -> 'int':
+        return self.get_access_type_id('see answers')
+
+    @contract
     def has_admin_access(self, user_id: 'int') -> 'bool':
         return self.isUserIdInGroup(user_id, 'Administrators')
 
@@ -542,7 +549,8 @@ class Users(TimDbBase):
                                self.get_view_access_id(),
                                self.get_edit_access_id(),
                                self.get_manage_access_id(),
-                               self.get_teacher_access_id())
+                               self.get_teacher_access_id(),
+                               self.get_seeanswers_access_id())
 
     @contract
     def has_teacher_access(self, user_id: 'int', block_id: 'int') -> 'bool':
@@ -602,6 +610,13 @@ class Users(TimDbBase):
         """
 
         return self.has_access(user_id, block_id, self.get_edit_access_id(), self.get_manage_access_id())
+
+    @contract
+    def has_seeanswers_access(self, uid: 'int', block_id: 'int') -> 'bool':
+        return self.has_access(uid, block_id,
+                               self.get_seeanswers_access_id(),
+                               self.get_manage_access_id(),
+                               self.get_teacher_access_id())
 
     def checkUserGroupAccess(self, block_id: 'int', usergroup_id: 'int|None', access_id: 'int') -> 'bool':
         if usergroup_id is None:
@@ -674,13 +689,14 @@ class Users(TimDbBase):
         cursor.execute("""UPDATE User SET prefs = ? WHERE id = ?""", [prefs, user_id])
         self.db.commit()
 
-    def get_users_for_group(self, usergroup_name):
+    def get_users_for_group(self, usergroup_name, order=False):
+        order_sql = ' ORDER BY User.name' if order else ''
         return self.resultAsDictionary(
             self.db.execute("""SELECT User.id, User.name, real_name, email
                            FROM User
                            JOIN UserGroupMember ON User.id = UserGroupMember.User_id
                            JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
-                           WHERE UserGroup.name = ?""", [usergroup_name]))
+                           WHERE UserGroup.name = ?{}""".format(order_sql), [usergroup_name]))
 
     def get_access_type_id(self, access_type):
         if not self.access_type_map:
@@ -693,7 +709,7 @@ class Users(TimDbBase):
         return self.resultAsDictionary(self.db.execute("""SELECT id, name FROM AccessType"""))
 
     @contract
-    def remove_membership(self, uid: 'int', gid: 'int') -> 'int':
+    def remove_membership(self, uid: 'int', gid: 'int', commit: 'bool'=True) -> 'int':
         """Removes membership of a user from a group.
         :param uid: The user id.
         :param gid: The group id.
@@ -701,5 +717,19 @@ class Users(TimDbBase):
         """
         c = self.db.cursor()
         c.execute("""DELETE FROM UserGroupMember WHERE User_id = ? and UserGroup_id = ?""", [uid, gid])
-        self.db.commit()
+        if commit:
+            self.db.commit()
         return c.rowcount
+
+    @contract
+    def create_user_with_group(self, name: 'str',
+                               real_name: 'str|None'=None,
+                               email: 'str|None'=None,
+                               password: 'str|None'=None,
+                               is_admin: 'bool'=False):
+        user_id = self.createUser(name, real_name or name, email or name + '@example.com', password=password or '')
+        user_group = self.createUserGroup(name)
+        self.addUserToGroup(user_group, user_id)
+        if is_admin:
+            self.addUserToAdmins(user_id)
+        return user_id, user_group

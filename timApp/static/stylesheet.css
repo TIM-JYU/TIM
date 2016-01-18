@@ -1888,3 +1888,7 @@ p.docsettings {
     margin-right: -5em;
     text-align: left;
 }
+
+.userlist .active {
+    background-color: white;
+}

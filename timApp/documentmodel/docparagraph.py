@@ -10,7 +10,7 @@ from documentmodel.documentwriter import DocumentWriter
 from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html, par_list_to_html_list, expand_macros
 from timdb.timdbbase import TimDbException
-from utils import count_chars
+from utils import count_chars, get_error_html
 from .randutils import *
 
 
@@ -148,7 +148,7 @@ class DocParagraph(DocParagraphBase):
         try:
             self.__htmldata['html'] = self.get_html()
         except Exception as e:
-            self.__htmldata['html'] = '<div class="pluginError">{}</div>'.format(e)
+            self.__htmldata['html'] = get_error_html(e)
 
         self.__htmldata['cls'] = 'par ' + self.get_class_str()
         self.__htmldata['is_plugin'] = self.is_plugin()
@@ -249,6 +249,8 @@ class DocParagraph(DocParagraphBase):
             return
 
         doc_id_str = str(pars[0].doc.doc_id)
+        macro_cache_file = '/tmp/tim_auto_macros_' + doc_id_str
+        heading_cache_file = '/tmp/heading_cache_' + doc_id_str
 
         first_pars = []
         if context_par is not None:
@@ -258,8 +260,8 @@ class DocParagraph(DocParagraphBase):
         if not persist:
             cache = {}
             heading_cache = {}
-            with shelve.open('/tmp/tim_auto_macros_' + doc_id_str) as c,\
-                 shelve.open('/tmp/heading_cache_' + doc_id_str) as hc:
+            with shelve.open(macro_cache_file) as c,\
+                 shelve.open(heading_cache_file) as hc:
 
                 # Basically we want the cache objects to be non-persistent, so we convert them to normal dicts
                 # Find out better way if possible...
@@ -273,8 +275,17 @@ class DocParagraph(DocParagraphBase):
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            with shelve.open('/tmp/tim_auto_macros_' + doc_id_str) as cache,\
-                 shelve.open('/tmp/heading_cache_' + doc_id_str) as heading_cache:
+            if clear_cache:
+                try:
+                    os.remove(macro_cache_file + '.db')
+                except FileNotFoundError:
+                    pass
+                try:
+                    os.remove(heading_cache_file + '.db')
+                except FileNotFoundError:
+                    pass
+            with shelve.open(macro_cache_file) as cache,\
+                 shelve.open(heading_cache_file) as heading_cache:
                 unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
                 for k, v in heading_cache.items():
                     heading_cache[k] = v
@@ -337,8 +348,9 @@ class DocParagraph(DocParagraphBase):
             else:
                 all_headings_so_far = defaultdict(int)
             cumulative_headings.append(all_headings_so_far)
-            for h in par_headings:
-                all_headings_so_far[h] += 1
+            if par_headings is not None:
+                for h in par_headings:
+                    all_headings_so_far[h] += 1
 
             if not clear_cache and cached is not None:
                 if type(cached) is str:  # Compatibility
@@ -577,7 +589,16 @@ class DocParagraph(DocParagraphBase):
         rindex = s.rfind(old)
         return s[:rindex] + new + s[rindex + len(old):] if rindex >= 0 else s
 
-    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True):
+    def get_referenced_pars(self, edit_window=False, set_html=True, source_doc=None, tr_get_one=True, cycle=None):
+        if cycle is None:
+            cycle = []
+        par_doc_id = self.get_doc_id(), self.get_id()
+        if par_doc_id in cycle:
+            cycle.append(par_doc_id)
+            raise TimDbException(
+                'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in cycle)))
+        cycle.append(par_doc_id)
+
         def reference_par(ref_par, write_link=False):
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
@@ -638,22 +659,33 @@ class DocParagraph(DocParagraphBase):
         write_link = (rl_attr == 'force') or not (is_default_rd or (rl_attr == 'no'))
 
         if self.is_par_reference():
-            if self.get_doc_id() == int(ref_docid) and self.get_id() == attrs['rp']:
-                raise TimDbException('Paragraph is referencing itself!')
             if not ref_doc.has_paragraph(attrs['rp']):
                 raise TimDbException('The referenced paragraph does not exist.')
 
             ref_par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
-            return [reference_par(ref_par, write_link=write_link)]
-
+            if ref_par.is_reference():
+                ref_pars = ref_par.get_referenced_pars(edit_window=edit_window,
+                                                       set_html=set_html,
+                                                       source_doc=source_doc,
+                                                       cycle=cycle)
+            else:
+                ref_pars = [ref_par]
         elif self.is_area_reference():
-            ref_pars = ref_doc.get_named_section(attrs['ra'])
+            section_pars = ref_doc.get_named_section(attrs['ra'])
+            ref_pars = []
+            for p in section_pars:
+                if p.is_reference():
+                    ref_pars.extend(p.get_referenced_pars(edit_window=edit_window,
+                                                          set_html=set_html,
+                                                          source_doc=source_doc,
+                                                          cycle=cycle))
+                else:
+                    ref_pars.append(p)
             if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
                 return [reference_par(ref_pars[0], write_link=write_link)]
-            else:
-                return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]
         else:
             assert False
+        return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]
 
     def set_original(self, orig):
         self.original = orig

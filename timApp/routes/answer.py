@@ -64,7 +64,7 @@ def save_answer(plugintype, task_id):
     answer_browser_data = request.get_json().get('abData', {})
     is_teacher = answer_browser_data.get('teacher', False)
     if is_teacher:
-        verify_teacher_access(doc_id)
+        verify_seeanswers_access(doc_id)
     try:
         plugin = Plugin.from_task_id(task_id)
     except PluginException as e:
@@ -128,6 +128,7 @@ def save_answer(plugintype, task_id):
                 result['error'] = explanation
         else:
             if answer_browser_data.get('saveTeacher', False):
+                verify_teacher_access(doc_id)
                 answer_id = answer_browser_data.get('answer_id', None)
                 if answer_id is None:
                     return jsonResponse({'error': 'Missing answer_id key'}, 400)
@@ -180,7 +181,7 @@ def get_answers(task_id, user_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
     if user_id != getCurrentUserId():
-        verify_teacher_access(doc_id)
+        verify_seeanswers_access(doc_id)
     if user is None:
         abort(400, 'Non-existent user')
     user_answers = timdb.answers.get_answers(user_id, task_id)
@@ -193,7 +194,7 @@ def get_answers(task_id, user_id):
 
 
 @answers.route("/allAnswers/<task_id>")
-def get__all_answers(task_id):
+def get_all_answers(task_id):
     verifyLoggedIn()
     timdb = getTimDb()
     doc_id, task_id_name = Plugin.parse_task_id(task_id)
@@ -201,6 +202,8 @@ def get__all_answers(task_id):
     if not usergroup: usergroup = 0
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
+
+    # Require full teacher rights for getting all answers
     verify_teacher_access(doc_id)
     all_answers = timdb.answers.get_all_answers(task_id, usergroup, hide_names_in_teacher(doc_id))
     return jsonResponse(all_answers)
@@ -218,7 +221,7 @@ def get_state():
     user = timdb.users.getUser(user_id)
     is_teacher = False
     if user_id != getCurrentUserId():
-        verify_teacher_access(doc_id)
+        verify_seeanswers_access(doc_id)
         is_teacher = True
     if user is None:
         abort(400, 'Non-existent user')
@@ -255,7 +258,7 @@ def get_state():
 @answers.route("/getTaskUsers/<task_id>")
 def get_task_users(task_id):
     doc_id, task_id_name = Plugin.parse_task_id(task_id)
-    verify_teacher_access(doc_id)
+    verify_seeanswers_access(doc_id)
     usergroup = request.args.get('group')
     users = getTimDb().answers.get_users_by_taskid(task_id)
     if usergroup is not None:

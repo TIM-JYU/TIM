@@ -177,6 +177,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.changeUser = function (user) {
+            sc.selectedUser = user;
             sc.$broadcast('userChanged', {user: user});
         };
 

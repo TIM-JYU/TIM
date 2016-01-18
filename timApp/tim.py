@@ -1800,6 +1800,13 @@ def make_session_permanent():
     session.permanent = True
 
 
+@app.after_request
+def close_db(response):
+    if hasattr(g, 'timdb'):
+        g.timdb.close()
+    return response
+
+
 def start_app():
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])

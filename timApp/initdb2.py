@@ -2,24 +2,17 @@
 """Initializes the TIM database."""
 
 import os
-import mkfolders
-import sqlalchemy
-from timdb.docidentifier import DocIdentifier
 
+import sqlalchemy
+
+import mkfolders
+import models
+from tim_app import app
+from timdb.docidentifier import DocIdentifier
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import blocktypes
 from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME
-from tim_app import app
-import models
 
-
-def create_user(timdb, name, real_name, email, password='', is_admin=False):
-    user_id = timdb.users.createUser(name, real_name, email, password=password)
-    user_group = timdb.users.createUserGroup(name)
-    timdb.users.addUserToGroup(user_group, user_id)
-    if is_admin:
-        timdb.users.addUserToAdmins(user_id)
-    return user_id, user_group
 
 def postgre_create_database(db_name):
     #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
@@ -52,10 +45,10 @@ def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files',
     timdb.initialize_tables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
     anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
-    create_user(timdb, 'vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
-    create_user(timdb, 'tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
-    create_user(timdb, 'testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
-    create_user(timdb, 'testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
+    timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
+    timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
+    timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
+    timdb.users.create_user_with_group('testuser2', 'Test user 2', 'test2@example.com', password='test2pass')
 
     if create_docs:
         timdb.documents.create('Testaus 1', anon_group)
@@ -89,7 +82,8 @@ def update_database():
     ver_old = ver
     update_dict = {0: update_datamodel,
                    1: update_answers,
-                   2: update_rights}
+                   2: update_rights,
+                   3: add_seeanswers_right}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -104,6 +98,14 @@ def update_database():
         print('Database is up to date.')
     else:
         print('Database was updated from version {} to {}.'.format(ver_old, ver))
+
+
+def add_seeanswers_right():
+    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+    timdb.execute_sql("""
+INSERT INTO AccessType(name) VALUES ('see answers')
+    """)
+    return True
 
 
 def update_rights():

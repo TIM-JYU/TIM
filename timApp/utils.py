@@ -1,10 +1,14 @@
 """Utility functions."""
-from copy import deepcopy
-from datetime import datetime
 import re
+from datetime import datetime
+
+import os
+
+import shutil
 import yaml
 from yaml import CLoader
-from markdownconverter import expand_macros
+
+from htmlSanitize import sanitize_html
 
 
 def date_to_relative(d):
@@ -113,40 +117,6 @@ def parse_yaml(text):
         return "Missing identifier"
 
 
-def parse_plugin_values(par,
-                        global_attrs=None,
-                        macros=None,
-                        macro_delimiter=None):
-    """
-
-    :type par: DocParagraph
-    :return:
-    :rtype: dict
-    """
-    try:
-        # We get the yaml str by removing the first and last lines of the paragraph markup
-        par_md = par.get_markdown()
-        yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
-                                 macros=macros,
-                                 macro_delimiter=macro_delimiter)
-        #print("yaml str is: " + yaml_str)
-        values = parse_yaml(yaml_str)
-        if type(values) is str:
-            return {'error': "YAML is malformed: " + values}
-        else:
-            if global_attrs:
-                if type(global_attrs) is str:
-                    return {'error': 'global_plugin_attrs should be a dict, not str'}
-                global_attrs = deepcopy(global_attrs)
-                final_values = global_attrs.get('all', {})
-                merge(final_values, global_attrs.get(par.get_attrs()['plugin'], {}))
-                merge(final_values, values)
-                values = final_values
-            return {"markup": values}
-    except Exception as e:
-        return {'error': "Unknown error: " + str(e)}
-
-
 def count_chars(md, char):
     num_ticks = 0
     for i, c in enumerate(md):
@@ -155,3 +125,26 @@ def count_chars(md, char):
         else:
             break
     return num_ticks
+
+
+def get_error_html(message):
+    """
+    Wraps an error message in an HTML element with class 'error'.
+
+    :param message: The message to be displayed in the error.
+
+    """
+
+    return sanitize_html('<div class="error">{}</div>'.format(str(message)))
+
+
+def del_content(directory, onerror=None):
+    for f in os.listdir(directory):
+        f_path = os.path.join(directory, f)
+        try:
+            if os.path.isfile(f_path):
+                os.unlink(f_path)
+            elif os.path.isdir(f_path):
+                shutil.rmtree(f_path, onerror=onerror)
+        except Exception as e:
+            print(e)

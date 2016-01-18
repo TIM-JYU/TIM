@@ -1,5 +1,9 @@
+from copy import deepcopy
+
 from documentmodel.document import Document
 import utils
+from markdownconverter import expand_macros
+from utils import parse_yaml, merge
 
 date_format = '%Y-%m-%d %H:%M:%S'
 
@@ -23,10 +27,10 @@ class Plugin:
         par = doc.get_paragraph_by_task(task_id_name)
         if par is None:
             raise PluginException('Task not found in the document: ' + task_id_name)
-        plugin_data = utils.parse_plugin_values(par,
-                                                global_attrs=doc.get_settings().global_plugin_attrs(),
-                                                macros=doc.get_settings().get_macros(),
-                                                macro_delimiter=doc.get_settings().get_macro_delimiter())
+        plugin_data = parse_plugin_values(par,
+                                          global_attrs=doc.get_settings().global_plugin_attrs(),
+                                          macros=doc.get_settings().get_macros(),
+                                          macro_delimiter=doc.get_settings().get_macro_delimiter())
         if 'error' in plugin_data:
             if type(plugin_data) is str:
                 raise PluginException(plugin_data + ' Task id: ' + task_id_name)
@@ -75,3 +79,37 @@ class Plugin:
 class PluginException(Exception):
     """The exception that is thrown when an error occurs during a plugin call."""
     pass
+
+
+def parse_plugin_values(par,
+                        global_attrs=None,
+                        macros=None,
+                        macro_delimiter=None):
+    """
+
+    :type par: DocParagraph
+    :return:
+    :rtype: dict
+    """
+    try:
+        # We get the yaml str by removing the first and last lines of the paragraph markup
+        par_md = par.get_markdown()
+        yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
+                                 macros=macros,
+                                 macro_delimiter=macro_delimiter)
+        #print("yaml str is: " + yaml_str)
+        values = parse_yaml(yaml_str)
+        if type(values) is str:
+            return {'error': "YAML is malformed: " + values}
+        else:
+            if global_attrs:
+                if type(global_attrs) is str:
+                    return {'error': 'global_plugin_attrs should be a dict, not str'}
+                global_attrs = deepcopy(global_attrs)
+                final_values = global_attrs.get('all', {})
+                merge(final_values, global_attrs.get(par.get_attrs()['plugin'], {}))
+                merge(final_values, values)
+                values = final_values
+            return {"markup": values}
+    except Exception as e:
+        return {'error': "Unknown error: " + str(e)}

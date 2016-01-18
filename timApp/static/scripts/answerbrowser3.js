@@ -65,9 +65,6 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
     }]);
 
 
-var GLOBALBrowseUser = null;    
-    
-
 timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window', '$filter',
     function ($upload, $http, $sce, $compile, $window, $filter) {
         "use strict";
@@ -218,6 +215,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                                 }
                             } else {
                                 $scope.answers = data;
+                                if ($scope.answers.length == 0 && $scope.$parent.teacherMode) {
+                                    $scope.dimPlugin();
+                                }
                                 $scope.updateFiltered();
                                 var i = $scope.findSelectedAnswerIndex();
                                 if (i >= 0) {
@@ -247,15 +247,18 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$on('userChanged', function (event, args) {
                     $scope.user = args.user;
-                    GLOBALBrowseUser = args.user;
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
                     if ($scope.hasUserChanged()) {
-                        $scope.parContent.css('opacity', '0.3');
+                        $scope.dimPlugin();
                     } else {
                         $scope.parContent.css('opacity', '1.0');
                     }
                 });
+
+                $scope.dimPlugin = function () {
+                    $scope.parContent.css('opacity', '0.3');
+                };
 
                 $scope.allowCustomPoints = function () {
                     if ($scope.taskInfo === null) {
@@ -271,6 +274,10 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         $scope.firstLoad = false;
                         $scope.shouldUpdateHtml = false;
                     }
+                };
+
+                $scope.showTeacher = function () {
+                    return $scope.$parent.teacherMode && $scope.$parent.rights.teacher;
                 };
 
                 $scope.getTriesLeft = function () {
@@ -297,6 +304,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 
                 $scope.checkUsers = function () {
+                    if ($scope.loading > 0) {
+                        return;
+                    }
                     $scope.loadIfChanged();
                     if ($scope.$parent.teacherMode && $scope.users === null) {
                         $scope.users = [];
@@ -339,9 +349,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                      return 'data:text/plain;charset=UTF-8,' + encodeURIComponent($scope.allAnswers);
                 };
 
-                if ( GLOBALBrowseUser ) {
-                    $scope.user = GLOBALBrowseUser;
-                }    
+                if ( $scope.$parent.selectedUser ) {
+                    $scope.user = $scope.$parent.selectedUser;
+                }
                 else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) { 
                     $scope.user = $scope.$parent.users[0];
                 } else {
@@ -350,7 +360,10 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.fetchedUser = null;
                 $scope.firstLoad = true;
-                $scope.shouldUpdateHtml = false;
+                $scope.shouldUpdateHtml = $scope.user !== $scope.$parent.users[0];
+                if ($scope.shouldUpdateHtml) {
+                    $scope.dimPlugin();
+                }
                 $scope.saveTeacher = false;
                 $scope.users = null;
                 $scope.answers = [];
@@ -377,6 +390,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 $scope.$watchGroup(['onlyValid', 'answers'], $scope.updateFiltered);
 
+                // call checkUsers automatically for now; suitable only for lazy mode!
                 $scope.checkUsers();
                 $element.parent().on('mouseenter touchstart', function () {
                     $scope.checkUsers();

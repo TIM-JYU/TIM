@@ -7,6 +7,7 @@ from lxml import html
 
 from dumboclient import call_dumbo
 from htmlSanitize import sanitize_html
+from utils import get_error_html
 
 
 def has_macros(text, macros, macro_delimiter=None):
@@ -35,7 +36,7 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None):
     try:
         return env.from_string(text).render(macros)
     except TemplateSyntaxError as e:
-        return '<div class="error">Syntax error in template: {}</div>'.format(e)
+        return get_error_html('Syntax error in template: {}'.format(e))
 
 
 expand_macros = expand_macros_jinja2
