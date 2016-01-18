@@ -249,6 +249,8 @@ class DocParagraph(DocParagraphBase):
             return
 
         doc_id_str = str(pars[0].doc.doc_id)
+        macro_cache_file = '/tmp/tim_auto_macros_' + doc_id_str
+        heading_cache_file = '/tmp/heading_cache_' + doc_id_str
 
         first_pars = []
         if context_par is not None:
@@ -258,8 +260,8 @@ class DocParagraph(DocParagraphBase):
         if not persist:
             cache = {}
             heading_cache = {}
-            with shelve.open('/tmp/tim_auto_macros_' + doc_id_str) as c,\
-                 shelve.open('/tmp/heading_cache_' + doc_id_str) as hc:
+            with shelve.open(macro_cache_file) as c,\
+                 shelve.open(heading_cache_file) as hc:
 
                 # Basically we want the cache objects to be non-persistent, so we convert them to normal dicts
                 # Find out better way if possible...
@@ -273,11 +275,17 @@ class DocParagraph(DocParagraphBase):
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            with shelve.open('/tmp/tim_auto_macros_' + doc_id_str) as cache,\
-                 shelve.open('/tmp/heading_cache_' + doc_id_str) as heading_cache:
-                if clear_cache:
-                    cache.clear()
-                    heading_cache.clear()
+            if clear_cache:
+                try:
+                    os.remove(macro_cache_file + '.db')
+                except FileNotFoundError:
+                    pass
+                try:
+                    os.remove(heading_cache_file + '.db')
+                except FileNotFoundError:
+                    pass
+            with shelve.open(macro_cache_file) as cache,\
+                 shelve.open(heading_cache_file) as heading_cache:
                 unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
                 for k, v in heading_cache.items():
                     heading_cache[k] = v

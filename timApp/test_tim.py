@@ -192,5 +192,12 @@ class TimTest(TimRouteTest):
                               json_key='texts',
                               as_tree=True)
 
+    def test_clear_cache(self):
+        self.login_test1()
+        doc = self.create_doc(initial_par="Test")
+        self.get('/view/{}'.format(doc.doc_id))
+        self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
+
+
 if __name__ == '__main__':
     unittest.main()
