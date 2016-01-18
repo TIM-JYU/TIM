@@ -304,6 +304,9 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
 
                 
                 $scope.checkUsers = function () {
+                    if ($scope.loading > 0) {
+                        return;
+                    }
                     $scope.loadIfChanged();
                     if ($scope.$parent.teacherMode && $scope.users === null) {
                         $scope.users = [];
