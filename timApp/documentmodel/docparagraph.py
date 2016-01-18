@@ -275,6 +275,9 @@ class DocParagraph(DocParagraphBase):
         else:
             with shelve.open('/tmp/tim_auto_macros_' + doc_id_str) as cache,\
                  shelve.open('/tmp/heading_cache_' + doc_id_str) as heading_cache:
+                if clear_cache:
+                    cache.clear()
+                    heading_cache.clear()
                 unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
                 for k, v in heading_cache.items():
                     heading_cache[k] = v
