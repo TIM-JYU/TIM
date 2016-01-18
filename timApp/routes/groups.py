@@ -33,6 +33,21 @@ def show_members(groupname):
 
 @groups.route('/create/<groupname>')
 def create_group(groupname):
+    """
+    Route for creating a usergroup.
+
+    The usergroup name has the following restrictions:
+
+     1. The name must have at least one digit.
+     2. The name must have at least one alphabetic character.
+     3. The name must NOT have any non-alphanumeric characters, with the exception that spaces are allowed.
+
+    These restrictions are needed in order to distinguish manually-created groups from personal usergroups.
+    Personal usergroup names are either
+
+     1. email addresses (containing '@' character), or
+     2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
+    """
     verify_admin()
     timdb = getTimDb()
     if timdb.users.group_exists(groupname):
