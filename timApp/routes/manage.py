@@ -12,7 +12,7 @@ manage_page = Blueprint('manage_page',
 def manage(path):
     timdb = getTimDb()
     isFolder = False
-    doc_id, doc_name, doc_shortname = timdb.documents.resolve_doc_id_name(path)
+    doc_id, doc_fullname, doc_name = timdb.documents.resolve_doc_id_name(path)
     if doc_id is None:
         try:
             folder_id = int(path)
@@ -41,10 +41,10 @@ def manage(path):
     else:
         doc = Document(block_id)
         doc_data = {'id': block_id}
-        doc_name = timdb.documents.get_first_document_name(block_id)
-        if doc_name is not None:
-            doc_data['name'] = doc_shortname
-            doc_data['fullname'] = doc_name
+        doc_fullname = timdb.documents.get_first_document_name(block_id)
+        if doc_fullname is not None:
+            doc_data['name'] = doc_name
+            doc_data['fullname'] = doc_fullname
         doc_data['versions'] = [entry for entry in doc.get_changelog()]
         doc_data['fulltext'] = doc.export_markdown()
         for ver in doc_data['versions']:

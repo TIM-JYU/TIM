@@ -52,7 +52,7 @@
     </style>
     <script>
         var docId = JSON.parse({{doc.id|tojson|safe}});
-        var docName = {{doc.name|tojson|safe}};
+        var docName = {{doc.fullname|tojson|safe}};
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};
         var reqs = {{reqs|tojson}};
@@ -134,7 +134,7 @@
         {% endif %}
         {% if slide_mode %}
             <div class="paragraphs">
-                <iframe id="slideFrame" src="/show_slide/{{ doc.name }}" allowfullscreen></iframe>
+                <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
             </div>
         {% else %}
             {% include 'view_content.html' %}
