@@ -337,8 +337,9 @@ class DocParagraph(DocParagraphBase):
             else:
                 all_headings_so_far = defaultdict(int)
             cumulative_headings.append(all_headings_so_far)
-            for h in par_headings:
-                all_headings_so_far[h] += 1
+            if par_headings is not None:
+                for h in par_headings:
+                    all_headings_so_far[h] += 1
 
             if not clear_cache and cached is not None:
                 if type(cached) is str:  # Compatibility
