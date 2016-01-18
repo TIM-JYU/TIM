@@ -689,13 +689,14 @@ class Users(TimDbBase):
         cursor.execute("""UPDATE User SET prefs = ? WHERE id = ?""", [prefs, user_id])
         self.db.commit()
 
-    def get_users_for_group(self, usergroup_name):
+    def get_users_for_group(self, usergroup_name, order=False):
+        order_sql = ' ORDER BY User.name' if order else ''
         return self.resultAsDictionary(
             self.db.execute("""SELECT User.id, User.name, real_name, email
                            FROM User
                            JOIN UserGroupMember ON User.id = UserGroupMember.User_id
                            JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
-                           WHERE UserGroup.name = ?""", [usergroup_name]))
+                           WHERE UserGroup.name = ?{}""".format(order_sql), [usergroup_name]))
 
     def get_access_type_id(self, access_type):
         if not self.access_type_map:
@@ -708,7 +709,7 @@ class Users(TimDbBase):
         return self.resultAsDictionary(self.db.execute("""SELECT id, name FROM AccessType"""))
 
     @contract
-    def remove_membership(self, uid: 'int', gid: 'int') -> 'int':
+    def remove_membership(self, uid: 'int', gid: 'int', commit: 'bool'=True) -> 'int':
         """Removes membership of a user from a group.
         :param uid: The user id.
         :param gid: The group id.
@@ -716,5 +717,19 @@ class Users(TimDbBase):
         """
         c = self.db.cursor()
         c.execute("""DELETE FROM UserGroupMember WHERE User_id = ? and UserGroup_id = ?""", [uid, gid])
-        self.db.commit()
+        if commit:
+            self.db.commit()
         return c.rowcount
+
+    @contract
+    def create_user_with_group(self, name: 'str',
+                               real_name: 'str'=None,
+                               email: 'str'=None,
+                               password: 'str'='',
+                               is_admin: 'bool'=False):
+        user_id = self.createUser(name, real_name, email, password=password)
+        user_group = self.createUserGroup(name)
+        self.addUserToGroup(user_group, user_id)
+        if is_admin:
+            self.addUserToAdmins(user_id)
+        return user_id, user_group

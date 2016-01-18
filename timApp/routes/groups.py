@@ -24,7 +24,7 @@ def show_members(groupname):
     timdb = getTimDb()
     if not timdb.users.group_exists(groupname):
         abort(404, 'Usergroup does not exist.')
-    members = timdb.users.get_users_for_group(groupname)
+    members = timdb.users.get_users_for_group(groupname, order=True)
     return jsonResponse(members)
 
 
@@ -68,7 +68,7 @@ def add_member(usernames, groupname):
     if groupname in SPECIAL_GROUPS:
         abort(400, 'Cannot add members to special groups.')
     timdb = getTimDb()
-    usernames = list(set(usernames.split(',')))
+    usernames = get_usernames(usernames)
     gid, uids = get_uid_gid(groupname, usernames)
     users = timdb.users.get_users_for_group(groupname)
     ids = set(u['id'] for u in users)
@@ -82,8 +82,9 @@ def add_member(usernames, groupname):
         if uid in ids:
             already.append(name)
         else:
-            timdb.users.addUserToGroup(gid, uid)
+            timdb.users.addUserToGroup(gid, uid, commit=False)
             added.append(name)
+    timdb.commit()
     return jsonResponse({'already_belongs': already, 'added': added, 'not_exist': not_exist})
 
 
@@ -93,7 +94,7 @@ def remove_member(usernames, groupname):
     if groupname in SPECIAL_GROUPS:
         abort(400, 'Cannot add members to special groups.')
     timdb = getTimDb()
-    usernames = list(set(usernames.split(',')))
+    usernames = get_usernames(usernames)
     gid, uids = get_uid_gid(groupname, usernames)
     removed = []
     does_not_belong = []
@@ -102,10 +103,17 @@ def remove_member(usernames, groupname):
         if uid is None:
             not_exist.append(name)
             continue
-        count = timdb.users.remove_membership(uid, gid)
+        count = timdb.users.remove_membership(uid, gid, commit=False)
         assert count <= 1
         if count == 0:
             does_not_belong.append(name)
         else:
             removed.append(name)
+    timdb.commit()
     return jsonResponse({'removed': removed, 'does_not_belong': does_not_belong, 'not_exist': not_exist})
+
+
+def get_usernames(usernames):
+    usernames = list(set(usernames.split(',')))
+    usernames.sort()
+    return usernames

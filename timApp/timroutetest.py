@@ -63,6 +63,10 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(expect_status, resp.status_code)
         self.assertDictEqual(expected, load_json(resp))
 
+    def assertListResponse(self, expected, resp, expect_status=200):
+        self.assertEqual(expect_status, resp.status_code)
+        self.assertListEqual(expected, load_json(resp))
+
     def get(self, url, as_tree=False, **kwargs):
         resp = self.app.get(url, **kwargs).get_data(as_text=True)
         if as_tree:
@@ -100,23 +104,25 @@ class TimRouteTest(TimDbTest):
         })
 
     def login_test1(self, force=False):
+        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force)
+
+    def login_test2(self, force=False):
+        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force)
+
+    def login_test3(self, force=False):
+        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force)
+
+    def login(self, username, email, passw, force=False):
         # Make a bogus request; something is wrong with session being cleared after a request if we're in a different
         # test class when running multiple tests at once
         self.app.get('/zzz')
         if not force \
                 and self.app.application.got_first_request \
-                and flask.session.get('user_name') == 'testuser1' \
+                and flask.session.get('user_name') == username \
                 and flask.session.get('user_id') != 0:
             return
         return self.app.post('/altlogin',
-                             data={'email': 'test1@example.com', 'password': 'test1pass'},
-                             follow_redirects=True)
-
-    def login_test2(self, force=False):
-        if not force and self.app.application.got_first_request and flask.session['user_name'] == 'testuser2':
-            return
-        return self.app.post('/altlogin',
-                             data={'email': 'test2@example.com', 'password': 'test2pass'},
+                             data={'email': email, 'password': passw},
                              follow_redirects=True)
 
     def create_doc(self, docname=None, from_file=None, initial_par=None, settings=None, assert_status=200):
