@@ -252,7 +252,7 @@ def get_state():
                                                                   timdb.answers,
                                                                   user_id,
                                                                   custom_state=answer['content'])
-    return jsonResponse(texts[0])
+    return jsonResponse({'html': texts[0]['html']})
 
 
 @answers.route("/getTaskUsers/<task_id>")
