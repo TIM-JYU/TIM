@@ -2,7 +2,7 @@
 
 from contracts import contract, new_contract
 
-from documentmodel.document import DocParagraph
+from documentmodel.document import DocParagraph, get_index_from_html_list
 from htmlSanitize import sanitize_html
 
 new_contract('range', 'tuple(int, int)')
@@ -210,6 +210,8 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
                                                           sanitize=False,
                                                           do_lazy=get_option(request, "lazy", True))
 
+    index = get_index_from_html_list(t['html'] for t in texts)
+
     reqs = pluginControl.get_all_reqs()
 
     if hide_names_in_teacher(doc_id):
@@ -242,6 +244,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
                              route="view",
                              doc={'id': doc_id, 'fullname': doc_fullname, 'name': doc_name},
                              text=texts,
+                             headers=index,
                              plugin_users=users,
                              current_user=current_user,
                              version=doc.get_version(),

@@ -52,6 +52,7 @@
     </style>
     <script>
         var docId = JSON.parse({{doc.id|tojson|safe}});
+        var showIndex = {{(headers|length > 0)|tojson}};
         var docName = {{doc.fullname|tojson|safe}};
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};

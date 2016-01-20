@@ -15,6 +15,7 @@ from documentmodel.documentparser import DocumentParser
 from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from timdb.timdbbase import TimDbException
+from utils import get_error_html
 
 
 class Document:
@@ -582,8 +583,12 @@ class Document:
         return before_i
 
     def get_index(self) -> 'list(tuple)':
-        DocParagraph.preload_htmls([par for par in DocParagraphIter(self)], self.get_settings())
-        html_list = [par.get_html() for par in self.get_paragraphs()]
+        pars = [par for par in DocParagraphIter(self)]
+        DocParagraph.preload_htmls(pars, self.get_settings())
+        pars = dereference_pars(pars, edit_window=False, source_doc=self.get_original_document())
+
+        # Skip plugins
+        html_list = [par.get_html() for par in pars if not par.is_dynamic()]
         return get_index_from_html_list(html_list)
 
     @staticmethod
@@ -780,7 +785,7 @@ class DocParagraphIter:
 
 
 @contract
-def get_index_from_html_list(html_table: 'list(str)') -> 'list(tuple)':
+def get_index_from_html_list(html_table) -> 'list(tuple)':
     index = []
     current_headers = None
     for htmlstr in html_table:
@@ -796,3 +801,30 @@ def get_index_from_html_list(html_table: 'list(str)') -> 'list(tuple)':
     if current_headers is not None:
         index.append(current_headers)
     return index
+
+
+def dereference_pars(pars, edit_window=False, source_doc=None):
+    """Resolves references in the given paragraphs.
+
+    :type pars: list[DocParagraph]
+    :param pars: The DocParagraphs to be processed.
+    :param edit_window: Calling from edit window or not.
+    :param source_doc: Default document for referencing.
+    """
+    new_pars = []
+    for par in pars:
+        if par.is_reference():
+            try:
+                new_pars += par.get_referenced_pars(edit_window=edit_window, source_doc=source_doc)
+            except TimDbException as e:
+                err_par = DocParagraph.create(
+                    par.doc,
+                    par_id=par.get_id(),
+                    md='',
+                    html=get_error_html(e))
+
+                new_pars.append(err_par)
+        else:
+            new_pars.append(par)
+
+    return new_pars

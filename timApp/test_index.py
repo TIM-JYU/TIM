@@ -155,4 +155,4 @@ Lorem ipsum.
         self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1-1', 'level': 1, 'text': 'Same'}, []),
-                          ({'id': 'same-2', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+                          ({'id': 'same-3', 'level': 1, 'text': 'Same'}, [])], doc.get_index())

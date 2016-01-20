@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
-from collections import OrderedDict
 import json
 import time
+from collections import OrderedDict
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
-from plugin import PluginException, parse_plugin_values
-from containerLink import plugin_reqs
-from containerLink import get_plugin_tim_url
 from containerLink import get_plugin_needs_browser
+from containerLink import get_plugin_tim_url
+from containerLink import plugin_reqs
 from documentmodel.docparagraph import DocParagraph
-from htmlSanitize import sanitize_html
-from timdb.timdbbase import TimDbException
+from documentmodel.document import dereference_pars
+from plugin import PluginException, parse_plugin_values
 from utils import get_error_html
 
 LAZYSTART= "<!--lazy "
@@ -56,33 +55,6 @@ def try_load_json(json_str):
         return None
     except ValueError:
         return json_str
-
-
-def dereference_pars(pars, edit_window=False, source_doc=None):
-    """Resolves references in the given paragraphs.
-
-    :type pars: list[DocParagraph]
-    :param pars: The DocParagraphs to be processed.
-    :param edit_window: Calling from edit window or not.
-    :param source_doc: Default document for referencing.
-    """
-    new_pars = []
-    for par in pars:
-        if par.is_reference():
-            try:
-                new_pars += par.get_referenced_pars(edit_window=edit_window, source_doc=source_doc)
-            except TimDbException as e:
-                err_par = DocParagraph.create(
-                    par.doc,
-                    par_id=par.get_id(),
-                    md='',
-                    html=get_error_html(e))
-
-                new_pars.append(err_par)
-        else:
-            new_pars.append(par)
-
-    return new_pars
 
 
 def pluginify(doc,
