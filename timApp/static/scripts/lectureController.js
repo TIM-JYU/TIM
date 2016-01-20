@@ -125,6 +125,22 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             })
                 .success(function (answer) {
                     var lectureCode = GetURLParameter('lecture');
+
+                    /*Check if the lecture parameter is autojoin.
+                    If it is and there is only one lecture going on in the document, join it automatically.
+                    Otherwise proceed as usual.*/
+                    var autoJoin = 'autojoin';
+                    if (answer.lectures) {
+                        if (lectureCode === autoJoin && answer.lectures.length === 1) {
+                            $scope.chosenLecture = answer.lectures[0];
+                            lectureCode = answer.lectures[0].lecture_code;
+                        }
+                        if (lectureCode === autoJoin && answer.lectures.length > 1) {
+                            lectureCode = "";
+                        }
+                    } else if (lectureCode === autoJoin) {
+                        lectureCode = "";
+                    }
                     if (lectureCode) {
                         http({
                             url: '/lectureNeedsPassword',
@@ -368,7 +384,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         });
 
 
-        $scope.$on('questionStopped', function() {
+        $scope.$on('questionStopped', function () {
             $scope.current_question_id = false;
         });
 
@@ -406,7 +422,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                 });
         });
 
-        $scope.$on("pointsClosed", function(event, asked_id) {
+        $scope.$on("pointsClosed", function (event, asked_id) {
             $scope.current_points_id = false;
             http({
                 url: '/closePoints',
@@ -958,8 +974,8 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         'is_lecturer': $scope.isLecturer, // Tarkista mielummin serverin päässä
                         'get_messages': $scope.lectureSettings.useWall,
                         'get_questions': $scope.lectureSettings.useQuestions,
-                        'current_question_id': $scope.current_question_id || null,
-                        'current_points_id': $scope.current_points_id || null,
+                        'current_question_id': $scope.current_question_id || null,
+                        'current_points_id': $scope.current_points_id || null,
                         'buster': new Date().getTime()
                     }
                 })
@@ -990,7 +1006,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         // If 'new_end_time' is not undefined, extend or end question according to new_end_time
                         if (typeof answer.new_end_time !== "undefined" && !$scope.isLecturer) {
                             $rootScope.$broadcast('update_end_time', answer.new_end_time);
-                        // If 'question' or 'result' is in answer, show question/explanation accordingly
+                            // If 'question' or 'result' is in answer, show question/explanation accordingly
                         } else if (typeof answer.points_closed !== "undefined") {
                             $scope.current_points_id = false;
                             $rootScope.$broadcast('update_end_time', null);
@@ -1178,18 +1194,18 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         };
 
         /*
-        jQuery.fn.center = function (parent) {
-            if (parent) {
-                parent = this.parent();
-            } else {
-                parent = window;
-            }
-            this.css({
-                "top": ((($(parent).height() - this.outerHeight()) / 2) + $(parent).scrollTop() + "px"),
-                "left": ((($(parent).width() - this.outerWidth()) / 2) + $(parent).scrollLeft() + "px")
-            });
-            return this;
-        };*/
+         jQuery.fn.center = function (parent) {
+         if (parent) {
+         parent = this.parent();
+         } else {
+         parent = window;
+         }
+         this.css({
+         "top": ((($(parent).height() - this.outerHeight()) / 2) + $(parent).scrollTop() + "px"),
+         "left": ((($(parent).width() - this.outerWidth()) / 2) + $(parent).scrollLeft() + "px")
+         });
+         return this;
+         };*/
 
         $scope.lostFocus = function () {
             console.log('Lost focus');
@@ -1220,7 +1236,7 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
         $(document).on('visibilitychange', function () {
             if (document.visibilityState == 'hidden') {
                 console.log('hidden');
-                $scope.timeout = $window.setTimeout(function() {
+                $scope.timeout = $window.setTimeout(function () {
                     $scope.lostFocus();
                 }, 1000)
             } else {
