@@ -204,8 +204,11 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
             src_doc = Document(src_doc_id)
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
-    texts, jsPaths, cssPaths, modules = post_process_pars(
-        doc, xs, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
+    texts, jsPaths, cssPaths, modules = post_process_pars(doc,
+                                                          xs,
+                                                          current_user if teacher or see_answers or logged_in() else None,
+                                                          sanitize=False,
+                                                          do_lazy=get_option(request, "lazy", True))
 
     reqs = pluginControl.get_all_reqs()
 

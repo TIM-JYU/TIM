@@ -94,7 +94,7 @@ class TimTest(TimRouteTest):
                                                            'docId': doc_id,
                                                            'par': first_id}))
 
-        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        ug = timdb.users.getPersonalUserGroup(timdb.users.getUser(session['user_id']))
         notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
         self.assertEqual(1, len(notes))
         test2_note_id = notes[0]['id']
@@ -109,7 +109,7 @@ class TimTest(TimRouteTest):
         self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
                                                                  'docId': doc_id,
                                                                  'par': first_id}))
-        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        ug = timdb.users.getPersonalUserGroup(timdb.users.getUser(session['user_id']))
         notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
@@ -197,7 +197,7 @@ class TimTest(TimRouteTest):
         doc = self.create_doc(initial_par="Test")
         self.get('/view/{}'.format(doc.doc_id))
         self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
-
+        doc.get_index()
 
 if __name__ == '__main__':
     unittest.main()

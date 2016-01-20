@@ -248,9 +248,8 @@ def get_state():
 
     texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                   [block],
-                                                                  user['name'],
+                                                                  user,
                                                                   timdb.answers,
-                                                                  user_id,
                                                                   custom_state=answer['content'])
     return jsonResponse({'html': texts[0]['html']})
 

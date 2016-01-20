@@ -1,16 +1,18 @@
 """Common functions for use with routes."""
+import json
 from collections import defaultdict
+
+from flask import current_app, session, abort, g, Response, request
+
+import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
-import pluginControl
-
 from timdb.timdb2 import TimDb
-from flask import current_app, session, abort, g, Response, request
-import json
-from timdb.docidentifier import DocIdentifier
-from werkzeug.exceptions import default_exceptions, HTTPException
-from flask import make_response, abort as flask_abort
-import time
+
+
+def get_current_user():
+    return getTimDb().users.getUser(getCurrentUserId())
+
 
 def getCurrentUserId():
     uid = session.get('user_id')
@@ -24,7 +26,7 @@ def getCurrentUserName():
 
 def getCurrentUserGroup():
     timdb = getTimDb()
-    return timdb.users.getPersonalUserGroup(getCurrentUserId())
+    return timdb.users.getPersonalUserGroup(get_current_user())
 
 
 def getTimDb():
@@ -229,14 +231,12 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_window=False):
+def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False):
     timdb = getTimDb()
-    current_user = timdb.users.getUser(user_id)
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
-                                                                      current_user['name'],
+                                                                      user,
                                                                       timdb.answers,
-                                                                      user_id,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
                                                                       edit_window=edit_window)
@@ -247,7 +247,7 @@ def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_win
     #    ref_id = req_json.get('ref-id')
     #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
 
-    if edit_window:
+    if edit_window or user is None:
         # Skip readings and notes
         return html_pars, js_paths, css_paths, modules
 
@@ -265,7 +265,7 @@ def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_win
         p['status'] = ''
         p['notes'] = []
 
-    group = timdb.users.getPersonalUserGroup(user_id)
+    group = timdb.users.getPersonalUserGroup(user)
     readings = timdb.readings.getReadings(group, doc)
 
     for r in readings:

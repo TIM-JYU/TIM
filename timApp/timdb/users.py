@@ -364,14 +364,13 @@ class Users(TimDbBase):
         return groups[0][0]
 
     @contract
-    def getPersonalUserGroup(self, user_id: 'int') -> 'int':
+    def getPersonalUserGroup(self, user: 'dict') -> 'int':
         """Gets the personal user group for the user.
         """
-        user = self.getUser(user_id)
         if user is None:
             raise TimDbException("No such user")
 
-        userName = self.getUser(user_id)['name']
+        userName = user['name']
         groups = self.getUserGroupsByName(userName)
         if len(groups) > 0:
             return groups[0]['id']
@@ -380,7 +379,7 @@ class Users(TimDbBase):
         if len(groups) > 0:
             return groups[0]['id']
 
-        return self.getUserGroups(user_id)[0]['id']
+        return self.getUserGroups(user['id'])[0]['id']
 
     @contract
     def getUserGroups(self, user_id: 'int') -> 'list(dict)':

@@ -89,7 +89,6 @@ def pluginify(doc,
               pars,
               user,
               answer_db,
-              user_id,
               custom_state=None,
               sanitize=True,
               do_lazy=False,
@@ -99,9 +98,8 @@ def pluginify(doc,
 
     :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
-    :param user: The current user's username.
+    :param user: The current user object.
     :param answer_db: A reference to the answer database.
-    :param user_id: The user id.
     :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
                          If this parameter is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
@@ -139,7 +137,7 @@ def pluginify(doc,
 
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
-            vals['markup']["user_id"] = user
+            vals['markup']["user_id"] = user['name'] if user is not None else 'Anonymous'
             task_id = "{}.{}".format(block.get_doc_id(), attr_taskId)
 
             if custom_state is not None:
@@ -149,8 +147,8 @@ def pluginify(doc,
                 state = None
             plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
 
-    if custom_state is None and user_id != 0:
-        answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
+    if custom_state is None and user is not None:
+        answers = answer_db.get_newest_answers(user['id'], list(state_map.keys()))
         for answer in answers:
             state = try_load_json(answer['content'])
             map_entry = state_map[answer['task_id']]
