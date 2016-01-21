@@ -5,6 +5,7 @@ import imghdr
 import io
 import re
 import datetime
+import time
 from time import mktime
 import posixpath
 import threading
