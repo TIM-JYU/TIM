@@ -89,8 +89,8 @@ class Answers(TimDbBase):
     @contract
     def get_newest_answers(self, user_id: 'int', task_ids: 'list(str)') -> 'list(dict)':
         template = ','.join('?' * len(task_ids))
-        return self.resultAsDictionary(self.db.execute("""SELECT Answer.id, task_id, content, points,
-                                  datetime(MAX(answered_on), 'localtime') as answered_on
+        return self.resultAsDictionary(self.db.execute("""SELECT MAX(Answer.id), task_id, content, points,
+                                  datetime(answered_on, 'localtime') as answered_on
                            FROM Answer
                            JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
                            WHERE task_id IN (%s)
