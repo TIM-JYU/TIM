@@ -66,7 +66,7 @@ class Answers(TimDbBase):
                           JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
                           WHERE task_id = ?
                             AND user_id = ?
-                          ORDER BY answered_on DESC""", [task_id, user_id])
+                          ORDER BY answered_on DESC, Answer.id DESC""", [task_id, user_id])
 
         answers = self.resultAsDictionary(cursor)
         if not get_collaborators:
