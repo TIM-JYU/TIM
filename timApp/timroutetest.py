@@ -68,24 +68,27 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(expect_status, resp.status_code)
         self.assertListEqual(expected, load_json(resp))
 
-    def get(self, url, as_tree=False, **kwargs):
+    def get(self, url: str, as_tree=False, as_json=False, **kwargs):
         resp = self.app.get(url, **kwargs).get_data(as_text=True)
         if as_tree:
             return html.fromstring(resp)
+        elif as_json:
+            return json.loads(resp)
         else:
             return resp
 
-    def json_put(self, url, json_data=None):
+    def json_put(self, url: str, json_data=None):
         return self.json_req(url, json_data, 'PUT')
 
-    def json_post(self, url, json_data=None):
+    def json_post(self, url: str, json_data=None):
         return self.json_req(url, json_data, 'POST')
 
-    def json_req(self, url, json_data=None, method='GET'):
+    def json_req(self, url: str, json_data=None, method='GET', **kwargs):
         return self.app.open(url,
                              data=json.dumps(json_data),
                              content_type='application/json',
-                             method=method)
+                             method=method,
+                             **kwargs)
 
     def post_par(self, doc: Document, text: str, par_id: str):
         doc.clear_mem_cache()
@@ -112,6 +115,9 @@ class TimRouteTest(TimDbTest):
 
     def login_test3(self, force=False):
         return self.login('testuser3', 'test3@example.com', 'test3pass', force=force)
+
+    def logout(self):
+        self.assertResponseStatus(self.app.post('/logout'), expect_status=302)
 
     def login(self, username, email, passw, force=False):
         # Make a bogus request; something is wrong with session being cleared after a request if we're in a different
