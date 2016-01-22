@@ -117,7 +117,11 @@ def pluginify(doc,
             else:
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
                 state = None
-            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
+            plugins[plugin_name][idx] = {"markup": vals['markup'],
+                                         "state": state,
+                                         "taskID":task_id,
+                                         "doLazy": do_lazy,
+                                         "anonymous": user is not None}
 
     if custom_state is None and user is not None:
         answers = answer_db.get_newest_answers(user['id'], list(state_map.keys()))

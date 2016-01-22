@@ -221,7 +221,7 @@ def get_state():
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
     is_teacher = False
-    if user_id != getCurrentUserId():
+    if user_id != getCurrentUserId() or not logged_in():
         verify_seeanswers_access(doc_id)
         is_teacher = True
     if user is None:
