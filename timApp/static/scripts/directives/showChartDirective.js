@@ -227,10 +227,10 @@ timApp.directive('showChartDirective', ['$compile', function ($compile) {
                     datasets: usedDataSets
                 };
 
-                $scope.answerChart = new Chart($scope.ctx).Bar(data, {
-                    multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>"
+                $scope.answerChart = new Chart($scope.ctx).Bar(data, {animation: false} ,{
+                    multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>"
                 });
-
+                //$scope.answerChart.options.animation = false;
                 $compile($scope);
             };
 

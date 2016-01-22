@@ -3,7 +3,6 @@
     <div id="largeMenu">
         <div class="lectureSection" ng-show="!lectureSettings.inLecture">
             <h1>Now:</h1>
-
             <div ng-show="lectures.length > 0" class="lectureArea">
                 <select ng-change="clearChange()" ng-model="chosenLecture"
                         ng-options="lecture.lecture_code for lecture in lectures">

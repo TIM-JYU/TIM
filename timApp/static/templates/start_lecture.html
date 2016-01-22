@@ -61,10 +61,14 @@
             </div>
         </div>
         <div>
-            <label for="lLink" class="linkLabel">Direct link to join lecture:</label>
+            <label for="lLink" class="linkLabelWide">Direct link to join lecture:</label>
             <input onclick="document.getElementById('lLink').setSelectionRange(0, 9999)"
                    style="background-color: #DCDCDC" readonly id="lLink" type="text" name="link"
-                   ng-value='"http://" + location + "/lecture/" + docNamePath + "?lecture=" + lectureCodeEncoded'/>
+                   ng-value='"http://" + hostName + "/lecture/" + docNamePath + "?lecture=" + lectureCodeEncoded'/>
+            <label for="lLink2" class="linkLabelWide">Link to automatically join lectures for this document:</label>
+            <input onclick="document.getElementById('lLink2').setSelectionRange(0, 9999)"
+                   style="background-color: #DCDCDC" readonly id="lLink2" type="text" name="link2"
+                   ng-value='"http://" + hostName + "/lecture/" + docNamePath + "?lecture=autojoin"'/>
         </div>
         <p id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
 

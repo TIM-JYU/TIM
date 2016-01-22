@@ -125,11 +125,14 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
             })
                 .success(function (answer) {
                     var lectureCode = GetURLParameter('lecture');
-
-                    /*Check if the lecture parameter is autojoin.
-                    If it is and there is only one lecture going on in the document, join it automatically.
-                    Otherwise proceed as usual.*/
+                    /*
+                     Check if the lecture parameter is autojoin.
+                     If it is and there is only one lecture going on in the document, join it automatically.
+                     Otherwise proceed as usual.*/
                     var autoJoin = 'autojoin';
+                    if (!answer.lectures && lectureCode === autoJoin) {
+                        lectureCode = "";
+                    }
                     if (answer.lectures) {
                         if (lectureCode === autoJoin && answer.lectures.length === 1) {
                             $scope.chosenLecture = answer.lectures[0];
@@ -138,8 +141,10 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                         if (lectureCode === autoJoin && answer.lectures.length > 1) {
                             lectureCode = "";
                         }
-                    } else if (lectureCode === autoJoin) {
-                        lectureCode = "";
+                        if (lectureCode === autoJoin && answer.lectures.length <= 0) {
+                            $scope.showDialog("There are no ongoing lectures for this document.");
+                            return showRightView(answer);
+                        }
                     }
                     if (lectureCode) {
                         http({
@@ -155,13 +160,18 @@ timApp.controller("LectureController", ['$scope', "$http", "$window", '$rootScop
                             if (!changeLecture)
                                 showRightView(answer);
                         }).error(function () {
-                            $scope.showDialog("Lecture " + lectureCode + " not found.");
+                            if (lectureCode === autoJoin) {
+                                $scope.showDialog("Could not find a lecture for this document.");
+                            } else {
+                                $scope.showDialog("Lecture " + lectureCode + " not found.");
+                            }
                             showRightView(answer);
                         });
                     } else {
                         showRightView(answer);
                     }
                 });
+
         };
 
         /**
