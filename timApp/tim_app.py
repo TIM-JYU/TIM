@@ -4,9 +4,11 @@ Do NOT define routes here.
 """
 
 import os
+
+import sys
 from flask import Flask
 
-
+sys.setrecursionlimit(10000)
 app = Flask(__name__)
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
