@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
-from collections import OrderedDict
 import json
 import time
+from collections import OrderedDict
 
 from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
-from plugin import PluginException
-from containerLink import plugin_reqs
-from containerLink import get_plugin_tim_url
 from containerLink import get_plugin_needs_browser
+from containerLink import get_plugin_tim_url
+from containerLink import plugin_reqs
 from documentmodel.docparagraph import DocParagraph
-from htmlSanitize import sanitize_html
-from timdb.timdbbase import TimDbException
-from utils import parse_plugin_values
+from documentmodel.document import dereference_pars
+from plugin import PluginException, parse_plugin_values
+from utils import get_error_html
 
 LAZYSTART= "<!--lazy "
 LAZYEND = " lazy-->"
@@ -20,13 +19,13 @@ NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
 
 
-def get_error_html(plugin_name, message):
+def get_error_html_plugin(plugin_name, message):
     """
 
     :type message: str
     :type plugin_name: str
     """
-    return '<div class="pluginError">Plugin {} error: {}</div>'.format(plugin_name, message)
+    return get_error_html('Plugin {} error: {}'.format(plugin_name, message))
 
 
 def find_task_ids(blocks, doc_id):
@@ -58,37 +57,10 @@ def try_load_json(json_str):
         return json_str
 
 
-def dereference_pars(pars, edit_window=False, source_doc=None):
-    """Resolves references in the given paragraphs.
-
-    :type pars: list[DocParagraph]
-    :param pars: The DocParagraphs to be processed.
-    :param edit_window: Calling from edit window or not.
-    :param source_doc: Default document for referencing.
-    """
-    new_pars = []
-    for par in pars:
-        if par.is_reference():
-            try:
-                new_pars += par.get_referenced_pars(edit_window=edit_window, source_doc=source_doc)
-            except TimDbException as e:
-                err_par = DocParagraph.create(
-                    par.doc,
-                    md=str(e),
-                    html='<div class="pluginError">' + sanitize_html(str(e)) + '</div>')
-
-                new_pars.append(err_par)
-        else:
-            new_pars.append(par)
-
-    return new_pars
-
-
 def pluginify(doc,
               pars,
               user,
               answer_db,
-              user_id,
               custom_state=None,
               sanitize=True,
               do_lazy=False,
@@ -98,9 +70,8 @@ def pluginify(doc,
 
     :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
-    :param user: The current user's username.
+    :param user: The current user object.
     :param answer_db: A reference to the answer database.
-    :param user_id: The user id.
     :param custom_state: Optional state that will used as the state for the plugin instead of answer database.
                          If this parameter is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
@@ -133,12 +104,12 @@ def pluginify(doc,
                                        macros=settings.get_macros(),
                                        macro_delimiter=settings.get_macro_delimiter())
             if 'error' in vals:
-                html_pars[idx]['html'] = get_error_html(plugin_name, vals['error'])
+                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, vals['error'])
                 continue
 
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
-            vals['markup']["user_id"] = user
+            vals['markup']["user_id"] = user['name'] if user is not None else 'Anonymous'
             task_id = "{}.{}".format(block.get_doc_id(), attr_taskId)
 
             if custom_state is not None:
@@ -146,10 +117,14 @@ def pluginify(doc,
             else:
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
                 state = None
-            plugins[plugin_name][idx] = {"markup": vals['markup'], "state": state, "taskID": task_id, "doLazy": do_lazy}
+            plugins[plugin_name][idx] = {"markup": vals['markup'],
+                                         "state": state,
+                                         "taskID":task_id,
+                                         "doLazy": do_lazy,
+                                         "anonymous": user is not None}
 
-    if custom_state is None and user_id != 0:
-        answers = answer_db.get_newest_answers(user_id, list(state_map.keys()))
+    if custom_state is None and user is not None:
+        answers = answer_db.get_newest_answers(user['id'], list(state_map.keys()))
         for answer in answers:
             state = try_load_json(answer['content'])
             map_entry = state_map[answer['task_id']]
@@ -168,13 +143,13 @@ def pluginify(doc,
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
-                html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
+                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
             continue
         try:
             reqs = json.loads(resp)
         except ValueError:
             for idx in plugin_block_map.keys():
-                html_pars[idx]['html'] = get_error_html(plugin_name, 'Failed to parse JSON from plugin reqs route.')
+                html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse JSON from plugin reqs route.')
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -204,13 +179,13 @@ def pluginify(doc,
                 response = call_plugin_multihtml(plugin_name, [val for _, val in plugin_block_map.items()])
             except PluginException as e:
                 for idx in plugin_block_map.keys():
-                    html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
+                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError:
                 for idx in plugin_block_map.keys():
-                    html_pars[idx]['html'] = get_error_html(plugin_name, 'Failed to parse plugin response from reqs route.')
+                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name, 'Failed to parse plugin response from reqs route.')
                 continue
 
             needs_browser = get_plugin_needs_browser(plugin_name)
@@ -226,7 +201,7 @@ def pluginify(doc,
                 try:
                     html = call_plugin_html(plugin_name, val['markup'], val['state'], val['taskID'])
                 except PluginException as e:
-                    html_pars[idx]['html'] = get_error_html(plugin_name, str(e))
+                    html_pars[idx]['html'] = get_error_html_plugin(plugin_name, str(e))
                     continue
                 html, is_lazy = make_lazy(html, val, do_lazy)
                 needs_browser = get_plugin_needs_browser(plugin_name)

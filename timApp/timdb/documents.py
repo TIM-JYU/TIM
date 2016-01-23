@@ -430,7 +430,7 @@ class Documents(TimDbBase):
             self.db.commit()
 
     @contract
-    def resolve_doc_id_name(self, doc_path: 'str') -> 'tuple(int,str)|tuple(None,None)':
+    def resolve_doc_id_name(self, doc_path: 'str') -> 'tuple(int,str,str)|tuple(None,None,None)':
         """Returns document id and name based on its path.
         :param doc_path: The document path.
         """
@@ -440,12 +440,12 @@ class Documents(TimDbBase):
             try:
                 doc_id = int(doc_path)
                 if not self.exists(doc_id):
-                    return None, None
+                    return None, None, None
                 doc_name = self.get_first_document_name(doc_id)
-                return doc_id, doc_name
+                return doc_id, doc_name, self.get_short_name(doc_name)
             except ValueError:
-                return None, None
-        return doc_id, doc_path
+                return None, None, None
+        return doc_id, doc_path, self.get_short_name(doc_path)
 
     @contract
     def get_short_name(self, full_name: 'str|None') -> 'str|None':

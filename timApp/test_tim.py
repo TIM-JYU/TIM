@@ -94,7 +94,7 @@ class TimTest(TimRouteTest):
                                                            'docId': doc_id,
                                                            'par': first_id}))
 
-        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        ug = timdb.users.getPersonalUserGroup(timdb.users.getUser(session['user_id']))
         notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=False)
         self.assertEqual(1, len(notes))
         test2_note_id = notes[0]['id']
@@ -109,7 +109,7 @@ class TimTest(TimRouteTest):
         self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
                                                                  'docId': doc_id,
                                                                  'par': first_id}))
-        ug = timdb.users.getPersonalUserGroup(session['user_id'])
+        ug = timdb.users.getPersonalUserGroup(timdb.users.getUser(session['user_id']))
         notes = timdb.notes.getNotes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
@@ -133,6 +133,7 @@ class TimTest(TimRouteTest):
             self.assertResponseStatus(a.get('/teacher/' + str(view_id)))
             self.assertResponseStatus(self.json_put('/addPermission/{}/{}/{}'.format(view_id, 'testuser2', 'teacher')),
                                       403)
+        timdb.close()
 
     def test_macro_doc(self):
         self.login_test1()
@@ -173,6 +174,30 @@ class TimTest(TimRouteTest):
         syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
         self.assertEqual(1, len(syntax_errors))
         self.assertIn('Syntax error in template:', syntax_errors[0].text)
+
+    def test_windows_eol(self):
+        """
+        Windows-style EOLs should work with Dumbo. If this test fails, try to recompile Dumbo.
+        """
+        self.login_test1()
+        md_table = """---\r\n|a|\r\n|-|"""
+        doc = self.create_doc(initial_par=md_table)
+        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        table_xpath = r'.//div[@class="par"]/div[@class="parContent"]/table'
+        tables = tree.findall(table_xpath)
+        self.assertEqual(1, len(tables))
+
+        self.assertInResponse(table_xpath,
+                              self.json_post('/preview/{}'.format(doc.doc_id), {'text': md_table}),
+                              json_key='texts',
+                              as_tree=True)
+
+    def test_clear_cache(self):
+        self.login_test1()
+        doc = self.create_doc(initial_par="Test")
+        self.get('/view/{}'.format(doc.doc_id))
+        self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
+        doc.get_index()
 
 if __name__ == '__main__':
     unittest.main()

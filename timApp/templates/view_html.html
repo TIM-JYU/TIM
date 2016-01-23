@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ doc.shortname }}{% endblock %}
+{% block title %}{{ doc.name }}{% endblock %}
 {% block head %}
     {{ super() }}
     <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
@@ -52,7 +52,8 @@
     </style>
     <script>
         var docId = JSON.parse({{doc.id|tojson|safe}});
-        var docName = {{doc.name|tojson|safe}};
+        var showIndex = {{(headers|length > 0)|tojson}};
+        var docName = {{doc.fullname|tojson|safe}};
         var version = {{version|tojson|safe}};
         var rights = {{rights|tojson}};
         var reqs = {{reqs|tojson}};
@@ -104,8 +105,8 @@
                     <table ng-table="tableParams" show-filter="true" class="table ng-table-rowselected"
                            export-csv="csv" export-korppi="expkorppi">
                         <tr ng-repeat="user in $data"
-                            ng-click="user.$selected = !user.$selected; changeUser(user)"
-                            ng-class="{'active': user.$selected}">
+                            ng-click="changeUser(user)"
+                            ng-class="{'active': user == selectedUser}">
                             <td data-title="'Full name'" sortable="'real_name'" filter="{ 'real_name': 'text' }">
                                 {{user.real_name}}
                             </td>
@@ -134,7 +135,7 @@
         {% endif %}
         {% if slide_mode %}
             <div class="paragraphs">
-                <iframe id="slideFrame" src="/show_slide/{{ doc.name }}" allowfullscreen></iframe>
+                <iframe id="slideFrame" src="/show_slide/{{ doc.fullname }}" allowfullscreen></iframe>
             </div>
         {% else %}
             {% include 'view_content.html' %}

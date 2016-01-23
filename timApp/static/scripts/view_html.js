@@ -65,6 +65,7 @@ timApp.controller("ViewCtrl", [
         http.defaults.headers.common.RefererPath = $window.refererPath;
         sc.docId = $window.docId;
         sc.docName = $window.docName;
+        sc.showIndex = $window.showIndex;
         sc.crumbs = $window.crumbs;
         sc.rights = $window.rights;
         sc.startIndex = $window.startIndex;
@@ -177,6 +178,7 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.changeUser = function (user) {
+            sc.selectedUser = user;
             sc.$broadcast('userChanged', {user: user});
         };
 
@@ -931,7 +933,7 @@ timApp.controller("ViewCtrl", [
                         sc.showIndex = false;
                     } else {
                         var indexElement = $(".index-sidebar .sideBarContainer");
-                        $(indexElement).append(data);
+                        $(indexElement).html(data);
                         sc.showIndex = true;
                     }
                     timLogTime("getindex done","view");
@@ -1027,8 +1029,6 @@ timApp.controller("ViewCtrl", [
         // Load index, notes and read markings
         timLogTime("getList start","view");
         sc.setHeaderLinks();
-        sc.indexTable = [];
-        sc.getIndex();
         timLogTime("getList end","view");
 
 

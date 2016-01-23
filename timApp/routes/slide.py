@@ -39,9 +39,10 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
     if not has_view_access(doc_id):
         if not logged_in():
             session['came_from'] = request.url
+            session['anchor'] = request.args.get('anchor', '')
             return render_template('loginpage.html',
-                                   target_url=url_for('login_page.loginWithKorppi'),
-                                   came_from=request.url)
+                                   came_from=request.url,
+                                   anchor=session['anchor'])
         else:
             abort(403)
 
@@ -62,9 +63,8 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
     current_user = timdb.users.getUser(user)
     texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                   xs,
-                                                                  current_user['name'],
+                                                                  current_user if teacher or logged_in() else None,
                                                                   timdb.answers,
-                                                                  current_user['id'],
                                                                   sanitize=False)
 
     modules.append("ngSanitize")

@@ -2,7 +2,7 @@
 
 from contracts import contract, new_contract
 
-from documentmodel.document import DocParagraph
+from documentmodel.document import DocParagraph, get_index_from_html_list
 from htmlSanitize import sanitize_html
 
 new_contract('range', 'tuple(int, int)')
@@ -62,6 +62,12 @@ def view_document(doc_name):
 def teacher_view(doc_name):
     usergroup = request.args.get('group')
     return view(doc_name, 'view_html.html', usergroup=usergroup, teacher=True)
+
+
+@view_page.route("/answers/<path:doc_name>")
+def see_answers_view(doc_name):
+    usergroup = request.args.get('group')
+    return view(doc_name, 'view_html.html', usergroup=usergroup, see_answers=True)
 
 
 @view_page.route("/lecture/<path:doc_name>")
@@ -138,11 +144,11 @@ def show_time(s):
     debug_time = nyt
 
 
-def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False):
+def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False, see_answers=False):
 
+    session['last_doc'] = request.path
     timdb = getTimDb()
-    doc_id, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
-    doc_shortname = timdb.documents.get_short_name(doc_name)
+    doc_id, doc_fullname, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
 
     if doc_id is None:
         return try_return_folder(doc_path)
@@ -150,12 +156,16 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
     if teacher:
         verify_teacher_access(doc_id)
 
+    if see_answers:
+        verify_seeanswers_access(doc_id)
+
     if not has_view_access(doc_id):
         if not logged_in():
             session['came_from'] = request.url
+            session['anchor'] = request.args.get('anchor', '')
             return render_template('loginpage.html',
-                                   target_url=url_for('login_page.loginWithKorppi'),
-                                   came_from=request.url), 403
+                                   came_from=request.url,
+                                   anchor=session['anchor']), 403
         else:
             abort(403)
 
@@ -172,7 +182,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
 
     user = getCurrentUserId()
 
-    if teacher:
+    if teacher or see_answers:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
         if usergroup is not None:
@@ -196,8 +206,13 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
             src_doc = Document(src_doc_id)
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
-    texts, jsPaths, cssPaths, modules = post_process_pars(
-        doc, xs, current_user['id'], sanitize=False, do_lazy=get_option(request, "lazy", True))
+    texts, jsPaths, cssPaths, modules = post_process_pars(doc,
+                                                          xs,
+                                                          current_user if teacher or see_answers or logged_in() else None,
+                                                          sanitize=False,
+                                                          do_lazy=get_option(request, "lazy", True))
+
+    index = get_index_from_html_list(t['html'] for t in texts)
 
     reqs = pluginControl.get_all_reqs()
 
@@ -229,8 +244,9 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
 
     result = render_template(template_name,
                              route="view",
-                             doc={'id': doc_id, 'name': doc_name, 'shortname': doc_shortname},
+                             doc={'id': doc_id, 'fullname': doc_fullname, 'name': doc_name},
                              text=texts,
+                             headers=index,
                              plugin_users=users,
                              current_user=current_user,
                              version=doc.get_version(),
@@ -241,7 +257,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
                              custom_css=custom_css,
                              doc_css=doc_css,
                              start_index=start_index,
-                             teacher_mode=teacher,
+                             teacher_mode=teacher or see_answers,
                              lecture_mode=lecture,
                              slide_mode=slide,
                              in_lecture=is_in_lecture,

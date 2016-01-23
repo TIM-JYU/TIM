@@ -231,6 +231,7 @@ INSERT INTO AccessType(id, name) VALUES (1, 'view');
 INSERT INTO AccessType(id, name) VALUES (2, 'edit');
 INSERT INTO AccessType(id, name) VALUES (3, 'teacher');
 INSERT INTO AccessType(id, name) VALUES (4, 'manage');
+INSERT INTO AccessType(id, name) VALUES (5, 'see answers');
 
 CREATE TABLE UserNotes (
   id           INTEGER      NOT NULL,
@@ -346,4 +347,4 @@ CREATE TABLE Version (
   updated_on TIMESTAMP
 );
 
-INSERT INTO Version(id, updated_on) VALUES (3, CURRENT_TIMESTAMP);
+INSERT INTO Version(id, updated_on) VALUES (4, CURRENT_TIMESTAMP);

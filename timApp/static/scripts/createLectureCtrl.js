@@ -54,6 +54,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.$on('editLecture', function (event, data) {
             $scope.lectureCode = data.lecture_name;
             $scope.lectureCodeEncoded = encodeURIComponent($scope.lectureCode);
+
+            $scope.hostName = encodeURIComponent(location.host);
             $scope.lectureId = data.lecture_id;
             var splittedStart = data.start_date.split(" ");
             var splittedStartTime = splittedStart[1].split(":");
@@ -473,6 +475,10 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         $scope.$watch('lectureCode', function () {
             $scope.lectureCodeEncoded = encodeURIComponent($scope.lectureCode);
+        });
+
+        $scope.$watch('hostName', function () {
+            $scope.hostName = encodeURIComponent(location.host);
         });
     }
 ]);

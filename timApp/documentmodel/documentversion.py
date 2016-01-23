@@ -112,9 +112,20 @@ class DocumentVersion(Document):
 
     @contract
     def update_section(self, text: 'str', par_id_first: 'str', par_id_last: 'str') -> 'tuple(str,str)':
-        assert False, "Called DocumentVersion.modify_paragraph"
+        assert False, "Called DocumentVersion.update_section"
 
     @contract
-    def update(self, text: 'str', original: 'str'):
-        assert False, "Called DocumentVersion.modify_paragraph"
+    def update(self, text: 'str', original: 'str', strict_validation=True):
+        assert False, "Called DocumentVersion.update"
 
+    @contract
+    def modify_paragraph_obj(self, par_id: 'str', p: 'DocParagraph') -> 'DocParagraph':
+        assert False, "Called DocumentVersion.modify_paragraph_obj"
+
+    @contract
+    def insert_paragraph_obj(self, p: 'DocParagraph', insert_before_id: 'str|None') -> 'DocParagraph':
+        assert False, "Called DocumentVersion.insert_paragraph_obj"
+
+    @contract
+    def delete_section(self, area_start: str, area_end: str):
+        assert False, "Called DocumentVersion.delete_section"

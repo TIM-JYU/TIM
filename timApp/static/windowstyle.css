@@ -71,7 +71,7 @@ fieldset, form {
     margin-bottom: 10px;
 }
 
-#infoFields input, #lLink {
+#infoFields input, #lLink , #lLink2 {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -109,6 +109,11 @@ input[type="number"] {
 #infoFields label, .linkLabel {
     display: inline-block;
     width: 150px;
+}
+
+.linkLabelWide {
+    display: block;
+    line-height: 1.8em;
 }
 
 .choose label {
@@ -411,7 +416,7 @@ and (max-device-width: 667px)
 and (-webkit-device-pixel-ratio: 2) {
 
     .pop-up-dialog {
-        width: 100%);
+        width: 100%;
         overflow: auto;
         z-index: 6;
         background-color: #fff;
@@ -427,7 +432,7 @@ and (min-device-width: 320px)
 and (max-device-width: 736px)
 and (-webkit-device-pixel-ratio: 3) {
     .pop-up-dialog {
-        width: 100%);
+        width: 100%;
         overflow: auto;
         z-index: 6;
         background-color: #fff;

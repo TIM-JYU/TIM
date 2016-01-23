@@ -102,10 +102,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
-                            var height = parseInt($('pareditor').css('max-height')) * 0.98;
+                            var height = $('pareditor').height();
                             var $preview = $('.previewcontent');
-                            var offset = $($preview).position().top;
-                            $($preview).css('max-height', (height - offset) + 'px');
+                            var offset = $preview.position().top;
+                            $preview.css('max-height', (height - offset) + 'px');
+                            $preview.scrollTop($scope.scrollPos);
                         }, 50
                     );
                 };
@@ -174,6 +175,17 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         }
                     });
                     editor.commands.addCommand({
+                        name: 'codeBlock',
+                        bindKey: {
+                            win: 'Ctrl-9',
+                            mac: 'Command-9',
+                            sender: 'editor|cli'
+                        },
+                        exec: function (env, args, request) {
+                            $scope.codeBlockClicked();
+                        }
+                    });
+                    editor.commands.addCommand({
                         name: 'h1',
                         bindKey: {
                             win: 'Ctrl-1',
@@ -217,6 +229,28 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             $scope.headerClicked('####');
                         }
                     });
+                    editor.commands.addCommand({
+                        name: 'endLine',
+                        bindKey: {
+                            win: 'Ctrl-Enter',
+                            mac: 'Command-Enter',
+                            sender: 'editor|cli'
+                        },
+                        exec: function (env, args, request) {
+                            $scope.endLineClicked();
+                        }
+                    });
+                    editor.commands.addCommand({
+                        name: 'insertParagraph',
+                        bindKey: {
+                            win: 'Shift-Enter',
+                            mac: 'Shift-Enter',
+                            sender: 'editor|cli'
+                        },
+                        exec: function (env, args, request) {
+                            $scope.paragraphClicked();
+                        }
+                    });
 
                     if (text) editor.getSession().setValue(text);
                 };
@@ -252,6 +286,9 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             } else if (e.keyCode === 79) {
                                 $scope.surroundClicked('`', '`');
                                 e.preventDefault();
+                            } else if (e.keyCode === 57) {
+                                $scope.codeBlockClicked();
+                                e.preventDefault();
                             } else if (e.keyCode === 49) {
                                 $scope.headerClicked('#');
                                 e.preventDefault();
@@ -264,11 +301,19 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             } else if (e.keyCode === 52) {
                                 $scope.headerClicked('####');
                                 e.preventDefault();
+                            } else if (e.keyCode === 13) {
+                                $scope.endLineClicked();
+                                e.preventDefault();
                             }
                         } else if (e.keyCode === 9) {
                             var outdent = e.shiftKey;
                             $scope.indent(outdent);
                             e.preventDefault();
+                        } else if (e.shiftKey) {
+                            if (e.keyCode === 13) {
+                                $scope.paragraphClicked();
+                                e.preventDefault();
+                            }
                         }
                     });
                     if (text) $scope.editor.val(text);
@@ -303,6 +348,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                     $scope.timer = $window.setTimeout(function () {
                         var text = $scope.getEditorText();
+                        $scope.scrollPos = $('.previewcontent').scrollTop();
                         $http.post($scope.previewUrl, angular.extend({
                             text: text
                         }, $scope.extraData)).success(function (data, status, headers, config) {
@@ -312,11 +358,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             $scope.$parent.processAllMathDelayed($previewDiv);
                             $scope.outofdate = false;
                             $scope.parCount = len;
+                            $('.editorContainer').resize();
                         }).error(function (data, status, headers, config) {
                             $window.alert("Failed to show preview: " + data.error);
                         });
                     }, 500);
-                    $('.editorContainer').resize();
                 };
 
                 if ($scope.options.touchDevice) {
@@ -335,6 +381,10 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                 } else {
                     $scope.setAceControllerFunctions();
                 }
+
+                /* Add citation info to help tab */
+                document.getElementById('helpCite').setAttribute('value', '#- {rd="' + $scope.extraData.docId + '" rl="no" rp="' + $scope.extraData.par +'"}');
+
             },
             link: function ($scope, $element, $attrs) {
 
@@ -778,6 +828,39 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         $scope.endClicked();
                         $scope.editor.replaceSelectedText("\n---\n");
                     };
+
+                    $scope.paragraphClicked = function () {
+                        $scope.endClicked();
+                        $scope.editor.replaceSelectedText("\n#-\n");
+                    };
+                    /*
+                    $scope.slideClicked = function () {
+                        $scope.endClicked();
+                        $scope.editor.replaceSelectedText($scope.editor.getSelection().text + "\n---------------\n");
+                    };
+                    */
+                    $scope.endLineClicked = function () {
+                        var editor = $scope.editor.get(0);
+                        var selection = $scope.editor.getSelection();
+                        var value = $scope.editor.val();
+                        var pos = selection.start;
+                        $scope.selectLine(true);
+                        var lineToBreak = $scope.editor.getSelection().text;
+                        if(lineToBreak.length > 0) {
+                            var toKeepInLine = value.substring(editor.selectionStart, pos)
+                        } else {
+                            var toKeepInLine = "";
+                        }
+                        if ((editor.selectionEnd - pos) > 0) {
+                            var toNextLine = value.substring(pos, editor.selectionEnd);
+                        } else {
+                            var toNextLine = "";
+                        }
+                        toNextLine = toNextLine.trim();
+                        $scope.editor.replaceSelectedText(toKeepInLine + "\\\n" + toNextLine);
+                        $scope.endClicked();
+                    };
+
                     //Insert
                     //Special characters
                     $scope.charClicked = function ($event) {
@@ -978,6 +1061,38 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                     $scope.listClicked = function () {
                         $scope.snippetManager.insertSnippet($scope.editor, "- ${0:$SELECTION}");
+                    };
+
+                    $scope.paragraphClicked = function () {
+                        $scope.editor.navigateLineEnd();
+                        $scope.snippetManager.insertSnippet($scope.editor, "\n#-\n");
+                    };
+                    /*
+                    $scope.slideClicked = function () {
+                        $scope.editor.navigateLineEnd();
+                        $scope.snippetManager.insertSnippet($scope.editor, "${0:$SELECTION}\n---------------\n");
+                    };
+                    */
+                    $scope.endLineClicked = function () {
+                        var pos = $scope.editor.getCursorPosition();
+                        var line = $scope.editor.session.getLine(pos.row);
+                        var range = $scope.editor.getSelection().getRange();
+                        range.start.column = 0;
+                        range.end.column = line.length;
+                        if(line.length > 0) {
+                            var toKeepInLine = line.substring(0, pos.column)
+                        } else {
+                            var toKeepInLine = "";
+                        }
+                        if ((line.length - pos.column) > 0) {
+                            var toNextLine = line.substring(pos.column, line.end);
+                        } else {
+                            var toNextLine = "";
+                        }
+                        toNextLine = toNextLine.trim();
+                        $scope.editor.selection.setRange(range);
+                        $scope.editor.insert(toKeepInLine + "\\" +"\n" + toNextLine);
+                        $scope.wrapFn();
                     };
 
                     $scope.insertTemplate = function (text) {
@@ -1252,12 +1367,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         scrollTop: $element.offset().top
                     }, 2000);
                 }
-
-                window.setTimeout(function () {
-                        var height = window.innerHeight * 0.99 + 'px';
-                        $element.css('max-height', height);
-                    }, 1000
-                )
             }
         };
     }]);

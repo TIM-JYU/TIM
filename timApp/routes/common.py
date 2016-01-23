@@ -1,16 +1,32 @@
 """Common functions for use with routes."""
+import json
 from collections import defaultdict
+from urllib.parse import urlparse, urljoin
+
+from flask import current_app, session, abort, g, Response, request, redirect, url_for
+
+import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
-import pluginControl
-
 from timdb.timdb2 import TimDb
-from flask import current_app, session, abort, g, Response, request
-import json
-from timdb.docidentifier import DocIdentifier
-from werkzeug.exceptions import default_exceptions, HTTPException
-from flask import make_response, abort as flask_abort
-import time
+
+
+def is_safe_url(url):
+    host_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, url))
+    return test_url.scheme in ['http', 'https'] and \
+           host_url.netloc == test_url.netloc
+
+
+def safe_redirect(url, **values):
+    if is_safe_url(url):
+        return redirect(url, **values)
+    return redirect(url_for('indexPage'))
+
+
+def get_current_user():
+    return getTimDb().users.getUser(getCurrentUserId())
+
 
 def getCurrentUserId():
     uid = session.get('user_id')
@@ -24,7 +40,7 @@ def getCurrentUserName():
 
 def getCurrentUserGroup():
     timdb = getTimDb()
-    return timdb.users.getPersonalUserGroup(getCurrentUserId())
+    return timdb.users.getPersonalUserGroup(get_current_user())
 
 
 def getTimDb():
@@ -57,21 +73,23 @@ def has_edit_access(block_id):
 
 
 def verify_view_access(block_id, require=True):
-    timdb = getTimDb()
-    if not timdb.users.has_view_access(getCurrentUserId(), block_id):
-        if not require:
-            return False
-        abort(403, "Sorry, you don't have permission to view this resource.")
-    return True
+    return verify_access(getTimDb().users.has_view_access(getCurrentUserId(), block_id), require)
 
 
 def verify_teacher_access(block_id, require=True):
-    timdb = getTimDb()
-    if not timdb.users.has_teacher_access(getCurrentUserId(), block_id):
-        if not require:
-            return False
+    return verify_access(getTimDb().users.has_teacher_access(getCurrentUserId(), block_id), require)
+
+
+def verify_seeanswers_access(block_id, require=True):
+    return verify_access(getTimDb().users.has_seeanswers_access(getCurrentUserId(), block_id), require)
+
+
+def verify_access(has_access, require=True):
+    if has_access:
+        return True
+    if require:
         abort(403, "Sorry, you don't have permission to view this resource.")
-    return True
+    return False
 
 
 def has_view_access(block_id):
@@ -107,12 +125,18 @@ def has_manage_access(doc_id):
     return timdb.users.has_manage_access(getCurrentUserId(), doc_id)
 
 
+def has_seeanswers_access(doc_id):
+    timdb = getTimDb()
+    return timdb.users.has_seeanswers_access(getCurrentUserId(), doc_id)
+
+
 def get_rights(doc_id):
     return {'editable': has_edit_access(doc_id),
             'can_mark_as_read': has_read_marking_right(doc_id),
             'can_comment': has_comment_right(doc_id),
             'browse_own_answers': logged_in(),
             'teacher': has_teacher_access(doc_id),
+            'see_answers': has_seeanswers_access(doc_id),
             'manage': has_manage_access(doc_id)
             }
 
@@ -221,14 +245,12 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_window=False):
+def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False):
     timdb = getTimDb()
-    current_user = timdb.users.getUser(user_id)
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
-                                                                      current_user['name'],
+                                                                      user,
                                                                       timdb.answers,
-                                                                      user_id,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
                                                                       edit_window=edit_window)
@@ -239,7 +261,7 @@ def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_win
     #    ref_id = req_json.get('ref-id')
     #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
 
-    if edit_window:
+    if edit_window or user is None:
         # Skip readings and notes
         return html_pars, js_paths, css_paths, modules
 
@@ -257,7 +279,7 @@ def post_process_pars(doc, pars, user_id, sanitize=True, do_lazy=False, edit_win
         p['status'] = ''
         p['notes'] = []
 
-    group = timdb.users.getPersonalUserGroup(user_id)
+    group = timdb.users.getPersonalUserGroup(user)
     readings = timdb.readings.getReadings(group, doc)
 
     for r in readings:

@@ -5,6 +5,7 @@ import imghdr
 import io
 import re
 import datetime
+import time
 from time import mktime
 import posixpath
 import threading
@@ -1798,6 +1799,13 @@ def getTempDb():
 @app.before_request
 def make_session_permanent():
     session.permanent = True
+
+
+@app.after_request
+def close_db(response):
+    if hasattr(g, 'timdb'):
+        g.timdb.close()
+    return response
 
 
 def start_app():

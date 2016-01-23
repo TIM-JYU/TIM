@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}TIM{% endblock %}
+{% block title %}{{'{} {}'.format(doc.name, '({})'.format(doc.location) if doc.location else '[root]') if doc else 'Root folder'}}{% endblock %}
 {% block head %}
     {{ super() }}
 
@@ -35,13 +35,6 @@
         {% include 'common_head.html' %}
         {% if in_lecture %}
             {% include 'lecture_head.html' %}
-            <script>
-            {% if doc %}
-                var docId = JSON.parse({{doc.id|tojson|safe}});
-                var docName = {{doc.name|tojson|safe}};
-            {% endif %}
-            var in_lecture = {{in_lecture|tojson}};
-            </script>
         {% endif %}
     {% endif %}
 {% endblock %}
