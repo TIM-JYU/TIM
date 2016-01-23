@@ -86,7 +86,9 @@ def generate_filename():
 
 def tquote(s):
     if s.startswith("$"): return s
-    return shlex.quote(s)
+    r = shlex.quote(s)
+    if r.find("$") < 0: return r
+    return r.replace("'",'"')     
 
 
 def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8"):
@@ -286,8 +288,10 @@ def get_html(ttype, query):
     # print("UserId:", user_id)
     if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
+        jump = get_param(query, "taskID", "")
+        # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
         if allow_anonymous != "true":
-            return NOLAZY + '<p class="pluginError"><a href="/">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
+            return NOLAZY + '<p class="pluginError"><a href="/login?anchor='+jump+'">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
                 query, "byCode", "") + '</pre>'
     do_lazy = is_lazy(query)
     # do_lazy = False
@@ -1036,7 +1040,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     userdoc = "/csimages/docs/%s" % self.user_id
                     docrnd = generate_filename()
                     doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (prgpath, userdoc, docrnd, userdoc)
-                    dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, filename, fileext)
+                    p = re.compile('\.java')
+                    docfilename = p.sub("", filename)
+                    p = re.compile('[^.]*\.')
+                    docfilename = p.sub("", docfilename)
+                    docfilename = docfilename.replace("_","__") # jostakin syystä tekee näin
+                    dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, docfilename, fileext)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",filename)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",docfilename)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
                     doc_output = check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
                     web["docurl"] = dochtml
                     give_points(points_rule, "doc")
@@ -1171,7 +1183,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if is_doc:
                 pass  # jos doc ei ajeta
-            elif get_param(query, "justCompile", False):
+            elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
                 #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
@@ -1351,6 +1363,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if eri < 0: eri = out.find("FAILURES")  # jcomtest
                 if eri < 0: eri = out.find("Test error")  # ccomtest
                 if eri < 0: eri = out.find("ERROR:")  # ccomtest compile error
+                p = re.compile('Xlib:  extension "RANDR" missing on display ":1"\.\n')
+                err = p.sub("", err)
                 web["testGreen"] = True
                 give_points(points_rule, "testrun")
                 if eri >= 0:

@@ -977,6 +977,7 @@ NEVERLAZY = "NEVERLAZY"
  
  
 def is_lazy(query):
+    # print(query)
     caller_lazy = get_param(query, "doLazy", NEVERLAZY)
     # print("caller_lazy=",caller_lazy)
     if caller_lazy == NEVERLAZY: return False

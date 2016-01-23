@@ -550,6 +550,10 @@ ul ul ul, ol ol ol {
     content: "Add new paragraph here";
 }
 
+#editorHelpCiteText {
+    margin-left: 2.0em;
+}
+
 .addParButton {
     z-index: 2;
     right: -8.2em;
@@ -638,7 +642,7 @@ table td {
     border-style: solid;
 }
 
-P {
+.parContent p {
     margin-top: 1.2em;
     margin-bottom: 0.3em;
     margin-left: 2em;
@@ -878,6 +882,7 @@ a.anchor:hover {
     padding: 0.5em;
     border-radius: 5px;
     background: #e0e0e0;
+    max-height: 99vh;
 }
 
 #pareditor {
@@ -1153,9 +1158,9 @@ body {
 task, .csRunDiv {
     border: solid 1px #3CC;
     border-radius: 5px;
-    margin: 0.3em 2em;
+    margin: 0.3em 0 0.3em 2em;
     padding-bottom: 0.5em;
-    width: 96.5%
+    width: calc(100% - 2em - 2px);
 }
 
 .csRunDiv h4 {
@@ -1537,9 +1542,9 @@ button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled {
 }
 
 .breadcrumb > li + li:before {
-    padding: 0 !important;
-    color: #ccc !important;
-    content: "/" !important;
+    padding-left: 5px;
+    color: #ccc;
+    content: "/";
 }
 
 .breadcrumb-div {
@@ -1674,7 +1679,7 @@ p.plgfooter {
         position: relative;
         margin-left: 0;
         margin-top: 1em;
-        margin-right: 1em;
+        margin-right: 0em;  
     }
 
     .addBottomContainer {
@@ -1744,6 +1749,18 @@ p.plgfooter {
         */
     }
 }
+
+/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
+@media only screen and (max-width: 900px) {
+    .paragraph, .par {
+        position: relative;
+        margin-left: 0;
+        margin-top: 1em;
+        margin-right: 1em;  
+    }
+
+}
+
 
 /* Kännyköiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 500px) {
@@ -1888,4 +1905,8 @@ p.docsettings {
     margin-left: 2em;
     margin-right: -5em;
     text-align: left;
+}
+
+.userlist .active {
+    background-color: white;
 }

@@ -866,11 +866,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
         var uinput = "";
         var uargs = "";
         if ( $scope.usercode ) ucode = $scope.usercode.replace($scope.cursor,"");
+        ucode = ucode.replace(/\r/g,"");
         if ( $scope.userinput ) uinput = $scope.userinput;
         if ( $scope.userargs ) uargs = $scope.userargs;
 		var t = runType;
 		// if ( t == "tauno" ) t = "comtest";
-
+    
 		// params = 'type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&replace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		// $http({method: 'POST', url:"http://tim-beta.it.jyu.fi/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		var params = {
@@ -1306,7 +1307,12 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                 var len = data.texts.length;
                 for (var i = 0; i < len; i++) s += data.texts[i].html;
             }    
-            $previewDiv.html(csApp.compile(s)($scope));
+            // s = '<div class="par"  id="f2AP4FHbBIkB"  t="MHgzMGJlMDIxNw=="  attrs="{}" ng-non-bindable>  <div class=""> <p>Vesa MD 2</p>  </div>    <div class="editline" title="Click to edit this paragraph"></div>    <div class="readline"          title="Click to mark this paragraph as read"></div>     </div>    ';
+            s = s.replace(/parContent/,""); // Tämä piti ottaa pois ettei scope pilaannu seuraavaa kertaa varten???
+            s = s.replace(/<div class="editline".*<.div>/,"");            
+            s = s.replace(/<div class="readline"[\s\S]*?<.div>/,"");            
+            var html = csApp.compile(s)($scope)
+            $previewDiv.html(html);
 
             //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
             // $scope.$parent.processAllMath($previewDiv[0]);
@@ -1316,6 +1322,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
                 $scope.$parent.$parent.processAllMath($previewDiv); 
             //$scope.outofdate = false;
             //$scope.parCount = len;
+
         }).error(function (data, status, headers, config) {
             $window.alert("Failed to show preview: " + data.error);
         });
