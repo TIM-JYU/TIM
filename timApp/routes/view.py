@@ -146,6 +146,7 @@ def show_time(s):
 
 def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False, see_answers=False):
 
+    session['last_doc'] = request.path
     timdb = getTimDb()
     doc_id, doc_fullname, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
 
@@ -161,9 +162,10 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
     if not has_view_access(doc_id):
         if not logged_in():
             session['came_from'] = request.url
+            session['anchor'] = request.args.get('anchor', '')
             return render_template('loginpage.html',
-                                   target_url=url_for('login_page.loginWithKorppi'),
-                                   came_from=request.url), 403
+                                   came_from=request.url,
+                                   anchor=session['anchor']), 403
         else:
             abort(403)
 

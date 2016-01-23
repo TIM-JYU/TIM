@@ -50,28 +50,10 @@ a {
     width: auto;
 }
 
-.viewLogin .loginButtonRow {
-}
-
-.viewLogin .loginButtonDiv {
-    width: auto;
-    height: 2em;
-    margin-top: 0.2em;
-    margin-left: 7em;
-    z-index: 300;
-    font-size: 2em;
-    text-align: left;
-}
-
-.viewLogin .loginwelcome {
-    margin-top: 2em;
-}
-
 .viewLogin .loginFieldDiv {
     font-size: 12px;
-    margin-top: 1.5em;
-    margin-left: 3em;
-    line-height: 20px;
+    margin-bottom: 1.5em;
+    line-height: 2em;
     text-align: left;
 }
 
@@ -79,11 +61,11 @@ a {
     float: left;
     width: 120px;
     text-align: right;
-    margin-right: 20px;
+    margin-right: 10px;
 }
 
 .viewLogin .loginFieldInput {
-    width: 200px;
+    width: 250px;
 }
 
 .viewLogin .loginFieldStatic {

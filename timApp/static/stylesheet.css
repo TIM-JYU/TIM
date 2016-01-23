@@ -642,7 +642,7 @@ table td {
     border-style: solid;
 }
 
-P {
+.parContent p {
     margin-top: 1.2em;
     margin-bottom: 0.3em;
     margin-left: 2em;

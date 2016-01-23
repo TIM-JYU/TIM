@@ -55,6 +55,7 @@ def logout():
     session.pop('appcookie', None)
     session.pop('altlogin', None)
     session.pop('came_from', None)
+    session.pop('anchor', None)
     session['user_name'] = 'Anonymous'
     return redirect(url_for('start_page'))
 
@@ -67,12 +68,14 @@ def login():
     elif request.args.get('emailSignup'):
         return signupWithEmail()
     else:
-        return "Invalid login request!"
+        return render_template('loginpage.html',
+                               hide_require_text=True,
+                               anchor=request.args.get('anchor'))
 
 @login_page.route("/korppiLogin")
 def loginWithKorppi():
     urlfile = request.url_root + "korppiLogin"
-    saveCameFrom()
+    save_came_from()
 
     if not session.get('appcookie'):
         randomHex = codecs.encode(os.urandom(24), 'hex').decode('utf-8')
@@ -123,13 +126,15 @@ def loginWithKorppi():
 
     return finishLogin()
 
+
 def loginWithEmail():
     if ('altlogin' in session and session['altlogin'] == 'login'):
         session.pop('altlogin', None)
     else:
         session['altlogin'] = "login"
 
-    return redirect(session.get('came_from', '/'))
+    return safe_redirect(session.get('came_from', '/'))
+
 
 def signupWithEmail():
     if ('altlogin' in session and session['altlogin'] == 'signup'):
@@ -137,7 +142,7 @@ def signupWithEmail():
     else:
         session['altlogin'] = "signup"
 
-    return redirect(session.get('came_from', '/'))
+    return safe_redirect(session.get('came_from', '/'))
 
 @login_page.route("/altsignup", methods=['POST'])
 def altSignup():
@@ -178,7 +183,7 @@ def altSignupAfter():
     oldpass = request.form['token']
     password = request.form['password']
     confirm = request.form['passconfirm']
-    saveCameFrom()
+    save_came_from()
     timdb = getTimDb()
 
     if not timdb.users.testPotentialUser(email, oldpass):
@@ -226,7 +231,7 @@ def altSignupAfter():
 
 @login_page.route("/altlogin", methods=['POST'])
 def altLogin():
-    saveCameFrom()
+    save_came_from()
     email = request.form['email']
     password = request.form['password']
     timdb = getTimDb()
@@ -268,24 +273,30 @@ def testuser(anything=None):
     return redirect(url_for('index_page'))
 
 
-def saveCameFrom():
+def save_came_from():
+    if session.get('last_doc') is not None:
+        session['came_from'] = session.get('last_doc')
     if request.args.get('came_from'):
         session['came_from'] = request.args.get('came_from')
+    if request.args.get('anchor'):
         session['anchor'] = request.args.get('anchor', '')
-    elif request.form.get('came_from'):
+    if request.form.get('came_from'):
         session['came_from'] = request.form.get('came_from')
+    if request.form.get('anchor'):
         session['anchor'] = request.form.get('anchor', '')
 
 
 def finishLogin(ready=True):
     anchor = session.get('anchor', '')
-    if anchor != "":
+    if anchor:
         anchor = "#" + anchor
-    came_from = session.get('came_from', '/')
+    came_from = session.get('came_from')
+    if came_from is None:
+        came_from = session.get('last_doc', '/')
     #if ready:
     #    session.pop('anchor', '')
     #    session['came_from'] = '/view/'
-    return redirect(came_from + anchor)
+    return safe_redirect(came_from + anchor)
 
 
 @login_page.route("/quickLogin/<username>")
