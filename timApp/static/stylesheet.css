@@ -882,6 +882,7 @@ a.anchor:hover {
     padding: 0.5em;
     border-radius: 5px;
     background: #e0e0e0;
+    max-height: 99vh;
 }
 
 #pareditor {
@@ -1159,7 +1160,7 @@ task, .csRunDiv {
     border-radius: 5px;
     margin: 0.3em 2em;
     padding-bottom: 0.5em;
-    width: 96.5%
+    width: calc(100% - 4em);
 }
 
 .csRunDiv h4 {

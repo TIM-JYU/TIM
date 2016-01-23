@@ -102,10 +102,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                 $scope.adjustPreview = function () {
                     window.setTimeout(function () {
-                            var height = parseInt($('pareditor').css('max-height')) * 0.98;
+                            var height = $('pareditor').height();
                             var $preview = $('.previewcontent');
-                            var offset = $($preview).position().top;
-                            $($preview).css('max-height', (height - offset) + 'px');
+                            var offset = $preview.position().top;
+                            $preview.css('max-height', (height - offset) + 'px');
+                            $preview.scrollTop($scope.scrollPos);
                         }, 50
                     );
                 };
@@ -347,6 +348,7 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
 
                     $scope.timer = $window.setTimeout(function () {
                         var text = $scope.getEditorText();
+                        $scope.scrollPos = $('.previewcontent').scrollTop();
                         $http.post($scope.previewUrl, angular.extend({
                             text: text
                         }, $scope.extraData)).success(function (data, status, headers, config) {
@@ -356,11 +358,11 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                             $scope.$parent.processAllMathDelayed($previewDiv);
                             $scope.outofdate = false;
                             $scope.parCount = len;
+                            $('.editorContainer').resize();
                         }).error(function (data, status, headers, config) {
                             $window.alert("Failed to show preview: " + data.error);
                         });
                     }, 500);
-                    $('.editorContainer').resize();
                 };
 
                 if ($scope.options.touchDevice) {
@@ -1365,12 +1367,6 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                         scrollTop: $element.offset().top
                     }, 2000);
                 }
-
-                window.setTimeout(function () {
-                        var height = window.innerHeight * 0.99 + 'px';
-                        $element.css('max-height', height);
-                    }, 1000
-                )
             }
         };
     }]);
