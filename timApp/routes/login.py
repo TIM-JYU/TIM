@@ -61,6 +61,9 @@ def logout():
 
 @login_page.route("/login")
 def login():
+    if logged_in():
+        flash('You are already logged in.')
+        return safe_redirect(session.get('last_doc', '/'))
     if request.args.get('korppiLogin'):
         return loginWithKorppi()
     elif request.args.get('emailLogin'):
