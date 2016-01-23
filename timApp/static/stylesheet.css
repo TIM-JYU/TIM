@@ -1158,9 +1158,9 @@ body {
 task, .csRunDiv {
     border: solid 1px #3CC;
     border-radius: 5px;
-    margin: 0.3em 2em;
+    margin: 0.3em 0 0.3em 2em;
     padding-bottom: 0.5em;
-    width: calc(100% - 4em);
+    width: calc(100% - 2em - 2px);
 }
 
 .csRunDiv h4 {
