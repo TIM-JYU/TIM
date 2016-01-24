@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag="cs3" .
+docker build --tag="cs3" $@ .
