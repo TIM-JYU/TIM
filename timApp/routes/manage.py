@@ -230,7 +230,7 @@ def rename_folder(doc_id):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.folders.rename(doc_id, new_name)
-    return "Success"
+    return jsonResponse({'new_name': new_name})
 
 
 @manage_page.route("/getPermissions/<int:doc_id>")
