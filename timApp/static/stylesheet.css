@@ -153,6 +153,10 @@ body {
     height: 3em;
 }
 
+.redbutton {
+    background-color: #990000
+}
+
 input[type="submit"], button, input[type="button"] {
     margin-right: 1px;
     background: #3CC;
@@ -1909,4 +1913,12 @@ p.docsettings {
 
 .userlist .active {
     background-color: white;
+}
+
+.rights-list p {
+    margin-left: 0;
+}
+
+.shortedit {
+    max-width: 4.5em;
 }

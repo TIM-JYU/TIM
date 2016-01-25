@@ -141,7 +141,56 @@ var crumbs = getBreadcrumbs(doc.fullname);
         </table>
     </div>
 
-    <button ng-show="!isFolder" ng-click="markAllAsRead()">Mark document as read</button>
+    <div ng-show="!isFolder">
+        Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in Finnish</a>):
+        <table class="borderless">
+            <tr>
+                <th>Language</th>
+                <th>Title</th>
+                <th>Maintainer</th>
+                <th>Actions</th>
+            </tr>
+            <tr>
+                <td><input type="text" class="shortedit" ng-model="lang_id" placeholder="Language"/></td>
+                <td><input type="text" ng-model="doc.title" placeholder="Language"/></td>
+                <td>{{ '{{doc.owner.name}}' }}</td>
+                <td>
+                    <button ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
+                </td>
+            </tr>
+            <tr ng-repeat="tr in translations">
+                <td><input type="text" class="shortedit" ng-model="tr.lang_id" placeholder="Language"/></td>
+                <td><input type="text" ng-model="tr.title" placeholder="Title"/></td>
+                <td>{{ '{{tr.owner}}' }}</td>
+                <td>
+                    <button ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <span ng-show="!isFolder">
+        <button ng-click="toggleDiv('translate')">Create a translation</button>
+        <button ng-click="toggleDiv('cite')">Create a cited copy</button>
+    </span>
+
+    <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
+        <p>
+            Please enter a short language identifier and the name of the document in the desired language.
+        </p>
+        <input type="text" ng-model="translationName" class="shortedit" placeholder="Language"/>
+        <input type="text" ng-model="translationTitle" placeholder="New document title"/>
+        <button ng-click="createTranslation()">Create translation</button>
+    </div>
+
+    <div class="margin rights-list" ng-show="showCreateDiv == 'cite'">
+        <p>
+            Please enter a fully qualified name for the new document.
+        </p>
+        <input type="text" ng-model="citationName" placeholder="New document name"/>
+        <button ng-click="createCitation()">Create cited copy</button>
+    </div>
+
     <span ng-show="readUpdating">Loading...</span>
     <form class="uploadForm margin" ng-show="!isFolder">
         Upload a new version for this {{objName}}
@@ -177,7 +226,8 @@ var crumbs = getBreadcrumbs(doc.fullname);
     </div>
 
     <div class="margin" ng-show="!isFolder">
-        <button ng-click="deleteDocument(doc.id)">Delete document</button>
+        <button ng-click="markAllAsRead()">Mark document as read</button>
+        <button class="redbutton" ng-click="deleteDocument(doc.id)">Delete document</button>
     </div>
 
     <div class="margin" ng-show="isFolder">

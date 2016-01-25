@@ -45,6 +45,10 @@ def manage(path):
         if doc_fullname is not None:
             doc_data['name'] = doc_name
             doc_data['fullname'] = doc_fullname
+            doc_data['title'] = timdb.documents.get_doc_title(block_id, doc_name)
+        else:
+            doc_data['title'] = "Untitled"
+            doc_data['fullname'] = None
         doc_data['versions'] = [entry for entry in doc.get_changelog()]
         doc_data['fulltext'] = doc.export_markdown()
         for ver in doc_data['versions']:
@@ -53,6 +57,7 @@ def manage(path):
     doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
     return render_template('manage.html',
                            route='manage',
+                           translations=timdb.documents.get_translations(doc_id) if not isFolder else None,
                            objName='folder' if isFolder else 'document',
                            objNameC='Folder' if isFolder else 'Document',
                            doc=doc_data,

@@ -10,6 +10,8 @@ DROP TABLE IF EXISTS Block;
 
 DROP TABLE IF EXISTS DocEntry;
 
+DROP TABLE IF EXISTS Translation;
+
 DROP TABLE IF EXISTS Folder;
 
 DROP TABLE IF EXISTS NewUser;
@@ -141,6 +143,28 @@ CREATE TABLE DocEntry (
   PRIMARY KEY (name),
   CONSTRAINT DocEntry_id
   FOREIGN KEY (id)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+CREATE TABLE Translation (
+  doc_id      INTEGER      NOT NULL,
+  src_docid   INTEGER      NOT NULL,
+  lang_id     INTEGER      NOT NULL,
+  doc_title   VARCHAR(50),
+
+  CONSTRAINT Translation_PK
+  PRIMARY KEY (doc_id),
+
+  CONSTRAINT Translation_id
+  FOREIGN KEY (doc_id)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE,
+
+  CONSTRAINT Translation_src_docid
+  FOREIGN KEY (src_docid)
   REFERENCES Block (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE
