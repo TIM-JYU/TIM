@@ -125,7 +125,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         plugin.css('opacity', '1.0');
                         $scope.$parent.processAllMathDelayed(plugin);
                     }).error(function (data, status, headers, config) {
-                        $window.alert('Error getting answers: ' + data.error);
+                        $scope.error = 'Error getting state: ' + data.error;
                     }).finally(function () {
                         $scope.loading--;
                     });
@@ -189,7 +189,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         .success(function (data, status, headers, config) {
                             $scope.users = data;
                         }).error(function (data, status, headers, config) {
-                            $window.alert('Error getting users: ' + data.error);
+                            $scope.error = 'Error getting users: ' + data.error;
                         }).finally(function () {
                             $scope.loading--;
                         });
@@ -227,7 +227,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             }
                             $scope.fetchedUser = $scope.user;
                         }).error(function (data, status, headers, config) {
-                            $window.alert('Error getting answers: ' + data.error);
+                            $scope.error = 'Error getting answers: ' + data.error;
                         }).finally(function () {
                             $scope.loading--;
                         });
@@ -296,7 +296,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                         .success(function (data, status, headers, config) {
                             $scope.taskInfo = data;
                         }).error(function (data, status, headers, config) {
-                            $window.alert('Error getting taskinfo: ' + data.error);
+                            $scope.error = 'Error getting taskinfo: ' + data.error;
                         }).finally(function () {
                             $scope.loading--;
                         });
@@ -326,7 +326,7 @@ timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$win
                             //var nd = nw.document;
                             //nd.write(data[0]);
                         }).error(function (data, status, headers, config) {
-                            $window.alert('Error getting answers: ' + data.error);
+                            $scope.error = 'Error getting answers: ' + data.error;
                         }).finally(function () {
                             $scope.loading--;
                         });

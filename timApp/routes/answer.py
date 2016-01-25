@@ -159,7 +159,10 @@ def should_hide_name(doc_id, user_id):
 
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
-    plugin = Plugin.from_task_id(task_id)
+    try:
+        plugin = Plugin.from_task_id(task_id)
+    except PluginException as e:
+        return abort(400, str(e))
     tim_vars = {'maxPoints': plugin.max_points(),
                 'userMin': plugin.user_min_points(),
                 'userMax': plugin.user_max_points(),
@@ -177,7 +180,10 @@ def get_answers(task_id, user_id):
         abort(404, 'Not a valid user id')
     verifyLoggedIn()
     timdb = getTimDb()
-    doc_id, task_id_name = Plugin.parse_task_id(task_id)
+    try:
+        doc_id, task_id_name = Plugin.parse_task_id(task_id)
+    except PluginException as e:
+        return abort(400, str(e))
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
     user = timdb.users.getUser(user_id)
