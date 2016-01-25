@@ -61,7 +61,7 @@ def view_document(doc_name):
 @view_page.route("/teacher/<path:doc_name>")
 def teacher_view(doc_name):
     usergroup = request.args.get('group')
-    return view(doc_name, 'view_html.html', usergroup=usergroup, teacher=True)
+    return view(doc_name, 'view_html.html', usergroup=usergroup, route="teacher")
 
 
 @view_page.route("/answers/<path:doc_name>")
@@ -72,12 +72,12 @@ def see_answers_view(doc_name):
 
 @view_page.route("/lecture/<path:doc_name>")
 def lecture_view(doc_name):
-    return view(doc_name, 'view_html.html', lecture=True)
+    return view(doc_name, 'view_html.html', route="lecture")
 
 
 @view_page.route("/slide/<path:doc_name>")
 def slide_document(doc_name):
-    return view(doc_name, 'view_html.html', slide=True)
+    return view(doc_name, 'view_html.html', route="slide")
 
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
 def par_info(doc_id, par_id):
@@ -144,26 +144,28 @@ def show_time(s):
     debug_time = nyt
 
 
-def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, slide=False, see_answers=False):
+def view(doc_path, template_name, usergroup=None, route="view"):
 
+    session['last_doc'] = request.path
     timdb = getTimDb()
     doc_id, doc_fullname, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
 
     if doc_id is None:
         return try_return_folder(doc_path)
 
-    if teacher:
+    if route == "teacher":
         verify_teacher_access(doc_id)
 
-    if see_answers:
+    if route == 'see_answers':
         verify_seeanswers_access(doc_id)
 
     if not has_view_access(doc_id):
         if not logged_in():
             session['came_from'] = request.url
+            session['anchor'] = request.args.get('anchor', '')
             return render_template('loginpage.html',
-                                   target_url=url_for('login_page.loginWithKorppi'),
-                                   came_from=request.url), 403
+                                   came_from=request.url,
+                                   anchor=session['anchor']), 403
         else:
             abort(403)
 
@@ -180,7 +182,8 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
 
     user = getCurrentUserId()
 
-    if teacher or see_answers:
+    teacher_or_see_answers = route in ('teacher', 'see_answers')
+    if teacher_or_see_answers:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
         if usergroup is not None:
@@ -206,7 +209,7 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
-                                                          current_user if teacher or see_answers or logged_in() else None,
+                                                          current_user if teacher_or_see_answers or logged_in() else None,
                                                           sanitize=False,
                                                           do_lazy=get_option(request, "lazy", True))
 
@@ -240,9 +243,11 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
+    doc_title = timdb.documents.get_doc_title(doc_id, doc_name)
+
     result = render_template(template_name,
-                             route="view",
-                             doc={'id': doc_id, 'fullname': doc_fullname, 'name': doc_name},
+                             route=route,
+                             doc={'id': doc_id, 'name': doc_name, 'fullname': doc_fullname, 'title': doc_title},
                              text=texts,
                              headers=index,
                              plugin_users=users,
@@ -255,13 +260,11 @@ def view(doc_path, template_name, usergroup=None, teacher=False, lecture=False, 
                              custom_css=custom_css,
                              doc_css=doc_css,
                              start_index=start_index,
-                             teacher_mode=teacher or see_answers,
-                             lecture_mode=lecture,
-                             slide_mode=slide,
                              in_lecture=is_in_lecture,
                              is_owner=has_ownership(doc_id),
                              group=usergroup,
                              rights=get_rights(doc_id),
+                             translations=timdb.documents.get_translations(doc_id),
                              reqs=reqs,
                              settings=settings)
     return result

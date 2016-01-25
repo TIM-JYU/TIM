@@ -153,6 +153,10 @@ body {
     height: 3em;
 }
 
+.redbutton {
+    background-color: #990000
+}
+
 input[type="submit"], button, input[type="button"] {
     margin-right: 1px;
     background: #3CC;
@@ -597,7 +601,7 @@ PRE {
     background-color: white;
 }
 
-p code {
+code { 
     font-size: 1.2em;
 }
 
@@ -642,7 +646,7 @@ table td {
     border-style: solid;
 }
 
-P {
+.parContent p {
     margin-top: 1.2em;
     margin-bottom: 0.3em;
     margin-left: 2em;
@@ -882,6 +886,7 @@ a.anchor:hover {
     padding: 0.5em;
     border-radius: 5px;
     background: #e0e0e0;
+    max-height: 99vh;
 }
 
 #pareditor {
@@ -1157,9 +1162,9 @@ body {
 task, .csRunDiv {
     border: solid 1px #3CC;
     border-radius: 5px;
-    margin: 0.3em 2em;
+    margin: 0.3em 0 0.3em 2em;
     padding-bottom: 0.5em;
-    width: 96.5%
+    width: calc(100% - 2em - 2px);
 }
 
 .csRunDiv h4 {
@@ -1652,6 +1657,11 @@ p.plgfooter {
 
 /* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
 @media only screen and (max-width: 1200px) {
+    .arealine {
+        position: absolute;
+        right: -1.5em; 
+        left: auto;
+    }
     .editor {
         /* height: 5em; */
     }
@@ -1673,7 +1683,7 @@ p.plgfooter {
         position: relative;
         margin-left: 0;
         margin-top: 1em;
-        margin-right: 1em;
+        margin-right: 0em;  
     }
 
     .addBottomContainer {
@@ -1743,6 +1753,18 @@ p.plgfooter {
         */
     }
 }
+
+/* Tablettien ja pienempien laitteiden erikoistyylit =============================================*/
+@media only screen and (max-width: 900px) {
+    .paragraph, .par {
+        position: relative;
+        margin-left: 0;
+        margin-top: 1em;
+        margin-right: 1em;  
+    }
+
+}
+
 
 /* Kännyköiden erikoistyylit =============================================*/
 @media only screen and (max-device-width: 500px) {
@@ -1891,4 +1913,12 @@ p.docsettings {
 
 .userlist .active {
     background-color: white;
+}
+
+.rights-list p {
+    margin-left: 0;
+}
+
+.shortedit {
+    max-width: 4.5em;
 }

@@ -10,6 +10,7 @@ import codecs
 import bleach
 import os
 
+CACHE_DIR = "/tmp/cache/"
 
 class QueryClass:
     def __init__(self):
@@ -177,19 +178,41 @@ cache = {}
 def clear_cache():
     global cache
     cache = {}
+    for f in os.listdir(CACHE_DIR):
+        os.remove(CACHE_DIR+f)
 
 
 def get_chache_keys():
     global cache
     s = ""
     for key in cache.keys(): s += key + "\n"
+    s = s + "\n".join(os.listdir(CACHE_DIR))
     return s
 
 
 def get_url_lines(url):
     global cache
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
-    if url in cache: return cache[url]
+    if url in cache: 
+        # print("from cache: ", url)
+        return cache[url]
+
+    diskcache = CACHE_DIR+url.replace('/','_').replace(':','_')
+
+    print("not in cache: ", url)
+    # if False and os.path.isfile(diskcache):
+    if os.path.isfile(diskcache):
+        try:
+            result = open(diskcache,"r",encoding='iso8859_15').read()
+            result = result.split("\n");
+            print("from DISK cache: ", diskcache)
+            cache[url] = result
+
+            return result
+        except Exception as e:
+            print(str(e))
+            print("error reading filecache: ", diskcache)
+            
 
     try:
         req = urlopen(url)
@@ -213,25 +236,49 @@ def get_url_lines(url):
         lines[i] = line.replace("\n", "").replace("\r", "")
 
     cache[url] = lines
+
+    try:
+        # open(diskcache,"w").write("\n".join(lines));
+        open(diskcache,"w",encoding='iso8859_15').write("\n".join(lines));
+    except Exception as e:
+        print(str(e))
+        print("XXXXXXXXXXXXXXXXXXXXXXXX Could no write cache: \n",diskcache)
+
+    
+    
     return lines
 
 
 def get_url_lines_as_string(url):
     global cache
-    # print("========= CACHE KEYS ==========\n", get_chache_keys())
     cachename = "lines_" + url
+    diskcache = CACHE_DIR+cachename.replace('/','_').replace(':','_')
+    # print("========= CACHE KEYS ==========\n", get_chache_keys())
     # print(cachename + "\n")
     #print(cache) # chache does not work in forkingMix
     if cachename in cache:
-        # print("from cache\n")
+        # print("from cache: ", cachename)
         return cache[cachename]
+
+    # print("not in cache: ", cachename)
+    # return "File not found: " + url
+    
+    if os.path.isfile(diskcache):
+        try:
+            result = open(diskcache,"r").read()
+            cache[cachename] = result
+            return result
+        except:
+            print("error reading filecache: ", diskcache)
+            
+    # print("not in filecache: ", diskcache)
 
     try:
         req = urlopen(url)
         # ftype = req.headers['content-type']
         lines = req.readlines()
     except:
-        return False
+        return "File not found: " + url
     # filecontent = nltk.clean_html(html)
 
     n = len(lines)
@@ -250,6 +297,12 @@ def get_url_lines_as_string(url):
 
     result = result.strip("\n")
     cache[cachename] = result
+    
+    try:
+        open(diskcache,"w").write(result)
+    except:
+        print("Could no write cache: ",diskcache)
+    
     # print(cache)
     return result
 
@@ -324,7 +377,7 @@ class FileParams:
 
         u = get_param(query, "url" + nr, "")
         if u and not self.url: self.url = url
-        if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
+        # if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
     def get_file(self, escape_html=False):
         if self.prorgam:
@@ -924,6 +977,7 @@ NEVERLAZY = "NEVERLAZY"
  
  
 def is_lazy(query):
+    # print(query)
     caller_lazy = get_param(query, "doLazy", NEVERLAZY)
     # print("caller_lazy=",caller_lazy)
     if caller_lazy == NEVERLAZY: return False

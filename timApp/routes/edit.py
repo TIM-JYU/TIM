@@ -199,7 +199,8 @@ def par_response(blocks, doc, edit_window=False, update_cache=False, context_par
 
     return jsonResponse({'texts': render_template('paragraphs.html',
                                                   text=pars,
-                                                  rights=get_rights(doc.doc_id)),
+                                                  rights=get_rights(doc.doc_id),
+                                                  preview=edit_window),
                          'route': 'preview',
                          'js': js_paths,
                          'css': css_paths,

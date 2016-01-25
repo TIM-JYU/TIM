@@ -1,13 +1,27 @@
 """Common functions for use with routes."""
 import json
 from collections import defaultdict
+from urllib.parse import urlparse, urljoin
 
-from flask import current_app, session, abort, g, Response, request
+from flask import current_app, session, abort, g, Response, request, redirect, url_for
 
 import pluginControl
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from documentmodel.document import Document
 from timdb.timdb2 import TimDb
+
+
+def is_safe_url(url):
+    host_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, url))
+    return test_url.scheme in ['http', 'https'] and \
+           host_url.netloc == test_url.netloc
+
+
+def safe_redirect(url, **values):
+    if is_safe_url(url):
+        return redirect(url, **values)
+    return redirect(url_for('indexPage'))
 
 
 def get_current_user():
@@ -203,7 +217,7 @@ def verify_json_params(*args, require=True, default=None):
     :rtype: tuple[str]
     """
     result = ()
-    json_params = request.get_json()
+    json_params = request.get_json() or []
     for arg in args:
         if arg in json_params:
             val = json_params[arg]

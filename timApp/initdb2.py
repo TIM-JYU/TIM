@@ -83,7 +83,8 @@ def update_database():
     update_dict = {0: update_datamodel,
                    1: update_answers,
                    2: update_rights,
-                   3: add_seeanswers_right}
+                   3: add_seeanswers_right,
+                   4: add_translation_table}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
@@ -98,6 +99,35 @@ def update_database():
         print('Database is up to date.')
     else:
         print('Database was updated from version {} to {}.'.format(ver_old, ver))
+
+
+def add_translation_table():
+    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+    if timdb.table_exists('Translation'):
+        return False
+    timdb.execute_sql("""
+CREATE TABLE Translation (
+  doc_id      INTEGER      NOT NULL,
+  src_docid   INTEGER      NOT NULL,
+  lang_id     INTEGER      NOT NULL,
+  doc_title   VARCHAR(50),
+
+  CONSTRAINT Translation_PK
+  PRIMARY KEY (doc_id),
+
+  CONSTRAINT Translation_id
+  FOREIGN KEY (doc_id)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE,
+
+  CONSTRAINT Translation_src_docid
+  FOREIGN KEY (src_docid)
+  REFERENCES Block (id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);""")
+    return True
 
 
 def add_seeanswers_right():

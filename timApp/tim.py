@@ -1088,25 +1088,27 @@ def create_item(item_name, item_type, create_function, owner_group_id):
     if not logged_in():
         abort(403, 'You have to be logged in to create a {}.'.format(item_type))
 
-    if item_name.startswith('/') or item_name.endswith('/'):
-        abort(400, 'The {} name cannot start or end with /.'.format(item_type))
+    if item_name is not None:
+        if item_name.startswith('/') or item_name.endswith('/'):
+            abort(400, 'The {} name cannot start or end with /.'.format(item_type))
 
-    if re.match('^(\d)*$', item_name) is not None:
-        abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
+        if re.match('^(\d)*$', item_name) is not None:
+            abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
 
     timdb = getTimDb()
     username = getCurrentUserName()
 
-    if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
-        abort(403, 'Item with a same name already exists.')
+    if item_name is not None:
+        if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
+            abort(403, 'Item with a same name already exists.')
 
-    if not canWriteToFolder(item_name):
-        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
+        if not canWriteToFolder(item_name):
+            abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
 
-    item_path, _ = timdb.folders.split_location(item_name)
-    folder_id = timdb.folders.create(item_path, owner_group_id)
+        item_path, _ = timdb.folders.split_location(item_name)
+        folder_id = timdb.folders.create(item_path, owner_group_id)
+
     item_id = create_function(item_name, owner_group_id)
-
     return jsonResponse({'id': item_id, 'name': item_name})
 
 
@@ -1114,28 +1116,94 @@ def create_item(item_name, item_type, create_function, owner_group_id):
 def create_document():
     jsondata = request.get_json()
     doc_name = jsondata['doc_name']
+
     timdb = getTimDb()
     return create_item(doc_name, 'document', lambda name, group: timdb.documents.create(name, group).doc_id,
                        getCurrentUserGroup())
 
 
-@app.route("/translate/<path:docname>/<language>", methods=["GET"])
-def create_translation(docname, language):
-    params = request.get_json()
-
-    # Filter for allowed reference parameters
-    if params is not None:
-        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
-
+@app.route("/translations/<int:doc_id>", methods=["GET"])
+def get_translations(doc_id):
     timdb = getTimDb()
-    src_doc_id = timdb.documents.get_document_id(docname)
-    if not has_view_access(src_doc_id):
-        abort(403)
 
-    src_doc = Document(src_doc_id)
-    new_name = docname + "-" + language
-    factory = lambda name, group: timdb.documents.create_translation(src_doc, name, group, params).doc_id
-    return create_item(new_name, 'document', factory, getCurrentUserGroup())
+    if not timdb.documents.exists(doc_id):
+        abort(404, 'Document not found')
+    if not has_view_access(doc_id):
+        abort(403, 'Permission denied')
+
+    trlist = timdb.documents.get_translations(doc_id)
+    for tr in trlist:
+        tr['owner'] = timdb.users.get_user_group_name(tr['owner_id']) if tr['owner_id'] else None
+
+    return jsonResponse(trlist)
+
+
+def valid_language_id(lang_id):
+    return re.match('^\w+$', lang_id) is not None
+
+
+@app.route("/translate/<int:tr_doc_id>/<language>", methods=["POST"])
+def create_translation(tr_doc_id, language):
+    title = request.get_json().get('doc_title', None)
+    timdb = getTimDb()
+
+    doc_id = timdb.documents.get_translation_source(tr_doc_id)
+
+    if not timdb.documents.exists(doc_id):
+        abort(404, 'Document not found')
+
+    if not has_view_access(doc_id):
+        abort(403, 'Permission denied')
+    if not valid_language_id(language):
+        abort(404, 'Invalid language identifier')
+    if timdb.documents.translation_exists(doc_id, lang_id=language):
+        abort(403, 'Translation already exists')
+    if not has_manage_access(doc_id):
+        # todo: check for translation right
+        abort(403, 'You have to be logged in to create a translation')
+
+    src_doc = Document(doc_id)
+    doc = timdb.documents.create_translation(src_doc, None, getCurrentUserGroup())
+    timdb.documents.add_translation(doc.doc_id, src_doc.doc_id, language, title)
+
+    src_doc_name = timdb.documents.get_first_document_name(src_doc.doc_id)
+    doc_name = timdb.documents.get_translation_path(doc_id, src_doc_name, language)
+
+    return jsonResponse({'id': doc.doc_id, 'title': title, 'name': doc_name})
+
+
+@app.route("/translation/<int:doc_id>", methods=["POST"])
+def update_translation(doc_id):
+    (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
+    timdb = getTimDb()
+
+    src_doc_id = doc_id
+    translations = timdb.documents.get_translations(doc_id)
+    for tr in translations:
+        if tr['id'] == doc_id:
+            src_doc_id = tr['src_docid']
+        if tr['lang_id'] == lang_id and tr['id'] != doc_id:
+            abort(403, 'Translation ' + lang_id + ' already exists')
+
+    if src_doc_id is None or not timdb.documents.exists(src_doc_id):
+        abort(404, 'Source document does not exist')
+
+    if not valid_language_id(lang_id):
+        if doc_id == src_doc_id and lang_id == "":
+            # Allow removing the language id for the document itself
+            timdb.documents.remove_translation(doc_id)
+            return okJsonResponse()
+
+        abort(403, 'Invalid language identifier')
+
+    if not has_ownership(src_doc_id) and not has_ownership(doc_id):
+        abort(403, "You need ownership of either this or the translated document")
+
+    # Remove and add because we might be adding a language identifier for the source document
+    # In that case there may be nothing to update!
+    timdb.documents.remove_translation(doc_id, commit=False)
+    timdb.documents.add_translation(doc_id, src_doc_id, lang_id, doc_title)
+    return okJsonResponse()
 
 
 @app.route("/cite/<int:docid>/<path:newname>", methods=["GET"])

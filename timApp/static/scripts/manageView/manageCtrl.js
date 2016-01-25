@@ -54,11 +54,75 @@ PermApp.controller("PermCtrl", [
                     sc.aliases = data;
 
             }).error(function (data, status, headers, config) {
-                alert(data.message);
+                alert("Error loading aliases: " + data.message);
             });
 
             return [];
         };
+
+        sc.getTranslations = function() {
+            if (sc.isFolder)
+                return [];
+
+            $http.get('/translations/' + sc.doc.id, {
+            }).success(function (data, status, headers, config) {
+                sc.lang_id = "";
+                sc.translations = [];
+
+                for (var i = 0; i < data.length; i++) {
+                    var tr = data[i];
+
+                    if (tr.id == sc.doc.id) {
+                        sc.lang_id = tr.lang_id;
+                    }
+                    else {
+                        trnew = JSON.parse(JSON.stringify(tr));
+                        trnew.old_langid = tr.lang_id;
+                        trnew.old_title = tr.title;
+                        sc.translations.push(trnew);
+                    }
+                }
+
+                sc.old_title = doc.title;
+                sc.old_langid = sc.lang_id;
+
+            }).error(function (data, status, headers, config) {
+                alert("Error loading translations: " + data.error);
+            });
+
+            return [];
+        };
+
+        sc.metaChanged = function() {
+            return doc.title != sc.old_title || sc.lang_id != sc.old_langid;
+        };
+
+        sc.updateMetadata = function() {
+            $http.post('/translation/' + sc.doc.id, {
+                'new_langid': sc.lang_id,
+                'new_title': sc.doc.title
+            }).success(function (data, status, headers, config) {
+                sc.getTranslations();
+            }).error(function (data, status, headers, config) {
+                alert(data.error);
+            });
+        };
+
+        sc.trChanged = function(tr) {
+            return tr.title != tr.old_title || tr.lang_id != tr.old_langid;
+        };
+
+        sc.updateTranslation = function(tr) {
+            $http.post('/translation/' + tr.id, {
+                'new_langid': tr.lang_id,
+                'new_title': tr.title
+            }).success(function (data, status, headers, config) {
+                sc.getTranslations();
+            }).error(function (data, status, headers, config) {
+                alert(data.error);
+            });
+        };
+
 
         sc.showAddRightFn = function (type) {
             sc.accessType = type;
@@ -359,6 +423,33 @@ text = '\n'.join(a)
                 });
         };
 
+        sc.toggleDiv = function(divName) {
+            if (sc.showCreateDiv == divName)
+                sc.showCreateDiv = "";
+            else
+                sc.showCreateDiv = divName;
+        };
+
+        sc.createTranslation = function() {
+            $http.post('/translate/' + sc.doc.id + "/" + sc.translationName, {
+                'doc_title': sc.translationTitle
+            }).success(function (data, status, headers, config) {
+                location.href = "/view/" + data.name;
+            }).error(function (data, status, headers, config) {
+                $window.alert('Could not create a translation. Error message is: ' + data.error);
+            });
+        };
+
+        sc.createCitation = function() {
+            $http.get('/cite/' + sc.doc.id + "/" + sc.citationName + '?_=' + Date.now())
+                .success(function (data, status, headers, config) {
+                    location.assign("/view/" + data.name);
+                }).error(function (data, status, headers, config) {
+                    $window.alert('Could not create a translation. Error message is: ' + data.error);
+                }).finally(function (data, status, headers, config) {
+                });
+        };
+
         sc.grouprights = grouprights;
         sc.userGroups = groups;
         sc.accessTypes = accessTypes;
@@ -374,6 +465,8 @@ text = '\n'.join(a)
         doc.fulltext = doc.fulltext.trim();
         sc.fulltext = doc.fulltext;
         sc.aliases = sc.getAliases();
+        sc.translations = sc.getTranslations();
+        sc.showCreateDiv = "";
 
         if (isFolder) {
             sc.newName = doc.name;

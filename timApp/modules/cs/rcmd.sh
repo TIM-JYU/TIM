@@ -1,9 +1,10 @@
 #!/bin/bash
 # Set locale
 export LANG=en_US.UTF-8
+# export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
 # For X server emulation
-Xvfb :1 -screen 0 1280x1024x24  2>/dev/null  &
-export DISPLAY=:1
+Xvfb :1 -screen 0 1280x1024x24 -extension RANDR 2>/dev/null  &
+export DISPLAY=:1 
 cmd=$1
 
 if [  -z "$cmd"  ]; then
@@ -13,7 +14,7 @@ fi
 # Copy Jypeli dll's to temp directory
 # cp /cs/jypeli/* /tmp/
 
-export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar
 export MONO_PATH=/cs/jypeli
 
 #if ! [ -f ".bashrc" ]; then

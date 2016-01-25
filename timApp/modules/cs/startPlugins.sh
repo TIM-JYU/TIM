@@ -29,6 +29,10 @@ sudo chmod 777 /tmp/uhome/user
 sudo mkdir -p /opt/cs/images/cs
 sudo chmod 777 /opt/cs/images/cs
 
+sudo mkdir -p /tmp/uhome/cache
+sudo chmod 777 /tmp/uhome/cache
+rm  /tmp/uhome/cache/*
+
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome
 # sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/cs
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/tmp

@@ -86,7 +86,9 @@ def generate_filename():
 
 def tquote(s):
     if s.startswith("$"): return s
-    return shlex.quote(s)
+    r = shlex.quote(s)
+    if r.find("$") < 0: return r
+    return r.replace("'",'"')     
 
 
 def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8"):
@@ -286,8 +288,10 @@ def get_html(ttype, query):
     # print("UserId:", user_id)
     if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
+        jump = get_param(query, "taskID", "")
+        # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
         if allow_anonymous != "true":
-            return NOLAZY + '<p class="pluginError"><a href="/">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
+            return NOLAZY + '<p class="pluginError"><a href="/login?anchor='+jump+'">Please login to interact with this component</a></p><pre class="csRunDiv">' + get_param(
                 query, "byCode", "") + '</pre>'
     do_lazy = is_lazy(query)
     # do_lazy = False
@@ -296,8 +300,8 @@ def get_html(ttype, query):
     js = query_params_to_map_check_parts(query)
     # print(js)
     if "byFile" in js and not ("byCode" in js):
-        js["byCode"] = get_url_lines_as_string(js["byFile"])
-    bycode = ""
+        js["byCode"] = get_url_lines_as_string(js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
+    bycode = ""  
     if "byCode" in js: bycode = js["byCode"]
     if get_param(query, "noeditor", False): bycode = ""
 
@@ -327,7 +331,10 @@ def get_html(ttype, query):
         r = "cs-console"
 
     if do_lazy:
-        # r = LAZYWORD + r;   
+        # r = LAZYWORD + r;    
+        if type(bycode) != type(''): 
+            print("Ei ollut string: ", bycode, jso)
+            bycode = '' + str(bycode)       
         ebycode = html.escape(bycode)
         lazy_visible = '<div class="lazyVisible csRunDiv no-popup-menu">' + get_surrounding_headers(query,
                                                                                                     '<div class="csRunCode csEditorAreaDiv csrunEditorDiv csRunArea csInputArea csLazyPre"><pre>' + ebycode + '</pre></div>') + '</div>'
@@ -454,6 +461,7 @@ def return_points(points_rule, result):
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, request, client_address, _server):
+        # print(request,client_address) 
         super().__init__(request, client_address, _server)
         self.user_id = "--"
 
@@ -740,6 +748,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             rndname = generate_filename()
             delete_tmp = True
             opt = get_param(query, "opt", "")
+            timeout = get_param(query, "timeout", 10)
             task_id = get_param(query, "taskID", "")
             doc_id, dummy = (task_id + "NONE.none").split(".", 1)
             
@@ -1031,7 +1040,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     userdoc = "/csimages/docs/%s" % self.user_id
                     docrnd = generate_filename()
                     doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (prgpath, userdoc, docrnd, userdoc)
-                    dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, filename, fileext)
+                    p = re.compile('\.java')
+                    docfilename = p.sub("", filename)
+                    p = re.compile('[^.]*\.')
+                    docfilename = p.sub("", docfilename)
+                    docfilename = docfilename.replace("_","__") # jostakin syystä tekee näin
+                    dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, docfilename, fileext)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",filename)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",docfilename)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
                     doc_output = check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
                     web["docurl"] = dochtml
                     give_points(points_rule, "doc")
@@ -1107,7 +1124,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     
                 # self.wfile.write("*** Success!\n")
                 print("*** Compile Success")
-                if nocode: remove(csfname)
+                if nocode and ttype != "jcomtest": 
+                    print("Poistetaan ", ttype, csfname)
+                    remove(csfname)
                 # print(compiler_output)
             except subprocess.CalledProcessError as e:
                 '''
@@ -1164,7 +1183,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if is_doc:
                 pass  # jos doc ei ajeta
-            elif get_param(query, "justCompile", False):
+            elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
                 #code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
             elif ttype == "jypeli":
@@ -1344,6 +1363,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if eri < 0: eri = out.find("FAILURES")  # jcomtest
                 if eri < 0: eri = out.find("Test error")  # ccomtest
                 if eri < 0: eri = out.find("ERROR:")  # ccomtest compile error
+                p = re.compile('Xlib:  extension "RANDR" missing on display ":1"\.\n')
+                err = p.sub("", err)
                 web["testGreen"] = True
                 give_points(points_rule, "testrun")
                 if eri >= 0:
@@ -1390,7 +1411,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     extra = "cd $PWD\nsource "
                     try:
                         # code, out, err = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin = stdin, uargs = userargs)
-                        code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                        code, out, err, pwd = run2([pure_exename], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                    uargs=userargs,
                                                    extra=extra)
                     except OSError as e:
@@ -1423,7 +1444,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                                uargs=userargs)
                 elif ttype == "sql":
                     print("sql: ", exename)
-                    code, out, err, pwd = run2(["sqlite3", dbname], cwd=prgpath, timeout=10, env=env, stdin=stdin,
+                    code, out, err, pwd = run2(["sqlite3", dbname], cwd=prgpath, timeout=timeout, env=env, stdin=stdin,
                                                uargs=userargs)
                 elif ttype == "psql":
                     print("psql: ", exename)
