@@ -1,5 +1,5 @@
 var modules = [];
-var timApp = angular.module('timApp', ['ngSanitize', 'angularFileUpload']);
+var timApp = angular.module('timApp', ['ngSanitize', 'ngFileUpload']);
 
 // Filter to make string URL friendly
 timApp.filter('escape', function () {
@@ -11,9 +11,9 @@ timApp.filter('escape', function () {
 
 // Controller used in document index and folders
 var angular, folder, crumbs, groups;
-timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', '$upload', '$window',
+timApp.controller("IndexCtrl", [ '$scope', '$controller', '$http', '$q', 'Upload', '$window', '$timeout',
 
-function(sc, controller, http, q, $upload, $window) {
+function(sc, controller, http, q, Upload, $window, $timeout) {
     sc.endsWith = function(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     };
@@ -116,43 +116,40 @@ function(sc, controller, http, q, $upload, $window) {
     sc.getFolders();
     sc.getDocs();
     sc.displayIndex = 0;
-    sc.m = {};
 
-    sc.selectedFile = "";
-    sc.onFileSelect = function(url, $files) {
-        // $files: an array of files selected, each file has name, size,
-        // and type.
-        sc.progress = 'Uploading... ';
-        sc.uploadInProgress = true;
-        for (var i = 0; i < $files.length; i++) {
-            var file = $files[i];
-            sc.upload = $upload.upload({
-                url : url,
-                method : 'POST',
-                file : file,
-                fields : {'folder' : sc.folder}
-            }).progress(function(evt) {
-                sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
-            }).success(function(data, status, headers, config) {
-                sc.uploadedFile = '/images/' + data.file;
-                sc.progress = 'Uploading... Done!';
-                sc.getDocs();
-                sc.uploadInProgress = false;
-            }).error(function(data, status, headers, config) {
-                sc.progress = 'Error: ' + data.error;
-                sc.uploadInProgress = false;
+    sc.onFileSelect = function(file) {
+        sc.file = file;
+        if (file) {
+            sc.file.progress = 0;
+            file.upload = Upload.upload({
+                url: '/upload/',
+                data: {
+                    file: file,
+                    folder: sc.folder
+                }
             });
-            //
+
+            file.upload.then(function (response) {
+                $timeout(function () {
+                    sc.getDocs();
+                });
+            }, function (response) {
+                if (response.status > 0)
+                    sc.file.progress = 'Error occurred: ' + response.data.error;
+            }, function (evt) {
+                sc.file.progress = Math.min(100, parseInt(100.0 *
+                    evt.loaded / evt.total));
+            });
+
+            file.upload.finally(function () {
+                sc.uploadInProgress = false;
+            })
         }
     };
 
-    sc.updateDocument = function(doc, $files) {
-        sc.onFileSelect('/update/' + doc.id + '/' + doc.versions[0].hash, $files);
-    };
-
-    sc.setCurrentDocument = function(doc) {
-        sc.m.currDoc = doc;
-        sc.progress = '';
+    sc.showUploadFn = function() {
+        sc.showUpload = true;
+        sc.file = null;
     };
 
 } ]);

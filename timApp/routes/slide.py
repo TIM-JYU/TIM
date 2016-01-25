@@ -68,7 +68,7 @@ def slide(doc_name, template_name, view_range=None, usergroup=None, teacher=Fals
                                                                   sanitize=False)
 
     modules.append("ngSanitize")
-    modules.append("angularFileUpload")
+    modules.append("ngFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
     custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
     if custom_css_files:

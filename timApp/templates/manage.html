@@ -193,10 +193,12 @@ var crumbs = getBreadcrumbs(doc.fullname);
 
     <span ng-show="readUpdating">Loading...</span>
     <form class="uploadForm margin" ng-show="!isFolder">
-        Upload a new version for this {{objName}}
+        Upload a new version for this {{ objName }}
         <div>
-            <input type="file" ng-model="fileName" ng-file-select="updateDocument(doc, $files)">
-            <span ng-bind="progress"></span>
+            <input type="file" ngf-select="updateDocument($file)">
+            <span ng-show="file.progress >= 0"
+                  ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
+            </span>
             <button id="reset" type="reset" value="Reset">Clear</button>
         </div>
     </form>
@@ -205,7 +207,7 @@ var crumbs = getBreadcrumbs(doc.fullname);
         Edit the full document
         <div>
             <textarea class="docEditor" ng-model="fulltext"></textarea>
-            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument(doc)">Save</button>
+            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
             <span ng-show="saving">Saving...</span>
         </div>
         <div><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>

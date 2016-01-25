@@ -229,8 +229,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                 user['name'] = '-'
                 user['real_name'] = 'Undisclosed student %d' % user['id']
 
-    modules.append("ngSanitize")
-    modules.append("angularFileUpload")
     prefs = timdb.users.getPrefs(getCurrentUserId())
     custom_css_files = json.loads(prefs).get('css_files', {}) if prefs is not None else {}
     if custom_css_files:

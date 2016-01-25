@@ -86,8 +86,9 @@
     <div id="pluginButtons" class="extraButtonArea hidden" ng-if="options.showPlugins"></div>
     <div id="uploadButtons" class="extraButtonArea hidden" ng-if="options.showImageUpload">
         <span>
-            Upload image: <input type="file" ng-file-select="onFileSelect('/upload/', $files)">
-            <span ng-bind="progress"></span>
+            Upload image/file: <input type="file" ngf-select="onFileSelect($file)">
+            <span ng-show="file.progress >= 0"
+                  ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'"></span>
         </span>
     </div>
     <div id="helpButtons" class="extraButtonArea hidden">

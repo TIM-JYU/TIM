@@ -2,7 +2,7 @@ var katex, $, angular, modules, MathJax;
 
 var timApp = angular.module('timApp', [
     'ngSanitize',
-    'angularFileUpload',
+    'ngFileUpload',
     'ui.ace',
     'ngStorage'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
     timLogTime("timApp config","view");
@@ -49,7 +49,6 @@ timApp.controller("ViewCtrl", [
     '$scope',
     '$http',
     '$q',
-    '$upload',
     '$injector',
     '$compile',
     '$window',
@@ -58,7 +57,7 @@ timApp.controller("ViewCtrl", [
     '$localStorage',
     '$filter',
     '$timeout',
-    function (sc, http, q, $upload, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout) {
+    function (sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout) {
         "use strict";
         timLogTime("VieCtrl start","view");
         http.defaults.headers.common.Version = $window.version.hash;

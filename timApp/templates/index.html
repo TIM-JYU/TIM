@@ -50,7 +50,7 @@
         <span ng-show="displayIndex">Welcome! Start by choosing a document to view: </span> <img
             src="{{ url_for('static', filename='images/loading.gif') }}" ng-show="!displayIndex">
 
-        <div ng-show="displayIndex == 2">
+        <div ng-show="displayIndex >= 2">
             <table ng-show="documentList.length > 0 || folderList.length > 0 || parentfolder != null">
                 <thead>
                 <tr>
@@ -107,18 +107,16 @@
             </table>
             <p ng-show="documentList.length == 0 && folderList.length == 0">There are no documents to show.</p>
             {% if session.user_id %}
-                <a ng-click="setCurrentDocument({})">Upload a new document</a>
-                <div class="uploadForm" ng-show="m.currDoc">
-                    <p ng-show="m.currDoc.id">Upload new version for document: {{ '{{ m.currDoc.name
-                    }}' }}</p>
-
-                    <p ng-show="!m.currDoc.id">Upload a new document</p>
-                    <input type="file"
-                           ng-file-select="m.currDoc.id ? updateDocument(m.currDoc, $files) : onFileSelect('/upload/', $files)">
-                    <span ng-bind="progress"></span>
+                <a ng-click="showUploadFn()">Upload a new document</a>
+                <div class="uploadForm" ng-show="showUpload">
+                    <input type="file" ngf-select="onFileSelect($file)">
+                     <span ng-show="file.progress >= 0"
+                           ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
+                     </span>
                     <button ng-disabled="uploadInProgress" type="button"
-                            ng-click="m.currDoc = 0">
-                        {{ '{{ progress && !uploadInProgress ? \'Close\' : \'Cancel\' }}' }}</button>
+                            ng-click="showUpload = false"
+                            ng-bind="file.progress && !uploadInProgress ? 'Close' : 'Cancel'">
+                    </button>
                 </div>
                 <div>
                     <a ng-show="!showControls" ng-click="showControls = true">Create a new document</a>

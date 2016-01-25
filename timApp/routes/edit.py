@@ -2,38 +2,32 @@
 from bs4 import UnicodeDammit
 from flask import Blueprint, render_template
 
-from routes import logger
-from utils import get_error_html
-from .common import *
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
-from htmlSanitize import sanitize_html
 from markdownconverter import md_to_html
-from routes.common import post_process_pars
-from timdb.docidentifier import DocIdentifier
+from routes import logger
 from timdb.timdbbase import TimDbException
+from utils import get_error_html
+from .common import *
 
 edit_page = Blueprint('edit_page',
                       __name__,
                       url_prefix='')  # TODO: Better URL prefix.
 
 
-@edit_page.route('/update/<int:doc_id>/<version>', methods=['POST'])
-def update_document(doc_id, version):
+@edit_page.route('/update/<int:doc_id>', methods=['POST'])
+def update_document(doc_id):
     """Route for updating a document as a whole.
 
     :param doc_id: The id of the document to be modified.
-    :param version: The version string of the current document version.
     :return: A JSON object containing the versions of the document.
     """
     timdb = getTimDb()
-    doc_identifier = DocIdentifier(doc_id, version)
     if not timdb.documents.exists(doc_id):
         abort(404)
     if not timdb.users.has_edit_access(getCurrentUserId(), doc_id):
         abort(403)
-    # verify_document_version(doc_id, version)
     if 'file' in request.files:
         doc = request.files['file']
         raw = doc.read()
@@ -44,15 +38,15 @@ def update_document(doc_id, version):
             content = raw.decode('utf-8')
         except UnicodeDecodeError:
             content = UnicodeDammit(raw).unicode_markup
-        original = None
-        # TODO: Include original when posting as a file
+        original = request.form['original']
+        strict_validation = not request.form.get('ignore_warnings', False)
     else:
         request_json = request.get_json()
         if 'fulltext' not in request_json:
-            return jsonResponse({'message': 'Malformed request - fulltext missing.'}, 400)
+            return abort(400, 'Malformed request - fulltext missing.')
         content = request_json['fulltext']
         original = request_json['original']
-        strict_validation = request_json.get('ignore_warnings', None) != True
+        strict_validation = not request_json.get('ignore_warnings', False)
 
     if original is None:
         abort(400, 'Missing parameter: original')
@@ -85,8 +79,6 @@ def modify_paragraph():
     verify_edit_access(doc_id)
 
     logger.log_message("Editing file: {}, paragraph {}".format(doc_id, par_id), 'INFO')
-    version = request.headers.get('Version', '')
-    # verify_document_version(doc_id, version)
     doc = get_newest_document(doc_id)
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
@@ -105,7 +97,6 @@ def modify_paragraph():
             pars = doc.get_section(new_start, new_end)
         except ValidationException as e:
             return abort(400, str(e))
-        original_par = doc.get_paragraph(new_start)
     else:
         original_par = doc.get_paragraph(par_id)
         pars = []
@@ -254,14 +245,12 @@ def add_paragraph():
     timdb = getTimDb()
     md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
     verify_edit_access(doc_id)
-    version = request.headers.get('Version', '')
     doc = get_newest_document(doc_id)
     try:
         editor_pars = get_pars_from_editor_text(doc, md)
     except ValidationException as e:
         return abort(400, str(e))
 
-    # verify_document_version(doc_id, version)
     pars = []
     separate_pars = DocumentParser(md).get_blocks()
     is_multi_block = len(separate_pars) > 1
@@ -293,9 +282,7 @@ def delete_paragraph(doc_id):
     """
     timdb = getTimDb()
     verify_edit_access(doc_id)
-    version = request.headers.get('Version', '')
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
-    # verify_document_version(doc_id, version)
     doc = get_newest_document(doc_id)
     if area_end and area_start:
         doc.delete_section(area_start, area_end)
@@ -309,6 +296,7 @@ def delete_paragraph(doc_id):
 def get_updated_pars(doc_id):
     """
     Gets updated paragraphs that were changed e.g. as the result of adding headings or modifying macros.
+    :param doc_id: The document id.
     """
     verify_view_access(doc_id)
     return par_response([], Document(doc_id), update_cache=True)

@@ -1,4 +1,4 @@
-var PermApp = angular.module('permApp', ['ngSanitize', 'angularFileUpload']);
+var PermApp = angular.module('permApp', ['ngSanitize', 'ngFileUpload']);
 
 // from https://stackoverflow.com/questions/14833326
 PermApp.directive('focusMe', function ($timeout, $parse) {
@@ -22,9 +22,10 @@ PermApp.directive('focusMe', function ($timeout, $parse) {
 PermApp.controller("PermCtrl", [
     '$scope',
     '$http',
-    '$upload',
+    'Upload',
     '$window',
-    function (sc, $http, $upload, $window) {
+    '$timeout',
+    function (sc, $http, Upload, $window, $timeout) {
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
         $http.defaults.headers.common.Version = function() {
             if ('versions' in sc.doc && sc.doc.versions.length > 0 && 'hash' in sc.doc.versions[0]) {
@@ -271,36 +272,36 @@ PermApp.controller("PermCtrl", [
             }
         };
 
-        sc.onFileSelect = function (url, $files) {
-            // $files: an array of files selected, each file has name, size,
-            // and type.
-            sc.progress = 'Uploading... ';
-            sc.uploadInProgress = true;
-            for (var i = 0; i < $files.length; i++) {
-                var file = $files[i];
-                sc.upload = $upload.upload({
-                    url: url,
-                    method: 'POST',
-                    file: file
-                }).progress(function (evt) {
-                    sc.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
-                }).success(function (data, status, headers, config) {
-                    sc.doc.versions = data;
-                    $http.get('/download/' + sc.doc.id).success(function (data) {
-                        sc.doc.fulltext = data;
-                        sc.fulltext = data;
-                        sc.progress = 'Uploading... Done!';
-                    })
-                }).error(function (data, status, headers, config) {
-                    sc.progress = 'Error occurred: ' + data.error;
-                }).then(function () {
-                    sc.uploadInProgress = false;
+        sc.updateDocument = function (file) {
+            sc.file = file;
+            if (file) {
+                sc.file.progress = 0;
+                file.upload = Upload.upload({
+                    url: '/update/' + sc.doc.id,
+                    data: {
+                        file: file,
+                        original: sc.doc.fulltext,
+                        version: sc.doc.versions[0]
+                    }
                 });
-            }
-        };
 
-        sc.updateDocument = function (doc, $files) {
-            sc.onFileSelect('/update/' + doc.id + '/' + doc.versions[0], $files);
+                file.upload.then(function (response) {
+                    $timeout(function () {
+                        sc.doc.versions = response.data.versions;
+                        sc.doc.fulltext = response.data.fulltext;
+                        sc.fulltext = response.data.fulltext;
+                    });
+                }, function (response) {
+                    if (response.status > 0)
+                        sc.file.progress = 'Error occurred: ' + response.data.error;
+                }, function (evt) {
+                    sc.file.progress = Math.min(100, parseInt(100.0 *
+                        evt.loaded / evt.total));
+                });
+
+                file.upload.finally(function () {
+                })
+            }
         };
 
         sc.convertDocument = function (doc) {
@@ -363,15 +364,16 @@ text = '\n'.join(a)
 */
             //sc.tracWikiText = text;
             sc.fulltext = text;
-        }
+        };
 
         
-        sc.saveDocument = function (doc) {
+        sc.saveDocument = function () {
             sc.saving = true;
-            $http.post('/update/' + doc.id + '/' + doc.versions[0],
+            $http.post('/update/' + sc.doc.id,
                 {
                     'fulltext': sc.fulltext,
-                    'original': sc.doc.fulltext
+                    'original': sc.doc.fulltext,
+                    'version': sc.doc.versions[0]
                 }).success(
                 function (data, status, headers, config) {
                     sc.fulltext = data.fulltext;
@@ -383,7 +385,7 @@ text = '\n'.join(a)
                     console.log(data);
                     if ('is_warning' in data && data.is_warning) {
                         if ( confirm(data.error + "\n\nDo you still wish to save the document?") ) {
-                            sc.saveDocumentWithWarnings(doc);
+                            sc.saveDocumentWithWarnings();
                         }
                     }
                     else {
@@ -392,13 +394,14 @@ text = '\n'.join(a)
                 });
         };
 
-        sc.saveDocumentWithWarnings = function (doc) {
+        sc.saveDocumentWithWarnings = function () {
             sc.saving = true;
-            $http.post('/update/' + doc.id + '/' + doc.versions[0],
+            $http.post('/update/' + sc.doc.id,
                 {
                     'fulltext': sc.fulltext,
                     'original': sc.doc.fulltext,
-                    'ignore_warnings': true
+                    'ignore_warnings': true,
+                    'version': sc.doc.versions[0]
                 }).success(
                 function (data, status, headers, config) {
                     sc.fulltext = data.fulltext;
