@@ -32,10 +32,12 @@ class TimTest(TimRouteTest):
                                         'doc_name': n
                                     }))
             doc_ids.add(doc_id + idx)
-        self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
-        self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(4, 'Logged-in users', 'view')))
-        self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
-        self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
+        self.assertDictResponse(self.ok_resp,
+                                self.json_put('/addPermission/{}/{}/{}'.format(3, 'Anonymous users', 'view')))
+        self.assertDictResponse(self.ok_resp,
+                                self.json_put('/addPermission/{}/{}/{}'.format(4, 'Logged-in users', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/addPermission/{}/{}/{}'.format(5, 'testuser2', 'view')))
+        self.assertDictResponse(self.ok_resp, self.json_put('/addPermission/{}/{}/{}'.format(6, 'testuser2', 'edit')))
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -104,7 +106,8 @@ class TimTest(TimRouteTest):
                               a.get('/note/{}'.format(test2_note_id)))
         teacher_right_docs = {6}
         for i in teacher_right_docs:
-            self.assertResponse('Success', self.json_put('/addPermission/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
+            self.assertDictResponse(self.ok_resp,
+                                    self.json_put('/addPermission/{}/{}/{}'.format(i, 'testuser2', 'teacher')))
 
         self.assertResponseStatus(self.json_post('/deleteNote', {'id': test2_note_id,
                                                                  'docId': doc_id,
@@ -198,6 +201,7 @@ class TimTest(TimRouteTest):
         self.get('/view/{}'.format(doc.doc_id))
         self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
         doc.get_index()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -18,7 +18,9 @@ class UploadTest(TimRouteTest):
         resp = self.app.post('/upload/', data={'folder': fname,
                                                'file': (io.BytesIO(b'test file'),
                                                         'test.md')})
-        self.assertDictResponse({'error': "You're not authorized to write here."}, resp, expect_status=403)
+        self.assertDictResponse({'error': 'You cannot create documents in this folder. '
+                                          'Try users/{} instead.'.format(session['user_name'])}, resp,
+                                expect_status=403)
         test1_group = db.users.get_personal_usergroup_by_id(session['user_id'])
         self.login_test3()
 
