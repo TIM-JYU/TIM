@@ -546,10 +546,10 @@ class Documents(TimDbBase):
                 if not self.exists(doc_id):
                     return None, None, None
                 doc_name = self.get_first_document_name(doc_id)
-                return doc_id, doc_name, self.get_short_name(doc_name)
+                return doc_id, doc_name, self.get_doc_title(doc_id, doc_name)
             except ValueError:
                 return None, None, None
-        return doc_id, doc_path, self.get_short_name(doc_path)
+        return doc_id, doc_path, self.get_doc_title(doc_id, doc_path)
 
     @contract
     def get_doc_title(self, doc_id: 'int', full_name: 'str|None') -> 'str|None':

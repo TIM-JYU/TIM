@@ -182,7 +182,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     user = getCurrentUserId()
 
-    if route in ('teacher', 'see_answers'):
+    teacher_or_see_answers = route in ('teacher', 'see_answers')
+    if teacher_or_see_answers:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
         if usergroup is not None:
@@ -208,7 +209,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     texts, jsPaths, cssPaths, modules = post_process_pars(doc,
                                                           xs,
-                                                          current_user if teacher or see_answers or logged_in() else None,
+                                                          current_user if teacher_or_see_answers or logged_in() else None,
                                                           sanitize=False,
                                                           do_lazy=get_option(request, "lazy", True))
 
