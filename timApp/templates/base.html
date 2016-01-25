@@ -64,19 +64,19 @@
     <div id="header">
         {% block header %}
             {% if doc %}
-                <a href="/view/{{ doc.fullname }}">View</a>
+                <a id="headerView" href="/view/{{ doc.fullname }}">View</a>
                 {% if rights.manage %}
-                    | <a href="/manage/{{ doc.fullname }}">Manage</a>
+                    | <a id="headerManage" href="/manage/{{ doc.fullname }}">Manage</a>
                 {% endif %}
                 {% if not folder %}
                     {% if rights.teacher %}
-                        | <a href="/teacher/{{ doc.fullname }}">Teacher view</a>
+                        | <a id="headerTeacher" href="/teacher/{{ doc.fullname }}">Teacher view</a>
                     {% endif %}
                     {% if rights.see_answers %}
-                        | <a href="/answers/{{ doc.fullname }}">Answers</a>
+                        | <a id="headerAnswers" href="/answers/{{ doc.fullname }}">Answers</a>
                     {% endif %}
-                        | <a href="/lecture/{{ doc.fullname }}">Lecture view</a>
-                        | <a href="/slide/{{ doc.fullname }}">Slide view</a>
+                        | <a id="headerLecture" href="/lecture/{{ doc.fullname }}">Lecture view</a>
+                        | <a id="headerSlide" href="/slide/{{ doc.fullname }}">Slide view</a>
                 {% endif %}
             {% endif %}
         {% endblock %}

@@ -7,16 +7,19 @@
  * @author Minna Lehtomäki
  * @author Juhani Sihvonen
  * @author Hannu Viinikainen
+ * @author Veli-Pekka Oksanen
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
 
-var angular, docId, lectureId, lectureCode, lectureStartTime, lectureEndTime;
+var angular, docId, lectureId, lectureCode, lectureStartTime, lectureEndTime, docName, inLecture;
 
 var timApp = angular.module('timApp');
 timApp.controller('LectureInfoController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
     "use strict";
     $scope.docId = docId;
+    $scope.docName = docName;
+    $scope.inLecture = inLecture;
     $scope.lectureId = lectureId;
     $scope.code = lectureCode;
     $scope.lectureCode = "Lecture info: " + lectureCode;
@@ -31,7 +34,6 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     $scope.showPoints = false;
     $scope.points = [];
     $scope.showLectureForm = false;
-
     /**
      * Sends http request to get info about the specific lecture.
      * @memberof module:lectureInfoController
@@ -43,6 +45,13 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
             params: {lecture_id: $scope.lectureId}
         })
             .success(function (answer) {
+
+                /*Update the header links to correct urls*/
+                $scope.updateHeaderLinks();
+                /*Add a return link icon to lecture header if user is in lecture*/
+                if($scope.inLecture) {
+                    $scope.addReturnLinkToHeader();
+                }
 
                 angular.forEach(answer.messages, function (msg) {
                     $scope.msg = $scope.msg + msg.sender + " <" + msg.time + ">: " + msg.message + "\n";
@@ -88,6 +97,35 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
      Gets the lecture info when loading page.
      */
     $scope.getLectureInfo();
+
+    /*
+     Updates the header links in base.html
+     */
+    $scope.updateHeaderLinks = function () {
+        document.getElementById("headerView").setAttribute("href", "http://" + location.host + "/view/" + window.docName);
+        document.getElementById("headerManage").setAttribute("href", "http://" + location.host + "/manage/" + window.docName);
+        document.getElementById("headerTeacher").setAttribute("href", "http://" + location.host + "/teacher/" + window.docName);
+        document.getElementById("headerAnswers").setAttribute("href", "http://" + location.host + "/answers/" + window.docName);
+        document.getElementById("headerLecture").setAttribute("href", "http://" + location.host + "/lecture/" + window.docName)
+        document.getElementById("headerSlide").setAttribute("href", "http://" + location.host + "/slide/" + window.docName);
+    };
+
+    /**
+     * Adds a header to lectureMenu that allows user to return to lecture
+     * if user is currently on the lecture.
+     */
+    $scope.addReturnLinkToHeader = function () {
+        var menu = document.getElementById("inLectureIconSection");
+        var linkToLecture = document.createElement("a");
+        linkToLecture.setAttribute("href", "http://" + location.host + "/lecture/" + window.docName + "?Lecture=" + lectureCode);
+        linkToLecture.setAttribute("title", "Return to lecture");
+        var returnImg = document.createElement("img");
+        returnImg.setAttribute("src", "/static/images/join-icon3.png");
+        returnImg.setAttribute("class", "icon");
+        returnImg.setAttribute("title", "Return to lecture");
+        linkToLecture.appendChild(returnImg);
+        menu.appendChild(linkToLecture);
+    }
 
     /**
      * Sends http request to delete the lecture.
