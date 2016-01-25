@@ -732,3 +732,7 @@ class Users(TimDbBase):
         if is_admin:
             self.addUserToAdmins(user_id)
         return user_id, user_group
+
+    @contract
+    def get_personal_usergroup_by_id(self, user_id: int) -> 'int|None':
+        return self.getPersonalUserGroup(self.getUser(user_id))

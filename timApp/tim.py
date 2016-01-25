@@ -157,9 +157,7 @@ def upload_file():
         return upload_image_or_file(file)
     filename = posixpath.join(folder, secure_filename(file.filename))
 
-    user_name = getCurrentUserName()
-    if not timdb.users.has_admin_access(getCurrentUserId()) \
-            and re.match('^users/' + user_name + '/', filename) is None:
+    if not can_write_to_folder(folder):
         abort(403, "You're not authorized to write here.")
 
     if not allowed_file(file.filename):
@@ -170,7 +168,7 @@ def upload_file():
         if not content:
             abort(400, 'Failed to convert the file to UTF-8.')
         timdb.documents.import_document(content, filename, getCurrentUserGroup())
-        return "Successfully uploaded document"
+        return okJsonResponse()
     else:
         abort(400, 'Invalid document extension')
 
@@ -1102,7 +1100,7 @@ def create_item(item_name, item_type, create_function, owner_group_id):
         if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
             abort(403, 'Item with a same name already exists.')
 
-        if not canWriteToFolder(item_name):
+        if not can_write_to_folder(item_name):
             abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
 
         item_path, _ = timdb.folders.split_location(item_name)

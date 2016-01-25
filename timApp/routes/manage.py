@@ -141,7 +141,7 @@ def add_alias(doc_id, new_alias):
 
     parent_folder, _ = timdb.folders.split_location(new_alias)
 
-    if not canWriteToFolder(parent_folder):
+    if not can_write_to_folder(parent_folder):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.folders.create(parent_folder, getCurrentUserGroup())
@@ -171,10 +171,10 @@ def change_alias(doc_id, alias):
         if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
             return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
         parent, _ = timdb.folders.split_location(alias)
-        if not canWriteToFolder(parent):
+        if not can_write_to_folder(parent):
             return jsonResponse({'message': "You don't have permission to write to the source folder."}, 403)
 
-    if not canWriteToFolder(new_parent):
+    if not can_write_to_folder(new_parent):
         return jsonResponse({'message': "You don't have permission to write to the destination folder."}, 403)
 
     timdb.folders.create(new_parent, getCurrentUserGroup())
@@ -201,7 +201,7 @@ def remove_alias(doc_id, alias):
 
     parent_folder, _ = timdb.folders.split_location(alias)
 
-    if not canWriteToFolder(parent_folder):
+    if not can_write_to_folder(parent_folder):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.documents.delete_name(doc_id, alias)
@@ -231,7 +231,7 @@ def rename_folder(doc_id):
         # Maybe do a recursive create with permission checks here later?
         return jsonResponse({'message': "The location does not exist."}, 403)
 
-    if not canWriteToFolder(parent):
+    if not can_write_to_folder(parent):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.folders.rename(doc_id, new_name)
