@@ -161,7 +161,7 @@ def logged_in():
     return getCurrentUserId() != 0
 
 
-def canWriteToFolder(folderName):
+def can_write_to_folder(folderName):
     timdb = getTimDb()
     userFolder = "users/" + getCurrentUserName()
     folder = folderName

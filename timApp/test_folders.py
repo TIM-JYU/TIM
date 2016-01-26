@@ -9,7 +9,7 @@ class FolderTest(TimRouteTest):
         fname = "users/{}/testing".format(session['user_name'])
         resp = self.json_post('/createFolder',
                               {"name": fname,
-                               "owner": db.users.getPersonalUserGroup(db.users.getUser(session['user_id']))})
+                               "owner": db.users.get_personal_usergroup_by_id(session['user_id'])})
         j = self.assertResponseStatus(resp, return_json=True)
         self.assertEqual(fname, j['name'])
         self.assertIsInstance(j['id'], int)

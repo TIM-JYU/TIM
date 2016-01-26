@@ -8,6 +8,7 @@
     <meta name="description" content="TIM - The Interactive Material."/>
     <meta name="keywords" content="tim,interactive,material"/>
     <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
+    <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU" />
 
     <title>TIM - Welcome</title>
 
@@ -34,12 +35,12 @@
     </script>
     {% if session.user_id %}
         <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
-        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
-        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular/angular.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-file-upload/angular-file-upload-all.js') }}"></script>
+        <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
+        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular/angular.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='ng-file-upload/ng-file-upload-all.min.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
         {% include 'common_head.html' %}
         {% if in_lecture %}

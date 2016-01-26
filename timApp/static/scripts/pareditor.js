@@ -2,8 +2,8 @@ var angular;
 var MENU_BUTTON_CLASS = 'menuButtons';
 var timApp = angular.module('timApp');
 
-timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window', '$localStorage',
-    function ($upload, $http, $sce, $compile, $window, $localStorage) {
+timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile', '$window', '$localStorage', '$timeout',
+    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout) {
         return {
             templateUrl: "/static/templates/parEditor.html",
             restrict: 'E',
@@ -1147,30 +1147,40 @@ timApp.directive("pareditor", ['$upload', '$http', '$sce', '$compile', '$window'
                     return (($scope.surroundedBy('*', '*') && !$scope.surroundedBy('**', '**')) || $scope.surroundedBy('***', '***'));
                 };
 
-                $scope.onFileSelect = function (url, $files) {
+                $scope.onFileSelect = function (file) {
                     if (!touchDevice) $scope.editor.focus();
-                    //$files: an array of files selected, each file has name, size, and type.
-                    for (var i = 0; i < $files.length; i++) {
-                        var file = $files[i];
-                        $scope.upload = $upload.upload({
-                            url: url,
-                            method: 'POST',
-                            file: file
-                        }).progress(function (evt) {
-                            $scope.progress = 'Uploading... ' + parseInt(100.0 * evt.loaded / evt.total) + '%';
-                        }).success(function (data, status, headers, config) {
-                            if (data.image) {
-                                $scope.uploadedFile = '/images/' + data.image;
-                                $scope.progress = 'Uploading... Done!';
-                                $scope.insertTemplate("![Image](" + $scope.uploadedFile + ")");
-                            } else {
-                                $scope.uploadedFile = '/files/' + data.file;
-                                $scope.progress = 'Uploading... Done!';
-                                $scope.insertTemplate("[File](" + $scope.uploadedFile + ")");
+                    $scope.file = file;
+                    console.log(file);
+
+                    if (file) {
+                        $scope.file.progress = 0;
+                        file.upload = Upload.upload({
+                            url: '/upload/',
+                            data: {
+                                file: file
                             }
-                        }).error(function (data, status, headers, config) {
-                            $scope.progress = 'Error while uploading: ' + data.error;
                         });
+
+                        file.upload.then(function (response) {
+                            $timeout(function () {
+                                if (response.data.image) {
+                                    $scope.uploadedFile = '/images/' + response.data.image;
+                                    $scope.insertTemplate("![Image](" + $scope.uploadedFile + ")");
+                                } else {
+                                    $scope.uploadedFile = '/files/' + response.data.file;
+                                    $scope.insertTemplate("[File](" + $scope.uploadedFile + ")");
+                                }
+                            });
+                        }, function (response) {
+                            if (response.status > 0)
+                                $scope.file.progress = 'Error occurred: ' + response.data.error;
+                        }, function (evt) {
+                                $scope.file.progress = Math.min(100, parseInt(100.0 *
+                                evt.loaded / evt.total));
+                        });
+
+                        file.upload.finally(function () {
+                        })
                     }
                 };
 

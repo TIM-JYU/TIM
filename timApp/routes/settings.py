@@ -45,4 +45,4 @@ def save_settings():
     timdb = getTimDb()
     prefs = request.get_json()
     timdb.users.setPrefs(getCurrentUserId(), json.dumps(prefs))
-    return "Success"
+    return okJsonResponse()

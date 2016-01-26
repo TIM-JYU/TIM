@@ -101,7 +101,7 @@ fi
 
 if param tim ; then
 # Start tim
-docker run --name tim -p 50001:5000 --link postgre:postgre --cpuset-cpus=0,0 -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
+docker run --name tim -p 50001:5000 --link postgre:postgre  -v /opt/tim/:/service ${DAEMON_FLAG} -t -i tim:$(./get_latest_date.sh) /bin/bash -c "cd /service/timApp && source initenv.sh ; export TIM_NAME=tim ; $TIM_SETTINGS python3 launch.py --with-gunicorn $END_SHELL"
 fi
 
 #trap '' 0

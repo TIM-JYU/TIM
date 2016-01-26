@@ -21,6 +21,7 @@ class TimRouteTest(TimDbTest):
     A base class for running tests for TIM routes.
     """
     doc_num = 1
+    ok_resp = {'status': 'ok'}
 
     @classmethod
     def setUpClass(cls):

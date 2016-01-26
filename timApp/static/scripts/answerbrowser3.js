@@ -19,8 +19,8 @@ function makeNotLazy(html) {
     return s;
 }
 
-timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '$window',
-    function ($upload, $http, $sce, $compile, $window) {
+timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$window',
+    function (Upload, $http, $sce, $compile, $window) {
         "use strict";
         timLogTime("answerbrowserlazy directive function","answ");
         return {
@@ -65,8 +65,8 @@ timApp.directive("answerbrowserlazy", ['$upload', '$http', '$sce', '$compile', '
     }]);
 
 
-timApp.directive("answerbrowser", ['$upload', '$http', '$sce', '$compile', '$window', '$filter',
-    function ($upload, $http, $sce, $compile, $window, $filter) {
+timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter',
+    function (Upload, $http, $sce, $compile, $window, $filter) {
         "use strict";
         timLogTime("answerbrowser directive function","answ");
         return {

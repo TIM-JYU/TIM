@@ -78,7 +78,7 @@ def changeOwner(doc_id, new_owner):
     if new_owner not in [group['id'] for group in possible_groups]:
         abort(403, "You must belong to the new usergroup.")
     timdb.documents.setOwner(doc_id, new_owner)
-    return "Success"
+    return okJsonResponse()
 
 
 @manage_page.route("/addPermission/<int:doc_id>/<group_name>/<perm_type>", methods=["PUT"])
@@ -99,7 +99,7 @@ def addPermission(doc_id, group_name, perm_type):
         timdb.users.grant_access(group_id, doc_id, perm_type)
     except KeyError:
         abort(400, 'Invalid permission type.')
-    return "Success"
+    return okJsonResponse()
 
 
 @manage_page.route("/removePermission/<int:doc_id>/<int:group_id>/<perm_type>", methods=["PUT"])
@@ -113,7 +113,7 @@ def removePermission(doc_id, group_id, perm_type):
         timdb.users.remove_access(group_id, doc_id, perm_type)
     except KeyError:
         abort(400, 'Unknown permission type')
-    return "Success"
+    return okJsonResponse()
 
 
 @manage_page.route("/alias/<int:doc_id>/", methods=["GET"])
@@ -141,12 +141,12 @@ def add_alias(doc_id, new_alias):
 
     parent_folder, _ = timdb.folders.split_location(new_alias)
 
-    if not canWriteToFolder(parent_folder):
+    if not can_write_to_folder(parent_folder):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.folders.create(parent_folder, getCurrentUserGroup())
     timdb.documents.add_name(doc_id, new_alias, is_public)
-    return "Success"
+    return okJsonResponse()
 
 
 @manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["POST"])
@@ -171,15 +171,15 @@ def change_alias(doc_id, alias):
         if timdb.documents.get_document_id(new_alias) is not None or timdb.folders.get_folder_id(new_alias) is not None:
             return jsonResponse({'message': 'Item with a same name already exists.'}, 403)
         parent, _ = timdb.folders.split_location(alias)
-        if not canWriteToFolder(parent):
+        if not can_write_to_folder(parent):
             return jsonResponse({'message': "You don't have permission to write to the source folder."}, 403)
 
-    if not canWriteToFolder(new_parent):
+    if not can_write_to_folder(new_parent):
         return jsonResponse({'message': "You don't have permission to write to the destination folder."}, 403)
 
     timdb.folders.create(new_parent, getCurrentUserGroup())
     timdb.documents.change_name(doc_id, alias, new_alias, is_public)
-    return "Success"
+    return okJsonResponse()
 
 
 @manage_page.route("/alias/<int:doc_id>/<path:alias>", methods=["DELETE"])
@@ -201,11 +201,11 @@ def remove_alias(doc_id, alias):
 
     parent_folder, _ = timdb.folders.split_location(alias)
 
-    if not canWriteToFolder(parent_folder):
+    if not can_write_to_folder(parent_folder):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.documents.delete_name(doc_id, alias)
-    return "Success"
+    return okJsonResponse()
 
 
 @manage_page.route("/rename/<int:doc_id>", methods=["PUT"])
@@ -231,7 +231,7 @@ def rename_folder(doc_id):
         # Maybe do a recursive create with permission checks here later?
         return jsonResponse({'message': "The location does not exist."}, 403)
 
-    if not canWriteToFolder(parent):
+    if not can_write_to_folder(parent):
         return jsonResponse({'message': "You don't have permission to write to that folder."}, 403)
 
     timdb.folders.rename(doc_id, new_name)
@@ -269,7 +269,7 @@ def deleteDocument(doc_id):
     if not timdb.users.userIsOwner(getCurrentUserId(), doc_id):
         return jsonResponse({'message': "You don't have permission to delete this document."}, 403)
     timdb.documents.delete(doc_id)
-    return "Success"
+    return okJsonResponse()
 
 
 @manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
@@ -283,4 +283,4 @@ def deleteFolder(doc_id):
         return jsonResponse({'message': "The folder is not empty. Only empty folders can be deleted."}, 403)
 
     timdb.folders.delete(doc_id)
-    return "Success"
+    return okJsonResponse()

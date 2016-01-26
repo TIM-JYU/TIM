@@ -2,7 +2,6 @@ from timroutetest import TimRouteTest
 
 
 class GroupTest(TimRouteTest):
-    ok_resp = {'status': 'ok'}
     error_resp = {'error': 'Usergroup must contain at least one digit and one letter and must '
                            'be alphanumeric.'}
 

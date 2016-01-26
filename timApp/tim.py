@@ -157,10 +157,7 @@ def upload_file():
         return upload_image_or_file(file)
     filename = posixpath.join(folder, secure_filename(file.filename))
 
-    user_name = getCurrentUserName()
-    if not timdb.users.has_admin_access(getCurrentUserId()) \
-            and re.match('^users/' + user_name + '/', filename) is None:
-        abort(403, "You're not authorized to write here.")
+    validate_item(filename, 'document', getCurrentUserGroup())
 
     if not allowed_file(file.filename):
         abort(403, 'The file format is not allowed.')
@@ -170,7 +167,7 @@ def upload_file():
         if not content:
             abort(400, 'Failed to convert the file to UTF-8.')
         timdb.documents.import_document(content, filename, getCurrentUserGroup())
-        return "Successfully uploaded document"
+        return okJsonResponse()
     else:
         abort(400, 'Invalid document extension')
 
@@ -1085,31 +1082,34 @@ def get_folders():
 
 
 def create_item(item_name, item_type, create_function, owner_group_id):
-    if not logged_in():
-        abort(403, 'You have to be logged in to create a {}.'.format(item_type))
-
-    if item_name is not None:
-        if item_name.startswith('/') or item_name.endswith('/'):
-            abort(400, 'The {} name cannot start or end with /.'.format(item_type))
-
-        if re.match('^(\d)*$', item_name) is not None:
-            abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
-
-    timdb = getTimDb()
-    username = getCurrentUserName()
-
-    if item_name is not None:
-        if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
-            abort(403, 'Item with a same name already exists.')
-
-        if not canWriteToFolder(item_name):
-            abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
-
-        item_path, _ = timdb.folders.split_location(item_name)
-        folder_id = timdb.folders.create(item_path, owner_group_id)
+    validate_item(item_name, item_type, owner_group_id)
 
     item_id = create_function(item_name, owner_group_id)
     return jsonResponse({'id': item_id, 'name': item_name})
+
+
+def validate_item(item_name, item_type, owner_group_id):
+    if not logged_in():
+        abort(403, 'You have to be logged in to create a {}.'.format(item_type))
+
+    if item_name is None:
+        return abort(400, 'item_name was None')
+
+    if item_name.startswith('/') or item_name.endswith('/'):
+        abort(400, 'The {} name cannot start or end with /.'.format(item_type))
+
+    if re.match('^(\d)*$', item_name) is not None:
+        abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
+    timdb = getTimDb()
+    username = getCurrentUserName()
+    if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
+        abort(403, 'Item with a same name already exists.')
+
+    if not can_write_to_folder(item_name):
+        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
+
+    item_path, _ = timdb.folders.split_location(item_name)
+    timdb.folders.create(item_path, owner_group_id)
 
 
 @app.route("/createDocument", methods=["POST"])
