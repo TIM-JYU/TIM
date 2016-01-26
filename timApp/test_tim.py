@@ -52,6 +52,7 @@ class TimTest(TimRouteTest):
                                                            'par': first_id}))
         self.assertInResponse(html_comment_of_test1, a.get('/view/' + doc_name))
         self.assertResponseStatus(a.get('/teacher/' + doc_name))
+        self.assertResponseStatus(a.get('/answers/' + doc_name))
         edit_text = 'testing editing now...\nnew line\n'
         par_html = md_to_html(edit_text)
         self.assertInResponse(par_html, self.post_par(doc, edit_text, first_id))

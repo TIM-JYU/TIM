@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% set teacher_mode = route == "teacher" %}
+{% set teacher_mode = route in ("teacher", "answers") %}
 {% set lecture_mode = route == "lecture" %}
 {% set slide_mode = route == "slide" %}
 

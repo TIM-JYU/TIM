@@ -67,7 +67,7 @@ def teacher_view(doc_name):
 @view_page.route("/answers/<path:doc_name>")
 def see_answers_view(doc_name):
     usergroup = request.args.get('group')
-    return view(doc_name, 'view_html.html', usergroup=usergroup, see_answers=True)
+    return view(doc_name, 'view_html.html', usergroup=usergroup, route="answers")
 
 
 @view_page.route("/lecture/<path:doc_name>")
@@ -215,8 +215,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
-    reqs = pluginControl.get_all_reqs()
-
     if hide_names_in_teacher(doc_id):
         pass
         if not timdb.users.userIsOwner(current_user['id'], doc_id)\
@@ -263,6 +261,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              group=usergroup,
                              rights=get_rights(doc_id),
                              translations=timdb.documents.get_translations(doc_id),
-                             reqs=reqs,
+                             reqs=pluginControl.get_all_reqs(),
                              settings=settings)
     return result
