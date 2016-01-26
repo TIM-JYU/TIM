@@ -182,7 +182,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     user = getCurrentUserId()
 
-    teacher_or_see_answers = route in ('teacher', 'see_answers')
+    teacher_or_see_answers = route in ('teacher', 'answers')
     if teacher_or_see_answers:
         task_ids = pluginControl.find_task_ids(xs, doc_id)
         user_list = None
