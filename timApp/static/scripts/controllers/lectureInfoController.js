@@ -102,12 +102,12 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
      Updates the header links in base.html
      */
     $scope.updateHeaderLinks = function () {
-        document.getElementById("headerView").setAttribute("href", "http://" + location.host + "/view/" + window.docName);
-        document.getElementById("headerManage").setAttribute("href", "http://" + location.host + "/manage/" + window.docName);
-        document.getElementById("headerTeacher").setAttribute("href", "http://" + location.host + "/teacher/" + window.docName);
-        document.getElementById("headerAnswers").setAttribute("href", "http://" + location.host + "/answers/" + window.docName);
-        document.getElementById("headerLecture").setAttribute("href", "http://" + location.host + "/lecture/" + window.docName)
-        document.getElementById("headerSlide").setAttribute("href", "http://" + location.host + "/slide/" + window.docName);
+        document.getElementById("headerView").setAttribute("href", "https://" + location.host + "/view/" + window.docName);
+        document.getElementById("headerManage").setAttribute("href", "https://" + location.host + "/manage/" + window.docName);
+        document.getElementById("headerTeacher").setAttribute("href", "https://" + location.host + "/teacher/" + window.docName);
+        document.getElementById("headerAnswers").setAttribute("href", "https://" + location.host + "/answers/" + window.docName);
+        document.getElementById("headerLecture").setAttribute("href", "https://" + location.host + "/lecture/" + window.docName)
+        document.getElementById("headerSlide").setAttribute("href", "https://" + location.host + "/slide/" + window.docName);
     };
 
     /**
@@ -117,7 +117,7 @@ timApp.controller('LectureInfoController', ['$scope', '$http', '$window', functi
     $scope.addReturnLinkToHeader = function () {
         var menu = document.getElementById("inLectureIconSection");
         var linkToLecture = document.createElement("a");
-        linkToLecture.setAttribute("href", "http://" + location.host + "/lecture/" + window.docName + "?Lecture=" + lectureCode);
+        linkToLecture.setAttribute("href", "https://" + location.host + "/lecture/" + window.docName + "?Lecture=" + lectureCode);
         linkToLecture.setAttribute("title", "Return to lecture");
         var returnImg = document.createElement("img");
         returnImg.setAttribute("src", "/static/images/join-icon3.png");
