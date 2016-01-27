@@ -5,8 +5,8 @@
 dockername="csPlugin"
 dockerOptions="--name $dockername -p 56000:5000 -v /var/run/docker.sock:/var/run/docker.sock -v $(which docker):/bin/docker -v /opt/cs:/cs/:ro -v /opt/cs/images/cs:/csimages/ -v /tmp/uhome:/tmp/ -w /cs cs3 /bin/bash"
 
-docker stop $dockername
-docker rm $dockername
+docker stop $dockername > /dev/null 2>&1
+docker rm $dockername > /dev/null 2>&1
 
 if [ "$2" != "p" ]
 then
@@ -31,7 +31,7 @@ sudo chmod 777 /opt/cs/images/cs
 
 sudo mkdir -p /tmp/uhome/cache
 sudo chmod 777 /tmp/uhome/cache
-rm  /tmp/uhome/cache/*
+rm /tmp/uhome/cache/* > /dev/null 2>&1
 
 sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome
 # sudo setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp/uhome/cs

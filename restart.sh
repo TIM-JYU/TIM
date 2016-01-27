@@ -26,37 +26,37 @@ function param {
 }
 
 if param tim ; then
-    docker stop tim &
+    docker stop tim > /dev/null 2>&1 &
 fi
 
 if param timbeta ; then
-    docker stop timbeta &
+    docker stop timbeta > /dev/null 2>&1 &
 fi
 
 if param timdev ; then
-    docker stop timdev &
+    docker stop timdev > /dev/null 2>&1 &
 fi
 
 if param postgre ; then
-    docker stop postgre &
+    docker stop postgre > /dev/null 2>&1 &
 fi
 wait
 
 # Remove stopped containers
 if param tim ; then
-    docker rm tim &
+    docker rm tim > /dev/null 2>&1 &
 fi
 
 if param timbeta ; then
-    docker rm timbeta &
+    docker rm timbeta > /dev/null 2>&1 &
 fi
 
 if param timdev ; then
-    docker rm timdev &
+    docker rm timdev > /dev/null 2>&1 &
 fi
 
 if param postgre ; then
-    docker rm postgre &
+    docker rm postgre > /dev/null 2>&1 &
 fi
 wait
 

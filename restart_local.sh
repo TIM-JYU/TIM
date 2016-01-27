@@ -36,30 +36,17 @@ checkdir /opt/svn $PWD/timApp/modules/svn
 checkdir /opt/cs $PWD/timApp/modules/cs
 checkdir /opt/postgre $PWD/postgresql
 
+# Stop and remove containers
 if param tim; then
-    docker stop tim &
+    docker rm -f tim > /dev/null 2>&1 &
 fi
 
 if param nginx; then
-    docker stop nginx &
+    docker rm -f nginx > /dev/null 2>&1 &
 fi
 
 if param postgre; then
-    docker stop postgre &
-fi
-wait
-
-# Remove stopped containers
-if param tim; then
-    docker rm tim &
-fi
-
-if param nginx; then
-    docker rm nginx &
-fi
-
-if param postgre; then
-    docker rm postgre &
+    docker rm -f postgre > /dev/null 2>&1 &
 fi
 wait
 

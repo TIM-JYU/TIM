@@ -3,8 +3,8 @@
 
 dockername="showFile"
 
-docker stop $dockername
-docker rm $dockername
+docker stop $dockername > /dev/null 2>&1
+docker rm $dockername > /dev/null 2>&1
 
 dockerOptions="--name $dockername -p 55000:5000 -v /tmp:/tmps/ -v /tmp/uhome:/tmp/ -v /opt/svn:/svn/:ro -w /svn svn /bin/bash"
 
