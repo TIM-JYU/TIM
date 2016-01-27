@@ -107,7 +107,8 @@ def add_logged_in_user(timdb):
     lu = timdb.users.getUserByName(LOGGED_IN_USERNAME)
     if lu is not None:
         return False
-    timdb.users.createUser(LOGGED_IN_USERNAME, LOGGED_IN_USERNAME, '')
+    uid = timdb.users.createUser(LOGGED_IN_USERNAME, LOGGED_IN_USERNAME, '')
+    timdb.users.addUserToGroup(timdb.users.get_logged_group_id(), uid)
     return True
 
 
