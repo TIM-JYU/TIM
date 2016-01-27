@@ -1,12 +1,9 @@
-from pprint import pprint
-
 import datetime
-
 import json
+
 from flask import session
 from lxml import html
 
-from timdb.users import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME
 from timroutetest import TimRouteTest
 
 
