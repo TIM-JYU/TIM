@@ -53,7 +53,12 @@
     <div class="parContent"{% if t.attrs.taskId %} id="{{ t.attrs.taskId }}"{% endif %}>
         {{ t.html|safe }}
     </div>
-
+    {% if t.attrs.rl == 'force' or not (not t.attrs.rd or t.attrs.rl == 'no') %}
+        <a class="parlink"
+           href="/view/{{ t.ref_doc_id }}#{{ t.ref_id }}"
+           data-docid="{{ t.ref_doc_id }}" data-parid="{{ t.ref_id }}">
+            <sup>[*]</sup></a>
+    {% endif %}
     {% if t.attrs.area_end == area %}
         {% set area = none %}
     {% endif %}
@@ -72,8 +77,10 @@
     {% endif %}
 
     {{ editline|safe }}
-    <div class="{{ ['readline', t.status]|join(' ')|trim }}"
-         title="Click to mark this paragraph as read"></div>
+        {% if not disable_read_markings %}
+            <div class="{{ ['readline', t.status]|join(' ')|trim }}"
+                     title="Click to mark this paragraph as read"></div>
+        {% endif %}
     {% if t.notes %}
         <div class="notes">
             {% for note in t.notes %}

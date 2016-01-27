@@ -317,7 +317,8 @@ ul ul ul, ol ol ol {
 .par > .headerlink {
     font-size: large;
     position: relative;
-    right: -0.5em;
+    right: -0.8em;
+    top: 0.5em;
 }
 
 *:hover > .headerlink {
@@ -712,6 +713,13 @@ p.kannentiedotoikea-western {
 .par blockquote {
     margin-left: 1.5cm;
     margin-right: 1.5cm;
+}
+
+.parlink {
+    float: right;
+    position: absolute;
+    top: 0;
+    right: -15px;
 }
 
 /*Georgia, - huonot numerot pystysuunnassa*/

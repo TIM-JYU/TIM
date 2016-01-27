@@ -11,6 +11,7 @@ timApp.directive('refPopup', ['$window', '$filter', '$http', function ($window, 
         replace: true,
 
         link: function ($scope, $element, $attrs) {
+            $scope.loaded = false;
             if ('docid' in $attrs && 'parid' in $attrs) {
                 //$scope.ref_docid = $attrs.docid;
                 //$scope.ref_parid = $attrs.parid;

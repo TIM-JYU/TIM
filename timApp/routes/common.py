@@ -245,7 +245,7 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False):
+def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True):
     timdb = getTimDb()
     html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
                                                                       pars,
@@ -253,7 +253,8 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
                                                                       timdb.answers,
                                                                       sanitize=sanitize,
                                                                       do_lazy=do_lazy,
-                                                                      edit_window=edit_window)
+                                                                      edit_window=edit_window,
+                                                                      load_states=load_plugin_states)
     #req_json = request.get_json()
 
     #if req_json is not None and 'ref-id' in req_json and req_json['ref-id'] != '':

@@ -599,7 +599,7 @@ class DocParagraph(DocParagraphBase):
                 'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in cycle)))
         cycle.append(par_doc_id)
 
-        def reference_par(ref_par, write_link=False):
+        def reference_par(ref_par):
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
             md = self.get_markdown() if tr else ref_par.get_markdown()
@@ -616,20 +616,10 @@ class DocParagraph(DocParagraphBase):
                 # if html is empty, use the source
                 if html == '':
                     html = ref_par.get_html()
-                if write_link:
-                    srclink = """&nbsp;
-                                    <a class="parlink"
-                                       href="/view/{0}#{1}"
-                                       data-docid="{0}" data-parid="{1}"
-                                       <sup>[*]</sup></a>
-                                 </p>
-                              """.format(ref_par.get_doc_id(), ref_par.get_id())
-                    html = self.__rrepl(html, '</p>', srclink)
                 par.__set_html(html)
             return par
 
         attrs = self.get_attrs()
-        is_default_rd = False
         if 'rd' in attrs:
             try:
                 ref_docid = int(attrs['rd'])
@@ -641,7 +631,6 @@ class DocParagraph(DocParagraphBase):
             else:
                 settings = self.doc.get_settings()
                 default_rd = settings.get_source_document()
-            is_default_rd = True
             if default_rd is None:
                 raise TimDbException('Source document for reference not specified.')
             ref_docid = default_rd
@@ -654,9 +643,6 @@ class DocParagraph(DocParagraphBase):
 
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
-
-        rl_attr = attrs.get('rl', 'all')
-        write_link = (rl_attr == 'force') or not (is_default_rd or (rl_attr == 'no'))
 
         if self.is_par_reference():
             if not ref_doc.has_paragraph(attrs['rp']):
@@ -682,10 +668,10 @@ class DocParagraph(DocParagraphBase):
                 else:
                     ref_pars.append(p)
             if tr_get_one and attrs.get('r', None) == 'tr' and len(ref_pars) > 0:
-                return [reference_par(ref_pars[0], write_link=write_link)]
+                return [reference_par(ref_pars[0])]
         else:
             assert False
-        return [reference_par(ref_par, write_link=write_link) for ref_par in ref_pars]
+        return [reference_par(ref_par) for ref_par in ref_pars]
 
     def set_original(self, orig):
         self.original = orig

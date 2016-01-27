@@ -64,7 +64,8 @@ def pluginify(doc,
               custom_state=None,
               sanitize=True,
               do_lazy=False,
-              edit_window=False):
+              edit_window=False,
+              load_states=True):
     """ "Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding
         plugin route for each plugin paragraph.
 
@@ -112,7 +113,7 @@ def pluginify(doc,
             vals['markup']["user_id"] = user['name'] if user is not None else 'Anonymous'
             task_id = "{}.{}".format(block.get_doc_id(), attr_taskId)
 
-            if custom_state is not None:
+            if load_states and custom_state is not None:
                 state = try_load_json(custom_state)
             else:
                 state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx}
@@ -123,7 +124,7 @@ def pluginify(doc,
                                          "doLazy": do_lazy,
                                          "anonymous": user is not None}
 
-    if custom_state is None and user is not None:
+    if load_states and custom_state is None and user is not None:
         answers = answer_db.get_newest_answers(user['id'], list(state_map.keys()))
         for answer in answers:
             state = try_load_json(answer['content'])

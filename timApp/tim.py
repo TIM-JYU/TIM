@@ -43,6 +43,7 @@ from routes.view import view_page
 from routes.slide import slide_page
 from routes.login import login_page
 from routes.logger import logger_bp
+from routes.search import search_routes
 from timdb.timdbbase import TimDbException
 from plugin import PluginException
 from routes.settings import settings_page
@@ -56,6 +57,9 @@ from models import db
 
 cache.init_app(app)
 
+with app.app_context():
+    cache.clear()
+
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
@@ -65,6 +69,7 @@ app.register_blueprint(login_page)
 app.register_blueprint(logger_bp)
 app.register_blueprint(answers)
 app.register_blueprint(groups)
+app.register_blueprint(search_routes)
 app.register_blueprint(Blueprint('bower',
                                  __name__,
                                  static_folder='static/scripts/bower_components',

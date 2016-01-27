@@ -1085,14 +1085,14 @@ timApp.controller("ViewCtrl", [
         sc.onMouseOver('.parlink', function ($this, e) {
             sc.over_reflink = true;
 
-            var $par = $this.parent();
-            var coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+            var $par = $this.parents('.par').find('.parContent');
+            var coords = {left: e.pageX - $par.offset().left + 10, top: e.pageY - $par.offset().top + 10};
             var params;
 
             try {
                 params = {
-                    docid: e.target.attributes['data-docid'].value,
-                    parid: e.target.attributes['data-parid'].value
+                    docid: $this[0].attributes['data-docid'].value,
+                    parid: $this[0].attributes['data-parid'].value
                 };
             } catch (TypeError) {
                 // The element was modified
@@ -1126,7 +1126,7 @@ timApp.controller("ViewCtrl", [
                 }
             }
 
-            $ref.prepend($popup); // need to prepend to DOM before compiling
+            $ref.parent().prepend($popup); // need to prepend to DOM before compiling
             $compile($popup[0])(sc);
             return $popup;
         };
