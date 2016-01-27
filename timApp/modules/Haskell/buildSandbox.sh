@@ -14,16 +14,16 @@ fi
 gitGet () {
     if [ ! -d "$1" ]; 
      then
-         git clone $2 $1 #http://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/PluginConstructionKit.git
+         git clone $2 $1
      else
          if [ ! -d "$1/.git" ];
           then
             mv $1 orig-$1
             git clone $2 $1
-            cp -r orig-$1 $1
+            cp -a orig-$1/. $1
             rm -rf orig-$1
           else
-            (cd $1 && git fetch && git merge origin/master)
+            (cd $1 && git stash && git pull && (git stash pop || true))
          fi
     fi
 }

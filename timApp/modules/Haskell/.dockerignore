@@ -1,2 +1,4 @@
 .cabal-sandbox/
 dist/
+Choices/
+PluginConstructionKit/
