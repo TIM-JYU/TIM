@@ -23,7 +23,7 @@ class DocumentTest(TimDbTest):
         self.get_db().documents.create(str(d.doc_id), 0, d.doc_id)
         db.close()
         return d
-    
+
     def add_pars(self, d, num_docs):
         pars = [d.add_paragraph(random_paragraph()).get_id() for _ in range(0, num_docs)]
         self.assertEqual((num_docs, 0), d.get_version())
@@ -47,7 +47,7 @@ class DocumentTest(TimDbTest):
 
     def test_addparagraph(self):
         d = self.init_testdoc()
-       
+
         # Add first paragraph
         par1 = d.add_paragraph('testing')
         self.assertEqual('testing', par1.get_markdown())
@@ -112,9 +112,9 @@ class DocumentTest(TimDbTest):
 
         # Delete last paragraph
         n = len(pars)
-        d.delete_paragraph(pars[n-1])
-        self.assertFalse(d.has_paragraph(pars[n-1]))
-        pars.remove(pars[n-1])
+        d.delete_paragraph(pars[n - 1])
+        self.assertFalse(d.has_paragraph(pars[n - 1]))
+        pars.remove(pars[n - 1])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
         self.assertEqual(13, len(d.get_changelog()))
@@ -146,7 +146,7 @@ class DocumentTest(TimDbTest):
 
     def test_get_html(self):
         d = self.init_testdoc()
-        
+
         par1 = d.add_paragraph('just text')
         self.assertEqual('<p>just text</p>', par1.get_html())
 
@@ -157,7 +157,7 @@ class DocumentTest(TimDbTest):
         d = self.init_testdoc()
         pars = [d.add_paragraph(random_paragraph()) for _ in range(0, 10)]
         self.assertEqual((10, 0), d.get_version())
-        
+
         par2_id = pars[2].get_id()
         par2_hash = pars[2].get_hash()
         old_md = pars[2].get_markdown()
@@ -289,6 +289,7 @@ class DocumentTest(TimDbTest):
                                                   'Multiple choice plugin example',
                                                   anon_group)
         timdb.close()
+
 
 if __name__ == '__main__':
     unittest.main()
