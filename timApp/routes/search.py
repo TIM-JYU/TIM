@@ -25,14 +25,14 @@ def search(query):
     timdb = getTimDb()
     docs = timdb.documents.get_documents()
     viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
-    allowed_docs = [doc for doc in docs if doc['id'] in viewable]
+    allowed_docs = set(doc['id'] for doc in docs if doc['id'] in viewable)
     current_user = get_current_user()
     all_texts = []
     all_js = []
     all_css = []
     all_modules = []
-    for d in allowed_docs:
-        doc = Document(d['id'])
+    for doc_id in allowed_docs:
+        doc = Document(doc_id)
         pars = doc.get_paragraphs()
         found_pars = []
         for t in pars:
