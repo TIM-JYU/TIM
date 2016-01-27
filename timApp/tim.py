@@ -194,13 +194,13 @@ def upload_image_or_file(image_file):
         img_id, img_filename = timdb.images.saveImage(content,
                                                       secure_filename(image_file.filename),
                                                       getCurrentUserGroup())
-        timdb.users.grantViewAccess(timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME), img_id)  # So far everyone can see all images
+        timdb.users.grantViewAccess(timdb.users.get_anon_group_id(), img_id)  # So far everyone can see all images
         return jsonResponse({"image": str(img_id) + '/' + img_filename})
     else:
         file_id, file_filename = timdb.files.saveFile(content,
                                                       secure_filename(image_file.filename),
                                                       getCurrentUserGroup())
-        timdb.users.grantViewAccess(timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME), file_id)  # So far everyone can see all files
+        timdb.users.grantViewAccess(timdb.users.get_anon_group_id(), file_id)  # So far everyone can see all files
         return jsonResponse({"file": str(file_id) + '/' + file_filename})
 
 
@@ -1033,7 +1033,8 @@ def uploaded_file(filename):
 def get_documents():
     timdb = getTimDb()
     docs = timdb.documents.get_documents()
-    allowed_docs = [doc for doc in docs if timdb.users.has_view_access(getCurrentUserId(), doc['id'])]
+    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
+    allowed_docs = [doc for doc in docs if doc['id'] in viewable]
 
     req_folder = request.args.get('folder')
     if req_folder is not None and len(req_folder) == 0:
@@ -1070,11 +1071,12 @@ def get_folders():
     root_path = request.args.get('root_path')
     timdb = getTimDb()
     folders = timdb.folders.get_folders(root_path)
-    allowed_folders = [f for f in folders if timdb.users.has_view_access(getCurrentUserId(), f['id'])]
+    viewable = timdb.users.get_viewable_blocks(getCurrentUserId())
+    allowed_folders = [f for f in folders if f['id'] in viewable]
     uid = getCurrentUserId()
-
+    is_admin = timdb.users.has_admin_access(uid)
     for f in allowed_folders:
-        f['isOwner'] = timdb.users.userIsOwner(uid, f['id']) or timdb.users.has_admin_access(uid)
+        f['isOwner'] = is_admin or timdb.users.userIsOwner(uid, f['id'])
         f['owner'] = timdb.users.getOwnerGroup(f['id'])
 
     allowed_folders.sort(key=lambda f: f['name'].lower())

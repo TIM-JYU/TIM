@@ -371,4 +371,4 @@ CREATE TABLE Version (
   updated_on TIMESTAMP
 );
 
-INSERT INTO Version(id, updated_on) VALUES (5, CURRENT_TIMESTAMP);
+INSERT INTO Version(id, updated_on) VALUES (6, CURRENT_TIMESTAMP);

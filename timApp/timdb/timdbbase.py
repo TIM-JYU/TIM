@@ -44,6 +44,10 @@ class TimDbBase(object):
         self.db = db
 
     @contract
+    def get_sql_template(self, value_list: list):
+        return ','.join('?' * len(value_list))
+
+    @contract
     def insertBlockToDb(self, name: 'str|None', owner_group_id: 'int', block_type: 'int', block_id: 'int|None'=None) -> 'int':
         """Inserts a block to database.
 

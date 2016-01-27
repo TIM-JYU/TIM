@@ -11,7 +11,7 @@ from tim_app import app
 from timdb.docidentifier import DocIdentifier
 from timdb.timdb2 import TimDb
 from timdb.timdbbase import blocktypes
-from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME
+from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME, LOGGED_IN_USERNAME
 
 
 def postgre_create_database(db_name):
@@ -44,7 +44,7 @@ def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files',
     timdb = TimDb(db_path=db_path, files_root_path=files_root_path)
     timdb.initialize_tables()
     timdb.users.createAnonymousAndLoggedInUserGroups()
-    anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
+    anon_group = timdb.users.get_anon_group_id()
     timdb.users.create_user_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
     timdb.users.create_user_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
     timdb.users.create_user_with_group('testuser1', 'Test user 1', 'test1@example.com', password='test1pass')
@@ -84,11 +84,12 @@ def update_database():
                    1: update_answers,
                    2: update_rights,
                    3: add_seeanswers_right,
-                   4: add_translation_table}
+                   4: add_translation_table,
+                   5: add_logged_in_user}
     while ver in update_dict:
         # TODO: Take automatic backup of the db (tim_files) before updating
         print('Starting update {}'.format(update_dict[ver].__name__))
-        result = update_dict[ver]()
+        result = update_dict[ver](timdb)
         if not result:
             print('Update {} was skipped.'.format(update_dict[ver].__name__))
         else:
@@ -99,10 +100,18 @@ def update_database():
         print('Database is up to date.')
     else:
         print('Database was updated from version {} to {}.'.format(ver_old, ver))
+    timdb.close()
 
 
-def add_translation_table():
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+def add_logged_in_user(timdb):
+    lu = timdb.users.getUserByName(LOGGED_IN_USERNAME)
+    if lu is not None:
+        return False
+    timdb.users.createUser(LOGGED_IN_USERNAME, LOGGED_IN_USERNAME, '')
+    return True
+
+
+def add_translation_table(timdb):
     if timdb.table_exists('Translation'):
         return False
     timdb.execute_sql("""
@@ -130,16 +139,14 @@ CREATE TABLE Translation (
     return True
 
 
-def add_seeanswers_right():
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+def add_seeanswers_right(timdb):
     timdb.execute_sql("""
 INSERT INTO AccessType(name) VALUES ('see answers')
     """)
     return True
 
 
-def update_rights():
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+def update_rights(timdb):
     timdb.execute_sql("""
 BEGIN TRANSACTION;
 
@@ -197,8 +204,7 @@ COMMIT TRANSACTION;
     return True
 
 
-def update_datamodel():
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+def update_datamodel(timdb):
     if not timdb.table_exists('Folder'):
         print('Executing SQL script update_to_datamodel...', end="", flush=True)
         timdb.execute_script('sql/update_to_datamodel.sql')
@@ -236,8 +242,7 @@ INSERT INTO Version(updated_on, id) VALUES (CURRENT_TIMESTAMP, 0);
     return True
 
 
-def update_answers():
-    timdb = TimDb(db_path='tim_files/tim.db', files_root_path='tim_files')
+def update_answers(timdb):
     timdb.execute_sql("""ALTER TABLE Answer ADD COLUMN valid BOOLEAN""")
     timdb.execute_sql("""UPDATE Answer SET valid = 1 WHERE id IN
 (SELECT Answer.id

@@ -57,13 +57,13 @@ class PluginTest(TimRouteTest):
         resp = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
         answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)  # type: list(dict)
         self.assertListEqual(
-                [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 3}], 'content': '[true, true, true]',
+                [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
                   'id': 4, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1},
-                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 3}], 'content': '[true, false, false]',
+                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
                   'id': 3, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 0},
-                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 3}], 'content': '[true, true, false]',
+                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, false]',
                   'id': 2, 'points': '1', 'task_id': '3.mmcqexample', 'valid': 1},
-                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 3}], 'content': '[true, false, false]',
+                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
                   'id': 1, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1}],
                 [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in answer_list])
         for ans in answer_list:
@@ -88,7 +88,7 @@ class PluginTest(TimRouteTest):
                                       "reason.&lt;/p&gt;&quot;}]}}'></mmcq></div>"}, j)
 
         timdb = self.get_db()
-        timdb.users.grant_access(timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME), doc.doc_id, 'view')
+        timdb.users.grant_access(timdb.users.get_anon_group_id(), doc.doc_id, 'view')
 
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False})
         plugs = tree.findall(mmcq_xpath)
@@ -99,8 +99,10 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, False])
         self.check_ok_answer(resp)
 
-        anon_answers = timdb.answers.get_answers(timdb.users.getUserByName(ANONYMOUS_USERNAME), task_id)
-        self.assertListEqual([{'collaborators': [{'real_name': None, 'user_id': 0}],
+        anon_id = timdb.users.get_anon_user_id()
+        anon_answers = timdb.answers.get_answers(anon_id, task_id)
+
+        self.assertListEqual([{'collaborators': [{'real_name': None, 'user_id': anon_id}],
                                'content': '[true, false, false]',
                                'id': 5,
                                'points': '2',
@@ -109,12 +111,12 @@ class PluginTest(TimRouteTest):
                              [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in anon_answers])
 
         self.assertResponseStatus(self.app.get('/getState',
-                                               query_string={'user_id': 0,
+                                               query_string={'user_id': anon_id,
                                                              'answer_id': answer_list[0]['id'],
                                                              'par_id': par_id,
                                                              'doc_id': doc.doc_id}), expect_status=403)
         self.assertResponseStatus(self.app.get('/getState',
-                                               query_string={'user_id': 0,
+                                               query_string={'user_id': anon_id,
                                                              'answer_id': anon_answers[0]['id'],
                                                              'par_id': par_id,
                                                              'doc_id': doc.doc_id}), expect_status=403)

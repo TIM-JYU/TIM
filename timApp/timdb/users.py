@@ -11,9 +11,16 @@ ANONYMOUS_USERNAME = "Anonymous"
 ANONYMOUS_GROUPNAME = "Anonymous users"
 KORPPI_GROUPNAME = "Korppi users"
 LOGGED_IN_GROUPNAME = "Logged-in users"
+LOGGED_IN_USERNAME = "Logged-in user"
 ADMIN_GROUPNAME = "Administrators"
 
 SPECIAL_GROUPS = {ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, ADMIN_GROUPNAME}
+
+# These will be cached in memory to reduce amount of db load
+ANON_USER_ID = None
+LOGGED_USER_ID = None
+ANON_GROUP_ID = None
+LOGGED_GROUP_ID = None
 
 
 class Users(TimDbBase):
@@ -30,19 +37,23 @@ class Users(TimDbBase):
         # Please keep these local and refer to the groups with their names instead.
         # They may differ depending on the script version they were created with.
         ANONYMOUS_USERID = 0
-        ANONYMOUS_GROUPID = 2
+        LOGGED_IN_USERID = 1
         LOGGED_IN_GROUPID = 0
+        ANONYMOUS_GROUPID = 2
         KORPPI_GROUPID = 3
         ADMIN_GROUPID = 4
 
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [0, ANONYMOUS_USERNAME])
+        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [ANONYMOUS_USERID, ANONYMOUS_USERNAME])
+        cursor.execute('INSERT INTO User (id, name) VALUES (?, ?)', [LOGGED_IN_USERID, LOGGED_IN_USERNAME])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)',
-                       [ANONYMOUS_USERID, ANONYMOUS_GROUPID])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [KORPPI_GROUPID, KORPPI_GROUPNAME])
         cursor.execute('INSERT INTO UserGroup (id, name) VALUES (?, ?)', [ADMIN_GROUPID, ADMIN_GROUPNAME])
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)',
+                       [ANONYMOUS_USERID, ANONYMOUS_GROUPID])
+        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (?, ?)',
+                       [LOGGED_IN_USERID, LOGGED_IN_GROUPID])
         self.db.commit()
         return 0
 
@@ -582,22 +593,52 @@ class Users(TimDbBase):
                   false otherwise.
         """
 
-        if self.userIsOwner(user_id, block_id):
-            return True
-        for access_id in access_ids:
-            if self.checkUserGroupAccess(block_id, self.getUserGroupByName(ANONYMOUS_GROUPNAME), access_id):
-                return True
-            if user_id > 0 and self.checkUserGroupAccess(block_id, self.getUserGroupByName(LOGGED_IN_GROUPNAME), access_id):
-                return True
-            result = self.db.execute("""SELECT id FROM User WHERE
-                              id = ?
-                              AND User.id IN
-                                  (SELECT User_id FROM UserGroupMember WHERE UserGroup_id IN
-                                      (SELECT UserGroup_id FROM BlockAccess WHERE Block_id = ? AND type = ?))
-                              """, [user_id, block_id, access_id]).fetchone()
-            if result is not None:
-                return True
-        return False
+        user_ids = [user_id, self.get_anon_user_id()]
+        if user_id > 0:
+            user_ids.append(self.get_logged_user_id())
+        whole_sql = """
+{} INTERSECT
+SELECT User_id
+FROM UserGroupMember
+WHERE UserGroup_id IN
+      (SELECT UserGroup_id
+       FROM BlockAccess
+       WHERE Block_id = ? AND type IN ({})
+       UNION SELECT UserGroup_id
+             FROM Block
+             WHERE id = ?
+      )
+""".format(' UNION '.join('SELECT ' + str(x) for x in user_ids), ','.join('?' * len(access_ids)))
+        result = self.db.execute(whole_sql, [block_id] + list(access_ids) + [block_id]).fetchone()
+        return result is not None
+
+    @contract
+    def get_accessible_blocks(self, user_id: int, access_types: 'list(int)') -> 'set(int)':
+        user_ids = [user_id, self.get_anon_user_id()]
+        if user_id > 0:
+            user_ids.append(self.get_logged_user_id())
+        r = self.db.execute("""
+SELECT Block_id as id FROM BlockAccess
+WHERE UserGroup_id IN (SELECT UserGroup_id
+FROM UserGroupMember
+WHERE User_id IN ({}))
+  AND type IN ({})
+UNION
+SELECT id FROM Block
+WHERE UserGroup_id IN (SELECT UserGroup_id
+FROM UserGroupMember
+WHERE User_id IN ({}))
+        """.format(self.get_sql_template(user_ids),
+                   self.get_sql_template(access_types),
+                   self.get_sql_template(user_ids)), user_ids + access_types + user_ids)
+        return set(row[0] for row in r.fetchall())
+
+    def get_viewable_blocks(self, user_id: int) -> 'set(int)':
+        return self.get_accessible_blocks(user_id, [self.get_view_access_id(),
+                                                    self.get_edit_access_id(),
+                                                    self.get_manage_access_id(),
+                                                    self.get_teacher_access_id(),
+                                                    self.get_seeanswers_access_id()])
 
     @contract
     def has_edit_access(self, user_id: 'int', block_id: 'int') -> 'bool':
@@ -736,3 +777,35 @@ class Users(TimDbBase):
     @contract
     def get_personal_usergroup_by_id(self, user_id: int) -> 'int|None':
         return self.getPersonalUserGroup(self.getUser(user_id))
+
+    @contract
+    def get_anon_user_id(self) -> int:
+        global ANON_USER_ID
+        if ANON_USER_ID is not None:
+            return ANON_USER_ID
+        ANON_USER_ID = self.getUserByName(ANONYMOUS_USERNAME)
+        return ANON_USER_ID
+
+    @contract
+    def get_logged_user_id(self) -> int:
+        global LOGGED_USER_ID
+        if LOGGED_USER_ID is not None:
+            return LOGGED_USER_ID
+        LOGGED_USER_ID = self.getUserByName(LOGGED_IN_USERNAME)
+        return LOGGED_USER_ID
+
+    @contract
+    def get_anon_group_id(self) -> int:
+        global ANON_GROUP_ID
+        if ANON_GROUP_ID is not None:
+            return ANON_GROUP_ID
+        ANON_GROUP_ID = self.getUserGroupByName(ANONYMOUS_GROUPNAME)
+        return ANON_GROUP_ID
+
+    @contract
+    def get_logged_group_id(self) -> int:
+        global LOGGED_GROUP_ID
+        if LOGGED_GROUP_ID is not None:
+            return LOGGED_GROUP_ID
+        LOGGED_GROUP_ID = self.getUserGroupByName(LOGGED_IN_GROUPNAME)
+        return LOGGED_GROUP_ID

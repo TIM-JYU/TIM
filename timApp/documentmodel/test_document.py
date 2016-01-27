@@ -283,11 +283,9 @@ class DocumentTest(TimDbTest):
 
     def test_import(self):
         timdb = self.get_db()
-        from timdb.users import ANONYMOUS_GROUPNAME
-        anon_group = timdb.users.getUserGroupByName(ANONYMOUS_GROUPNAME)
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
                                                   'Multiple choice plugin example',
-                                                  anon_group)
+                                                  timdb.users.get_anon_group_id())
         timdb.close()
 
 
