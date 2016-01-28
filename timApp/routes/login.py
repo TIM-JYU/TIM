@@ -55,15 +55,18 @@ def logout():
     session.pop('appcookie', None)
     session.pop('altlogin', None)
     session.pop('came_from', None)
+    session.pop('last_doc', None)
     session.pop('anchor', None)
     session['user_name'] = 'Anonymous'
     return redirect(url_for('start_page'))
 
+
 @login_page.route("/login")
 def login():
+    save_came_from()
     if logged_in():
         flash('You are already logged in.')
-        return safe_redirect(session.get('last_doc', '/'))
+        return safe_redirect(session.get('came_from', '/'))
     if request.args.get('korppiLogin'):
         return loginWithKorppi()
     elif request.args.get('emailLogin'):
@@ -277,28 +280,20 @@ def testuser(anything=None):
 
 
 def save_came_from():
-    if session.get('last_doc') is not None:
-        session['came_from'] = session.get('last_doc')
-    if request.args.get('came_from'):
-        session['came_from'] = request.args.get('came_from')
-    if request.args.get('anchor'):
-        session['anchor'] = request.args.get('anchor', '')
-    if request.form.get('came_from'):
-        session['came_from'] = request.form.get('came_from')
-    if request.form.get('anchor'):
-        session['anchor'] = request.form.get('anchor', '')
+    came_from = request.args.get('came_from') or request.form.get('came_from')
+    if came_from:
+        session['came_from'] = came_from
+        session['last_doc'] = came_from
+    else:
+        session['came_from'] = session.get('last_doc', '/')
+    session['anchor'] = request.args.get('anchor') or request.form.get('anchor') or ''
 
 
 def finishLogin(ready=True):
     anchor = session.get('anchor', '')
     if anchor:
         anchor = "#" + anchor
-    came_from = session.get('came_from')
-    if came_from is None:
-        came_from = session.get('last_doc', '/')
-    #if ready:
-    #    session.pop('anchor', '')
-    #    session['came_from'] = '/view/'
+    came_from = session.get('came_from', '/')
     return safe_redirect(came_from + anchor)
 
 
