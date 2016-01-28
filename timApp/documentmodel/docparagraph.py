@@ -463,16 +463,32 @@ class DocParagraph(DocParagraphBase):
         elif attr_name == 'rp' or attr_name == 'ra':
             self.__is_ref = self.is_par_reference() or self.is_area_reference()
 
+    @classmethod
     @contract
-    def get_attrs(self) -> 'dict':
-        return self.__data['attrs']
+    def __combine_md(cls, base_md: 'str|None', over_md: 'str') -> 'str':
+        if base_md is None:
+            return over_md
+
+        # TODO: combine element by element
+        return base_md if over_md == '' else over_md
+
+    @classmethod
+    @contract
+    def __combine_dict(cls, base_dict: 'dict|None', over_dict: 'dict') -> 'dict':
+        if base_dict is None:
+            return over_dict
+        new_dict = dict(base_dict)
+        for key in over_dict:
+            new_dict[key] = over_dict[key]
+        return new_dict
 
     @contract
-    def get_properties(self) -> 'dict':
-        if 'props' in self.__data:
-            return self.__data['props']
-        else:
-            return {}
+    def get_attrs(self, base_attrs: 'dict|None' = None) -> 'dict':
+        return DocParagraph.__combine_dict(base_attrs, self.__data['attrs'])
+
+    @contract
+    def get_properties(self, base_props: 'dict|None' = None) -> 'dict':
+        return DocParagraph.__combine_dict(base_props, self.__data.get('props', {}))
 
     @contract
     def is_multi_block(self) -> 'bool':
@@ -602,9 +618,12 @@ class DocParagraph(DocParagraphBase):
         def reference_par(ref_par):
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
-            md = self.get_markdown() if tr else ref_par.get_markdown()
-            attrs = self.get_attrs() if tr else ref_par.get_attrs()
-            props = self.get_properties() if tr else ref_par.get_properties()
+            if ref_par.is_plugin():
+                md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown())
+            else:
+                md = self.get_markdown() if tr else ref_par.get_markdown()
+            attrs = self.get_attrs(ref_par.get_attrs()) if tr else ref_par.get_attrs()
+            props = self.get_properties(ref_par.get_properties()) if tr else ref_par.get_properties()
 
             par = DocParagraph.create(doc, par_id=ref_par.get_id(), md=md, t=ref_par.get_hash(),
                                            attrs=attrs, props=props)
