@@ -638,27 +638,26 @@ class DocParagraph(DocParagraphBase):
                 par.__set_html(html)
             return par
 
+        ref_docid = None
+        ref_doc = None
+
         attrs = self.get_attrs()
         if 'rd' in attrs:
             try:
                 ref_docid = int(attrs['rd'])
             except ValueError as e:
                 raise TimDbException('Invalid reference document id: "{}"'.format(attrs['rd']))
+        elif source_doc is not None:
+            ref_doc = source_doc
         else:
-            if source_doc is not None:
-                default_rd = source_doc.doc_id
-            else:
-                settings = self.doc.get_settings()
-                default_rd = settings.get_source_document()
-            if default_rd is None:
-                raise TimDbException('Source document for reference not specified.')
-            ref_docid = default_rd
+            settings = self.doc.get_settings()
+            ref_docid = settings.get_source_document()
 
-        if source_doc is None:
+        if ref_doc is None:
+            if ref_docid is None:
+                raise TimDbException('Source document for reference not specified.')
             from documentmodel.document import Document  # Document import needs to be here to avoid circular import
             ref_doc = Document(ref_docid)
-        else:
-            ref_doc = source_doc
 
         if not ref_doc.exists():
             raise TimDbException('The referenced document does not exist.')
@@ -671,7 +670,6 @@ class DocParagraph(DocParagraphBase):
             if ref_par.is_reference():
                 ref_pars = ref_par.get_referenced_pars(edit_window=edit_window,
                                                        set_html=set_html,
-                                                       source_doc=source_doc,
                                                        cycle=cycle)
             else:
                 ref_pars = [ref_par]
