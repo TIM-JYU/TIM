@@ -593,6 +593,9 @@ class Users(TimDbBase):
                   false otherwise.
         """
 
+        if self.has_admin_access(user_id):
+            return True
+
         user_ids = [user_id, self.get_anon_user_id()]
         if user_id > 0:
             user_ids.append(self.get_logged_user_id())
