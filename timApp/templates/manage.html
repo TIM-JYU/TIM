@@ -148,12 +148,14 @@ var crumbs = getBreadcrumbs(doc.fullname);
                 <th>Language</th>
                 <th>Title</th>
                 <th>Maintainer</th>
+                <th>Document id</th>
                 <th>Actions</th>
             </tr>
             <tr>
                 <td><input type="text" class="shortedit" ng-model="lang_id" placeholder="Language"/></td>
                 <td><input type="text" ng-model="doc.title" placeholder="Language"/></td>
                 <td>{{ '{{doc.owner.name}}' }}</td>
+                <td>{{ '{{doc.id}}' }}</td>
                 <td>
                     <button ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
                 </td>
@@ -162,6 +164,7 @@ var crumbs = getBreadcrumbs(doc.fullname);
                 <td><input type="text" class="shortedit" ng-model="tr.lang_id" placeholder="Language"/></td>
                 <td><input type="text" ng-model="tr.title" placeholder="Title"/></td>
                 <td>{{ '{{tr.owner}}' }}</td>
+                <td>{{ '{{tr.id}}' }}</td>
                 <td>
                     <button ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
                 </td>
