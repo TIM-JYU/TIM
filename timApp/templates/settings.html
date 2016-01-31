@@ -8,7 +8,7 @@
     <script src="{{ url_for('static', filename='scripts/settingsView/settingsCtrl.js') }}"></script>
 {% endblock %}
 {% block content %}
-    <div ng-app="settingsApp" ng-controller="SettingsCtrl">
+    <div ng-controller="SettingsCtrl">
         <form ng-submit="submit('{{ request.path + 'save' }}')">
             {% if css_files %}
                 <span>Available custom styles:</span>

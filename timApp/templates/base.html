@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="timApp">
 <head>
     {% block head %}
         <base href="{{ request.path }}">
@@ -13,21 +13,26 @@
         <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
         <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU" />
 
-        <link href="{{url_for('static', filename='images/favicon.ico')}}" rel="shortcut icon" type="image/x-icon"/>
         <script src="{{ url_for('static', filename='scripts/timTiming.js') }}"></script>
-        <script>timLogInit("{{ request.query_string }}");</script>
-        
-        <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+        <script>timLogInit({{ request.query_string|string|tojson }});</script>
+
+        {% block stylesheet %}
+            <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+        {% endblock %}
         <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.css') }}">
-
 
         <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
         <script src="{{ url_for('bower.static', filename='angular/angular.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='ng-file-upload/ng-file-upload-all.min.js') }}"></script>
 
+        {% block ngscripts %}
+            <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
+        {% endblock %}
+
+        <script>
+            angular.module('timApp', [{% block ngmodules %}'ngSanitize',{% endblock %}]);
+        </script>
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
         <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -38,9 +43,7 @@
     {% endblock %}
 </head>
 <body>
-<form name="ignore_me">
-    <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0" />
-</form>
+{% block body %}
 <div class="container">
     <div class="header clearfix">
         <a href="/">
@@ -64,42 +67,12 @@
 
     <div id="header">
         {% block header %}
-            {% if doc %}
-                <a id="headerView" href="/view/{{ doc.fullname }}">View</a>
-                {% if rights.manage %}
-                    | <a id="headerManage" href="/manage/{{ doc.fullname }}">Manage</a>
-                {% endif %}
-                {% if not folder %}
-                    {% if rights.teacher %}
-                        | <a id="headerTeacher" href="/teacher/{{ doc.fullname }}">Teacher view</a>
-                    {% endif %}
-                    {% if rights.see_answers %}
-                        | <a id="headerAnswers" href="/answers/{{ doc.fullname }}">Answers</a>
-                    {% endif %}
-                        | <a id="headerLecture" href="/lecture/{{ doc.fullname }}">Lecture view</a>
-                        | <a id="headerSlide" href="/slide/{{ doc.fullname }}">Slide view</a>
-                    {% if translations %}
-                        <span style="float: right;">
-                            {% for tr in translations %}
-                                <a href="/{{ route }}/{{ tr.name }}">{{ tr.lang_id }}</a>
-                                {% if not loop.last %} | {% endif %}
-                            {% endfor %}
-                        </span>
-                        <span style="clear: left"></span>
-                    {% endif %}
-                {% endif %}
-            {% endif %}
         {% endblock %}
     </div>
 
-    {% block beforecontent %}{% endblock %}
-
     <div class="material">
-        <!-- <h1>{{ self.title() }}</h1> -->
         {% block content %}{% endblock %}
     </div>
-
-    {% block aftercontent %}{% endblock %}
 
     <footer class="footer">
         {% block footer %}
@@ -107,5 +80,6 @@
     </footer>
 </div>
 <script>timLogTime("Document end","base");</script>
+{% endblock %}
 </body>
 </html>

@@ -1,42 +1,24 @@
-{% extends "base.html" %}
-{% block title %}Info{% endblock %}
+{% extends "document.html" %}
+{% block title %}Lecture info{% endblock %}
 {% block head %}
     {{ super() }}
 
-    <script src="{{ url_for('bower.static', filename='ace-builds/src-min-noconflict/ace.js') }}"></script>
-    <script src="{{ url_for('bower.static', filename='angular-ui-ace/ui-ace.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
-
-    <script>
-
-        var modules = checkModules([
-            {% for dep in jsMods %}
-                "{{ dep|safe}}",
-            {% endfor %}
-        ]);
-
-    </script>
-
-    <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='lectureInfo.css') }}">
     {% include 'common_head.html' %}
-
     {% include 'lecture_head.html' %}
 
     <script>
-        var docId = {{doc.id|tojson|safe}};
         var lectureId = {{lectureId|tojson|safe}};
         var lectureCode = {{lectureCode|tojson|safe}};
         var lectureStartTime = {{lectureStartTime|tojson|safe}};
         var lectureEndTime = {{lectureEndTime|tojson|safe}};
-        var docName = {{doc.name|tojson|safe}};
         var inLecture = {{in_lecture|tojson|safe}};
     </script>
 
 {% endblock %}
 {% block content %}
-    <div ng-app="timApp" ng-controller="LectureInfoController">
+    <div ng-controller="LectureInfoController">
         {% if in_lecture %}
             {% include 'lecture.html' %}
         {% endif %}
@@ -108,4 +90,3 @@
         </div>
     </div>
 {% endblock %}
-

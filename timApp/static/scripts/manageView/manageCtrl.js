@@ -1,4 +1,4 @@
-var PermApp = angular.module('permApp', ['ngSanitize', 'ngFileUpload']);
+var PermApp = angular.module('timApp');
 
 // from https://stackoverflow.com/questions/14833326
 PermApp.directive('focusMe', function ($timeout, $parse) {
@@ -458,7 +458,6 @@ text = '\n'.join(a)
         sc.accessTypes = accessTypes;
         sc.accessType = sc.accessTypes[0];
         sc.doc = doc;
-        sc.crumbs = crumbs;
         sc.isFolder = isFolder;
         //sc.newName = sc.getJustDocName(doc.name);
         //sc.newFolderName = sc.getFolderName(doc.name);

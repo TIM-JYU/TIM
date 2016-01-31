@@ -4,9 +4,11 @@ Do NOT define routes here.
 """
 
 import os
-
 import sys
+
 from flask import Flask
+
+from routes.filters import map_format
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
@@ -25,3 +27,5 @@ else:
 timname = os.environ.get('TIM_NAME', 'tim')
 app.config['TIM_NAME'] = timname
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
+
+app.jinja_env.filters['map_format'] = map_format

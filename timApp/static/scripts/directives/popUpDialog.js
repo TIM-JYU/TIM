@@ -9,6 +9,8 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
+var angular;
+var timApp = angular.module('timApp');
 
 timApp.directive('popUpDialog', function () {
     var toDragOrNot = function () {

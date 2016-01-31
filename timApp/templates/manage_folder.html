@@ -1,0 +1,28 @@
+{% extends 'manage.html' %}
+{% set obj_name = 'folder' %}
+{% block managecontent %}
+    Name and location
+    <table class="borderless">
+        <form ng-submit="renameFolder(newName)">
+            <tr>
+                <td>Folder name:</td>
+                <td><input type="text" ng-model="newName"></td>
+                <td>
+                    <button ng-disabled="newName === oldName">Update</button>
+                </td>
+            </tr>
+        </form>
+        <form ng-submit="moveFolder(newFolderName)">
+            <tr>
+                <td>Location:</td>
+                <td><input type="text" ng-model="newFolderName"></td>
+                <td>
+                    <button ng-disabled="newFolderName === oldFolderName">Update</button>
+                </td>
+            </tr>
+        </form>
+    </table>
+    <div class="margin">
+        <button ng-click="deleteFolder(doc.id)">Delete folder</button>
+    </div>
+{% endblock %}

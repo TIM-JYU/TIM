@@ -12,8 +12,8 @@ manage_page = Blueprint('manage_page',
 def manage(path):
     timdb = getTimDb()
     isFolder = False
-    doc_id, doc_fullname, doc_name = timdb.documents.resolve_doc_id_name(path)
-    if doc_id is None:
+    doc_info = timdb.documents.resolve_doc_id_name(path)
+    if doc_info is None:
         try:
             folder_id = int(path)
             if not timdb.folders.exists(folder_id):
@@ -25,7 +25,7 @@ def manage(path):
         isFolder = True
         block_id = folder_id
     else:
-        block_id = doc_id
+        block_id = doc_info['id']
 
     if not timdb.users.has_manage_access(getCurrentUserId(), block_id):
         abort(403)
@@ -42,6 +42,7 @@ def manage(path):
         doc = Document(block_id)
         doc_data = {'id': block_id}
         doc_fullname = timdb.documents.get_first_document_name(block_id)
+        doc_name = doc_info['name']
         if doc_fullname is not None:
             doc_data['name'] = doc_name
             doc_data['fullname'] = doc_fullname
@@ -55,16 +56,13 @@ def manage(path):
             ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
 
     doc_data['owner'] = timdb.users.getOwnerGroup(block_id)
-    return render_template('manage.html',
+    return render_template('manage_folder.html' if isFolder else 'manage_document.html',
                            route='manage',
-                           translations=timdb.documents.get_translations(doc_id) if not isFolder else None,
-                           objName='folder' if isFolder else 'document',
-                           objNameC='Folder' if isFolder else 'Document',
+                           translations=timdb.documents.get_translations(block_id) if not isFolder else None,
                            doc=doc_data,
                            grouprights=grouprights,
                            access_types=access_types,
                            user_groups=possible_groups,
-                           folder=isFolder,
                            rights=get_rights(block_id))
 
 

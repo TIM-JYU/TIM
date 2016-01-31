@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block ngmodules %}
+    {{ super() }}
+    {{ ['ngFileUpload']|map('map_format', "'%s'")|join(', ')|safe }},
+{% endblock %}
+{% block ngscripts %}
+    {{ super() }}
+    <script src="{{ url_for('bower.static', filename='ng-file-upload/ng-file-upload-all.min.js') }}"></script>
+{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script>
+        var docId = {{doc.id|tojson}};
+        var docName = {{doc.fullname|tojson}};
+        var rights = {{rights|tojson}};
+    </script>
+    <script src="{{ url_for('static', filename='scripts/breadcrumbs.js') }}"></script>
+{% endblock %}
+{% block header %}
+    {{ super() }}
+    {% block itemlinks %}
+        <a id="headerView" href="/view/{{ doc.fullname }}">View</a>
+        {% if rights.manage %}
+            | <a id="headerManage" href="/manage/{{ doc.fullname }}">Manage</a>
+        {% endif %}
+    {% endblock %}
+    {% include 'breadcrumbs.html' %}
+{% endblock %}

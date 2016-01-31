@@ -9,6 +9,8 @@
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
+var angular;
+var timApp = angular.module('timApp');
 
 timApp.controller("QuestionController", ['$scope', '$http', '$window', '$rootScope', function (scope, http, $window, $rootScope) {
     "use strict";

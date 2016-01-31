@@ -1,0 +1,160 @@
+{% extends "manage.html" %}
+{% set obj_name = 'document' %}
+{% block managecontent %}
+    <div>
+        Names:
+        <table class="borderless">
+            <tr>
+                <th>Visible in index</th>
+                <th>Location</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+            <tr ng-repeat="alias in aliases">
+                <td class="checkbox-td" ng-click="aliasPublicClicked(alias)"><input type="checkbox"
+                                                                                    ng-checked="alias.public"/></td>
+                <td><input type="text" ng-model="alias.location"/><a
+                        href="{{ '/view/{{alias.location}}' }}">View</a></td>
+                <td><input type="text" ng-model="alias.name" placeholder="Document name"/><a
+                        href="{{ '/view/{{alias.fullname}}' }}">View</a></td>
+                <td>
+                    <button ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)">Update</button>
+                    <button ng-click="removeAlias(alias)">Remove</button>
+                </td>
+            </tr>
+            <tr>
+                <form>
+                    <td class="checkbox-td"><input type="checkbox" ng-model="newAlias.public"/></td>
+                    <td><input type="text" ng-model="newAlias.location"/></td>
+                    <td><input type="text" placeholder="Click to add" ng-model="newAlias.name"/></td>
+                    <td>
+                        <button class="fullwidth" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add
+                        </button>
+                    </td>
+                </form>
+            </tr>
+        </table>
+    </div>
+
+    <div>
+        Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in Finnish</a>):
+        <table class="borderless">
+            <tr>
+                <th>Language</th>
+                <th>Title</th>
+                <th>Maintainer</th>
+                <th>Document id</th>
+                <th>Actions</th>
+            </tr>
+            <tr>
+                <td><input type="text" class="shortedit" ng-model="lang_id" placeholder="Language"/></td>
+                <td><input type="text" ng-model="doc.title" placeholder="Language"/></td>
+                <td>{{ '{{doc.owner.name}}' }}</td>
+                <td>{{ '{{doc.id}}' }}</td>
+                <td>
+                    <button ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
+                </td>
+            </tr>
+            <tr ng-repeat="tr in translations">
+                <td><input type="text" class="shortedit" ng-model="tr.lang_id" placeholder="Language"/></td>
+                <td><input type="text" ng-model="tr.title" placeholder="Title"/></td>
+                <td>{{ '{{tr.owner}}' }}</td>
+                <td>{{ '{{tr.id}}' }}</td>
+                <td>
+                    <button ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <span>
+        <button ng-click="toggleDiv('translate')">Create a translation</button>
+        <button ng-click="toggleDiv('cite')">Create a cited copy</button>
+    </span>
+
+    <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
+        <p>
+            Please enter a short language identifier and the name of the document in the desired language.
+        </p>
+        <input type="text" ng-model="translationName" class="shortedit" placeholder="Language"/>
+        <input type="text" ng-model="translationTitle" placeholder="New document title"/>
+        <button ng-click="createTranslation()">Create translation</button>
+    </div>
+
+    <div class="margin rights-list" ng-show="showCreateDiv == 'cite'">
+        <p>
+            Please enter a fully qualified name for the new document.
+        </p>
+        <input type="text" ng-model="citationName" placeholder="New document name"/>
+        <button ng-click="createCitation()">Create cited copy</button>
+    </div>
+
+    <span ng-show="readUpdating">Loading...</span>
+    <form class="uploadForm margin">
+        Upload a new version for this document
+        <div>
+            <input type="file" ngf-select="updateDocument($file)">
+            <span ng-show="file.progress >= 0"
+                  ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
+            </span>
+            <button id="reset" type="reset" value="Reset">Clear</button>
+        </div>
+    </form>
+
+    <form class="uploadForm">
+        Edit the full document
+        <div>
+            <textarea class="docEditor" ng-model="fulltext"></textarea>
+            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
+            <span ng-show="saving">Saving...</span>
+        </div>
+        <div><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
+            <div ng-hide="!showTracWiki">
+                <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
+                    TracWiki page below and then press "Convert TracWiki" button to get the text converted
+                    above as MarkDown. Then you can edit the MarkDown before pressing Save.
+                    You may need to add extra empty lines before lists.</p>
+                <p>Wiki root: <input ng-model="wikiRoot" size="50"
+                                     value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></p>
+                <textarea class="docEditor" ng-model="tracWikiText"></textarea>
+                <button ng-click="convertDocument(doc)">Convert TracWiki</button>
+            </div>
+        </div>
+    </form>
+
+    <div>
+        <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
+    </div>
+
+    <div class="margin">
+        <button ng-click="markAllAsRead()">Mark document as read</button>
+        <button class="redbutton" ng-click="deleteDocument(doc.id)">Delete document</button>
+    </div>
+
+    <div>
+        <p>Document version history</p>
+        <table>
+            <thead>
+            <tr>
+                <!--<td>Time</td>
+                <td>User</td>
+                <td>Difference</td>-->
+                <td>Time</td>
+                <td>User / group</td>
+                <td>Paragraph</td>
+                <td>Event</td>
+            </tr>
+            </thead>
+            <tr ng-repeat="version in doc.versions">
+                <td>{{ '{{ version.time }}' }}</td>
+                <td>{{ '{{ version.group }}' }}</td>
+                <td>{{ '{{ version.par_id }}' }}</td>
+                <td>{{ '{{ version.op }}' }}</td>
+                <!--<td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
+                <td>{{ '{{ version.user }}' }}</td>
+                <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
+            </tr>
+        </table>
+    </div>
+    <a href="{{ url_for('index_page') }}">Return to the index page</a>
+{% endblock %}

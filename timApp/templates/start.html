@@ -1,68 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="TIM - The Interactive Material."/>
-    <meta name="keywords" content="tim,interactive,material"/>
-    <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
-    <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU" />
-
-    <title>TIM - Welcome</title>
-
-    <!-- Bootstrap core CSS -->
-
-    <!-- Custom styles for this template -->
+{% extends 'base.html' %}
+{% block stylesheet %}
     <link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
+{% endblock %}
+{% block title %}Welcome{% endblock %}
+{% block head %}
+    {{ super() }}
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
     <script>
-        $('#loginTab a').click(function (e) {
-            e.preventDefault()
-            $(this).tab('show')
+        $('#loginTab').find('a').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
         })
     </script>
     {% if session.user_id %}
-        <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
         <link rel="stylesheet" href="{{ url_for('bower.static', filename='jquery-ui/themes/base/jquery-ui.min.css') }}">
-        <script src="{{ url_for('bower.static', filename='jquery/dist/jquery.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='jquery-ui/jquery-ui.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular/angular.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='angular-sanitize/angular-sanitize.min.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='ng-file-upload/ng-file-upload-all.min.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
         {% include 'common_head.html' %}
         {% if in_lecture %}
             {% include 'lecture_head.html' %}
         {% endif %}
     {% endif %}
-</head>
-
-<body>
-
-<div class="container" ng-app="timApp">
-    <div class="header clearfix">
-        <a href="/">
-            <img alt="TIM - The Interactive Material." class="pull-left"
-                 src="{{ url_for('static', filename='images/tim-logo_42height.png') }}"/>
-        </a>
-        <a href="https://www.jyu.fi">
-            <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-                 src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-        </a>
-        {% include 'loginlogout.html' %}
-    </div>
+{% endblock %}
+{% block content %}
     {% if in_lecture %}
         {% include 'lecture.html' %}
     {% elif session.user_id %}
@@ -251,18 +212,10 @@
             <sup>(*)</sup> vaatii kirjautumisen
         </div>
     </div>
-
-    <footer class="footer">
-        <p>&copy; Jyväskylän yliopisto</p>
-        <ul>
-            <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</a></li>
-        </ul>
-    </footer>
-</div>
-<!-- /container -->
-
-
-<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-<script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
-</body>
-</html>
+{% endblock %}
+{% block footer %}
+    <p>&copy; Jyväskylän yliopisto</p>
+    <ul>
+        <li><a href="/view/tim/Rekisteriseloste">Rekisteriseloste</a></li>
+    </ul>
+{% endblock %}

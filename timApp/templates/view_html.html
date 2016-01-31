@@ -1,4 +1,24 @@
-{% extends "base.html" %}
+{% extends "document.html" %}
+{% block ngmodules %}
+    {{ super() }}
+    {% if teacher_mode %}
+    {{ (['ui.ace', 'ngStorage', "ngTable", "ngTableExport", "ngTableExportKorppi"] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {% else %}
+    {{ (['ui.ace', 'ngStorage'] + jsMods)|map('map_format', "'%s'")|join(', ')|safe }},
+    {% endif %}
+{% endblock %}
+{% block ngscripts %}
+    {{ super() }}
+    {% if teacher_mode %}
+        <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
+        <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/ng-table-exportKorppi.js') }}"></script>
+    {% endif %}
+
+    {% for script in js %}
+        <script src=" {{ script }}"></script>
+    {% endfor %}
+{% endblock %}
 
 {% set teacher_mode = route in ("teacher", "answers") %}
 {% set lecture_mode = route == "lecture" %}
@@ -7,30 +27,8 @@
 {% block title %}{{ doc.title }}{% endblock %}
 {% block head %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='scripts/checkModules.js') }}"></script>
+
     <script src="{{ url_for('static', filename='scripts/marktree.js') }}"></script>
-
-    {% if teacher_mode %}
-        <script src="{{ url_for('bower.static', filename='ng-table/dist/ng-table.js') }}"></script>
-        <script src="{{ url_for('bower.static', filename='ng-table-export/ng-table-export.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/ng-table-exportKorppi.js') }}"></script>
-        {#        <link rel="stylesheet" href="{{ url_for('bower.static', filename='ng-table/dist/ng-table.css') }}">#}
-    {% endif %}
-
-    {% for script in js %}
-        <script src=" {{ script }}"></script>
-    {% endfor %}
-    <script>
-        var modules = checkModules([
-            {% for dep in jsMods %}
-                "{{ dep|safe}}",
-            {% endfor %}
-            {% if teacher_mode %}
-                "ngTable", "ngTableExport", "ngTableExportKorppi"
-            {% endif %}
-        ]);
-
-    </script>
 
     {% include 'view_head.html' %}
     {% include 'common_head.html' %}
@@ -56,11 +54,8 @@
         {{ custom_css if custom_css }}
     </style>
     <script>
-        var docId = JSON.parse({{doc.id|tojson|safe}});
         var showIndex = {{(headers|length > 0)|tojson}};
-        var docName = {{doc.fullname|tojson|safe}};
         var version = {{version|tojson|safe}};
-        var rights = {{rights|tojson}};
         var translations = {{translations|tojson}};
         var reqs = {{reqs|tojson}};
         var startIndex = {{start_index|tojson}};
@@ -75,14 +70,13 @@
         {% else %}
             users = [{{current_user|tojson}}];
         {% endif %}
-
-        var crumbs = getBreadcrumbs(docName);
-        {% include 'breadcrumbs.js' %}
     </script>
-
 {% endblock %}
 {% block content %}
-    <div ng-app="timApp" class="paragraphs" ng-controller="ViewCtrl">
+    <form name="ignore_me">
+        <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0"/>
+    </form>
+    <div class="paragraphs" ng-controller="ViewCtrl">
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="isPageDirty() && !hideRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
             <button ng-click="reload()">Refresh</button>
@@ -95,7 +89,6 @@
             <button ng-click="hidePending = true">Dismiss</button>
         </div>
         {% endraw %}
-        {% include 'breadcrumbs.html' %}
 
         {% if lecture_mode or in_lecture %}
             {% include 'lecture.html' %}

@@ -46,6 +46,11 @@ def get_document(doc_id: 'int', view_range: 'range|None' = None) -> 'tuple(Docum
     return doc, (get_whole_document(doc) if view_range is None else get_partial_document(doc, view_range))
 
 
+@view_page.route("/show_slide/<path:doc_name>")
+def show_slide(doc_name):
+    return view(doc_name, 'show_slide.html')
+
+
 @view_page.route("/view_content/<path:doc_name>")
 def view_document_content(doc_name):
     return view(doc_name, 'view_content.html')
@@ -148,11 +153,12 @@ def view(doc_path, template_name, usergroup=None, route="view"):
 
     session['last_doc'] = request.path
     timdb = getTimDb()
-    doc_id, doc_fullname, doc_name = timdb.documents.resolve_doc_id_name(doc_path)
+    doc_info = timdb.documents.resolve_doc_id_name(doc_path)
 
-    if doc_id is None:
+    if doc_info is None:
         return try_return_folder(doc_path)
 
+    doc_id = doc_info['id']
     if route == "teacher":
         verify_teacher_access(doc_id)
 
@@ -175,10 +181,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
 
-    #from time import time
-    #t0 = time()
     doc, xs = get_document(doc_id, view_range)
-    #print("Loaded all paragraphs in {} s.".format(time() - t0))
 
     user = getCurrentUserId()
 
@@ -239,11 +242,9 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     if is_in_lecture:
         is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
 
-    doc_title = timdb.documents.get_doc_title(doc_id, doc_name)
-
     result = render_template(template_name,
                              route=route,
-                             doc={'id': doc_id, 'name': doc_name, 'fullname': doc_fullname, 'title': doc_title},
+                             doc=doc_info,
                              text=texts,
                              headers=index,
                              plugin_users=users,
@@ -257,7 +258,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              doc_css=doc_css,
                              start_index=start_index,
                              in_lecture=is_in_lecture,
-                             is_owner=has_ownership(doc_id),
                              group=usergroup,
                              rights=get_rights(doc_id),
                              translations=timdb.documents.get_translations(doc_id),

@@ -10,7 +10,7 @@ from time import mktime
 import posixpath
 import threading
 
-from flask import Flask, Blueprint
+from flask import Blueprint
 from flask import stream_with_context
 from flask import render_template
 from flask import send_from_directory
@@ -24,7 +24,6 @@ from tim_app import app
 
 # IMPORTANT: We want to disable contracts (if requested) as early as possible
 # before any @contract decorator is encountered.
-from timdb.users import ANONYMOUS_GROUPNAME
 
 if app.config['CONTRACTS_ENABLED']:
     print('Contracts are ENABLED')
@@ -40,7 +39,6 @@ from routes.answer import answers
 from routes.edit import edit_page, par_response
 from routes.manage import manage_page
 from routes.view import view_page
-from routes.slide import slide_page
 from routes.login import login_page
 from routes.logger import logger_bp
 from routes.search import search_routes
@@ -64,7 +62,6 @@ app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
-app.register_blueprint(slide_page)
 app.register_blueprint(login_page)
 app.register_blueprint(logger_bp)
 app.register_blueprint(answers)
@@ -720,7 +717,7 @@ def show_lecture_info(lecture_id):
         abort(400)
 
     lecture = lecture[0]
-    doc = timdb.documents.get_document(lecture.get('doc_id'))
+    doc = timdb.documents.resolve_doc_id_name(str(lecture.get('doc_id')))
     in_lecture, lecture_ids = timdb.lectures.check_if_in_any_lecture(getCurrentUserId())
     settings = get_user_settings()
     return render_template("lectureInfo.html",
@@ -731,7 +728,8 @@ def show_lecture_info(lecture_id):
                            lectureEndTime=lecture.get("end_time"),
                            in_lecture=in_lecture,
                            settings=settings,
-                           rights=get_rights(doc['id']))
+                           rights=get_rights(doc['id']),
+                           translations=timdb.documents.get_translations(doc['id']))
 
 
 # Route to get show lecture info of some specific lecture
@@ -1821,7 +1819,9 @@ def index_page():
                            userId=current_user,
                            userGroups=possible_groups,
                            in_lecture=in_lecture,
-                           settings=settings)
+                           settings=settings,
+                           doc={'id': -1, 'fullname': ''},
+                           rights={})
 
 
 @app.route("/getslidestatus/")

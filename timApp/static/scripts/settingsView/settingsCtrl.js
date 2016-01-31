@@ -1,4 +1,4 @@
-var settingsApp = angular.module('settingsApp', []);
+var settingsApp = angular.module('timApp');
 
 settingsApp.controller('SettingsCtrl', ['$scope', '$http', function (sc, http) {
     sc.settings = settings;

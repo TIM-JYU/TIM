@@ -1,10 +1,6 @@
-var katex, $, angular, modules, MathJax;
+var katex, $, angular, MathJax;
 
-var timApp = angular.module('timApp', [
-    'ngSanitize',
-    'ngFileUpload',
-    'ui.ace',
-    'ngStorage'].concat(modules)).config(['$httpProvider', function ($httpProvider) {
+var timApp = angular.module('timApp').config(['$httpProvider', function ($httpProvider) {
     timLogTime("timApp config","view");
     var interceptor = [
         '$q',

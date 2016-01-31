@@ -1,5 +1,4 @@
-var modules = [];
-var timApp = angular.module('timApp', ['ngSanitize', 'ngFileUpload']);
+var timApp = angular.module('timApp');
 
 // Filter to make string URL friendly
 timApp.filter('escape', function () {

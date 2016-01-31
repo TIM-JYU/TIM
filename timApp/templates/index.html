@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "folder.html" %}
 {% block title %}{{'{} {}'.format(doc.name, '({})'.format(doc.location) if doc.location else '[root]') if doc else 'Root folder'}}{% endblock %}
 {% block head %}
     {{ super() }}
@@ -6,8 +6,6 @@
     <script>
         var groups = {{userGroups|tojson|safe}};
         var folder = "{{doc.fullname if doc else ''}}";
-        var crumbs = getBreadcrumbs(folder);
-        {% include 'breadcrumbs.js' %}
     </script>
     <script src="{{ url_for('static', filename='scripts/timApp.js') }}"></script>
     <style type="text/css">
@@ -39,8 +37,7 @@
     {% endif %}
 {% endblock %}
 {% block content %}
-    <div ng-app="timApp" ng-controller="IndexCtrl">
-        {% include 'breadcrumbs.html' %}
+    <div ng-controller="IndexCtrl">
         {% if in_lecture %}
             {% include 'lecture.html' %}
         {% elif session.user_id %}

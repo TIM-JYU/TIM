@@ -1,269 +1,93 @@
-{% extends "base.html" %}
+{% extends obj_name + ".html" %}
+{% set is_folder = obj_name == 'folder' %}
 {% block title %}{{ doc.name }} - Manage{% endblock %}
 {% block head %}
-{{ super() }}
-<script src="{{url_for('static', filename='scripts/manageView/manageCtrl.js')}}"></script>
+    {{ super() }}
+    <script src="{{ url_for('static', filename='scripts/manageView/manageCtrl.js') }}"></script>
 
-<style type="text/css">
-table {
-	margin: 1em;
-}
+    <style type="text/css">
+        table {
+            margin: 1em;
+        }
 
-thead {
-	font-weight: bold;
-}
+        thead {
+            font-weight: bold;
+        }
 
-table td {
-	padding: 0.2em;
-}
+        table td {
+            padding: 0.2em;
+        }
 
-.flashes li {
-	list-style-type: none;
-	border: 1px solid black;
-	border-radius: 3px;
-	padding: 0.5em;
-}
+        .flashes li {
+            list-style-type: none;
+            border: 1px solid black;
+            border-radius: 3px;
+            padding: 0.5em;
+        }
 
-.uploadForm {
-	border: 1px solid black;
-	padding: 1em;
-}
+        .uploadForm {
+            border: 1px solid black;
+            padding: 1em;
+        }
 
-.material {
-	padding: 1em;
-}
+        .material {
+            padding: 1em;
+        }
 
-.margin {
-	margin-top: 1em;
-	margin-bottom: 1em;
-}
-</style>
-<script>
-var isFolder = {{folder|tojson}};
-var doc = {{doc|tojson|safe}};
-var grouprights = {{grouprights|tojson|safe}};
-var accessTypes = {{access_types|tojson}};
-var groups = {{user_groups|tojson|safe}};
-{% include 'breadcrumbs.js' %}
-var crumbs = getBreadcrumbs(doc.fullname);
-
-</script>
+        .margin {
+            margin-top: 1em;
+            margin-bottom: 1em;
+        }
+    </style>
+    <script>
+        var isFolder = {{is_folder|tojson}};
+        var doc = {{doc|tojson|safe}};
+        var grouprights = {{grouprights|tojson|safe}};
+        var accessTypes = {{access_types|tojson}};
+        var groups = {{user_groups|tojson|safe}};
+    </script>
 {% endblock %}
 {% block content %}
-<div ng-app="permApp" ng-controller="PermCtrl">
-    {% with messages = get_flashed_messages() %} {% if messages %}
-    <ul class="flashes">
-        {% for message in messages %}
-        <li>{{ message }}</li> {% endfor %}
-    </ul>
-    {% endif %} {% endwith %}
+    <div ng-controller="PermCtrl">
+        <div class="margin">
+            {{ obj_name|capitalize }} owner: <select ng-model="doc.owner"
+                                          ng-options="group.name for group in userGroups | orderBy:'name' track by group.id"
+                                          ng-change="changeOwner()">
 
-    {% include 'breadcrumbs.html' %}
-    
-    <div class="margin">
-        {{objNameC}} owner: <select ng-model="doc.owner"
-                              ng-options="group.name for group in userGroups | orderBy:'name' track by group.id"
-            ng-change="changeOwner()">
-
-    </select>
-        <span ng-show="ownerUpdating">Updating...</span>
-    </div>
-        
-    <div class="margin rights-list" ng-repeat="type in accessTypes">
-        <a ng-click="showAddRightFn(type)">{{ '{{ type.name }}' }} right</a>:
-        <span ng-show="filtered.length == 0">none</span> 
- 
-        <ul>
-            <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{ '{{group.name}}' }} (<a ng-click="removeConfirm(group, type.name)">remove</a>)
-            </li>
-        </ul>
-        <!-- <p ng-show="filtered.length == 0">This {{ objName }} doesn't have groups with {{ '{{ type.name }}' }} right.</p> -->
-   </div>
-    <div class="margin">
-        <a ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</a>
-        <div ng-show="showAddRight" class="rights-list">
-            <form ng-submit="addPermission(groupName, accessType)">
-                <label>Right: <select ng-model="accessType" ng-options="access.name for access in accessTypes track by access.id"></select></label>
-                <label>name: <input type="text" ng-model="groupName" focus-me="focusEditor" placeholder='enter userid or group name'></label>
-                <button type="submit" ng-disabled="!groupName">Add</button>
-                <button type="button" ng-click="showAddRight = false">Cancel</button>
-                
-                <button type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users</button>
-                <button type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in users</button>
-                <button type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous users</button>
-                
-            </form>
+        </select>
+            <span ng-show="ownerUpdating">Updating...</span>
         </div>
-    </div>
 
-    <div ng-show="isFolder">
-        Name and location
-        <table class="borderless">
-            <form ng-submit="renameFolder(newName)"><tr>
-                <td>{{objNameC}} name:</td>
-                <td><input type="text" ng-model="newName"></td>
-                <td><button ng-disabled="newName === oldName">Update</button></td>
-            </tr></form>
-            <form ng-submit="moveFolder(newFolderName)"><tr>
-                <td>Location:</td>
-                <td><input type="text" ng-model="newFolderName"></td>
-                <td><button ng-disabled="newFolderName === oldFolderName">Update</button></td>
-            </tr></form>
-        </table>
-    </div>
+        <div class="margin rights-list" ng-repeat="type in accessTypes">
+            <a ng-click="showAddRightFn(type)">{{ '{{ type.name }}' }} right</a>:
+            <span ng-show="filtered.length == 0">none</span>
 
-    <div ng-show="!isFolder">
-        Names:
-        <table class="borderless">
-            <tr>
-                <th>Visible in index</th>
-                <th>Location</th>
-                <th>Name</th>
-                <th>Actions</th>
-            </tr>
-            <tr ng-repeat="alias in aliases">
-                <td class="checkbox-td" ng-click="aliasPublicClicked(alias)"><input type="checkbox" ng-checked="alias.public"/></td>
-                <td><input type="text" ng-model="alias.location"/><a href="{{ '/view/{{alias.location}}' }}">View</a></td>
-                <td><input type="text" ng-model="alias.name" placeholder="{{objNameC}} name"/><a href="{{ '/view/{{alias.fullname}}' }}">View</a></td>
-                <td>
-                    <button ng-click="updateAlias(alias)" ng-disabled="!aliasChanged(alias)">Update</button>
-                    <button ng-click="removeAlias(alias)">Remove</button>
-                </td>
-            </tr>
-            <tr>
-                <form>
-                    <td class="checkbox-td"><input type="checkbox" ng-model="newAlias.public"/></td>
-                    <td><input type="text" ng-model="newAlias.location"/></td>
-                    <td><input type="text" placeholder="Click to add" ng-model="newAlias.name"/></td>
-                    <td><button class="fullwidth" ng-click="addAlias(newAlias)" ng-disabled="!newAlias.name">Add</button></td>
+            <ul>
+                <li ng-repeat="group in filtered = (grouprights | filter: {access_type: type.id}:true)">{{ '{{group.name}}' }}
+                    (<a ng-click="removeConfirm(group, type.name)">remove</a>)
+                </li>
+            </ul>
+        </div>
+        <div class="margin">
+            <a ng-show="!showAddRight" ng-click="showAddRight = true; focusEditor = true">Add right</a>
+            <div ng-show="showAddRight" class="rights-list">
+                <form ng-submit="addPermission(groupName, accessType)">
+                    <label>Right: <select ng-model="accessType"
+                                          ng-options="access.name for access in accessTypes track by access.id"></select></label>
+                    <label>name: <input type="text" ng-model="groupName" focus-me="focusEditor"
+                                        placeholder='enter userid or group name'></label>
+                    <button type="submit" ng-disabled="!groupName">Add</button>
+                    <button type="button" ng-click="showAddRight = false">Cancel</button>
+
+                    <button type="button" ng-click="addPermission('Korppi users', accessType)">Add Korppi users</button>
+                    <button type="button" ng-click="addPermission('Logged-in users', accessType)">Add logged-in users
+                    </button>
+                    <button type="button" ng-click="addPermission('Anonymous users', accessType)">Add anonymous users
+                    </button>
+
                 </form>
-            </tr>
-        </table>
-    </div>
-
-    <div ng-show="!isFolder">
-        Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in Finnish</a>):
-        <table class="borderless">
-            <tr>
-                <th>Language</th>
-                <th>Title</th>
-                <th>Maintainer</th>
-                <th>Document id</th>
-                <th>Actions</th>
-            </tr>
-            <tr>
-                <td><input type="text" class="shortedit" ng-model="lang_id" placeholder="Language"/></td>
-                <td><input type="text" ng-model="doc.title" placeholder="Language"/></td>
-                <td>{{ '{{doc.owner.name}}' }}</td>
-                <td>{{ '{{doc.id}}' }}</td>
-                <td>
-                    <button ng-click="updateMetadata()" ng-disabled="!metaChanged()">Update</button>
-                </td>
-            </tr>
-            <tr ng-repeat="tr in translations">
-                <td><input type="text" class="shortedit" ng-model="tr.lang_id" placeholder="Language"/></td>
-                <td><input type="text" ng-model="tr.title" placeholder="Title"/></td>
-                <td>{{ '{{tr.owner}}' }}</td>
-                <td>{{ '{{tr.id}}' }}</td>
-                <td>
-                    <button ng-click="updateTranslation(tr)" ng-disabled="!trChanged(tr)">Update</button>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <span ng-show="!isFolder">
-        <button ng-click="toggleDiv('translate')">Create a translation</button>
-        <button ng-click="toggleDiv('cite')">Create a cited copy</button>
-    </span>
-
-    <div class="margin rights-list" ng-show="showCreateDiv == 'translate'">
-        <p>
-            Please enter a short language identifier and the name of the document in the desired language.
-        </p>
-        <input type="text" ng-model="translationName" class="shortedit" placeholder="Language"/>
-        <input type="text" ng-model="translationTitle" placeholder="New document title"/>
-        <button ng-click="createTranslation()">Create translation</button>
-    </div>
-
-    <div class="margin rights-list" ng-show="showCreateDiv == 'cite'">
-        <p>
-            Please enter a fully qualified name for the new document.
-        </p>
-        <input type="text" ng-model="citationName" placeholder="New document name"/>
-        <button ng-click="createCitation()">Create cited copy</button>
-    </div>
-
-    <span ng-show="readUpdating">Loading...</span>
-    <form class="uploadForm margin" ng-show="!isFolder">
-        Upload a new version for this {{ objName }}
-        <div>
-            <input type="file" ngf-select="updateDocument($file)">
-            <span ng-show="file.progress >= 0"
-                  ng-bind="file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!'">
-            </span>
-            <button id="reset" type="reset" value="Reset">Clear</button>
+            </div>
         </div>
-    </form>
-
-    <form class="uploadForm" ng-show="!isFolder">
-        Edit the full document
-        <div>
-            <textarea class="docEditor" ng-model="fulltext"></textarea>
-            <button ng-disabled="(doc.fulltext === fulltext) || saving" ng-click="saveDocument()">Save</button>
-            <span ng-show="saving">Saving...</span>
-        </div>
-        <div><p>Import TracWiki <input type="checkbox" ng-model="showTracWiki"></p>
-        <div ng-hide="!showTracWiki">
-            <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
-            TracWiki page below and then press "Convert TracWiki" button to get the text converted
-            above as MarkDown.  Then you can edit the MarkDown before pressing Save.
-            You may need to add extra empty lines before lists.</p>
-            <p>Wiki root: <input  ng-model="wikiRoot" size="50" value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></p>
-            <textarea class="docEditor" ng-model="tracWikiText"></textarea>
-            <button ng-click="convertDocument(doc)">Convert TracWiki</button> 
-        </div>
-        </div>
-    </form>
-
-    <div ng-show="!isFolder">
-        <a href="/download/{{ '{{ doc.id }}' }}">Download document markdown</a>
+    {% block managecontent %}{% endblock %}
     </div>
-
-    <div class="margin" ng-show="!isFolder">
-        <button ng-click="markAllAsRead()">Mark document as read</button>
-        <button class="redbutton" ng-click="deleteDocument(doc.id)">Delete document</button>
-    </div>
-
-    <div class="margin" ng-show="isFolder">
-        <button ng-click="deleteFolder(doc.id)">Delete folder</button>
-    </div>
-
-    <div ng-show="!isFolder">
-        <p>Document version history</p>
-        <table>
-            <thead>
-                <tr>
-                    <!--<td>Time</td>
-                    <td>User</td>
-                    <td>Difference</td>-->
-                    <td>Time</td>
-                    <td>User / group</td>
-                    <td>Paragraph</td>
-                    <td>Event</td>
-                </tr>
-            </thead>
-            <tr ng-repeat="version in doc.versions">
-                <td>{{ '{{ version.time }}' }}</td>
-                <td>{{ '{{ version.group }}' }}</td>
-                <td>{{ '{{ version.par_id }}' }}</td>
-                <td>{{ '{{ version.op }}' }}</td>
-                <!--<td><a href="/download/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.timestamp }}' }}</a></td>
-                <td>{{ '{{ version.user }}' }}</td>
-                <td><a href="/diff/{{ '{{ doc.id + "/" + version.hash }}' }}">{{ '{{ version.message }}' }}</a></td>-->
-            </tr>
-        </table>
-    </div>
-    <a href="{{url_for('index_page')}}">Return to the index page</a>
-</div>
 {% endblock %}

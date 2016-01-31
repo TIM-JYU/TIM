@@ -534,7 +534,7 @@ class Documents(TimDbBase):
             self.db.commit()
 
     @contract
-    def resolve_doc_id_name(self, doc_path: 'str') -> 'tuple(int,str,str)|tuple(None,None,None)':
+    def resolve_doc_id_name(self, doc_path: 'str') -> 'dict|None':
         """Returns document id and name based on its path.
         :param doc_path: The document path.
         """
@@ -544,12 +544,18 @@ class Documents(TimDbBase):
             try:
                 doc_id = int(doc_path)
                 if not self.exists(doc_id):
-                    return None, None, None
+                    return None
                 doc_name = self.get_first_document_name(doc_id)
-                return doc_id, doc_name, self.get_doc_title(doc_id, doc_name)
+                return {'id': doc_id,
+                        'fullname': doc_name,
+                        'name': self.get_short_name(doc_name),
+                        'title': self.get_doc_title(doc_id, doc_name)}
             except ValueError:
-                return None, None, None
-        return doc_id, doc_path, self.get_doc_title(doc_id, doc_path)
+                return None
+        return {'id': doc_id,
+                'fullname': doc_path,
+                'name': self.get_short_name(doc_path),
+                'title': self.get_doc_title(doc_id, doc_path)}
 
     @contract
     def get_doc_title(self, doc_id: 'int', full_name: 'str|None') -> 'str|None':
@@ -558,5 +564,9 @@ class Documents(TimDbBase):
             return title
         if full_name is None:
             return "Untitled"
+        return self.get_short_name(full_name)
+
+    @contract
+    def get_short_name(self, full_name: str) -> str:
         parts = full_name.rsplit('/', 1)
         return parts[len(parts) - 1]
