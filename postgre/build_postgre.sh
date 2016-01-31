@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 CONF_DIR=/etc/postgresql/9.3
 DATA_DIR=/var/lib/postgresql/9.3
