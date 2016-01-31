@@ -3,19 +3,13 @@
 import os
 from sqlite3 import Connection
 
-from copy import deepcopy
 from contracts import contract
-from ansi2html import Ansi2HTMLConverter
-import sqlite3
-from documentmodel.attributeparser import AttributeParser
 
 from documentmodel.docparagraph import DocParagraph
-from documentmodel.documentparser import DocumentParser, ValidationException
-from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
-from timdb.docidentifier import DocIdentifier
-from ephemeralclient import EphemeralException, EphemeralClient, EPHEMERAL_URL
-from documentmodel.document import Document
 from documentmodel.docsettings import DocSettings
+from documentmodel.document import Document
+from documentmodel.documentparser import DocumentParser
+from timdb.timdbbase import TimDbBase, TimDbException, blocktypes
 
 
 class Documents(TimDbBase):
@@ -36,7 +30,6 @@ class Documents(TimDbBase):
         :param files_root_path: The root path where all the files will be stored.
         """
         TimDbBase.__init__(self, db_path, files_root_path, type_name, current_user_name)
-        self.ec = EphemeralClient(EPHEMERAL_URL)
 
     @contract
     def add_paragraph(self, doc: 'Document',
@@ -375,58 +368,6 @@ class Documents(TimDbBase):
         return results
 
     @contract
-    def get_document_with_autoimport(self, document_id: 'DocIdentifier') -> 'Document|None':
-        """Attempts to load a document from the new model. If it doesn't exist, attempts to load from old model.
-        If found, an autoimport is performed and a Document object is returned. Otherwise, None is returned.
-
-        :param document_id: The id of the document.
-        :returns: The Document object or None if it doesn't exist.
-        """
-        d = Document(doc_id=document_id.id)
-        if Document.doc_exists(document_id.id):
-            return d
-        if not self.exists(document_id.id):
-            return None
-        md_blocks = self.ephemeralCall(document_id, self.ec.getDocumentAsBlocks)
-        cursor = self.db.execute('SELECT description FROM Block WHERE id = ? AND type_id = ?',
-                                 [document_id.id, blocktypes.DOCUMENT])
-        name = cursor.fetchone()[0]
-        try:
-            self.add_name(document_id.id, name)
-        except sqlite3.IntegrityError:
-            # name already exists; it was migrated earlier
-            pass
-        d.create()
-        ap = AttributeParser()
-        for md in md_blocks:
-            ap.set_str(md.split('\n', 1)[0])
-            attrs, index = ap.get_attributes()
-            if index is None:
-                attrs = None
-            d.add_paragraph(text=md, attrs=attrs)
-        return d
-
-    @contract
-    def ephemeralCall(self, document_id: 'DocIdentifier', ephemeral_function, *args):
-        """Calls a function of EphemeralClient, ensuring that the document is in cache.
-
-        :param args: Required arguments for the function.
-        :param ephemeral_function: The function to call.
-        :param document_id: The id of the document.
-        """
-
-        try:
-            result = ephemeral_function(document_id, *args)
-        except EphemeralException:
-            if self.exists(document_id.id):
-                with open(self.getBlockPath(document_id.id), 'rb') as f:
-                    self.ec.loadDocument(document_id, f.read())
-                result = ephemeral_function(document_id, *args)
-            else:
-                raise TimDbException('The requested document was not found.')
-        return result
-
-    @contract
     def getDocumentPath(self, document_id: 'int') -> 'str':
         """Gets the path of the specified document.
         
@@ -438,24 +379,6 @@ class Documents(TimDbBase):
     @contract
     def getDocumentPathAsRelative(self, document_id: 'int'):
         return os.path.relpath(self.getDocumentPath(document_id), self.files_root_path).replace('\\', '/')
-
-    @contract
-    def getDocumentMarkdown(self, document_id: 'DocIdentifier') -> 'str':
-        content = self.git.get_contents(document_id.hash, self.getDocumentPathAsRelative(document_id.id))
-        return self.trim_markdown(content)
-
-    @contract
-    def getDifferenceToPrevious(self, document_id: 'DocIdentifier') -> 'str':
-        try:
-            out, _ = self.git.command('diff --word-diff=color --unified=5 {}^! {}'.format(document_id.hash,
-                                                                                self.getDocumentPathAsRelative(
-                                                                                    document_id.id)))
-        except TimDbException as e:
-            e.message = 'The requested revision was not found.'
-            raise
-        conv = Ansi2HTMLConverter(inline=True, dark_bg=False)
-        html = conv.convert(out, full=False)
-        return html
 
     @contract
     def import_document_from_file(self, document_file: 'str', document_name: 'str',

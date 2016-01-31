@@ -1,11 +1,10 @@
 """Routes for searching."""
 from flask import Blueprint, render_template
 
-import tim
 from documentmodel.docparagraph import DocParagraph
 from options import get_option
-from .common import *
 from .cache import cache
+from .common import *
 
 search_routes = Blueprint('search',
                           __name__,
@@ -79,7 +78,7 @@ def search(query):
                                    'manage': False
                                    },
                            reqs=pluginControl.get_all_reqs(),
-                           settings=tim.get_user_settings(),
+                           settings=get_user_settings(),
                            version={'hash': None},
                            translations=None,
                            start_index=None,

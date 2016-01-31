@@ -6,6 +6,7 @@ Do NOT define routes here.
 import os
 import sys
 
+import contracts
 from flask import Flask
 
 from routes.filters import map_format
@@ -29,3 +30,12 @@ app.config['TIM_NAME'] = timname
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
 
 app.jinja_env.filters['map_format'] = map_format
+
+# IMPORTANT: We want to disable contracts (if requested) as early as possible
+# before any @contract decorator is encountered.
+
+if app.config['CONTRACTS_ENABLED']:
+    print('Contracts are ENABLED')
+else:
+    contracts.disable_all()
+    print('Contracts are DISABLED')

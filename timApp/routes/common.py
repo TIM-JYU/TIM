@@ -1,5 +1,6 @@
 """Common functions for use with routes."""
 import json
+import re
 from collections import defaultdict
 from urllib.parse import urlparse, urljoin
 
@@ -311,3 +312,31 @@ def get_referenced_pars_from_req(par):
         return [ref_par for ref_par in par.get_referenced_pars(set_html=False, tr_get_one=False)]
     else:
         return [par]
+
+
+def validate_item(item_name, item_type, owner_group_id):
+    if not logged_in():
+        abort(403, 'You have to be logged in to create a {}.'.format(item_type))
+
+    if item_name is None:
+        return abort(400, 'item_name was None')
+
+    if item_name.startswith('/') or item_name.endswith('/'):
+        abort(400, 'The {} name cannot start or end with /.'.format(item_type))
+
+    if re.match('^(\d)*$', item_name) is not None:
+        abort(400, 'The {} name can not be a number to avoid confusion with document id.'.format(item_type))
+    timdb = getTimDb()
+    username = getCurrentUserName()
+    if timdb.documents.get_document_id(item_name) is not None or timdb.folders.get_folder_id(item_name) is not None:
+        abort(403, 'Item with a same name already exists.')
+
+    if not can_write_to_folder(item_name):
+        abort(403, 'You cannot create {}s in this folder. Try users/{} instead.'.format(item_type, username))
+
+    item_path, _ = timdb.folders.split_location(item_name)
+    timdb.folders.create(item_path, owner_group_id)
+
+
+def get_user_settings():
+    return session.get('settings', {})

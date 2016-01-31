@@ -1,21 +1,19 @@
-
 """Initializes the TIM database."""
 
 import os
 
 import sqlalchemy
+import sqlalchemy.exc
 
-import mkfolders
 import models
 from tim_app import app
-from timdb.docidentifier import DocIdentifier
 from timdb.timdb2 import TimDb
-from timdb.timdbbase import blocktypes
-from timdb.users import ANONYMOUS_GROUPNAME, ADMIN_GROUPNAME, LOGGED_IN_USERNAME
+from timdb.timdbbase import TimDbException
+from timdb.users import LOGGED_IN_USERNAME
 
 
 def postgre_create_database(db_name):
-    #app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
+    # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://docker:docker@postgre:5432/tempdb_" + timname
     engine = sqlalchemy.create_engine("postgresql://docker:docker@postgre:5432/postgres")
     conn = engine.connect()
     conn.execute("commit")
@@ -25,6 +23,7 @@ def postgre_create_database(db_name):
         if 'already exists' not in str(e):
             raise e
     conn.close()
+
 
 def initialize_temp_database():
     postgre_create_database('tempdb_' + app.config['TIM_NAME'])
@@ -54,11 +53,11 @@ def initialize_database(db_path='tim_files/tim.db', files_root_path='tim_files',
         timdb.documents.create('Testaus 1', anon_group)
         timdb.documents.create('Testaus 2', anon_group)
         timdb.documents.import_document_from_file('example_docs/programming_examples.md',
-                                                         'Programming examples',
-                                                         anon_group)
+                                                  'Programming examples',
+                                                  anon_group)
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
-                                                         'Multiple choice plugin example',
-                                                         anon_group)
+                                                  'Multiple choice plugin example',
+                                                  anon_group)
     timdb.close()
     if print_progress:
         print(' done.')
@@ -205,42 +204,9 @@ COMMIT TRANSACTION;
     return True
 
 
+# noinspection PyUnusedLocal
 def update_datamodel(timdb):
-    if not timdb.table_exists('Folder'):
-        print('Executing SQL script update_to_datamodel...', end="", flush=True)
-        timdb.execute_script('sql/update_to_datamodel.sql')
-        print(' done.', flush=True)
-    if not timdb.table_exists('Question'):
-        print('Executing SQL script update_to_timppa...', end="", flush=True)
-        timdb.execute_script('sql/update_to_timppa.sql')
-        print(' done.', flush=True)
-    if not timdb.table_exists('Version'):
-        print('Creating Version table...', end="", flush=True)
-        timdb.execute_sql("""
-CREATE TABLE Version (
-  id INTEGER NOT NULL PRIMARY KEY,
-  updated_on TIMESTAMP
-);
-
-INSERT INTO Version(updated_on, id) VALUES (CURRENT_TIMESTAMP, 0);
-        """)
-        print(' done.', flush=True)
-    doc_ids = timdb.db.execute("""SELECT id FROM Block WHERE type_id = ?""", [blocktypes.DOCUMENT]).fetchall()
-    for doc_id, in doc_ids:
-        print('Migrating document {}...'.format(doc_id), end="", flush=True)
-        try:
-            timdb.documents.get_document_with_autoimport(DocIdentifier(doc_id, ''))
-        except FileNotFoundError:
-            print(' document was not found from file system, skipping.')
-        print(' done.', flush=True)
-    admin_group_id = timdb.users.getUserGroupByName(ADMIN_GROUPNAME)
-    if admin_group_id is None:
-        print('Administrators usergroup is missing, adding...', end="", flush=True)
-        timdb.db.execute('INSERT INTO UserGroup (name) VALUES (?)', [ADMIN_GROUPNAME])
-        timdb.db.commit()
-        print(' done.', flush=True)
-    mkfolders.update_tables(timdb.db)
-    return True
+    raise TimDbException('This update is obsolete.')
 
 
 def update_answers(timdb):
@@ -269,4 +235,3 @@ WHERE valid IS NULL)
 if __name__ == "__main__":
     initialize_database()
     initialize_temp_database()
-

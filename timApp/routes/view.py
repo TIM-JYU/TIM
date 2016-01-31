@@ -2,17 +2,17 @@
 
 from contracts import contract, new_contract
 
+import routes.lecture
 from documentmodel.document import DocParagraph, get_index_from_html_list
 from htmlSanitize import sanitize_html
 
 new_contract('range', 'tuple(int, int)')
 
-from flask import Blueprint, render_template, url_for
+from flask import Blueprint, render_template
 from .common import *
 import pluginControl
 from options import *
 import time
-import tim
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -84,6 +84,7 @@ def lecture_view(doc_name):
 def slide_document(doc_name):
     return view(doc_name, 'view_html.html', route="slide")
 
+
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
 def par_info(doc_id, par_id):
     timdb = getTimDb()
@@ -108,11 +109,12 @@ def par_info(doc_id, par_id):
 
     return jsonResponse(info)
 
+
 @contract
 def parse_range(start_index: 'int|str|None', end_index: 'int|str|None') -> 'range|None':
     if start_index is None and end_index is None:
         return None
-    return( int(start_index), int(end_index) )
+    return int(start_index), int(end_index)
 
 
 def try_return_folder(doc_name):
@@ -126,10 +128,10 @@ def try_return_folder(doc_name):
     user = getCurrentUserId()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
-        is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
+        is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
     possible_groups = timdb.users.getUserGroupsPrintable(getCurrentUserId())
-    settings = tim.get_user_settings()
+    settings = get_user_settings()
     return render_template('index.html',
                            doc=doc,
                            userGroups=possible_groups,
@@ -236,11 +238,11 @@ def view(doc_path, template_name, usergroup=None, route="view"):
         custom_css_files = {key: value for key, value in custom_css_files.items() if value}
     custom_css = json.loads(prefs).get('custom_css', '') if prefs is not None else ''
 
-    settings = tim.get_user_settings()
+    settings = get_user_settings()
 
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
-        is_in_lecture = tim.check_if_lecture_is_running(lecture_id)
+        is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
 
     result = render_template(template_name,
                              route=route,
