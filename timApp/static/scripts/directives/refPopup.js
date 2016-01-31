@@ -1,4 +1,4 @@
-var timApp = window.angular.module('timApp');
+var timApp = angular.module('timApp');
 
 /**
  * A reference popup window directive that is used in the document view.
