@@ -9,7 +9,6 @@ import sys
 import tim
 
 import dumboclient
-import ephemeralclient
 import initdb2
 
 from filemodehelper import change_permission_and_retry
