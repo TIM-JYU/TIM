@@ -10,7 +10,7 @@
  * @copyright 2015 Timppa project authors
  */
 
-var angular, docId, lectureId, lectureCode, lectureStartTime, lectureEndTime;
+var angular, docId, lectureCode, lectureStartTime, lectureEndTime;
 
 var timApp = angular.module('timApp');
 timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope',

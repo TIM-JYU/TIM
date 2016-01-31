@@ -1,6 +1,6 @@
 timLogTime("answerbrowser3 load","answ");
 
-var angular, Waypoint;
+var angular;
 var timApp = angular.module('timApp');
 var LAZYWORD = "lazylazylazy";
 var LAZYSTART="<!--lazy ";
