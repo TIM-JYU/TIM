@@ -206,6 +206,10 @@ class DocParagraph(DocParagraphBase):
 
     @contract
     def get_exported_markdown(self) -> 'str':
+        if self.is_reference():
+            data = [par.__data for par in self.get_referenced_pars()]
+            return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
+
         return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
 
     @contract
@@ -618,10 +622,7 @@ class DocParagraph(DocParagraphBase):
         def reference_par(ref_par):
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
-            if ref_par.is_plugin():
-                md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown())
-            else:
-                md = self.get_markdown() if tr else ref_par.get_markdown()
+            md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else ref_par.get_markdown()
             attrs = self.get_attrs(ref_par.get_attrs()) if tr else ref_par.get_attrs()
             props = self.get_properties(ref_par.get_properties()) if tr else ref_par.get_properties()
 
