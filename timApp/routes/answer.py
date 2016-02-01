@@ -3,11 +3,10 @@ from datetime import datetime
 
 from flask import Blueprint
 
-import documentmodel.document
-from .common import *
-from plugin import Plugin, PluginException
-import pluginControl
 import containerLink
+import documentmodel.document
+from plugin import Plugin, PluginException
+from .common import *
 
 
 answers = Blueprint('answers',
@@ -64,8 +63,23 @@ def save_answer(plugintype, task_id):
 
     answer_browser_data = request.get_json().get('abData', {})
     is_teacher = answer_browser_data.get('teacher', False)
+    save_teacher = answer_browser_data.get('saveTeacher', False)
+    if save_teacher:
+        verify_teacher_access(doc_id)
+    users = None
     if is_teacher:
         verify_seeanswers_access(doc_id)
+        answer_id = answer_browser_data.get('answer_id', None)
+        if answer_id is not None:
+            expected_task_id = timdb.answers.get_task_id(answer_id)
+            if expected_task_id != task_id:
+                return abort(400, 'Task ids did not match')
+            users = timdb.answers.get_users(answer_id)
+            if len(users) == 0:
+                return abort(400, 'No users found for the specified answer')
+            user_id = answer_browser_data.get('userId', None)
+            if user_id not in users:
+                return abort(400, 'userId is not associated with answer_id')
     try:
         plugin = Plugin.from_task_id(task_id)
     except PluginException as e:
@@ -75,13 +89,21 @@ def save_answer(plugintype, task_id):
         abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
 
     # Load old answers
-    old_answers = timdb.answers.get_answers(getCurrentUserId(), task_id, get_collaborators=False)
+    current_user_id = getCurrentUserId()
+
+    if users is None:
+        users = [current_user_id]
+
+    old_answers = timdb.answers.get_common_answers(users, task_id)
 
     # Get the newest answer (state). Only for logged in users.
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
-    answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
+    plugin.values['current_user_id'] = getCurrentUserName()
+    plugin.values['user_id'] = '.'.join([timdb.users.getUser(uid)['name'] for uid in users])
+    plugin.values['look_answer'] = is_teacher and not save_teacher
 
+    answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
     plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
 
     try:
@@ -124,27 +146,28 @@ def save_answer(plugintype, task_id):
                         result['error'] = 'Points must be in range [{},{}]'.format(points_min, points_max)
                     else:
                         points = custom_points
-            result['savedNew'] = timdb.answers.saveAnswer([getCurrentUserId()], task_id, json.dumps(save_object), points, tags, is_valid)
+            result['savedNew'] = timdb.answers.saveAnswer([current_user_id],
+                                                          task_id,
+                                                          json.dumps(save_object),
+                                                          points,
+                                                          tags,
+                                                          is_valid)
             if not is_valid:
                 result['error'] = explanation
+        elif save_teacher:
+            if current_user_id not in users:
+                users.append(current_user_id)
+            points = answer_browser_data.get('points', points)
+            if points == "":
+                points = None
+            result['savedNew'] = timdb.answers.saveAnswer(users,
+                                                          task_id,
+                                                          json.dumps(save_object),
+                                                          points,
+                                                          tags,
+                                                          valid=True)
         else:
-            if answer_browser_data.get('saveTeacher', False):
-                verify_teacher_access(doc_id)
-                answer_id = answer_browser_data.get('answer_id', None)
-                if answer_id is None:
-                    return jsonResponse({'error': 'Missing answer_id key'}, 400)
-                expected_task_id = timdb.answers.get_task_id(answer_id)
-                if expected_task_id != task_id:
-                    return jsonResponse({'error': 'Task ids did not match'}, 400)
-                users = timdb.answers.get_users(answer_id)
-                if len(users) == 0:
-                    return jsonResponse({'error': 'No users found for the specified answer'}, 400)
-                if not getCurrentUserId() in users:
-                    users.append(getCurrentUserId())
-                points = answer_browser_data.get('points', points)
-                if points == "":
-                    points = None
-                result['savedNew'] = timdb.answers.saveAnswer(users, task_id, json.dumps(save_object), points, tags, valid=True)
+            result['savedNew'] = False
 
     return jsonResponse(result)
 
@@ -206,7 +229,8 @@ def get_all_answers(task_id):
     timdb = getTimDb()
     doc_id, task_id_name = Plugin.parse_task_id(task_id)
     usergroup = request.args.get('group')
-    if not usergroup: usergroup = 0
+    if not usergroup:
+        usergroup = 0
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
 

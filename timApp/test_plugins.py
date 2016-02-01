@@ -8,10 +8,14 @@ from timroutetest import TimRouteTest
 
 
 class PluginTest(TimRouteTest):
-    def post_answer(self, plugin_type, doc_id, task_name, user_input, save_teacher=False, teacher=False):
+    def post_answer(self, plugin_type, doc_id, task_name, user_input,
+                    save_teacher=False, teacher=False, user_id=None, answer_id=None):
         return self.json_put('/{}/{}.{}/answer/'.format(plugin_type, doc_id, task_name),
                              {"input": user_input,
-                              "abData": {"saveTeacher": save_teacher, "teacher": teacher}})
+                              "abData": {"saveTeacher": save_teacher,
+                                         "teacher": teacher,
+                                         "userId": user_id,
+                                         "answer_id": answer_id}})
 
     def test_plugin(self):
         self.login_test1()
@@ -21,7 +25,7 @@ class PluginTest(TimRouteTest):
         ht = resp.get_data(as_text=True)
         tree = html.fromstring(ht)
         mmcq_xpath = r'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{}.mmcqexample"]'.format(
-                doc.doc_id)
+            doc.doc_id)
         plugs = tree.findall(mmcq_xpath)
         self.assertEqual(1, len(plugs))
         task_name = 'mmcqexample'
@@ -54,17 +58,26 @@ class PluginTest(TimRouteTest):
         resp = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
         answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)  # type: list(dict)
         self.assertListEqual(
-                [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
-                  'id': 4, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1},
-                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-                  'id': 3, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 0},
-                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, false]',
-                  'id': 2, 'points': '1', 'task_id': '3.mmcqexample', 'valid': 1},
-                 {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
-                  'id': 1, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1}],
-                [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in answer_list])
+            [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
+              'id': 4, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
+              'id': 3, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 0},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, false]',
+              'id': 2, 'points': '1', 'task_id': '3.mmcqexample', 'valid': 1},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
+              'id': 1, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1}],
+            [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in answer_list])
         for ans in answer_list:
             datetime.datetime.strptime(ans['answered_on'], '%Y-%m-%d %H:%M:%S')
+        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, False],
+                                save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
+                                user_id=session['user_id'] - 1)
+        self.assertDictResponse({'error': 'userId is not associated with answer_id'}, resp, expect_status=400)
+
+        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [False, False, False],
+                                save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
+                                user_id=session['user_id'])
+        self.check_ok_answer(resp, is_new=False)
 
         par_id = doc.get_paragraph_by_task(task_name).get_id()
         j = self.get('/getState', as_json=True,

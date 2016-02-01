@@ -174,7 +174,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             saveTeacher: $scope.saveTeacher,
                             teacher: $scope.$parent.teacherMode,
                             points: $scope.points,
-                            giveCustomPoints: $scope.giveCustomPoints
+                            giveCustomPoints: $scope.giveCustomPoints,
+                            userId: $scope.user.id
                         };
                     else
                         return {
