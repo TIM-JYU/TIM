@@ -373,9 +373,11 @@ class Document:
         }
         rd = src_par.get_doc_id()
         if self.get_settings().get_source_document() != rd:
-            ref_attrs['rd'] = rd,
+            ref_attrs['rd'] = str(rd)
         if text:
             ref_attrs['r'] = 'tr'
+        else:
+            text = ''
 
         return self.add_paragraph(text, attrs=ref_attrs)
 
