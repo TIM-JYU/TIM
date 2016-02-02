@@ -100,7 +100,7 @@ def save_answer(plugintype, task_id):
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
     plugin.values['current_user_id'] = getCurrentUserName()
-    plugin.values['user_id'] = '.'.join([timdb.users.getUser(uid)['name'] for uid in users])
+    plugin.values['user_id'] = ';'.join([timdb.users.getUser(uid)['name'] for uid in users])
     plugin.values['look_answer'] = is_teacher and not save_teacher
 
     answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
