@@ -6,30 +6,27 @@ from requests.exceptions import Timeout
 
 from documentmodel.docparagraphencoder import DocParagraphEncoder
 from plugin import PluginException
-from tim_app import app
-
-BRIDGE = app.config['DOCKER_BRIDGE']
 
 TIM_URL = ""
 
-# Most plugins are currently running on tim-beta.it.jyu.fi
-# Plugins with numeric IP-address are running there as well, they just don't have routes
-# defined in nginx, and as such must be accessed through tim-beta localhost. However,
-# as TIM is run from a docker container, pointing to tim-beta's localhost
-# must be made through a special bridge.
+CSPLUGIN_NAME = 'csPlugin'
+SVNPLUGIN_NAME = 'showFile'
+HASKELLPLUGIN_NAME = 'haskellplugins2'
+PALIPLUGIN_NAME = 'pali'
+
 PLUGINS = {
-    "csPlugin":      {"host": BRIDGE + ":56000/cs/"},
-    "taunoPlugin":   {"host": BRIDGE + ":56000/cs/tauno/"},
-    "simcirPlugin":  {"host": BRIDGE + ":56000/cs/simcir/"},
-    "csPluginRikki": {"host": BRIDGE + ":56000/cs/rikki/"},  # demonstrates a broken plugin
-    "showCode":      {"host": BRIDGE + ":55000/svn/", "browser": False},
-    "showImage":     {"host": BRIDGE + ":55000/svn/image/", "browser": False},
-    "showVideo":     {"host": BRIDGE + ":55000/svn/video/", "browser": False},
-    "mcq":           {"host": BRIDGE + ":57000/"},
-    "mmcq":          {"host": BRIDGE + ":58000/"},
-    "shortNote":     {"host": BRIDGE + ":59000/"},
-    "graphviz":      {"host": BRIDGE + ":60000/", "browser": False},
-    "pali":          {"host": BRIDGE + ":61000/"}
+    "csPlugin":      {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
+    "taunoPlugin":   {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
+    "simcirPlugin":  {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
+    "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
+    "showCode":      {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
+    "showImage":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
+    "showVideo":     {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+    "mcq":           {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
+    "mmcq":          {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
+    "shortNote":     {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
+    "graphviz":      {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
+    # "pali":          {"host": "http://" + PALIPLUGIN_NAME + ":5000/"}
 }
 
 
