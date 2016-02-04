@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 var csPluginStartTime = new Date();
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3

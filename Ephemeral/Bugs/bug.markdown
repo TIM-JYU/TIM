@@ -1,4 +1,4 @@
-﻿5.2 Suorittaminen
+5.2 Suorittaminen
 -----------------
 
 C\#:n tuottaa siis lähdekoodista suoritettavan (tai ”ajettavan”)

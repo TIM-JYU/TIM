@@ -1,4 +1,4 @@
-﻿var videoApp = angular.module('videoApp', ['ngSanitize']);
+var videoApp = angular.module('videoApp', ['ngSanitize']);
 videoApp.directive('videoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
 videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) {	videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {

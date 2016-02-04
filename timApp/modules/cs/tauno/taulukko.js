@@ -1,4 +1,4 @@
-﻿// -*- coding: utf-8; tab-width: 4;  -*-
+// -*- coding: utf-8; tab-width: 4;  -*-
 //
 // Tauno - taulukot nohevasti
 //
