@@ -164,7 +164,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     if route == "teacher":
         verify_teacher_access(doc_id)
 
-    if route == 'see_answers':
+    if route == 'answers':
         verify_seeanswers_access(doc_id)
 
     if not has_view_access(doc_id):
