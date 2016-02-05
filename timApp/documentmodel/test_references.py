@@ -14,6 +14,7 @@ from documentmodel.documentwriter import DocumentWriter
 from documentmodel.exceptions import DocExistsError
 from documentmodel.randutils import random_paragraph
 from timdbtest import TimDbTest
+from timdb.timdbbase import TimDbException
 
 
 class RefTest(TimDbTest):
@@ -71,6 +72,24 @@ class RefTest(TimDbTest):
         self.assertEqual(self.dict_merge(self.src_par.get_attrs(), ref_par.get_attrs()), rendered_pars[0].get_attrs())
         self.assertEqual(self.dict_merge(self.src_par.get_properties(), ref_par.get_properties()),
                          rendered_pars[0].get_properties())
+
+    def test_circular(self):
+        db = self.init_testdb()
+
+        ref_par = self.ref_doc.add_ref_paragraph(self.src_par)
+        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
+        self.assertEqual('', ref_par.get_markdown())
+
+        self.src_par.set_attr('rd', str(self.ref_doc.doc_id))
+        self.src_par.set_attr('rp', ref_par.get_id())
+        self.src_doc.modify_paragraph_obj(self.src_par.get_id(), self.src_par)
+
+        self.assertRaises(TimDbException, ref_par.get_referenced_pars)
+        self.assertRaises(TimDbException, self.src_par.get_referenced_pars)
+
+    def tearDown(self):
+        self.get_db().close()
 
 if __name__ == '__main__':
     unittest.main()
