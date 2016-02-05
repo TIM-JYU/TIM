@@ -366,11 +366,13 @@ class Document:
         return self.add_paragraph_obj(p)
 
     @contract
-    def add_ref_paragraph(self, src_par: 'DocParagraph', text: 'str|None' = None) -> 'DocParagraph':
-        ref_attrs = {
-            'rp': src_par.get_id(),
-            'rt': src_par.get_hash()
-        }
+    def add_ref_paragraph(self, src_par: 'DocParagraph', text: 'str|None' = None,
+                          attrs: 'dict|None' = None, properties: 'dict|None' = None) -> 'DocParagraph':
+
+        ref_attrs = {} if attrs is None else attrs.copy()
+        ref_attrs['rp'] = src_par.get_id()
+        ref_attrs['rt'] = src_par.get_hash()
+
         rd = src_par.get_doc_id()
         if self.get_settings().get_source_document() != rd:
             ref_attrs['rd'] = str(rd)
@@ -379,7 +381,7 @@ class Document:
         else:
             text = ''
 
-        return self.add_paragraph(text, attrs=ref_attrs)
+        return self.add_paragraph(text, attrs=ref_attrs, properties=properties)
 
     @contract
     def delete_paragraph(self, par_id: 'str'):

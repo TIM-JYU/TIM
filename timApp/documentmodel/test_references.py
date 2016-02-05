@@ -29,6 +29,13 @@ class RefTest(TimDbTest):
         c.update(b)
         return c
 
+    def dict_issubset(self, a, b):
+        return set(a.items()).issubset(set(b.items()))
+
+    def assert_dict_issubset(self, a, b):
+        self.assertTrue(self.dict_issubset(a, b), "{} is not a subset of {}".format(a, b))
+
+
     def init_testdb(self):
         db = self.get_db()
         self.src_doc = self.doc_create(db, "original", 1)
@@ -56,10 +63,13 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
         self.assertEqual(self.src_par.get_properties(), rendered_pars[0].get_properties())
 
+        db.close()
+
     def test_translation(self):
         db = self.init_testdb()
 
-        ref_par = self.ref_doc.add_ref_paragraph(self.src_par, "translation")
+        ref_attrs = {'foo': 'fffoooo', 'bar': 'baaaa'}
+        ref_par = self.ref_doc.add_ref_paragraph(self.src_par, "translation", attrs=ref_attrs)
         self.assertEqual(1, len(self.ref_doc))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual("translation", ref_par.get_markdown())
@@ -69,9 +79,11 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_id(), rendered_pars[0].get_id())
         self.assertEqual(ref_par.get_markdown(), rendered_pars[0].get_markdown())
         self.assertEqual(ref_par.get_html(), rendered_pars[0].get_html())
-        self.assertEqual(self.dict_merge(self.src_par.get_attrs(), ref_par.get_attrs()), rendered_pars[0].get_attrs())
+        self.assertEqual(self.dict_merge(self.src_par.get_attrs(), ref_attrs), rendered_pars[0].get_attrs())
         self.assertEqual(self.dict_merge(self.src_par.get_properties(), ref_par.get_properties()),
                          rendered_pars[0].get_properties())
+
+        db.close()
 
     def test_circular(self):
         db = self.init_testdb()
@@ -88,8 +100,47 @@ class RefTest(TimDbTest):
         self.assertRaises(TimDbException, ref_par.get_referenced_pars)
         self.assertRaises(TimDbException, self.src_par.get_referenced_pars)
 
-    def tearDown(self):
-        self.get_db().close()
+        db.close()
+
+    def test_transitive(self):
+        db = self.init_testdb()
+
+        # Reference to the original paragraph
+        ref_par1 = self.ref_doc.add_ref_paragraph(self.src_par)
+        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(ref_par1.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
+        self.assertEqual('', ref_par1.get_markdown())
+
+        # Reference to the reference above
+        ref_doc2 = self.doc_create(db, "referencing reference", 3)
+        ref_par2 = ref_doc2.add_ref_paragraph(ref_par1)
+        self.assertEqual(1, len(ref_doc2))
+        self.assertEqual(ref_par2.get_id(), ref_doc2.get_paragraphs()[0].get_id())
+        self.assertEqual('', ref_par2.get_markdown())
+
+        # Render the reference to the reference
+        rendered_pars = ref_par2.get_referenced_pars()
+        self.assertEqual(1, len(rendered_pars))
+        self.assertEqual(self.src_par.get_id(), rendered_pars[0].get_id())
+        self.assertEqual(self.src_par.get_markdown(), rendered_pars[0].get_markdown())
+        self.assertEqual(self.src_par.get_html(), rendered_pars[0].get_html())
+        self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
+        self.assertEqual(self.src_par.get_properties(), rendered_pars[0].get_properties())
+
+        # Declare some new attributes
+        ref_par1.set_attr('foo', 'fffooo')
+        ref_par2.set_attr('bar', 'baaaa')
+        self.ref_doc.modify_paragraph_obj(ref_par1.get_id(), ref_par1)
+        ref_doc2.modify_paragraph_obj(ref_par2.get_id(), ref_par2)
+
+        expected_attrs = self.src_par.get_attrs()
+        expected_attrs['foo'] = 'fffooo'
+        expected_attrs['bar'] = 'baaaa'
+
+        rendered_pars = ref_par2.get_referenced_pars()
+        self.assert_dict_issubset(expected_attrs, rendered_pars[0].get_attrs())
+
+        db.close()
 
 if __name__ == '__main__':
     unittest.main()
