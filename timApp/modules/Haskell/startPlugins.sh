@@ -4,7 +4,7 @@
 #IFS=$'\n\t'
 
 dockername="haskellplugins2"
-dockerOptions="--name $dockername \
+dockerOptions="--name $dockername --net=timnet \
    -v /opt/tim/timApp/modules/Haskell/.cabal-sandbox/bin/:/hbin\
    -v /opt/tim/timApp/modules/Haskell/:/Haskell\
    -v /opt/tim/timApp/modules/Haskell/startAll.sh:/startAll.sh\
