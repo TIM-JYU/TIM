@@ -376,7 +376,7 @@ class Document:
         rd = src_par.get_doc_id()
         if self.get_settings().get_source_document() != rd:
             ref_attrs['rd'] = str(rd)
-        if text:
+        if text is not None:
             ref_attrs['r'] = 'tr'
         else:
             text = ''

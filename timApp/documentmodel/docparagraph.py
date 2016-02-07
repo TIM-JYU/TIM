@@ -207,7 +207,7 @@ class DocParagraph(DocParagraphBase):
     @contract
     def get_exported_markdown(self) -> 'str':
         if self.is_reference():
-            data = [par.__data for par in self.get_referenced_pars()]
+            data = [par.__data for par in self.get_referenced_pars(edit_window=True)]
             return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
 
         return DocumentWriter([self.__data], export_hashes=False, export_ids=False).get_text()
@@ -623,12 +623,17 @@ class DocParagraph(DocParagraphBase):
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
             md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else ref_par.get_markdown()
-            attrs = self.get_attrs(ref_par.get_attrs()) #if tr else ref_par.get_attrs()
-            props = self.get_properties(ref_par.get_properties()) #if tr else ref_par.get_properties()
 
-            # Remove reference attributes
-            for ref_attr in ['r', 'rd', 'rp', 'ra', 'rt']:
-                attrs.pop(ref_attr, None)
+            if edit_window:
+                attrs = self.get_attrs()
+                props = self.get_properties()
+            else:
+                attrs = self.get_attrs(ref_par.get_attrs()) #if tr else ref_par.get_attrs()
+                props = self.get_properties(ref_par.get_properties()) #if tr else ref_par.get_properties()
+
+                # Remove reference attributes
+                for ref_attr in ['r', 'rd', 'rp', 'ra', 'rt']:
+                    attrs.pop(ref_attr, None)
 
             par = DocParagraph.create(doc, par_id=ref_par.get_id(), md=md, t=ref_par.get_hash(),
                                            attrs=attrs, props=props)

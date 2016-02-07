@@ -142,5 +142,74 @@ class RefTest(TimDbTest):
 
         db.close()
 
+    def test_editparagraph_cite(self):
+        db = self.init_testdb()
+
+        src_md = self.src_par.get_exported_markdown()
+        self.assertRegex(src_md, '^#- *\\{([ab]="[21]" ?){2}\\}\ntestpar\n$')
+
+        ref_par = self.ref_doc.add_ref_paragraph(self.src_par)
+        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
+        self.assertEqual('', ref_par.get_markdown())
+
+        ref_md = ref_par.get_exported_markdown()
+        ref_blocks = [DocParagraph.create(doc=ref_par.doc, md=par['md'], attrs=par.get('attrs'))
+              for par in DocumentParser(ref_md).validate_structure(
+                  is_whole_document=False).get_blocks()]
+
+        self.assertEqual(1, len(ref_blocks))
+        self.assertEqual(self.src_par.get_markdown(), ref_blocks[0].get_markdown())
+        self.assertEqual(str(self.src_doc.doc_id), str(ref_blocks[0].get_attr('rd')))
+        self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
+        self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
+
+        db.close()
+
+    def test_editparagraph_translate(self):
+        db = self.init_testdb()
+
+        src_md = self.src_par.get_exported_markdown()
+        self.assertRegex(src_md, '^#- *\\{([ab]="[21]" ?){2}\\}\ntestpar\n$')
+
+        empty_refpar = self.ref_doc.add_ref_paragraph(self.src_par, "")
+        self.assertEqual(1, len(self.ref_doc))
+        self.assertEqual(empty_refpar.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
+        self.assertEqual("", empty_refpar.get_markdown())
+
+        ref_md = empty_refpar.get_exported_markdown()
+        ref_blocks = [DocParagraph.create(doc=empty_refpar.doc, md=par['md'], attrs=par.get('attrs'))
+              for par in DocumentParser(ref_md).validate_structure(
+                  is_whole_document=False).get_blocks()]
+
+        self.assertEqual(1, len(ref_blocks))
+        self.assertEqual(self.src_par.get_markdown(), ref_blocks[0].get_markdown())
+        self.assertEqual(str(self.src_doc.doc_id), str(ref_blocks[0].get_attr('rd')))
+        self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
+        self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
+        self.assertEqual("tr", ref_blocks[0].get_attr('r'))
+
+
+        ref_attrs = {'foo': 'fffoooo', 'bar': 'baaaa'}
+        ref_par = self.ref_doc.add_ref_paragraph(self.src_par, "translation", attrs=ref_attrs)
+        self.assertEqual(2, len(self.ref_doc))
+        self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[1].get_id())
+        self.assertEqual("translation", ref_par.get_markdown())
+
+        ref_md = ref_par.get_exported_markdown()
+        ref_blocks = [DocParagraph.create(doc=ref_par.doc, md=par['md'], attrs=par.get('attrs'))
+              for par in DocumentParser(ref_md).validate_structure(
+                  is_whole_document=False).get_blocks()]
+
+        self.assertEqual(1, len(ref_blocks))
+        self.assertEqual(ref_par.get_markdown(), ref_blocks[0].get_markdown())
+        self.assertEqual(str(self.src_doc.doc_id), str(ref_blocks[0].get_attr('rd')))
+        self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
+        self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
+        self.assertEqual("tr", ref_blocks[0].get_attr('r'))
+
+        db.close()
+
+
 if __name__ == '__main__':
     unittest.main()
