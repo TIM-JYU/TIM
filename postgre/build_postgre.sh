@@ -4,6 +4,9 @@ CONF_DIR=/etc/postgresql/9.3
 DATA_DIR=/var/lib/postgresql/9.3
 CONTAINER_NAME=postgre_init
 
+# Delete the symbolic link if it still exists
+rm -f /opt/postgre 2> /dev/null
+
 checkdir() {
   if [ ! -d "$1" ]; then
       echo "Folder $1 doesn't exist, copying it from container"
@@ -11,7 +14,7 @@ checkdir() {
   fi
 }
 
-docker build -t postgre .
+docker build -t postgre $@ .
 
 docker run -d --name $CONTAINER_NAME -t -i postgre /bin/bash -c 'sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf ; /bin/bash'
 
