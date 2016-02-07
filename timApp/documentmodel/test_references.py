@@ -159,7 +159,7 @@ class RefTest(TimDbTest):
                   is_whole_document=False).get_blocks()]
 
         self.assertEqual(1, len(ref_blocks))
-        self.assertEqual(self.src_par.get_markdown(), ref_blocks[0].get_markdown())
+        self.assertEqual('', ref_blocks[0].get_markdown())
         self.assertEqual(str(self.src_doc.doc_id), str(ref_blocks[0].get_attr('rd')))
         self.assertEqual(self.src_par.get_id(), ref_blocks[0].get_attr('rp'))
         self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))

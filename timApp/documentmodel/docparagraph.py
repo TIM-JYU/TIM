@@ -622,12 +622,13 @@ class DocParagraph(DocParagraphBase):
         def reference_par(ref_par):
             tr = self.get_attr('r') == 'tr'
             doc = ref_par.doc
-            md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else ref_par.get_markdown()
 
             if edit_window:
+                md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else self.get_markdown()
                 attrs = self.get_attrs()
                 props = self.get_properties()
             else:
+                md = DocParagraph.__combine_md(ref_par.get_markdown(), self.get_markdown()) if tr else ref_par.get_markdown()
                 attrs = self.get_attrs(ref_par.get_attrs()) #if tr else ref_par.get_attrs()
                 props = self.get_properties(ref_par.get_properties()) #if tr else ref_par.get_properties()
 
