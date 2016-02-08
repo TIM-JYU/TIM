@@ -64,6 +64,11 @@ def update_document(doc_id):
     chg = d.get_changelog()
     for ver in chg:
         ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
+
+    # todo: include diffs in the message
+    notify_doc_owner(doc_id, '{} has edited your document "{}" as whole'.format(
+        getCurrentUserName(), timdb.documents.get_first_document_name(doc_id)))
+
     return jsonResponse({'versions': chg, 'fulltext': d.export_markdown()})
 
 
@@ -93,12 +98,15 @@ def modify_paragraph():
 
     if editing_area:
         try:
+            original_md = doc.export_section(area_start, area_end)
             new_start, new_end = doc.update_section(md, area_start, area_end)
+            updated_md = doc.export_section(new_start, new_end)
             pars = doc.get_section(new_start, new_end)
         except ValidationException as e:
             return abort(400, str(e))
     else:
         original_par = doc.get_paragraph(par_id)
+        original_md = doc.export_section(par_id, par_id)
         pars = []
 
         separate_pars = DocumentParser(md).get_blocks()
@@ -134,7 +142,15 @@ def modify_paragraph():
             [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs(),
                                                      properties=properties)
             pars.append(par)
+
+        updated_md = doc.export_section(pars[0].get_id(), pars[len(pars) - 1].get_id())
+
     mark_pars_as_read_if_chosen(pars, doc)
+
+    msg = '{} has edited a paragraph in your document "{}":\n\n== ORIGINAL ==\n{}\n\n==MODIFIED==\n{}\n'
+    notify_doc_owner(doc_id, msg.format(getCurrentUserName(), timdb.documents.get_first_document_name(doc_id),
+                                        original_md, updated_md))
+
     return par_response(pars,
                         doc,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'])
@@ -270,6 +286,10 @@ def add_paragraph():
                                                  properties=properties)
         pars.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
+
+    notify_doc_owner(doc_id, '{} has added a new paragraph on your document "{}":\n\n{}'.format(
+        getCurrentUserName(), timdb.documents.get_first_document_name(doc_id), md))
+
     return par_response(pars, doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 
@@ -285,10 +305,16 @@ def delete_paragraph(doc_id):
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
     doc = get_newest_document(doc_id)
     if area_end and area_start:
+        text = doc.export_section(area_start, area_end)
         doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
+        text = doc.export_section(par_id, par_id)
         timdb.documents.delete_paragraph(doc, par_id)
+
+    notify_doc_owner(doc_id, '{} has deleted paragraph(s) from your document "{}":\n\n{}'.format(
+        getCurrentUserName(), timdb.documents.get_first_document_name(doc_id), text))
+
     return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'])
 
 

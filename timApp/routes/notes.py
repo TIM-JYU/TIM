@@ -1,8 +1,7 @@
 from flask import Blueprint, abort, request
 
 from documentmodel.document import Document
-from routes.common import getTimDb, getCurrentUserGroup, getCurrentUserId, jsonResponse, verify_view_access, \
-    verifyLoggedIn, verify_comment_right, get_referenced_pars_from_req
+from routes.common import *
 from routes.edit import par_response
 
 notes = Blueprint('notes',
@@ -51,6 +50,9 @@ def post_note():
         par = get_referenced_pars_from_req(par)[0]
 
     timdb.notes.addNote(group_id, Document(par.get_doc_id()), par, note_text, access, tags)
+    notify_doc_owner(doc_id, '{} has posted a note on your document "{}":\n\n{}'.format(
+        getCurrentUserName(), timdb.documents.get_first_document_name(doc_id), note_text))
+
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -75,6 +77,9 @@ def edit_note():
     if not (timdb.notes.hasEditAccess(group_id, note_id) or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
     timdb.notes.modifyNote(note_id, note_text, access, tags)
+    notify_doc_owner(doc_id, '{} has edited a note on your document "{}":\n\n{}'.format(
+        getCurrentUserName(), timdb.documents.get_first_document_name(doc_id), note_text))
+
     doc = Document(doc_id)
     return par_response([doc.get_paragraph(par_id)],
                         doc)

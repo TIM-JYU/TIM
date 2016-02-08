@@ -427,7 +427,8 @@ class Users(TimDbBase):
     @contract
     def get_users_in_group(self, group_id: 'int', limit:'int'=1000) -> 'list(dict)':
         cursor = self.db.cursor()
-        cursor.execute("""SELECT UserGroupMember.User_id as id, User.real_name as name from UserGroupMember
+        cursor.execute("""SELECT UserGroupMember.User_id as id, User.real_name as name, User.email as email
+                          FROM UserGroupMember
                           INNER JOIN User ON UserGroupMember.User_id=User.id
                           WHERE UserGroupMember.UserGroup_id=?
                           LIMIT ?

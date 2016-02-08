@@ -340,3 +340,17 @@ def validate_item(item_name, item_type, owner_group_id):
 
 def get_user_settings():
     return session.get('settings', {})
+
+
+def notify_doc_owner(doc_id, msg):
+    timdb = getTimDb()
+    my_userid = getCurrentUserId()
+    owner_group = timdb.documents.get_owner(doc_id)
+    email_list = []
+    for user in timdb.users.get_users_in_group(owner_group):
+        if user['id'] != my_userid:
+            email_list.append(user['email'])
+        else:
+            print("Not sending to {}, that's me".format(user['name']))
+    print("Sending email to {}:\n{}\n".format(email_list, msg))
+
