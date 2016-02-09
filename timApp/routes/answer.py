@@ -68,8 +68,9 @@ def post_answer(plugintype, task_id):
     if save_teacher:
         verify_teacher_access(doc_id)
     users = None
-    if is_teacher:
+    if not save_answer or is_teacher:
         verify_seeanswers_access(doc_id)
+    if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
         if answer_id is not None:
             expected_task_id = timdb.answers.get_task_id(answer_id)
