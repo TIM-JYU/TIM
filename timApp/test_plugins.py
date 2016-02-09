@@ -106,6 +106,12 @@ class PluginTest(TimRouteTest):
         self.assertEqual(1, len(plugs))
         self.assertEqual([True, True, True], json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
 
+        # Testing noanswers parameter: There should be no answers in the document
+        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False, 'noanswers': True})
+        plugs = tree.findall(mmcq_xpath)
+        self.assertEqual(1, len(plugs))
+        self.assertIsNone(json.loads(plugs[0].find('mmcq').get('data-content')).get('state'))
+
         self.logout()
         resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, False])
         self.check_ok_answer(resp)
