@@ -201,6 +201,7 @@ def view(doc_path, template_name, usergroup=None, route="view"):
     current_user = timdb.users.getUser(user)
 
     clear_cache = get_option(request, "nocache", False)
+    hide_answers = get_option(request, 'noanswers', False)
     doc_settings = doc.get_settings()
     raw_css = doc_settings.css() if doc_settings else None
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
@@ -216,7 +217,8 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                                                           xs,
                                                           current_user if teacher_or_see_answers or logged_in() else None,
                                                           sanitize=False,
-                                                          do_lazy=get_option(request, "lazy", True))
+                                                          do_lazy=get_option(request, "lazy", True),
+                                                          load_plugin_states=not hide_answers)
 
     index = get_index_from_html_list(t['html'] for t in texts)
 
@@ -264,5 +266,6 @@ def view(doc_path, template_name, usergroup=None, route="view"):
                              rights=get_rights(doc_id),
                              translations=timdb.documents.get_translations(doc_id),
                              reqs=pluginControl.get_all_reqs(),
-                             settings=settings)
+                             settings=settings,
+                             no_browser=hide_answers)
     return result

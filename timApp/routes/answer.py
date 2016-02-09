@@ -33,7 +33,7 @@ def is_answer_valid(plugin, old_answers, tim_info):
 
 
 @answers.route("/<plugintype>/<task_id>/answer/", methods=['PUT'])
-def save_answer(plugintype, task_id):
+def post_answer(plugintype, task_id):
     """
     Saves the answer submitted by user for a plugin in the database.
 
@@ -64,6 +64,7 @@ def save_answer(plugintype, task_id):
     answer_browser_data = request.get_json().get('abData', {})
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
+    save_answer = answer_browser_data.get('saveAnswer', False)
     if save_teacher:
         verify_teacher_access(doc_id)
     users = None
@@ -126,7 +127,7 @@ def save_answer(plugintype, task_id):
             tags = save_object['tags']
         except (TypeError, KeyError):
             pass
-        if not is_teacher:
+        if not is_teacher and save_answer:
             is_valid, explanation = is_answer_valid(plugin, old_answers, tim_info)
             if answer_browser_data.get('giveCustomPoints'):
                 custom_points = answer_browser_data.get('points')

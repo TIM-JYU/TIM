@@ -15,7 +15,8 @@ class PluginTest(TimRouteTest):
                               "abData": {"saveTeacher": save_teacher,
                                          "teacher": teacher,
                                          "userId": user_id,
-                                         "answer_id": answer_id}})
+                                         "answer_id": answer_id,
+                                         "saveAnswer": True}})
 
     def test_plugin(self):
         self.login_test1()

@@ -42,11 +42,12 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
                     var newScope = $scope;
-                    var newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
-                    var newElement = $compile(newHtml);
-                    var parent = $element.parents(".par")[0];
-                    parent.replaceChild(newElement($scope.$parent)[0],$element[0]);
-                    
+                    if (!$scope.$parent.noBrowser) {
+                        var newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
+                        var newElement = $compile(newHtml);
+                        var parent = $element.parents(".par")[0];
+                        parent.replaceChild(newElement($scope.$parent)[0], $element[0]);
+                    }
                     // Next the inside of the plugin to non lazy
                     var origHtml = plugin[0].innerHTML;
                     if ( origHtml.indexOf(LAZYSTART) >= 0 ) {
@@ -175,12 +176,14 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             teacher: $scope.$parent.teacherMode,
                             points: $scope.points,
                             giveCustomPoints: $scope.giveCustomPoints,
-                            userId: $scope.user.id
+                            userId: $scope.user.id,
+                            saveAnswer: !$scope.$parent.noBrowser
                         };
                     else
                         return {
                             saveTeacher: false,
-                            teacher: $scope.$parent.teacherMode
+                            teacher: $scope.$parent.teacherMode,
+                            saveAnswer: !$scope.$parent.noBrowser
                         };
                 };
 
