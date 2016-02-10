@@ -58,6 +58,7 @@ timApp.controller("ViewCtrl", [
         timLogTime("VieCtrl start","view");
         http.defaults.headers.common.Version = $window.version.hash;
         http.defaults.headers.common.RefererPath = $window.refererPath;
+        sc.noBrowser = $window.noBrowser;
         sc.docId = $window.docId;
         sc.docName = $window.docName;
         sc.showIndex = $window.showIndex;

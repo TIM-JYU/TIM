@@ -54,6 +54,7 @@
         {{ custom_css if custom_css }}
     </style>
     <script>
+        var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};
         var version = {{version|tojson|safe}};
         var translations = {{translations|tojson}};

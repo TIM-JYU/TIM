@@ -31,7 +31,18 @@
         {% endblock %}
 
         <script>
-            angular.module('timApp', [{% block ngmodules %}'ngSanitize',{% endblock %}]);
+            var timApp = angular.module('timApp', [{% block ngmodules %}'ngSanitize',{% endblock %}]);
+            // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
+            timApp.config(['$provide', function ($provide) {
+                $provide.decorator('$browser', ['$delegate', function ($delegate) {
+                    $delegate.onUrlChange = function () {
+                    };
+                    $delegate.url = function () {
+                        return "";
+                    };
+                    return $delegate;
+                }]);
+            }]);
         </script>
         <!-- HTML5 shiv and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
