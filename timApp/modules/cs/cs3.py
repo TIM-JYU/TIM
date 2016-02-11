@@ -430,9 +430,11 @@ def give_points(points_rule, rule, default=0):
     if not points_rule.get("cumulative", False):
         points_rule["result"] = max(points_rule.get("result", 0), p)
         return
+    print("rule: ", rule)
     ptstype = "run"
     if "test" in rule: ptstype = "test"
     if "doc" in rule: ptstype = "doc"
+    # if "code" in rule: ptstype = "code"
     pts = points_rule.get("points", None)
     if pts:
         ptype = pts.get(ptstype, 0)
@@ -442,7 +444,7 @@ def give_points(points_rule, rule, default=0):
         pts = {}
         points_rule["points"] = pts
         pts[ptstype] = p
-    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0) + pts.get("doc", 0)
+    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0) + pts.get("doc", 0) + pts.get("code", 0)
 
 
 def get_points_rule(points_rule, key, default):

@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 var csPluginStartTime = new Date();
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
@@ -76,16 +76,21 @@ ConsolePWD.getPWD = function() {
 
 var languageTypes = {};
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","r","xml"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","r","xml"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","sage","simcir","xml","r"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","python","json","xml","r"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
-languageTypes.testTypes = ["ccomtest","jcomtest","comtest","junit","scomtest"];
+languageTypes.testTypes = ["ccomtest","jcomtest","comtest","scomtest"];
+languageTypes.unitTestTypes = ["junit","unit"];
 
 // If test type is comtest, how to change it for specific languages
 languageTypes.impTestTypes = {cs:"comtest", console:"comtest", cc:"ccomtest", java:"jcomtest", scala:"scomtest"};
 languageTypes.impTestTypes["c++"] = "ccomtest";
+
+// If test type is unit, how to change it for specific languages
+languageTypes.impUnitTestTypes = {cs:"nunit", console:"nunit", cc:"cunit", java:"junit", scala:"junit"};
+languageTypes.impUnitTestTypes["c++"] = "cunit";
 
 languageTypes.whatIsIn = function (types, type, def) {
 "use strict";
@@ -124,12 +129,22 @@ languageTypes.getAceModeType = function(type,def) {
     return this.whatIsInAce(this.runTypes,type,def);
 };
 
-languageTypes.getTestType = function(type,def) {
+languageTypes.getTestType = function(type,language,def) {
 "use strict";
     var t = this.whatIsIn(this.testTypes,type,def);
     if ( t !== "comtest" ) return t;
-    var lt = this.whatIsIn(this.runTypes,type,"console");
+    var lt = this.whatIsIn(this.runTypes,language,"console");
     var impt = this.impTestTypes[lt];
+    if ( impt ) return impt;
+    return t;     
+};
+
+languageTypes.getUnitTestType = function(type,language,def) {
+"use strict";
+    var t = this.whatIsIn(this.unitTestTypes,type,def);
+    if ( t !== "unit" ) return t;
+    var lt = this.whatIsIn(this.runTypes,language,"console");
+    var impt = this.impUnitTestTypes[lt];
     if ( impt ) return impt;
     return t;     
 };
@@ -288,6 +303,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p class="csRunMenu" >' +
 				  '<button ng-if="isRun"  ng-disabled="isRunning" ng-click="runCode();">{{buttonText}}</button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
+				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
 				  '<a href="" ng-if="!attrs.nocode && (file || attrs.program)" ng-click="showCode();">{{showCodeLink}}</a>&nbsp&nbsp'+
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
@@ -380,7 +396,8 @@ csApp.directiveFunction = function(t,isInput) {
             scope.languageText = english ? "language: " : "kieli: ";  
             
 			csApp.set(scope,attrs,"type","cs");
-            scope.isText = languageTypes.getRunType(scope.type,false) == "text";
+            var rt = languageTypes.getRunType(scope.type,false);
+            scope.isText = rt == "text" || rt == "xml" || rt == "css";
             scope.isSage = languageTypes.getRunType(scope.type,false) == "sage";
             scope.isSimcir = t === "simcir";
             
@@ -472,7 +489,8 @@ csApp.directiveFunction = function(t,isInput) {
             
             scope.isAll  = languageTypes.isAllType(scope.type);
             scope.isRun = (languageTypes.getRunType(scope.type,false) !== false  || scope.isAll ) && scope.norun == false;
-            scope.isTest = languageTypes.getTestType(scope.type,false) !== false;
+            scope.isTest = languageTypes.getTestType(scope.type,scope.selectedLanguage,false) !== false;
+            scope.isUnitTest = languageTypes.getUnitTestType(scope.type,scope.selectedLanguage,false) !== false;
             scope.isDocument = (scope.type.indexOf("doc") >= 0);
 
             scope.showInput = (scope.type.indexOf("input") >= 0);
@@ -770,10 +788,16 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 	};
 	
 	$scope.runTest = function() {
-		var t = languageTypes.getTestType($scope.selectedLanguage,"comtest"); 
+		var t = languageTypes.getTestType($scope.type,$scope.selectedLanguage,"comtest"); 
 		$scope.doRunCode(t,false);
 	};
 	
+	$scope.runUnitTest = function() {
+		var t = languageTypes.getUnitTestType($scope.type,$scope.selectedLanguage,"junit"); 
+		$scope.doRunCode(t,false);
+	};
+	
+    
     
 	$scope.runDocument = function() {
 	    if ( $scope.docURL ) {
@@ -915,6 +939,7 @@ csApp.Controller = function($scope,$http,$transclude,$sce) {
 			if ( data.web.testGreen ) $scope.runTestGreen = true;
 			if ( data.web.testRed ) $scope.runTestRed = true;
 			$scope.comtestError = data.web.comtestError;
+            if ( $scope.runError ) $scope.runTestGreen = false;
 
 			var docURL = data.web.docurl;
 

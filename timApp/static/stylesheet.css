@@ -410,12 +410,12 @@ ul ul ul, ol ol ol {
 }
 
 .areacollapse::before {
-    color: #D8D8D8;
+    color: #3cc; 
     content: "[-]";
 }
 
 .areaexpand::before {
-    color: #D8D8D8;
+    color: #3cc;
     content: "[+]";
 }
 
