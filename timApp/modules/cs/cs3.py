@@ -1021,7 +1021,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         points_rule["points"]["run"] = 0
 
                 expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
-                if expect_code:
+                if expect_code and not is_doc:
                     if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
                     excode = re.compile(expect_code.rstrip('\n'), re.M)
                     if excode.match(usercode): give_points(points_rule, "code", 1)
