@@ -4,6 +4,7 @@ import string
 import time
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from mailer import Mailer
 
 HOST_NAME = "localhost"
 HOST_PORT = 80
@@ -25,7 +26,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.send_str_response(400, 'Missing message data')
                 return
 
-            self.queue_mail(mfrom, mto, mdata)
+            Mailer.queue_mail(mfrom, mto, mdata)
             self.send_str_response(200, 'Message queued')
         else:
             self.send_str_response(400, 'Unknown route ' + self.path)
@@ -36,24 +37,15 @@ class MyServer(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(bytes(msg + '\n', 'utf-8'))
 
-    @classmethod
-    def queue_mail(cls, sender: str, rcpt: str, msg: str):
-        if not os.path.exists(MAIL_DIR):
-            os.mkdir(MAIL_DIR)
-
-        ordinal = str(len(os.listdir(MAIL_DIR)))
-        random_part = ''.join([random.choice(string.ascii_lowercase) for _ in range(6)])
-        fname = os.path.join(MAIL_DIR, ordinal + '_' + random_part)
-
-        with open(fname, 'w') as f:
-            f.write('\n'.join([sender, rcpt, msg]))
-
 if __name__ == '__main__':
     myServer = HTTPServer((HOST_NAME, HOST_PORT), MyServer)
     print(time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, HOST_PORT))
 
     try:
-        myServer.serve_forever()
+        while True:
+            myServer.handle_request()
+            Mailer.update()
+
     except KeyboardInterrupt:
         pass
 
