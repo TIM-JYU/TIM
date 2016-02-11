@@ -122,7 +122,11 @@ def post_answer(plugintype, task_id):
         tags = []
         tim_info = jsonresp.get('tim_info', {})
         points = tim_info.get('points', None)
-
+        multiplier = plugin.points_multiplier()
+        if multiplier and points is not None:
+            points *= plugin.points_multiplier()
+        elif not multiplier:
+            points = None
         # Save the new state
         try:
             tags = save_object['tags']
