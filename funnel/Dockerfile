@@ -11,6 +11,12 @@ RUN dpkg-reconfigure locales
 RUN export LC_ALL="en_US.utf8"
 
 # Install everything we need
-#RUN apt-get update
-#RUN apt-get install -y python3
+RUN apt-get update
+RUN apt-get install -y python3
+RUN apt-get install -y python3-pip
+
+RUN pip3 install typing
+
+# Expose http port
+EXPOSE 80
 
