@@ -83,7 +83,7 @@ class Mailer:
     def has_messages(self):
         return os.path.islink(self.get_first_filename())
 
-    def dequeue(self) -> Union[dict, None]:
+    def dequeue(self) -> Union[list, None]:
         first_file = self.get_first_filename()
         if not os.path.isfile(first_file):
             return None
@@ -95,6 +95,7 @@ class Mailer:
             print('Syntax error in file ' + first_file)
             return None
 
+        os.unlink(os.path.join(self.mail_dir, os.readlink(first_file)))
         os.unlink(first_file)
         if lines[0] == '':
             os.unlink(self.get_last_filename())
@@ -107,7 +108,7 @@ class Mailer:
         if self.dry_run:
             return
 
-            print('Sending a new message')
+        print('Sending a new message')
         for (key, val) in msg.items():
             print('{}: {}'.format(key, val))
         print()

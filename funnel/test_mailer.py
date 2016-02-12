@@ -123,8 +123,52 @@ class MailerTest(unittest.TestCase):
                              f1_data[i],
                              'Line {} mismatches! Set "{}", read "{}"'.format(i, f1_data[i], f3_readdata[i]))
 
-    #def testDequeue(self):
-    #    self.fail()
+    def testDequeue(self):
+        # Empty dequeue
+        self.assertEqual(self.mailer.dequeue(), None)
+        files = os.listdir(self.maildir)
+        self.assertEqual(len(files), 0)
+
+        # Single element
+
+        f1_data = ['', 'sender', 'recipient', 'message']
+        f1_abs, f1_rel = self.mailer.get_random_filenames()
+        with open(f1_abs, 'w') as f1:
+            f1.write('\n'.join(f1_data))
+        os.symlink(f1_rel, self.mailer.get_first_filename())
+        os.symlink(f1_rel, self.mailer.get_last_filename())
+
+        f1_readdata = self.mailer.dequeue()
+
+        files = os.listdir(self.maildir)
+        self.assertEqual(len(files), 0)
+        self.assertEqual(len(f1_readdata), 3, 'Read message: ' + str(f1_readdata))
+        self.assertEqual(f1_readdata['From'], f1_data[1])
+        self.assertEqual(f1_readdata['To'], f1_data[2])
+        self.assertEqual(f1_readdata['Msg'], f1_data[3])
+
+        # Multiple elements
+        f_abs, f_rel = zip(*[self.mailer.get_random_filenames() for _ in range(3)])
+        f_data = [[f_rel[1], f1_data[1], f1_data[2], f1_data[3]],
+                  [f_rel[2], 'daemon@example.org', 'human@example2.com', 'first line\nsecond line'],
+                  ['', 'third@sender.com', 'third@recipient.net', 'message number three']]
+        for i in range(3):
+            with open(f_abs[i], 'w') as f:
+                f.write('\n'.join(f_data[i]))
+        os.symlink(f_rel[0], self.mailer.get_first_filename())
+        os.symlink(f_rel[2], self.mailer.get_last_filename())
+
+        f1_readdata = self.mailer.dequeue()
+        files = os.listdir(self.maildir)
+        self.assertEqual(len(files), 4, 'Files: ' + str(files))
+        self.assertEqual(len(f1_readdata), 3, 'Read message: ' + str(f1_readdata))
+        self.assertEqual(f1_readdata['From'], f_data[0][1])
+        self.assertEqual(f1_readdata['To'], f_data[0][2])
+        self.assertEqual(f1_readdata['Msg'], f_data[0][3])
+
+        # todo: test cases for message 2
+        # todo: test cases for message 3
+        # todo: test cases for empty queue again
 
     #def testUpdate(self):
     #    self.fail()
