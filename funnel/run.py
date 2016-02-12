@@ -27,7 +27,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.send_str_response(400, 'Missing message data')
                 return
 
-            Mailer.queue_mail(mfrom, mto, mdata)
+            Mailer.enqueue(mfrom, mto, mdata)
             self.send_str_response(200, 'Message queued')
         else:
             self.send_str_response(400, 'Unknown route ' + self.path)

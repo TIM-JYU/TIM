@@ -57,7 +57,7 @@ class Mailer:
         with open(filename, 'w') as f_dest:
             f_dest.write('\n'.join(lines))
 
-    def queue_mail(self, sender: str, rcpt: str, msg: str):
+    def enqueue(self, sender: str, rcpt: str, msg: str) -> str:
         this_absfile, this_relfile = self.get_random_filenames()
         with open(this_absfile, 'w') as f:
             f.write('\n'.join(['', sender, rcpt, msg]))
@@ -78,11 +78,12 @@ class Mailer:
             os.unlink(last_file)
 
         os.symlink(this_relfile, last_file)
+        return this_relfile
 
     def has_messages(self):
         return os.path.islink(self.get_first_filename())
 
-    def dequeue_message(self) -> Union[dict, None]:
+    def dequeue(self) -> Union[dict, None]:
         first_file = self.get_first_filename()
         if not os.path.isfile(first_file):
             return None
@@ -128,7 +129,7 @@ class Mailer:
             print('Rate limit exceeded, delaying send')
             return
 
-        self.send_message(self.dequeue_message())
+        self.send_message(self.dequeue())
         self.messages_remaining -= 1
         if self.first_message_time is None:
             self.first_message_time = time.time()
