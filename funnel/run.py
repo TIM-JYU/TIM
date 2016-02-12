@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 import os
 import random
 import string
@@ -6,7 +7,7 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from mailer import Mailer
 
-HOST_NAME = "localhost"
+HOST_NAME = "0.0.0.0"
 HOST_PORT = 80
 
 MAIL_DIR = "/service/mail"
@@ -39,12 +40,13 @@ class MyServer(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     myServer = HTTPServer((HOST_NAME, HOST_PORT), MyServer)
+    mailer = Mailer()
     print(time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, HOST_PORT))
 
     try:
         while True:
             myServer.handle_request()
-            Mailer.update()
+            mailer.update()
 
     except KeyboardInterrupt:
         pass
