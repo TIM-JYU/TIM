@@ -47,7 +47,7 @@ class Mailer:
 
     def set_next(self, filename: str, next_filename: str):
         with open(filename, 'r') as f_src:
-            lines = [line for line in f_src]
+            lines = f_src.read().split('\n')
 
         if len(lines) < 4:
             print('Syntax error in file ' + filename)
@@ -88,7 +88,7 @@ class Mailer:
             return None
 
         with open(first_file, 'r') as f_src:
-            lines = [line for line in f_src]
+            lines = f_src.read().split('\n')
 
         if len(lines) < 4:
             print('Syntax error in file ' + first_file)
