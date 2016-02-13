@@ -34,7 +34,8 @@ run locale-gen fi_FI.UTF-8
 run mkdir /service
 
 # Get GPG keys for Java 8
-run sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
+# run sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
+run apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
 
 #
 # Oracle Java 8 Dockerfile
