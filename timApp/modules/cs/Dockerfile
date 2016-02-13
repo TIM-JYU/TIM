@@ -106,6 +106,7 @@ run wget http://downloads.typesafe.com/scala/2.11.7/scala-2.11.7.deb
 run dpkg -i scala-2.11.7.deb
 run apt-get update
 run apt-get install scala    
+run rm scala-2.11.7.deb
 # Install Docker from Docker Inc. repositories.
 
 
