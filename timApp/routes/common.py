@@ -263,7 +263,7 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
     #    ref_id = req_json.get('ref-id')
     #    html_pars = [par for par in html_pars if par['doc_id'] == ref_doc_id and par['id'] == ref_id]
 
-    if edit_window or user is None:
+    if edit_window:
         # Skip readings and notes
         return html_pars, js_paths, css_paths, modules
 
@@ -281,15 +281,15 @@ def post_process_pars(doc, pars, user, sanitize=True, do_lazy=False, edit_window
         p['status'] = ''
         p['notes'] = []
 
-    group = timdb.users.getPersonalUserGroup(user)
-    readings = timdb.readings.getReadings(group, doc)
-
-    for r in readings:
-        key = (r['par_id'], r['doc_id'])
-        pars = pars_dict.get(key)
-        if pars:
-            for p in pars:
-                p['status'] = 'read' if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t') else 'modified'
+    group = timdb.users.getPersonalUserGroup(user) if user is not None else timdb.users.get_anon_group_id()
+    if user is not None:
+        readings = timdb.readings.getReadings(group, doc)
+        for r in readings:
+            key = (r['par_id'], r['doc_id'])
+            pars = pars_dict.get(key)
+            if pars:
+                for p in pars:
+                    p['status'] = 'read' if r['par_hash'] == p['t'] or r['par_hash'] == p.get('ref_t') else 'modified'
     
     notes = timdb.notes.getNotes(group, doc)
 

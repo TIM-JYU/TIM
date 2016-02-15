@@ -243,6 +243,7 @@ ul ul ul, ol ol ol {
     margin-left: 0;
     margin-top: 0;
     margin-bottom: 5px;
+    display: inline;
 }
 
 .note p:last-child {
@@ -292,6 +293,10 @@ ul ul ul, ol ol ol {
 
 .note {
     font-size: 0.7em;
+}
+
+.note .timestamp {
+    color: lightgrey;
 }
 
 .noteButton {
