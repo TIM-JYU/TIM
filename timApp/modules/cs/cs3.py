@@ -427,12 +427,14 @@ def log(self):
 def give_points(points_rule, rule, default=0):
     if not points_rule: return
     p = points_rule.get(rule, default)
-    if not points_rule.get("cumulative", False):
+    if not points_rule.get("cumulative", True):
         points_rule["result"] = max(points_rule.get("result", 0), p)
         return
+    print("rule: ", rule)
     ptstype = "run"
     if "test" in rule: ptstype = "test"
     if "doc" in rule: ptstype = "doc"
+    # if "code" in rule: ptstype = "code"
     pts = points_rule.get("points", None)
     if pts:
         ptype = pts.get(ptstype, 0)
@@ -442,7 +444,7 @@ def give_points(points_rule, rule, default=0):
         pts = {}
         points_rule["points"] = pts
         pts[ptstype] = p
-    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0) + pts.get("doc", 0)
+    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0) + pts.get("doc", 0) + pts.get("code", 0)
 
 
 def get_points_rule(points_rule, key, default):
@@ -1019,7 +1021,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         points_rule["points"]["run"] = 0
 
                 expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
-                if expect_code:
+                if expect_code and not is_doc:
                     if expect_code == "byCode": expect_code = get_param(query, "byCode", "")
                     excode = re.compile(expect_code.rstrip('\n'), re.M)
                     if excode.match(usercode): give_points(points_rule, "code", 1)
@@ -1046,10 +1048,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     docfilename = p.sub("", docfilename)
                     docfilename = docfilename.replace("_","__") # jostakin syystä tekee näin
                     dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, docfilename, fileext)
+                    docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, fileext)
                     print("XXXXXXXXXXXXXXXXXXXXXX",filename)
                     print("XXXXXXXXXXXXXXXXXXXXXX",docfilename)
                     print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
+                    print("XXXXXXXXXXXXXXXXXXXXXX",docfile)
                     doc_output = check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+                    if not os.path.isfile(docfile): # There is maybe more files with same name and it is difficult to guess the name
+                        dochtml = "/csimages/cs/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
+                        print("XXXXXXXXXXXXXXXXXXXXXX",dochtml)
+                        
                     web["docurl"] = dochtml
                     give_points(points_rule, "doc")
 

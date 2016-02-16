@@ -83,4 +83,5 @@ def search(query):
                            translations=None,
                            start_index=None,
                            in_lecture=False,
-                           disable_read_markings=True)
+                           disable_read_markings=True,
+                           no_browser=get_option(request, "noanswers", False))

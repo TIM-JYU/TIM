@@ -11,8 +11,8 @@ groups = Blueprint('groups',
 def get_uid_gid(groupname, usernames):
     timdb = getTimDb()
 
-    uids = [timdb.users.getUserByName(u) for u in usernames]
-    gid = timdb.users.getUserGroupByName(groupname)
+    uids = [timdb.users.get_user_by_name(u) for u in usernames]
+    gid = timdb.users.get_usergroup_by_name(groupname)
     if gid is None:
         abort(404, 'Usergroup does not exist.')
     return gid, uids
@@ -58,7 +58,7 @@ def create_group(groupname):
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace())
     if not has_digits or not has_letters or has_non_alnum:
         abort(400, 'Usergroup must contain at least one digit and one letter and must be alphanumeric.')
-    timdb.users.createUserGroup(groupname)
+    timdb.users.create_usergroup(groupname)
     return okJsonResponse()
 
 
@@ -82,7 +82,7 @@ def add_member(usernames, groupname):
         if uid in ids:
             already.append(name)
         else:
-            timdb.users.addUserToGroup(gid, uid, commit=False)
+            timdb.users.add_user_to_group(gid, uid, commit=False)
             added.append(name)
     timdb.commit()
     return jsonResponse({'already_belongs': already, 'added': added, 'not_exist': not_exist})

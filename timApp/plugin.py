@@ -75,6 +75,9 @@ class Plugin:
     def answer_limit(self):
         return self.values.get(self.answer_limit_key, self.limit_defaults.get(self.type))
 
+    def points_multiplier(self, default=1):
+        return self.points_rule({}).get('multiplier', default)
+
 
 class PluginException(Exception):
     """The exception that is thrown when an error occurs during a plugin call."""

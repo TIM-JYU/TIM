@@ -3,7 +3,7 @@
 {% block content %}
     <script>
         $(document).ready(function () {
-            var target_url = {{ url_for('login_page.loginWithKorppi')|tojson }};
+            var target_url = {{ url_for('login_page.login_with_korppi')|tojson }};
             var separator = target_url.indexOf('?') >= 0 ? '&' : '?';
             var came_from_raw = {{ (came_from or '')|tojson }};
             var came_from = encodeURIComponent(came_from_raw.replace("#", "%23"));

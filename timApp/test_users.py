@@ -8,17 +8,17 @@ class UserTest(TimDbTest):
         test_block_id = 4
         anonymous_usergroup_id = 2
         name, real_name, email, password_hash = ['test', 'John Doe', 'john@example.com', '0123456789abcdef']
-        user_id = db.users.createUser(name, real_name, email, password_hash)
-        saved_user = db.users.getUser(user_id)
+        user_id = db.users.create_user(name, real_name, email, password_hash)
+        saved_user = db.users.get_user(user_id)
         self.assertEqual(saved_user['name'], name)
         self.assertEqual(saved_user['real_name'], real_name)
         self.assertEqual(saved_user['email'], email)
-        group_id = db.users.createUserGroup('test group')
+        group_id = db.users.create_usergroup('test group')
         self.assertNotEqual(group_id, anonymous_usergroup_id)  # Should not be equal to anonymous usergroup id
 
         # Testing view access
         self.assertFalse(db.users.has_view_access(user_id, test_block_id))
-        db.users.addUserToGroup(group_id, user_id)
+        db.users.add_user_to_group(group_id, user_id)
         db.users.grant_access(group_id, test_block_id, 'view')
         self.assertTrue(db.users.has_view_access(user_id, test_block_id))
         self.assertFalse(db.users.has_edit_access(user_id, test_block_id))

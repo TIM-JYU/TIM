@@ -56,10 +56,22 @@ class PluginTest(TimRouteTest):
         resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, True, True])
         self.check_ok_answer(resp, is_new=False)
 
+        doc.set_settings({'global_plugin_attrs': {'mmcq': {'answerLimit': None, 'pointsRule': {'multiplier': 0}}}})
+        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [False, False, True])
+        self.check_ok_answer(resp)
+
+        doc.set_settings({'global_plugin_attrs': {'mmcq': {'answerLimit': None, 'pointsRule': {'multiplier': 3}}}})
+        resp = self.post_answer(plugin_type, doc.doc_id, task_name, [True, False, True])
+        self.check_ok_answer(resp)
+
         resp = self.json_req('/answers/{}/{}'.format(task_id, session['user_id']))
         answer_list = self.assertResponseStatus(resp, expect_status=200, return_json=True)  # type: list(dict)
         self.assertListEqual(
-            [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
+            [{'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, true]',
+              'id': 6, 'points': '9', 'task_id': '3.mmcqexample', 'valid': 1},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[false, false, true]',
+              'id': 5, 'points': None, 'task_id': '3.mmcqexample', 'valid': 1},
+             {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, true, true]',
               'id': 4, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 1},
              {'collaborators': [{'real_name': 'Test user 1', 'user_id': 4}], 'content': '[true, false, false]',
               'id': 3, 'points': '2', 'task_id': '3.mmcqexample', 'valid': 0},
@@ -87,7 +99,7 @@ class PluginTest(TimRouteTest):
                                    'par_id': par_id,
                                    'doc_id': doc.doc_id})
         self.assertDictEqual({'html': "<div id='3.mmcqexample' data-plugin='/mmcq'><mmcq "
-                                      "data-content='{&quot;state&quot;:[true,true,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
+                                      "data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;onTry&quot;:null,&quot;stem&quot;:&quot;&lt;p&gt;Answer "
                                       'yes or no to the following '
                                       'questions.&lt;/p&gt;&quot;,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;p&gt;&lt;span '
                                       'class=\\&quot;math '
@@ -104,7 +116,7 @@ class PluginTest(TimRouteTest):
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False})
         plugs = tree.findall(mmcq_xpath)
         self.assertEqual(1, len(plugs))
-        self.assertEqual([True, True, True], json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
+        self.assertEqual([True, False, True], json.loads(plugs[0].find('mmcq').get('data-content'))['state'])
 
         # Testing noanswers parameter: There should be no answers in the document
         tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True, query_string={'lazy': False, 'noanswers': True})
@@ -121,8 +133,8 @@ class PluginTest(TimRouteTest):
 
         self.assertListEqual([{'collaborators': [{'real_name': None, 'user_id': anon_id}],
                                'content': '[true, false, false]',
-                               'id': 5,
-                               'points': '2',
+                               'id': 7,
+                               'points': '6',
                                'task_id': '3.mmcqexample',
                                'valid': 1}],
                              [{k: v for k, v in ans.items() if k != 'answered_on'} for ans in anon_answers])

@@ -2,20 +2,21 @@
 @pushd E:\tim\timApp\modules\cs
 @cd t:\cs
 @t:
-@kopioi *.py e:    /q /s
-@kopioi Dockerf*.* e:    /q /s
-@kopioi *.js e:    /q /s
-@kopioi *.html e:  /q /s
-@kopioi *.css e:   /q /s
-@kopioi *.bat e:   /q
-@kopioi *. e:      /q
-@kopioi *.sh e:    /q /s
-@kopioi r.* e:     /q
-@kopioi dr*.* e:   /q /s
+@xcopy *.py e:    /d  /Y
+@xcopy Dockerf*.* e:    /d  /Y
+@xcopy js\*.js e:js\*.*    /d  /Y
+@xcopy *.html e:  /d  /Y
+@xcopy css\*.css e:css\*.*:   /d /s  /Y
+@xcopy doxygen\*.* e:doxygen\*.*:   /d /s  /Y
+@xcopy *.bat e:   /d  /Y
+@xcopy *. e:      /d  /Y
+@xcopy *.sh e:    /d  /Y
+@xcopy r.* e:     /d  /Y
+@xcopy dr*.* e:   /d  /Y
 @xcopy  ptauno\index.html E:\kurssit\pauno\taulukko.html /d /Y
 @xcopy  ptauno\taulukko.* E:\kurssit\pauno\  /d /Y
 cd E:\tim\timApp\modules\cs\templates
 cd templates
-@kopioi *.* e:     /q /s
+@xcopy *.* e:     /d /s  /Y
 cd ..
 @popd

@@ -16,8 +16,8 @@ KNOWN_TAGS = ['difficult', 'unclear']
 def get_note(note_id):
     timdb = getTimDb()
     note = timdb.notes.get_note(note_id)
-    if not (timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id) or timdb.users.userIsOwner(getCurrentUserId(),
-                                                                                                 note['doc_id'])):
+    if not (timdb.notes.hasEditAccess(getCurrentUserGroup(), note_id) or timdb.users.user_is_owner(getCurrentUserId(),
+                                                                                                   note['doc_id'])):
         abort(403)
     note.pop('UserGroup_id')
     tags = note['tags']
@@ -75,7 +75,7 @@ def edit_note():
         if sent_tags[tag]:
             tags.append(tag)
     timdb = getTimDb()
-    if not (timdb.notes.hasEditAccess(group_id, note_id) or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+    if not (timdb.notes.hasEditAccess(group_id, note_id) or timdb.users.user_is_owner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to edit this note.")
     timdb.notes.modifyNote(note_id, note_text, access, tags)
     notify_doc_owner(doc_id, '{} has edited a note on your document "{}":\n\n{}'.format(
@@ -94,7 +94,7 @@ def delete_note():
     note_id = int(jsondata['id'])
     paragraph_id = jsondata['par']
     timdb = getTimDb()
-    if not (timdb.notes.hasEditAccess(group_id, note_id) or timdb.users.userIsOwner(getCurrentUserId(), doc_id)):
+    if not (timdb.notes.hasEditAccess(group_id, note_id) or timdb.users.user_is_owner(getCurrentUserId(), doc_id)):
         abort(403, "Sorry, you don't have permission to remove this note.")
     timdb.notes.deleteNote(note_id)
     doc = Document(doc_id)

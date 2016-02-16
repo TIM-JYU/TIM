@@ -54,6 +54,8 @@ function timLogInit(params) {
     var p = params.replace("b&#39;","");
     p = p.replace("&#39;","");
     p = p.replace("&amp;","&");
+    p = p.replace("b'",""); 
+    p = p.replace("'","");
     var ps = p.split("&");
     for (var i=0; i<ps.length; i++) {
         var k = (ps[i]+"=").split("=");

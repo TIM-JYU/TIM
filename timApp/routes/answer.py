@@ -102,7 +102,7 @@ def post_answer(plugintype, task_id):
     state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
     plugin.values['current_user_id'] = getCurrentUserName()
-    plugin.values['user_id'] = ';'.join([timdb.users.getUser(uid)['name'] for uid in users])
+    plugin.values['user_id'] = ';'.join([timdb.users.get_user(uid)['name'] for uid in users])
     plugin.values['look_answer'] = is_teacher and not save_teacher
 
     answer_call_data = {'markup': plugin.values, 'state': state, 'input': answerdata, 'taskID': task_id}
@@ -122,7 +122,11 @@ def post_answer(plugintype, task_id):
         tags = []
         tim_info = jsonresp.get('tim_info', {})
         points = tim_info.get('points', None)
-
+        multiplier = plugin.points_multiplier()
+        if multiplier and points is not None:
+            points *= plugin.points_multiplier()
+        elif not multiplier:
+            points = None
         # Save the new state
         try:
             tags = save_object['tags']
@@ -211,7 +215,7 @@ def get_answers(task_id, user_id):
         return abort(400, str(e))
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
-    user = timdb.users.getUser(user_id)
+    user = timdb.users.get_user(user_id)
     if user_id != getCurrentUserId():
         verify_seeanswers_access(doc_id)
     if user is None:
@@ -251,7 +255,7 @@ def get_state():
                                                      'answer_id', types=[int, str, int, int])
     if not timdb.documents.exists(doc_id):
         abort(404, 'No such document')
-    user = timdb.users.getUser(user_id)
+    user = timdb.users.get_user(user_id)
     is_teacher = False
     if user_id != getCurrentUserId() or not logged_in():
         verify_seeanswers_access(doc_id)
@@ -295,7 +299,7 @@ def get_task_users(task_id):
     users = getTimDb().answers.get_users_by_taskid(task_id)
     if usergroup is not None:
         timdb = getTimDb()
-        users = [user for user in users if timdb.users.isUserIdInGroup(user['id'], usergroup)]
+        users = [user for user in users if timdb.users.is_user_id_in_group(user['id'], usergroup)]
     if hide_names_in_teacher(doc_id):
         for user in users:
             if should_hide_name(doc_id, user['id']):

@@ -87,6 +87,17 @@
                 <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"
                      note-id="{{ note.id }}">
                     {{ note.html|safe }}
+                    &mdash;
+                    {% if rights.teacher %}
+                        <a class="username" title="{{ note.real_name }}" href="mailto:{{ note.user_email }}">
+                            {{ note.user_name }}</a>
+                    {% endif %}
+                    <span class="timestamp" title="{{ note.created }}">{{ note.created|datestr_to_relative }}</span>
+                    {% if note.modified %}
+                        <span class="timestamp" title="{{ note.modified }}">
+                            (edited {{ note.modified|datestr_to_relative }})
+                        </span>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

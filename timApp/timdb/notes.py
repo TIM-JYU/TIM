@@ -131,10 +131,16 @@ class Notes(TimDbBase):
         if include_public:
             include_public_sql = "OR access = 'everyone'"
         result = self.resultAsDictionary(
-            self.db.execute("""SELECT id, par_id, doc_id, par_hash, content,
-                                      created, modified, access, tags, html, UserGroup_id
+            self.db.execute("""SELECT UserNotes.id, par_id, doc_id, par_hash, content,
+                                      datetime(created, 'localtime') as created,
+                                      datetime(modified, 'localtime') as modified,
+                                      access, tags, html,
+                                      UserNotes.UserGroup_id, User.name as user_name,
+                                      User.real_name, User.email as user_email
                                FROM UserNotes
-                               WHERE (UserGroup_id = ? %s) AND doc_id IN (%s)""" % (include_public_sql, template),
+                               JOIN UserGroupMember ON UserNotes.UserGroup_id = UserGroupMember.UserGroup_id
+                               JOIN User ON UserGroupMember.User_id = User.id
+                               WHERE (UserNotes.UserGroup_id = ? %s) AND doc_id IN (%s)""" % (include_public_sql, template),
                             [usergroup_id] + list(ids)))
 
 

@@ -14,7 +14,7 @@ settings_page = Blueprint('settings_page',
 def show():
     verifyLoggedIn()
     timdb = getTimDb()
-    prefs = timdb.users.getPrefs(getCurrentUserId())
+    prefs = timdb.users.get_preferences(getCurrentUserId())
     prefs = json.loads(prefs) if prefs is not None else {}
     css_file_names = [file[:-4] for file in os.listdir('static/css') if file.endswith('.css')]
     css_file_descriptions = []
@@ -44,5 +44,5 @@ def save_settings():
     verifyLoggedIn()
     timdb = getTimDb()
     prefs = request.get_json()
-    timdb.users.setPrefs(getCurrentUserId(), json.dumps(prefs))
+    timdb.users.set_preferences(getCurrentUserId(), json.dumps(prefs))
     return okJsonResponse()
