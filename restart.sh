@@ -40,6 +40,10 @@ fi
 if param postgre ; then
     docker stop postgre > /dev/null 2>&1 &
 fi
+
+if param funnel; then
+    docker stop funnel > /dev/null 2>&1 &
+fi
 wait
 
 # Remove stopped containers
@@ -57,6 +61,10 @@ fi
 
 if param postgre ; then
     docker rm postgre > /dev/null 2>&1 &
+fi
+
+if param funnel; then
+    docker rm funnel > /dev/null 2>&1 &
 fi
 wait
 
@@ -76,6 +84,12 @@ if param profile ; then
   TIM_SETTINGS='TIM_SETTINGS=/service/timApp/profileconfig.py'
   END_SHELL=''
   DAEMON_FLAG=''
+fi
+
+if param funnel; then
+docker run --net=timnet -d --name funnel \
+    -v /opt/funnel:/service \
+    funnel /service/run.sh
 fi
 
 if param postgre ; then

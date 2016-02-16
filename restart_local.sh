@@ -3,7 +3,7 @@
 # Stop the script if any error occurs
 set -e
 
-params=${*/all/tim nginx postgre plugins}
+params=${*/all/tim nginx postgre plugins funnel}
 
 if [ "$params" = "" ] ; then
     echo "Usage: restart [tim [sshd]|nginx|plugins]..."
@@ -35,6 +35,7 @@ checkdir /opt/tim $PWD
 checkdir /opt/svn $PWD/timApp/modules/svn
 checkdir /opt/cs $PWD/timApp/modules/cs
 checkdir /opt/postgre $PWD/postgresql
+checkdir /opt/funnel $PWD/funnel
 
 # Stop and remove containers
 if param tim; then
@@ -48,7 +49,17 @@ fi
 if param postgre; then
     docker rm -f postgre > /dev/null 2>&1 &
 fi
+
+if param funnel; then
+    docker rm -f funnel > /dev/null 2>&1 &
+fi
 wait
+
+if param funnel; then
+    docker run --net=timnet -d --name funnel \
+    -v /opt/funnel:/service \
+    funnel /service/run_local.sh
+fi
 
 if param plugins; then
  ./start_plugins.sh
