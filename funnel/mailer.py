@@ -1,10 +1,14 @@
 import os
 import random
+import smtplib
+import socket
 import string
 import time
 
+from email.mime.text import MIMEText
 from typing import Union
 
+MAIL_HOST = "smtp.jyu.fi"
 MAIL_DIR = "/service/mail"
 
 
@@ -16,11 +20,13 @@ CLIENT_RATE_WINDOW = 10  # In seconds
 
 class Mailer:
     def __init__(self,
+                 mail_host: str = MAIL_HOST,
                  mail_dir: str = MAIL_DIR,
                  client_rate: int = CLIENT_RATE,
                  client_rate_window: int = CLIENT_RATE_WINDOW,
                  dry_run: bool = False):
 
+        self.mail_host = mail_host
         self.mail_dir = mail_dir
         if not os.path.exists(mail_dir):
             os.mkdir(mail_dir)
@@ -106,12 +112,17 @@ class Mailer:
 
     def send_message(self, msg: dict):
         if self.dry_run:
+            print("Mail to {}: {}".format(msg['To'], msg['Msg']))
             return
 
-        print('Sending a new message')
-        for (key, val) in msg.items():
-            print('{}: {}'.format(key, val))
-        print()
+        mime_msg = MIMEText(msg['Msg'])
+        mime_msg['Subject'] = 'TIM Notification'
+        mime_msg['From'] = msg['From']
+        mime_msg['To'] = msg['To']
+
+        s = smtplib.SMTP(self.mail_host)
+        s.sendmail(msg['From'], [msg['To']], mime_msg.as_string())
+        s.quit()
 
     def update(self):
         if self.first_message_time is not None:
