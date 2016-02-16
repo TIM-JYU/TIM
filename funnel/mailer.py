@@ -30,7 +30,7 @@ class Mailer:
         self.dry_run = dry_run
 
         self.first_message_time = None
-        self.messages_remaining = CLIENT_RATE
+        self.messages_remaining = client_rate
 
     def get_first_filename(self) -> str:
         return os.path.join(self.mail_dir, 'first')
@@ -116,18 +116,13 @@ class Mailer:
     def update(self):
         if self.first_message_time is not None:
             window_age = time.time() - self.first_message_time
-            print(window_age)
             if window_age > self.client_rate_window:
                 # New window
-                print('A new window is opened')
+                #print('A new window is opened')
                 self.first_message_time = None
                 self.messages_remaining = self.client_rate
 
-        if not self.has_messages():
-            return
-
-        if self.messages_remaining < 1:
-            print('Rate limit exceeded, delaying send')
+        if not self.has_messages() or self.messages_remaining < 1:
             return
 
         self.send_message(self.dequeue())
