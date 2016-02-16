@@ -112,9 +112,13 @@ def loginWithKorppi():
         # Try email
         user = timdb.users.getUserByEmail(email)
         if user is not None:
+            # An email user signs in using Korppi for the first time. We update the user's username and personal
+            # usergroup.
             userId = user['id']
+            group_id = timdb.users.getPersonalUserGroup(user)
             timdb.users.updateUser(userId, userName, realName, email)
             timdb.users.addUserToKorppiGroup(userId)
+            timdb.users.set_usergroup_name(group_id, userName)
         else:
             uid = timdb.users.createUser(userName, realName, email)
             gid = timdb.users.createUserGroup(userName)

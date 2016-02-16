@@ -390,7 +390,7 @@ class Users(TimDbBase):
         if len(groups) > 0:
             return groups[0]['id']
 
-        return self.getUserGroups(user['id'])[0]['id']
+        raise TimDbException('Personal usergroup for user {} was not found!'.format(userName))
 
     @contract
     def getUserGroups(self, user_id: 'int') -> 'list(dict)':
@@ -812,3 +812,7 @@ WHERE User_id IN ({}))
             return LOGGED_GROUP_ID
         LOGGED_GROUP_ID = self.getUserGroupByName(LOGGED_IN_GROUPNAME)
         return LOGGED_GROUP_ID
+
+    def set_usergroup_name(self, group_id: int, user_name: str):
+        self.db.execute("""UPDATE UserGroup SET name = ? WHERE id = ?""", (user_name, group_id))
+        self.db.commit()
