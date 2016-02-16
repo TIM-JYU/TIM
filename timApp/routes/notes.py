@@ -3,6 +3,7 @@ from flask import Blueprint, abort, request
 from documentmodel.document import Document
 from routes.common import *
 from routes.edit import par_response
+from routes.notify import notify_doc_owner
 
 notes = Blueprint('notes',
                   __name__,

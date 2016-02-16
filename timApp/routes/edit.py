@@ -7,6 +7,7 @@ from documentmodel.document import Document
 from documentmodel.documentparser import DocumentParser, ValidationException, ValidationWarning
 from markdownconverter import md_to_html
 from routes import logger
+from routes.notify import notify_doc_owner
 from timdb.timdbbase import TimDbException
 from utils import get_error_html
 from .common import *
